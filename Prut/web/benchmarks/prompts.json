@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "צריך מייל ללקוח שמסביר עיכוב בפרויקט עם הצעה לפיצוי.",
+    "tone": "Professional",
+    "category": "CustomerSupport"
+  },
+  {
+    "prompt": "פוסט ללינקדאין על השקת מוצר SaaS חדש לשוק האמריקאי.",
+    "tone": "Professional",
+    "category": "Marketing"
+  },
+  {
+    "prompt": "תכתוב תיאור משרה למפתח/ת Frontend React עם 3 שנות ניסיון.",
+    "tone": "Professional",
+    "category": "HR"
+  },
+  {
+    "prompt": "סיכום מסמך משפטי והדגשת סיכונים עיקריים.",
+    "tone": "Professional",
+    "category": "Legal"
+  },
+  {
+    "prompt": "תוכנית שיעור קצרה בנושא בינה מלאכותית לתלמידי חטיבה.",
+    "tone": "Professional",
+    "category": "Education"
+  },
+  {
+    "prompt": "רשימת פיצ'רים חובה ל-MVP לאפליקציית כושר.",
+    "tone": "Professional",
+    "category": "Product"
+  },
+  {
+    "prompt": "תסריט מכירה קצר לשיחת הכרות עם לקוח B2B.",
+    "tone": "Professional",
+    "category": "Sales"
+  },
+  {
+    "prompt": "הנחיות לכתיבת API בפייתון כולל דוגמת קוד.",
+    "tone": "Professional",
+    "category": "Dev"
+  },
+  {
+    "prompt": "מתווה קמפיין פרפורמנס לחנות אונליין עם תקציב חודשי 20,000 ש\"ח.",
+    "tone": "Professional",
+    "category": "Marketing"
+  },
+  {
+    "prompt": "רשימת צעדים לייעול תהליך קליטת עובדים חדשים.",
+    "tone": "Professional",
+    "category": "Operations"
+  },
+  {
+    "prompt": "הצעת קונספט קריאייטיבי למותג אופנה צעיר.",
+    "tone": "Professional",
+    "category": "Creative"
+  },
+  {
+    "prompt": "תכנון מדריך תמיכה לבעיה נפוצה באפליקציה עם FAQ.",
+    "tone": "Professional",
+    "category": "CustomerSupport"
+  }
+]
