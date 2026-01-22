@@ -950,9 +950,9 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setViewMode("personal")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors"
               >
-                <BookOpen className="w-4 h-4" />
+                <BookOpen className="w-5 h-5" />
                 ספריה אישית
               </button>
               <button
@@ -960,16 +960,16 @@ export default function Home() {
                    setViewMode("personal");
                    setPersonalView("favorites");
                  }}
-                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                 className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors"
               >
-                <Star className="w-4 h-4" />
+                <Star className="w-5 h-5" />
                 מועדפים
               </button>
               <button
                 onClick={() => setViewMode("home")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors font-bold"
               >
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
                 חזרה לעריכה
               </button>
 
@@ -1223,28 +1223,28 @@ export default function Home() {
                   setPersonalView("all");
                   setViewMode("library");
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors"
               >
-                <BookOpen className="w-4 h-4" />
+                <BookOpen className="w-5 h-5" />
                 ספריה מלאה
               </button>
               <button
                 onClick={() => setPersonalView((prev) => (prev === "favorites" ? "all" : "favorites"))}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors",
+                  "flex items-center gap-2 px-6 py-3 rounded-lg border text-base transition-colors",
                   personalView === "favorites"
                     ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-200"
                     : "border-white/10 text-slate-300 hover:bg-white/10"
                 )}
               >
-                <Star className="w-4 h-4" />
+                <Star className="w-5 h-5" />
                 מועדפים
               </button>
               <button
                 onClick={() => setViewMode("home")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors font-bold"
               >
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
                 חזרה לעריכה
               </button>
             </div>

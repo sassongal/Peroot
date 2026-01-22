@@ -89,7 +89,7 @@ export function ResultSection({
           <div className="flex items-center gap-3">
              <button
                 onClick={onBack}
-                className="px-4 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors font-bold"
              >
                חזרה לעריכה
              </button>

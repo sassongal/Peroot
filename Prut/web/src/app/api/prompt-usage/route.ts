@@ -40,29 +40,21 @@ export async function GET(req: Request) {
 
   try {
     const supabase = await createClient();
-    const base = () =>
-      supabase.from("prompt_usage_events").select("id", { count: "exact", head: true });
+    
+    // Use the RPC function for O(1) aggregation
+    const { data, error } = await supabase.rpc('get_prompt_usage_stats', { key });
 
-    const [
-      { count: copies, error: copyError },
-      { count: saves, error: saveError },
-      { count: refinements, error: refineError },
-    ] = await Promise.all([
-      base().eq("prompt_key", key).eq("event_type", "copy"),
-      base().eq("prompt_key", key).eq("event_type", "save"),
-      base().eq("prompt_key", key).eq("event_type", "refine"),
-    ]);
-
-    if (copyError || saveError || refineError) {
-      console.warn("Failed to fetch usage counts", copyError || saveError || refineError);
+    if (error) {
+      console.warn("Failed to fetch usage stats via RPC", error);
+      // Fallback to zeros (or legacy method if needed, but RPC should work)
       return new Response(JSON.stringify({ copies: 0, saves: 0, refinements: 0 }), { status: 200 });
     }
 
     return new Response(
       JSON.stringify({
-        copies: copies ?? 0,
-        saves: saves ?? 0,
-        refinements: refinements ?? 0,
+        copies: data?.copies ?? 0,
+        saves: data?.saves ?? 0,
+        refinements: data?.refinements ?? 0,
       }),
       { status: 200 }
     );
