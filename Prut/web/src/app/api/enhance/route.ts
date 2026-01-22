@@ -1,7 +1,8 @@
 import { generateObject } from "ai";
-import { generateSystemPrompt } from "@/lib/prompt-engine";
+import { generatePromptSystemPrompt, generateQuestionsSystemPrompt } from "@/lib/prompt-engine";
 import { gemini, groqLlama, AI_PROVIDERS } from "@/lib/ai/models";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 30;
 
@@ -15,7 +16,7 @@ const RequestSchema = z.object({
     id: z.number(),
     question: z.string(),
   })).optional(),
-  answers: z.record(z.string()).optional(),
+  answers: z.record(z.string(), z.string()).optional(),
 });
 
 // Rich Question Schema
@@ -26,7 +27,18 @@ const QuestionSchema = z.object({
   examples: z.array(z.string()),
 });
 
-// Output Schema for Structured JSON with Rich Questions
+// Output Schema for Prompt Only
+const PromptResponseSchema = z.object({
+  great_prompt: z.string(),
+  category: z.string(),
+});
+
+// Output Schema for Questions Only
+const QuestionsResponseSchema = z.object({
+  clarifying_questions: z.array(QuestionSchema),
+});
+
+// Output Schema for Monolithic Fallback
 const ResponseSchema = z.object({
   great_prompt: z.string(),
   clarifying_questions: z.array(QuestionSchema),
@@ -35,14 +47,39 @@ const ResponseSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // 1. Strict Auth Check
+    if (!user) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    // 2. Check Credit Balance
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('credits_balance')
+        .eq('id', user.id)
+        .single();
+    
+    if (profileError || !profile) {
+        console.error("Profile fetch error:", profileError);
+        return new Response(JSON.stringify({ error: "Failed to fetch user profile" }), { status: 500 });
+    }
+
+    if ((profile.credits_balance ?? 0) < 1) {
+        return new Response(JSON.stringify({ error: "Insufficient credits" }), { status: 403 });
+    }
+
     const json = await req.json();
     const { prompt, tone, category, previousResult, refinementInstruction, questions, answers } = RequestSchema.parse(json);
     
+
     // Determine if this is a refinement request
-    // It's a refinement if we have a previous result AND (refinement instruction OR answers)
-    const hasAnswers = answers && Object.values(answers).some((a: string) => a.trim());
-    const isRefinement = !!previousResult && (!!refinementInstruction || hasAnswers);
+    const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
+    const isRefinement = !!previousResult && (!!refinementInstruction || !!hasAnswers);
     
+    // Prepare input text
     let missingInput = prompt;
     if (isRefinement) {
       const answersText = questions && answers 
@@ -55,10 +92,9 @@ export async function POST(req: Request) {
       missingInput = `${prompt}\n\n${refinementInstruction || ""}\n\n${answersText}`;
     }
 
-    let systemPrompt = generateSystemPrompt({ tone, category, input: missingInput });
-    
+    // Refinement format injection if needed
+    let refinementContext = "";
     if (isRefinement) {
-        // Format answers for the system prompt
         const formattedAnswers = questions && answers
             ? questions
                 .filter(q => answers[String(q.id)]?.trim())
@@ -66,66 +102,101 @@ export async function POST(req: Request) {
                 .join("\n")
             : "";
 
-      systemPrompt += `\n\nRefinement mode:
+      refinementContext = `\n\nRefinement mode:
 - Previous draft: ${previousResult}
 - New instruction: ${refinementInstruction || "None"}
 ${formattedAnswers ? `- structured Answers to Clarifying Questions:\n${formattedAnswers}` : ""}
-
-- Update the "great_prompt" by incorporating the user's answers and new instructions.
-- **CRITICAL: You MUST generate exactly 3 distinct clarifying questions** to guide the user to a perfect prompt.
-- **Question 1 (Strategy/Goal)**: Ask about the core objective or target audience (e.g., "Who is this for?", "What is the main goal?").
-- **Question 2 (Content/Style)**: Ask about the tone, format, or specific content requirements (e.g., "What tone should I use?", "Do you need a list or a paragraph?").
-- **Question 3 (Missing Details/Constraints)**: Ask for specific missing information or constraints (e.g., "Are there any length limits?", "What key points must be included?").
-- **Examples**: For EACH question, provide 3 short, clickable example answers.
-- Apply new details to replace placeholders wherever possible.`;
-    } else {
-      systemPrompt += `\n\n**CRITICAL: You MUST generate exactly 3 clarifying questions** to refine the prompt.
-- **Question 1 (Strategy/Goal)**: Ask about the core objective or target audience.
-- **Question 2 (Content/Style)**: Ask about the tone, format, or specific content requirements.
-- **Question 3 (Missing Details)**: Ask for specific missing information that would make the prompt better.
-- **Examples**: For EACH question, provide 3 short, clickable example answers.`;
+- Update the prompt incorporating these new details.`;
     }
+
+    // Generate specialized system prompts
+    const promptSystemPrompt = generatePromptSystemPrompt({ tone, category, input: missingInput }) + refinementContext;
+    const questionsSystemPrompt = generateQuestionsSystemPrompt({ input: missingInput }); // Questions don't need tone/category context as much
 
     const userPrompt = prompt;
     
-    // Debug logging
-    console.log(`[DEBUG] Mode: ${isRefinement ? 'REFINEMENT' : 'INITIAL'}`);
+    console.log(`[DEBUG] Mode: ${isRefinement ? 'REFINEMENT' : 'INITIAL'} | Strategy: PARALLEL SPLIT`);
 
-    // Try Gemini 1.5 Flash first
-    try {
-      console.log(`[${AI_PROVIDERS.PRIMARY}] Attempting with Gemini...`);
-      
-      const result = await generateObject({
-        model: gemini,
-        schema: ResponseSchema,
-        system: systemPrompt,
+    // Create Promises for Parallel Execution
+    const promptPromise = generateObject({
+        model: gemini, // Using Flash (fast/cheap)
+        schema: PromptResponseSchema,
+        system: promptSystemPrompt,
         prompt: userPrompt,
-        temperature: 0,
-      });
+        temperature: isRefinement ? 0.2 : 0.3, // Slightly creative for prompt
+    });
 
-      console.log(`[${AI_PROVIDERS.PRIMARY}] Success!`);
+    const questionsPromise = generateObject({
+        model: gemini, // Using Flash (fast/cheap)
+        schema: QuestionsResponseSchema,
+        system: questionsSystemPrompt,
+        prompt: userPrompt,
+        temperature: 0.1, // Deterministic for questions
+    });
+
+    try {
+      // Execute in Parallel
+      const [promptResult, questionsResult] = await Promise.all([promptPromise, questionsPromise]);
+
+      console.log(`[${AI_PROVIDERS.PRIMARY}] Parallel Success!`);
       
-      const normalized = normalizeResponse(result.object, category);
+      // Merge results
+      const combinedResult = {
+          great_prompt: promptResult.object.great_prompt,
+          category: promptResult.object.category,
+          clarifying_questions: questionsResult.object.clarifying_questions
+      };
+
+      const normalized = normalizeResponse(combinedResult, category);
+
+      // Deduct credit
+      const { error: deductError } = await supabase.rpc('decrement_credits', { user_id: user.id, amount: 1 });
+      if (deductError) {
+           console.warn("RPC decrement_credits failed, trying direct update", deductError);
+           await supabase
+            .from('profiles')
+            .update({ credits_balance: (profile.credits_balance ?? 0) - 1 })
+            .eq('id', user.id);
+      }
 
       return new Response(JSON.stringify(normalized), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store' // Dynamic content, do not cache at browser level
+        },
       });
       
-    } catch (geminiError) {
-      console.warn(`[${AI_PROVIDERS.PRIMARY}] Failed, switching to fallback...`, geminiError);
+    } catch (error) {
+      console.warn(`[${AI_PROVIDERS.PRIMARY}] Parallel Failed, switching to fallback (Linear)...`, error);
       
-      // Fallback
+      // Fallback: Use Llama sequentially (or monolithic if cheaper/safer for fallback)
+       const fallbackSystemPrompt = `Role: Senior Prompt Engineer. 
+Goal: Write a great prompt and 3 clarifying questions.
+Language: Hebrew/English mixed.
+Category: ${category}
+Tone: ${tone}
+Input: ${missingInput}
+Output JSON: { "great_prompt": "...", "clarifying_questions": [], "category": "..." }`;
+
       const result = await generateObject({
         model: groqLlama,
         schema: ResponseSchema,
-        system: systemPrompt,
+        system: fallbackSystemPrompt,
         prompt: userPrompt,
-        temperature: isRefinement ? 0.15 : 0.2,
+        temperature: 0.2,
       });
 
       console.log(`[${AI_PROVIDERS.FALLBACK}] Fallback success!`);
-      
       const normalized = normalizeResponse(result.object, category);
+
+       // Deduct credit
+      const { error: deductError } = await supabase.rpc('decrement_credits', { user_id: user.id, amount: 1 });
+      if (deductError) {
+           await supabase
+            .from('profiles')
+            .update({ credits_balance: (profile.credits_balance ?? 0) - 1 })
+            .eq('id', user.id);
+      }
 
       return new Response(JSON.stringify(normalized), {
         headers: { 'Content-Type': 'application/json' },
@@ -140,30 +211,12 @@ ${formattedAnswers ? `- structured Answers to Clarifying Questions:\n${formatted
   }
 }
 
-function normalizeResponse(payload: z.infer<typeof ResponseSchema>, fallbackCategory: string) {
+function normalizeResponse(payload: { great_prompt?: string; clarifying_questions?: any[]; category?: string }, fallbackCategory: string) {
   const allowedCategories = new Set([
-    "General",
-    "Marketing",
-    "Sales",
-    "Social",
-    "CustomerSupport",
-    "Product",
-    "Operations",
-    "HR",
-    "Dev",
-    "Education",
-    "Legal",
-    "Creative",
-    "Finance",
-    "Healthcare",
-    "Ecommerce",
-    "RealEstate",
-    "Strategy",
-    "Design",
-    "Data",
-    "Automation",
-    "Community",
-    "Nonprofit",
+    "General", "Marketing", "Sales", "Social", "CustomerSupport",
+    "Product", "Operations", "HR", "Dev", "Education", "Legal",
+    "Creative", "Finance", "Healthcare", "Ecommerce", "RealEstate",
+    "Strategy", "Design", "Data", "Automation", "Community", "Nonprofit"
   ]);
 
   const greatPrompt =
@@ -173,9 +226,9 @@ function normalizeResponse(payload: z.infer<typeof ResponseSchema>, fallbackCate
 
   const questions = Array.isArray(payload.clarifying_questions)
     ? payload.clarifying_questions
-        .filter((q) => q && typeof q.question === "string" && q.question.trim())
+        .filter((q: any) => q && typeof q.question === "string" && q.question.trim())
         .slice(0, 3)
-        .map((q, index) => ({
+        .map((q: any, index: number) => ({
           id: q.id ?? index + 1,
           question: q.question.trim(),
           description:

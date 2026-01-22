@@ -247,83 +247,78 @@ function collectMissingSignals(input: string): string[] {
     .map((item) => item.key);
 }
 
-export function generateSystemPrompt({ tone = "Professional", category = "General", input = "" }: PromptOptions): string {
-  const templateHint = TEMPLATE_HINTS[category] ?? TEMPLATE_HINTS.General;
-  const missingInfo = input ? detectMissingInfo(input) : ["קונטקסט", "מטרה", "קהל יעד"];
-  const missingInfoText = missingInfo.length > 0 ? missingInfo.join(", ") : "ללא";
+export function generatePromptSystemPrompt({ tone = "Professional", category = "General", input = "" }: PromptOptions): string {
   const languageHint = hebrewRegex.test(input) ? "Hebrew" : "Match the user's language";
-
+  const templateHint = TEMPLATE_HINTS[category] ?? TEMPLATE_HINTS.General;
+  
+  // CACHE STRATEGY: Static instructions first!
   return `Role: Senior Prompt Engineer & Product Writer
 Goal: Convert a rough prompt into a clear, high-quality "Great Prompt" with depth and practical detail.
 
-Language: ${languageHint}. Keep responses concise and practical.
-Category: ${category}. Use this unless clearly wrong; valid categories: ${CATEGORY_LIST.join(", ")}.
-Tone: ${tone}.
-
-Template hint:
-${templateHint}
-
-Preflight (deterministic): Missing focus areas = ${missingInfoText}
+Current Task Configuration:
+- Language: ${languageHint}. Keep responses concise and practical.
+- Tone: ${tone}.
+- Category: ${category}. (Valid: ${CATEGORY_LIST.join(", ")}).
+- Context Hint: ${templateHint}
 
 Great Prompt structure (Markdown):
 Format the output as a professionally styled prompt ready for immediate use:
 
-1. **Section Headings**: Use yellow-styled headings in square brackets format, e.g.:
+1. **Section Headings**: Use yellow-styled headings in square brackets format:
    - [מצב משימה] or [Situation]
    - [משימה] or [Task]
    - [מטרה] or [Objective]
    - [ידע נדרש] or [Knowledge]
    - [מגבלות] or [Constraints]
 
-2. **Variables**: Mark all fillable placeholders with curly braces and use ENGLISH names:
-   - Example: {product_name}, {target_audience}, {deadline}, {budget}
-   - These are meant for users to fill in later
+2. **Variables**: Mark all variables with curly braces and ENGLISH names (e.g. {product_name}).
 
-3. **Spacing**: Use proper line breaks between sections for readability:
-   - One blank line between sections
-   - Bullet points for lists within sections
+3. **Style**: Use bullet points and clean spacing.
 
-4. **Sub-bullets and Details**: When needed, use indented bullet points under main items.
-
-Example format:
----
-[מצב משימה]
-אתה {role} שעובד עבור {company_name}...
-
-[משימה]
-• צור תוכנית פעולה ל-{project_type}
-• התמקד ב-{focus_area}
-
-[מטרה]
-להשיג {desired_outcome} עד {deadline}
-
-[ידע נדרש]
-• {topic_1}
-• {topic_2}
-• {topic_3}
-
-[מגבלות]
-• טון: מקצועי וישיר
-• אורך: עד {word_count} מילים
-• פורמט: {output_format}
----
-
-Questions:
-- Ask 0-3 clarifying questions only if needed.
-- If missing focus areas = "ללא", clarifying_questions MUST be [].
-- Each question should be specific, short, and directly fill a missing gap.
-
-Output: Return ONLY valid JSON (no markdown fences), with fields:
+Output format (JSON):
 {
   "great_prompt": "...",
-  "clarifying_questions": [
-    { "id": 1, "question": "...", "description": "...", "examples": ["...", "...", "..."] }
-  ],
   "category": "..."
 }
 
 Rules:
-- If any field would be empty, provide a best-effort value.
-- Prefer actionable steps, timelines, and organized sub-bullets when relevant.
-- Do not mention internal frameworks or the analysis process.`;
+- Return ONLY valid JSON.
+- Prefer actionable steps and organized sub-bullets.
+- Do not mention internal frameworks.`;
+}
+
+export function generateQuestionsSystemPrompt({ input = "" }: PromptOptions): string {
+  const missingInfo = input ? detectMissingInfo(input) : ["קונטקסט", "מטרה", "קהל יעד"];
+  const missingInfoText = missingInfo.length > 0 ? missingInfo.join(", ") : "ללא";
+  const languageHint = hebrewRegex.test(input) ? "Hebrew" : "Match the user's language";
+
+  // CACHE STRATEGY: Static instructions first!
+  return `Role: Senior Prompt Engineer (Strategy Specialist)
+Goal: Identify EXACTLY 3 missing details that would significantly improve the user's prompt.
+
+Current Task Configuration:
+- Language: ${languageHint}.
+- Detected Missing Areas: ${missingInfoText}
+
+Instructions:
+1. Analyze the input prompt.
+2. Generate exactly 3 distinct clarifying questions.
+3. If "Detected Missing Areas" is "ללא" (None) and the prompt seems complete, return an empty array.
+
+Question Types:
+- Question 1 (Strategy/Goal): Core objective or audience.
+- Question 2 (Content/Style): Tone, format, specific requirements.
+- Question 3 (Missing Details): Constraints or key missing info.
+
+Output format (JSON):
+{
+  "clarifying_questions": [
+    { "id": 1, "question": "...", "description": "...", "examples": ["...", "...", "..."] }
+  ]
+}
+
+Rules:
+- Questions must be short, specific, and directly fill a gap.
+- Provide 3 short examples for each question.
+- Return ONLY valid JSON.`;
 }

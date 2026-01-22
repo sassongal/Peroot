@@ -131,9 +131,13 @@ export const toStyledHtml = (value: string) => {
     .replace(/\n/g, "<br />");
 };
 
+import DOMPurify from "isomorphic-dompurify";
+
 // Styled prompt rendering for the ResultSection with yellow headers and blue variables
 export const renderStyledPrompt = (value: string): string => {
-  let html = escapeHtml(value);
+  // Sanitize input to prevent XSS before any manipulation
+  let html = DOMPurify.sanitize(value);
+  html = escapeHtml(html);
   
   // Style section headers in brackets [כותרת] or [Title] with yellow
   html = html.replace(

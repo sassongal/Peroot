@@ -3,20 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
-
-export interface PersonalPrompt {
-  id: string;
-  title_he: string;
-  prompt_he: string;
-  prompt_style?: string;
-  category?: string;
-  personal_category: string;
-  use_case: string;
-  source: string;
-  use_count: number;
-  sort_index?: number;
-  updated_at?: string | number;
-}
+import { PersonalPrompt } from '@/lib/types';
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -76,22 +63,23 @@ export function useLibrary() {
           .order('updated_at', { ascending: false });
 
         if (libData && mounted) {
-          setPersonalLibrary(
-            libData.map((row, index) => ({
-              id: row.id,
-              title_he: row.title_he,
-            prompt_he: row.prompt_he,
-            prompt_style: row.prompt_style ?? null,
-            category: row.category,
-            personal_category: row.personal_category,
-            use_case: row.use_case,
-              source: row.source,
-              use_count: row.use_count,
-              updated_at: row.updated_at ?? row.created_at ?? null,
-              sort_index:
-                typeof orderMap[row.id] === "number" ? orderMap[row.id] : index,
-            }))
-          );
+            setPersonalLibrary(
+              libData.map((row, index) => ({
+                id: row.id,
+                title_he: row.title_he,
+                prompt_he: row.prompt_he,
+                prompt_style: row.prompt_style ?? undefined,
+                category: row.category ?? "",
+                personal_category: row.personal_category ?? null,
+                use_case: row.use_case,
+                source: row.source,
+                use_count: row.use_count,
+                created_at: row.created_at ?? Date.now(),
+                updated_at: row.updated_at ?? row.created_at ?? Date.now(),
+                sort_index:
+                  typeof orderMap[row.id] === "number" ? orderMap[row.id] : index,
+              }))
+            );
         }
 
         // Categories are derived from items + manual list
@@ -116,8 +104,10 @@ export function useLibrary() {
                       : typeof orderMap[row.id] === "number"
                         ? orderMap[row.id]
                         : index,
-                  updated_at: row.updated_at ?? null,
-                  prompt_style: row.prompt_style ?? null,
+                  created_at: row.created_at ?? Date.now(),
+                  updated_at: row.updated_at ?? Date.now(),
+                  prompt_style: row.prompt_style ?? undefined,
+                  personal_category: row.personal_category ?? null,
                 }))
               );
             }
@@ -167,7 +157,7 @@ export function useLibrary() {
     }
   }, [personalLibrary, personalCategories, isLoaded, user]);
 
-  const addPrompt = async (prompt: Omit<PersonalPrompt, 'id' | 'use_count'>) => {
+  const addPrompt = async (prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>) => {
     const nextSortIndex = personalLibrary
       .filter((item) => item.personal_category === prompt.personal_category)
       .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
@@ -176,6 +166,7 @@ export function useLibrary() {
       ...prompt,
       id: crypto.randomUUID(),
       use_count: 0,
+      created_at: Date.now(),
       updated_at: Date.now(),
       sort_index: nextSortIndex,
     };
@@ -372,7 +363,7 @@ export function useLibrary() {
     setPersonalLibrary(prev => {
       const item = prev.find(p => p.id === id);
       if (!item) return prev;
-      sourceCategory = item.personal_category;
+      sourceCategory = item.personal_category ?? "General";
 
       const without = prev.filter(p => p.id !== id);
       const sourceItems = without

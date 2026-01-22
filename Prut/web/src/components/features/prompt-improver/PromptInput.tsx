@@ -25,11 +25,6 @@ interface PromptInputProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   isLoading: boolean;
-  viewMode: "home" | "library" | "personal";
-  personalView: "all" | "favorites";
-  onNavPersonal: () => void;
-  onNavFavorites: () => void;
-  onNavLibrary: () => void;
   variables: string[];
   variableValues: Record<string, string>;
   setVariableValues: (values: Record<string, string>) => void;
@@ -46,11 +41,6 @@ export function PromptInput({
   selectedCategory,
   setSelectedCategory,
   isLoading,
-  viewMode,
-  personalView,
-  onNavPersonal,
-  onNavFavorites,
-  onNavLibrary,
   variables,
   variableValues,
   setVariableValues,
