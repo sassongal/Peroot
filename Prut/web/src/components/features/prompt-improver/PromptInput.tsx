@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Wand2, Loader2, BookOpen, Star } from "lucide-react";
+import { Wand2, Loader2 } from "lucide-react";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { User } from "@supabase/supabase-js";
@@ -58,17 +58,7 @@ export function PromptInput({
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col gap-2 items-center text-center">
-        <div className="flex items-center justify-center gap-4">
-             <img src="/logo.svg" alt="Peroot" className="h-20 md:h-24 w-auto brightness-110" />
-            {user && (
-                 <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="Connected"></span>
-            )}
-        </div>
-        <p className="text-lg md:text-xl text-slate-400 font-light max-w-2xl leading-relaxed mt-2">
-          מנוע חכם שהופך רעיונות גולמיים לפרומפטים מדויקים ומקצועיים.
-        </p>
-      </div>
+
 
       <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-6 items-stretch">
         {variables.length > 0 && (
@@ -234,50 +224,7 @@ export function PromptInput({
       {/* Feature Grid Removed as requested */}
 
       {/* Centered Navigation Tabs */}
-      <div className="flex items-center justify-center gap-3 mt-12 mb-4">
-        <button
-          onClick={onNavPersonal}
-          className={cn(
-            "flex items-center gap-4 px-8 py-4 rounded-full text-base font-bold transition-all border-2 shadow-xl hover:scale-105 active:scale-95",
-            viewMode === "personal" && personalView === "all"
-              ? "bg-white text-black border-white shadow-white/20 scale-105"
-              : "border-white/10 text-slate-400 hover:bg-white/5 hover:border-white/30 shadow-none"
-          )}
-        >
-          <BookOpen className="w-5 h-5" />
-          ספריה אישית
-        </button>
-        <button
-          onClick={onNavFavorites}
-          className={cn(
-            "flex items-center gap-4 px-8 py-4 rounded-full text-base font-bold transition-all border-2 shadow-xl hover:scale-105 active:scale-95",
-            personalView === "favorites"
-              ? "bg-yellow-400/20 text-yellow-400 border-yellow-400/40 shadow-yellow-400/20 scale-105"
-              : "border-white/10 text-slate-400 hover:bg-white/5 hover:border-white/30 shadow-none"
-          )}
-        >
-          <Star className={cn("w-5 h-5", personalView === "favorites" ? "fill-yellow-400" : "fill-none")} />
-          מועדפים
-        </button>
-        <button
-          onClick={onNavLibrary}
-          className={cn(
-            "flex items-center gap-4 px-8 py-4 rounded-full text-base font-bold transition-all border-2 shadow-xl hover:scale-105 active:scale-95",
-            viewMode === "library"
-              ? "bg-white text-black border-white shadow-white/20 scale-105"
-              : "border-white/10 text-slate-400 hover:bg-white/5 hover:border-white/30 shadow-none"
-          )}
-        >
-          <BookOpen className="w-5 h-5" />
-          ספריה מלאה
-        </button>
-      </div>
 
-      <div className="mt-16 text-center">
-         <p className="font-mono text-xs text-slate-600 uppercase tracking-widest">
-            Peroot © 2026 · Made by Joyatech
-         </p>
-      </div>
     </div>
   );
 }

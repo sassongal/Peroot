@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { MessageCircle, Search, X, ChevronDown } from "lucide-react";
+import { MessageCircle, Search, X, ChevronDown, Mail, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FAQ_ITEMS } from "@/lib/faq-data";
 
@@ -40,6 +40,10 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
       ? "absolute bottom-16 right-0"
       : "fixed bottom-24 right-6";
 
+  const handleFeedback = () => {
+     window.location.href = "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
+  };
+
   return (
     <div className={cn("flex flex-col items-end gap-3", mode === "inline" ? "relative" : "z-[9999]")}>
       <div
@@ -49,128 +53,165 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
         aria-hidden={!isOpen}
         className={cn(
           panelClass,
-          "w-[360px] md:w-[420px] max-h-[70vh] rounded-3xl border border-white/10 bg-black/90 backdrop-blur-2xl shadow-2xl overflow-hidden transition-all duration-300",
-          isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+          "w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out",
+          isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none"
         )}
         dir="rtl"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <div>
-            <div className="text-xs text-slate-500 uppercase tracking-widest">FAQ</div>
-            <h3 id={headingId} className="text-lg text-white font-serif">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5 backdrop-blur-md">
+          <div className="flex flex-col">
+            <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">מרכז עזרה</div>
+            <h3 id={headingId} className="text-xl text-white font-serif font-medium tracking-wide">
               שאלות נפוצות
             </h3>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 rounded-full border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label="סגור שאלות נפוצות"
+            className="p-2.5 rounded-full border border-white/5 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+            aria-label="סגור"
           >
-            <X className="w-4 h-4" aria-hidden="true" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          <div className="relative">
-            <Search
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="חיפוש מהיר..."
-              aria-label="חיפוש שאלות נפוצות"
-              className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pr-10 pl-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => {
-                  setActiveCategory(category);
-                  setOpenIndex(0);
-                }}
-                aria-pressed={activeCategory === category}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors",
-                  activeCategory === category
-                    ? "bg-white text-black border-white"
-                    : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
-                )}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+           {/* Search & Categories */}
+           <div className="p-6 pb-2 space-y-5">
+             <div className="relative group">
+               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+               <div className="relative flex items-center bg-black/50 border border-white/10 rounded-xl focus-within:border-white/20 focus-within:bg-black/80 transition-all duration-300">
+                  <Search className="w-4 h-4 text-slate-500 mr-3 ml-2" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="איך אפשר לעזור לך?"
+                    className="w-full bg-transparent border-none py-3 text-sm text-white placeholder:text-slate-500 focus:ring-0 focus:outline-none"
+                  />
+               </div>
+             </div>
+ 
+             <div className="flex flex-wrap gap-2">
+               {categories.map((category) => (
+                 <button
+                   key={category}
+                   onClick={() => {
+                     setActiveCategory(category);
+                     setOpenIndex(0);
+                   }}
+                   className={cn(
+                     "px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-300",
+                     activeCategory === category
+                       ? "bg-white text-black border-white shadow-lg shadow-white/10 scale-105"
+                       : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"
+                   )}
+                 >
+                   {category}
+                 </button>
+               ))}
+             </div>
+           </div>
+ 
+           {/* Questions List */}
+           <div className="px-6 pb-4 space-y-3 overflow-y-auto min-h-0 flex-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/20">
+             {filtered.map((item, index) => {
+               const isItemOpen = openIndex === index;
+               return (
+                 <div
+                   key={`${item.category}-${item.question}`}
+                   className={cn(
+                     "rounded-2xl border transition-all duration-300 overflow-hidden",
+                     isItemOpen 
+                        ? "bg-white/[0.08] border-white/20 shadow-lg" 
+                        : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
+                   )}
+                 >
+                   <button
+                     onClick={() => setOpenIndex(isItemOpen ? null : index)}
+                     className="w-full flex items-start justify-between px-5 py-4 text-right gap-4"
+                     aria-expanded={isItemOpen}
+                   >
+                     <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">{item.category}</span>
+                        <span className={cn("text-sm transition-colors duration-300 font-medium leading-relaxed", isItemOpen ? "text-white" : "text-slate-300")}>
+                           {item.question}
+                        </span>
+                     </div>
+                     <div className={cn(
+                        "mt-1 p-1 rounded-full border transition-all duration-300",
+                        isItemOpen ? "bg-white text-black border-white rotate-180" : "border-white/10 text-slate-500"
+                     )}>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                     </div>
+                   </button>
+                   
+                   <div className={cn(
+                      "grid transition-all duration-300 ease-in-out",
+                      isItemOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                   )}>
+                     <div className="overflow-hidden">
+                        <div className="px-5 pb-5 pt-0 text-sm text-slate-300/90 leading-relaxed border-t border-white/5 mt-2">
+                           <div className="h-2"></div>
+                           {item.answer}
+                        </div>
+                     </div>
+                   </div>
+                 </div>
+               );
+             })}
+ 
+             {filtered.length === 0 && (
+               <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                    <Search className="w-5 h-5 text-slate-600" />
+                 </div>
+                 <p className="text-sm text-slate-500">לא נמצאו תוצאות עבור "{query}"</p>
+               </div>
+             )}
+           </div>
         </div>
 
-        <div className="px-5 pb-5 space-y-3 overflow-y-auto max-h-[45vh]">
-          {filtered.map((item, index) => {
-            const isItemOpen = openIndex === index;
-            const answerId = `faq-answer-${index}`;
-            return (
-              <div
-                key={`${item.category}-${item.question}`}
-                className={cn(
-                  "rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden transition-all",
-                  isItemOpen && "border-white/20 bg-white/[0.06]"
-                )}
-              >
-                <button
-                  onClick={() => setOpenIndex(isItemOpen ? null : index)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-right"
-                  aria-expanded={isItemOpen}
-                  aria-controls={answerId}
-                >
-                  <div className="text-xs text-slate-500">{item.category}</div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-200 font-semibold">{item.question}</span>
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 text-slate-500 transition-transform",
-                        isItemOpen && "rotate-180"
-                      )}
-                      aria-hidden="true"
-                    />
-                  </div>
-                </button>
-                {isItemOpen && (
-                  <div
-                    id={answerId}
-                    role="region"
-                    aria-label={item.question}
-                    className="px-4 pb-4 text-sm text-slate-300 leading-relaxed"
-                  >
-                    {item.answer}
-                  </div>
-                )}
+        {/* Footer: Help Us Improve */}
+        <div className="p-4 bg-gradient-to-t from-black/80 to-transparent border-t border-white/5 relative z-10">
+           <button 
+              onClick={handleFeedback}
+              className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 p-4 text-right"
+           >
+              <div className="relative z-10 flex items-center justify-between">
+                 <div>
+                    <div className="text-xs font-bold text-blue-300 mb-0.5">עזרו לנו להשתפר</div>
+                    <div className="text-sm text-slate-300 group-hover:text-white transition-colors">מצאתם באג? יש לכם רעיון?</div>
+                 </div>
+                 <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500/30 transition-all duration-300">
+                    <Send className="w-4 h-4 text-blue-300" />
+                 </div>
               </div>
-            );
-          })}
-
-          {filtered.length === 0 && (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-500 text-center">
-              לא נמצאו תוצאות. נסו מונח אחר.
-            </div>
-          )}
+           </button>
         </div>
+
       </div>
 
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          "rounded-full bg-white text-black flex items-center justify-center shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:scale-105 transition-transform",
-          mode === "inline" ? "w-12 h-12" : "w-14 h-14"
+          "relative group rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-all duration-500",
+          mode === "inline" ? "w-12 h-12" : "w-16 h-16",
+          isOpen ? "bg-white rotate-90 scale-90" : "bg-gradient-to-br from-white to-slate-200 hover:scale-110 hover:-translate-y-1"
         )}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        aria-label={isOpen ? "סגור שאלות נפוצות" : "פתח שאלות נפוצות"}
+        aria-label={isOpen ? "סגור" : "פתח"}
       >
-        <MessageCircle className="w-6 h-6 text-slate-900" aria-hidden="true" />
+        {isOpen ? (
+            <X className="w-6 h-6 text-black" />
+        ) : (
+            <>
+                <div className="absolute inset-0 rounded-full bg-white blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-pulse"></div>
+                <MessageCircle className="w-7 h-7 text-black relative z-10" fill="currentColor" />
+            </>
+        )}
       </button>
     </div>
   );

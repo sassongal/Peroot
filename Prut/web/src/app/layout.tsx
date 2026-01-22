@@ -27,9 +27,15 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://peroot.ai";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Peroot (פירוט) - מחולל פרומפטים בעברית",
+  title: {
+    default: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
+    template: "%s | Peroot"
+  },
   description:
-    "Peroot הופך רעיונות גולמיים לפרומפטים מדויקים: מבנה ברור, שאלות מיקוד, ודירוג חוזק בזמן אמת.",
+    "הפכו רעיונות לפרומפטים מדויקים עבור ChatGPT, Claude, ו-Gemini. המערכת של Peroot משדרגת כל פרומפט עם מבנה מקצועי, שאלות מיקוד ודירוג איכות בזמן אמת.",
+  applicationName: "Peroot",
+  authors: [{ name: "JoyaTech", url: "https://joya-tech.net" }],
+  generator: "Next.js",
   keywords: [
     "פרומפטים",
     "פרומפט בעברית",
@@ -37,14 +43,30 @@ export const metadata: Metadata = {
     "שיפור פרומפט",
     "Prompt Engineering",
     "AI בעברית",
+    "כתיבת פרומפטים",
+    "ChatGPT בעברית",
+    "Claude בעברית",
+    "מידג'רני בעברית",
+    "אופטימיזציה לפרומפט",
+    "פרומפט ל-LLM",
+    "Peroot",
+    "פירוט"
   ],
+  referrer: "origin-when-cross-origin",
+  creator: "Gal Sasson",
+  publisher: "JoyaTech",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Peroot (פירוט) - מחולל פרומפטים בעברית",
+    title: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
     description:
-      "שדרגו רעיונות לפרומפטים מקצועיים בעזרת מבנה חכם ושאלות מיקוד מותאמות.",
+      "הכלי המתקדם בישראל ליצירה ושיפור של פרומפטים. שדרגו את התוצאות שלכם ב-AI עם מבנה חכם, הקשר מדויק ושאלות הכוונה.",
     url: siteUrl,
     siteName: "Peroot",
     locale: "he_IL",
@@ -54,16 +76,22 @@ export const metadata: Metadata = {
         url: "/assets/branding/logo.png",
         width: 1200,
         height: 630,
-        alt: "Peroot",
+        alt: "Peroot AI Prompt Generator",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Peroot (פירוט) - מחולל פרומפטים בעברית",
+    title: "Peroot (פירוט) - שדרוג פרומפטים ב-AI",
     description:
-      "פרומפטים מדויקים בעברית, דירוג חוזק, ודלתות מהירות לשיפור.",
+      "כתבו פרומפטים טובים יותר בשניות. המערכת היחידה שמותאמת במיוחד לשפה העברית ולמודלים המובילים.",
     images: ["/assets/branding/logo.png"],
+    creator: "@joyatech",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Peroot",
+    statusBarStyle: "black-translucent",
   },
 };
 

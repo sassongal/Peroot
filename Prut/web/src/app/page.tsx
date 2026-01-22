@@ -19,7 +19,9 @@ import { scorePrompt } from "@/lib/prompt-engine";
 import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
 import { LibraryView } from "@/components/views/LibraryView";
 import { PersonalLibraryView } from "@/components/views/PersonalLibraryView";
-import { BookOpen } from "lucide-react";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
+import { BookOpen, Star, Library } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Constants
 const USAGE_STORAGE_KEY = "peroot_prompt_usage_v1";
@@ -43,6 +45,8 @@ function PageContent() {
     viewMode, 
     setViewMode, 
     addPrompt,
+    personalView,
+    setPersonalView
   } = useLibraryContext();
 
   // Editor State
@@ -356,6 +360,20 @@ function PageContent() {
      toast.success("כל ההיסטוריה יובאה!");
   };
 
+  const handleNavPersonal = () => {
+     setViewMode("personal");
+     setPersonalView("all");
+  };
+  
+  const handleNavFavorites = () => {
+    setViewMode("personal");
+    setPersonalView("favorites");
+  };
+
+  const handleNavLibrary = () => {
+    setViewMode("library");
+  };
+
   // --- Render ---
 
   if (viewMode === "library") {
@@ -378,123 +396,152 @@ function PageContent() {
     );
   }
 
-  // Home View
+  // Home View - Restored Layout
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="flex flex-col items-center justify-center pt-8 pb-4 relative z-10 transition-all duration-500 ease-out">
-        <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-purple-500/10 via-blue-500/5 to-transparent blur-3xl -z-10" />
-        <img 
-          src="/logo.svg" 
-          alt="Peroot" 
-          className="h-32 w-auto mb-6 drop-shadow-2xl brightness-110 hover:scale-105 transition-transform duration-500"
-        />
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-center text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-white drop-shadow-sm tracking-tight px-4 pb-2">
-            הפרומפט שלך, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300 font-italic">מדויק יותר.</span>
-        </h1>
-        <p className="mt-4 text-slate-400 text-lg md:text-xl text-center max-w-2xl px-4 font-light leading-relaxed">
-            שפר/י את הפרומפטים שלך עם בינה מלאכותית מתקדמת,
-            <br className="hidden md:block"/>
-            התאם אותם לצרכים שלך וקבל תוצות טובות יותר.
-        </p>
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] mx-auto w-full">
+      {/* Background Gradient */}
+      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-purple-500/10 via-blue-500/5 to-transparent blur-3xl -z-10" />
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button 
-             onClick={() => setViewMode("library")}
-             className="px-6 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-slate-300 text-sm flex items-center gap-2 group backdrop-blur-sm"
-          >
-             <BookOpen className="w-4 h-4 group-hover:text-blue-300 transition-colors" />
-             ספריית פרומפטים
-          </button>
-           <button 
-             onClick={() => setViewMode("personal")}
-             className="px-6 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-slate-300 text-sm flex items-center gap-2 group backdrop-blur-sm"
-          >
-             <UserMenu user={user} position="top" /> 
-             {/* Note: UserMenu inside button is unconventional if it contains its own buttons/links */}
-             {/* Wait, the original design had UserMenu separately. 
-                 The button here says "האזור האישי".
-                 Actually, UserMenu has its own avatar trigger. 
-                 If I place UserMenu inside a button, clicking the button triggers both?
-                 Let's check the design.
-                 The previous code (Step 424) had:
-                 <button ...> <UserMenu /> <span...>האזור האישי</span> </button>
-                 This seems wrong because UserMenu has an interactive button.
-                 I should probably keep the UserMenu separate or make the UserMenu *be* the trigger.
-                 However, to preserve the look, maybe I should just use an Icon here?
-                 Or maybe just rely on the UserMenu in the corner?
-                 The "Personal Area" button switches view to personal library.
-                 So here I should just have an icon, not UserMenu component.
-             */}
-             <span className="group-hover:text-purple-300 transition-colors">האזור האישי</span>
-          </button>
-        </div>
+      {/* Fixed Elements */}
+      <div className="fixed top-6 left-6 z-50">
+         <UserMenu user={user} position="top" />
+      </div>
+      
+      <div className="fixed bottom-6 left-6 z-50">
+         <UserMenu user={user} position="bottom" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        {/* Main Content */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          <PromptInput
-             user={user}
-             inputVal={inputVal}
-             setInputVal={setInputVal}
-             handleEnhance={handleEnhance}
-             inputScore={inputScore}
-             scoreTone={scoreTone}
-             selectedTone={selectedTone}
-             setSelectedTone={setSelectedTone}
-             selectedCategory={selectedCategory}
-             setSelectedCategory={setSelectedCategory}
-             isLoading={isLoading}
-             variables={inputVariables}
-             variableValues={variableValues}
-             setVariableValues={setVariableValues}
-             onApplyVariables={applyVariablesToPrompt}
-          />
+      <div className="fixed bottom-6 right-6 z-50">
+         <FAQBubble />
+      </div>
 
-          {completion && (
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-                <ResultSection
-                    completion={completion}
-                    copied={copied}
-                    onCopy={handleCopyText}
-                    improvementDelta={0} // calculated locally?
-                    completionScore={completionScore}
-                    onSave={saveCompletionToPersonal}
-                    onBack={() => setCompletion("")}
-                    placeholders={placeholders}
-                    variableValues={variableValues}
-                    // calculated locally in useMemo: improvementDelta
-                    improvementDelta={completionScore.baseScore - inputScore.baseScore}
-                />
-                
-                {questions.length > 0 && (
-                   <SmartRefinement
-                      questions={questions}
-                      answers={questionAnswers}
-                      onAnswerChange={(id, val) => setQuestionAnswers(prev => ({...prev, [id]: val}))}
-                      onRefine={() => handleRefine("")}
-                      isLoading={isLoading}
-                   />
-                )}
-            </div>
-          )}
-        </div>
+      {/* Grid Layout - Sidebar First for Right Alignment in RTL */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8 px-4 md:px-8">
 
-        {/* Right Sidebar */}
-        <div className="lg:col-span-4 flex flex-col gap-6 space-y-6">
-           <HistoryPanel
-              history={history}
-              isLoaded={isLoaded}
-              onRestore={handleRestore}
-              onClear={clearHistory}
-              onSaveToPersonal={addPersonalPromptFromHistory}
-              onCopy={handleCopyText}
-           />
+        {/* Right Sidebar (History & Navigation) */}
+        <div className="lg:col-span-3 h-[calc(100vh-40px)] sticky top-6 flex flex-col gap-4">
            
-           <FAQBubble />
+           {/* Navigation Buttons */}
+           <div className="flex flex-col gap-3">
+              <button
+                onClick={handleNavPersonal}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-300 text-slate-400 backdrop-blur-sm group",
+                  viewMode === "personal" && personalView === "all" ? "bg-blue-500/20 text-blue-300 border-blue-400/50" : "bg-black/20"
+                )}
+              >
+                <div className={cn("p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors", viewMode === "personal" && personalView === "all" && "bg-blue-500/20")}>
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <span>ספריה אישית</span>
+              </button>
+              
+              <button
+                onClick={handleNavFavorites}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-yellow-400/30 hover:bg-yellow-500/10 hover:text-yellow-300 text-slate-400 backdrop-blur-sm group",
+                  personalView === "favorites" ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/50" : "bg-black/20"
+                )}
+              >
+                <div className={cn("p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors", personalView === "favorites" && "bg-yellow-500/20")}>
+                  <Star className="w-4 h-4" />
+                </div>
+                <span>מועדפים</span>
+              </button>
+
+              <button
+                onClick={handleNavLibrary}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-purple-400/30 hover:bg-purple-500/10 hover:text-purple-300 text-slate-400 backdrop-blur-sm group",
+                  viewMode === "library" ? "bg-purple-500/20 text-purple-300 border-purple-400/50" : "bg-black/20"
+                )}
+              >
+                <div className={cn("p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors", viewMode === "library" && "bg-purple-500/20")}>
+                  <Library className="w-4 h-4" />
+                </div>
+                <span>ספריה ציבורית</span>
+              </button>
+           </div>
+
+           <div className="flex-1 min-h-0">
+             <HistoryPanel
+                history={history}
+                isLoaded={isLoaded}
+                onRestore={handleRestore}
+                onClear={clearHistory}
+                onSaveToPersonal={addPersonalPromptFromHistory}
+                onCopy={handleCopyText}
+             />
+           </div>
         </div>
+
+        {/* Main Content (Center) */}
+        <div className="lg:col-span-9 flex flex-col gap-8 max-w-5xl mx-auto w-full pl-0 lg:pl-12">
+           {/* Huge Central Logo */}
+           <div className="flex justify-center pb-2">
+             <img 
+              src="/logo.svg" 
+              alt="Peroot" 
+              className="w-80 md:w-96 h-auto drop-shadow-2xl brightness-110"
+             />
+           </div>
+
+           <LoadingOverlay isVisible={isLoading} />
+
+           {!completion ? (
+             /* INPUT MODE */
+             <>
+               <PromptInput
+                  user={user}
+                  inputVal={inputVal}
+                  setInputVal={setInputVal}
+                  handleEnhance={handleEnhance}
+                  inputScore={inputScore}
+                  scoreTone={scoreTone}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  isLoading={isLoading}
+                  variables={inputVariables}
+                  variableValues={variableValues}
+                  setVariableValues={setVariableValues}
+                  onApplyVariables={applyVariablesToPrompt}
+               />
+
+
+             </>
+           ) : (
+             /* RESULT MODE */
+             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col gap-8">
+                 <ResultSection
+                     completion={completion}
+                     copied={copied}
+                     onCopy={handleCopyText}
+                     completionScore={completionScore}
+                     onSave={saveCompletionToPersonal}
+                     onBack={() => setCompletion("")}
+                     placeholders={placeholders}
+                     variableValues={variableValues}
+                     improvementDelta={completionScore.baseScore - inputScore.baseScore}
+                     onVariableChange={(key, val) => setVariableValues(prev => ({ ...prev, [key]: val }))}
+                 />
+                 
+                 {questions.length > 0 && (
+                    <SmartRefinement
+                       questions={questions}
+                       answers={questionAnswers}
+                       onAnswerChange={(id, val) => setQuestionAnswers(prev => ({...prev, [id]: val}))}
+                       onRefine={() => handleRefine("")}
+                       isLoading={isLoading}
+                    />
+                 )}
+             </div>
+           )}
+
+           {/* Removed old placement of ResultSection (lines 493-517) as it is now in conditional block */}
+
+
+        </div>
+
       </div>
       
       {/* Login Modal */}
@@ -505,9 +552,17 @@ function PageContent() {
         message={loginRequiredConfig.message}
         feature={loginRequiredConfig.feature}
       />
-      
-      <div className="fixed top-4 left-4 z-50">
-        <UserMenu user={user} position="top" />
+
+      {/* Footer */}
+      <div className="mt-20 text-center pb-8 flex flex-col gap-4 animate-in fade-in duration-1000 delay-300">
+         <p className="font-mono text-xs text-slate-600 uppercase tracking-widest">
+            Peroot © 2026 · Made by Joyatech
+         </p>
+         <div className="flex justify-center gap-6 text-xs text-slate-500 font-medium">
+            <a href="/privacy" className="hover:text-slate-300 transition-colors">מדיניות פרטיות</a>
+            <span className="text-slate-700">|</span>
+            <a href="/accessibility" className="hover:text-slate-300 transition-colors">הצהרת נגישות</a>
+         </div>
       </div>
     </div>
   );
@@ -515,7 +570,7 @@ function PageContent() {
 
 // Wrapper component to provide context and user state
 function HomeWrapper() {
-  const { user } = useHistory(); // History hook also provides user, convenient
+  const { user } = useHistory(); 
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [loginFeature, setLoginFeature] = useState("");
 
@@ -526,7 +581,7 @@ function HomeWrapper() {
 
   return (
     <LibraryProvider user={user} showLoginRequired={showLoginRequired}>
-        <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-6 px-4 md:px-6 max-w-7xl mx-auto">
+        <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-6 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
             <Toaster position="top-center" theme="dark" closeButton />
             <PageContent />
             

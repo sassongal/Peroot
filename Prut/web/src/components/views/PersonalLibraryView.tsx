@@ -42,6 +42,8 @@ export function PersonalLibraryView({
     personalCategories,
     favoritePersonalIds,
     handleToggleFavorite,
+    libraryFavorites, // Added
+    addPrompt,       // Added
     
     // Editing
     editingPersonalId,
@@ -80,6 +82,25 @@ export function PersonalLibraryView({
   } = useLibraryContext();
   
   const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
+    try {
+        await addPrompt({
+            title_he: prompt.title_he,
+            prompt_he: prompt.prompt_he,
+            category: prompt.category,
+            personal_category: PERSONAL_DEFAULT_CATEGORY,
+            use_case: prompt.use_case,
+            source: "library",
+            reference: prompt.id,
+            prompt_style: undefined
+        });
+        toast.success("נשמר לספריה האישית");
+    } catch (e) {
+        console.error(e);
+        toast.error("שגיאה בשמירה");
+    }
+  };
 
   // Styling Helpers
   const applyStyleToken = (prefix: string, value: string) => {
@@ -538,8 +559,76 @@ export function PersonalLibraryView({
            
            // Let's implement rendering Personal Favorites.
           <div className="flex flex-col gap-6">
-             {/* Note: Missing Library Favorites Section for now, can add if critical */}
-            
+             {/* Library Favorites Section */}
+             {libraryFavorites.length > 0 && (
+               <div className="space-y-4 rounded-3xl border border-white/10 bg-gradient-to-l from-white/[0.05] via-white/[0.03] to-transparent px-5 md:px-7 py-7">
+                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                   <div className="flex items-baseline gap-3">
+                     <h3 className="text-3xl md:text-4xl font-serif font-semibold text-slate-100 tracking-wide">
+                       מועדפים מהספריה
+                     </h3>
+                     <span className="text-sm text-slate-400">{libraryFavorites.length} פרומפטים</span>
+                   </div>
+                   <span className="text-xs px-3 py-1 rounded-full border border-white/10 text-slate-400">
+                     ספריה ציבורית
+                   </span>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+                   {libraryFavorites.map((prompt) => (
+                      <GlowingEdgeCard
+                        key={prompt.id}
+                        className="rounded-[28px]"
+                        contentClassName="p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[360px]"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h4 className="text-xl md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title_he}</h4>
+                            <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFavorite("library", prompt.id)}
+                            className="shrink-0 p-1.5 rounded-full border border-yellow-300/40 bg-yellow-300/10 text-yellow-300 transition-colors"
+                            aria-label="הסר ממועדפים"
+                          >
+                            <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
+                          </button>
+                        </div>
+
+                        <div className="text-sm text-slate-300 leading-relaxed max-h-40 overflow-hidden" dir="rtl">
+                          {prompt.prompt_he}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 pt-1 mt-auto">
+                          <button
+                            onClick={() => onUsePrompt(prompt)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                            השתמש
+                          </button>
+                          <button
+                            onClick={() => addPersonalPromptFromLibrary(prompt)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+                          >
+                            <BookOpen className="w-3 h-3" />
+                            שמור לאישי
+                          </button>
+                          <button
+                            onClick={() => onCopyText(prompt.prompt_he)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+                          >
+                            <Copy className="w-3 h-3" />
+                            העתק
+                          </button>
+                        </div>
+                      </GlowingEdgeCard>
+                   ))}
+                 </div>
+               </div>
+             )}
+
+            {/* Personal Favorites Section */}
             {filteredPersonalLibrary.length > 0 && (
               <div className="space-y-4 rounded-3xl border border-white/10 bg-gradient-to-l from-white/[0.05] via-white/[0.03] to-transparent px-5 md:px-7 py-7">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -559,7 +648,7 @@ export function PersonalLibraryView({
               </div>
             )}
             
-            {totalCount === 0 && (
+            {totalCount === 0 && libraryFavorites.length === 0 && (
               <div className="glass-card p-10 rounded-xl border-white/10 bg-black/40 text-center text-slate-500">
                 אין עדיין מועדפים. סמנו פרומפטים בכוכב כדי שיופיעו כאן.
               </div>

@@ -31,7 +31,7 @@ export function HistoryPanel({
   }, []);
 
   return (
-    <div className="glass-card rounded-xl p-6 border-white/10 bg-white/[0.02] flex flex-col max-h-[70vh]">
+    <div className="glass-card rounded-xl p-6 border-white/10 bg-white/[0.02] flex flex-col h-full">
       <div className="flex flex-col items-center gap-4 mb-6 pt-2">
         <h2 className="text-2xl font-serif text-white tracking-wide">היסטוריה</h2>
         <div className="w-12 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full" />

@@ -28,6 +28,7 @@ interface LibraryContextType {
   setPersonalView: (view: "all" | "favorites") => void;
   
   filteredPersonalLibrary: PersonalPrompt[];
+  libraryFavorites: LibraryPrompt[]; // Added
   
   // Data
   personalLibrary: PersonalPrompt[];
@@ -94,7 +95,10 @@ const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
 const PERSONAL_DEFAULT_CATEGORY = "כללי";
 
 // Fallback logic for promptsData if it's not matching expected type
-const libraryPrompts = (promptsData as any).prompts || [];
+// Fallback logic for promptsData if it's not matching expected type
+const libraryPrompts = Array.isArray(promptsData) 
+  ? promptsData 
+  : (promptsData as any).prompts || [];
 
 export function LibraryProvider({ children, user, showLoginRequired }: { children: ReactNode, user: any, showLoginRequired: (feature: string) => void }) {
   // --- Local UI State ---
@@ -156,6 +160,11 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
         .join(" ").toLowerCase().includes(query)
     );
   }, [libraryQuery]);
+
+  const libraryFavorites = useMemo(() => {
+      // Return all library prompts that are in favorites
+      return libraryPrompts.filter((p: any) => favoriteLibraryIds.has(p.id));
+  }, [favoriteLibraryIds]);
 
   const getUpdatedAt = (prompt: PersonalPrompt) => {
     if (typeof prompt.updated_at === "number") return prompt.updated_at;
@@ -372,7 +381,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     personalQuery, setPersonalQuery,
     personalSort, setPersonalSort,
     personalView, setPersonalView,
-    filteredPersonalLibrary,
+    filteredPersonalLibrary, libraryFavorites,
     personalLibrary, personalCategories,
     favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
     popularityMap,

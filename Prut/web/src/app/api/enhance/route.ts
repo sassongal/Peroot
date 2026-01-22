@@ -50,25 +50,23 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // 1. Strict Auth Check
-    if (!user) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
-    // 2. Check Credit Balance
-    const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('credits_balance')
-        .eq('id', user.id)
-        .single();
+    // 2. Check Credit Balance (Only for logged-in users)
+    if (user) {
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('credits_balance')
+            .eq('id', user.id)
+            .maybeSingle(); 
+        
+        if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            return new Response(JSON.stringify({ error: "Failed to fetch user profile" }), { status: 500 });
+        }
     
-    if (profileError || !profile) {
-        console.error("Profile fetch error:", profileError);
-        return new Response(JSON.stringify({ error: "Failed to fetch user profile" }), { status: 500 });
-    }
-
-    if ((profile.credits_balance ?? 0) < 1) {
-        return new Response(JSON.stringify({ error: "Insufficient credits" }), { status: 403 });
+        const balance = profile?.credits_balance ?? 0;
+        if (balance < 1) {
+            return new Response(JSON.stringify({ error: "Insufficient credits" }), { status: 403 });
+        }
     }
 
     const json = await req.json();
@@ -149,14 +147,19 @@ ${formattedAnswers ? `- structured Answers to Clarifying Questions:\n${formatted
 
       const normalized = normalizeResponse(combinedResult, category);
 
-      // Deduct credit
-      const { error: deductError } = await supabase.rpc('decrement_credits', { user_id: user.id, amount: 1 });
-      if (deductError) {
-           console.warn("RPC decrement_credits failed, trying direct update", deductError);
-           await supabase
-            .from('profiles')
-            .update({ credits_balance: (profile.credits_balance ?? 0) - 1 })
-            .eq('id', user.id);
+      // Deduct credit (Only for logged-in users)
+      if (user) {
+          const { error: deductError } = await supabase.rpc('decrement_credits', { user_id: user.id, amount: 1 });
+          if (deductError) {
+               console.warn("RPC decrement_credits failed, trying direct update", deductError);
+               // Fallback update
+               const { data: profile } = await supabase.from('profiles').select('credits_balance').eq('id', user.id).single();
+               const currentBalance = profile?.credits_balance ?? 1;
+               await supabase
+                .from('profiles')
+                .update({ credits_balance: currentBalance - 1 })
+                .eq('id', user.id);
+          }
       }
 
       return new Response(JSON.stringify(normalized), {
@@ -190,12 +193,16 @@ Output JSON: { "great_prompt": "...", "clarifying_questions": [], "category": ".
       const normalized = normalizeResponse(result.object, category);
 
        // Deduct credit
-      const { error: deductError } = await supabase.rpc('decrement_credits', { user_id: user.id, amount: 1 });
-      if (deductError) {
-           await supabase
-            .from('profiles')
-            .update({ credits_balance: (profile.credits_balance ?? 0) - 1 })
-            .eq('id', user.id);
+      if (user) {
+          const { error: deductError } = await supabase.rpc('decrement_credits', { user_id: user.id, amount: 1 });
+          if (deductError) {
+               const { data: profile } = await supabase.from('profiles').select('credits_balance').eq('id', user.id).single();
+               const currentBalance = profile?.credits_balance ?? 1;
+               await supabase
+                .from('profiles')
+                .update({ credits_balance: currentBalance - 1 })
+                .eq('id', user.id);
+          }
       }
 
       return new Response(JSON.stringify(normalized), {
@@ -211,7 +218,13 @@ Output JSON: { "great_prompt": "...", "clarifying_questions": [], "category": ".
   }
 }
 
-function normalizeResponse(payload: { great_prompt?: string; clarifying_questions?: any[]; category?: string }, fallbackCategory: string) {
+type ResponsePayload = {
+  great_prompt?: string;
+  clarifying_questions?: any[];
+  category?: string;
+};
+
+function normalizeResponse(payload: ResponsePayload, fallbackCategory: string) {
   const allowedCategories = new Set([
     "General", "Marketing", "Sales", "Social", "CustomerSupport",
     "Product", "Operations", "HR", "Dev", "Education", "Legal",
