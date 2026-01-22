@@ -1,0 +1,18 @@
+# Peroot (Hebrew Prompt Engineering)
+
+Peroot turns raw ideas into structured, high-quality prompts in Hebrew (RTL-first).
+
+## Key URLs
+- https://peroot.ai/
+- https://peroot.ai/privacy
+- https://peroot.ai/accessibility
+
+## Product Summary
+- Hebrew-first prompt improver
+- Structured "Great Prompt" output
+- Clarifying questions (0-3)
+- Prompt strength scoring
+- Personal prompt library
+
+## Contact
+- support@peroot.net

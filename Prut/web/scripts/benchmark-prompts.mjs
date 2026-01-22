@@ -23,7 +23,7 @@ for (let i = 0; i < prompts.length; i += 1) {
   let payload = null;
   try {
     payload = await response.json();
-  } catch (error) {
+  } catch {
     payload = { error: "Invalid JSON response" };
   }
 

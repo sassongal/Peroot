@@ -11,6 +11,11 @@ const RequestSchema = z.object({
   category: z.string().default("General"),
   previousResult: z.string().optional(),
   refinementInstruction: z.string().optional(),
+  questions: z.array(z.object({
+    id: z.number(),
+    question: z.string(),
+  })).optional(),
+  answers: z.record(z.string()).optional(),
 });
 
 // Rich Question Schema
@@ -31,20 +36,54 @@ const ResponseSchema = z.object({
 export async function POST(req: Request) {
   try {
     const json = await req.json();
-    const { prompt, tone, category, previousResult, refinementInstruction } = RequestSchema.parse(json);
+    const { prompt, tone, category, previousResult, refinementInstruction, questions, answers } = RequestSchema.parse(json);
     
     // Determine if this is a refinement request
-    const isRefinement = !!previousResult && !!refinementInstruction;
+    // It's a refinement if we have a previous result AND (refinement instruction OR answers)
+    const hasAnswers = answers && Object.values(answers).some((a: string) => a.trim());
+    const isRefinement = !!previousResult && (!!refinementInstruction || hasAnswers);
     
-    const missingInput = isRefinement ? `${prompt}\n${refinementInstruction}` : prompt;
+    let missingInput = prompt;
+    if (isRefinement) {
+      const answersText = questions && answers 
+        ? questions.map(q => {
+            const ans = answers[String(q.id)];
+            return ans ? `Q: ${q.question}\nA: ${ans}` : null;
+          }).filter(Boolean).join("\n")
+        : "";
+      
+      missingInput = `${prompt}\n\n${refinementInstruction || ""}\n\n${answersText}`;
+    }
+
     let systemPrompt = generateSystemPrompt({ tone, category, input: missingInput });
     
     if (isRefinement) {
+        // Format answers for the system prompt
+        const formattedAnswers = questions && answers
+            ? questions
+                .filter(q => answers[String(q.id)]?.trim())
+                .map(q => `- Question: "${q.question}"\n  User Answer: "${answers[String(q.id)]}"`)
+                .join("\n")
+            : "";
+
       systemPrompt += `\n\nRefinement mode:
 - Previous draft: ${previousResult}
-- New instruction: ${refinementInstruction}
-- Update only the "great_prompt". If questions remain, keep up to 3.
+- New instruction: ${refinementInstruction || "None"}
+${formattedAnswers ? `- structured Answers to Clarifying Questions:\n${formattedAnswers}` : ""}
+
+- Update the "great_prompt" by incorporating the user's answers and new instructions.
+- **CRITICAL: You MUST generate exactly 3 distinct clarifying questions** to guide the user to a perfect prompt.
+- **Question 1 (Strategy/Goal)**: Ask about the core objective or target audience (e.g., "Who is this for?", "What is the main goal?").
+- **Question 2 (Content/Style)**: Ask about the tone, format, or specific content requirements (e.g., "What tone should I use?", "Do you need a list or a paragraph?").
+- **Question 3 (Missing Details/Constraints)**: Ask for specific missing information or constraints (e.g., "Are there any length limits?", "What key points must be included?").
+- **Examples**: For EACH question, provide 3 short, clickable example answers.
 - Apply new details to replace placeholders wherever possible.`;
+    } else {
+      systemPrompt += `\n\n**CRITICAL: You MUST generate exactly 3 clarifying questions** to refine the prompt.
+- **Question 1 (Strategy/Goal)**: Ask about the core objective or target audience.
+- **Question 2 (Content/Style)**: Ask about the tone, format, or specific content requirements.
+- **Question 3 (Missing Details)**: Ask for specific missing information that would make the prompt better.
+- **Examples**: For EACH question, provide 3 short, clickable example answers.`;
     }
 
     const userPrompt = prompt;
@@ -61,7 +100,7 @@ export async function POST(req: Request) {
         schema: ResponseSchema,
         system: systemPrompt,
         prompt: userPrompt,
-        temperature: isRefinement ? 0.15 : 0.2,
+        temperature: 0,
       });
 
       console.log(`[${AI_PROVIDERS.PRIMARY}] Success!`);

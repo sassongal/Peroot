@@ -13,6 +13,7 @@ export function AuthForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [showEmailSent, setShowEmailSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,6 @@ export function AuthForm() {
             toast.error("שגיאה בהתחברות: " + error.message);
         } else {
             toast.success("התחברת בהצלחה!");
-            // Use absolute redirect to clear any stale state
             window.location.href = '/';
         }
       } else {
@@ -50,14 +50,43 @@ export function AuthForm() {
         if (error) {
             toast.error("שגיאה בהרשמה: " + error.message);
         } else {
-            toast.success("נשלח אימייל לאימות במידה וההרשמה תקינה!");
-            setEmail("");
-            setPassword("");
-            setFullName("");
+            setShowEmailSent(true);
         }
       }
     });
   };
+
+  if (showEmailSent) {
+    return (
+      <div className="w-full max-w-sm mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center animate-bounce">
+            <Mail className="w-10 h-10 text-purple-400" />
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-white">בדוק את האימייל שלך</h2>
+        <p className="text-slate-300">
+          שלחנו קישור אימות לכתובת:
+          <br />
+          <span className="font-semibold text-purple-300">{email}</span>
+        </p>
+        <p className="text-sm text-slate-500">
+            יש ללחוץ על הקישור באימייל כדי להפעיל את החשבון ולהתחיל להשתמש בפירוט.
+        </p>
+        <button
+            onClick={() => {
+                setShowEmailSent(false);
+                setIsLogin(true);
+                setEmail("");
+                setPassword("");
+            }}
+            className="text-sm text-slate-400 hover:text-white transition-colors underline decoration-slate-400/30"
+        >
+            חזרה להתחברות
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -137,6 +137,11 @@
   }
 }
 
+:focus-visible {
+  outline: 2px solid #e2e8f0;
+  outline-offset: 3px;
+}
+
 .noise-overlay {
   position: fixed;
   top: 0;
@@ -159,4 +164,135 @@
 
 .silver-gradient {
   @apply bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 border border-white/20 shadow-[inset_0_1px_0_theme(colors.white/0.4)];
+}
+
+.glow-card {
+  position: relative;
+  isolation: isolate;
+  --glow-sens: 52;
+  --color-sens: calc(var(--glow-sens) + 10);
+  --edge-base: 0;
+  --glow-base: 0;
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --pointer-deg: 45deg;
+  --pointer-d: 0;
+  --card-bg: linear-gradient(160deg, rgba(13, 13, 16, 0.95), rgba(8, 8, 10, 0.92));
+  --blend: soft-light;
+  --glow-blend: screen;
+  --glow-color: 45deg 95% 65%;
+  --glow-boost: 0%;
+}
+
+.glow-card:hover {
+  --edge-base: 0.7;
+  --glow-base: 0.5;
+}
+
+.glow-card__mesh-border,
+.glow-card__mesh-bg,
+.glow-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.glow-card__mesh-border {
+  z-index: 1;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card-bg) 0 100%) padding-box,
+    linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box,
+    radial-gradient(at 18% 22%, hsla(45, 95%, 65%, 0.6) 0px, transparent 55%) border-box,
+    radial-gradient(at 82% 78%, hsla(50, 90%, 55%, 0.35) 0px, transparent 55%) border-box,
+    linear-gradient(hsl(45 95% 65% / 0.45) 0 100%) border-box;
+  opacity: clamp(0, calc((var(--pointer-d) - var(--color-sens)) / (100 - var(--color-sens)) + var(--edge-base)), 1);
+  mask-image: conic-gradient(from var(--pointer-deg) at center, black 25%, transparent 40%, transparent 60%, black 75%);
+  transition: opacity 0.25s ease-out;
+}
+
+.glow-card__mesh-bg {
+  z-index: 0;
+  border: 1px solid transparent;
+  background: none;
+  mask-image: none;
+  opacity: 0;
+  mix-blend-mode: normal;
+  transition: opacity 0.25s ease-out;
+}
+
+.glow-card__glow {
+  inset: -20px;
+  z-index: 2;
+  mask-image: conic-gradient(from var(--pointer-deg) at center, black 10%, transparent 22%, transparent 78%, black 90%);
+  opacity: clamp(0, calc((var(--pointer-d) - var(--glow-sens)) / (100 - var(--glow-sens)) + var(--glow-base)), 1);
+  mix-blend-mode: var(--glow-blend);
+  transition: opacity 0.25s ease-out;
+}
+
+.glow-card__glow::before {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 1px hsl(var(--glow-color) / 65%),
+    0 0 10px 0 hsl(var(--glow-color) / 25%),
+    0 0 22px 2px hsl(var(--glow-color) / 16%);
+}
+
+.glow-card__content {
+  transition: border-color 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+
+.glow-card:hover .glow-card__content {
+  border-color: hsl(45 95% 65% / 0.7);
+  box-shadow:
+    0 0 0 1px hsl(45 95% 65% / 0.6),
+    0 0 24px hsl(45 95% 55% / 0.3);
+}
+
+.glow-card:not(:hover) .glow-card__mesh-border,
+.glow-card:not(:hover) .glow-card__mesh-bg,
+.glow-card:not(:hover) .glow-card__glow {
+  opacity: 0;
+  transition: opacity 0.75s ease-in-out;
+}
+
+@media (hover: none) {
+  .glow-card__mesh-border,
+  .glow-card__mesh-bg,
+  .glow-card__glow {
+    opacity: 0 !important;
+  }
+}
+
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10000;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  transform: translateY(-220%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

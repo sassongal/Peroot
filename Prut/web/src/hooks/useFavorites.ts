@@ -19,7 +19,7 @@ export function useFavorites() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -91,7 +91,7 @@ export function useFavorites() {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (!isLoaded || user) return;
@@ -108,7 +108,12 @@ export function useFavorites() {
     [favorites]
   );
 
-  const toggleFavorite = async (itemType: FavoriteType, itemId: string) => {
+  const toggleFavorite = async (itemType: FavoriteType, itemId: string): Promise<boolean> => {
+    // Return false if guest - caller should show login prompt
+    if (!user) {
+      return false;
+    }
+    
     let shouldRemove = false;
     setFavorites((prev) => {
       const exists = prev.some((fav) => fav.item_type === itemType && fav.item_id === itemId);
@@ -118,8 +123,6 @@ export function useFavorites() {
       }
       return [...prev, { item_type: itemType, item_id: itemId }];
     });
-
-    if (!user) return;
 
     if (shouldRemove) {
       await supabase
@@ -136,6 +139,8 @@ export function useFavorites() {
           { onConflict: "user_id,item_type,item_id" }
         );
     }
+    
+    return true;
   };
 
   return {
@@ -144,5 +149,6 @@ export function useFavorites() {
     favoritePersonalIds,
     toggleFavorite,
     isLoaded,
+    user,
   };
 }

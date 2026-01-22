@@ -1,10 +1,21 @@
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Accessibility as AccessibilityIcon, Phone, Mail, User } from "lucide-react";
 
+export const metadata: Metadata = {
+  title: "הצהרת נגישות | Peroot",
+  description: "הצהרת הנגישות של Peroot והתאמות שבוצעו באתר.",
+};
+
 export default function AccessibilityPage() {
   return (
-    <div className="min-h-screen bg-black text-slate-300 font-sans p-6 md:p-12 lg:p-24" dir="rtl">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="min-h-screen bg-black text-slate-300 font-sans p-6 md:p-12 lg:p-24"
+      dir="rtl"
+    >
       <div className="max-w-4xl mx-auto space-y-10">
         <Link 
           href="/"
@@ -31,16 +42,23 @@ export default function AccessibilityPage() {
           </h2>
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
             <p>
-              אתר זה עומד בדרישות תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע&quot;ג-2013. התאמות הנגישות בוצעו בהתאם להמלצות התקן הישראלי (ת&quot;י 5568) לנגישות תכנים באינטרנט ברמת **AA** ולמסמך WCAG2.0 הבינלאומי.
+              אתר זה עומד בדרישות תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע&quot;ג-2013. התאמות הנגישות בוצעו בהתאם לתקן הישראלי ת&quot;י 5568 המבוסס על WCAG 2.1 ברמת <strong>AA</strong>.
+            </p>
+            <p className="text-sm text-slate-400">
+              בדיקה אחרונה: ינואר 2026. בדיקות בוצעו בדפדפני Chrome, Edge, Firefox ו-Safari ובקוראי מסך NVDA ו-VoiceOver.
             </p>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium">
               <li className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                תמיכה מלאה בניווט מקלדת
+                תמיכה מלאה בניווט מקלדת (Tab/Shift+Tab/Enter)
               </li>
               <li className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                מותאם לקוראי מסך (NVDA, JAWS)
+                קישור דילוג לתוכן הראשי
+              </li>
+              <li className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                מותאם לקוראי מסך (NVDA, VoiceOver)
               </li>
               <li className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -48,7 +66,11 @@ export default function AccessibilityPage() {
               </li>
               <li className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                ניגודיות צבעים גבוהה
+                ניגודיות צבעים גבוהה וסימון פוקוס ברור
+              </li>
+              <li className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                כיבוד העדפת הפחתת תנועה (Reduced Motion)
               </li>
             </ul>
           </div>
@@ -61,10 +83,11 @@ export default function AccessibilityPage() {
               האתר מותאם לצפייה בדפדפנים המודרניים (Chrome, Edge, Firefox, Safari) וכולל את ההתאמות הבאות:
             </p>
             <ul className="list-disc pr-6 space-y-2">
-              <li>שימוש במקש <strong>Tab</strong> למעבר בין אלמנטים לחיצים.</li>
-              <li>שימוש במקשי החיצים ו-<strong>Enter</strong> להפעלת כפתורים ותפריטים.</li>
-              <li>מתן תיאורי טקסט חלופיים (Alt Text) לתמונות משמעותיות.</li>
-              <li>מניעת הבהובים והנפשות העלולות לגרום להפרעה.</li>
+              <li>שימוש במקש <strong>Tab</strong> למעבר בין אלמנטים אינטראקטיביים.</li>
+              <li>שימוש ב-<strong>Enter</strong> ו-<strong>Space</strong> להפעלת כפתורים ותפריטים.</li>
+              <li>קישור &quot;דלג לתוכן הראשי&quot; זמין מתחילת העמוד.</li>
+              <li>תמיכה בתיאורי טקסט חלופיים (Alt Text) לתמונות משמעותיות.</li>
+              <li>אפשרות להפחתת אנימציות במערכת (prefers-reduced-motion).</li>
             </ul>
           </div>
         </section>
@@ -72,7 +95,21 @@ export default function AccessibilityPage() {
         <section className="space-y-4">
           <h2 className="text-2xl text-white font-semibold">יישומי נגישות נוספים</h2>
           <p>
-            האתר נבנה בטכנולוגיית React/Next.js המאפשרת ניהול פוקוס חכם ושימוש ב-ARIA Roles כדי להנגיש אלמנטים דינמיים (מודאלים, תפריטים נפתחים) באופן שקוראי מסך יוכלו להקריא בצורה לוגית.
+            האתר נבנה בטכנולוגיית React/Next.js ומיישם ניהול פוקוס, ARIA Roles ותיוגים סמנטיים כדי להנגיש אלמנטים דינמיים כגון מודאלים ותפריטים נפתחים באופן עקבי.
+          </p>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-2xl text-white font-semibold">מגבלות ידועות</h2>
+          <p>
+            ייתכן כי רכיבי צד שלישי (כגון קישורים חיצוניים או תכנים מוטמעים) לא יהיו נגישים במלואם. אנו ממשיכים לשפר את הנגישות ונשמח לקבל דיווחים.
+          </p>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-2xl text-white font-semibold">הסדרי נגישות פיזיים</h2>
+          <p>
+            השירות ניתן באופן דיגיטלי בלבד, ואין קבלת קהל או משרד פיזי לקבלת שירות.
           </p>
         </section>
 
@@ -81,7 +118,7 @@ export default function AccessibilityPage() {
             רכז נגישות ודרכי התקשרות
           </h2>
           <p>
-            למרות מאמצנו להנגיש את כלל דפי האתר, ייתכן שיתגלו חלקים שטרם הונגשו במלואם. אם נתקלתם בבעיה או שיש לכם הצעה לשיפור, נשמח לשמוע מכם.
+            למרות מאמצנו להנגיש את כלל דפי האתר, ייתכן שיתגלו חלקים שטרם הונגשו במלואם. אם נתקלתם בבעיה או שיש לכם הצעה לשיפור, נשמח לשמוע מכם. ניתן גם להשתמש בכפתור &quot;תעזור לנו להשתפר&quot; בתחתית האתר.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -107,6 +144,6 @@ export default function AccessibilityPage() {
           תאריך עדכון הצהרה: ינואר 2026
         </footer>
       </div>
-    </div>
+    </main>
   );
 }

@@ -266,12 +266,47 @@ ${templateHint}
 Preflight (deterministic): Missing focus areas = ${missingInfoText}
 
 Great Prompt structure (Markdown):
-- Situation
-- Task
-- Objective
-- Knowledge (key topics, checklists, or sub-areas to cover)
-- Constraints (include tone, category, and any output format expectations)
-Use {placeholders} for missing specifics. Headings should match the user's language.
+Format the output as a professionally styled prompt ready for immediate use:
+
+1. **Section Headings**: Use yellow-styled headings in square brackets format, e.g.:
+   - [מצב משימה] or [Situation]
+   - [משימה] or [Task]
+   - [מטרה] or [Objective]
+   - [ידע נדרש] or [Knowledge]
+   - [מגבלות] or [Constraints]
+
+2. **Variables**: Mark all fillable placeholders with curly braces and use ENGLISH names:
+   - Example: {product_name}, {target_audience}, {deadline}, {budget}
+   - These are meant for users to fill in later
+
+3. **Spacing**: Use proper line breaks between sections for readability:
+   - One blank line between sections
+   - Bullet points for lists within sections
+
+4. **Sub-bullets and Details**: When needed, use indented bullet points under main items.
+
+Example format:
+---
+[מצב משימה]
+אתה {role} שעובד עבור {company_name}...
+
+[משימה]
+• צור תוכנית פעולה ל-{project_type}
+• התמקד ב-{focus_area}
+
+[מטרה]
+להשיג {desired_outcome} עד {deadline}
+
+[ידע נדרש]
+• {topic_1}
+• {topic_2}
+• {topic_3}
+
+[מגבלות]
+• טון: מקצועי וישיר
+• אורך: עד {word_count} מילים
+• פורמט: {output_format}
+---
 
 Questions:
 - Ask 0-3 clarifying questions only if needed.

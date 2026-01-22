@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -13,31 +13,39 @@ export interface HistoryItem {
   timestamp: number;
 }
 
-const STORAGE_KEY = 'peroot_history';
+
 
 export function useHistory() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Initialize Auth & History
   useEffect(() => {
-    async function init() {
-      // 1. Check User
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    let mounted = true;
 
-      if (user) {
-        // 2. Fetch from DB
-        const { data, error } = await supabase
+    async function init() {
+      if (!mounted) return;
+      
+      console.log("[useHistory] init: checking user...");
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!mounted) return;
+      
+      console.log("[useHistory] init: currentUser =", currentUser?.email || "null");
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Fetch from DB
+        const { data } = await supabase
           .from('history')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', currentUser.id)
           .order('created_at', { ascending: false });
         
-        if (data) {
+        if (data && mounted) {
           const formatted: HistoryItem[] = data.map(row => ({
             id: row.id,
             original: row.prompt,
@@ -49,40 +57,44 @@ export function useHistory() {
           setHistory(formatted);
         }
       } else {
-        // 3. Load from LocalStorage
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          try {
-            setHistory(JSON.parse(stored));
-          } catch (e) {
-            console.error("Failed to parse history", e);
-          }
-        }
+        // Guests don't get history - just set empty and mark loaded
+        setHistory([]);
       }
-      setIsLoaded(true);
+      if (mounted) setIsLoaded(true);
     }
 
     init();
 
     // Listen for Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        init(); // Refresh both user and history
-      }
+      console.log(`[useHistory] onAuthStateChange: ${event}, user:`, session?.user?.email || "null");
+      
+      if (!mounted) return;
+
+      const newUser = session?.user ?? null;
+      
+      // Only re-run init if the user ID actually changed to avoid cycles
+      setUser((prev) => {
+        if (prev?.id !== newUser?.id) {
+          console.log("[useHistory] user ID changed, re-initializing...");
+          init();
+        }
+        return newUser;
+      });
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
-  // Save to localStorage only if user is NOT logged in
-  useEffect(() => {
-    if (isLoaded && !user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-    }
-  }, [history, isLoaded, user]);
+  // No localStorage sync for guests - history is login-only
 
   const addToHistory = async (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+    // Only save history for logged-in users
+    if (!user) return;
+    
     const newItem: HistoryItem = {
       ...item,
       id: crypto.randomUUID(),
@@ -95,25 +107,20 @@ export function useHistory() {
       return [newItem, ...prev];
     });
 
-    if (user) {
-      // Sync to DB
-      await supabase.from('history').insert({
-        user_id: user.id,
-        prompt: item.original,
-        enhanced_prompt: item.enhanced,
-        category: item.category,
-        tone: item.tone,
-      });
-    }
+    // Sync to DB
+    await supabase.from('history').insert({
+      user_id: user.id,
+      prompt: item.original,
+      enhanced_prompt: item.enhanced,
+      category: item.category,
+      tone: item.tone,
+    });
   };
 
   const clearHistory = async () => {
+    if (!user) return;
     setHistory([]);
-    if (user) {
-      await supabase.from('history').delete().eq('user_id', user.id);
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
+    await supabase.from('history').delete().eq('user_id', user.id);
   };
 
   return { history, addToHistory, clearHistory, isLoaded, user };

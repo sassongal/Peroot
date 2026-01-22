@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
-  } catch (error) {
+  } catch {
     return new Response(JSON.stringify({ ok: false }), { status: 200 });
   }
 }
@@ -66,7 +66,7 @@ export async function GET(req: Request) {
       }),
       { status: 200 }
     );
-  } catch (error) {
+  } catch {
     return new Response(JSON.stringify({ copies: 0, saves: 0, refinements: 0 }), { status: 200 });
   }
 }

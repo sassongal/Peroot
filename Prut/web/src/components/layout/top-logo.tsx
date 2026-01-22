@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -13,7 +14,7 @@ export function TopLogo() {
         <img
           src="/assets/branding/logo.svg"
           alt="Peroot"
-          className="h-12 md:h-16 w-auto drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
+          className="h-14 md:h-20 w-auto drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
         />
       </Link>
     </div>

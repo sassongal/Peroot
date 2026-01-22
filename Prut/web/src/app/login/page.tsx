@@ -1,9 +1,13 @@
-
+/* eslint-disable @next/next/no-img-element */
 import { AuthForm } from "@/components/auth/auth-form";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-black text-silver font-sans relative overflow-hidden flex items-center justify-center p-4">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="min-h-screen bg-black text-silver font-sans relative overflow-hidden flex items-center justify-center p-4"
+    >
       {/* Background Gradients */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/10 blur-[150px] rounded-full"></div>
@@ -20,6 +24,6 @@ export default function LoginPage() {
            <AuthForm />
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,9 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Accessibility as AccessibilityIcon } from "lucide-react";
 
+export const metadata: Metadata = {
+  title: "מדיניות פרטיות | Peroot",
+  description:
+    "מדיניות הפרטיות של Peroot: מידע שנאסף, שימוש, אבטחה וזכויות משתמשים.",
+};
+
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-black text-slate-300 font-sans p-6 md:p-12 lg:p-24" dir="rtl">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="min-h-screen bg-black text-slate-300 font-sans p-6 md:p-12 lg:p-24"
+      dir="rtl"
+    >
       <div className="max-w-4xl mx-auto space-y-8">
         <Link 
           href="/"
@@ -75,6 +87,6 @@ export default function PrivacyPolicy() {
           עודכן לאחרונה: ינואר 2026 | ליצירת קשר: support@peroot.net
         </footer>
       </div>
-    </div>
+    </main>
   );
 }

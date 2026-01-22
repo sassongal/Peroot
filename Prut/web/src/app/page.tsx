@@ -1,27 +1,32 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { Copy, Check, ChevronDown, Plus, Pencil, ArrowRight, BookOpen, Search, Trash2, History, Star, GripVertical, X, Wand2 } from "lucide-react";
-import { useEffect, useMemo, useState, useRef, DragEvent, Children, isValidElement, cloneElement, ReactNode } from "react";
+import { Copy, Check, Plus, Pencil, BookOpen, Search, Trash2, GripVertical, X, Star, ArrowRight } from "lucide-react";
+import { FAQBubble } from "@/components/features/faq/FAQBubble";
+import { useEffect, useMemo, useState, useRef, useId, DragEvent } from "react";
 import { cn } from "@/lib/utils";
 import { scorePrompt } from "@/lib/prompt-engine";
-import ReactMarkdown from 'react-markdown';
+// ReactMarkdown removed
 import { Toaster, toast } from 'sonner';
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { useLibrary, PersonalPrompt } from "@/hooks/useLibrary";
+import { HistoryPanel } from "@/components/features/history/HistoryPanel";
+import { CATEGORY_LABELS, PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useFavorites } from "@/hooks/useFavorites";
 import { UserMenu } from "@/components/layout/user-nav";
-import { formatDistanceToNow } from 'date-fns';
-import { he } from 'date-fns/locale';
+import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
+import { ResultSection } from "@/components/features/prompt-improver/ResultSection";
+import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
+import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
+import { ResultVariables } from "@/components/features/prompt-improver/ResultVariables";
+import { SmartRefinement } from "@/components/features/prompt-improver/SmartRefinement";
+import { extractPlaceholders, stripStyleTokens, toStyledHtml, STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, escapeRegExp } from "@/lib/text-utils";
+import { PromptUsage, Question } from "@/lib/types";
 import Link from "next/link";
 import promptsData from "../../prompts.he.json";
 
 // Types
-type Question = {
-  id?: number;
-  question: string;
-  description: string;
-  examples: string[];
-};
+
 
 type LibraryPrompt = {
   id: string;
@@ -45,205 +50,12 @@ type LibraryPrompt = {
 
 
 // const TONES = ["Professional", "Casual", "Sales", "Direct"];
-const CATEGORY_OPTIONS = [
-  { id: "General", label: "כללי" },
-  { id: "Marketing", label: "שיווק" },
-  { id: "Sales", label: "מכירות" },
-  { id: "CustomerSupport", label: "תמיכה" },
-  { id: "Product", label: "מוצר" },
-  { id: "Operations", label: "תפעול" },
-  { id: "HR", label: "משאבי אנוש" },
-  { id: "Dev", label: "פיתוח" },
-  { id: "Education", label: "חינוך" },
-  { id: "Legal", label: "משפטי" },
-  { id: "Creative", label: "קריאייטיב" },
-  { id: "Social", label: "סושיאל" },
-  { id: "Finance", label: "פיננסים" },
-  { id: "Healthcare", label: "בריאות" },
-  { id: "Ecommerce", label: "אי־קומרס" },
-  { id: "RealEstate", label: "נדל\"ן" },
-  { id: "Strategy", label: "אסטרטגיה" },
-  { id: "Design", label: "עיצוב" },
-  { id: "Data", label: "דאטה" },
-  { id: "Automation", label: "אוטומציה" },
-  { id: "Community", label: "קהילה" },
-  { id: "Nonprofit", label: "מלכ\"ר" },
-];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  Marketing: "שיווק",
-  Sales: "מכירות",
-  CustomerSupport: "תמיכה",
-  Product: "מוצר",
-  Operations: "תפעול",
-  HR: "משאבי אנוש",
-  Dev: "פיתוח",
-  Education: "חינוך",
-  Legal: "משפטי",
-  Creative: "קריאייטיב",
-  Social: "סושיאל",
-  General: "כללי",
-  Finance: "פיננסים",
-  Healthcare: "בריאות",
-  Ecommerce: "אי־קומרס",
-  RealEstate: "נדל\"ן",
-  Strategy: "אסטרטגיה",
-  Design: "עיצוב",
-  Data: "דאטה",
-  Automation: "אוטומציה",
-  Community: "קהילה",
-  Nonprofit: "מלכ\"ר",
-};
-
-const PERSONAL_DEFAULT_CATEGORY = "כללי";
+// Constants removed - imported from @/lib/constants
 const USAGE_STORAGE_KEY = "peroot_prompt_usage_v1";
-const PLACEHOLDER_REGEX = /{[^}]+}/g;
-const QUICK_ACTIONS = [
-  { label: "קצר יותר", instruction: "קצר יותר. שמור על המבנה והדגשים המרכזיים." },
-  { label: "יותר אסרטיבי", instruction: "יותר אסרטיבי, ישיר וממוקד תוצאה." },
-  { label: "יותר פרקטי", instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות." },
-];
-
-type PromptUsage = {
-  copies?: number;
-  saves?: number;
-  refinements?: number;
-};
-
-const PLACEHOLDER_SUGGESTIONS: Array<{ pattern: RegExp; suggestions: string[] }> = [
-  { pattern: /קהל|audience|persona/i, suggestions: ["מנהלי שיווק B2B", "בעלי עסקים קטנים", "סטודנטים"] },
-  { pattern: /מטרה|goal|objective|יעד/i, suggestions: ["להגדיל הרשמות", "לשכנע לרכישה", "להסביר תהליך"] },
-  { pattern: /פורמט|format|מבנה|output/i, suggestions: ["רשימה של 5 נקודות", "טבלה קצרה", "פסקה אחת"] },
-  { pattern: /טון|tone|סגנון|style/i, suggestions: ["אסרטיבי", "ידידותי", "מקצועי"] },
-  { pattern: /ערוץ|channel|פלטפורמה|platform/i, suggestions: ["לינקדאין", "מייל", "וואטסאפ"] },
-  { pattern: /זמן|timeline|תאריך|דדליין/i, suggestions: ["שבועיים", "עד יום חמישי", "סוף החודש"] },
-  { pattern: /תקציב|budget/i, suggestions: ["₪2,000", "₪10,000", "גמיש"] },
-];
-
-const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
-  const matches = Array.from(text.matchAll(PLACEHOLDER_REGEX));
-  if (matches.length === 0) return [text];
-
-  const parts: ReactNode[] = [];
-  let cursor = 0;
-  matches.forEach((match, index) => {
-    const start = match.index ?? 0;
-    if (start > cursor) {
-      parts.push(text.slice(cursor, start));
-    }
-    const token = match[0];
-    parts.push(
-      <span
-        key={`ph-${start}-${index}`}
-        className="inline-flex items-center rounded-md border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.5 text-[0.8em] text-sky-200"
-      >
-        {token}
-      </span>
-    );
-    cursor = start + token.length;
-  });
-  if (cursor < text.length) {
-    parts.push(text.slice(cursor));
-  }
-  return parts;
-};
-
-const highlightPlaceholders = (children: ReactNode): ReactNode =>
-  Children.map(children, (child) => {
-    if (typeof child === "string") return highlightTextWithPlaceholders(child);
-    if (isValidElement(child)) {
-      const nodeType = child.type;
-      if (typeof nodeType === "string" && (nodeType === "code" || nodeType === "pre")) {
-        return child;
-      }
-      if (child.props?.children) {
-        return cloneElement(child, {
-          ...child.props,
-          children: highlightPlaceholders(child.props.children),
-        });
-      }
-    }
-    return child;
-  });
-
-const markdownComponents = {
-  p: ({ children, ...props }: { children?: ReactNode }) => (
-    <p {...props}>{highlightPlaceholders(children)}</p>
-  ),
-  li: ({ children, ...props }: { children?: ReactNode }) => (
-    <li {...props}>{highlightPlaceholders(children)}</li>
-  ),
-  h1: ({ children, ...props }: { children?: ReactNode }) => (
-    <h1 {...props}>{highlightPlaceholders(children)}</h1>
-  ),
-  h2: ({ children, ...props }: { children?: ReactNode }) => (
-    <h2 {...props}>{highlightPlaceholders(children)}</h2>
-  ),
-  h3: ({ children, ...props }: { children?: ReactNode }) => (
-    <h3 {...props}>{highlightPlaceholders(children)}</h3>
-  ),
-  h4: ({ children, ...props }: { children?: ReactNode }) => (
-    <h4 {...props}>{highlightPlaceholders(children)}</h4>
-  ),
-};
-
-const extractPlaceholders = (text: string): string[] => {
-  const matches = text.match(PLACEHOLDER_REGEX) || [];
-  const unique = new Set(matches.map((match) => match.replace(/[{}]/g, "").trim()));
-  return Array.from(unique).filter(Boolean);
-};
-
-const getPlaceholderSuggestions = (placeholder: string): string[] => {
-  const normalized = placeholder.toLowerCase();
-  const hit = PLACEHOLDER_SUGGESTIONS.find((item) => item.pattern.test(normalized));
-  return hit ? hit.suggestions : ["פרט מדויק", "דוגמה קצרה", "גבולות ברורים"];
-};
+// Text utilities extracted to @/lib/text-utils
 
 const STYLE_STORAGE_KEY = "peroot_prompt_styles_v1";
-const STYLE_TOKEN_REGEX = /\[\[(\/?)(c|hl)(?::([a-z]+))?\]\]/g;
-const STYLE_TEXT_COLORS: Record<string, string> = {
-  red: "text-red-300",
-  amber: "text-amber-300",
-  emerald: "text-emerald-300",
-  blue: "text-sky-300",
-  violet: "text-violet-300",
-  slate: "text-slate-200",
-};
-const STYLE_HIGHLIGHT_COLORS: Record<string, string> = {
-  yellow: "bg-yellow-400/20 text-yellow-200",
-  pink: "bg-pink-400/20 text-pink-200",
-  green: "bg-emerald-400/20 text-emerald-200",
-  blue: "bg-sky-400/20 text-sky-200",
-  violet: "bg-violet-400/20 text-violet-200",
-};
-
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const escapeHtml = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-const stripStyleTokens = (value: string) =>
-  value.replace(STYLE_TOKEN_REGEX, "");
-
-const toStyledHtml = (value: string) => {
-  const escaped = escapeHtml(value);
-  const withTokens = escaped
-    .replace(/\[\[c:([a-z]+)\]\]/g, (_, color) => {
-      const className = STYLE_TEXT_COLORS[color] ?? STYLE_TEXT_COLORS.slate;
-      return `<span class="${className}">`;
-    })
-    .replace(/\[\[hl:([a-z]+)\]\]/g, (_, color) => {
-      const className = STYLE_HIGHLIGHT_COLORS[color] ?? STYLE_HIGHLIGHT_COLORS.yellow;
-      return `<span class="${className}">`;
-    })
-    .replace(/\[\[\/c\]\]/g, "</span>")
-    .replace(/\[\[\/hl\]\]/g, "</span>");
-
-  return withTokens
-    .replace(PLACEHOLDER_REGEX, (match) => `<span class="text-sky-300 font-semibold">${match}</span>`)
-    .replace(/\n/g, "<br />");
-};
+// Style constants moved to @/lib/text-utils
 
 const getPromptKey = (text: string) => {
   const normalized = text.trim().slice(0, 500);
@@ -271,7 +83,14 @@ export default function Home() {
     renameCategory,
     addCategory: addLibCategory
   } = useLibrary();
-  const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite } = useFavorites();
+  const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite: toggleFavoriteBase } = useFavorites();
+  
+  const handleToggleFavorite = async (itemType: "library" | "personal", itemId: string) => {
+    const success = await toggleFavoriteBase(itemType, itemId);
+    if (!success) {
+      showLoginRequired("הוספה למועדפים");
+    }
+  };
 
   const [selectedTone, setSelectedTone] = useState("Professional");
   const [selectedCategory, setSelectedCategory] = useState("General");
@@ -295,7 +114,7 @@ export default function Home() {
   const [dragOverPersonalId, setDragOverPersonalId] = useState<string | null>(null);
   
   const [popularityMap, setPopularityMap] = useState<Record<string, number>>({});
-  const [hasHydrated, setHasHydrated] = useState(false);
+  // const [hasHydrated, setHasHydrated] = useState(false);
   const [usageMap, setUsageMap] = useState<Record<string, PromptUsage>>({});
   const [remoteUsageMap, setRemoteUsageMap] = useState<Record<string, PromptUsage>>({});
   const [promptStyles, setPromptStyles] = useState<Record<string, string>>({});
@@ -310,10 +129,34 @@ export default function Home() {
   const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
   
   const [isLoading, setIsLoading] = useState(false);
-  const [refinementInput, setRefinementInput] = useState("");
+
   
-  // Accordion State
-  const [openQuestionId, setOpenQuestionId] = useState<number | null>(0); // Default open first
+  // Feedback Modal State
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const feedbackDialogId = useId();
+  const feedbackTitleId = useId();
+  const feedbackDescId = useId();
+  const feedbackTextareaId = useId();
+
+  // Guest usage limits
+  const [guestPromptCount, setGuestPromptCount] = useState(0);
+  const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
+  const [loginRequiredConfig, setLoginRequiredConfig] = useState<{title?: string; message?: string; feature?: string}>({});
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = sessionStorage.getItem("peroot_guest_count");
+    if (stored) setGuestPromptCount(parseInt(stored, 10));
+  }, []);
+
+  const showLoginRequired = (feature: string, message?: string) => {
+    setLoginRequiredConfig({
+      feature,
+      message: message || `כדי להשתמש ב${feature}, יש להתחבר לחשבון שלך.`
+    });
+    setIsLoginRequiredModalOpen(true);
+  };
 
   const libraryPrompts = promptsData as LibraryPrompt[];
   const mergeUsage = (local?: PromptUsage, remote?: PromptUsage) => ({
@@ -349,9 +192,18 @@ export default function Home() {
     [user?.id]
   );
 
+
+
   useEffect(() => {
-    setHasHydrated(true);
-  }, []);
+    if (!isFeedbackModalOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsFeedbackModalOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFeedbackModalOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -450,7 +302,7 @@ export default function Home() {
     return () => controller.abort();
   }, [completion, completionKey]);
 
-  const recordUsageSignal = (type: "copy" | "save" | "refine", text: string) => {
+  const recordUsageSignal = (type: "copy" | "save" | "refine" | "enhance", text: string) => {
     const target = text.trim();
     if (!target) return;
     const key = getPromptKey(target);
@@ -545,17 +397,10 @@ export default function Home() {
     promptStyles[prompt.id] ?? prompt.prompt_style ?? prompt.prompt_he;
 
   const variables = useMemo(() => extractPlaceholders(inputVal), [inputVal]);
-  const variablesKey = useMemo(() => variables.join("|"), [variables]);
 
-  useEffect(() => {
-    setVariableValues((prev) => {
-      const next: Record<string, string> = {};
-      variables.forEach((variable) => {
-        next[variable] = prev[variable] ?? "";
-      });
-      return next;
-    });
-  }, [variablesKey]);
+  // No longer initialize variables from inputVal for the post-completion variables
+  // We will manage variableValues based on the placeholders in the completion
+
 
   const applyVariablesToPrompt = () => {
     if (variables.length === 0) return;
@@ -622,6 +467,13 @@ export default function Home() {
 
   const handleEnhance = async () => {
     if (!inputVal.trim()) return;
+    
+    // Check guest limit
+    if (!user && guestPromptCount >= 1) {
+      showLoginRequired("שימוש ללא הגבלה", "ניצלת את הפרומפט החינמי שלך לסשן זה. התחבר כדי להמשיך ללא הגבלה!");
+      return;
+    }
+
     setIsLoading(true);
     setCompletion("");
     setQuestions([]);
@@ -634,20 +486,39 @@ export default function Home() {
       });
       if (!response.ok) throw new Error("Failed to enhance prompt");
       const data = await response.json();
-      const nextQuestions = data.clarifying_questions || [];
       setCompletion(data.great_prompt);
-      setQuestions(nextQuestions);
+      recordUsageSignal("enhance", data.great_prompt);
+      setQuestions([]);
       setQuestionAnswers({});
       setDetectedCategory(data.category || selectedCategory);
-      setOpenQuestionId(nextQuestions.length > 0 ? 0 : null);
+
+      // Extract placeholders from the enhanced prompt
+      const extracted = extractPlaceholders(data.great_prompt);
+      // Initialize variableValues for these placeholders
+      setVariableValues(prev => {
+        const next = { ...prev };
+        extracted.forEach(ph => {
+          if (!(ph in next)) next[ph] = "";
+        });
+        return next;
+      });
+
       addToHistory({
         original: inputVal,
         enhanced: data.great_prompt,
         tone: selectedTone,
         category: data.category || selectedCategory,
       });
+
+      // Increment guest count
+      if (!user) {
+        const nextCount = guestPromptCount + 1;
+        setGuestPromptCount(nextCount);
+        sessionStorage.setItem("peroot_guest_count", nextCount.toString());
+      }
+
       toast.success("הפרומפט שופר!");
-    } catch (error) {
+    } catch {
       toast.error("שגיאה בשיפור הפרומפט");
     } finally {
       setIsLoading(false);
@@ -655,7 +526,10 @@ export default function Home() {
   };
 
   const handleRefine = async (instruction: string) => {
-    if (!instruction.trim() || !completion) return;
+    // Allow if we have instruction OR structured answers
+    const hasAnswers = Object.values(questionAnswers).some(a => a.trim());
+    if ((!instruction.trim() && !hasAnswers) || !completion) return;
+    
     setIsLoading(true);
     try {
       const response = await fetch("/api/enhance", {
@@ -667,24 +541,35 @@ export default function Home() {
           category: selectedCategory,
           previousResult: completion,
           refinementInstruction: instruction,
+          questions: questions.map(q => ({ id: q.id, question: q.question })),
+          answers: questionAnswers,
         }),
       });
       if (!response.ok) throw new Error("Failed to refine prompt");
       const data = await response.json();
       setCompletion(data.great_prompt);
       recordUsageSignal("refine", data.great_prompt);
+      
+      // Extract placeholders and update values
+      const extracted = extractPlaceholders(data.great_prompt);
+      setVariableValues(prev => {
+        const next = { ...prev };
+        extracted.forEach(ph => {
+          if (!(ph in next)) next[ph] = "";
+        });
+        return next;
+      });
+
       if (data.clarifying_questions?.length > 0) {
         setQuestions(data.clarifying_questions);
         setQuestionAnswers({});
-        setOpenQuestionId(0);
       } else {
         setQuestions([]);
         setQuestionAnswers({});
-        setOpenQuestionId(null);
       }
-      setRefinementInput("");
+
       toast.success("הפרומפט עודכן!");
-    } catch (error) {
+    } catch {
       toast.error("שגיאה בעדכון הפרומפט");
     } finally {
       setIsLoading(false);
@@ -696,13 +581,7 @@ export default function Home() {
     toast.success(message);
   };
 
-  const handleCopy = async () => {
-    if (!completion) return;
-    await handleCopyText(completion, "הועתק ללוח!");
-    recordUsageSignal("copy", completion);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+
 
   const handleRestore = (item: HistoryItem) => {
     setInputVal(item.original);
@@ -714,6 +593,10 @@ export default function Home() {
   };
 
   const addPersonalPromptFromHistory = (item: HistoryItem) => {
+    if (!user) {
+      showLoginRequired("שמירת פרומפטים");
+      return;
+    }
     addPrompt({
       title_he: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
       prompt_he: item.enhanced,
@@ -727,6 +610,10 @@ export default function Home() {
   };
 
   const saveCompletionToPersonal = () => {
+    if (!user) {
+      showLoginRequired("שמירת פרומפטים");
+      return;
+    }
     if (!completion.trim()) return;
     addPrompt({
       title_he: inputVal.slice(0, 30) + (inputVal.length > 30 ? "..." : ""),
@@ -944,11 +831,19 @@ export default function Home() {
   };
 
   const handleShowPersonalFavorites = () => {
+    if (!user) {
+      showLoginRequired("מועדפים");
+      return;
+    }
     setPersonalView("favorites");
     setViewMode("personal");
   };
 
   const handleShowPersonalLibrary = () => {
+    if (!user) {
+      showLoginRequired("ספריה אישית");
+      return;
+    }
     setPersonalView("all");
     setViewMode("personal");
   };
@@ -968,496 +863,53 @@ export default function Home() {
   const incrementPopularity = (id: string, delta = 1) => {
     setPopularityMap((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + delta }));
     fetch("/api/library-popularity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, delta }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, delta }),
     }).catch(() => {});
+  };
+
+  const handleSendFeedback = () => {
+    if (!feedbackMessage.trim()) {
+      toast.error("אנא כתבו הודעה לפני השליחה");
+      return;
+    }
+    const subject = encodeURIComponent("משוב מאפליקציית Peroot");
+    const body = encodeURIComponent(feedbackMessage);
+    window.location.href = `mailto:Gal@joya-tech.net?subject=${subject}&body=${body}`;
+    setIsFeedbackModalOpen(false);
+    setFeedbackMessage("");
+    toast.success("תודה על המשוב!");
   };
 
   // --- RENDER HELPERS ---
 
-  const renderInitialView = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-2xl mx-auto px-4 animate-in fade-in zoom-in duration-500">
-
-
-      <div className="mb-12 text-center relative flex flex-col items-center">
-        <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none"></div>
-        <img 
-          src="/assets/branding/logo.svg" 
-          alt="פירוט" 
-          className="w-48 md:w-64 h-auto relative z-10 mb-1 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] brightness-110 contrast-110"
-        />
-        <p className="text-lg text-slate-400 font-light tracking-wide max-w-md mx-auto relative z-10">
-          הפוך מחשבות לפרומפטים מדויקים
-        </p>
-      </div>
-
-      {/* Main Input Card */}
-      <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-6 items-stretch">
-        {variables.length > 0 && (
-          <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-white/10 bg-white/[0.02]">
-            <div className="text-xs text-slate-400 uppercase tracking-widest">משתנים</div>
-            <p className="text-[11px] text-slate-500 mt-2">
-              מלא/י ערכים והחלף אותם בפרומפט בלחיצה.
-            </p>
-            <div className="mt-4 space-y-3">
-              {variables.map((variable) => (
-                <div key={variable} className="space-y-2">
-                  <label className="text-xs text-sky-300 font-semibold">{`{${variable}}`}</label>
-                  <input
-                    dir="rtl"
-                    value={variableValues[variable] ?? ""}
-                    onChange={(e) =>
-                      setVariableValues((prev) => ({ ...prev, [variable]: e.target.value }))
-                    }
-                    className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
-                    placeholder="הכנס ערך..."
-                  />
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={applyVariablesToPrompt}
-              className="mt-4 w-full px-3 py-2 rounded-lg bg-white text-black text-sm font-semibold hover:bg-slate-200 transition-colors"
-            >
-              הכנס לפרומפט
-            </button>
-            {inputVal.trim() && (
-              <div className="mt-4 text-[11px] text-slate-500">
-                תצוגה חיה:
-                <div className="mt-2 rounded-lg border border-white/10 bg-black/30 p-2 text-xs text-slate-200">
-                  {highlightTextWithPlaceholders(inputVal)}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="flex-1 glass-card p-2 rounded-2xl shadow-2xl shadow-black/50 border-white/5 relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="relative bg-black/40 rounded-xl overflow-hidden border border-white/5">
-             <div
-              aria-hidden
-              className="absolute inset-0 p-6 text-xl text-slate-200 font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
-              dir="rtl"
-              suppressHydrationWarning
-             >
-              {highlightTextWithPlaceholders(inputVal)}
-             </div>
-             <textarea
-              dir="rtl"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleEnhance();
-                }
-              }}
-              placeholder="מה תרצה ליצור היום? (למשל: מייל ללקוח, פוסט ללינקדאין, קוד בפייתון...)"
-              className="w-full min-h-[8rem] bg-transparent p-6 text-xl text-transparent caret-white placeholder:text-slate-600 focus:outline-none resize-none font-sans leading-relaxed"
-              ref={inputTextareaRef}
-            />
-
-            <div className="px-6 pb-4 pt-2 border-t border-white/5">
-              <div className="flex items-center justify-between text-[11px] text-slate-500">
-                <span className="font-mono tracking-widest">חוזק פרומפט</span>
-                <span className={cn("font-semibold", scoreTone.text)}>
-                  {inputScore.label} · {inputScore.score}%
-                </span>
-              </div>
-              <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden">
-                <div
-                  className={cn("h-full transition-all duration-500", scoreTone.bar)}
-                  style={{ width: `${inputScore.score}%` }}
-                />
-              </div>
-              {inputScore.usageBoost > 0 && (
-                <div className="mt-2 text-[10px] text-slate-500">
-                  כיול שימוש +{inputScore.usageBoost}
-                </div>
-              )}
-              {inputScore.tips.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {inputScore.tips.map((tip, index) => (
-                    <span
-                      key={`${tip}-${index}`}
-                      className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-300 border border-white/10"
-                    >
-                      {tip}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center justify-between px-4 pb-4 bg-white/0">
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-slate-500">קטגוריה</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-white/30"
-                >
-                  {CATEGORY_OPTIONS.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={handleEnhance}
-                disabled={isLoading || !inputVal.trim()}
-                className="flex items-center justify-center w-12 h-10 bg-white text-black rounded-lg font-medium hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group/btn"
-                aria-label="שפר פרומפט"
-              >
-                {isLoading ? (
-                  <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
-                ) : (
-                  <Wand2 className="w-5 h-5 text-slate-900 group-hover/btn:rotate-12 transition-transform" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Footer */}
-      <div className="mt-16 text-center">
-         <p className="font-mono text-xs text-slate-600 uppercase tracking-widest">
-            Peroot © 2024 · Designed for Builders
-         </p>
-      </div>
-    </div>
-  );
-
-  const renderHistoryPanel = () => (
-    <div className="glass-card rounded-xl p-5 border-white/10 bg-white/[0.02] flex flex-col max-h-[70vh]">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleShowPersonalLibrary}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all border bg-white text-black border-white hover:bg-slate-200"
-          >
-            <BookOpen className="w-3 h-3" />
-            ספריה אישית
-          </button>
-          <button
-            onClick={handleShowPersonalFavorites}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-white/10 text-slate-300 hover:bg-white/10"
-          >
-            <Star className="w-3 h-3" />
-            מועדפים
-          </button>
-          <button
-            onClick={() => setViewMode("library")}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-white/10 text-slate-300 hover:bg-white/10"
-          >
-            <BookOpen className="w-3 h-3" />
-            ספריה מלאה
-          </button>
-        </div>
-        {history.length > 0 && (
-          <button
-            onClick={clearHistory}
-            className="flex items-center gap-2 px-2 py-1 text-xs text-slate-400 hover:text-white transition-colors"
-            title="נקה היסטוריה"
-          >
-            <Trash2 className="w-3 h-3" />
-            נקה
-          </button>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <History className="w-3 h-3" />
-          היסטוריה
-        </div>
-        {!isLoaded && (
-          <div className="text-xs text-slate-500 text-center py-6">טוען היסטוריה...</div>
-        )}
-        {isLoaded && history.length === 0 && (
-          <div className="text-xs text-slate-500 text-center py-6">אין פרומפטים בהיסטוריה</div>
-        )}
-        {history.map((item) => (
-          <div
-            key={item.id}
-            className="rounded-xl border border-white/10 bg-black/30 p-4 hover:bg-white/5 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 text-slate-400">
-                {CATEGORY_LABELS[item.category] ?? item.category}
-              </span>
-              <span className="text-[10px] text-slate-500" suppressHydrationWarning>
-                {hasHydrated ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true, locale: he }) : "..."}
-              </span>
-            </div>
-            <p className="text-sm text-slate-200 mt-2 leading-relaxed max-h-16 overflow-hidden" dir="rtl">
-              {item.original}
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                onClick={() => handleRestore(item)}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white text-black text-xs hover:bg-slate-200 transition-colors"
-              >
-                <ArrowRight className="w-3 h-3" />
-                שחזר
-              </button>
-              <button
-                onClick={() => addPersonalPromptFromHistory(item)}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                שמור לאישי
-              </button>
-              <button
-                onClick={() => handleCopyText(item.enhanced)}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors"
-              >
-                <Copy className="w-3 h-3" />
-                העתק פלט
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderResultMain = () => (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="glass-card p-6 rounded-xl border-white/10 flex items-start justify-between group">
-        <div>
-          <h2 className="text-xl text-slate-200 font-medium font-serif leading-relaxed" dir="rtl">
-            {inputVal}
-          </h2>
-        </div>
-        <button
-          onClick={() => setCompletion("")}
-          className="p-2 hover:bg-white/10 rounded-lg text-slate-500 hover:text-white transition-colors"
-          title="Edit Original Request"
-        >
-          <Pencil className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-        <span
-          className={cn(
-            "font-semibold",
-            improvementDelta >= 12
-              ? "text-emerald-400"
-              : improvementDelta >= 4
-                ? "text-yellow-400"
-                : improvementDelta >= 0
-                  ? "text-slate-300"
-                  : "text-red-400"
-          )}
-        >
-          שיפור {improvementDelta >= 0 ? `+${improvementDelta}` : improvementDelta}
-        </span>
-        <span className="text-[10px] uppercase tracking-widest text-slate-600">מדד חוזק</span>
-        {completionScore.usageBoost > 0 && (
-          <span className="text-[10px] text-slate-500">כיול שימוש +{completionScore.usageBoost}</span>
-        )}
-      </div>
-
-      <div className="glass-card rounded-xl p-8 border-silver/10 bg-black/40 relative min-h-[600px]">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-sm font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            Great Prompt
-            <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[10px] border border-green-500/20">Optimized</span>
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={saveCompletionToPersonal}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white border border-white/5 text-xs font-medium"
-            >
-              <BookOpen className="w-3 h-3" />
-              שמור לאישי
-            </button>
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white border border-white/5 text-xs font-medium"
-            >
-              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-              {copied ? "Copied" : "Copy"}
-            </button>
-          </div>
-        </div>
-
-        <div dir="rtl" className="prose prose-invert prose-p:text-slate-300 prose-headings:font-serif prose-headings:text-silver max-w-none font-sans leading-relaxed text-lg">
-          <ReactMarkdown components={markdownComponents}>{completion}</ReactMarkdown>
-        </div>
-
-        {placeholders.length > 0 && (
-          <div className="mt-8 rounded-xl border border-sky-400/20 bg-sky-400/10 p-4">
-            <div className="text-xs text-sky-200 font-semibold">חסרים להשלמה</div>
-            <div className="mt-3 flex flex-col gap-3 text-xs text-slate-300">
-              {placeholders.map((placeholder) => {
-                const suggestions = getPlaceholderSuggestions(placeholder).slice(0, 3);
-                return (
-                  <div key={placeholder} className="flex flex-wrap items-center gap-2">
-                    <span className="text-sky-200 font-mono">{`{${placeholder}}`}</span>
-                    <span className="text-slate-500">לדוגמה:</span>
-                    {suggestions.map((suggestion) => (
-                      <span
-                        key={`${placeholder}-${suggestion}`}
-                        className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-200"
-                      >
-                        {suggestion}
-                      </span>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+// HistoryPanel extracted to component
+  // renderResultMain replaced by ResultSection component
 
   const renderImprovePanel = () => (
-    <div className="glass-card rounded-xl p-6 border-white/10 bg-white/[0.02]" dir="rtl">
-      <div className="mb-6 text-right">
-        <h2 className="text-xl font-serif text-white mb-2">שפר את הפרומפט</h2>
-        <p className="text-sm text-slate-500">ענה/י על השאלות כדי לקבל תוצאה מדויקת יותר.</p>
-      </div>
-
-      <div className="mb-6">
-        <div className="text-[11px] uppercase tracking-widest text-slate-500 mb-2">דלתות מהירות</div>
-        <div className="flex flex-wrap gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.label}
-              onClick={() => handleRefine(action.instruction)}
-              disabled={isLoading || !completion}
-              className="min-w-[120px] rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-xs font-semibold text-slate-200 hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {questions.map((q, idx) => {
-          const isOpen = openQuestionId === idx;
-          const answerValue = questionAnswers[idx] ?? "";
-          const sendAnswer = (value: string) => {
-            const trimmed = value.trim();
-            if (!trimmed) return;
-            handleRefine(`תשובה לשאלה \"${q.question}\": ${trimmed}`);
-            setQuestionAnswers((prev) => ({ ...prev, [idx]: "" }));
-          };
-
-          return (
-            <div
-              key={idx}
-              className={cn(
-                "border rounded-xl transition-all duration-300 overflow-hidden",
-                isOpen ? "border-white/20 bg-white/5" : "border-white/5 hover:border-white/10"
-              )}
-            >
-              <button
-                onClick={() => setOpenQuestionId(isOpen ? null : idx)}
-                className="w-full flex items-center justify-between p-4 text-right"
-              >
-                <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform", isOpen && "rotate-180")} />
-                <div className="flex items-center gap-3">
-                  <span className="font-medium text-slate-200 text-sm" dir="rtl">{q.question}</span>
-                  <span className="w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs font-mono">
-                    {idx + 1}
-                  </span>
-                </div>
-              </button>
-
-              {isOpen && (
-                <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
-                  <p className="text-xs text-slate-400 mb-3 text-right" dir="rtl">{q.description}</p>
-
-                  <div className="relative mb-3">
-                    <textarea
-                      dir="rtl"
-                      placeholder="כתוב/י תשובה כאן..."
-                      value={answerValue}
-                      onChange={(e) =>
-                        setQuestionAnswers((prev) => ({ ...prev, [idx]: e.target.value }))
-                      }
-                      className="w-full h-24 bg-black/30 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 resize-none"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          sendAnswer(e.currentTarget.value);
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={() => sendAnswer(answerValue)}
-                      disabled={!answerValue.trim()}
-                      className="absolute bottom-2 left-2 p-1.5 bg-purple-600 rounded-md text-white hover:bg-purple-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="שלח/י תשובה"
-                    >
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    {q.examples.map((ex, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleRefine(`תשובה לשאלה \"${q.question}\": ${ex}`)}
-                        className="flex items-center justify-between p-2 rounded-lg border border-white/5 hover:bg-white/5 hover:border-white/10 transition-colors group/ex"
-                      >
-                        <Plus className="w-3 h-3 text-slate-500 group-hover/ex:text-purple-400" />
-                        <span className="text-xs text-slate-300 text-right w-full pr-2" dir="rtl">{ex}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-6 pt-6 border-t border-white/10">
-        <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => setOpenQuestionId(999)}>
-          <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform", openQuestionId === 999 && "rotate-180")} />
-          <h3 className="text-sm font-medium text-slate-300">ליטוש ידני</h3>
-        </div>
-
-        {openQuestionId === 999 && (
-          <div className="space-y-4 animate-in slide-in-from-top-2">
-            <p className="text-xs text-slate-500 text-right">ערוך/י מהר או הוסף/י פרטים חסרים.</p>
-            <div className="relative">
-              <textarea
-                value={refinementInput}
-                onChange={(e) => setRefinementInput(e.target.value)}
-                placeholder="הגבל אורך, טון, סגנון ועוד..."
-                className="w-full h-24 bg-black/30 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/30 resize-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleRefine(refinementInput);
-                  }
-                }}
-              />
-              <button
-                onClick={() => handleRefine(refinementInput)}
-                disabled={!refinementInput.trim()}
-                className="absolute bottom-2 left-2 p-1.5 bg-white text-black rounded-md hover:bg-slate-200 transition-colors"
-              >
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="h-[400px]">
+        <SmartRefinement 
+          questions={questions}
+          answers={questionAnswers}
+          onAnswerChange={(id: number, value: string) => setQuestionAnswers(prev => ({...prev, [id]: value}))}
+          onRefine={(customInstruction?: string) => {
+              const questionParts = Object.entries(questionAnswers)
+                .map(([id, answer]) => {
+                  const q = questions.find(q => q.id === Number(id));
+                  return q && answer.trim() ? `בשאלה: ${q.question}\nעניתי: ${answer}` : "";
+                })
+                .filter(Boolean);
+              
+              const allInstructions = [
+                ...questionParts,
+                customInstruction?.trim() ? `הנחיות נוספות: ${customInstruction}` : ""
+              ].filter(Boolean).join("\n\n");
+              
+              handleRefine(allInstructions);
+          }}
+          isLoading={isLoading}
+        />
     </div>
   );
 
@@ -1483,7 +935,7 @@ export default function Home() {
             <img 
               src="/assets/branding/logo.svg" 
               alt="Peroot" 
-              className="h-10 w-auto brightness-110 transition-transform group-hover:scale-105" 
+              className="h-24 w-auto brightness-110 transition-transform group-hover:scale-105" 
             />
           </button>
         </div>
@@ -1504,11 +956,33 @@ export default function Home() {
                 ספריה אישית
               </button>
               <button
+                 onClick={() => {
+                   setViewMode("personal");
+                   setPersonalView("favorites");
+                 }}
+                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+              >
+                <Star className="w-4 h-4" />
+                מועדפים
+              </button>
+              <button
                 onClick={() => setViewMode("home")}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
               >
                 <ArrowRight className="w-4 h-4" />
                 חזרה לעריכה
+              </button>
+
+              {/* Logo in Library Header */}
+              <button 
+                onClick={() => setViewMode("home")}
+                className="mr-6 group flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src="/logo.svg" 
+                  alt="Peroot" 
+                  className="h-24 w-auto brightness-110 transition-transform group-hover:scale-105" 
+                />
               </button>
             </div>
           </div>
@@ -1588,7 +1062,7 @@ export default function Home() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => toggleFavorite("library", prompt.id)}
+                        onClick={() => handleToggleFavorite("library", prompt.id)}
                         className={cn(
                           "shrink-0 p-1.5 rounded-full border transition-colors",
                           isFavorite
@@ -1598,7 +1072,7 @@ export default function Home() {
                         aria-pressed={isFavorite}
                         aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
                       >
-                        <Star className={cn("w-3 h-3", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
+                        <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-400 fill-yellow-400" : "text-yellow-400/50")} />
                       </button>
                     </div>
 
@@ -1728,9 +1202,9 @@ export default function Home() {
             className="group flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <img 
-              src="/assets/branding/logo.svg" 
+              src="/logo.svg" 
               alt="Peroot" 
-              className="h-10 w-auto brightness-110 transition-transform group-hover:scale-105" 
+              className="h-24 w-auto brightness-110 transition-transform group-hover:scale-105" 
             />
           </button>
         </div>
@@ -1879,9 +1353,10 @@ export default function Home() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                   {filteredFavoritesLibrary.map((prompt) => (
-                    <div
+                    <GlowingEdgeCard
                       key={prompt.id}
-                      className="rounded-[28px] border border-white/15 bg-black/40 p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[380px]"
+                      className="rounded-[28px]"
+                      contentClassName="p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[380px]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -1890,7 +1365,7 @@ export default function Home() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => toggleFavorite("library", prompt.id)}
+                          onClick={() => handleToggleFavorite("library", prompt.id)}
                           className="shrink-0 p-2 rounded-full border border-yellow-300/40 bg-yellow-300/10 text-yellow-300"
                           aria-label="הסר ממועדפים"
                         >
@@ -1923,7 +1398,7 @@ export default function Home() {
                           העתק
                         </button>
                       </div>
-                    </div>
+                    </GlowingEdgeCard>
                   ))}
                 </div>
               </div>
@@ -1950,9 +1425,10 @@ export default function Home() {
                     const styledMarkup = getStyledPromptMarkup(prompt);
 
                     return (
-                      <div
+                      <GlowingEdgeCard
                         key={prompt.id}
-                        className="rounded-[28px] border border-white/15 bg-black/40 p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[380px]"
+                        className="rounded-[28px]"
+                        contentClassName="p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[380px]"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -1983,7 +1459,7 @@ export default function Home() {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => toggleFavorite("personal", prompt.id)}
+                              onClick={() => handleToggleFavorite("personal", prompt.id)}
                               className={cn(
                                 "p-2 rounded-full border transition-colors",
                                 isFavorite
@@ -2128,7 +1604,7 @@ export default function Home() {
                             עיצוב
                           </button>
                         </div>
-                      </div>
+                      </GlowingEdgeCard>
                     );
                   })}
                 </div>
@@ -2213,7 +1689,7 @@ export default function Home() {
                     const styledMarkup = getStyledPromptMarkup(prompt);
 
                     return (
-                      <div
+                      <GlowingEdgeCard
                         key={prompt.id}
                         draggable={canDrag}
                         onDragStart={(event) => handlePersonalDragStart(event, prompt)}
@@ -2221,11 +1697,12 @@ export default function Home() {
                         onDragOver={(event) => handlePersonalDragOver(event, prompt)}
                         onDrop={(event) => handlePersonalDrop(event, prompt)}
                         className={cn(
-                          "rounded-[28px] border border-white/15 bg-black/40 p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[420px]",
+                          "rounded-[28px]",
                           canDrag && "cursor-grab",
                           isDragging && "opacity-60",
                           isDragOver && "ring-2 ring-white/30"
                         )}
+                        contentClassName="p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[420px]"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3">
@@ -2259,7 +1736,7 @@ export default function Home() {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => toggleFavorite("personal", prompt.id)}
+                              onClick={() => handleToggleFavorite("personal", prompt.id)}
                               className={cn(
                                 "p-2 rounded-full border transition-colors",
                                 isFavorite
@@ -2432,7 +1909,7 @@ export default function Home() {
                             עיצוב
                           </button>
                         </div>
-                      </div>
+                      </GlowingEdgeCard>
                     );
                   })}
                 </div>
@@ -2459,7 +1936,12 @@ export default function Home() {
     );
   };
   return (
-    <main className="min-h-screen bg-black text-silver font-sans relative overflow-hidden selection:bg-purple-500/30">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      aria-busy={isLoading}
+      className="min-h-screen bg-black text-silver font-sans relative overflow-hidden selection:bg-purple-500/30"
+    >
       {isLoading && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div
@@ -2490,11 +1972,18 @@ export default function Home() {
       </div>
 
       <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
-        <button 
-          className="px-6 py-2.5 bg-white text-black font-semibold rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-        >
-          Help us improve
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsFeedbackModalOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={isFeedbackModalOpen}
+            aria-controls={feedbackDialogId}
+            className="px-6 py-2.5 bg-white text-black font-semibold rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+          >
+            תעזור לנו להשתפר
+          </button>
+          <FAQBubble mode="inline" />
+        </div>
         <div className="flex items-center gap-4 text-[10px] text-slate-500 font-medium" suppressHydrationWarning>
           <Link href="/privacy" className="hover:text-purple-400 transition-colors underline decoration-white/5 underline-offset-4" suppressHydrationWarning>Privacy Policy</Link>
           <span className="w-1 h-1 rounded-full bg-slate-800" />
@@ -2523,16 +2012,162 @@ export default function Home() {
           </div>
         ) : (
           <div className="w-full max-w-[1800px] mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 order-1 lg:order-2">
-              {!completion ? renderInitialView() : renderResultMain()}
-            </div>
+            {/* LEFT SIDEBAR: History when no completion, SmartRefinement when completion exists */}
             <div className="lg:col-span-4 order-2 lg:order-1 flex flex-col gap-6">
-              {renderHistoryPanel()}
-              {completion ? renderImprovePanel() : null}
+              {!completion ? (
+                <HistoryPanel
+                  history={history}
+                  isLoaded={isLoaded}
+                  onClear={clearHistory}
+                  onRestore={handleRestore}
+                  onSaveToPersonal={addPersonalPromptFromHistory}
+                  onCopy={handleCopyText}
+                />
+              ) : (
+                <>
+                  {renderImprovePanel()}
+                  <HistoryPanel
+                    history={history}
+                    isLoaded={isLoaded}
+                    onClear={clearHistory}
+                    onRestore={handleRestore}
+                    onSaveToPersonal={addPersonalPromptFromHistory}
+                    onCopy={handleCopyText}
+                  />
+                </>
+              )}
+            </div>
+            
+            {/* MAIN AREA: PromptInput or ResultSection */}
+            <div className="lg:col-span-8 order-1 lg:order-2">
+              {!completion ? (
+                <PromptInput
+                  user={user}
+                  inputVal={inputVal}
+                  setInputVal={setInputVal}
+                  handleEnhance={handleEnhance}
+                  inputScore={inputScore}
+                  scoreTone={scoreTone}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  isLoading={isLoading}
+                  viewMode={viewMode}
+                  personalView={personalView}
+                  onNavPersonal={handleShowPersonalLibrary}
+                  onNavFavorites={handleShowPersonalFavorites}
+                  onNavLibrary={() => setViewMode("library")}
+                  variables={variables}
+                  variableValues={variableValues}
+                  setVariableValues={setVariableValues}
+                  onApplyVariables={applyVariablesToPrompt}
+                />
+              ) : (
+                <>
+                  <ResultSection
+                    completion={completion}
+                    completionScore={completionScore}
+                    improvementDelta={improvementDelta}
+                    copied={copied}
+                    onCopy={async (text) => {
+                      await handleCopyText(text);
+                      recordUsageSignal("copy", text);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    onBack={() => setCompletion("")}
+                    onSave={saveCompletionToPersonal}
+                    placeholders={placeholders}
+                    variableValues={variableValues}
+                  />
+                  
+                  {placeholders.length > 0 && (
+                    <ResultVariables
+                      placeholders={placeholders}
+                      variableValues={variableValues}
+                      onUpdateVariable={(ph, val) => setVariableValues(prev => ({ ...prev, [ph]: val }))}
+                    />
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      {isFeedbackModalOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div
+            id={feedbackDialogId}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={feedbackTitleId}
+            aria-describedby={feedbackDescId}
+            tabIndex={-1}
+            className="w-full max-w-lg glass-card p-8 rounded-3xl border-white/10 bg-zinc-950/90 shadow-2xl relative animate-in zoom-in-95 duration-300"
+            dir="rtl"
+          >
+            <button 
+              onClick={() => setIsFeedbackModalOpen(false)}
+              className="absolute top-6 left-6 p-2 text-slate-500 hover:text-white transition-colors"
+              aria-label="סגור חלון משוב"
+            >
+              <X className="w-5 h-5" aria-hidden="true" />
+            </button>
+            
+            <div className="mb-8">
+              <h2 id={feedbackTitleId} className="text-2xl font-serif text-white mb-2">
+                תעזור לנו להשתפר
+              </h2>
+              <p id={feedbackDescId} className="text-slate-400 text-sm">
+                נשמח לשמוע כל דבר שיש לך לומר - רעיונות, הצעות לשיפור או פשוט מילה טובה.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label
+                  htmlFor={feedbackTextareaId}
+                  className="text-xs text-slate-500 uppercase tracking-widest mr-1"
+                >
+                  ההודעה שלך
+                </label>
+                <textarea
+                  id={feedbackTextareaId}
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  placeholder="כתוב/י לנו כאן..."
+                  autoFocus
+                  className="w-full min-h-[150px] bg-white/5 border border-white/10 rounded-2xl p-4 text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors resize-none"
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSendFeedback}
+                  className="flex-1 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-all shadow-lg shadow-white/5"
+                >
+                  שלח הודעה
+                </button>
+                <button
+                  onClick={() => setIsFeedbackModalOpen(false)}
+                  className="px-6 py-3 border border-white/10 text-slate-400 font-medium rounded-xl hover:bg-white/5 transition-all"
+                >
+                  ביטול
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Required Modal for Guests */}
+      <LoginRequiredModal
+        isOpen={isLoginRequiredModalOpen}
+        onClose={() => setIsLoginRequiredModalOpen(false)}
+        title={loginRequiredConfig.title}
+        message={loginRequiredConfig.message}
+        feature={loginRequiredConfig.feature}
+      />
     </main>
   );
 }

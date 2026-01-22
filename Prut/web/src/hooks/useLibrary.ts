@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -22,56 +22,60 @@ const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
 const ORDER_KEY = 'peroot_personal_order';
 
+const getOrderKey = (userId?: string | null) =>
+  userId ? `${ORDER_KEY}_${userId}` : ORDER_KEY;
+
+const readOrderMap = (userId?: string | null) => {
+  const key = getOrderKey(userId);
+  const raw = localStorage.getItem(key);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, number>;
+    }
+  } catch (error) {
+    console.warn("Failed to parse personal order map", error);
+  }
+  return {};
+};
+
+const persistOrderMap = (userId: string | null, items: PersonalPrompt[]) => {
+  const key = getOrderKey(userId);
+  const next: Record<string, number> = {};
+  items.forEach((item, index) => {
+    next[item.id] = typeof item.sort_index === "number" ? item.sort_index : index;
+  });
+  localStorage.setItem(key, JSON.stringify(next));
+};
+
 export function useLibrary() {
   const [personalLibrary, setPersonalLibrary] = useState<PersonalPrompt[]>([]);
   const [personalCategories, setPersonalCategories] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   
-  const supabase = createClient();
-
-  const getOrderKey = (userId?: string | null) =>
-    userId ? `${ORDER_KEY}_${userId}` : ORDER_KEY;
-
-  const readOrderMap = (userId?: string | null) => {
-    const key = getOrderKey(userId);
-    const raw = localStorage.getItem(key);
-    if (!raw) return {};
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed as Record<string, number>;
-      }
-    } catch (error) {
-      console.warn("Failed to parse personal order map", error);
-    }
-    return {};
-  };
-
-  const persistOrderMap = (userId: string | null, items: PersonalPrompt[]) => {
-    const key = getOrderKey(userId);
-    const next: Record<string, number> = {};
-    items.forEach((item, index) => {
-      next[item.id] = typeof item.sort_index === "number" ? item.sort_index : index;
-    });
-    localStorage.setItem(key, JSON.stringify(next));
-  };
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    let mounted = true;
 
-      if (user) {
-        const orderMap = readOrderMap(user.id);
+    async function init() {
+      if (!mounted) return;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!mounted) return;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const orderMap = readOrderMap(currentUser.id);
         // Fetch Library from DB
         const { data: libData } = await supabase
           .from('personal_library')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', currentUser.id)
           .order('updated_at', { ascending: false });
 
-        if (libData) {
+        if (libData && mounted) {
           setPersonalLibrary(
             libData.map((row, index) => ({
               id: row.id,
@@ -92,14 +96,14 @@ export function useLibrary() {
 
         // Categories are derived from items + manual list
         const storedCats = localStorage.getItem(CATEGORIES_KEY);
-        if (storedCats) {
+        if (storedCats && mounted) {
             setPersonalCategories(JSON.parse(storedCats));
         }
       } else {
         const orderMap = readOrderMap(null);
         // Load from LocalStorage
         const storedLib = localStorage.getItem(STORAGE_KEY);
-        if (storedLib) {
+        if (storedLib && mounted) {
           try {
             const parsed = JSON.parse(storedLib);
             if (Array.isArray(parsed)) {
@@ -123,20 +127,30 @@ export function useLibrary() {
         }
         
         const storedCats = localStorage.getItem(CATEGORIES_KEY);
-        if (storedCats) setPersonalCategories(JSON.parse(storedCats));
+        if (storedCats && mounted) setPersonalCategories(JSON.parse(storedCats));
       }
-      setIsLoaded(true);
+      if (mounted) setIsLoaded(true);
     }
 
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      init();
+      if (!mounted) return;
+      const newUser = session?.user ?? null;
+      
+      setUser((prev) => {
+        if (prev?.id !== newUser?.id) {
+          init();
+        }
+        return newUser;
+      });
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   // Sync to local/session storage
   useEffect(() => {
