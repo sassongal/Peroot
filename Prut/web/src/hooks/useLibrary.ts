@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { PersonalPrompt } from '@/lib/types';
+import { CapabilityMode } from '@/lib/capability-mode';
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -74,8 +75,10 @@ export function useLibrary() {
                 use_case: row.use_case,
                 source: row.source,
                 use_count: row.use_count,
-                created_at: row.created_at ?? Date.now(),
-                updated_at: row.updated_at ?? row.created_at ?? Date.now(),
+                capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
+                tags: row.tags ?? [],
+                created_at: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+                updated_at: row.updated_at ? new Date(row.updated_at).getTime() : (row.created_at ? new Date(row.created_at).getTime() : Date.now()),
                 sort_index:
                   typeof orderMap[row.id] === "number" ? orderMap[row.id] : index,
               }))
@@ -108,6 +111,8 @@ export function useLibrary() {
                   updated_at: row.updated_at ?? Date.now(),
                   prompt_style: row.prompt_style ?? undefined,
                   personal_category: row.personal_category ?? null,
+                  capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
+                  tags: row.tags || []
                 }))
               );
             }
@@ -124,10 +129,49 @@ export function useLibrary() {
 
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       const newUser = session?.user ?? null;
       
+      if (newUser && !user) {
+          // Just logged in - MIGRATE GUEST DATA
+          const localStr = localStorage.getItem(STORAGE_KEY);
+          if (localStr) {
+               try {
+                   const localItems = JSON.parse(localStr) as PersonalPrompt[];
+                   if (Array.isArray(localItems) && localItems.length > 0) {
+                       console.log("Migrating guest items:", localItems.length);
+                       
+                       const itemsToInsert = localItems.map(item => ({
+                           user_id: newUser.id,
+                           title_he: item.title_he,
+                           prompt_he: item.prompt_he,
+                           prompt_style: item.prompt_style ?? null,
+                           category: item.category,
+                           personal_category: item.personal_category,
+                           use_case: item.use_case,
+                           source: item.source,
+                           use_count: item.use_count,
+                           created_at: new Date(item.created_at ?? Date.now()).toISOString(),
+                           updated_at: new Date(item.updated_at ?? Date.now()).toISOString(),
+                           sort_index: item.sort_index ?? 0,
+                           capability_mode: item.capability_mode ?? CapabilityMode.STANDARD,
+                           tags: item.tags ?? []
+                       }));
+                       
+                       // Perform Bulk Insert
+                       await supabase.from('personal_library').insert(itemsToInsert);
+                       
+                       localStorage.removeItem(STORAGE_KEY);
+                       localStorage.removeItem(CATEGORIES_KEY);
+                       localStorage.removeItem(ORDER_KEY);
+                   }
+               } catch (e) {
+                   console.error("Migration failed", e);
+               }
+          }
+      }
+
       setUser((prev) => {
         if (prev?.id !== newUser?.id) {
           init();
@@ -140,7 +184,7 @@ export function useLibrary() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, user]); // Added user dependency to detect transition
 
   // Sync to local/session storage
   useEffect(() => {
@@ -169,22 +213,28 @@ export function useLibrary() {
       created_at: Date.now(),
       updated_at: Date.now(),
       sort_index: nextSortIndex,
+      capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
+      tags: prompt.tags || []
     };
 
     setPersonalLibrary(prev => [newItem, ...prev]);
 
     if (user) {
-      await supabase.from('personal_library').insert({
-        user_id: user.id,
-        title_he: prompt.title_he,
-        prompt_he: prompt.prompt_he,
-        prompt_style: prompt.prompt_style ?? null,
-        category: prompt.category,
-        personal_category: prompt.personal_category,
-        use_case: prompt.use_case,
-        source: prompt.source,
-        sort_index: nextSortIndex
-      });
+        const insertData: any = {
+           user_id: user.id,
+           title_he: prompt.title_he,
+           prompt_he: prompt.prompt_he,
+           prompt_style: prompt.prompt_style ?? null,
+           category: prompt.category,
+           personal_category: prompt.personal_category,
+           use_case: prompt.use_case,
+           source: prompt.source,
+           sort_index: nextSortIndex,
+           capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
+        };
+        if (prompt.tags) insertData.tags = prompt.tags;
+
+      await supabase.from('personal_library').insert(insertData);
     }
   };
 
@@ -294,7 +344,6 @@ export function useLibrary() {
             sort_index: index
         }));
         
-        // Use upsert for bulk update of sort_index
         await supabase.from('personal_library').upsert(updates, { onConflict: 'id' });
     }
   };
@@ -408,6 +457,52 @@ export function useLibrary() {
     }
   };
 
+  const deletePrompts = async (ids: string[]) => {
+      try {
+        const { error } = await supabase
+            .from("personal_library")
+            .delete()
+            .in("id", ids);
+        if (error) throw error;
+        
+        setPersonalLibrary(prev => prev.filter(p => !ids.includes(p.id)));
+      } catch (err) {
+        throw err;
+      }
+  };
+
+  const movePrompts = async (ids: string[], category: string) => {
+      try {
+        const { error } = await supabase
+            .from("personal_library")
+            .update({ personal_category: category })
+            .in("id", ids);
+        if (error) throw error;
+
+        setPersonalLibrary(prev => prev.map(p => 
+            ids.includes(p.id) ? { ...p, personal_category: category } : p
+        ));
+      } catch (err) {
+        throw err;
+      }
+  };
+
+  const updateTags = async (id: string, tags: string[]) => {
+      try {
+         const { error } = await supabase
+            .from("personal_library")
+            .update({ tags })
+            .eq("id", id);
+         if (error) throw error;
+         
+         setPersonalLibrary(prev => prev.map(p => 
+            p.id === id ? { ...p, tags } : p
+         ));
+      } catch (err) {
+         throw err;
+      }
+  };
+
   return { 
     personalLibrary, 
     personalCategories, 
@@ -421,6 +516,9 @@ export function useLibrary() {
     reorderPrompts,
     movePrompt,
     renameCategory,
-    addCategory 
+    addCategory,
+    deletePrompts,
+    movePrompts,
+    updateTags
   };
 }

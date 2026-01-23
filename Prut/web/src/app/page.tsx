@@ -6,6 +6,7 @@ import { Toaster, toast } from 'sonner';
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { HistoryPanel } from "@/components/features/history/HistoryPanel";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
+import { CapabilityMode } from "@/lib/capability-mode";
 import { useFavorites } from "@/hooks/useFavorites";
 import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
@@ -52,6 +53,7 @@ function PageContent() {
   // Editor State
   const [selectedTone, setSelectedTone] = useState("Professional");
   const [selectedCategory, setSelectedCategory] = useState("General");
+  const [selectedCapability, setSelectedCapability] = useState<CapabilityMode>(CapabilityMode.STANDARD);
   const [inputVal, setInputVal] = useState("");
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
@@ -214,7 +216,12 @@ function PageContent() {
       const response = await fetch("/api/enhance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: inputVal, tone: selectedTone, category: selectedCategory }),
+        body: JSON.stringify({ 
+          prompt: inputVal, 
+          tone: selectedTone, 
+          category: selectedCategory,
+          capability_mode: selectedCapability 
+        }),
       });
       if (!response.ok) throw new Error("Failed to enhance prompt");
       const data = await response.json();
@@ -264,6 +271,7 @@ function PageContent() {
           prompt: inputVal,
           tone: selectedTone,
           category: selectedCategory,
+          capability_mode: selectedCapability,
           previousResult: completion,
           refinementInstruction: instruction,
           questions: questions.map(q => ({ id: q.id, question: q.question })),
@@ -330,6 +338,7 @@ function PageContent() {
       prompt_he: item.enhanced,
       category: item.category,
       personal_category: PERSONAL_DEFAULT_CATEGORY,
+      capability_mode: CapabilityMode.STANDARD,
       use_case: "נשמר מהיסטוריה",
       source: "manual"
     });
@@ -348,8 +357,9 @@ function PageContent() {
       prompt_he: completion,
       category: detectedCategory || selectedCategory,
       personal_category: PERSONAL_DEFAULT_CATEGORY,
+      capability_mode: selectedCapability,
       use_case: "נשמר מהתוצאה",
-      source: "enhance"
+      source: "manual"
     });
     recordUsageSignal("save", completion);
     toast.success("נשמר לספריה האישית!");
@@ -425,12 +435,9 @@ function PageContent() {
            <div className="flex flex-col gap-3">
               <button
                 onClick={handleNavPersonal}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-300 text-slate-400 backdrop-blur-sm group",
-                  viewMode === "personal" && personalView === "all" ? "bg-blue-500/20 text-blue-300 border-blue-400/50" : "bg-black/20"
-                )}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-300 text-slate-400 backdrop-blur-sm group bg-black/20"
               >
-                <div className={cn("p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors", viewMode === "personal" && personalView === "all" && "bg-blue-500/20")}>
+                <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <span>ספריה אישית</span>
@@ -451,12 +458,9 @@ function PageContent() {
 
               <button
                 onClick={handleNavLibrary}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-purple-400/30 hover:bg-purple-500/10 hover:text-purple-300 text-slate-400 backdrop-blur-sm group",
-                  viewMode === "library" ? "bg-purple-500/20 text-purple-300 border-purple-400/50" : "bg-black/20"
-                )}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-purple-400/30 hover:bg-purple-500/10 hover:text-purple-300 text-slate-400 backdrop-blur-sm group bg-black/20"
               >
-                <div className={cn("p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors", viewMode === "library" && "bg-purple-500/20")}>
+                <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
                   <Library className="w-4 h-4" />
                 </div>
                 <span>ספריה ציבורית</span>
@@ -500,6 +504,8 @@ function PageContent() {
                   scoreTone={scoreTone}
                   selectedCategory={selectedCategory}
                   setSelectedCategory={setSelectedCategory}
+                   selectedCapability={selectedCapability}
+                   setSelectedCapability={setSelectedCapability}
                   isLoading={isLoading}
                   variables={inputVariables}
                   variableValues={variableValues}

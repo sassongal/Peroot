@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { MessageCircle, Search, X, ChevronDown, Mail, Send } from "lucide-react";
+import { MessageCircle, Search, X, ChevronDown, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FAQ_ITEMS } from "@/lib/faq-data";
 
@@ -167,7 +167,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                     <Search className="w-5 h-5 text-slate-600" />
                  </div>
-                 <p className="text-sm text-slate-500">לא נמצאו תוצאות עבור "{query}"</p>
+                 <p className="text-sm text-slate-500">לא נמצאו תוצאות עבור &quot;{query}&quot;</p>
                </div>
              )}
            </div>

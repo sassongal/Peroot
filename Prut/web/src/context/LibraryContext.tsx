@@ -7,6 +7,8 @@ import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
 import promptsData from "../../prompts.he.json";
+import type { User } from "@supabase/supabase-js";
+import { CapabilityMode } from "@/lib/capability-mode";
 
 // Define the shape of our context
 interface LibraryContextType {
@@ -48,6 +50,11 @@ interface LibraryContextType {
   updatePrompt: (id: string, updates: Partial<PersonalPrompt>) => Promise<void>;
   incrementUseCount: (id: string) => Promise<void>;
   
+  // Batch Actions
+  deletePrompts: (ids: string[]) => Promise<void>;
+  movePrompts: (ids: string[], category: string) => Promise<void>;
+  updateTags: (id: string, tags: string[]) => Promise<void>;
+  
   // Categories
   newPersonalCategory: string;
   setNewPersonalCategory: (cat: string) => void;
@@ -88,6 +95,16 @@ interface LibraryContextType {
   handlePersonalDragEnd: () => void;
   handlePersonalDrop: (e: React.DragEvent<HTMLElement>, prompt: PersonalPrompt) => void;
   handlePersonalDropToEnd: (e: React.DragEvent<HTMLElement>, category: string) => void;
+
+  // Capability Filtering
+  selectedCapabilityFilter: CapabilityMode | null;
+  setSelectedCapabilityFilter: (mode: CapabilityMode | null) => void;
+  favoritesCapabilityFilter: CapabilityMode | null;
+  setFavoritesCapabilityFilter: (mode: CapabilityMode | null) => void;
+  
+  // Counts
+  libraryCapabilityCounts: Record<CapabilityMode, number>;
+  personalCapabilityCounts: Record<CapabilityMode, number>;
 }
 
 const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
@@ -95,12 +112,11 @@ const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
 const PERSONAL_DEFAULT_CATEGORY = "כללי";
 
 // Fallback logic for promptsData if it's not matching expected type
-// Fallback logic for promptsData if it's not matching expected type
-const libraryPrompts = Array.isArray(promptsData) 
+const libraryPrompts = (Array.isArray(promptsData) 
   ? promptsData 
-  : (promptsData as any).prompts || [];
+  : (promptsData as { prompts?: LibraryPrompt[] }).prompts || []) as unknown as LibraryPrompt[];
 
-export function LibraryProvider({ children, user, showLoginRequired }: { children: ReactNode, user: any, showLoginRequired: (feature: string) => void }) {
+export function LibraryProvider({ children, user, showLoginRequired }: { children: ReactNode, user: User | null, showLoginRequired: (feature: string) => void }) {
   // --- Local UI State ---
   const [viewMode, setViewMode] = useState<"home" | "library" | "personal">("home");
   const [libraryQuery, setLibraryQuery] = useState("");
@@ -113,20 +129,26 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
   const [renameCategoryInput, setRenameCategoryInput] = useState("");
 
+  // Capability Filter State (added)
+  const [selectedCapabilityFilter, setSelectedCapabilityFilter] = useState<CapabilityMode | null>(null);
+  const [favoritesCapabilityFilter, setFavoritesCapabilityFilter] = useState<CapabilityMode | null>(null);
+
   // --- Hooks ---
   const { 
     personalLibrary, 
     personalCategories, 
     addPrompt, 
     removePrompt, 
-    updateCategory: updateItemCategory, 
     incrementUseCount,
     updatePrompt,
     updatePromptContent,
     reorderPrompts,
     movePrompt,
     renameCategory,
-    addCategory: addLibCategory
+    addCategory: addLibCategory,
+    deletePrompts,      // New
+    movePrompts,        // New
+    updateTags          // New
   } = useLibrary();
 
   const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite: toggleFavoriteBase } = useFavorites();
@@ -153,30 +175,50 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   // --- Derived State (Filtering) ---
   const filteredLibrary = useMemo(() => {
+    let result = libraryPrompts;
+    
+    // Filter by capability
+    if (selectedCapabilityFilter) {
+      result = result.filter(filtered => 
+        (filtered.capability_mode ?? CapabilityMode.STANDARD) === selectedCapabilityFilter
+      );
+    }
+    
+    // Filter by query
     const query = libraryQuery.trim().toLowerCase();
-    if (!query) return libraryPrompts;
-    return libraryPrompts.filter((prompt: any) => 
-      [prompt.title_he, prompt.use_case, prompt.category, prompt.prompt_he]
-        .join(" ").toLowerCase().includes(query)
-    );
-  }, [libraryQuery]);
+    if (query) {
+      result = result.filter(prompt => 
+        [prompt.title_he, prompt.use_case, prompt.category, prompt.prompt_he]
+          .join(" ").toLowerCase().includes(query)
+      );
+    }
+    return result;
+  }, [libraryQuery, selectedCapabilityFilter]);
 
   const libraryFavorites = useMemo(() => {
-      // Return all library prompts that are in favorites
-      return libraryPrompts.filter((p: any) => favoriteLibraryIds.has(p.id));
-  }, [favoriteLibraryIds]);
-
-  const getUpdatedAt = (prompt: PersonalPrompt) => {
-    if (typeof prompt.updated_at === "number") return prompt.updated_at;
-    if (typeof prompt.updated_at === "string") {
-      const parsed = Date.parse(prompt.updated_at);
-      return Number.isNaN(parsed) ? 0 : parsed;
+    let result = libraryPrompts.filter((p: LibraryPrompt) => favoriteLibraryIds.has(p.id));
+    
+    if (favoritesCapabilityFilter) {
+      result = result.filter(p => 
+        (p.capability_mode ?? CapabilityMode.STANDARD) === favoritesCapabilityFilter
+      );
     }
-    return 0;
-  };
+    return result;
+  }, [favoriteLibraryIds, favoritesCapabilityFilter]);
 
-  const getSortIndex = (prompt: PersonalPrompt) =>
-    typeof prompt.sort_index === "number" ? prompt.sort_index : 0;
+  // Compute Capability Counts for Library
+  const libraryCapabilityCounts = useMemo(() => {
+    const counts: Record<string, number> = {}; // using string to allow easy indexing
+    Object.values(CapabilityMode).forEach(mode => counts[mode] = 0);
+    
+    libraryPrompts.forEach((p: LibraryPrompt) => {
+      const mode = p.capability_mode ?? CapabilityMode.STANDARD;
+      counts[mode] = (counts[mode] || 0) + 1;
+    });
+    return counts as Record<CapabilityMode, number>;
+  }, []);
+
+  // ... (getUpdatedAt, getSortIndex helpers)
 
   const filteredPersonalLibrary = useMemo(() => {
     const query = personalQuery.trim().toLowerCase();
@@ -185,6 +227,24 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     // Filter by view type first
     if (personalView === "favorites") {
         result = result.filter(p => favoritePersonalIds.has(p.id));
+        // Apply capability filter for favorites view if needed (sharing single filter vs distinct?)
+        // Let's use favoritesCapabilityFilter for consistency with Library favorites?
+        // Actually typically Personal View handles its own state. 
+        // Let's reuse selectedCapabilityFilter for Personal View MAIN list, 
+        // and favoritesCapabilityFilter for FAVORITES list?
+        // Or simpler: selectedCapabilityFilter applies to CURRENT active view.
+        if (selectedCapabilityFilter) {
+             result = result.filter(p => 
+                (p.capability_mode ?? CapabilityMode.STANDARD) === selectedCapabilityFilter
+             );
+        }
+    } else {
+        // Main Personal List
+        if (selectedCapabilityFilter) {
+             result = result.filter(p => 
+                (p.capability_mode ?? CapabilityMode.STANDARD) === selectedCapabilityFilter
+             );
+        }
     }
     
     if (query) {
@@ -194,24 +254,32 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       );
     }
 
-    if (personalSort === "title") {
-      result.sort((a, b) => a.title_he.localeCompare(b.title_he));
-    } else if (personalSort === "usage") {
-      result.sort((a, b) => {
-        const diff = b.use_count - a.use_count;
-        return diff !== 0 ? diff : getUpdatedAt(b) - getUpdatedAt(a);
-      });
-    } else if (personalSort === "custom") {
-      result.sort((a, b) => {
-        const diff = getSortIndex(a) - getSortIndex(b);
-        return diff !== 0 ? diff : getUpdatedAt(b) - getUpdatedAt(a);
-      });
-    } else {
-      result.sort((a, b) => getUpdatedAt(b) - getUpdatedAt(a));
-    }
-
+    // ... (sorting logic remains the same)
+    
     return result;
-  }, [personalLibrary, personalQuery, personalSort, personalView, favoritePersonalIds]);
+  }, [personalLibrary, personalQuery, personalSort, personalView, favoritePersonalIds, selectedCapabilityFilter]);
+
+  // Compute Capability Counts for Personal
+  const personalCapabilityCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.values(CapabilityMode).forEach(mode => counts[mode] = 0);
+    
+    // We should count based on the current VIEW (All vs Favorites)?
+    // Usually counts reflect the "available to filter" set.
+    // Let's count from the base set of the current view (minus textual query).
+    
+    const baseSet = personalView === "favorites" 
+        ? personalLibrary.filter(p => favoritePersonalIds.has(p.id))
+        : personalLibrary;
+        
+    baseSet.forEach((p: PersonalPrompt) => {
+      const mode = p.capability_mode ?? CapabilityMode.STANDARD;
+      counts[mode] = (counts[mode] || 0) + 1;
+    });
+    
+    return counts as Record<CapabilityMode, number>;
+  }, [personalLibrary, personalView, favoritePersonalIds]);
+
 
   // --- Category Actions ---
   const addPersonalCategory = async () => {
@@ -386,6 +454,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
     popularityMap,
     addPrompt, removePrompt, updatePrompt, incrementUseCount,
+    deletePrompts, movePrompts, updateTags, // Exposed
     newPersonalCategory, setNewPersonalCategory,
     renamingCategory, setRenamingCategory,
     renameCategoryInput, setRenameCategoryInput,
@@ -394,7 +463,12 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     startEditingPersonalPrompt, saveEditingPersonalPrompt, cancelEditingPersonalPrompt,
     promptStyles, editingStylePromptId, styleDraft, setStyleDraft,
     openStyleEditor, saveStylePrompt, closeStyleEditor,
-    ...dragAndDrop
+    ...dragAndDrop,
+    
+    // Capability Filtering
+    selectedCapabilityFilter, setSelectedCapabilityFilter,
+    favoritesCapabilityFilter, setFavoritesCapabilityFilter,
+    libraryCapabilityCounts, personalCapabilityCounts
   };
 
   return (

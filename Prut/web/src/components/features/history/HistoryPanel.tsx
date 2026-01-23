@@ -27,7 +27,7 @@ export function HistoryPanel({
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
-    setHasHydrated(true);
+    queueMicrotask(() => setHasHydrated(true));
   }, []);
 
   return (

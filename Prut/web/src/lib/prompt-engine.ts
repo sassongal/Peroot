@@ -128,7 +128,7 @@ type PromptScore = {
   wordCount: number;
 };
 
-function detectMissingInfo(input: string): string[] {
+export function detectMissingInfo(input: string): string[] {
   return collectMissingSignals(input).slice(0, 3);
 }
 
@@ -251,29 +251,21 @@ export function generatePromptSystemPrompt({ tone = "Professional", category = "
   const languageHint = hebrewRegex.test(input) ? "Hebrew" : "Match the user's language";
   const templateHint = TEMPLATE_HINTS[category] ?? TEMPLATE_HINTS.General;
   
-  // CACHE STRATEGY: Static instructions first!
+  // NOTE: This is now called server-side only (API route)
+  // The actual dynamic prompt fetching happens in the API route
   return `Role: Senior Prompt Engineer & Product Writer
 Goal: Convert a rough prompt into a clear, high-quality "Great Prompt" with depth and practical detail.
 
 Current Task Configuration:
 - Language: ${languageHint}. Keep responses concise and practical.
 - Tone: ${tone}.
-- Category: ${category}. (Valid: ${CATEGORY_LIST.join(", ")}).
+- Category: ${category}.
 - Context Hint: ${templateHint}
 
 Great Prompt structure (Markdown):
-Format the output as a professionally styled prompt ready for immediate use:
-
-1. **Section Headings**: Use yellow-styled headings in square brackets format:
-   - [מצב משימה] or [Situation]
-   - [משימה] or [Task]
-   - [מטרה] or [Objective]
-   - [ידע נדרש] or [Knowledge]
-   - [מגבלות] or [Constraints]
-
-2. **Variables**: Mark all variables with curly braces and ENGLISH names (e.g. {product_name}).
-
-3. **Style**: Use bullet points and clean spacing.
+1. **Section Headings**: Use yellow-styled headings
+2. **Variables**: Mark with curly braces and ENGLISH names
+3. **Style**: Use bullet points and clean spacing
 
 Output format (JSON):
 {
@@ -283,8 +275,7 @@ Output format (JSON):
 
 Rules:
 - Return ONLY valid JSON.
-- Prefer actionable steps and organized sub-bullets.
-- Do not mention internal frameworks.`;
+- Prefer actionable steps.`;
 }
 
 export function generateQuestionsSystemPrompt({ input = "" }: PromptOptions): string {
@@ -292,9 +283,9 @@ export function generateQuestionsSystemPrompt({ input = "" }: PromptOptions): st
   const missingInfoText = missingInfo.length > 0 ? missingInfo.join(", ") : "ללא";
   const languageHint = hebrewRegex.test(input) ? "Hebrew" : "Match the user's language";
 
-  // CACHE STRATEGY: Static instructions first!
+  // NOTE: This is now called server-side only (API route)
   return `Role: Senior Prompt Engineer (Strategy Specialist)
-Goal: Identify EXACTLY 3 missing details that would significantly improve the user's prompt.
+Goal: Identify EXACTLY 3 missing details.
 
 Current Task Configuration:
 - Language: ${languageHint}.
@@ -303,12 +294,6 @@ Current Task Configuration:
 Instructions:
 1. Analyze the input prompt.
 2. Generate exactly 3 distinct clarifying questions.
-3. If "Detected Missing Areas" is "ללא" (None) and the prompt seems complete, return an empty array.
-
-Question Types:
-- Question 1 (Strategy/Goal): Core objective or audience.
-- Question 2 (Content/Style): Tone, format, specific requirements.
-- Question 3 (Missing Details): Constraints or key missing info.
 
 Output format (JSON):
 {
@@ -318,7 +303,7 @@ Output format (JSON):
 }
 
 Rules:
-- Questions must be short, specific, and directly fill a gap.
-- Provide 3 short examples for each question.
+- Questions must be short and specific.
+- Provide 3 examples per question.
 - Return ONLY valid JSON.`;
 }

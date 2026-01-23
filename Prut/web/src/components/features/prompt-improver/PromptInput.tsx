@@ -4,6 +4,8 @@ import { useRef, useEffect } from "react";
 import { Wand2, Loader2 } from "lucide-react";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
+import { CapabilityMode } from "@/lib/capability-mode";
+import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
 import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
@@ -24,6 +26,8 @@ interface PromptInputProps {
   scoreTone: { text: string; bar: string } | null;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  selectedCapability: CapabilityMode;
+  setSelectedCapability: (mode: CapabilityMode) => void;
   isLoading: boolean;
   variables: string[];
   variableValues: Record<string, string>;
@@ -32,7 +36,6 @@ interface PromptInputProps {
 }
 
 export function PromptInput({
-  user,
   inputVal,
   setInputVal,
   handleEnhance,
@@ -40,6 +43,8 @@ export function PromptInput({
   scoreTone,
   selectedCategory,
   setSelectedCategory,
+  selectedCapability,
+  setSelectedCapability,
   isLoading,
   variables,
   variableValues,
@@ -59,6 +64,15 @@ export function PromptInput({
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
+      {/* Capability Mode Selector */}
+      <div className="w-full max-w-4xl mx-auto">
+        <div className="text-xs text-slate-400 uppercase tracking-widest mb-3">מצב יכולת</div>
+        <CapabilitySelector
+          value={selectedCapability}
+          onChange={setSelectedCapability}
+          disabled={isLoading}
+        />
+      </div>
 
       <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-6 items-stretch">
         {variables.length > 0 && (

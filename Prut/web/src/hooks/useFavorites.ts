@@ -82,19 +82,47 @@ export function useFavorites() {
 
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      loadFavorites(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const newUser = session?.user ?? null;
+      
+      // Migration Logic
+      if (newUser && !user) {
+         const localStr = localStorage.getItem(STORAGE_KEY);
+         if (localStr) {
+             try {
+                const localFavs = JSON.parse(localStr) as FavoriteEntry[];
+                if (Array.isArray(localFavs) && localFavs.length > 0) {
+                    const toInsert = localFavs.map(f => ({
+                        user_id: newUser.id,
+                        item_type: f.item_type,
+                        item_id: f.item_id
+                    }));
+                    // Upsert to avoid conflicts if they already exist in DB
+                    await supabase.from("prompt_favorites").upsert(toInsert, { onConflict: 'user_id,item_type,item_id' });
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+             } catch (e) { console.error("Fav migration failed", e); }
+         }
+      }
+
+      setUser(newUser);
+      loadFavorites(newUser);
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, user]);
 
   useEffect(() => {
-    if (!isLoaded || user) return;
+    if (!isLoaded) return; // Don't write if not loaded
+    if (user) {
+        // If user is logged in, we rely on DB, do NOT write to guest local storage
+        // Maybe we want to clear it? Already done in migration.
+        return;
+    } 
+    // Guest mode -> Sync to LS
     localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
   }, [favorites, isLoaded, user]);
 

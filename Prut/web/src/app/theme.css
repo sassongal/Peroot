@@ -1,0 +1,38 @@
+:root {
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+}
+
+/* Theme color utilities */
+.bg-theme-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-theme-secondary {
+  background-color: var(--color-secondary);
+}
+
+.text-theme-primary {
+  color: var(--color-primary);
+}
+
+.text-theme-secondary {
+  color: var(--color-secondary);
+}
+
+.border-theme-primary {
+  border-color: var(--color-primary);
+}
+
+.border-theme-secondary {
+  border-color: var(--color-secondary);
+}
+
+/* Gradient backgrounds using theme colors */
+.bg-gradient-theme {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
+}

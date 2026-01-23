@@ -63,7 +63,7 @@ export function useDragAndDrop({
   };
 
   const handlePersonalDragStart = (
-    event: DragEvent<HTMLDivElement>,
+    event: DragEvent<HTMLElement>,
     prompt: PersonalPrompt
   ) => {
     if (renamingCategory) {
@@ -78,7 +78,7 @@ export function useDragAndDrop({
   };
 
   const handlePersonalDragOver = (
-    event: DragEvent<HTMLDivElement>,
+    event: DragEvent<HTMLElement>,
     prompt: PersonalPrompt
   ) => {
     event.preventDefault();
@@ -86,7 +86,7 @@ export function useDragAndDrop({
   };
 
   const handlePersonalDrop = (
-    event: DragEvent<HTMLDivElement>,
+    event: DragEvent<HTMLElement>,
     prompt: PersonalPrompt
   ) => {
     event.preventDefault();
@@ -109,7 +109,7 @@ export function useDragAndDrop({
     setDraggingPersonalCategory(null);
   };
 
-  const handlePersonalDropToEnd = (event: DragEvent<HTMLDivElement>, category: string) => {
+  const handlePersonalDropToEnd = (event: DragEvent<HTMLElement>, category: string) => {
     event.preventDefault();
     event.stopPropagation();
     const draggedId = event.dataTransfer.getData("text/plain") || draggingPersonalId;

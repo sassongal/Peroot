@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
 import { toast } from "sonner";
+import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
+import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
+import { CapabilityMode } from "@/lib/capability-mode";
 
 interface LibraryViewProps {
   onUsePrompt: (prompt: LibraryPrompt) => void;
@@ -23,7 +26,10 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     setViewMode,
     addPrompt,
     setPersonalView,
-    popularityMap
+    popularityMap,
+    selectedCapabilityFilter,
+    setSelectedCapabilityFilter,
+    libraryCapabilityCounts
   } = useLibraryContext();
   
   const PERSONAL_DEFAULT_CATEGORY = "כללי";
@@ -100,6 +106,14 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               </button>
             </div>
           </div>
+          
+          <div className="mt-6">
+            <CapabilityFilter
+              value={selectedCapabilityFilter}
+              onChange={setSelectedCapabilityFilter}
+              counts={libraryCapabilityCounts}
+            />
+          </div>
 
           <div className="relative mt-5">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -171,6 +185,9 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
+                        <div className="flex items-center gap-2 mb-2">
+                           <CapabilityBadge mode={prompt.capability_mode} />
+                        </div>
                         <h4 className="text-xl md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title_he}</h4>
                         <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
                       </div>

@@ -1,7 +1,7 @@
 import { google } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 
-// Primary: Google Gemini 2.5 Flash
+// Primary: Google Gemini 2.5 Flash (Verified Available)
 export const gemini = google('gemini-2.5-flash');
 
 // Fallback: Groq Llama 3 70B (Free beta, ultra-fast)

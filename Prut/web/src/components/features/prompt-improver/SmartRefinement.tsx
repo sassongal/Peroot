@@ -129,7 +129,7 @@ export function SmartRefinement({
                 </div>
              </div>
              <p className="text-xs text-slate-500 mb-3 text-right" dir="rtl">
-               הוסף/י הוראות חידוד חופשיות (למשל: "תקצר את הטקסט", "תוסיף אימוג'ים").
+                הוסף/י הוראות חידוד חופשיות (למשל: &quot;תקצר את הטקסט&quot;, &quot;תוסיף אימוג&apos;ים&quot;).
              </p>
              <textarea
                dir="rtl"
