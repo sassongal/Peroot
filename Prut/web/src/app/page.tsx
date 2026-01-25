@@ -516,7 +516,7 @@ function PageContent({ user }: { user: User | null }) {
               width={384}
               height={120}
               priority
-              className="w-80 md:w-96 h-auto drop-shadow-2xl brightness-110"
+              className="w-40 md:w-48 h-auto drop-shadow-2xl brightness-110"
               style={{ width: 'auto', height: 'auto' }}
              />
            </div>

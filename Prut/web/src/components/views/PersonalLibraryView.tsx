@@ -534,7 +534,7 @@ export function PersonalLibraryView({
         {/* Header Logo */}
         <div className="flex items-center justify-start -mb-4">
           <button onClick={() => setViewMode("home")} className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Image src="/logo.svg" alt="Peroot" width={96} height={96} priority className="h-24 w-auto brightness-110 transition-transform group-hover:scale-105" style={{ width: 'auto', height: 'auto' }} />
+            <Image src="/logo.svg" alt="Peroot" width={48} height={48} priority className="h-10 w-auto brightness-110 transition-transform group-hover:scale-105" style={{ width: 'auto', height: 'auto' }} />
           </button>
         </div>
 

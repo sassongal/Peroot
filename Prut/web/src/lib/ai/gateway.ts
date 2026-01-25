@@ -20,9 +20,13 @@ export class AIGateway {
             try {
                 const config = AVAILABLE_MODELS[modelId];
                 
-                // Safety check: Don't use Groq if no key provided (to avoid immediate crash)
+                // Providers safety checks
                 if (config.provider === 'groq' && !process.env.GROQ_API_KEY) {
                     console.warn('[AIGateway] Skipping Groq (No API Key)');
+                    continue;
+                }
+                if (config.provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY) {
+                    console.warn('[AIGateway] Skipping DeepSeek (No API Key)');
                     continue;
                 }
 

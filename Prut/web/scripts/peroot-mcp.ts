@@ -12,7 +12,7 @@ import * as Sentry from "@sentry/node";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import Redis from "ioredis";
+import { Redis } from "@upstash/redis";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import dotenv from "dotenv";
@@ -30,7 +30,9 @@ Sentry.init({
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 // 2. Setup Clients
-const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
+const redis = (process.env.REDIS_URL && process.env.REDIS_TOKEN) 
+  ? new Redis({ url: process.env.REDIS_URL, token: process.env.REDIS_TOKEN }) 
+  : null;
 const supabase = (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   : null;
@@ -157,7 +159,7 @@ instrumentedServer.tool(
   "Verifies connection to Redis, Supabase and Resend",
   {},
   async () => {
-    const redisOk = redis ? (await redis.ping() === "PONG") : false;
+    const redisOk = redis ? (await redis.ping() === "OK") : false; // Upstash returns 'OK' for ping
     const supabaseOk = !!supabase;
     const resendOk = !!resend;
     

@@ -1,12 +1,18 @@
 import { google } from "@ai-sdk/google";
 import { groq } from "@ai-sdk/groq";
+import { createOpenAI } from "@ai-sdk/openai";
 import { LanguageModel } from "ai";
 
-export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b';
+export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b' | 'deepseek-chat';
+
+const deepseek = createOpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: process.env.DEEPSEEK_API_KEY,
+});
 
 export interface ModelConfig {
     id: ModelId;
-    provider: 'google' | 'groq';
+    provider: 'google' | 'groq' | 'deepseek';
     model: LanguageModel;
     label: string;
     contextWindow: number;
@@ -37,11 +43,20 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         label: 'Llama 3 70B (Groq)',
         contextWindow: 8192,
         tier: 'free'
+    },
+    'deepseek-chat': {
+        id: 'deepseek-chat',
+        provider: 'deepseek',
+        model: deepseek('deepseek-chat'),
+        label: 'DeepSeek Chat (Alternative)',
+        contextWindow: 64000,
+        tier: 'free'
     }
 };
 
 export const FALLBACK_ORDER: ModelId[] = [
     'gemini-2.0-flash', 
     'gemini-1.5-flash', 
-    'llama-3-70b'
+    'llama-3-70b',
+    'deepseek-chat'
 ];

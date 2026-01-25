@@ -14,7 +14,7 @@ export function TopLogo() {
         <img
           src="/assets/branding/logo.svg"
           alt="Peroot"
-          className="h-14 md:h-20 w-auto drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
+          className="h-8 md:h-10 w-auto drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
         />
       </Link>
     </div>
