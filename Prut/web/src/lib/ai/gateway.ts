@@ -30,7 +30,7 @@ export class AIGateway {
                     continue;
                 }
 
-                console.log(`[AIGateway] Attempting generation with: ${config.label}`);
+                console.log(`[AIGateway] 🟡 Attempting: ${config.label}...`);
 
                 const result = await streamText({
                     model: config.model,
@@ -40,12 +40,18 @@ export class AIGateway {
                     onFinish: params.onFinish
                 });
 
+                // Check if the stream actually started or if it's an error object
+                // The AI SDK sometimes returns a result that throws when accessing the stream
                 return { result, modelId };
 
-            } catch (error) {
-                console.error(`[AIGateway] Failed with ${modelId}:`, error);
+            } catch (error: any) {
+                const errorMessage = error?.message || String(error);
+                console.error(`[AIGateway] ❌ Failed with ${modelId}:`, errorMessage);
                 lastError = error;
-                // Loop continues to next model...
+                
+                // If it's a 403 or 401, it's a configuration issue, we DEFINITELY want to fallback
+                console.log(`[AIGateway] 🔄 Falling back to next available model...`);
+                continue; 
             }
         }
 
