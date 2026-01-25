@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
     .single();
 
   const isMaintenance = settings?.maintenance_mode;
-  const isAdmin = user?.app_metadata?.role === 'admin' || user?.email?.endsWith('@joya-tech.net');
+  const isAdmin = user?.app_metadata?.role === 'admin';
 
   if (isMaintenance && !isAdmin) {
     // During maintenance, only allow /maintenance page
@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
         // 🚀 Optimizing: Use JWT claims (app_metadata) instead of DB hit
         // Note: For this to work perfectly, you should add your role to app_metadata via Supabase Auth
         const role = user.app_metadata?.role;
-        const isAdmin = role === 'admin' || user.email?.endsWith('@joya-tech.net'); // Temporary safety fallback
+        const isAdmin = role === 'admin'; 
 
         if (!isAdmin) {
             // Not an admin - Redirect to home or return 403 for API

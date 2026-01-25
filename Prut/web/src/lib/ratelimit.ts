@@ -1,33 +1,25 @@
-
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 
 // Singleton Redis client management for serverless/edge environments
 const redisUrl = process.env.REDIS_URL;
+const redisToken = process.env.REDIS_TOKEN; // Upstash needs a token for REST
 
 let redis: Redis | null = null;
 
 function getRedisClient() {
   if (redis) return redis;
-  if (!redisUrl) {
+  if (!redisUrl || !redisToken) {
     if (process.env.NODE_ENV === 'production') {
-      console.error('[Redis] CRITICAL: REDIS_URL missing in production!');
+      console.error('[Redis] CRITICAL: REDIS_URL or REDIS_TOKEN missing in production!');
     } else {
-      console.warn('[Redis] REDIS_URL missing, rate limiting disabled.');
+      console.warn('[Redis] Configuration missing, rate limiting disabled.');
     }
     return null;
   }
 
-  redis = new Redis(redisUrl, {
-    maxRetriesPerRequest: 1,
-    connectTimeout: 5000,
-  });
-  
-  redis.on('error', (err) => {
-    // Structured error logging for better observability
-    console.error(`[Redis] Connection Error: ${err.message}`, { 
-      stack: err.stack,
-      url: redisUrl.split('@').pop() // Hide credentials in logs
-    });
+  redis = new Redis({
+    url: redisUrl,
+    token: redisToken,
   });
 
   return redis;
@@ -73,13 +65,16 @@ export async function checkRateLimit(identifier: string, tier: 'free' | 'pro' | 
         pipeline.incr(key);
         pipeline.ttl(key);
         const results = await pipeline.exec();
+        
+        // Upstash REST returns results directly [incrValue, ttlValue] 
+        // unlike ioredis which returns [[err, res], [err, res]]
 
-        if (!results) {
-            return { success: true, limit, remaining: limit, reset: 0 };
+        if (!results || results.length < 2) {
+             return { success: true, limit, remaining: limit, reset: 0 };
         }
 
-        const count = (results[0][1] as number) || 1;
-        let ttl = (results[1][1] as number);
+        const count = results[0] as number;
+        let ttl = results[1] as number;
 
         if (ttl === -1) {
             await redis.expire(key, windowSize);
