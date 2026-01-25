@@ -1,16 +1,47 @@
-import { google } from '@ai-sdk/google';
-import { createOpenAI } from '@ai-sdk/openai';
+import { google } from "@ai-sdk/google";
+import { groq } from "@ai-sdk/groq";
+import { LanguageModel } from "ai";
 
-// Primary: Google Gemini 2.5 Flash (Verified Available)
-export const gemini = google('gemini-2.5-flash');
+export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b';
 
-// Fallback: Groq Llama 3 70B (Free beta, ultra-fast)
-export const groqLlama = createOpenAI({
-  baseURL: 'https://api.groq.com/openai/v1',
-  apiKey: process.env.GROQ_API_KEY || '',
-})('llama3-70b-8192');
+export interface ModelConfig {
+    id: ModelId;
+    provider: 'google' | 'groq';
+    model: LanguageModel;
+    label: string;
+    contextWindow: number;
+    tier: 'free' | 'paid';
+}
 
-export const AI_PROVIDERS = {
-  PRIMARY: 'gemini',
-  FALLBACK: 'groq-llama3',
-} as const;
+export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
+    'gemini-2.0-flash': {
+        id: 'gemini-2.0-flash',
+        provider: 'google',
+        model: google('gemini-2.0-flash'),
+        label: 'Gemini 2.0 Flash (Primary)',
+        contextWindow: 1000000,
+        tier: 'free'
+    },
+    'gemini-1.5-flash': {
+        id: 'gemini-1.5-flash',
+        provider: 'google',
+        model: google('gemini-1.5-flash'),
+        label: 'Gemini 1.5 Flash (Backup)',
+        contextWindow: 1000000,
+        tier: 'free'
+    },
+    'llama-3-70b': {
+        id: 'llama-3-70b',
+        provider: 'groq',
+        model: groq('llama3-70b-8192'),
+        label: 'Llama 3 70B (Groq)',
+        contextWindow: 8192,
+        tier: 'free'
+    }
+};
+
+export const FALLBACK_ORDER: ModelId[] = [
+    'gemini-2.0-flash', 
+    'gemini-1.5-flash', 
+    'llama-3-70b'
+];

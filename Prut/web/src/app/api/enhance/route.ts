@@ -1,5 +1,4 @@
-import { streamText } from "ai";
-import { google } from "@ai-sdk/google";
+
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -130,58 +129,55 @@ export async function POST(req: Request) {
         ? engine.generateRefinement(engineInput)
         : engine.generate(engineInput);
 
-    // 3. Execution with Streaming & Telemetry
+    // 3. Execution with Streaming & Telemetry via Gateway
     const startTime = Date.now();
-    const modelId = 'gemini-2.0-flash'; 
+    const { AIGateway } = await import("@/lib/ai/gateway");
 
-    const result = await streamText({
-      model: google(modelId),
-      system: engineOutput.systemPrompt,
-      prompt: engineOutput.userPrompt,
-      temperature: 0.7,
-      onFinish: async (completion) => {
-        const durationMs = Date.now() - startTime;
-        if (user) {
-            // 📝 Log activity (Synchronous/Important - we want this persisted)
-            await supabase.from('activity_logs').insert({
-                user_id: user.id,
-                action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
-                entity_type: 'prompt',
-                details: { 
-                    mode, 
-                    model: modelId,
-                    latency_ms: durationMs,
-                    tokens: completion.usage,
-                    prompt_length: prompt.length,
-                    result_length: completion.text.length
+    const { result, modelId } = await AIGateway.generateStream({
+        system: engineOutput.systemPrompt,
+        prompt: engineOutput.userPrompt,
+        temperature: 0.7,
+        onFinish: async (completion) => {
+            const durationMs = Date.now() - startTime;
+            if (user) {
+                // 📝 Log activity
+                await supabase.from('activity_logs').insert({
+                    user_id: user.id,
+                    action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
+                    entity_type: 'prompt',
+                    details: { 
+                        mode, 
+                        model: modelId,
+                        latency_ms: durationMs,
+                        tokens: completion.usage,
+                        prompt_length: prompt.length,
+                        result_length: completion.text.length
+                    }
+                });
+
+                // 🚀 BACKGROUND TASKS: Persistent Queue
+                try {
+                    const { enqueueJob } = await import("@/lib/jobs/queue");
+                    
+                    // 1. Style Analysis Check (Every 5th interaction)
+                    const { count } = await supabase
+                        .from('activity_logs')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
+
+                    if (count && count % 5 === 0) {
+                        await enqueueJob('style_analysis', { userId: user.id });
+                    }
+
+                    // 2. Achievement Check (Always check)
+                    await enqueueJob('achievement_check', { userId: user.id });
+
+                } catch (bgError) {
+                    console.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
                 }
-            });
-
-            // 🚀 BACKGROUND TASKS: Persistent Queue
-            // We enqueue these jobs to be processed by the worker (via Cron or Queue)
-            try {
-                const { enqueueJob } = await import("@/lib/jobs/queue");
-                
-                // 1. Style Analysis Check (Every 5th interaction)
-                const { count } = await supabase
-                    .from('activity_logs')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', user.id)
-                    .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
-
-                if (count && count % 5 === 0) {
-                    await enqueueJob('style_analysis', { userId: user.id });
-                }
-
-                // 2. Achievement Check (Always check)
-                await enqueueJob('achievement_check', { userId: user.id });
-
-            } catch (bgError) {
-                console.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
-                // Non-blocking, we still return the result
             }
         }
-      }
     });
 
     return result.toTextStreamResponse();
