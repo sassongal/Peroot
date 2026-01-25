@@ -1,122 +1,76 @@
 #!/bin/bash
 
-# 🐝 Aegis Hive Control Center - v2.0 (2026 Edition)
-# Managing 7 Antigravity Nodes + Claude Code + Codex Bridge
+# 🐝 HIVE CLI - The Aegis Remote Control
+# Based on External Agent Guidance (Section 4)
 
-# --- Configuration ---
-ACCOUNTS=(
-    "querico.auto@gmail.com"  # Node 1
-    "sask8gal@gmail.com"     # Node 2
-    "sassong4l@gmail.com"    # Node 3 (Master Hub: Claude/GPT)
-    "gal@flow-it.biz"        # Node 4
-    "gal@joya-tech.net"      # Node 5
-    "sasson1009@gmail.com"   # Node 6
-    "perootapp@gmail.com"    # Node 7
-)
-
-CLAUDE_USER="sassong4l@gmail.com"
 BRAIN_FILE=".ag_brain.md"
 REGISTRY_FILE=".ag_registry.json"
 
-# Colors
+# Colors for terminal output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
-PURPLE='\033[0;35m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# --- Logic ---
-
-function show_help() {
-    echo -e "${PURPLE}HIVE CONTROL SYSTEM - COMMANDS:${NC}"
-    echo "  switch [1-7]  - Rotate Antigravity account, Sync Git, & Update Identity"
-    echo "  lock [file]   - Tag a file as 'Under Construction' by the active Node"
-    echo "  unlock [file] - Release file for other Agents (Claude/Antigravity)"
-    echo "  status        - View Brain Objectives and Lock Registry"
-    echo "  sync          - Immediate Git push of Brain and Code state"
-    echo "  check         - Verify Hive infrastructure integrity"
+# פונקציה להחלפת משתמש וסנכרון
+switch_node() {
+  NODE_ID=$1
+  if [ -z "$NODE_ID" ]; then echo "Usage: ./hive.sh switch [node_id]"; return; fi
+  
+  echo -e "${BLUE}--- Switching to Hive Node $NODE_ID ---${NC}"
+  
+  # 1. סנכרון מצב (משיכת שינויים מהמוח)
+  git add .ag_brain.md .ag_registry.json
+  git commit -m "[HIVE] Sync state before Node $NODE_ID takeover" --allow-empty
+  
+  # 2. החלפת חשבון (פקודת גוגל קלאוד)
+  if command -v gcloud &> /dev/null; then
+    gcloud config set account "user$NODE_ID@gmail.com"
+  fi
+  
+  # 3. הזרקת קונטקסט לטרמינל עבור Claude Code
+  export CLAUDE_CODE_CONTEXT="You are now Node $NODE_ID. Read .ag_brain.md immediately."
+  
+  echo -e "${GREEN}Node $NODE_ID is ready. Brain is synced.${NC}"
 }
 
-# Identity & Context Manager
-function switch_node() {
-    NODE_ID=$1
-    if [[ -z "$NODE_ID" || $NODE_ID -lt 1 || $NODE_ID -gt 7 ]]; then
-        echo -e "${RED}Error: Choose Node 1 to 7.${NC}"
-        return
-    fi
-    
-    EMAIL=${ACCOUNTS[$((NODE_ID-1))]}
-    echo -e "${BLUE}🔄 Synchronizing Hive State before transition...${NC}"
-
-    # 1. Atomic Sync: Ensuring the next node sees exactly what happened
-    git add $BRAIN_FILE $REGISTRY_FILE
-    git commit -m "chore(hive): auto-sync state - handover to Node $NODE_ID ($EMAIL)" --allow-empty
-
-    # 2. Google Identity Switch (Antigravity Core)
-    echo -e "${YELLOW}🔑 Setting Google Account to: $EMAIL...${NC}"
-    gcloud config set account "$EMAIL" 2>/dev/null
-    
-    # 3. Environment Injection
-    export HIVE_NODE=$NODE_ID
-    export ACTIVE_EMAIL=$EMAIL
-    
-    # 4. Master Hub Logic
-    if [ "$EMAIL" == "$CLAUDE_USER" ]; then
-        echo -e "${PURPLE}⭐ MASTER HUB ACTIVE: Claude Code & GPT Context are now synced.${NC}"
-    fi
-
-    echo -e "${GREEN}✅ NODE $NODE_ID ACTIVE. Open Antigravity and continue task.${NC}"
+# פונקציה לבדיקת "בריאות" הכוורת
+status() {
+  echo -e "${BLUE}=== 🧠 HIVE MASTER STATE ===${NC}"
+  if [ -f "$BRAIN_FILE" ]; then
+    cat "$BRAIN_FILE" | grep "CURRENT OBJECTIVE" -A 10
+  else
+    echo -e "${RED}Error: Brain file not found!${NC}"
+  fi
 }
 
-# Registry Management
-function lock_file() {
+# פונקציות ניהול נעילות (שמירה על פונקציונליות הרישום)
+lock() {
     FILE=$1
-    if [ -z "$FILE" ]; then echo "Usage: hive lock [filename]"; return; fi
-    echo "{\"file\": \"$FILE\", \"locked_by\": \"Node_$HIVE_NODE\", \"timestamp\": \"$(date)\"}" >> "$REGISTRY_FILE"
+    if [ -z "$FILE" ]; then echo "Usage: ./hive.sh lock [filename]"; return; fi
+    [ ! -f "$REGISTRY_FILE" ] && echo "{}" > "$REGISTRY_FILE"
+    tmp=$(mktemp)
+    # שימוש ב-NODE_ID מהסביבה או ברירת מחדל
+    NODE_NAME="Node_${HIVE_NODE:-Unknown}"
+    jq --arg f "$FILE" --arg n "$NODE_NAME" --arg t "$(date)" \
+       '. + {($f): {locked_by: $n, timestamp: $t}}' "$REGISTRY_FILE" > "$tmp" && mv "$tmp" "$REGISTRY_FILE"
     echo -e "${RED}🔒 Resource LOCKED: $FILE${NC}"
 }
 
-function unlock_file() {
+unlock() {
     FILE=$1
-    if [ -z "$FILE" ]; then echo "Usage: hive unlock [filename]"; return; fi
-    # Remove the line with the filename
-    sed -i '' "/$FILE/d" "$REGISTRY_FILE" 2>/dev/null || sed -i "/$FILE/d" "$REGISTRY_FILE"
+    if [ -z "$FILE" ]; then echo "Usage: ./hive.sh unlock [filename]"; return; fi
+    tmp=$(mktemp)
+    jq "del(.\"$FILE\")" "$REGISTRY_FILE" > "$tmp" && mv "$tmp" "$REGISTRY_FILE"
     echo -e "${GREEN}🔓 Resource RELEASED: $FILE${NC}"
 }
 
-function show_status() {
-    echo -e "${PURPLE}=== 🧠 GLOBAL BRAIN STATE ===${NC}"
-    if [ -f "$BRAIN_FILE" ]; then
-        # Print current objective section
-        sed -n '/## 🎯 CURRENT OBJECTIVE/,/##/p' "$BRAIN_FILE" | head -n -1
-    else
-        echo -e "${RED}Warning: .ag_brain.md not found!${NC}"
-    fi
-    
-    echo -e "\n${YELLOW}=== 📋 LOCKED IN REGISTRY ===${NC}"
-    if [ -s "$REGISTRY_FILE" ]; then
-        cat "$REGISTRY_FILE"
-    else
-        echo "No locked files. All resources available."
-    fi
-}
-
-function verify_hive() {
-    echo -e "${BLUE}Verifying Hive Infrastructure...${NC}"
-    FILES=(".ag_brain.md" ".ag_registry.json" ".ag_protocols/sync_protocol.md")
-    for f in "${FILES[@]}"; do
-        [ -f "$f" ] && echo -e "  ${GREEN}✓ $f${NC}" || echo -e "  ${RED}✗ $f (Missing)${NC}"
-    done
-}
-
-# --- Router ---
+# Main Execution Logic
 case "$1" in
-    switch) switch_node "$2" ;;
-    lock)   lock_file "$2" ;;
-    unlock) unlock_file "$2" ;;
-    status) show_status ;;
-    sync)   git add . && git commit -m "hive: manual sync" && git push ;;
-    check)  verify_hive ;;
-    *)      show_help ;;
+  switch) switch_node $2 ;;
+  status) status ;;
+  lock) lock $2 ;;
+  unlock) unlock $2 ;;
+  *) echo "Usage: ./hive.sh {switch|status|lock|unlock} [args]" ;;
 esac

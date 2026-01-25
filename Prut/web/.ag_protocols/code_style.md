@@ -1,36 +1,19 @@
-# 🎨 Unified Code Style Protocol
+# 🎨 HIVE CODE STYLE & ARCHITECTURE
 
-All coding must follow these strict rules to ensure consistent quality across all agents:
+## 🏗️ CORE STACK
 
-## 🏛️ Architecture (Strict)
+- **Frontend:** Next.js (App Router), Tailwind CSS.
+- **Database:** Supabase (PostgreSQL).
+- **AI Logic:** Integrated via Agent Engines (src/lib/engines).
 
-- **Pattern:** Feature-First, Clean Architecture.
-- **State Management:** Riverpod (`AsyncNotifier` preferred).
-- **Routing:** `go_router` with Typed Routes.
-- **Models:** Inherently immutable using `Freezed` & `JsonSerializable`.
+## ✍️ WRITING RULES
 
-## 💻 Language & Documentation
+- **Types:** Strict TypeScript. Interfaces over Types.
+- **Naming:** CamelCase for functions, PascalCase for components.
+- **Components:** Functional components with specific imports.
+- **Error Handling:** Use custom error boundaries (see `src/components/ui/ErrorBoundary.tsx`).
 
-- **Variables/Logic:** English only.
-- **Comments/Commit Messages:** Hebrew (unless requested otherwise).
-- **Hardcoded Strings:** Forbidden. Use L10n (`app_en.arb`, `app_he.arb`).
+## 🧩 MODULARITY
 
-## 🧱 Design System
-
-- Use `Theme.of(context).colorScheme`.
-- Follow the `PremiumTheme` guidelines.
-- Responsive design for all screen sizes.
-
-## 🛡️ Stability
-
-- **Type Safety:** No `dynamic`.
-- **Null Safety:** Explicit handling.
-- **Logic:** Data layer handles exceptions, Presentation shows failures.
-
-## 🏃 Workflow
-
-1. Define Domain (Freezed).
-2. Implement Repository (Data).
-3. Build Controller (Riverpod).
-4. Create Screen (Presentation).
-5. Run `build_runner`.
+- Keep logic in `src/lib` and UI in `src/components`.
+- Do not mix business logic inside components.

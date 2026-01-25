@@ -1,27 +1,26 @@
-# 🔄 Sync Protocol (Agent Synchronization)
+# 🔄 HIVE SYNCHRONIZATION PROTOCOL (HSP-1)
 
-Every agent must follow these rules before and after every session to ensure harmony:
+## 1. PRE-TASK (The "Look-Before-Leap")
 
-## 1. Pre-Session Audit
+- Read `.ag_brain.md` to identify the current `GLOBAL OBJECTIVE`.
+- Run `hive status` to check if target files are locked by another Node.
+- If a file is locked, **DO NOT TOUCH**. Wait for handover or ask user for override.
 
-- Read `.ag_brain.md` to understand the current state and mission.
-- Check `.ag_registry.json` for active "locks" on files.
-- If another agent is working on a file, coordinate or wait.
+## 2. DURING TASK (The "Active Heartbeat")
 
-## 2. Real-time Communication
+- For major structural changes, update the `AG_BRAIN.md` halfway through to prevent logic-drift in case of Quota failure.
+- If Quota limit warning appears: **STOP IMMEDIATELY**.
 
-- Update `.ag_registry.json` when starting to work on a specific set of files.
-- Log significant architectural decisions in `.ag_brain.md` immediately.
+## 3. POST-TASK (The "Clean Handover")
 
-## 3. Post-Session Sync
+- **Sync the Brain:** Update the `PROGRESS LOG` and `NEXT_NODE_GOAL`.
+- **Release Locks:** Run `hive unlock <file>` for all files you touched.
+- **Commit:** Use the format `[NODE-ID] brief description`.
+- **Final Message:** Write the last instruction for the next agent clearly.
 
-- Update `.ag_brain.md` with:
-  - What was accomplished.
-  - New state of the project.
-  - Next steps for the next agent.
-- Release locks in `.ag_registry.json`.
+## 4. CONFLICT RESOLUTION
 
-## 4. Conflict Resolution
-
-- If two agents have conflicting instructions, **Antigravity** is the master orchestrator.
-- User-defined rules in `MEMORY` blocks always take priority.
+- If you find code written by another node that contradicts your goal:
+  1. DO NOT delete it immediately.
+  2. Document the conflict in the Brain.
+  3. Ask the user (Gal) for a "Architectural Decision".
