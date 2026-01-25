@@ -1,9 +1,17 @@
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { groq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { LanguageModel } from "ai";
 
 export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b' | 'deepseek-chat';
+
+// Create custom Google provider with Referer header to bypass API restrictions
+const google = createGoogleGenerativeAI({
+    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    headers: {
+        'Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    }
+});
 
 const deepseek = createOpenAI({
   baseURL: 'https://api.deepseek.com',

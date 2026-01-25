@@ -13,7 +13,7 @@ export class AIGateway {
      * Attempts to generate text streaming using the defined fallback order.
      * Guaranteed to try all free models before failing.
      */
-    static async generateStream(params: GatewayParams): Promise<{ result: StreamTextResult<object>; modelId: ModelId }> {
+    static async generateStream(params: GatewayParams): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
         let lastError: unknown;
 
         for (const modelId of FALLBACK_ORDER) {
