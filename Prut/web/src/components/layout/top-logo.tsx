@@ -3,10 +3,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLibraryContext } from "@/context/LibraryContext";
 
 export function TopLogo() {
   const pathname = usePathname();
-  if (pathname === "/") return null;
+  const { viewMode } = useLibraryContext();
+  
+  // Show logo if we are NOT on root OR if we are on root but in a sub-view (personal/library)
+  // Actually, page.tsx renders everything on "/", so we check viewMode.
+  // If viewMode is 'home', we hide it (because home has the big logo).
+  // If viewMode is 'library' or 'personal', we show it.
+  
+  const isHomeView = pathname === "/" && viewMode === "home";
+  if (isHomeView) return null;
 
   return (
     <div className="fixed top-6 right-6 z-[9999]">

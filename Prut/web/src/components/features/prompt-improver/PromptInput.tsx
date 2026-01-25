@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2, Loader2, Mic, MicOff } from "lucide-react";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
@@ -10,6 +10,8 @@ import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { toast } from "sonner"; // Assuming sonner is available for error toasts
 
 interface PromptInputProps {
   user: User | null;
@@ -49,6 +51,21 @@ export function PromptInput({
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Voice Recorder Logic
+    const { isListening, toggleListening, isSupported } = useVoiceRecorder({
+        onResult: (text, isFinal) => {
+            if (isFinal) {
+                setInputVal((prev) => {
+                    const prefix = prev.trim() ? prev.trim() + " " : "";
+                    return prefix + text;
+                });
+            }
+        },
+        onError: (err) => {
+            toast.error("שגיאה בהקלטה: " + err);
+        }
+    });
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -173,6 +190,33 @@ export function PromptInput({
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Voice Input Trigger */}
+            {isSupported && (
+               <div className="absolute top-4 left-4 z-30">
+                   <button 
+                     onClick={toggleListening}
+                     className={cn(
+                       "p-2 rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
+                       isListening 
+                         ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse" 
+                         : "bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
+                     )}
+                     title={isListening ? "עצור הקלטה" : "הקלט קולית"}
+                   >
+                       {isListening ? (
+                           <MicOff className="w-5 h-5" />
+                       ) : (
+                           <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
+                       )}
+                   </button>
+                   {isListening && (
+                       <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                           מקליט...
+                       </span>
+                   )}
+               </div>
             )}
 
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-white/5 pt-5 p-5 md:p-7 relative z-20 bg-black/20">

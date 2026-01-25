@@ -531,12 +531,7 @@ export function PersonalLibraryView({
 
   return (
       <div className="flex flex-col gap-7 animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-24">
-        {/* Header Logo */}
-        <div className="flex items-center justify-start -mb-4">
-          <button onClick={() => setViewMode("home")} className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Image src="/logo.svg" alt="Peroot" width={48} height={48} priority className="h-10 w-auto brightness-110 transition-transform group-hover:scale-105" style={{ width: 'auto', height: 'auto' }} />
-          </button>
-        </div>
+
 
         <div className="glass-card p-7 md:p-9 rounded-2xl border-white/10 bg-black/40">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

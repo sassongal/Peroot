@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Frank_Ruhl_Libre, Heebo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { TopLogo } from "@/components/layout/top-logo";
 import { FAQSchema } from "@/components/features/faq/FAQSchema";
+import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
 
 const frankRuhl = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
@@ -118,10 +118,11 @@ export default async function RootLayout({
           דלג לתוכן הראשי
         </a>
         <div className="noise-overlay" />
-        <TopLogo />
         <FAQSchema />
         <I18nProvider dictionary={dictionary}>
-          {children}
+          <GlobalContextWrapper>
+            {children}
+          </GlobalContextWrapper>
         </I18nProvider>
       </body>
     </html>

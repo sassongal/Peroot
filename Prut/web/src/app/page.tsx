@@ -516,7 +516,7 @@ function PageContent({ user }: { user: User | null }) {
               width={384}
               height={120}
               priority
-              className="w-40 md:w-48 h-auto drop-shadow-2xl brightness-110"
+              className="w-20 md:w-28 h-auto drop-shadow-2xl brightness-110"
               style={{ width: 'auto', height: 'auto' }}
              />
            </div>
@@ -609,33 +609,12 @@ function PageContent({ user }: { user: User | null }) {
   );
 }
 
-// Wrapper component to provide context and user state
-function HomeWrapper() {
-  const { user } = useHistory(); 
-  const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
-  const [loginFeature, setLoginFeature] = useState("");
-
-  const showLoginRequired = (feature: string) => {
-      setLoginFeature(feature);
-      setIsLoginRequiredModalOpen(true);
-  };
-
+// Wrapper is no longer needed as context is global
+export default function HomePage() {
+  const { user } = useHistory();
   return (
-    <LibraryProvider user={user} showLoginRequired={showLoginRequired}>
-        <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-6 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
-            <Toaster position="top-center" theme="dark" closeButton />
-            <PageContent user={user} />
-            
-             <LoginRequiredModal
-                isOpen={isLoginRequiredModalOpen}
-                onClose={() => setIsLoginRequiredModalOpen(false)}
-                title="התחברות נדרשת"
-                message={`כדי להשתמש ב${loginFeature}, יש להתחבר לחשבון.`}
-                feature={loginFeature}
-            />
-        </div>
-    </LibraryProvider>
+    <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-6 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+        <PageContent user={user} />
+    </div>
   );
 }
-
-export default HomeWrapper;

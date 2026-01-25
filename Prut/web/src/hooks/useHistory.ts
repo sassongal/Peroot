@@ -29,12 +29,10 @@ export function useHistory() {
     async function init() {
       if (!mounted) return;
       
-      console.log("[useHistory] init: checking user...");
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
       if (!mounted) return;
       
-      console.log("[useHistory] init: currentUser =", currentUser?.email || "null");
       setUser(currentUser);
 
       if (currentUser) {
@@ -67,7 +65,6 @@ export function useHistory() {
 
     // Listen for Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(`[useHistory] onAuthStateChange: ${event}, user:`, session?.user?.email || "null");
       
       if (!mounted) return;
 
@@ -76,7 +73,6 @@ export function useHistory() {
       // Only re-run init if the user ID actually changed to avoid cycles
       setUser((prev) => {
         if (prev?.id !== newUser?.id) {
-          console.log("[useHistory] user ID changed, re-initializing...");
           init();
         }
         return newUser;
