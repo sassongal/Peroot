@@ -157,30 +157,29 @@ export async function POST(req: Request) {
                 }
             });
 
-            // 🚀 BACKGROUND TASKS: Non-blocking execution
-            // We initiate these but don't await them in the main thread to speed up response.
-            (async () => {
-                try {
-                    // Style Analysis & Achievements
-                    const { count } = await supabase
-                        .from('activity_logs')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('user_id', user.id)
-                        .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
+            // 🚀 BACKGROUND TASKS: Persistent Queue
+            // We enqueue these jobs to be processed by the worker (via Cron or Queue)
+            try {
+                const { enqueueJob } = await import("@/lib/jobs/queue");
+                
+                // 1. Style Analysis Check (Every 5th interaction)
+                const { count } = await supabase
+                    .from('activity_logs')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id)
+                    .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
 
-                    if (count && count % 5 === 0) {
-                        const { analyzeUserStyle } = await import("@/lib/intelligence/personality-analyzer");
-                        const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
-                        await analyzeUserStyle(user.id);
-                        await AchievementTracker.award(user.id, 'style_explorer');
-                    }
-
-                    const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
-                    await AchievementTracker.checkUsageMilestones(user.id);
-                } catch (bgError) {
-                    console.error("[BackgroundTasks] Error in non-blocking routine:", bgError);
+                if (count && count % 5 === 0) {
+                    await enqueueJob('style_analysis', { userId: user.id });
                 }
-            })();
+
+                // 2. Achievement Check (Always check)
+                await enqueueJob('achievement_check', { userId: user.id });
+
+            } catch (bgError) {
+                console.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
+                // Non-blocking, we still return the result
+            }
         }
       }
     });
