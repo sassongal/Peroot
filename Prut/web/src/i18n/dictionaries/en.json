@@ -1,0 +1,202 @@
+{
+  "locale": "en",
+  "onboarding": {
+    "welcome": "Welcome to Peroot",
+    "description": "We're here to help you become an AI expert. Peroot is your professional tool for creating, managing, and improving Hebrew prompts.",
+    "role_question": "What is your role?",
+    "role_description": "Choosing will help us match you with the most relevant prompts.",
+    "goal_question": "What is your main goal?",
+    "goal_description": "This way we'll know what to focus on in our engine optimization.",
+    "live_badge": "Live Detail",
+    "variables_title": "What's Peroot's Power? Variables!",
+    "variables_description": "In Peroot, you can use curly brackets <code className=\"text-amber-400\">{`{}`}</code> to turn any prompt into a smart template.",
+    "variables_magic": "Watch the bracket magic under your mouse",
+    "placeholder_badge": "This is a Placeholder!",
+    "fill_title": "Fill and Use",
+    "fill_description": "Once there are variables, Peroot creates an automatic form for you. Try filling in the client name:",
+    "variables_panel": "Variables Panel",
+    "preview": "Preview:",
+    "enhance_title": "And the best part? \"Enhance Prompt\"",
+    "enhance_description": "Our AI will take your simple prompt and turn it into a professional and detailed work tool.",
+    "original_prompt": "Original Prompt",
+    "peroot_result": "Peroot Result ✨",
+    "mission_mode": "[Mission Mode]",
+    "mission": "[Mission]",
+    "mission_description": "You are a customer service manager at a leading e-commerce company...",
+    "mission_task": "Draft a personal apology to a client named {name}...",
+    "ready_title": "We're ready!",
+    "ready_description": "You've learned how to use variables and enhance prompts to the highest level.\nNow your personal library and all advanced tools are open to you.",
+    "roles": {
+      "marketing": "Marketing & Advertising",
+      "dev": "Software Development",
+      "creative": "Creative & Design",
+      "sales": "Sales & CRM",
+      "product": "Product Management",
+      "education": "Education & Training",
+      "data": "Data Analysis",
+      "other": "Other"
+    },
+    "goals": {
+      "efficiency": "Saving time (Productivity)",
+      "quality": "Improving output quality (AI Quality)",
+      "learning": "Learning and improving my prompting",
+      "automation": "Automating repetitive tasks"
+    },
+    "sim_input": "Write an email to client {client_name} regarding {issue}",
+    "sim_placeholder": "e.g., John Doe",
+    "sim_issue_val": "Shipping delay",
+    "buttons": {
+        "start": "Get Started?",
+        "understand": "Understood, let's try",
+        "advanced": "Advanced",
+        "amazing": "Wow, amazing",
+        "lets_go": "Let's start",
+        "continue": "Continue",
+        "enhance_cta": "Enhance for me!",
+        "analyzing": "Analyzing..."
+    }
+  },
+  "home": {
+    "personal_library": "Personal Library",
+    "favorites": "Favorites",
+    "public_library": "Public Library",
+    "footer_credits": "Peroot © 2026 · Made by Joyatech",
+    "privacy_policy": "Privacy Policy",
+    "accessibility": "Accessibility Statement",
+    "login_required_title": "Login Required",
+    "login_required_msg": "To use {feature}, please log in to your account."
+  },
+  "auth": {
+    "login_signup": "Login / Sign Up",
+    "guest_mode": "Guest Mode",
+    "connected": "Connected",
+    "logout": "Sign Out",
+    "logout_success": "Logged out successfully",
+    "logout_error": "Error signing out",
+    "account_settings": "Account Settings",
+    "unexpected_error": "Unexpected error"
+  },
+  "prompt_generator": {
+    "capability_mode": "Capability Mode",
+    "variables": "Variables",
+    "variables_hint": "Fill in values and click to insert them into the prompt.",
+    "apply_to_prompt": "Insert to Prompt",
+    "live_view": "Live View:",
+    "placeholder": "Describe your prompt freely here... (e.g., 'I need an email for a client complaining about price')",
+    "prompt_strength": "Prompt Strength",
+    "usage_boost": "Usage Boost",
+    "category": "Category:",
+    "processing": "Processing...",
+    "success_toast": "Prompt enhanced!",
+    "error_toast": "Error enhancing prompt"
+  },
+  "result_section": {
+    "title": "Your Enhanced Prompt",
+    "ready": "Ready to use",
+    "performance_boost": "+{delta}% performance",
+    "copy_tooltip": "Copy",
+    "back_to_edit": "Back to Edit",
+    "save": "Save",
+    "copy_button": "Copy Prompt",
+    "copied": "Copied!",
+    "variables_title": "Prompt Variables",
+    "variable_placeholder": "Enter value for {ph}...",
+    "auto_update_hint": "Values automatically update in the prompt on the left"
+  },
+  "admin": {
+    "layout": {
+      "dashboard": "Dashboard",
+      "analytics": "Analytics",
+      "activity": "Activity",
+      "users": "Users",
+      "engines": "Prompt Engines",
+      "library": "Prompt Library",
+      "database": "Database",
+      "telemetry": "Telemetry Logs",
+      "settings": "Settings",
+      "logout": "Sign Out"
+    },
+    "dashboard": {
+      "loading": "Interrogating Systems...",
+      "description": "Peroot's main control center. Monitor performance, manage AI engines, and system infrastructure.",
+      "stats": {
+        "active_users": "Active Users",
+        "generated_prompts": "Generated Prompts",
+        "velocity": "Today's Velocity",
+        "active_styles": "Active Styles"
+      },
+      "quick_actions": {
+        "consolidate": "Consolidate Logic",
+        "consolidate_desc": "Unify all active prompt engines",
+        "maintenance": "Infra Maintenance",
+        "maintenance_desc": "Backups and database scaling"
+      }
+    },
+    "users": {
+        "title_desc": "Identity management, access monitoring, and resource usage. Full control over user access to the AI core.",
+        "search_placeholder": "Search by email, name or ID...",
+        "filters": {
+            "all": "All",
+            "admin": "Admins",
+            "active": "Active",
+            "banned": "Banned"
+        },
+        "stats": {
+            "total": "Total Identity",
+            "admins": "Nexus Admins",
+            "active": "Active Streams",
+            "credits": "Credits Liquid"
+        },
+        "table": {
+            "identity": "Unified Identity",
+            "access": "Access Tier",
+            "telemetry": "Telemetry Join",
+            "credits": "Credits",
+            "actions": "Actions",
+            "loading": "Accessing Data Stream...",
+            "empty": "No matched identities in terminal"
+        },
+        "toasts": {
+            "load_error": "Error loading users",
+            "sync_success": "Synced {count} users successfully",
+            "sync_error": "Error syncing with Auth",
+            "comm_error": "Communication failed",
+            "admin_confirm": "Are you sure you want to {action} admin permissions for this user?",
+            "action_add": "add",
+            "action_remove": "remove",
+            "update_success": "Permissions updated successfully",
+            "update_error": "Permission update failed"
+        }
+    },
+    "prompts": {
+        "title_desc": "Version management, logic routing, and real-time Bi-Directional instructions",
+        "search_placeholder": "Search prompts by key or content...",
+        "edit_model": "Edit Model",
+        "history": "History",
+        "save_changes": "Save Changes",
+        "cancel": "Cancel",
+        "toasts": {
+            "load_error": "Error loading prompts",
+            "login_required": "You must be logged in to edit prompts",
+            "update_success": "Prompt updated! New version created.",
+            "update_error": "Failed to save prompt",
+            "rollback_confirm": "Are you sure you want to rollback to version {version}?",
+            "rollback_success": "Prompt restored to the selected version",
+            "rollback_error": "Error restoring version"
+        }
+    }
+  },
+  "gamification": {
+    "achievements_title": "Achievements & Badges",
+    "unlocked_badge": "Unlocked Successfully!"
+  },
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish",
+    "loading": "Loading...",
+    "role": "Role",
+    "goal": "Goal",
+    "not_selected": "Not selected"
+  }
+}

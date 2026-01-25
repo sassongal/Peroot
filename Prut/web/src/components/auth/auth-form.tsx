@@ -160,7 +160,7 @@ export function AuthForm() {
             ) : (
                 <>
                     <span>{isLogin ? "כניסה למערכת" : "הרשמה וחשבון חדש"}</span>
-                    <ArrowRight className="w-4 h-4 rotate-180" />
+                    <ArrowRight className="w-4 h-4 rtl-flip" />
                 </>
             )}
           </button>

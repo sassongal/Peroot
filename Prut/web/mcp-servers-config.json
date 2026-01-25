@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "peroot-platform": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "scripts/peroot-mcp.ts"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

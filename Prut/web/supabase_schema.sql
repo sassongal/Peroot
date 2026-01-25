@@ -87,8 +87,8 @@ CREATE POLICY "Users can delete their own history"
 CREATE TABLE IF NOT EXISTS public.personal_library (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  title_he TEXT NOT NULL,
-  prompt_he TEXT NOT NULL,
+  title TEXT NOT NULL,
+  prompt TEXT NOT NULL,
   prompt_style TEXT,
   category TEXT,
   personal_category TEXT NOT NULL DEFAULT 'כללי',

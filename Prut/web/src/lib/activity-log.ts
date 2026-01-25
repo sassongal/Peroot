@@ -6,7 +6,7 @@ export interface ActivityLog {
   action: string;
   entity_type: string;
   entity_id?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   created_at: string;
@@ -16,7 +16,7 @@ export async function logActivity(
   action: string,
   entityType: string,
   entityId?: string,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ) {
   try {
     const supabase = await createClient();

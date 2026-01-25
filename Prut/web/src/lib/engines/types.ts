@@ -11,6 +11,7 @@ export interface EngineConfig {
   output_format_instruction?: string;
   default_params?: Record<string, unknown>;
   is_active?: boolean;
+  global_system_identity?: string;
 }
 
 export interface EngineInput {
@@ -21,6 +22,8 @@ export interface EngineInput {
   modeParams?: Record<string, unknown>;
   previousResult?: string;
   refinementInstruction?: string;
+  userHistory?: { title: string; prompt: string }[];
+  userPersonality?: { tokens: string[]; brief?: string; format?: string };
 }
 
 export interface EngineOutput {

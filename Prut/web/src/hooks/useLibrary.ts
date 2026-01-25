@@ -67,8 +67,8 @@ export function useLibrary() {
             setPersonalLibrary(
               libData.map((row, index) => ({
                 id: row.id,
-                title_he: row.title_he,
-                prompt_he: row.prompt_he,
+                title: row.title,
+                prompt: row.prompt,
                 prompt_style: row.prompt_style ?? undefined,
                 category: row.category ?? "",
                 personal_category: row.personal_category ?? null,
@@ -144,8 +144,8 @@ export function useLibrary() {
                        
                        const itemsToInsert = localItems.map(item => ({
                            user_id: newUser.id,
-                           title_he: item.title_he,
-                           prompt_he: item.prompt_he,
+                           title: item.title,
+                           prompt: item.prompt,
                            prompt_style: item.prompt_style ?? null,
                            category: item.category,
                            personal_category: item.personal_category,
@@ -220,10 +220,11 @@ export function useLibrary() {
     setPersonalLibrary(prev => [newItem, ...prev]);
 
     if (user) {
-        const insertData: any = {
+        // Prepare data for DB
+        const insertData = {
            user_id: user.id,
-           title_he: prompt.title_he,
-           prompt_he: prompt.prompt_he,
+           title: prompt.title,
+           prompt: prompt.prompt,
            prompt_style: prompt.prompt_style ?? null,
            category: prompt.category,
            personal_category: prompt.personal_category,
@@ -231,10 +232,14 @@ export function useLibrary() {
            source: prompt.source,
            sort_index: nextSortIndex,
            capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
+           tags: prompt.tags || []
         };
-        if (prompt.tags) insertData.tags = prompt.tags;
 
-      await supabase.from('personal_library').insert(insertData);
+      const { data, error } = await supabase.from('personal_library').insert(insertData).select().single();
+      if (!error && data) {
+          // Update the item in local state with the actual DB ID
+          setPersonalLibrary(prev => prev.map(p => p.id === newItem.id ? { ...p, id: data.id } : p));
+      }
     }
   };
 
@@ -270,13 +275,13 @@ export function useLibrary() {
     }
   };
 
-  const updatePrompt = async (id: string, updates: { title_he?: string; use_case?: string }) => {
+  const updatePrompt = async (id: string, updates: { title?: string; use_case?: string }) => {
     setPersonalLibrary(prev =>
       prev.map(p =>
         p.id === id
           ? {
               ...p,
-              title_he: updates.title_he ?? p.title_he,
+              title: updates.title ?? p.title,
               use_case: updates.use_case ?? p.use_case,
               updated_at: Date.now(),
             }
@@ -288,7 +293,7 @@ export function useLibrary() {
       await supabase
         .from('personal_library')
         .update({
-          title_he: updates.title_he,
+          title: updates.title,
           use_case: updates.use_case,
         })
         .eq('id', id)
@@ -296,14 +301,14 @@ export function useLibrary() {
     }
   };
 
-  const updatePromptContent = async (id: string, prompt_he: string, prompt_style?: string) => {
-    const trimmed = prompt_he.trim();
+  const updatePromptContent = async (id: string, prompt: string, prompt_style?: string) => {
+    const trimmed = prompt.trim();
     setPersonalLibrary(prev =>
       prev.map(p =>
         p.id === id
           ? {
               ...p,
-              prompt_he: trimmed || p.prompt_he,
+              prompt: trimmed || p.prompt,
               prompt_style: typeof prompt_style === "string" ? prompt_style : p.prompt_style,
               updated_at: Date.now(),
             }
@@ -312,8 +317,8 @@ export function useLibrary() {
     );
 
     if (user) {
-      const updates: { prompt_he?: string; prompt_style?: string } = {
-        prompt_he: trimmed || prompt_he,
+      const updates: { prompt?: string; prompt_style?: string } = {
+        prompt: trimmed || prompt,
       };
       if (typeof prompt_style === "string") {
         updates.prompt_style = prompt_style;
@@ -472,18 +477,115 @@ export function useLibrary() {
   };
 
   const movePrompts = async (ids: string[], category: string) => {
-      try {
-        const { error } = await supabase
-            .from("personal_library")
-            .update({ personal_category: category })
-            .in("id", ids);
-        if (error) throw error;
+      const trimmed = category.replace(/\s+/g, " ").trim();
+      if (!trimmed) return;
 
-        setPersonalLibrary(prev => prev.map(p => 
-            ids.includes(p.id) ? { ...p, personal_category: category } : p
-        ));
+      try {
+        // 1. Calculate next sort indices for the target category
+        // We append them to the end of the existing category
+        const targetItems = personalLibrary
+            .filter(p => p.personal_category === trimmed && !ids.includes(p.id))
+            .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+        
+        let nextIdx = targetItems.length;
+        
+        const updates = personalLibrary.map(p => {
+            if (ids.includes(p.id)) {
+                const updated = { ...p, personal_category: trimmed, sort_index: nextIdx, updated_at: Date.now() };
+                nextIdx++;
+                return updated;
+            }
+            return p;
+        });
+
+        // 2. Local State Update
+        setPersonalLibrary(updates);
+        
+        // 3. Category Sync
+        setPersonalCategories(prev => {
+            if (prev.includes(trimmed)) return prev;
+            return [...prev, trimmed];
+        });
+
+        // 4. DB Sync
+        if (user) {
+            const dbUpdates = updates
+                .filter(p => ids.includes(p.id))
+                .map(p => ({
+                    id: p.id,
+                    user_id: user.id,
+                    personal_category: p.personal_category,
+                    sort_index: p.sort_index,
+                    updated_at: new Date(p.updated_at).toISOString()
+                }));
+            
+            const { error } = await supabase
+                .from("personal_library")
+                .upsert(dbUpdates, { onConflict: 'id' });
+            
+            if (error) throw error;
+        }
       } catch (err) {
+        console.error("[useLibrary] movePrompts error:", err);
         throw err;
+      }
+  };
+
+  const addPrompts = async (prompts: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>[]) => {
+      if (prompts.length === 0) return;
+      
+      const newItems: PersonalPrompt[] = prompts.map((p, i) => ({
+          ...p,
+          id: crypto.randomUUID(),
+          use_count: 0,
+          created_at: Date.now() + i, // slight offset
+          updated_at: Date.now() + i,
+          sort_index: 0, // We'll fix indices shortly
+          capability_mode: p.capability_mode ?? CapabilityMode.STANDARD,
+          tags: p.tags || []
+      }));
+
+      // Calculate indices per category for the batch
+      const categoriesInBatch = Array.from(new Set(newItems.map(item => item.personal_category)));
+      
+      categoriesInBatch.forEach(cat => {
+          const currentMax = personalLibrary
+              .filter(p => p.personal_category === cat)
+              .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1);
+          
+          let runningIdx = currentMax + 1;
+          newItems.forEach(item => {
+              if (item.personal_category === cat) {
+                  item.sort_index = runningIdx++;
+              }
+          });
+      });
+
+      setPersonalLibrary(prev => [...newItems, ...prev]);
+
+      if (user) {
+          const insertData = newItems.map(item => ({
+              user_id: user.id,
+              title: item.title,
+              prompt: item.prompt,
+              prompt_style: item.prompt_style ?? null,
+              category: item.category,
+              personal_category: item.personal_category,
+              use_case: item.use_case,
+              source: item.source,
+              sort_index: item.sort_index,
+              capability_mode: item.capability_mode,
+              tags: item.tags
+          }));
+
+          const { data, error } = await supabase.from('personal_library').insert(insertData).select();
+          if (!error && data) {
+              // Sync IDs from DB
+              setPersonalLibrary(prev => prev.map(p => {
+                  const dbMatch = data.find(d => d.title === p.title && d.prompt === p.prompt);
+                  return dbMatch ? { ...p, id: dbMatch.id } : p;
+              }));
+          }
       }
   };
 
@@ -503,6 +605,44 @@ export function useLibrary() {
       }
   };
 
+  const updateProfile = async (updates: { 
+    onboarding_completed?: boolean;
+    plan_tier?: 'free' | 'pro';
+    credits_balance?: number;
+  }) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (error) {
+       console.error('[useLibrary] Error updating profile:', error);
+       throw error;
+    }
+  };
+
+  const completeOnboarding = async () => {
+    if (!user) return;
+    
+    try {
+        const response = await fetch('/api/user/onboarding/complete', {
+            method: 'POST',
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "Failed to complete onboarding");
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('[useLibrary] completeOnboarding error:', error);
+        throw error;
+    }
+  };
+
   return { 
     personalLibrary, 
     personalCategories, 
@@ -510,7 +650,7 @@ export function useLibrary() {
     addPrompt, 
     removePrompt, 
     updateCategory, 
-    incrementUseCount,
+    incrementUseCount, 
     updatePrompt,
     updatePromptContent,
     reorderPrompts,
@@ -519,6 +659,9 @@ export function useLibrary() {
     addCategory,
     deletePrompts,
     movePrompts,
-    updateTags
+    addPrompts,
+    updateTags,
+    updateProfile,
+    completeOnboarding
   };
 }

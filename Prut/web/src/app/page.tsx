@@ -1,8 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import NextImage from "next/image";
 import { Toaster, toast } from 'sonner';
+import { User } from "@supabase/supabase-js";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { HistoryPanel } from "@/components/features/history/HistoryPanel";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
@@ -15,8 +16,10 @@ import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { FAQBubble } from "@/components/features/faq/FAQBubble";
 import { SmartRefinement } from "@/components/features/prompt-improver/SmartRefinement";
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
-import { PromptUsage, Question, LibraryPrompt, PersonalPrompt } from "@/lib/types";
-import { scorePrompt } from "@/lib/prompt-engine";
+import { Question, LibraryPrompt, PersonalPrompt } from "@/lib/types";
+import { BaseEngine } from "@/lib/engines/base-engine";
+import { createClient } from "@/lib/supabase/client";
+import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
 import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
 import { LibraryView } from "@/components/views/LibraryView";
 import { PersonalLibraryView } from "@/components/views/PersonalLibraryView";
@@ -25,7 +28,6 @@ import { BookOpen, Star, Library } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Constants
-const USAGE_STORAGE_KEY = "peroot_prompt_usage_v1";
 
 const getPromptKey = (text: string) => {
   const normalized = text.trim().slice(0, 500);
@@ -37,8 +39,12 @@ const getPromptKey = (text: string) => {
   return `${Math.abs(hash)}:${normalized.length}`;
 };
 
-function PageContent() {
-  const { history, addToHistory, clearHistory, isLoaded, user } = useHistory();
+import { useI18n } from "@/context/I18nContext";
+
+function PageContent({ user }: { user: User | null }) {
+  const t = useI18n();
+  const { history, addToHistory, clearHistory, isLoaded } = useHistory();
+  // ... rest of imports stay the same ...
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { toggleFavorite: _toggle } = useFavorites();
   
@@ -47,8 +53,13 @@ function PageContent() {
     setViewMode, 
     addPrompt,
     personalView,
-    setPersonalView
+    setPersonalView,
+    updateProfile,
+    completeOnboarding
   } = useLibraryContext();
+
+  // User / Auth State
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Editor State
   const [selectedTone, setSelectedTone] = useState("Professional");
@@ -66,8 +77,6 @@ function PageContent() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Usage & Feedback
-  const [usageMap, setUsageMap] = useState<Record<string, PromptUsage>>({});
-  const [remoteUsageMap, setRemoteUsageMap] = useState<Record<string, PromptUsage>>({});
   const [guestPromptCount, setGuestPromptCount] = useState(0);
   
   // Modals
@@ -83,39 +92,49 @@ function PageContent() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = localStorage.getItem(USAGE_STORAGE_KEY);
-      if (stored) setUsageMap(JSON.parse(stored));
-    } catch (error) { console.warn(error); }
-  }, []);
+    const supabase = createClient();
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error fetching profile:", error);
+        } else if (data) {
+          if (!data.onboarding_completed) {
+            setShowOnboarding(true);
+          }
+        }
+      } else {
+        setShowOnboarding(false);
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   // --- Logic ---
 
   const showLoginRequired = (feature: string, message?: string) => {
     setLoginRequiredConfig({
       feature,
-      message: message || `כדי להשתמש ב${feature}, יש להתחבר לחשבון שלך.`
+      message: message || t.home.login_required_msg.replace('{feature}', feature)
     });
     setIsLoginRequiredModalOpen(true);
   };
 
-  const mergeUsage = (local?: PromptUsage, remote?: PromptUsage) => ({
-    copies: (local?.copies ?? 0) + (remote?.copies ?? 0),
-    saves: (local?.saves ?? 0) + (remote?.saves ?? 0),
-    refinements: (local?.refinements ?? 0) + (remote?.refinements ?? 0),
-  });
-
-  const inputKey = useMemo(() => getPromptKey(inputVal), [inputVal]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const completionKey = useMemo(() => getPromptKey(completion), [completion]);
   
   const inputScore = useMemo(
-    () => scorePrompt(inputVal, usageMap[inputKey]),
-    [inputVal, usageMap, inputKey]
+    () => BaseEngine.scorePrompt(inputVal),
+    [inputVal]
   );
   const completionScore = useMemo(
-    () => scorePrompt(completion, mergeUsage(usageMap[completionKey], remoteUsageMap[completionKey])),
-    [completion, usageMap, remoteUsageMap, completionKey]
+    () => BaseEngine.scorePrompt(completion),
+    [completion]
   );
 
   const scoreTone =
@@ -142,36 +161,6 @@ function PageContent() {
     setInputVal(next);
   };
   
-  // Remote Usage Loader
-  useEffect(() => {
-    const key = completionKey;
-    if (!completion || key === "empty") return;
-    const controller = new AbortController();
-    const loadUsage = async () => {
-      try {
-        const response = await fetch(`/api/prompt-usage?key=${encodeURIComponent(key)}`, {
-          signal: controller.signal,
-          cache: "no-store",
-        });
-        if (!response.ok) return;
-        const data = await response.json();
-        if (!data) return;
-        setRemoteUsageMap((prev) => ({
-          ...prev,
-          [key]: {
-            copies: data.copies ?? 0,
-            saves: data.saves ?? 0,
-            refinements: data.refinements ?? 0,
-          },
-        }));
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") console.warn(error);
-      }
-    };
-    loadUsage();
-    return () => controller.abort();
-  }, [completion, completionKey]);
-
   const recordUsageSignal = (type: "copy" | "save" | "refine" | "enhance", text: string) => {
     const target = text.trim();
     if (!target) return;
@@ -185,20 +174,6 @@ function PageContent() {
         prompt_length: target.length,
       }),
     }).catch(() => {});
-    
-    setUsageMap((prev) => {
-      const current = prev[key] ?? { copies: 0, saves: 0, refinements: 0 };
-      const next = { ...current };
-      if (type === "copy") next.copies = (next.copies || 0) + 1;
-      if (type === "save") next.saves = (next.saves || 0) + 1;
-      if (type === "refine") next.refinements = (next.refinements || 0) + 1;
-      
-      const updated = { ...prev, [key]: next };
-      if (typeof window !== "undefined") {
-        localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(updated));
-      }
-      return updated;
-    });
   };
 
   const handleEnhance = async () => {
@@ -212,6 +187,7 @@ function PageContent() {
     setCompletion("");
     setQuestions([]);
     setQuestionAnswers({});
+    
     try {
       const response = await fetch("/api/enhance", {
         method: "POST",
@@ -223,15 +199,32 @@ function PageContent() {
           capability_mode: selectedCapability 
         }),
       });
-      if (!response.ok) throw new Error("Failed to enhance prompt");
-      const data = await response.json();
-      setCompletion(data.great_prompt);
-      recordUsageSignal("enhance", data.great_prompt);
-      setQuestions([]);
-      setQuestionAnswers({});
-      setDetectedCategory(data.category || selectedCategory);
 
-      const extracted = extractPlaceholders(data.great_prompt);
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to enhance prompt");
+      }
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        setCompletion(fullText);
+      }
+
+      // Cleanup & Post-processing
+      recordUsageSignal("enhance", fullText);
+      setDetectedCategory(selectedCategory);
+
+      const extracted = extractPlaceholders(fullText);
       setVariableValues(prev => {
         const next = { ...prev };
         extracted.forEach(ph => { if (!(ph in next)) next[ph] = ""; });
@@ -240,9 +233,9 @@ function PageContent() {
 
       addToHistory({
         original: inputVal,
-        enhanced: data.great_prompt,
+        enhanced: fullText,
         tone: selectedTone,
-        category: data.category || selectedCategory,
+        category: selectedCategory,
       });
 
       if (!user) {
@@ -250,9 +243,12 @@ function PageContent() {
         setGuestPromptCount(nextCount);
         sessionStorage.setItem("peroot_guest_count", nextCount.toString());
       }
-      toast.success("הפרומפט שופר!");
-    } catch {
-      toast.error("שגיאה בשיפור הפרומפט");
+      toast.success(t.prompt_generator.success_toast);
+
+    } catch (e) {
+      const err = e as Error;
+      console.error("[Enhance] Error:", err);
+      toast.error(err.message || t.prompt_generator.error_toast);
     } finally {
       setIsLoading(false);
     }
@@ -278,28 +274,49 @@ function PageContent() {
           answers: questionAnswers,
         }),
       });
-      if (!response.ok) throw new Error("Failed to refine prompt");
-      const data = await response.json();
-      setCompletion(data.great_prompt);
-      recordUsageSignal("refine", data.great_prompt);
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to refine prompt");
+      }
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      // Stream the refined text
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        setCompletion(fullText);
+      }
+
+      recordUsageSignal("refine", fullText);
       
-      const extracted = extractPlaceholders(data.great_prompt);
+      const extracted = extractPlaceholders(fullText);
       setVariableValues(prev => {
         const next = { ...prev };
         extracted.forEach(ph => { if (!(ph in next)) next[ph] = ""; });
         return next;
       });
 
-      if (data.clarifying_questions?.length > 0) {
-        setQuestions(data.clarifying_questions);
-        setQuestionAnswers({});
-      } else {
-        setQuestions([]);
-        setQuestionAnswers({});
-      }
+      // For refinement, we don't always get new questions unless logic changes
+      // In current streaming mode, we might need a separate endpoint for metadata
+      // For now, clear questions on finish to avoid stale state
+      setQuestions([]);
+      setQuestionAnswers({});
+
       toast.success("הפרומפט עודכן!");
-    } catch {
-      toast.error("שגיאה בעדכון הפרומפט");
+
+    } catch (e) {
+      const err = e as Error;
+      console.error("[Refine] Error:", err);
+      toast.error(err.message || "שגיאה בעדכון הפרומפט");
     } finally {
       setIsLoading(false);
     }
@@ -314,7 +331,7 @@ function PageContent() {
   };
 
   const handleUsePrompt = (prompt: LibraryPrompt | PersonalPrompt) => {
-    setInputVal(prompt.prompt_he);
+    setInputVal(prompt.prompt);
     setViewMode("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -334,8 +351,8 @@ function PageContent() {
       return;
     }
     addPrompt({
-      title_he: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
-      prompt_he: item.enhanced,
+      title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
+      prompt: item.enhanced,
       category: item.category,
       personal_category: PERSONAL_DEFAULT_CATEGORY,
       capability_mode: CapabilityMode.STANDARD,
@@ -353,8 +370,8 @@ function PageContent() {
     }
     if (!completion.trim()) return;
     addPrompt({
-      title_he: inputVal.slice(0, 30) + (inputVal.length > 30 ? "..." : ""),
-      prompt_he: completion,
+      title: inputVal.slice(0, 30) + (inputVal.length > 30 ? "..." : ""),
+      prompt: completion,
       category: detectedCategory || selectedCategory,
       personal_category: PERSONAL_DEFAULT_CATEGORY,
       capability_mode: selectedCapability,
@@ -368,6 +385,17 @@ function PageContent() {
   const handleImportHistory = () => {
      history.forEach(item => addPersonalPromptFromHistory(item));
      toast.success("כל ההיסטוריה יובאה!");
+  };
+
+  const handleOnboardingComplete = async () => {
+      try {
+          await completeOnboarding();
+          setShowOnboarding(false);
+          toast.success("ברוכים הבאים לפירוט!");
+      } catch (e) {
+          console.error('[Onboarding] Error:', e);
+          toast.error("שגיאה בשמירת נתוני Onboarding");
+      }
   };
 
   const handleNavPersonal = () => {
@@ -440,7 +468,7 @@ function PageContent() {
                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
                   <BookOpen className="w-4 h-4" />
                 </div>
-                <span>ספריה אישית</span>
+                <span>{t.home.personal_library}</span>
               </button>
               
               <button
@@ -453,7 +481,7 @@ function PageContent() {
                 <div className={cn("p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors", personalView === "favorites" && "bg-yellow-500/20")}>
                   <Star className="w-4 h-4" />
                 </div>
-                <span>מועדפים</span>
+                <span>{t.home.favorites}</span>
               </button>
 
               <button
@@ -463,7 +491,7 @@ function PageContent() {
                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
                   <Library className="w-4 h-4" />
                 </div>
-                <span>ספריה ציבורית</span>
+                <span>{t.home.public_library}</span>
               </button>
            </div>
 
@@ -481,12 +509,15 @@ function PageContent() {
 
         {/* Main Content (Center) */}
         <div className="lg:col-span-9 flex flex-col gap-8 max-w-5xl mx-auto w-full pl-0 lg:pl-12">
-           {/* Huge Central Logo */}
            <div className="flex justify-center pb-2">
-             <img 
+             <NextImage 
               src="/logo.svg" 
               alt="Peroot" 
+              width={384}
+              height={120}
+              priority
               className="w-80 md:w-96 h-auto drop-shadow-2xl brightness-110"
+              style={{ width: 'auto', height: 'auto' }}
              />
            </div>
 
@@ -562,14 +593,18 @@ function PageContent() {
       {/* Footer */}
       <div className="mt-20 text-center pb-8 flex flex-col gap-4 animate-in fade-in duration-1000 delay-300">
          <p className="font-mono text-xs text-slate-600 uppercase tracking-widest">
-            Peroot © 2026 · Made by Joyatech
+            {t.home.footer_credits}
          </p>
          <div className="flex justify-center gap-6 text-xs text-slate-500 font-medium">
-            <a href="/privacy" className="hover:text-slate-300 transition-colors">מדיניות פרטיות</a>
+            <a href="/privacy" className="hover:text-slate-300 transition-colors">{t.home.privacy_policy}</a>
             <span className="text-slate-700">|</span>
-            <a href="/accessibility" className="hover:text-slate-300 transition-colors">הצהרת נגישות</a>
+            <a href="/accessibility" className="hover:text-slate-300 transition-colors">{t.home.accessibility}</a>
          </div>
       </div>
+      {/* Onboarding Overlay */}
+      {showOnboarding && user && (
+          <OnboardingOverlay onComplete={handleOnboardingComplete} />
+      )}
     </div>
   );
 }
@@ -589,7 +624,7 @@ function HomeWrapper() {
     <LibraryProvider user={user} showLoginRequired={showLoginRequired}>
         <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-6 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
             <Toaster position="top-center" theme="dark" closeButton />
-            <PageContent />
+            <PageContent user={user} />
             
              <LoginRequiredModal
                 isOpen={isLoginRequiredModalOpen}

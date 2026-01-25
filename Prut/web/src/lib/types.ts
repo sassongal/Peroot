@@ -29,8 +29,8 @@ export type ModeParams = ImageGenerationParams | AgentBuilderParams;
 
 export type PersonalPrompt = {
   id: string;
-  title_he: string;
-  prompt_he: string;
+  title: string;
+  prompt: string;
   category: string;
   personal_category: string | null;
   /** Defaults to STANDARD if not specified */
@@ -44,16 +44,17 @@ export type PersonalPrompt = {
   reference?: string; // ID if from library
   sort_index?: number;
   prompt_style?: string; // HTML with style tokens
+  tags?: string[];
 };
 
 export type LibraryPrompt = {
   id: string;
-  title_he: string;
+  title: string;
   category: string;
   /** Defaults to STANDARD if not specified */
   capability_mode?: CapabilityMode;
   use_case: string;
-  prompt_he: string;
+  prompt: string;
   variables: string[];
   output_format: string;
   quality_checks: string[];
@@ -66,4 +67,20 @@ export type LibraryPrompt = {
     reference: string;
   };
 };
+
+export interface Achievement {
+  id: string;
+  name_he: string;
+  description_he: string;
+  icon: string;
+  category: string;
+  points: number;
+}
+
+export interface UserAchievement {
+  user_id: string;
+  achievement_id: string;
+  unlocked_at: string;
+  achievement?: Achievement;
+}
 

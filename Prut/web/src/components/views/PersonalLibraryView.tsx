@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { 
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
 import { toast } from "sonner";
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState } from "react";
 import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
@@ -95,6 +96,7 @@ export function PersonalLibraryView({
   
   // -- Local State --
   const [layoutMode, setLayoutMode] = useState<"grid" | "list">("grid");
+  const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   // Dialogs State
@@ -102,12 +104,14 @@ export function PersonalLibraryView({
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [tagsInput, setTagsInput] = useState("");
   const [targetMoveCategory, setTargetMoveCategory] = useState("");
+  const [isCreatingNewMoveCategory, setIsCreatingNewMoveCategory] = useState(false);
+  const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
 
   const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
     try {
         await addPrompt({
-            title_he: prompt.title_he,
-            prompt_he: prompt.prompt_he,
+            title: prompt.title,
+            prompt: prompt.prompt,
             category: prompt.category,
             personal_category: PERSONAL_DEFAULT_CATEGORY,
             use_case: prompt.use_case,
@@ -159,7 +163,7 @@ export function PersonalLibraryView({
   };
   
   const getStyledPromptMarkup = (prompt: PersonalPrompt) => {
-    return prompt.prompt_style || prompt.prompt_he;
+    return prompt.prompt_style || prompt.prompt;
   };
 
   // -- Batch Logic --
@@ -183,8 +187,22 @@ export function PersonalLibraryView({
      setSelectedIds(next);
   };
 
+  const selectAllVisible = () => {
+    const next = new Set(selectedIds);
+    const visibleIds = displayItems.map(p => p.id);
+    const allVisibleSelected = visibleIds.every(id => next.has(id));
+    
+    if (allVisibleSelected) {
+        visibleIds.forEach(id => next.delete(id));
+    } else {
+        visibleIds.forEach(id => next.add(id));
+    }
+    setSelectedIds(next);
+  };
+
   const clearSelection = () => {
       setSelectedIds(new Set());
+      setSelectionMode(false);
   };
   
   const handleBatchDelete = async () => {
@@ -199,11 +217,14 @@ export function PersonalLibraryView({
   };
 
   const handleBatchMove = async () => {
-      if (!targetMoveCategory) return;
+      const category = isCreatingNewMoveCategory ? newMoveCategoryInput.trim() : targetMoveCategory;
+      if (!category) return;
       try {
-          await movePrompts(Array.from(selectedIds), targetMoveCategory);
+          await movePrompts(Array.from(selectedIds), category);
           toast.success("הועברו בהצלחה");
           setShowMoveDialog(false);
+          setIsCreatingNewMoveCategory(false);
+          setNewMoveCategoryInput("");
           clearSelection();
       } catch {
           toast.error("שגיאה בהעברה");
@@ -257,14 +278,14 @@ export function PersonalLibraryView({
     displayItems.some((prompt) => prompt.personal_category === cat || (!prompt.personal_category && cat === PERSONAL_DEFAULT_CATEGORY))
   );
 
-  const grouped = useMemo(() => {
-      return displayItems.reduce<Record<string, PersonalPrompt[]>>((acc, prompt) => {
-        const key = prompt.personal_category || PERSONAL_DEFAULT_CATEGORY;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(prompt);
-        return acc;
-      }, {});
-  }, [displayItems]);
+  const grouped: Record<string, PersonalPrompt[]> = {};
+  if (displayItems && Array.isArray(displayItems)) {
+    for (const prompt of displayItems) {
+      const key = prompt.personal_category || PERSONAL_DEFAULT_CATEGORY;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(prompt);
+    }
+  }
 
   const totalCount = displayItems.length;
 
@@ -306,21 +327,21 @@ export function PersonalLibraryView({
             !isEditing && "cursor-grab",
             isDragging && "opacity-60",
             isDragOver && "ring-2 ring-white/30",
-            isSelected && "ring-2 ring-blue-500/50 bg-blue-500/5"
+            (isSelected || selectionMode) && "ring-2 ring-blue-500/50 bg-blue-500/5"
           )}
           contentClassName="p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[420px]"
         >
           {/* Selection Checkbox Overlay */}
           <div className={cn(
-              "absolute top-6 left-6 z-10 transition-opacity duration-200",
-              isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          )}>
-              <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}>
-                  {isSelected 
-                    ? <CheckSquare className="w-6 h-6 text-blue-400 fill-blue-500/20" /> 
-                    : <Square className="w-6 h-6 text-slate-500 hover:text-slate-300" />}
-              </button>
-          </div>
+               "absolute top-6 left-6 z-10 transition-opacity duration-200",
+               (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+           )}>
+               <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}>
+                   {isSelected 
+                     ? <CheckSquare className="w-6 h-6 text-blue-400 fill-blue-500/20" /> 
+                     : <Square className="w-6 h-6 text-slate-500 hover:text-slate-300" />}
+               </button>
+           </div>
 
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
@@ -348,7 +369,7 @@ export function PersonalLibraryView({
                     <div className="flex flex-wrap gap-2 mb-1">
                         <CapabilityBadge mode={prompt.capability_mode} />
                     </div>
-                    <h4 className="text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title_he}</h4>
+                    <h4 className="text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
                     <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
                     {renderPromptTags(prompt.tags)}
                   </>
@@ -438,7 +459,7 @@ export function PersonalLibraryView({
               השתמש בפרומפט
             </button>
             <button
-              onClick={() => onCopyText(prompt.prompt_he)}
+              onClick={() => onCopyText(prompt.prompt)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
             >
               <Copy className="w-3 h-3" />
@@ -484,7 +505,7 @@ export function PersonalLibraryView({
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
                   <div className="flex items-center gap-2 mb-1">
                       {renderPromptTags(prompt.tags)}
-                      <h4 className="text-base text-slate-200 font-medium truncate">{prompt.title_he}</h4>
+                      <h4 className="text-base text-slate-200 font-medium truncate">{prompt.title}</h4>
                   </div>
                   <p className="text-sm text-slate-500 truncate w-full max-w-[60vw]" dir="rtl">{prompt.use_case}</p>
               </div>
@@ -498,7 +519,7 @@ export function PersonalLibraryView({
               {/* Actions */}
               <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white"><Plus className="w-4 h-4"/></button>
-                  <button onClick={() => onCopyText(prompt.prompt_he)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Copy className="w-4 h-4"/></button>
+                  <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Copy className="w-4 h-4"/></button>
                   <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Pencil className="w-4 h-4"/></button>
                   <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full">
                       <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
@@ -513,7 +534,7 @@ export function PersonalLibraryView({
         {/* Header Logo */}
         <div className="flex items-center justify-start -mb-4">
           <button onClick={() => setViewMode("home")} className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img src="/logo.svg" alt="Peroot" className="h-24 w-auto brightness-110 transition-transform group-hover:scale-105" />
+            <Image src="/logo.svg" alt="Peroot" width={96} height={96} priority className="h-24 w-auto brightness-110 transition-transform group-hover:scale-105" style={{ width: 'auto', height: 'auto' }} />
           </button>
         </div>
 
@@ -543,6 +564,25 @@ export function PersonalLibraryView({
                   >
                       <LayoutList className="w-5 h-5" />
                   </button>
+              </div>
+
+              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ml-2">
+                  <button 
+                    onClick={() => setSelectionMode(!selectionMode)}
+                    className={cn("px-3 py-2 rounded-md transition-all text-xs font-bold flex items-center gap-2", selectionMode ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40" : "text-slate-500 hover:text-slate-300")}
+                    title="מצב בחירה מרובה"
+                  >
+                      <CheckSquare className="w-4 h-4" />
+                      <span>ניהול פריטים</span>
+                  </button>
+                  {selectionMode && (
+                      <button 
+                         onClick={selectAllVisible}
+                         className="px-3 py-2 rounded-md text-xs font-bold text-slate-300 hover:text-white"
+                      >
+                          בחר הכל ({totalCount})
+                      </button>
+                  )}
               </div>
 
               <button
@@ -650,7 +690,7 @@ export function PersonalLibraryView({
                                       // Minimal card for library favorites (read-only mostly)
                                       <GlowingEdgeCard key={p.id} className="rounded-2xl" contentClassName="p-6 flex flex-col gap-4">
                                           <div className="flex justify-between">
-                                              <h4 className="text-white font-semibold">{p.title_he}</h4>
+                                              <h4 className="text-white font-semibold">{p.title}</h4>
                                               <button onClick={() => handleToggleFavorite("library", p.id)}><Star className="w-4 h-4 text-yellow-300 fill-yellow-300"/></button>
                                           </div>
                                           <p className="text-slate-400 text-sm">{p.use_case}</p>
@@ -766,13 +806,39 @@ export function PersonalLibraryView({
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">העברת {selectedIds.size} פריטים</h3>
                     <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
+                        <button
+                            onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
+                            className={cn(
+                                "w-full text-right px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between",
+                                isCreatingNewMoveCategory ? "bg-blue-600/20 border-blue-500 text-blue-200" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                            )}
+                        >
+                            <span>+ קטגוריה חדשה</span>
+                            <Plus className="w-4 h-4" />
+                        </button>
+
+                        {isCreatingNewMoveCategory && (
+                            <div className="p-1 animate-in slide-in-from-top-2 duration-300">
+                                <input
+                                    dir="rtl"
+                                    value={newMoveCategoryInput}
+                                    onChange={e => setNewMoveCategoryInput(e.target.value)}
+                                    placeholder="שם הקטגוריה..."
+                                    className="w-full bg-black/40 border border-blue-500/50 rounded-lg p-3 text-white focus:outline-none"
+                                    autoFocus
+                                />
+                            </div>
+                        )}
+
+                        <div className="h-px bg-white/5 my-2" />
+
                         {personalCategories.concat(PERSONAL_DEFAULT_CATEGORY).map(cat => (
                             <button
                                 key={cat}
-                                onClick={() => setTargetMoveCategory(cat)}
+                                onClick={() => { setTargetMoveCategory(cat); setIsCreatingNewMoveCategory(false); }}
                                 className={cn(
                                     "w-full text-right px-4 py-3 rounded-xl border transition-all text-sm",
-                                    targetMoveCategory === cat ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                                    targetMoveCategory === cat && !isCreatingNewMoveCategory ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
                                 )}
                             >
                                 {cat}
@@ -780,8 +846,19 @@ export function PersonalLibraryView({
                         ))}
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={handleBatchMove} disabled={!targetMoveCategory} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50">אישור</button>
-                        <button onClick={() => setShowMoveDialog(false)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg">ביטול</button>
+                        <button 
+                            onClick={handleBatchMove} 
+                            disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())} 
+                            className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50"
+                        >
+                            אישור
+                        </button>
+                        <button 
+                            onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }} 
+                            className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg"
+                        >
+                            ביטול
+                        </button>
                     </div>
                 </div>
             </div>

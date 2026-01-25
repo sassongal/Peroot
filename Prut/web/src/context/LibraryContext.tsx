@@ -51,9 +51,16 @@ interface LibraryContextType {
   incrementUseCount: (id: string) => Promise<void>;
   
   // Batch Actions
+  addPrompts: (prompts: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">[]) => Promise<void>;
   deletePrompts: (ids: string[]) => Promise<void>;
   movePrompts: (ids: string[], category: string) => Promise<void>;
   updateTags: (id: string, tags: string[]) => Promise<void>;
+  updateProfile: (updates: { 
+    onboarding_completed?: boolean;
+    plan_tier?: 'free' | 'pro';
+    credits_balance?: number;
+  }) => Promise<void>;
+  completeOnboarding: () => Promise<boolean | undefined>;
   
   // Categories
   newPersonalCategory: string;
@@ -111,8 +118,8 @@ const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
 
 const PERSONAL_DEFAULT_CATEGORY = "כללי";
 
-// Fallback logic for promptsData if it's not matching expected type
-const libraryPrompts = (Array.isArray(promptsData) 
+// Initial fallback data from JSON
+const fallbackLibraryPrompts = (Array.isArray(promptsData) 
   ? promptsData 
   : (promptsData as { prompts?: LibraryPrompt[] }).prompts || []) as unknown as LibraryPrompt[];
 
@@ -133,6 +140,34 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const [selectedCapabilityFilter, setSelectedCapabilityFilter] = useState<CapabilityMode | null>(null);
   const [favoritesCapabilityFilter, setFavoritesCapabilityFilter] = useState<CapabilityMode | null>(null);
 
+  // Dynamic Data State
+  const [libraryPrompts, setLibraryPrompts] = useState<LibraryPrompt[]>(fallbackLibraryPrompts);
+  const [, setDynamicCategories] = useState<unknown[]>([]);
+
+  // --- Effects ---
+  useEffect(() => {
+    const fetchPublicData = async () => {
+        try {
+            const [pRes, cRes] = await Promise.all([
+                fetch("/api/library/prompts"),
+                fetch("/api/library/categories")
+            ]);
+            
+            if (pRes.ok) {
+                const pData = await pRes.json();
+                if (pData.length > 0) setLibraryPrompts(pData);
+            }
+            if (cRes.ok) {
+                const cData = await cRes.json();
+                setDynamicCategories(cData);
+            }
+        } catch (e) {
+            console.warn("Library synchronization paused:", e);
+        }
+    };
+    fetchPublicData();
+  }, []);
+
   // --- Hooks ---
   const { 
     personalLibrary, 
@@ -148,7 +183,10 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     addCategory: addLibCategory,
     deletePrompts,      // New
     movePrompts,        // New
-    updateTags          // New
+    addPrompts,         // New
+    updateTags,          // New
+    updateProfile,
+    completeOnboarding
   } = useLibrary();
 
   const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite: toggleFavoriteBase } = useFavorites();
@@ -188,12 +226,12 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     const query = libraryQuery.trim().toLowerCase();
     if (query) {
       result = result.filter(prompt => 
-        [prompt.title_he, prompt.use_case, prompt.category, prompt.prompt_he]
+        [prompt.title, prompt.use_case, prompt.category, prompt.prompt]
           .join(" ").toLowerCase().includes(query)
       );
     }
     return result;
-  }, [libraryQuery, selectedCapabilityFilter]);
+  }, [libraryQuery, selectedCapabilityFilter, libraryPrompts]);
 
   const libraryFavorites = useMemo(() => {
     let result = libraryPrompts.filter((p: LibraryPrompt) => favoriteLibraryIds.has(p.id));
@@ -204,7 +242,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       );
     }
     return result;
-  }, [favoriteLibraryIds, favoritesCapabilityFilter]);
+  }, [favoriteLibraryIds, favoritesCapabilityFilter, libraryPrompts]);
 
   // Compute Capability Counts for Library
   const libraryCapabilityCounts = useMemo(() => {
@@ -216,7 +254,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       counts[mode] = (counts[mode] || 0) + 1;
     });
     return counts as Record<CapabilityMode, number>;
-  }, []);
+  }, [libraryPrompts]);
 
   // ... (getUpdatedAt, getSortIndex helpers)
 
@@ -249,7 +287,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     
     if (query) {
       result = result.filter(p => 
-        [p.title_he, p.prompt_he, p.use_case, p.personal_category]
+        [p.title, p.prompt, p.use_case, p.personal_category]
           .join(" ").toLowerCase().includes(query)
       );
     }
@@ -257,7 +295,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     // ... (sorting logic remains the same)
     
     return result;
-  }, [personalLibrary, personalQuery, personalSort, personalView, favoritePersonalIds, selectedCapabilityFilter]);
+  }, [personalLibrary, personalQuery, personalView, favoritePersonalIds, selectedCapabilityFilter]);
 
   // Compute Capability Counts for Personal
   const personalCapabilityCounts = useMemo(() => {
@@ -352,7 +390,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   const startEditingPersonalPrompt = (prompt: PersonalPrompt) => {
     setEditingPersonalId(prompt.id);
-    setEditingTitle(prompt.title_he);
+    setEditingTitle(prompt.title);
     setEditingUseCase(prompt.use_case);
   };
 
@@ -366,7 +404,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     if (!editingPersonalId) return;
     try {
       await updatePrompt(editingPersonalId, {
-        title_he: editingTitle,
+        title: editingTitle,
         use_case: editingUseCase
       });
       toast.success("הפרומפט עודכן");
@@ -412,7 +450,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   const openStyleEditor = (prompt: PersonalPrompt) => {
     setEditingStylePromptId(prompt.id);
-    setStyleDraft(promptStyles[prompt.id] || prompt.prompt_he); // Fallback to raw text if no style
+    setStyleDraft(promptStyles[prompt.id] || prompt.prompt); // Fallback to raw text if no style
   };
 
   const closeStyleEditor = () => {
@@ -433,7 +471,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
         // We need to find the prompt to get its text
         const prompt = personalLibrary.find(p => p.id === id);
         if (prompt) {
-             await updatePromptContent(id, prompt.prompt_he, styleDraft);
+             await updatePromptContent(id, prompt.prompt, styleDraft);
         }
 
         toast.success("עיצוב נשמר");
@@ -454,7 +492,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
     popularityMap,
     addPrompt, removePrompt, updatePrompt, incrementUseCount,
-    deletePrompts, movePrompts, updateTags, // Exposed
+    deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding, // Exposed
     newPersonalCategory, setNewPersonalCategory,
     renamingCategory, setRenamingCategory,
     renameCategoryInput, setRenameCategoryInput,

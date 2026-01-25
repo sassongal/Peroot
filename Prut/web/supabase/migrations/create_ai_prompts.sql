@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS ai_prompts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   prompt_key TEXT NOT NULL UNIQUE,
-  prompt_content TEXT NOT NULL,
+  prompt TEXT NOT NULL,
   version INTEGER NOT NULL DEFAULT 1,
   is_active BOOLEAN DEFAULT true,
   metadata JSONB DEFAULT '{}',
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ai_prompt_versions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   prompt_id UUID REFERENCES ai_prompts(id) ON DELETE CASCADE,
   version INTEGER NOT NULL,
-  prompt_content TEXT NOT NULL,
+  prompt TEXT NOT NULL,
   metadata JSONB DEFAULT '{}',
   created_by UUID,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -51,8 +51,8 @@ CREATE OR REPLACE FUNCTION create_prompt_version()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Insert old version into history
-  INSERT INTO ai_prompt_versions (prompt_id, version, prompt_content, metadata, created_by)
-  VALUES (OLD.id, OLD.version, OLD.prompt_content, OLD.metadata, OLD.created_by);
+  INSERT INTO ai_prompt_versions (prompt_id, version, prompt, metadata, created_by)
+  VALUES (OLD.id, OLD.version, OLD.prompt, OLD.metadata, OLD.created_by);
   
   -- Increment version
   NEW.version = OLD.version + 1;
@@ -67,11 +67,11 @@ DROP TRIGGER IF EXISTS trigger_create_prompt_version ON ai_prompts;
 CREATE TRIGGER trigger_create_prompt_version
   BEFORE UPDATE ON ai_prompts
   FOR EACH ROW
-  WHEN (OLD.prompt_content IS DISTINCT FROM NEW.prompt_content)
+  WHEN (OLD.prompt IS DISTINCT FROM NEW.prompt)
   EXECUTE FUNCTION create_prompt_version();
 
 -- Seed initial prompts (from existing code)
-INSERT INTO ai_prompts (prompt_key, prompt_content, version, metadata) VALUES
+INSERT INTO ai_prompts (prompt_key, prompt, version, metadata) VALUES
 (
   'prompt_generator_v1',
   'Role: Senior Prompt Engineer & Product Writer

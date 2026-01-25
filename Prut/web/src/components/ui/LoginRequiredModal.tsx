@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { X, LogIn } from "lucide-react";
 import Link from "next/link";
 
@@ -59,7 +60,7 @@ export function LoginRequiredModal({
 
         <div className="flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center border border-white/10">
-            <img src="/logo.svg" alt="Peroot" className="w-10 h-10 brightness-110" />
+            <Image src="/logo.svg" alt="Peroot" width={40} height={40} className="w-10 h-10 brightness-110" style={{ width: 'auto', height: 'auto' }} />
           </div>
 
           <div className="space-y-2">

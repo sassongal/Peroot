@@ -95,13 +95,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { I18nProvider } from "@/context/I18nContext";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Default to Hebrew for now. 
+  // Future: Detect from URL or cookie
+  const locale = 'he';
+  const dictionary = await getDictionary(locale);
+
   return (
-    <html lang="he" dir="rtl" className="dark">
+    <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark">
       <body
         className={`${frankRuhl.variable} ${heebo.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative`}
         suppressHydrationWarning
@@ -112,7 +120,9 @@ export default function RootLayout({
         <div className="noise-overlay" />
         <TopLogo />
         <FAQSchema />
-        {children}
+        <I18nProvider dictionary={dictionary}>
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

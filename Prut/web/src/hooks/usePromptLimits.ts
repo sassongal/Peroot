@@ -13,6 +13,7 @@ const USAGE_STORAGE_KEY = 'peroot_guest_usage';
 export function usePromptLimits() {
   const { settings } = useSiteSettings();
   const [user, setUser] = useState<any>(null);
+  const [credits, setCredits] = useState<number | null>(null);
   const [usage, setUsage] = useState<PromptUsage>({ count: 0, lastReset: new Date().toISOString() });
   const [canUsePrompt, setCanUsePrompt] = useState(true);
   const supabase = createClient();
@@ -28,10 +29,21 @@ export function usePromptLimits() {
   }, [user, settings, usage]);
 
   async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const { data: { user: activeUser } } = await supabase.auth.getUser();
+    setUser(activeUser);
 
-    if (!user) {
+    if (activeUser) {
+      // Load credits from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits_balance')
+        .eq('id', activeUser.id)
+        .maybeSingle();
+      
+      if (profile) {
+        setCredits(profile.credits_balance);
+      }
+    } else {
       // Load guest usage from localStorage
       const stored = localStorage.getItem(USAGE_STORAGE_KEY);
       if (stored) {
@@ -47,8 +59,14 @@ export function usePromptLimits() {
 
   function updateLimits() {
     if (user) {
-      // Authenticated users - check credits (implement later)
-      setCanUsePrompt(true);
+      // Authenticated users - check actual DB credits
+      // If credits is null (loading), we allow (will be caught by server anyway)
+      // but once loaded, we hard-lock.
+      if (credits !== null) {
+        setCanUsePrompt(credits > 0);
+      } else {
+        setCanUsePrompt(true);
+      }
     } else {
       // Guest users - check free prompts limit
       if (!settings.allow_guest_access) {
@@ -73,12 +91,15 @@ export function usePromptLimits() {
 
   function getRemainingPrompts(): number {
     if (user) {
-      return Infinity; // Or check actual credits from user profile
+      return credits ?? 0;
     }
     return Math.max(0, settings.max_free_prompts - usage.count);
   }
 
   function getRequiredAction(): 'login' | 'upgrade' | null {
+    if (user) {
+        return (credits !== null && credits < 1) ? 'upgrade' : null;
+    }
     if (!user && !settings.allow_guest_access) {
       return 'login';
     }

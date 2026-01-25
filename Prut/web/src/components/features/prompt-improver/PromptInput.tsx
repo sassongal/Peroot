@@ -9,20 +9,14 @@ import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
 import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
+import { PromptScore } from "@/lib/engines/base-engine";
 
 interface PromptInputProps {
   user: User | null;
   inputVal: string;
   setInputVal: (val: string) => void;
   handleEnhance: () => void;
-  inputScore: {
-    score: number;
-    label: string;
-    usageBoost: number;
-    tips: string[];
-    issues?: string[];
-    suggestions?: string[];
-  } | null;
+  inputScore: PromptScore | null;
   scoreTone: { text: string; bar: string } | null;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
@@ -34,6 +28,8 @@ interface PromptInputProps {
   setVariableValues: (values: Record<string, string>) => void;
   onApplyVariables: () => void;
 }
+
+import { useI18n } from "@/context/I18nContext";
 
 export function PromptInput({
   inputVal,
@@ -51,6 +47,7 @@ export function PromptInput({
   setVariableValues,
   onApplyVariables,
 }: PromptInputProps) {
+    const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -66,7 +63,7 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-xs text-slate-400 uppercase tracking-widest mb-3">מצב יכולת</div>
+        <div className="text-xs text-slate-400 uppercase tracking-widest mb-3">{t.prompt_generator.capability_mode}</div>
         <CapabilitySelector
           value={selectedCapability}
           onChange={setSelectedCapability}
@@ -77,9 +74,9 @@ export function PromptInput({
       <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-6 items-stretch">
         {variables.length > 0 && (
           <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-white/10 bg-white/[0.02]">
-            <div className="text-xs text-slate-400 uppercase tracking-widest">משתנים</div>
+            <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.variables}</div>
             <p className="text-[11px] text-slate-500 mt-2">
-              מלא/י ערכים והחלף אותם בפרומפט בלחיצה.
+              {t.prompt_generator.variables_hint}
             </p>
             <div className="mt-4 space-y-3">
               {variables.map((variable, index) => {
@@ -97,7 +94,7 @@ export function PromptInput({
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
                       className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
-                      placeholder="הכנס ערך..."
+                      placeholder={t.onboarding.sim_placeholder}
                     />
                   </div>
                 );
@@ -107,11 +104,11 @@ export function PromptInput({
               onClick={onApplyVariables}
               className="mt-4 w-full px-3 py-2 rounded-lg bg-white text-black text-sm font-semibold hover:bg-slate-200 transition-colors"
             >
-              הכנס לפרומפט
+              {t.prompt_generator.apply_to_prompt}
             </button>
             {inputVal.trim() && (
               <div className="mt-4 space-y-2">
-                <div className="text-xs text-slate-400 uppercase tracking-widest">תצוגה חיה:</div>
+                <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.live_view}</div>
                 <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-base md:text-lg text-slate-200 leading-relaxed min-h-[100px]">
                   {highlightTextWithPlaceholders(inputVal)}
                 </div>
@@ -134,7 +131,7 @@ export function PromptInput({
               dir="rtl"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              placeholder="תאר/י את הפרומפט שלך כאן באופן חופשי... (למשל: 'אני צריך מייל ללקוח שהתלונן על המחיר')"
+              placeholder={t.prompt_generator.placeholder}
               className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-lg md:text-xl text-transparent caret-white placeholder:text-slate-600 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -147,7 +144,7 @@ export function PromptInput({
             {inputScore && scoreTone && (
               <div className="px-6 pb-4 pt-2 border-t border-white/5 relative z-20 bg-black/20">
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
-                  <span className="font-mono tracking-widest">חוזק פרומפט</span>
+                  <span className="font-mono tracking-widest">{t.prompt_generator.prompt_strength}</span>
                   <span className={cn("font-semibold", scoreTone.text)}>
                     {inputScore.label} · {inputScore.score}%
                   </span>
@@ -160,7 +157,7 @@ export function PromptInput({
                 </div>
                 {inputScore.usageBoost > 0 && (
                   <div className="mt-2 text-[10px] text-slate-500">
-                    כיול שימוש +{inputScore.usageBoost}
+                    {t.prompt_generator.usage_boost} +{inputScore.usageBoost}
                   </div>
                 )}
                 {inputScore.tips.length > 0 && (
@@ -180,7 +177,7 @@ export function PromptInput({
 
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-white/5 pt-5 p-5 md:p-7 relative z-20 bg-black/20">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest shrink-0">קטגוריה:</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
                 <div className="relative group/select min-w-[140px]">
                   <select
                     value={selectedCategory}
@@ -217,7 +214,7 @@ export function PromptInput({
                   {isLoading ? (
                     <>
                       <Loader2 className="w-8 h-8 md:w-10 md:h-10 animate-spin" />
-                      <span className="text-[10px] uppercase tracking-tighter">מעבד...</span>
+                      <span className="text-[10px] uppercase tracking-tighter">{t.prompt_generator.processing}</span>
                     </>
                   ) : (
                     <>

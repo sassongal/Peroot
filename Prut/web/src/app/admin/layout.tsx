@@ -2,19 +2,28 @@
 "use client";
 
 import { AdminGuard } from "@/components/admin/AdminGuard";
-import { LayoutDashboard, Settings, Cpu, LogOut } from "lucide-react";
+import { LayoutDashboard, Settings, Cpu, LogOut, Activity, Users, Database, Library, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
+import { useI18n } from "@/context/I18nContext";
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const t = useI18n();
   const pathname = usePathname();
   const supabase = createClient();
 
   const navItems = [
-    { label: "לוח בקרה", href: "/admin", icon: LayoutDashboard },
-    { label: "מנועי פרומפט", href: "/admin/engines", icon: Cpu },
+    { label: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
+    { label: t.admin.layout.analytics, href: "/admin/analytics", icon: BarChart3 },
+    { label: t.admin.layout.activity, href: "/admin/activity", icon: Activity },
+    { label: t.admin.layout.users, href: "/admin/users", icon: Users },
+    { label: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
+    { label: t.admin.layout.library, href: "/admin/prompts", icon: Library },
+    { label: t.admin.layout.database, href: "/admin/database", icon: Database },
+    { label: t.admin.layout.settings, href: "/admin/settings", icon: Settings },
   ];
 
   return (
@@ -55,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 w-full transition-colors"
             >
               <LogOut className="w-5 h-5" />
-              <span>התנתק</span>
+              <span>{t.admin.layout.logout}</span>
             </button>
           </div>
         </aside>

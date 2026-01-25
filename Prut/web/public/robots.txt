@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/admin/
+Disallow: /auth/
+Disallow: /api/prompts/sync
+
+Sitemap: https://peroot.ai/sitemap.xml

@@ -1,0 +1,202 @@
+{
+  "locale": "he",
+  "onboarding": {
+    "welcome": "ברוכים הבאים ל-Peroot",
+    "description": "אנחנו כאן כדי לעזור לך להפוך מומחה/ית ל-AI. Peroot הוא הכלי המקצועי שלך ליצירה, ניהול ושיפור של פרומפטים בעברית.",
+    "role_question": "מה התפקיד שלך?",
+    "role_description": "הבחירה תעזור לנו להתאים לך את הפרומפטים הרלוונטיים ביותר.",
+    "goal_question": "מה המטרה העיקרית שלך?",
+    "goal_description": "ככה נוכל לדעת במה להתמקד באופטימיזציה של המנועים שלנו.",
+    "live_badge": "פירוט לייב",
+    "variables_title": "מה הכוח של פירוט? משתנים!",
+    "variables_description": "ב-Peroot, אפשר להשתמש בסוגריים מסולסלים <code className=\"text-amber-400\">{`{}`}</code> כדי להפוך כל פרומפט לתבנית חכמה.",
+    "variables_magic": "צפה בקסם הסוגריים מתחת לעכבר",
+    "placeholder_badge": "זהו Placeholder!",
+    "fill_title": "ממלאים ומשתמשים",
+    "fill_description": "ברגע שיש משתנים, פירוט יוצר עבורך טופס אוטומטי. נסו למלא את שם הלקוח:",
+    "variables_panel": "לוח משתנים",
+    "preview": "תצוגה מקדימה:",
+    "enhance_title": "והחלק הכי טוב? \"שפר פרומפט\"",
+    "enhance_description": "ה-AI שלנו ייקח את הפרומפט הפשוט שלך ויהפוך אותו לכלי עבודה מקצועי ומפורט.",
+    "original_prompt": "הפרומפט המקורי",
+    "peroot_result": "התוצאה של Peroot ✨",
+    "mission_mode": "[מצב משימה]",
+    "mission": "[משימה]",
+    "mission_description": "אתה מנהל שירות לקוחות בחברת איקומרס מובילה...",
+    "mission_task": "נסח התנצלות אישית ללקוח בשם {name}...",
+    "ready_title": "אנחנו מוכנים!",
+    "ready_description": "למדת איך להשתמש במשתנים ולשפר פרומפטים לרמה הגבוהה ביותר.\nכעת הספריה האישית וכל הכלים המתקדמים פתוחים בפניך.",
+    "roles": {
+      "marketing": "שיווק ופרסום",
+      "dev": "פיתוח תוכנה",
+      "creative": "עיצוב וקריאייטיב",
+      "sales": "מכירות וניהול לקוחות",
+      "product": "ניהול מוצר",
+      "education": "חינוך והדרכה",
+      "data": "ניתוח נתונים",
+      "other": "אחר"
+    },
+    "goals": {
+      "efficiency": "חיסכון בזמן (פרודוקטיביות)",
+      "quality": "שיפור איכות התוצרים (AI Quality)",
+      "learning": "למידה ושיפור ה-Prompting שלי",
+      "automation": "אוטומציה של משימות חוזרות"
+    },
+    "sim_input": "כתוב אימייל ללקוח {client_name} בנוגע ל{issue}",
+    "sim_placeholder": "למשל: דני כהן",
+    "sim_issue_val": "איחור במשלוח",
+    "buttons": {
+        "start": "מתחילים?",
+        "understand": "הבנתי, בוא ננסה",
+        "advanced": "מתקדם",
+        "amazing": "וואו, מדהים",
+        "lets_go": "בוא נתחיל",
+        "continue": "ממשיכים",
+        "enhance_cta": "שפר עבורי!",
+        "analyzing": "מנתח..."
+    }
+  },
+  "home": {
+    "personal_library": "ספריה אישית",
+    "favorites": "מועדפים",
+    "public_library": "ספריה ציבורית",
+    "footer_credits": "Peroot © 2026 · Made by Joyatech",
+    "privacy_policy": "מדיניות פרטיות",
+    "accessibility": "הצהרת נגישות",
+    "login_required_title": "התחברות נדרשת",
+    "login_required_msg": "כדי להשתמש ב{feature}, יש להתחבר לחשבון."
+  },
+  "auth": {
+    "login_signup": "התחבר / הירשם",
+    "guest_mode": "מצב אורח",
+    "connected": "מחובר",
+    "logout": "התנתק",
+    "logout_success": "התנתקת בהצלחה",
+    "logout_error": "שגיאה בהתנתקות",
+    "account_settings": "הגדרות חשבון",
+    "unexpected_error": "שגיאה לא צפויה"
+  },
+  "prompt_generator": {
+    "capability_mode": "מצב יכולת",
+    "variables": "משתנים",
+    "variables_hint": "מלא/י ערכים והחלף אותם בפרומפט בלחיצה.",
+    "apply_to_prompt": "הכנס לפרומפט",
+    "live_view": "תצוגה חיה:",
+    "placeholder": "תאר/י את הפרומפט שלך כאן באופן חופשי... (למשל: 'אני צריך מייל ללקוח שהתלונן על המחיר')",
+    "prompt_strength": "חוזק פרומפט",
+    "usage_boost": "כיול שימוש",
+    "category": "קטגוריה:",
+    "processing": "מעבד...",
+    "success_toast": "הפרומפט שופר!",
+    "error_toast": "שגיאה בשיפור הפרומפט"
+  },
+  "result_section": {
+    "title": "הפרומפט המשופר שלך",
+    "ready": "מוכן לשימוש",
+    "performance_boost": "+{delta}% בביצועים",
+    "copy_tooltip": "העתק",
+    "back_to_edit": "חזרה לעריכה",
+    "save": "שמור",
+    "copy_button": "העתק פרומפט",
+    "copied": "הועתק!",
+    "variables_title": "משתנים בפרומפט",
+    "variable_placeholder": "הכנס ערך ל-{ph}...",
+    "auto_update_hint": "הערכים מתעדכנים אוטומטית בפרומפט משמאל"
+  },
+  "admin": {
+    "layout": {
+      "dashboard": "לוח בקרה",
+      "analytics": "אנליטיקה",
+      "activity": "פעילות",
+      "users": "משתמשים",
+      "engines": "מנועי פרומפט",
+      "library": "ספריית פרומפטים",
+      "database": "בסיס נתונים",
+      "telemetry": "יומני פעילות",
+      "settings": "הגדרות",
+      "logout": "התנתק"
+    },
+    "dashboard": {
+      "loading": "Interrogating Systems...",
+      "description": "מרכז הבקרה העליון של Peroot. ניטור ביצועים, ניהול מנועי בינה מלאכותית ותשתית המערכת.",
+      "stats": {
+        "active_users": "Active Users",
+        "generated_prompts": "Generated Prompts",
+        "velocity": "Today's Velocity",
+        "active_styles": "Active Styles"
+      },
+      "quick_actions": {
+        "consolidate": "Consolidate Logic",
+        "consolidate_desc": "Unify all active prompt engines",
+        "maintenance": "Infra Maintenance",
+        "maintenance_desc": "Backups and database scaling"
+      }
+    },
+    "users": {
+        "title_desc": "ניהול זהויות, הרשאות ניטור ושימוש במשאבים. שליטה מלאה על גישת המשתמשים לליבת ה-AI.",
+        "search_placeholder": "חיפוש לפי אימייל, שם או מזהה...",
+        "filters": {
+            "all": "הכל",
+            "admin": "מנהלים",
+            "active": "פעילים",
+            "banned": "חסומים"
+        },
+        "stats": {
+            "total": "Total Identity",
+            "admins": "Nexus Admins",
+            "active": "Active Streams",
+            "credits": "Credits Liquid"
+        },
+        "table": {
+            "identity": "Unified Identity",
+            "access": "Access Tier",
+            "telemetry": "Telemetry Join",
+            "credits": "Credits",
+            "actions": "Actions",
+            "loading": "Accessing Data Stream...",
+            "empty": "No matched identities in terminal"
+        },
+        "toasts": {
+            "load_error": "שגיאה בטעינת משתמשים",
+            "sync_success": "סונכרנו {count} משתמשים בהצלחה",
+            "sync_error": "שגיאה בסנכרון מול Auth",
+            "comm_error": "נכשל בתקשורת עם השרת",
+            "admin_confirm": "האם אתה בטוח שברצונך {action} הרשאות ניהול למשתמש זה?",
+            "action_add": "להוסיף",
+            "action_remove": "להסיר",
+            "update_success": "הרשאות עודכנו בהצלחה",
+            "update_error": "עדכון הרשאות נכשל"
+        }
+    },
+    "prompts": {
+        "title_desc": "ניהול גרסאות, ניתוב לוגיקה והנחיות Bi-Directional בזמן אמת",
+        "search_placeholder": "חיפוש פרומפטים לפי מפתח או תוכן...",
+        "edit_model": "ערוך מודל",
+        "history": "היסטוריה",
+        "save_changes": "שמור שינויים",
+        "cancel": "ביטול",
+        "toasts": {
+            "load_error": "שגיאה בטעינת פרומפטים",
+            "login_required": "עליך להיות מחובר כדי לערוך פרומפטים",
+            "update_success": "הפרומפט עודכן! נוצרה גרסה חדשה.",
+            "update_error": "נכשל בשמירת הפרומפט",
+            "rollback_confirm": "האם אתה בטוח שברצונך לחזור לגרסה {version}?",
+            "rollback_success": "הפרומפט שוחזר לגרסה שנבחרה",
+            "rollback_error": "שגיאה בשחזור גרסה"
+        }
+    }
+  },
+  "gamification": {
+    "achievements_title": "הישגים ומדליות",
+    "unlocked_badge": "שוחרר בהצלחה!"
+  },
+  "common": {
+    "next": "המשך",
+    "back": "חזרה",
+    "finish": "סיום",
+    "loading": "טוען...",
+    "role": "תפקיד",
+    "goal": "מטרה",
+    "not_selected": "לא נבחר"
+  }
+}

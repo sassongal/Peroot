@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { promptManager } from '@/lib/prompts/prompt-manager';
+import { invalidateEngineCache } from '@/lib/engines';
 
 /**
  * POST /api/prompts/sync
@@ -10,10 +11,11 @@ import { promptManager } from '@/lib/prompts/prompt-manager';
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { prompt_key } = body;
+    const { prompt_key, mode } = body;
 
-    // Invalidate cache for specific key or all
+    // Invalidate both caches
     promptManager.invalidateCache(prompt_key);
+    invalidateEngineCache(mode);
 
     return NextResponse.json({ 
       success: true,

@@ -166,6 +166,11 @@
   @apply bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 border border-white/20 shadow-[inset_0_1px_0_theme(colors.white/0.4)];
 }
 
+/* RTL Utilities */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
 .glow-card {
   position: relative;
   isolation: isolate;

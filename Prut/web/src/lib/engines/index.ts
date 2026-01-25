@@ -7,23 +7,36 @@ import { ImageEngine } from "./image-engine";
 import { AgentEngine } from "./agent-engine";
 import { createClient } from "../supabase/server";
 
-// We need a way to get the active engine config.
-// Since this runs in an API route (server-side), we can use createClient.
+// Cache for engine configs to reduce DB hits
+const engineCache: Record<string, { config: EngineConfig; timestamp: number }> = {};
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
+  const now = Date.now();
+  
+  if (engineCache[mode] && (now - engineCache[mode].timestamp < CACHE_TTL)) {
+    return createEngineInstance(mode, engineCache[mode].config);
+  }
+
   const supabase = await createClient();
   
-  // Try to fetch active config from DB
+  // 1. Fetch Global Identity (Shared across all engines)
+  const { data: globalIdentityRow } = await supabase
+    .from('ai_prompts')
+    .select('prompt')
+    .eq('prompt_key', 'global_system_identity')
+    .maybeSingle();
+  
+  const globalIdentity = globalIdentityRow?.prompt || "";
+
+  // 2. Fetch Engine Specific Config
   const { data: config } = await supabase
     .from('prompt_engines')
     .select('*')
     .eq('mode', mode)
     .eq('is_active', true)
-    .single();
+    .maybeSingle();
 
-  // If found, verify it matches EngineConfig shape roughly and use it.
-  // The BaseEngine constructor takes EngineConfig.
-  
   const engineConfig: EngineConfig | undefined = config ? {
       mode: config.mode as CapabilityMode,
       name: config.name,
@@ -33,19 +46,37 @@ export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
       output_format_instruction: config.output_format_instruction,
       default_params: config.default_params,
       is_active: config.is_active,
-      id: config.id
+      id: config.id,
+      global_system_identity: globalIdentity
   } : undefined;
 
+  if (engineConfig) {
+    engineCache[mode] = { config: engineConfig, timestamp: now };
+  }
+
+  return createEngineInstance(mode, engineConfig);
+}
+
+function createEngineInstance(mode: CapabilityMode, config?: EngineConfig): PromptEngine {
   switch (mode) {
     case CapabilityMode.DEEP_RESEARCH:
-      return new ResearchEngine(engineConfig);
+      return new ResearchEngine(config);
     case CapabilityMode.IMAGE_GENERATION:
-      return new ImageEngine(engineConfig);
+      return new ImageEngine(config);
     case CapabilityMode.AGENT_BUILDER:
-      return new AgentEngine(engineConfig);
+      return new AgentEngine(config);
     case CapabilityMode.STANDARD:
     default:
-      return new StandardEngine(engineConfig);
+      return new StandardEngine(config);
+  }
+}
+
+export function invalidateEngineCache(mode?: CapabilityMode) {
+  if (mode) {
+    delete engineCache[mode];
+  } else {
+    // Clear all
+    Object.keys(engineCache).forEach(key => delete engineCache[key]);
   }
 }
 

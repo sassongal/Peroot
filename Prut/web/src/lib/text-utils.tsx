@@ -139,16 +139,16 @@ export const renderStyledPrompt = (value: string): string => {
   let html = DOMPurify.sanitize(value);
   html = escapeHtml(html);
   
-  // Style section headers in brackets [כותרת] or [Title] with yellow
+  // Style section headers in brackets [כותרת] or [Title] with amber/orange
   html = html.replace(
     /\[([^\]]+)\]/g,
-    '<span class="text-yellow-400 font-bold text-lg">[$1]</span>'
+    '<span class="text-amber-500 font-black text-lg tracking-tight bg-amber-500/5 px-2 py-0.5 rounded-lg border border-amber-500/20">[$1]</span>'
   );
   
   // Style variables {variable_name} with blue
   html = html.replace(
     /\{([^}]+)\}/g,
-    '<span class="text-sky-400 font-semibold bg-sky-400/10 px-1.5 py-0.5 rounded border border-sky-400/30">{$1}</span>'
+    '<span class="text-sky-400 font-semibold bg-sky-900/30 px-1.5 py-0.5 rounded border border-sky-400/30 whitespace-nowrap shadow-[0_0_15px_rgba(56,189,248,0.1)]">{$1}</span>'
   );
   
   // Convert bullet points to styled bullets

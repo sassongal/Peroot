@@ -14,13 +14,16 @@ interface UserMenuProps {
   position: "top" | "bottom";
 }
 
-const getErrorMessage = (err: unknown) =>
-  err instanceof Error ? err.message : "שגיאה לא צפויה";
+import { useI18n } from "@/context/I18nContext";
 
 export function UserMenu({ user, position }: UserMenuProps) {
+  const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const supabase = createClient();
+
+  const getErrorMessage = (err: unknown) =>
+    err instanceof Error ? err.message : t.auth.unexpected_error;
 
   useEffect(() => {
     setMounted(true);
@@ -30,10 +33,10 @@ export function UserMenu({ user, position }: UserMenuProps) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      toast.success("התנתקת בהצלחה");
+      toast.success(t.auth.logout_success);
       window.location.href = '/?logged-out=true';
     } catch (err) {
-      toast.error("שגיאה בהתנתקות: " + getErrorMessage(err));
+      toast.error(t.auth.logout_error + ": " + getErrorMessage(err));
     }
   };
 
@@ -56,7 +59,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
           <div className="flex flex-col items-end hidden md:flex">
              <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="text-[10px] font-medium text-amber-400">Guest Mode</span>
+                <span className="text-[10px] font-medium text-amber-400">{t.auth.guest_mode}</span>
              </div>
           </div>
           <Link
@@ -65,7 +68,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
               suppressHydrationWarning
           >
               <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform text-purple-400" />
-              <span>התחבר / הירשם</span>
+              <span>{t.auth.login_signup}</span>
           </Link>
         </div>
       );
@@ -77,7 +80,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
         <div className="flex flex-col items-end hidden md:flex">
              <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                <span className="text-[10px] font-medium text-emerald-400">Connected</span>
+                <span className="text-[10px] font-medium text-emerald-400">{t.auth.connected}</span>
              </div>
         </div>
         <button
@@ -148,7 +151,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 rounded-xl transition-colors text-right"
                   >
                       <Settings className="w-4 h-4" />
-                      <span>הגדרות חשבון</span>
+                      <span>{t.auth.account_settings}</span>
                   </Link>
                </div>
             </div>
@@ -168,7 +171,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
           className="flex items-center gap-2.5 group px-4 py-2 hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-white/10"
         >
           <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
-          <span className="text-sm font-semibold text-slate-400 group-hover:text-white transition-colors">התנתק</span>
+          <span className="text-sm font-semibold text-slate-400 group-hover:text-white transition-colors">{t.auth.logout}</span>
         </button>
       </div>
     );

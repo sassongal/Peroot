@@ -3,14 +3,11 @@
 import { Check, Copy, Plus, ThumbsUp, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
+import { PromptScore } from "@/lib/engines/base-engine";
 
 interface ResultSectionProps {
   completion: string;
-  completionScore: {
-    score: number;
-    label: string;
-    tone?: { text: string; bg: string };
-  } | null;
+  completionScore: PromptScore | null;
   improvementDelta: number;
   copied: boolean;
   onCopy: (text: string) => void;
@@ -20,6 +17,8 @@ interface ResultSectionProps {
   variableValues?: Record<string, string>;
   onVariableChange?: (key: string, value: string) => void;
 }
+
+import { useI18n } from "@/context/I18nContext";
 
 export function ResultSection({
   completion,
@@ -33,7 +32,8 @@ export function ResultSection({
   variableValues = {},
   onVariableChange,
 }: ResultSectionProps) {
-  // Replace placeholders with their values for display, while keeping the structure
+    const t = useI18n();
+  // ... rest of logic ...
   const displayCompletion = completion.replace(/\{([^}]+)\}/g, (match, ph) => {
     return variableValues[ph] || match;
   });
@@ -44,12 +44,12 @@ export function ResultSection({
       {/* Header Card */}
       <div className="glass-card p-6 rounded-xl border-white/10 flex items-start justify-between group">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-serif text-slate-100 mb-1">הפרומפט המשופר שלך</h2>
+          <h2 className="text-2xl font-serif text-slate-100 mb-1">{t.result_section.title}</h2>
           <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span>מוכן לשימוש</span>
+            <span>{t.result_section.ready}</span>
             {improvementDelta > 0 && (
               <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full font-medium">
-                +{improvementDelta}% בביצועים
+                {t.result_section.performance_boost.replace('{delta}', improvementDelta.toString())}
               </span>
             )}
           </div>
@@ -70,7 +70,7 @@ export function ResultSection({
             <button
               onClick={() => onCopy(displayCompletion)}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-              title="העתק"
+              title={t.result_section.copy_tooltip}
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -96,21 +96,21 @@ export function ResultSection({
                   onClick={onBack}
                   className="px-4 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors font-bold"
                >
-                 חזרה לעריכה
+                 {t.result_section.back_to_edit}
                </button>
                <button
                   onClick={onSave}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
                >
                   <Plus className="w-4 h-4" />
-                  שמור
+                  {t.result_section.save}
                </button>
                <button
                   onClick={() => onCopy(displayCompletion)}
                   className="flex items-center gap-2 px-6 py-2 rounded-lg bg-white text-black font-medium text-sm hover:bg-slate-200 transition-colors"
                >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied ? "הועתק!" : "העתק פרומפט"}
+                  {copied ? t.result_section.copied : t.result_section.copy_button}
                </button>
             </div>
           </div>
@@ -123,7 +123,7 @@ export function ResultSection({
                <div className="bg-blue-500/20 text-blue-300 p-1.5 rounded-md">
                  <Plus className="w-4 h-4" />
                </div>
-               <span className="text-sm font-semibold text-slate-200">משתנים בפרומפט</span>
+               <span className="text-sm font-semibold text-slate-200">{t.result_section.variables_title}</span>
             </div>
             <div className="flex flex-col gap-3">
                {placeholders.map((ph, i) => (
@@ -135,14 +135,14 @@ export function ResultSection({
                       dir="rtl"
                       value={variableValues[ph] || ""}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
-                      placeholder={`הכנס ערך ל-${ph}...`}
+                      placeholder={t.result_section.variable_placeholder.replace('{ph}', ph)}
                       className="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500/50 transition-colors placeholder:text-slate-600"
                     />
                  </div>
                ))}
             </div>
             <div className="text-[10px] text-slate-600 text-center mt-2">
-              הערכים מתעדכנים אוטומטית בפרומפט משמאל
+              {t.result_section.auto_update_hint}
             </div>
           </div>
         )}

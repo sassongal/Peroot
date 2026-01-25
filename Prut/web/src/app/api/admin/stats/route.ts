@@ -27,19 +27,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get all stats
     const [
       { count: totalUsers },
       { count: totalPrompts },
       { count: todayPrompts },
-      { count: totalActivity }
+      { count: totalActivity },
+      { count: totalStyles }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('personal_library').select('*', { count: 'exact', head: true }),
       supabase.from('personal_library')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
-      supabase.from('activity_logs').select('*', { count: 'exact', head: true })
+      supabase.from('activity_logs').select('*', { count: 'exact', head: true }),
+      supabase.from('user_style_personality').select('*', { count: 'exact', head: true })
     ]);
 
     return NextResponse.json({
@@ -47,8 +48,9 @@ export async function GET() {
       totalPrompts: totalPrompts || 0,
       todayPrompts: todayPrompts || 0,
       totalActivity: totalActivity || 0,
+      totalStyles: totalStyles || 0,
       timestamp: new Date().toISOString()
-    });
+});
   } catch (error) {
     console.error('[Admin Stats] Error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

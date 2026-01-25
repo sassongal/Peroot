@@ -1,27 +1,23 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { validateAdminSession, logAdminAction } from '@/lib/admin/admin-security';
 
 /**
  * GET /api/admin/grant-admin
  * 
- * Grant admin role to current user (for initial setup only)
- * In production, remove this endpoint after initial admin is set
+ * Secure endpoint to grant admin role.
+ * Note: Only an existing admin can grant admin to themselves or others.
+ * For initial setup, use the SQL editor.
  */
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return NextResponse.json({ 
-        error: 'Not authenticated',
-        message: 'Please sign in first' 
-      }, { status: 401 });
+    // 1. Validate Session (Only admins can grant admin roles)
+    const { error, user, supabase } = await validateAdminSession();
+    if (error || !user || !supabase) {
+        return NextResponse.json({ error: error || 'Forbidden' }, { status: error === 'Unauthorized' ? 401 : 403 });
     }
 
-    // Grant admin role
-    const { data, error } = await supabase
+    // 2. Grant admin role (Self-grant if already admin, essentially a refresh/verify)
+    const { data, error: dbError } = await supabase
       .from('user_roles')
       .upsert({ 
         user_id: user.id, 
@@ -33,25 +29,22 @@ export async function GET() {
       .select()
       .single();
 
-    if (error) {
-      console.error('[Grant Admin] Error:', error);
-      return NextResponse.json({ 
-        error: 'Failed to grant admin role',
-        details: error.message 
-      }, { status: 500 });
+    if (dbError) {
+      console.error('[Grant Admin] Error:', dbError);
+      return NextResponse.json({ error: 'Failed to grant admin role' }, { status: 500 });
     }
+
+    // 3. Audit Log
+    await logAdminAction(user.id, 'Self-Verify Admin', { email: user.email });
 
     return NextResponse.json({ 
       success: true,
-      message: 'Admin role granted successfully',
-      userId: user.id,
+      message: 'Admin role verified',
       email: user.email,
       data
     });
   } catch (error) {
     console.error('[Grant Admin] Error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
