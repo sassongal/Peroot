@@ -13,8 +13,12 @@
 
 ## 3. POST-TASK (The "Clean Handover")
 
-- **Sync the Brain:** Update the `PROGRESS LOG` and `NEXT_NODE_GOAL`.
-- **Release Locks:** Run `hive unlock <file>` for all files you touched.
+- **Sync the Brain:** Update the `PROGRESS LOG` and the `HANDOVER PROTOCOL` section in `.ag_brain.md`.
+- **Handover Format:** You MUST include:
+  - **LAST_ACTION:** What you did.
+  - **PENDING_LOGIC:** What's half-finished.
+  - **NEXT_NODE_GOAL:** Exact instruction for the next agent.
+- **Release Locks:** Run `./hive.sh unlock <file>` for all files you touched.
 - **Commit:** Use the format `[NODE-ID] brief description`.
 - **Final Message:** Write the last instruction for the next agent clearly.
 
