@@ -3,27 +3,21 @@
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
-  Loader2, 
-  Save, 
   ArrowLeft, 
   Play, 
   RefreshCw, 
   Terminal, 
   Cpu, 
   Shield, 
-  Variable, 
-  CheckCircle2, 
-  AlertCircle,
   Copy,
   Wand2,
   Settings,
-  Database,
-  LucideIcon
+  Database
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 
 interface EngineConfig {
   id: string;
@@ -88,7 +82,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
       if (error) throw error;
 
       // Invalidate logic cache
-      await fetch('/api/prompts/sync', { method: 'POST' });
+      await fetch(getApiPath('/api/prompts/sync'), { method: 'POST' });
 
       toast.success("Logic Core Synchronized");
 
@@ -99,7 +93,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
         details: { mode: config.mode }
       });
 
-    } catch (e) {
+    } catch {
       toast.error("Synchronization failed");
     } finally {
       setSaving(false);
@@ -111,7 +105,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
     setTesting(true);
     setTestOutput("");
     try {
-      const res = await fetch("/api/admin/test-engine", {
+      const res = await fetch(getApiPath("/api/admin/test-engine"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -129,7 +123,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
       } else {
          setTestOutput(data.error || "Simulation Error");
       }
-    } catch (e) {
+    } catch {
       setTestOutput("Fatal simulation error");
     }
     setTesting(false);

@@ -4,12 +4,14 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig: NextConfig = {
   compress: true,
   // Enable basePath for subdirectory deployment (e.g., joya-tech.net/peroot)
-  // Set NEXT_PUBLIC_BASE_PATH=/peroot in production environment
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  basePath: '/peroot',
   // Ensure assets are loaded from the correct path
-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  assetPrefix: '/peroot',
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'recharts', '@radix-ui/react-slot'],
+  },
+  turbopack: {
+     root: __dirname,
   },
 };
 

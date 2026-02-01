@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
+import { getApiPath } from '@/lib/api-path';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { PersonalPrompt } from '@/lib/types';
@@ -627,7 +628,7 @@ export function useLibrary() {
     if (!user) return;
     
     try {
-        const response = await fetch('/api/user/onboarding/complete', {
+        const response = await fetch(getApiPath('/api/user/onboarding/complete'), {
             method: 'POST',
         });
         

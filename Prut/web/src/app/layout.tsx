@@ -24,6 +24,8 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://peroot.ai";
 
 export const metadata: Metadata = {
@@ -77,7 +79,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/branding/logo.png",
+        url: `${basePath}/assets/branding/logo.png`,
         width: 1200,
         height: 630,
         alt: "Peroot AI Prompt Generator",
@@ -89,7 +91,7 @@ export const metadata: Metadata = {
     title: "Peroot (פירוט) - שדרוג פרומפטים ב-AI",
     description:
       "כתבו פרומפטים טובים יותר בשניות. המערכת היחידה שמותאמת במיוחד לשפה העברית ולמודלים המובילים.",
-    images: ["/assets/branding/logo.png"],
+    images: [`${basePath}/assets/branding/logo.png`],
     creator: "@joyatech",
   },
   appleWebApp: {

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import promptsData from "../../prompts.he.json";
 import type { User } from "@supabase/supabase-js";
 import { CapabilityMode } from "@/lib/capability-mode";
+import { getApiPath } from "@/lib/api-path";
 
 // Define the shape of our context
 interface LibraryContextType {
@@ -153,8 +154,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     const fetchPublicData = async () => {
         try {
             const [pRes, cRes] = await Promise.all([
-                fetch("/api/library/prompts"),
-                fetch("/api/library/categories")
+                fetch(getApiPath("/api/library/prompts")),
+                fetch(getApiPath("/api/library/categories"))
             ]);
             
             if (pRes.ok) {
@@ -376,7 +377,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     let isMounted = true;
     const loadPopularity = async () => {
       try {
-        const response = await fetch("/api/library-popularity", { cache: "no-store" });
+        const response = await fetch(getApiPath("/api/library-popularity"), { cache: "no-store" });
         if (!response.ok) throw new Error(`Failed to load popularity: ${response.status}`);
         const data = await response.json();
         if (!data?.popularity) return;

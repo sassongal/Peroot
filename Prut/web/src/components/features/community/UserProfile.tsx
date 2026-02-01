@@ -14,6 +14,7 @@ import {
     ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 import { AchievementShowcase } from "../gamification/AchievementShowcase";
 
 interface ProfileData {
@@ -35,7 +36,7 @@ export function UserProfile({ userId }: { userId: string }) {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch(`/api/community/profile/${userId}`);
+                const res = await fetch(getApiPath(`/api/community/profile/${userId}`));
                 const data = await res.json();
                 setProfile(data);
             } catch (e) {

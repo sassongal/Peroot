@@ -10,6 +10,7 @@ import {
     Search,
     Dna
 } from "lucide-react";
+import { getApiPath } from "@/lib/api-path";
 
 interface IntelMetrics {
     topTokens: { token: string; count: number }[];
@@ -27,7 +28,7 @@ export function IntelligenceHub() {
     useEffect(() => {
         const fetchIntel = async () => {
             try {
-                const res = await fetch("/api/admin/intelligence");
+                const res = await fetch(getApiPath("/api/admin/intelligence"));
                 const json = await res.json();
                 setData(json);
             } catch (e) {

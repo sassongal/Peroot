@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { IntelligenceHub } from "@/components/admin/IntelligenceHub";
+import { getApiPath } from "@/lib/api-path";
 
 interface AdminStats {
   totalUsers: number;
@@ -37,7 +38,7 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("/api/admin/stats");
+        const res = await fetch(getApiPath("/api/admin/stats"));
         const data = await res.json();
         setStats(data);
       } catch (e) {

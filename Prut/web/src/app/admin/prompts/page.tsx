@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 
 interface Prompt {
   id: string;
@@ -131,7 +132,7 @@ export default function PromptsAdminPage() {
       loadPrompts();
       
       // Invalidate cache
-      await fetch('/api/prompts/sync', { method: 'POST' });
+      await fetch(getApiPath('/api/prompts/sync'), { method: 'POST' });
 
       // Log action
       await supabase.from('activity_logs').insert({
@@ -167,7 +168,7 @@ export default function PromptsAdminPage() {
       toast.success(t.admin.prompts.toasts.rollback_success);
       loadPrompts();
       
-      await fetch('/api/prompts/sync', { method: 'POST' });
+      await fetch(getApiPath('/api/prompts/sync'), { method: 'POST' });
 
       // Log action
       await supabase.from('activity_logs').insert({

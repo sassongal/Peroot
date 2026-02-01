@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { useI18n } from "@/context/I18nContext";
+import { getApiPath } from "@/lib/api-path";
 
 interface OnboardingOverlayProps {
     onComplete: (data: { role: string; goal: string }) => void;
@@ -61,7 +62,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
     const handleFinish = async () => {
         // Award Pioneer Achievement
-        fetch("/api/user/achievements/award", {
+        fetch(getApiPath("/api/user/achievements/award"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ achievementId: 'pioneer' })

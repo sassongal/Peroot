@@ -19,6 +19,7 @@ import {
   Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -45,7 +46,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const checkAdminStatus = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/is-admin');
+      const response = await fetch(getApiPath('/api/admin/is-admin'));
       const data = await response.json();
       
       if (!data.isAdmin) {
@@ -156,7 +157,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
              </Link>
              <button
                className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all text-sm font-bold border border-rose-500/0 hover:border-rose-500/20"
-               onClick={() => fetch('/api/auth/signout', { method: 'POST' }).then(() => window.location.href = "/")}
+               onClick={() => fetch(getApiPath('/api/auth/signout'), { method: 'POST' }).then(() => window.location.href = "/")}
              >
                <LogOut className="w-4 h-4" />
                {t.admin.layout.logout}

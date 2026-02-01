@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import NextImage from "next/image";
 import { getAssetPath } from "@/lib/asset-path";
+import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
@@ -165,7 +166,7 @@ function PageContent({ user }: { user: User | null }) {
     const target = text.trim();
     if (!target) return;
     const key = getPromptKey(target);
-    void fetch("/api/prompt-usage", {
+    void fetch(getApiPath("/api/prompt-usage"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -189,7 +190,7 @@ function PageContent({ user }: { user: User | null }) {
     setQuestionAnswers({});
     
     try {
-      const response = await fetch("/api/enhance", {
+      const response = await fetch(getApiPath("/api/enhance"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -284,7 +285,7 @@ function PageContent({ user }: { user: User | null }) {
     
     setIsLoading(true);
     try {
-      const response = await fetch("/api/enhance", {
+      const response = await fetch(getApiPath("/api/enhance"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

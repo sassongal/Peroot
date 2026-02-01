@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+@import "./tw-animate.css";
 
 @plugin "tailwindcss-animate";
 
@@ -182,7 +182,11 @@
   --pointer-y: 50%;
   --pointer-deg: 45deg;
   --pointer-d: 0;
-  --card-bg: linear-gradient(160deg, rgba(13, 13, 16, 0.95), rgba(8, 8, 10, 0.92));
+  --card-bg: linear-gradient(
+    160deg,
+    rgba(13, 13, 16, 0.95),
+    rgba(8, 8, 10, 0.92)
+  );
   --blend: soft-light;
   --glow-blend: screen;
   --glow-color: 45deg 95% 65%;
@@ -209,11 +213,26 @@
   background:
     linear-gradient(var(--card-bg) 0 100%) padding-box,
     linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box,
-    radial-gradient(at 18% 22%, hsla(45, 95%, 65%, 0.6) 0px, transparent 55%) border-box,
-    radial-gradient(at 82% 78%, hsla(50, 90%, 55%, 0.35) 0px, transparent 55%) border-box,
+    radial-gradient(at 18% 22%, hsla(45, 95%, 65%, 0.6) 0px, transparent 55%)
+      border-box,
+    radial-gradient(at 82% 78%, hsla(50, 90%, 55%, 0.35) 0px, transparent 55%)
+      border-box,
     linear-gradient(hsl(45 95% 65% / 0.45) 0 100%) border-box;
-  opacity: clamp(0, calc((var(--pointer-d) - var(--color-sens)) / (100 - var(--color-sens)) + var(--edge-base)), 1);
-  mask-image: conic-gradient(from var(--pointer-deg) at center, black 25%, transparent 40%, transparent 60%, black 75%);
+  opacity: clamp(
+    0,
+    calc(
+      (var(--pointer-d) - var(--color-sens)) / (100 - var(--color-sens)) +
+        var(--edge-base)
+    ),
+    1
+  );
+  mask-image: conic-gradient(
+    from var(--pointer-deg) at center,
+    black 25%,
+    transparent 40%,
+    transparent 60%,
+    black 75%
+  );
   transition: opacity 0.25s ease-out;
 }
 
@@ -230,8 +249,21 @@
 .glow-card__glow {
   inset: -20px;
   z-index: 2;
-  mask-image: conic-gradient(from var(--pointer-deg) at center, black 10%, transparent 22%, transparent 78%, black 90%);
-  opacity: clamp(0, calc((var(--pointer-d) - var(--glow-sens)) / (100 - var(--glow-sens)) + var(--glow-base)), 1);
+  mask-image: conic-gradient(
+    from var(--pointer-deg) at center,
+    black 10%,
+    transparent 22%,
+    transparent 78%,
+    black 90%
+  );
+  opacity: clamp(
+    0,
+    calc(
+      (var(--pointer-d) - var(--glow-sens)) / (100 - var(--glow-sens)) +
+        var(--glow-base)
+    ),
+    1
+  );
   mix-blend-mode: var(--glow-blend);
   transition: opacity 0.25s ease-out;
 }
@@ -248,7 +280,9 @@
 }
 
 .glow-card__content {
-  transition: border-color 0.25s ease-out, box-shadow 0.25s ease-out;
+  transition:
+    border-color 0.25s ease-out,
+    box-shadow 0.25s ease-out;
 }
 
 .glow-card:hover .glow-card__content {
@@ -316,7 +350,8 @@
 
 /* Smooth pulse with opacity only (no layout thrashing) */
 @keyframes logo-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
     transform: scale(1) translateZ(0);
   }
@@ -328,7 +363,8 @@
 
 /* Subtle float animation - transform only */
 @keyframes logo-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) translateZ(0);
   }
   50% {
@@ -393,12 +429,15 @@
 
 /* Hero logo continuous glow animation */
 @keyframes hero-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 20px rgba(147, 197, 253, 0.3)) drop-shadow(0 0 40px rgba(196, 181, 253, 0.2));
+  0%,
+  100% {
+    filter: drop-shadow(0 0 20px rgba(147, 197, 253, 0.3))
+      drop-shadow(0 0 40px rgba(196, 181, 253, 0.2));
     transform: translateZ(0);
   }
   50% {
-    filter: drop-shadow(0 0 30px rgba(147, 197, 253, 0.5)) drop-shadow(0 0 60px rgba(196, 181, 253, 0.35));
+    filter: drop-shadow(0 0 30px rgba(147, 197, 253, 0.5))
+      drop-shadow(0 0 60px rgba(196, 181, 253, 0.35));
     transform: translateZ(0);
   }
 }
@@ -436,7 +475,8 @@
 
 /* Floating animation for logo */
 @keyframes hero-logo-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) translateZ(0);
   }
   50% {
@@ -474,7 +514,8 @@
 }
 
 @keyframes hero-ring-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1) translateZ(0);
     opacity: 0.6;
   }
@@ -495,7 +536,8 @@
 }
 
 @keyframes breathe {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.3;
   }
@@ -506,7 +548,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
   50% {

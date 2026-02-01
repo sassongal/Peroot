@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 
 interface User {
   id: string;
@@ -81,7 +82,7 @@ export default function UsersPage() {
   async function syncWithAuth() {
     setIsSyncing(true);
     try {
-      const res = await fetch('/api/admin/sync-users', { method: 'POST' });
+      const res = await fetch(getApiPath('/api/admin/sync-users'), { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         toast.success(t.admin.users.toasts.sync_success.replace('{count}', data.synced.toString()));

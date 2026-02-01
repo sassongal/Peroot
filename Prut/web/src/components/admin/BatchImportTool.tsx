@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Upload, FileJson, CheckCircle2, AlertCircle, X, Download, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 import { toast } from "sonner";
 
 export function BatchImportTool({ onComplete }: { onComplete: () => void }) {
@@ -23,7 +24,7 @@ export function BatchImportTool({ onComplete }: { onComplete: () => void }) {
             const parsed = JSON.parse(jsonInput);
             if (!Array.isArray(parsed)) throw new Error("Input must be an array of prompts.");
 
-            const res = await fetch("/api/admin/library/batch", {
+            const res = await fetch(getApiPath("/api/admin/library/batch"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(parsed)

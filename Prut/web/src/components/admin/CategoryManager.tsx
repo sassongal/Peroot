@@ -21,6 +21,7 @@ import {
     Palette
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 import { toast } from "sonner";
 
 interface Category {
@@ -43,7 +44,7 @@ export function CategoryManager() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch("/api/admin/library/categories");
+            const res = await fetch(getApiPath("/api/admin/library/categories"));
             const data = await res.json();
             setCategories(data);
         } catch (e) {
@@ -66,7 +67,7 @@ export function CategoryManager() {
         if (!editData.id || !editData.name_he) return;
 
         try {
-            const res = await fetch("/api/admin/library/categories", {
+            const res = await fetch(getApiPath("/api/admin/library/categories"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editData)

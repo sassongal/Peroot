@@ -2,18 +2,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { 
-    Trophy, 
-    Medal, 
-    Users, 
     Copy, 
-    Star, 
-    TrendingUp,
-    ChevronLeft,
-    Crown,
-    CheckCircle2
+    Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 
 interface LeaderboardEntry {
     user_id: string;
@@ -32,7 +27,7 @@ export function Leaderboard() {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                const res = await fetch("/api/community/leaderboard");
+                const res = await fetch(getApiPath("/api/community/leaderboard"));
                 const data = await res.json();
                 setEntries(data);
             } catch (e) {
@@ -92,7 +87,7 @@ export function Leaderboard() {
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden">
                                     {entry.avatar_url ? (
-                                        <img src={entry.avatar_url} alt="" className="w-full h-full object-cover" />
+                                        <Image src={entry.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="text-xs font-black text-blue-400">{entry.full_name[0]}</span>
                                     )}
@@ -140,7 +135,7 @@ function PodiumCard({ entry, rank, color, isCrown }: { entry?: LeaderboardEntry,
                 rank === 1 ? "border-amber-500/50" : "border-white/5"
             )}>
                 {entry.avatar_url ? (
-                    <img src={entry.avatar_url} alt="" className="w-full h-full object-cover" />
+                    <Image src={entry.avatar_url} alt="" width={80} height={80} className="w-full h-full object-cover" />
                 ) : (
                     <div className="text-2xl font-black text-white/20 uppercase">{entry.full_name[0]}</div>
                 )}

@@ -17,16 +17,16 @@ export function Footer() {
 
         {/* Links */}
         <nav className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
-          <Link href="/terms" className="hover:text-purple-400 transition-colors">
+          <Link href="/terms" className="hover:text-purple-400 transition-colors" suppressHydrationWarning>
             תנאי שימוש
           </Link>
-          <Link href="/privacy" className="hover:text-purple-400 transition-colors">
+          <Link href="/privacy" className="hover:text-purple-400 transition-colors" suppressHydrationWarning>
             מדיניות פרטיות
           </Link>
-          <Link href="/accessibility" className="hover:text-purple-400 transition-colors">
+          <Link href="/accessibility" className="hover:text-purple-400 transition-colors" suppressHydrationWarning>
             הצהרת נגישות
           </Link>
-          <a href="mailto:support@peroot.net" className="hover:text-purple-400 transition-colors">
+          <a href="mailto:support@peroot.net" className="hover:text-purple-400 transition-colors" suppressHydrationWarning>
             צור קשר
           </a>
         </nav>
