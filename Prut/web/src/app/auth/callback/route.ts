@@ -3,12 +3,15 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  const origin = siteUrl || new URL(request.url).origin
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=no-code`)
+    return NextResponse.redirect(`${origin}${basePath}/login?error=no-code`)
   }
 
   const cookieStore = await cookies()
@@ -37,11 +40,13 @@ export async function GET(request: Request) {
 
   if (error || !data.session) {
     console.log('[Callback] Error:', error?.message)
-    return NextResponse.redirect(`${origin}/login?error=auth-failed`)
+    return NextResponse.redirect(`${origin}${basePath}/login?error=auth-failed`)
   }
 
   // Create the redirect response
-  const response = NextResponse.redirect(`${origin}${next}`)
+  // Ensure next path starts with basePath if it doesn't already
+  const redirectPath = next.startsWith(basePath) ? next : `${basePath}${next}`
+  const response = NextResponse.redirect(`${origin}${redirectPath}`)
 
   // Now set all the cookies on the response
   // The SDK sets cookies asynchronously, so we need to wait a tick
@@ -63,7 +68,7 @@ export async function GET(request: Request) {
     const chunkSize = 3500
 
     const cookieOptions = {
-      path: '/',
+      path: basePath || '/',
       sameSite: 'lax' as const,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -71,7 +76,7 @@ export async function GET(request: Request) {
     }
 
     // Clear the code verifier
-    response.cookies.set(`${cookieName}-code-verifier`, '', { path: '/', maxAge: 0 })
+    response.cookies.set(`${cookieName}-code-verifier`, '', { path: basePath || '/', maxAge: 0 })
 
     if (encoded.length <= chunkSize) {
       response.cookies.set(cookieName, `base64-${encoded}`, cookieOptions)
