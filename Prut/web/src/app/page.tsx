@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import NextImage from "next/image";
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { HistoryPanel } from "@/components/features/history/HistoryPanel";
@@ -20,7 +20,7 @@ import { Question, LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { createClient } from "@/lib/supabase/client";
 import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
-import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
+import { useLibraryContext } from "@/context/LibraryContext";
 import { LibraryView } from "@/components/views/LibraryView";
 import { PersonalLibraryView } from "@/components/views/PersonalLibraryView";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
@@ -54,7 +54,6 @@ function PageContent({ user }: { user: User | null }) {
     addPrompt,
     personalView,
     setPersonalView,
-    updateProfile,
     completeOnboarding
   } = useLibraryContext();
 
@@ -209,22 +208,46 @@ function PageContent({ user }: { user: User | null }) {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = "";
+      let promptText = "";
+      let questionsPart = "";
+      let foundDelimiter = false;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         
         const chunk = decoder.decode(value, { stream: true });
-        fullText += chunk;
-        setCompletion(fullText);
+        
+        if (!foundDelimiter) {
+          if (chunk.includes("[GENIUS_QUESTIONS]")) {
+            foundDelimiter = true;
+            const [text, json] = chunk.split("[GENIUS_QUESTIONS]");
+            promptText += text;
+            questionsPart += json || "";
+            setCompletion(promptText);
+          } else {
+            promptText += chunk;
+            setCompletion(promptText);
+          }
+        } else {
+          questionsPart += chunk;
+        }
       }
 
-      // Cleanup & Post-processing
-      recordUsageSignal("enhance", fullText);
+      // Final processing
+      if (questionsPart) {
+        try {
+          const parsed = JSON.parse(questionsPart.trim());
+          setQuestions(parsed);
+        } catch (e) {
+          console.error("[Enhance] Failed to parse Genius questions:", e, questionsPart);
+        }
+      }
+
+      recordUsageSignal("enhance", promptText);
       setDetectedCategory(selectedCategory);
 
-      const extracted = extractPlaceholders(fullText);
+      const extracted = extractPlaceholders(promptText);
       setVariableValues(prev => {
         const next = { ...prev };
         extracted.forEach(ph => { if (!(ph in next)) next[ph] = ""; });
@@ -233,7 +256,7 @@ function PageContent({ user }: { user: User | null }) {
 
       addToHistory({
         original: inputVal,
-        enhanced: fullText,
+        enhanced: promptText,
         tone: selectedTone,
         category: selectedCategory,
       });
@@ -284,7 +307,9 @@ function PageContent({ user }: { user: User | null }) {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = "";
+      let promptText = "";
+      let questionsPart = "";
+      let foundDelimiter = false;
 
       // Stream the refined text
       while (true) {
@@ -292,13 +317,35 @@ function PageContent({ user }: { user: User | null }) {
         if (done) break;
         
         const chunk = decoder.decode(value, { stream: true });
-        fullText += chunk;
-        setCompletion(fullText);
+        
+        if (!foundDelimiter) {
+          if (chunk.includes("[GENIUS_QUESTIONS]")) {
+            foundDelimiter = true;
+            const [text, json] = chunk.split("[GENIUS_QUESTIONS]");
+            promptText += text;
+            questionsPart += json || "";
+            setCompletion(promptText);
+          } else {
+            promptText += chunk;
+            setCompletion(promptText);
+          }
+        } else {
+          questionsPart += chunk;
+        }
       }
 
-      recordUsageSignal("refine", fullText);
+      if (questionsPart) {
+        try {
+          const parsed = JSON.parse(questionsPart.trim());
+          setQuestions(parsed);
+        } catch (e) {
+          console.error("[Refine] Failed to parse Genius questions:", e, questionsPart);
+        }
+      }
+
+      recordUsageSignal("refine", promptText);
       
-      const extracted = extractPlaceholders(fullText);
+      const extracted = extractPlaceholders(promptText);
       setVariableValues(prev => {
         const next = { ...prev };
         extracted.forEach(ph => { if (!(ph in next)) next[ph] = ""; });
@@ -454,7 +501,7 @@ function PageContent({ user }: { user: User | null }) {
       </div>
 
       {/* Grid Layout - Sidebar First for Right Alignment in RTL */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8 px-4 md:px-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2 md:pt-4 px-4 md:px-8">
 
         {/* Right Sidebar (History & Navigation) */}
         <div className="lg:col-span-3 h-[calc(100vh-40px)] sticky top-6 flex flex-col gap-4">
@@ -508,15 +555,15 @@ function PageContent({ user }: { user: User | null }) {
         </div>
 
         {/* Main Content (Center) */}
-        <div className="lg:col-span-9 flex flex-col gap-8 max-w-5xl mx-auto w-full pl-0 lg:pl-12">
-           <div className="flex justify-center pb-2">
+        <div className="lg:col-span-9 flex flex-col gap-4 md:gap-6 max-w-5xl mx-auto w-full pl-0 lg:pl-12 pt-2 md:pt-4">
+           <div className="flex justify-center">
              <NextImage 
               src="/logo.svg" 
               alt="Peroot" 
-              width={384}
-              height={120}
+              width={80}
+              height={25}
               priority
-              className="w-20 md:w-28 h-auto drop-shadow-2xl brightness-110"
+              className="w-8 md:w-12 h-auto drop-shadow-2xl brightness-110"
               style={{ width: 'auto', height: 'auto' }}
              />
            </div>
@@ -613,7 +660,7 @@ function PageContent({ user }: { user: User | null }) {
 export default function HomePage() {
   const { user } = useHistory();
   return (
-    <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-6 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+    <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
         <PageContent user={user} />
     </div>
   );

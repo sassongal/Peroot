@@ -1,6 +1,7 @@
 "use client";
 
 import { Wand2, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -150,7 +151,7 @@ export function SmartRefinement({
         >
           {isLoading ? (
              <>
-               <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+               <AnimatedLogo size="sm" />
                <span>מעבד...</span>
              </>
           ) : (

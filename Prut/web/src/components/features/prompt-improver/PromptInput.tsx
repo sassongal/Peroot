@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { Wand2, Loader2, Mic, MicOff } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import { Wand2, Mic, MicOff } from "lucide-react";
+import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
@@ -16,7 +17,7 @@ import { toast } from "sonner"; // Assuming sonner is available for error toasts
 interface PromptInputProps {
   user: User | null;
   inputVal: string;
-  setInputVal: (val: string) => void;
+  setInputVal: (val: string | ((prev: string) => string)) => void;
   handleEnhance: () => void;
   inputScore: PromptScore | null;
   scoreTone: { text: string; bar: string } | null;
@@ -34,6 +35,7 @@ interface PromptInputProps {
 import { useI18n } from "@/context/I18nContext";
 
 export function PromptInput({
+  user,
   inputVal,
   setInputVal,
   handleEnhance,
@@ -51,19 +53,24 @@ export function PromptInput({
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [interimResult, setInterimResult] = useState("");
 
     // Voice Recorder Logic
     const { isListening, toggleListening, isSupported } = useVoiceRecorder({
         onResult: (text, isFinal) => {
             if (isFinal) {
-                setInputVal((prev) => {
+                setInputVal((prev: string) => {
                     const prefix = prev.trim() ? prev.trim() + " " : "";
                     return prefix + text;
                 });
+                setInterimResult("");
+            } else {
+                setInterimResult(text);
             }
         },
         onError: (err) => {
             toast.error("שגיאה בהקלטה: " + err);
+            setInterimResult("");
         }
     });
 
@@ -73,22 +80,26 @@ export function PromptInput({
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  }, [inputVal]);
+  }, [inputVal, interimResult]);
+
+  // Combined value for display
+  const displayValue = inputVal + (interimResult ? (inputVal && !inputVal.endsWith(' ') ? ' ' : '') + interimResult : '');
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-xs text-slate-400 uppercase tracking-widest mb-3">{t.prompt_generator.capability_mode}</div>
+        <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
         <CapabilitySelector
           value={selectedCapability}
           onChange={setSelectedCapability}
           disabled={isLoading}
+          compact
         />
       </div>
 
-      <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-6 items-stretch">
+      <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-4 items-stretch">
         {variables.length > 0 && (
           <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-white/10 bg-white/[0.02]">
             <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.variables}</div>
@@ -127,7 +138,7 @@ export function PromptInput({
               <div className="mt-4 space-y-2">
                 <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.live_view}</div>
                 <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-base md:text-lg text-slate-200 leading-relaxed min-h-[100px]">
-                  {highlightTextWithPlaceholders(inputVal)}
+                  {highlightTextWithPlaceholders(displayValue)}
                 </div>
               </div>
             )}
@@ -141,13 +152,17 @@ export function PromptInput({
               className="absolute inset-0 p-6 md:p-8 text-lg md:text-xl text-slate-200 font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
               dir="rtl"
              >
-              {highlightTextWithPlaceholders(inputVal)}
+              {highlightTextWithPlaceholders(displayValue)}
              </div>
             <textarea
               ref={textareaRef}
               dir="rtl"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
+              value={displayValue}
+              onChange={(e) => {
+                 // Committing interim result if typing happens
+                 setInputVal(e.target.value);
+                 setInterimResult("");
+              }}
               placeholder={t.prompt_generator.placeholder}
               className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-lg md:text-xl text-transparent caret-white placeholder:text-slate-600 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
@@ -257,8 +272,8 @@ export function PromptInput({
                 <span className="relative z-10 flex flex-col items-center gap-1">
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-8 h-8 md:w-10 md:h-10 animate-spin" />
-                      <span className="text-[10px] uppercase tracking-tighter">{t.prompt_generator.processing}</span>
+                      <AnimatedLogo size="md" />
+                      <span className="text-[10px] uppercase tracking-tighter mt-1">{t.prompt_generator.processing}</span>
                     </>
                   ) : (
                     <>

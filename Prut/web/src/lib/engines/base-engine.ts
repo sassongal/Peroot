@@ -140,7 +140,7 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
      }
 
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}`,
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nIdentify 3 distinct gaps in the user's request across these categories: 1. Strategic Goal (What is the ultimate 'why'?), 2. Tone & Style (Nuance/Audience matching), 3. Missing Detail (Technical or contextual missing info).\nAfter the enhanced prompt, you MUST add the delimiter [GENIUS_QUESTIONS] and followed by exactly 3 questions in a valid JSON array format. \nExample: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}, ...]\nDo NOT include any text after the JSON.`,
          userPrompt: this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
@@ -157,7 +157,11 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
 
 עליך לשפר ולעדכן את הפרומפט הקיים בהתאם להוראות המשתמש, תוך שמירה קפדנית על המבנה המקצועי המוגדר מטה.
 
-${this.getSystemIdentity()}`,
+${this.getSystemIdentity()}
+
+[GENIUS_ANALYSIS]
+Analyze the enhancement request. If the user provided answers to previous questions, incorporate them. 
+After the improved prompt, add the delimiter [GENIUS_QUESTIONS] followed by 3 NEW clarifying questions in JSON array format if further details would help, or an empty array [] if the prompt is now perfect.`,
             userPrompt: `פרומפט נוכחי לשיפור:
 ---
 ${input.previousResult}

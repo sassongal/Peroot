@@ -10,6 +10,15 @@ interface UseVoiceRecorderProps {
 export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  
+  // Keep callbacks in refs to prevent effect re-running
+  const onResultRef = useRef(onResult);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onResultRef.current = onResult;
+    onErrorRef.current = onError;
+  }, [onResult, onError]);
 
   useEffect(() => {
     // Basic browser support check
@@ -22,7 +31,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'he-IL'; // Default to Hebrew to start, or make dynamic later
+    recognition.lang = 'he-IL';
 
     recognition.onstart = () => {
       console.log("🎤 Recording Started");
@@ -37,7 +46,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error("Speech recognition error", event.error);
       setIsListening(false);
-      if (onError) onError(event.error);
+      if (onErrorRef.current) onErrorRef.current(event.error);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -54,9 +63,8 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
       
       console.log("🎤 Result:", { final: finalTranscript, interim: interimTranscript });
 
-      // We only send updates if there is content
       if (finalTranscript || interimTranscript) {
-        onResult(finalTranscript || interimTranscript, !!finalTranscript);
+        onResultRef.current(finalTranscript || interimTranscript, !!finalTranscript);
       }
     };
 
@@ -67,7 +75,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
         recognitionRef.current.abort();
       }
     };
-  }, [onResult, onError]);
+  }, []); // Empty dependency array - only init once!
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
@@ -90,12 +98,18 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
     else startListening();
   }, [isListening, startListening, stopListening]);
 
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    setIsSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition));
+  }, []);
+
   return {
     isListening,
     startListening,
     stopListening,
     toggleListening,
-    isSupported: typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+    isSupported
   };
 }
 

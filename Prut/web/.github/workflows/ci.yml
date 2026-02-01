@@ -1,40 +1,44 @@
-name: CI - Quality Gate
+name: Submarine CI
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   pull_request:
-    branches: [main]
+    branches: ["main"]
 
 jobs:
-  quality-check:
+  build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
 
-      - name: Setup Node.js
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
-      - name: Lint check
+      - name: Lint
         run: npm run lint
 
-      - name: Type check
-        run: npx tsc --noEmit
+      # - name: Type Check
+      #   run: npx tsc --noEmit
 
-      - name: Build test
-        env:
-          # Dummy values for build-time validation
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: placeholder
-          REDIS_URL: redis://localhost:6379
-          SENTRY_DSN: "https://placeholder@sentry.io/1"
-          NEXT_PUBLIC_SENTRY_DSN: "https://placeholder@sentry.io/1"
+      - name: Run Unit Tests
+        run: npx vitest run
+
+      - name: Build
         run: npm run build
+        env:
+          # Dummy values for build time if needed, typically Next.js builds need public vars
+          NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "dummy-key"

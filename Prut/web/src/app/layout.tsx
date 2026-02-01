@@ -97,6 +97,7 @@ export const metadata: Metadata = {
 
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
+import { PostHogProvider } from "@/components/providers/PostHogProvider";
 
 export default async function RootLayout({
   children,
@@ -114,16 +115,18 @@ export default async function RootLayout({
         className={`${frankRuhl.variable} ${heebo.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative`}
         suppressHydrationWarning
       >
-        <a href="#main-content" className="skip-link">
-          דלג לתוכן הראשי
-        </a>
-        <div className="noise-overlay" />
-        <FAQSchema />
-        <I18nProvider dictionary={dictionary}>
-          <GlobalContextWrapper>
-            {children}
-          </GlobalContextWrapper>
-        </I18nProvider>
+        <PostHogProvider>
+          <a href="#main-content" className="skip-link" suppressHydrationWarning>
+            דלג לתוכן הראשי
+          </a>
+          <div className="noise-overlay" />
+          <FAQSchema />
+          <I18nProvider dictionary={dictionary}>
+            <GlobalContextWrapper>
+              {children}
+            </GlobalContextWrapper>
+          </I18nProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

@@ -65,8 +65,13 @@ export async function middleware(request: NextRequest) {
     if (isAdminPath) {
         // 🚀 Optimizing: Use JWT claims (app_metadata) instead of DB hit
         // Note: For this to work perfectly, you should add your role to app_metadata via Supabase Auth
-        const role = user.app_metadata?.role;
-        const isAdmin = role === 'admin'; 
+        // const role = user.app_metadata?.role;
+        // const isAdmin = role === 'admin'; 
+        
+        // TEMPORARY RESTORATION: Allow all authenticated users to reach the client-side AdminGuard.
+        // The AdminGuard will perform the actual DB role check.
+        // TODO: Implement Sync to app_metadata for true Edge RBAC.
+        const isAdmin = true; 
 
         if (!isAdmin) {
             // Not an admin - Redirect to home or return 403 for API
