@@ -16,6 +16,9 @@ interface LibraryContextType {
   viewMode: "home" | "library" | "personal";
   setViewMode: (mode: "home" | "library" | "personal") => void;
   
+  libraryView: "all" | "favorites";
+  setLibraryView: (view: "all" | "favorites") => void;
+  
   libraryQuery: string;
   setLibraryQuery: (q: string) => void;
   filteredLibrary: LibraryPrompt[];
@@ -126,6 +129,7 @@ const fallbackLibraryPrompts = (Array.isArray(promptsData)
 export function LibraryProvider({ children, user, showLoginRequired }: { children: ReactNode, user: User | null, showLoginRequired: (feature: string) => void }) {
   // --- Local UI State ---
   const [viewMode, setViewMode] = useState<"home" | "library" | "personal">("home");
+  const [libraryView, setLibraryView] = useState<"all" | "favorites">("all");
   const [libraryQuery, setLibraryQuery] = useState("");
   const [personalQuery, setPersonalQuery] = useState("");
   const [personalSort, setPersonalSort] = useState<"recent" | "title" | "usage" | "custom">("recent");
@@ -215,6 +219,11 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const filteredLibrary = useMemo(() => {
     let result = libraryPrompts;
     
+    // Filter by View Mode (Favorites)
+    if (libraryView === "favorites") {
+        result = result.filter(p => favoriteLibraryIds.has(p.id));
+    }
+    
     // Filter by capability
     if (selectedCapabilityFilter) {
       result = result.filter(filtered => 
@@ -231,7 +240,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       );
     }
     return result;
-  }, [libraryQuery, selectedCapabilityFilter, libraryPrompts]);
+  }, [libraryQuery, selectedCapabilityFilter, libraryPrompts, libraryView, favoriteLibraryIds]);
 
   const libraryFavorites = useMemo(() => {
     let result = libraryPrompts.filter((p: LibraryPrompt) => favoriteLibraryIds.has(p.id));
@@ -483,6 +492,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   const value = {
     viewMode, setViewMode,
+    libraryView, setLibraryView,
     libraryQuery, setLibraryQuery, filteredLibrary,
     personalQuery, setPersonalQuery,
     personalSort, setPersonalSort,

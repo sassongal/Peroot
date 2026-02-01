@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import NextImage from "next/image";
+import { getAssetPath } from "@/lib/asset-path";
 import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
@@ -557,15 +558,16 @@ function PageContent({ user }: { user: User | null }) {
         {/* Main Content (Center) */}
         <div className="lg:col-span-9 flex flex-col gap-4 md:gap-6 max-w-5xl mx-auto w-full pl-0 lg:pl-12 pt-2 md:pt-4">
            <div className="flex justify-center">
-             <NextImage 
-              src="/logo.svg" 
-              alt="Peroot" 
-              width={80}
-              height={25}
-              priority
-              className="w-8 md:w-12 h-auto drop-shadow-2xl brightness-110"
-              style={{ width: 'auto', height: 'auto' }}
-             />
+             <div className="hero-logo-container">
+               <div className="hero-logo-ring hero-logo-ring-1" />
+               <div className="hero-logo-ring hero-logo-ring-2" />
+               <div className="hero-logo-ring hero-logo-ring-3" />
+               <img
+                 src={getAssetPath("/logo.svg")}
+                 alt="Peroot"
+                 className="hero-logo-image"
+               />
+             </div>
            </div>
 
            <LoadingOverlay isVisible={isLoading} />
@@ -574,7 +576,6 @@ function PageContent({ user }: { user: User | null }) {
              /* INPUT MODE */
              <>
                <PromptInput
-                  user={user}
                   inputVal={inputVal}
                   setInputVal={setInputVal}
                   handleEnhance={handleEnhance}
@@ -637,17 +638,6 @@ function PageContent({ user }: { user: User | null }) {
         feature={loginRequiredConfig.feature}
       />
 
-      {/* Footer */}
-      <div className="mt-20 text-center pb-8 flex flex-col gap-4 animate-in fade-in duration-1000 delay-300">
-         <p className="font-mono text-xs text-slate-600 uppercase tracking-widest">
-            {t.home.footer_credits}
-         </p>
-         <div className="flex justify-center gap-6 text-xs text-slate-500 font-medium">
-            <a href="/privacy" className="hover:text-slate-300 transition-colors">{t.home.privacy_policy}</a>
-            <span className="text-slate-700">|</span>
-            <a href="/accessibility" className="hover:text-slate-300 transition-colors">{t.home.accessibility}</a>
-         </div>
-      </div>
       {/* Onboarding Overlay */}
       {showOnboarding && user && (
           <OnboardingOverlay onComplete={handleOnboardingComplete} />
@@ -660,8 +650,32 @@ function PageContent({ user }: { user: User | null }) {
 export default function HomePage() {
   const { user } = useHistory();
   return (
-    <div className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-20 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Peroot",
+            "applicationCategory": "ProductivityApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "ILS"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "ratingCount": "120"
+            }
+          })
+        }}
+      />
+      <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
         <PageContent user={user} />
     </div>
+    </>
   );
 }

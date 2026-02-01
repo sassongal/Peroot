@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Frank_Ruhl_Libre, Heebo, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { FAQSchema } from "@/components/features/faq/FAQSchema";
@@ -38,19 +39,22 @@ export const metadata: Metadata = {
   generator: "Next.js",
   keywords: [
     "פרומפטים",
-    "פרומפט בעברית",
     "מחולל פרומפטים",
-    "שיפור פרומפט",
-    "Prompt Engineering",
-    "AI בעברית",
+    "בינה מלאכותית",
     "כתיבת פרומפטים",
-    "ChatGPT בעברית",
-    "Claude בעברית",
-    "מידג'רני בעברית",
-    "אופטימיזציה לפרומפט",
-    "פרומפט ל-LLM",
+    "מדריך פרומפטים",
+    "AI בעברית",
+    "ChatGPT",
+    "Claude",
+    "Midjourney",
+    "ג'יני",
+    "פרות",
     "Peroot",
-    "פירוט"
+    "Prompt Engineering Israel",
+    "קורס AI",
+    "כלי AI למנהלים",
+    "שיווק דיגיטלי AI",
+    "יוצר תמונות AI"
   ],
   referrer: "origin-when-cross-origin",
   creator: "Gal Sasson",
@@ -93,11 +97,29 @@ export const metadata: Metadata = {
     title: "Peroot",
     statusBarStyle: "black-translucent",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // ⚠️ IMPORTANT: Replace with your Google Search Console verification token before production!
+    // Get it from: https://search.google.com/search-console → Settings → Ownership verification
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || 'verification_token',
+  },
 };
 
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
+
+import { Footer } from "@/components/layout/Footer";
 
 export default async function RootLayout({
   children,
@@ -112,7 +134,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark">
       <body
-        className={`${frankRuhl.variable} ${heebo.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative`}
+        className={`${frankRuhl.variable} ${heebo.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
         suppressHydrationWarning
       >
         <PostHogProvider>
@@ -122,9 +144,14 @@ export default async function RootLayout({
           <div className="noise-overlay" />
           <FAQSchema />
           <I18nProvider dictionary={dictionary}>
-            <GlobalContextWrapper>
-              {children}
-            </GlobalContextWrapper>
+            <Suspense fallback={null}>
+              <GlobalContextWrapper>
+                <div className="flex-grow">
+                  {children}
+                </div>
+                <Footer />
+              </GlobalContextWrapper>
+            </Suspense>
           </I18nProvider>
         </PostHogProvider>
       </body>

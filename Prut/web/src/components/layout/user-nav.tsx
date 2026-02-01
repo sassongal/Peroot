@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 import { User as UserIcon, Settings, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { getAssetPath } from "@/lib/asset-path";
 
 interface UserMenuProps {
   user: User | null;
@@ -116,7 +117,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                <div className="p-4 border-b border-white/10 flex flex-col gap-3 bg-white/5">
                    {/* Embedded Logo in Menu */}
                    <div className="flex justify-center pb-2 border-b border-white/5">
-                        <img src="/logo.svg" alt="Peroot" className="h-5 w-auto opacity-70" />
+                        <img src={getAssetPath("/logo.svg")} alt="Peroot" className="h-5 w-auto opacity-70" />
                    </div>
                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden shrink-0 border border-white/10">

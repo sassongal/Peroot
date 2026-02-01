@@ -36,7 +36,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const navigation = [
     { name: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
     { name: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
-    { name: t.admin.layout.library, href: "/admin/prompts", icon: FileText },
+    { name: t.admin.layout.library, href: "/admin/library", icon: FileText },
     { name: t.admin.layout.users, href: "/admin/users", icon: Users },
     { name: t.admin.layout.database, href: "/admin/database", icon: Database },
     { name: t.admin.layout.telemetry, href: "/admin/activity", icon: Activity },

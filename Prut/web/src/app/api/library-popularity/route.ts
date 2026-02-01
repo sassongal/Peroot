@@ -40,7 +40,11 @@ export async function GET() {
     (data ?? []).map((row) => [row.prompt_id, row.count])
   );
 
-  return NextResponse.json({ popularity });
+  return NextResponse.json({ popularity }, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+    }
+  });
 }
 
 export async function POST(req: Request) {

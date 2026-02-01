@@ -27,3 +27,5 @@
 # Misc
 .qodo/
 Prut/web/.git.bak/
+.vscode/
+*.code-workspace

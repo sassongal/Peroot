@@ -1,13 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
 import { Wand2, Mic, MicOff } from "lucide-react";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
-import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
@@ -15,9 +14,8 @@ import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner"; // Assuming sonner is available for error toasts
 
 interface PromptInputProps {
-  user: User | null;
   inputVal: string;
-  setInputVal: (val: string | ((prev: string) => string)) => void;
+  setInputVal: Dispatch<SetStateAction<string>>;
   handleEnhance: () => void;
   inputScore: PromptScore | null;
   scoreTone: { text: string; bar: string } | null;
@@ -35,7 +33,6 @@ interface PromptInputProps {
 import { useI18n } from "@/context/I18nContext";
 
 export function PromptInput({
-  user,
   inputVal,
   setInputVal,
   handleEnhance,
@@ -54,6 +51,11 @@ export function PromptInput({
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [interimResult, setInterimResult] = useState("");
+    
+    // Performance optimization: Memoize heavy text processing
+    // This prevents re-calculation when other props (like loading state) change
+    const displayValue = inputVal + (interimResult ? (inputVal && !inputVal.endsWith(' ') ? ' ' : '') + interimResult : '');
+    const highlightedContent = useMemo(() => highlightTextWithPlaceholders(displayValue), [displayValue]);
 
     // Voice Recorder Logic
     const { isListening, toggleListening, isSupported } = useVoiceRecorder({
@@ -82,8 +84,6 @@ export function PromptInput({
     }
   }, [inputVal, interimResult]);
 
-  // Combined value for display
-  const displayValue = inputVal + (interimResult ? (inputVal && !inputVal.endsWith(' ') ? ' ' : '') + interimResult : '');
 
   return (
     <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -138,7 +138,7 @@ export function PromptInput({
               <div className="mt-4 space-y-2">
                 <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.live_view}</div>
                 <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-base md:text-lg text-slate-200 leading-relaxed min-h-[100px]">
-                  {highlightTextWithPlaceholders(displayValue)}
+                  {highlightedContent}
                 </div>
               </div>
             )}
@@ -152,7 +152,7 @@ export function PromptInput({
               className="absolute inset-0 p-6 md:p-8 text-lg md:text-xl text-slate-200 font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
               dir="rtl"
              >
-              {highlightTextWithPlaceholders(displayValue)}
+              {highlightedContent}
              </div>
             <textarea
               ref={textareaRef}

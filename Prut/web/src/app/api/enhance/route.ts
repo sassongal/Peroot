@@ -28,24 +28,33 @@ const RateLimitError = (reset: number) => NextResponse.json(
 
 export async function POST(req: Request) {
   try {
+    const json = await req.json();
+    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers } = RequestSchema.parse(json);
+    
+    // Determine if this is a refinement request
+    const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
+    const isRefinement = !!previousResult && (!!refinementInstruction || !!hasAnswers);
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
-    // 1. Determine Tier & Rate Limit
-    let tier: 'free' | 'pro' | 'guest' = 'guest';
+    // 1. Parallel Context Fetching (Profile, Library, Personality)
+    // We start these early to minimize latency
+    const contextPromise = user ? Promise.all([
+        supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
+        !isRefinement ? supabase.from('personal_library').select('title, prompt').eq('user_id', user.id).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
+        !isRefinement ? supabase.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null })
+    ]) : Promise.resolve([ { data: null }, { data: null }, { data: null } ]);
+
+    const [profileRes, historyRes, personalityRes] = await contextPromise;
+
+    // 1.1 Process Profile & Tier
+    let tier: 'free' | 'pro' | 'guest' = 'guest'; // Fixed: Use let for reassignment
     let profile: { plan_tier: string } | null = null;
 
-    if (user) {
-        const { data } = await supabase
-            .from('profiles')
-            .select('plan_tier')
-            .eq('id', user.id)
-            .maybeSingle();
-        
-        if (data) {
-            profile = data;
-            tier = (profile.plan_tier as 'free' | 'pro') || 'free';
-        }
+    if (profileRes.data) {
+        profile = profileRes.data;
+        tier = (profile.plan_tier as 'free' | 'pro') || 'free';
     }
 
     // 2. Execute Rate Limiting
@@ -72,43 +81,22 @@ export async function POST(req: Request) {
         }
     }
 
-    const json = await req.json();
-    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers } = RequestSchema.parse(json);
-    
-    // Determine if this is a refinement request
-    const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
-    const isRefinement = !!previousResult && (!!refinementInstruction || !!hasAnswers);
-
     // 2. Engine Selection & Generation
     const mode = parseCapabilityMode(capability_mode);
     const engine = await getEngine(mode);
 
-    // 2.5 Style RAG
+    // 2.5 Style RAG Processing (using pre-fetched data)
     let userHistory: { title: string; prompt: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined = undefined;
 
     if (user && !isRefinement) {
-        const { data: historyData } = await supabase
-            .from('personal_library')
-            .select('title, prompt')
-            .eq('user_id', user.id)
-            .order('use_count', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(3);
-        
-        if (historyData) userHistory = historyData;
+        if (historyRes.data) userHistory = historyRes.data;
 
-        const { data: personalityData } = await supabase
-            .from('user_style_personality')
-            .select('style_tokens, personality_brief, preferred_format')
-            .eq('user_id', user.id)
-            .maybeSingle();
-        
-        if (personalityData) {
+        if (personalityRes.data) {
             userPersonality = {
-                tokens: personalityData.style_tokens || [],
-                brief: personalityData.personality_brief,
-                format: personalityData.preferred_format
+                tokens: personalityRes.data.style_tokens || [],
+                brief: personalityRes.data.personality_brief,
+                format: personalityRes.data.preferred_format
             };
         }
     }
@@ -183,7 +171,7 @@ export async function POST(req: Request) {
     return result.toTextStreamResponse();
 
   } catch (error) {
-    console.error("API Error:", error);
+    // console.error("API Error:", error); // Handled by Next.js
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -1,11 +1,28 @@
 "use client";
 
 import { useHistory } from "@/hooks/useHistory";
-import { LibraryProvider } from "@/context/LibraryContext";
+import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { useState } from "react";
 import { TopLogo } from "@/components/layout/top-logo";
-import { Toaster } from "sonner";
+import dynamic from "next/dynamic";
+
+const Toaster = dynamic(
+  () => import("sonner").then((mod) => mod.Toaster),
+  { ssr: false }
+);
+
+function InnerWrapper({ children }: { children: React.ReactNode }) {
+  const { viewMode } = useLibraryContext();
+
+  return (
+    <>
+      <TopLogo hidden={viewMode === "home"} />
+      <Toaster position="top-center" theme="dark" closeButton />
+      {children}
+    </>
+  );
+}
 
 export function GlobalContextWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useHistory();
@@ -19,9 +36,7 @@ export function GlobalContextWrapper({ children }: { children: React.ReactNode }
 
   return (
     <LibraryProvider user={user} showLoginRequired={showLoginRequired}>
-        <TopLogo />
-        <Toaster position="top-center" theme="dark" closeButton />
-        {children}
+        <InnerWrapper>{children}</InnerWrapper>
         <LoginRequiredModal
             isOpen={isLoginRequiredModalOpen}
             onClose={() => setIsLoginRequiredModalOpen(false)}

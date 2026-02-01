@@ -20,7 +20,13 @@ export async function GET() {
             return NextResponse.json({ error: 'Database error' }, { status: 500 });
         }
         
-        return NextResponse.json(data || []);
+        return NextResponse.json(data || [], {
+            headers: {
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                'CDN-Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                'Vercel-CDN-Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            }
+        });
     } catch (err) {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }

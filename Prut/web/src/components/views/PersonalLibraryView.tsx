@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
-import { 
-    BookOpen, Star, ArrowRight, Plus, Copy, Pencil, Check, X, 
-    Search, Trash2, GripVertical, LayoutGrid, LayoutList, 
-    CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2 
+import {
+    BookOpen, Star, ArrowRight, Plus, Copy, Pencil, Check, X,
+    Search, Trash2, GripVertical, LayoutGrid, LayoutList,
+    CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
@@ -535,11 +535,27 @@ export function PersonalLibraryView({
 
         <div className="glass-card p-7 md:p-9 rounded-2xl border-white/10 bg-black/40">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-serif text-white">ספריה אישית</h2>
-              <p className="text-base text-slate-400 mt-2">
-                {totalCount} פרומפטים {personalView === "favorites" ? "מועדפים" : "אישיים"} · ארגון לפי קטגוריות
-              </p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-4xl md:text-5xl font-serif text-white">ספריה אישית</h2>
+                <p className="text-base text-slate-400 mt-2">
+                  {totalCount} פרומפטים {personalView === "favorites" ? "מועדפים" : "אישיים"} · ארגון לפי קטגוריות
+                </p>
+              </div>
+
+              {/* New Prompt Button */}
+              <button
+                onClick={() => setViewMode("home")}
+                className="group flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md hover:shadow-lg"
+              >
+                <div className="relative w-5 h-5">
+                  <Sparkles className="absolute inset-0 w-5 h-5 text-yellow-600" />
+                  <Plus className="absolute inset-0 w-5 h-5 text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+                </div>
+                <span className="text-sm font-semibold text-black hidden lg:inline">
+                  פרומפט חדש
+                </span>
+              </button>
             </div>
             
             {/* Top Toolbar */}

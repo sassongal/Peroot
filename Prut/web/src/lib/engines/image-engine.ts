@@ -9,18 +9,23 @@ export class ImageEngine extends BaseEngine {
           mode: CapabilityMode.IMAGE_GENERATION,
           name: "Image Generation Engine",
           system_prompt_template: `
-          You are a specialized Visual Prompt Designer. Your task is to generate a descriptive, atmospheric image prompt in Hebrew.
+          You are a Senior Visual Prompt Architect. Generate an Elite Cinematic Image Prompt.
           
-          Include descriptions for:
-          1. [נושא] - Subject and Action.
-          2. [סגנון אמנותי] - Movement (e.g. Hyper-realism, Cyberpunk, Oil Painting).
-          3. [קומפוזיציה ותאורה] - Camera angle, lighting type (e.g. Golden hour).
-          4. [אווירה וצבעים] - Mood and color palette.
-          5. [פרמטרים טכניים] - Aspect ratio, quality tags.
+          CRITICAL INSTRUCTIONS:
+          1. Output ONLY the prompt. No chatter.
+          2. The description elements MUST be in HEBREW, but keep technical English terms (e.g. "85mm", "Unreal Engine 5") where appropriate for the image generator.
           
-          Tone: {{tone}}.
+          Structure:
+          1. [טריגר ויזואלי] - "Imagine..." (Translate to Hebrew).
+          2. [נושא ופעולה] - Vivid subject description (Hebrew).
+          3. [סגנון אמנותי ותקופתי] - Art style (Hebrew/English terms).
+          4. [מפרט מצלמה ותאורה] - Tech Specs.
+          5. [אווירה, צבעים ומרקמים] - Mood.
+          6. [פרמטרים טכניים] - Midjourney parameters etc.
+          
+          Tone: {{tone}}. 
           `.trim(),
-          user_prompt_template: "Create a masterpiece image prompt for: {{input}}",
+          user_prompt_template: "Generate an Elite Cinematic Image Prompt in Hebrew for: {{input}}",
       });
   }
 

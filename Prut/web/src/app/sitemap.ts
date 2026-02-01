@@ -1,32 +1,38 @@
-import type { MetadataRoute } from "next";
+import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://peroot.ai";
-  const now = new Date();
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.ai';
+
   return [
     {
-      url: `${siteUrl}/`,
-      lastModified: now,
-      changeFrequency: "weekly",
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: `${siteUrl}/privacy`,
-      lastModified: now,
-      changeFrequency: "yearly",
+      url: `${baseUrl}/login`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
-      url: `${siteUrl}/accessibility`,
-      lastModified: now,
-      changeFrequency: "yearly",
+      url: `${baseUrl}/terms`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
-      url: `${siteUrl}/login`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.2,
+      url: `${baseUrl}/accessibility`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.3,
     },
   ];
 }

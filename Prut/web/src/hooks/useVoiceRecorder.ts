@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+
 interface UseVoiceRecorderProps {
   onResult: (text: string, isFinal: boolean) => void;
   onError?: (error: string) => void;
@@ -9,7 +10,7 @@ interface UseVoiceRecorderProps {
 
 export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   
   // Keep callbacks in refs to prevent effect re-running
   const onResultRef = useRef(onResult);
@@ -43,13 +44,13 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
       setIsListening(false);
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (event: Event & { error: string }) => {
       console.error("Speech recognition error", event.error);
       setIsListening(false);
       if (onErrorRef.current) onErrorRef.current(event.error);
     };
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => {
       let interimTranscript = '';
       let finalTranscript = '';
 
@@ -114,9 +115,26 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
 }
 
 // Add types for TypeScript since they might not be in the global scope by default
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: Event & { error: string }) => void) | null;
+  onresult: ((event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance;
+}
+
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { getAssetPath } from "@/lib/asset-path";
 
 interface AnimatedLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -8,8 +9,9 @@ interface AnimatedLogoProps {
 }
 
 /**
- * Animated logo component for loading states
- * Creates a mesmerizing effect with the Peroot logo
+ * Optimized animated logo component for loading states
+ * Uses GPU-accelerated transforms for smooth 60fps animations
+ * Transparent background for versatile use
  */
 export function AnimatedLogo({ size = "md", className }: AnimatedLogoProps) {
   const sizeClasses = {
@@ -19,84 +21,72 @@ export function AnimatedLogo({ size = "md", className }: AnimatedLogoProps) {
     xl: "w-24 h-24",
   };
 
+  const ringScales = {
+    sm: { outer: "w-12 h-12", inner: "w-10 h-10" },
+    md: { outer: "w-16 h-16", inner: "w-14 h-14" },
+    lg: { outer: "w-24 h-24", inner: "w-20 h-20" },
+    xl: { outer: "w-32 h-32", inner: "w-28 h-28" },
+  };
+
   return (
-    <div className={cn("relative flex items-center justify-center", className)}>
-      {/* Outer rotating glow ring */}
+    <div
+      className={cn(
+        "relative flex items-center justify-center",
+        className
+      )}
+      style={{ willChange: "transform" }}
+    >
+      {/* Outer rotating ring - GPU accelerated */}
       <div
         className={cn(
-          "absolute rounded-full animate-spin-slow",
-          sizeClasses[size]
+          "absolute rounded-full animate-logo-spin",
+          ringScales[size].outer
         )}
         style={{
-          background: "conic-gradient(from 0deg, transparent, rgba(147, 197, 253, 0.5), transparent, rgba(196, 181, 253, 0.5), transparent)",
-          filter: "blur(8px)",
-          animationDuration: "3s",
+          background: "conic-gradient(from 0deg, transparent 0%, rgba(147, 197, 253, 0.4) 25%, transparent 50%, rgba(196, 181, 253, 0.4) 75%, transparent 100%)",
+          willChange: "transform",
         }}
       />
 
-      {/* Middle pulsing ring */}
+      {/* Inner pulsing glow ring - uses opacity animation */}
       <div
         className={cn(
-          "absolute rounded-full animate-pulse",
-          size === "sm" ? "w-6 h-6" : size === "md" ? "w-10 h-10" : size === "lg" ? "w-14 h-14" : "w-20 h-20"
+          "absolute rounded-full animate-logo-pulse",
+          ringScales[size].inner
         )}
         style={{
-          background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
-          boxShadow: "0 0 30px rgba(147, 197, 253, 0.3), 0 0 60px rgba(196, 181, 253, 0.2)",
+          background: "radial-gradient(circle, rgba(147, 197, 253, 0.2) 0%, rgba(196, 181, 253, 0.1) 50%, transparent 70%)",
+          willChange: "opacity, transform",
         }}
       />
 
-      {/* Inner breathing glow */}
-      <div
-        className={cn(
-          "absolute rounded-full animate-breathe",
-          size === "sm" ? "w-10 h-10" : size === "md" ? "w-14 h-14" : size === "lg" ? "w-20 h-20" : "w-28 h-28"
-        )}
-        style={{
-          background: "radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%)",
-        }}
-      />
-
-      {/* Logo container with effects */}
-      <div className="relative z-10">
-        {/* Shimmer overlay */}
-        <div
-          className="absolute inset-0 overflow-hidden rounded-lg"
-          style={{ mixBlendMode: "overlay" }}
-        >
-          <div
-            className="absolute inset-0 animate-shimmer-diagonal"
-            style={{
-              background: "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)",
-              backgroundSize: "200% 200%",
-            }}
-          />
-        </div>
-
-        {/* Logo image */}
+      {/* Logo container */}
+      <div className="relative z-10" style={{ willChange: "transform" }}>
+        {/* Logo image with subtle float animation */}
         <img
-          src="/assets/branding/logo.png"
+          src={getAssetPath("/assets/branding/logo.png")}
           alt="פרוט"
           className={cn(
-            "relative animate-float drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]",
+            "relative animate-logo-float",
             sizeClasses[size]
           )}
           style={{
-            filter: "drop-shadow(0 0 10px rgba(147, 197, 253, 0.4)) drop-shadow(0 0 20px rgba(196, 181, 253, 0.3))",
+            willChange: "transform",
+            filter: "drop-shadow(0 0 8px rgba(147, 197, 253, 0.5))",
           }}
         />
       </div>
 
-      {/* Orbiting particles */}
-      <div className={cn("absolute", sizeClasses[size])}>
+      {/* Orbiting particles - simplified for performance */}
+      <div className={cn("absolute animate-logo-orbit", sizeClasses[size])} style={{ willChange: "transform" }}>
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="absolute w-1.5 h-1.5 rounded-full bg-white/60 animate-orbit"
+            className="absolute w-1 h-1 rounded-full bg-white/70"
             style={{
-              animationDelay: `${i * 1.2}s`,
-              animationDuration: "3.6s",
-              boxShadow: "0 0 6px rgba(255,255,255,0.8)",
+              top: "50%",
+              left: "50%",
+              transform: `rotate(${i * 120}deg) translateX(${size === "sm" ? 16 : size === "md" ? 24 : size === "lg" ? 32 : 48}px)`,
             }}
           />
         ))}

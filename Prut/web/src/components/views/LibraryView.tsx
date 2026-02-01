@@ -1,9 +1,8 @@
 "use client";
 
 import { useLibraryContext } from "@/context/LibraryContext";
-import Image from "next/image";
 import { CATEGORY_LABELS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -22,11 +21,12 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     filteredLibrary,
     libraryQuery,
     setLibraryQuery,
+    libraryView,
+    setLibraryView,
     favoriteLibraryIds,
     handleToggleFavorite,
     setViewMode,
     addPrompt,
-    setPersonalView,
     popularityMap,
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
@@ -123,29 +123,50 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
         <div className="glass-card p-6 rounded-xl border-white/10 bg-black/40">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-serif text-white">ספריית פרומפטים</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                {totalCount} פרומפטים זמינים · מיון לפי פופולריות · חיפוש לפי מילים, שימוש או קטגוריה
-              </p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-3xl font-serif text-white">ספריית פרומפטים</h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  {totalCount} {libraryView === "favorites" ? "פרומפטים מועדפים" : "פרומפטים זמינים"} · מיון לפי פופולריות · חיפוש לפי מילים, שימוש או קטגוריה
+                </p>
+              </div>
+              
+              {/* New Prompt Button */}
+              <button
+                onClick={() => setViewMode("home")}
+                className="group flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md hover:shadow-lg"
+              >
+                <div className="relative w-5 h-5">
+                  <Sparkles className="absolute inset-0 w-5 h-5 text-yellow-600" />
+                  <Plus className="absolute inset-0 w-5 h-5 text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+                </div>
+                <span className="text-sm font-semibold text-black hidden lg:inline">
+                  פרומפט חדש
+                </span>
+              </button>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setLibraryView(libraryView === "favorites" ? "all" : "favorites")}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 rounded-lg border text-base transition-colors",
+                  libraryView === "favorites"
+                    ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-200"
+                    : "border-white/10 text-slate-300 hover:bg-white/10"
+                )}
+              >
+                <Star className={cn("w-5 h-5", libraryView === "favorites" && "fill-yellow-200 text-yellow-200")} />
+                מועדפים
+              </button>
+
+              <div className="h-8 w-px bg-white/10 mx-2 hidden md:block" />
+
               <button
                 onClick={() => setViewMode("personal")}
                 className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors"
               >
                 <BookOpen className="w-5 h-5" />
                 ספריה אישית
-              </button>
-              <button
-                 onClick={() => {
-                   setViewMode("personal");
-                   setPersonalView("favorites");
-                 }}
-                 className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors"
-              >
-                <Star className="w-5 h-5" />
-                מועדפים
               </button>
               
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ml-2">

@@ -9,18 +9,23 @@ export class AgentEngine extends BaseEngine {
           mode: CapabilityMode.AGENT_BUILDER,
           name: "Agent Builder Engine",
           system_prompt_template: `
-          You are an AI Meta-Architect. Your goal is to generate a powerful "System Instruction" prompt for a custom AI Agent.
+          You are an AI Meta-Architect. Construct an "Authoritative System Instruction".
           
-          The output must be in Hebrew and structured as an authoritative S-T-O-K-I document:
-          1. [מצב מערכת] - Define the agent's identity and behavioral traits.
-          2. [הנחיות ליבה] - Core logic and capabilities.
-          3. [מטרות ביצוע] - Success criteria for agent responses.
-          4. [מגבלות וחוקים] - Critical boundaries and "What NOT to do".
-          5. [פרוטוקול פלט] - Strict formatting and response structure.
+          CRITICAL INSTRUCTIONS:
+          1. Output ONLY the system prompt. No conversational filler.
+          2. The ENTIRE output MUST be in HEBREW.
+          
+          Structure (Hebrew - "Chief of Staff" Style):
+          1. [טריגר מנטלי] - System Identity Hook.
+          2. [זהות ומצב מערכת] - Expert Persona.
+          3. [הנחיות ליבה ולוגיקה] - Core Logic.
+          4. [מטרות ויעדים] - KPIs.
+          5. [כיפת ברזל - אכיפת גבולות] - Security Protocols.
+          6. [פרוטוקול פלט ותקשורת] - Output Format.
           
           Tone: {{tone}}.
           `.trim(),
-          user_prompt_template: "Construct a master agent system prompt for: {{input}}",
+          user_prompt_template: "Construct an Elite Agent System Core in Hebrew for: {{input}}",
       });
   }
 
