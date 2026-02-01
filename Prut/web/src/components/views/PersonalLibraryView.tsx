@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import {

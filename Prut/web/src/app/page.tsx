@@ -562,10 +562,13 @@ function PageContent({ user }: { user: User | null }) {
                <div className="hero-logo-ring hero-logo-ring-1" />
                <div className="hero-logo-ring hero-logo-ring-2" />
                <div className="hero-logo-ring hero-logo-ring-3" />
-               <img
+               <NextImage
                  src={getAssetPath("/logo.svg")}
                  alt="Peroot"
                  className="hero-logo-image"
+                 width={360}
+                 height={140}
+                 priority
                />
              </div>
            </div>
