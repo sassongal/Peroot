@@ -111,6 +111,7 @@
       "users": "Users",
       "engines": "Prompt Engines",
       "library": "Prompt Library",
+      "costs": "Costs",
       "database": "Database",
       "telemetry": "Telemetry Logs",
       "settings": "Settings",

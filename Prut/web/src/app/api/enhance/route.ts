@@ -7,6 +7,7 @@ import { parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { enqueueJob } from "@/lib/jobs/queue";
+import { trackApiUsage } from "@/lib/admin/track-api-usage";
 
 export const maxDuration = 30;
 
@@ -133,6 +134,18 @@ export async function POST(req: Request) {
         temperature: 0.7,
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;
+
+            // Track API usage for cost analysis
+            const usage = completion.usage as { promptTokens?: number; completionTokens?: number } | undefined;
+            trackApiUsage({
+                userId: user?.id,
+                modelId,
+                inputTokens: usage?.promptTokens || 0,
+                outputTokens: usage?.completionTokens || 0,
+                durationMs,
+                endpoint: 'enhance',
+            });
+
             if (user && supabase) {
                 await supabase.from('activity_logs').insert({
                     user_id: user.id,

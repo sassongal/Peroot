@@ -2,7 +2,7 @@
 "use client";
 
 import { AdminGuard } from "@/components/admin/AdminGuard";
-import { LayoutDashboard, Settings, Cpu, LogOut, Activity, Users, Database, Library, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Settings, Cpu, LogOut, Activity, Users, Database, Library, BarChart3, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { label: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
+    { label: t.admin.layout.costs || "Costs", href: "/admin/costs", icon: DollarSign },
     { label: t.admin.layout.analytics, href: "/admin/analytics", icon: BarChart3 },
     { label: t.admin.layout.activity, href: "/admin/activity", icon: Activity },
     { label: t.admin.layout.users, href: "/admin/users", icon: Users },

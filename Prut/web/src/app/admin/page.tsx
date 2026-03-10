@@ -1,301 +1,715 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { 
-  Users, 
-  Activity, 
-  Zap, 
-  ShieldCheck, 
-  Cpu,
-  BarChart3,
-  Terminal,
-  ArrowUpRight,
-  Database,
-  Box,
-  Brain
-} from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { IntelligenceHub } from "@/components/admin/IntelligenceHub";
+import {
+  Users,
+  Activity,
+  ShieldCheck,
+  ArrowUpRight,
+  TrendingUp,
+  DollarSign,
+  Zap,
+  CircleDollarSign,
+  ArrowRight,
+  Clock,
+  ChevronRight,
+} from "lucide-react";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getApiPath } from "@/lib/api-path";
+import { useI18n } from "@/context/I18nContext";
+import { cn } from "@/lib/utils";
 
-interface AdminStats {
+// ─── Data Shape ─────────────────────────────────────────────────────────────
+
+interface DashboardData {
   totalUsers: number;
-  totalPrompts: number;
-  todayPrompts: number;
-  totalActivity: number;
-  totalStyles: number;
+  freeUsers: number;
+  proUsers: number;
+  totalRevenue: number;
+  apiCostsMTD: number;
+  manualCostsMTD: number;
+  promptsThisMonth: number;
+  promptsToday: number;
+  recentSignups: Array<{ id: string; created_at: string; plan_tier: string }>;
+  recentActivity: Array<{
+    id: string;
+    user_id: string;
+    action: string;
+    created_at: string;
+    details: Record<string, unknown> | null;
+  }>;
+  monthlyTrend: Array<{ month: string; count: number }>;
 }
 
-import { useI18n } from "@/context/I18nContext";
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-export default function AdminPage() {
-  const t = useI18n();
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
+function formatCurrency(n: number): string {
+  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
+  return `$${n.toFixed(2)}`;
+}
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch(getApiPath("/api/admin/stats"));
-        const data = await res.json();
-        setStats(data);
-      } catch (e) {
-        console.error("Failed to fetch stats", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
+}
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex flex-col items-center justify-center py-40 gap-6">
-          <Activity className="w-12 h-12 text-blue-500 animate-pulse" />
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">{t.admin.dashboard.loading}</span>
-        </div>
-      </AdminLayout>
-    );
-  }
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
+function initials(id: string): string {
+  return id.slice(0, 2).toUpperCase();
+}
+
+const PLAN_BADGE: Record<string, string> = {
+  pro: "bg-blue-500/15 text-blue-400 border-blue-500/25",
+  free: "bg-zinc-800 text-zinc-500 border-white/5",
+  premium: "bg-purple-500/15 text-purple-400 border-purple-500/25",
+};
+
+// ─── Skeleton ────────────────────────────────────────────────────────────────
+
+function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={style}
+      className={cn(
+        "animate-pulse rounded-lg bg-white/[0.04]",
+        className
+      )}
+    />
+  );
+}
+
+function DashboardSkeleton() {
   return (
     <AdminLayout>
-      <div className="space-y-12 animate-in fade-in duration-1000 select-none pb-20" dir="rtl">
-
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit"
-        >
-          <ArrowUpRight className="w-4 h-4 rotate-180 transition-transform group-hover:translate-x-[-2px]" />
-          <span>חזרה</span>
-        </Link>
-
-        {/* Header Area */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
-          <div className="space-y-4">
-             <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                   <ShieldCheck className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Operational Authority Level 1</span>
-             </div>
-             <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
-                Nexus Hub
-             </h1>
-             <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
-                {t.admin.dashboard.description}
-             </p>
+      <div className="space-y-10 pb-20" dir="rtl">
+        {/* Header skeleton */}
+        <div className="bg-zinc-950/50 p-10 rounded-[40px] border border-white/5 flex justify-between items-end">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-14 w-80" />
+            <Skeleton className="h-4 w-64" />
           </div>
-
-          <div className="flex gap-4">
-             <div className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                All Systems Operational
-             </div>
-          </div>
+          <Skeleton className="h-10 w-52 rounded-2xl" />
         </div>
 
-        {/* Stats Matrix */}
+        {/* KPI row skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard 
-            label={t.admin.dashboard.stats.active_users} 
-            value={stats?.totalUsers || 0} 
-            icon={Users} 
-            trend="+12%" 
-            color="blue"
-            href="/admin/users"
-          />
-          <StatCard 
-            label={t.admin.dashboard.stats.generated_prompts} 
-            value={stats?.totalPrompts || 0} 
-            icon={Cpu} 
-            trend="+45%" 
-            color="purple"
-            href="/admin/prompts"
-          />
-          <StatCard 
-            label={t.admin.dashboard.stats.velocity} 
-            value={stats?.todayPrompts || 0} 
-            icon={Zap} 
-            trend="Peak" 
-            color="amber"
-            href="/admin/activity"
-          />
-          <StatCard 
-            label={t.admin.dashboard.stats.active_styles} 
-            value={stats?.totalStyles || 0} 
-            icon={Brain} 
-            trend="+8%" 
-            color="purple"
-            href="#intelligence"
-          />
-        </div>
-
-        {/* Intelligence Layer */}
-        <div id="intelligence" className="space-y-8">
-           <div className="flex items-center gap-4">
-              <div className="flex-1 h-[1px] bg-gradient-to-l from-purple-500/50 to-transparent" />
-              <div className="flex items-center gap-3">
-                  <Brain className="w-5 h-5 text-purple-400" />
-                  <h2 className="text-sm font-black text-purple-400 uppercase tracking-[0.4em]">System Intelligence</h2>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 space-y-6">
+              <div className="flex justify-between">
+                <Skeleton className="h-12 w-12 rounded-2xl" />
+                <Skeleton className="h-4 w-12" />
               </div>
-              <div className="flex-1 h-[1px] bg-gradient-to-r from-purple-500/50 to-transparent" />
-           </div>
-           
-           <IntelligenceHub />
+              <div className="space-y-2">
+                <Skeleton className="h-10 w-28" />
+                <Skeleton className="h-3 w-36" />
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Control Matrix */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          
-          {/* Subsystem Health Overlay */}
-          <div className="xl:col-span-2 space-y-6">
-             <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex items-center justify-between mb-10">
-                   <div className="flex items-center gap-4">
-                      <div className="p-4 rounded-2xl bg-zinc-900 border border-white/5">
-                         <BarChart3 className="w-6 h-6 text-white" />
-                      </div>
-                      <h3 className="text-2xl font-black text-white tracking-tight">Intelligence Pipeline</h3>
-                   </div>
-                   <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Inference Real-time</span>
-                </div>
-                
-                <div className="space-y-8">
-                   <PipelineMetric label="Engine Cluster v4" pct={84} status="Heavy Load" />
-                   <PipelineMetric label="Memory Buffer" pct={32} status="Stable" />
-                   <PipelineMetric label="Network Latency" pct={12} status="Optimal" />
-                </div>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <QuickAction 
-                  title={t.admin.dashboard.quick_actions.consolidate} 
-                  desc={t.admin.dashboard.quick_actions.consolidate_desc} 
-                  icon={Box} 
-                  href="/admin/engines"
-                />
-                <QuickAction 
-                  title={t.admin.dashboard.quick_actions.maintenance} 
-                  desc={t.admin.dashboard.quick_actions.maintenance_desc} 
-                  icon={Database} 
-                  href="/admin/database"
-                />
-             </div>
+        {/* Charts row skeleton */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 rounded-[36px] bg-zinc-950 border border-white/5 p-8 h-64">
+            <Skeleton className="h-6 w-48 mb-8" />
+            <div className="flex items-end gap-3 h-32">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="flex-1 rounded-t-lg" style={{ height: `${40 + i * 12}%` }} />
+              ))}
+            </div>
           </div>
-
-          {/* Telemetry Stream */}
-          <div className="rounded-[40px] border border-white/5 bg-zinc-950 p-8 flex flex-col gap-6 relative shadow-3xl">
-             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
-                   <Terminal className="w-4 h-4 text-zinc-500" />
-                   Telemetry
-                </h3>
-                <div className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[8px] font-black uppercase">Live Feed</div>
-             </div>
-             
-             <div className="flex-1 space-y-4 font-mono text-[10px] text-zinc-600 overflow-y-auto max-h-[400px] custom-scrollbar pr-2" dir="ltr">
-                <div className="flex gap-3">
-                   <span className="text-zinc-800">[13:42:01]</span>
-                   <span className="text-emerald-500/80">INFO: Intelligence pipeline synchronized</span>
-                </div>
-                <div className="flex gap-3 text-zinc-500">
-                   <span className="text-zinc-800">[13:42:05]</span>
-                   <span>AUTH: User sequence #8291 validated</span>
-                </div>
-                <div className="flex gap-3 text-zinc-500">
-                   <span className="text-zinc-800">[13:42:12]</span>
-                   <span>CRON: Database snapshot initialized</span>
-                </div>
-                <div className="flex gap-3">
-                   <span className="text-zinc-800">[13:42:30]</span>
-                   <span className="text-blue-500">ENGINE: Gemini 2.0 Pro Inference started</span>
-                </div>
-                <div className="flex gap-3 text-zinc-800">
-                   <span>[......] SYSTEM STANDBY [......]</span>
-                </div>
-             </div>
-
-             <button className="w-full py-4 rounded-2xl bg-white/[0.03] border border-white/5 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all active:scale-95">
-                View All Events
-             </button>
+          <div className="rounded-[36px] bg-zinc-950 border border-white/5 p-8 h-64 flex items-center justify-center">
+            <Skeleton className="h-40 w-40 rounded-full" />
           </div>
-
         </div>
 
+        {/* Bottom row skeleton */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="rounded-[36px] bg-zinc-950 border border-white/5 p-8 space-y-4">
+              <Skeleton className="h-6 w-40 mb-6" />
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="flex items-center gap-4">
+                  <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+                  <Skeleton className="h-4 flex-1" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </AdminLayout>
   );
 }
 
-function StatCard({ label, value, icon: Icon, trend, color, href }: { label: string; value: number | string; icon: React.ElementType; trend: string; color: string; href: string }) {
-  const colors: Record<string, string> = {
-    blue: "group-hover:text-blue-400 group-hover:border-blue-500/30",
-    purple: "group-hover:text-purple-400 group-hover:border-purple-500/30",
-    emerald: "group-hover:text-emerald-400 group-hover:border-emerald-500/30",
-    amber: "group-hover:text-amber-400 group-hover:border-amber-500/30",
-  };
+// ─── KPI Card ────────────────────────────────────────────────────────────────
 
+type AccentColor = "blue" | "purple" | "emerald" | "amber" | "rose";
+
+const ACCENT: Record<AccentColor, {
+  icon: string;
+  border: string;
+  glow: string;
+  badge: string;
+  bar: string;
+}> = {
+  blue:    { icon: "text-blue-400",    border: "group-hover:border-blue-500/30",    glow: "group-hover:shadow-blue-500/10",    badge: "bg-blue-500/10 text-blue-400",    bar: "bg-blue-500" },
+  purple:  { icon: "text-purple-400",  border: "group-hover:border-purple-500/30",  glow: "group-hover:shadow-purple-500/10",  badge: "bg-purple-500/10 text-purple-400", bar: "bg-purple-500" },
+  emerald: { icon: "text-emerald-400", border: "group-hover:border-emerald-500/30", glow: "group-hover:shadow-emerald-500/10", badge: "bg-emerald-500/10 text-emerald-400", bar: "bg-emerald-500" },
+  amber:   { icon: "text-amber-400",   border: "group-hover:border-amber-500/30",   glow: "group-hover:shadow-amber-500/10",   badge: "bg-amber-500/10 text-amber-400",  bar: "bg-amber-500" },
+  rose:    { icon: "text-rose-400",    border: "group-hover:border-rose-500/30",    glow: "group-hover:shadow-rose-500/10",    badge: "bg-rose-500/10 text-rose-400",    bar: "bg-rose-500" },
+};
+
+function KpiCard({
+  label,
+  value,
+  sub,
+  trend,
+  icon: Icon,
+  color,
+  href,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  trend: string;
+  icon: React.ElementType;
+  color: AccentColor;
+  href: string;
+}) {
+  const a = ACCENT[color];
   return (
-    <Link 
+    <Link
       href={href}
       className={cn(
-        "p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6 transition-all duration-700 hover:scale-[1.03] hover:shadow-3xl group",
-        colors[color]
+        "p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6",
+        "transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl group cursor-pointer",
+        a.border,
+        a.glow,
       )}
     >
-       <div className="flex justify-between items-start">
-          <div className="p-4 rounded-2xl bg-zinc-900 border border-white/5 text-zinc-500 group-hover:bg-zinc-800 transition-all duration-500">
-             <Icon className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{trend}</span>
-       </div>
-       <div className="space-y-1">
-          <div className="text-4xl font-black text-white tracking-tighter">{value}</div>
-          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</div>
-       </div>
+      <div className="flex items-start justify-between">
+        <div className={cn(
+          "p-4 rounded-2xl bg-zinc-900 border border-white/5 transition-colors duration-500",
+          a.icon
+        )}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <span className={cn(
+          "text-[9px] font-black uppercase tracking-[0.25em] px-2.5 py-1 rounded-lg",
+          a.badge
+        )}>
+          {trend}
+        </span>
+      </div>
+
+      <div className="space-y-1">
+        <div className="text-4xl font-black text-white tracking-tighter tabular-nums">
+          {value}
+        </div>
+        <div className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
+          {label}
+        </div>
+        {sub && (
+          <div className="text-[10px] font-bold text-zinc-600 pt-0.5">{sub}</div>
+        )}
+      </div>
     </Link>
   );
 }
 
-function PipelineMetric({ label, pct, status }: { label: string; pct: number; status: string }) {
+// ─── CSS Bar Chart ────────────────────────────────────────────────────────────
+
+function BarChart({ data }: { data: Array<{ month: string; count: number }> }) {
+  const max = Math.max(...data.map((d) => d.count), 1);
+
   return (
-    <div className="space-y-3">
-       <div className="flex justify-between items-end">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</span>
-          <span className="text-[9px] font-black text-zinc-600 bg-white/5 px-2 py-0.5 rounded uppercase">{status}</span>
-       </div>
-       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-          <div 
-             className="h-full bg-blue-600 transition-all duration-[3000ms] shadow-[0_0_10px_rgba(37,99,235,0.4)]" 
-             style={{ width: `${pct}%` }}
-          />
-       </div>
+    <div className="flex items-end gap-3 h-40 w-full">
+      {data.map((d, i) => {
+        const pct = Math.round((d.count / max) * 100);
+        const isLast = i === data.length - 1;
+        return (
+          <div key={d.month} className="flex-1 flex flex-col items-center gap-2 group/bar h-full justify-end">
+            <span className={cn(
+              "text-[9px] font-black tabular-nums transition-opacity duration-300",
+              isLast ? "text-blue-400 opacity-100" : "text-zinc-700 opacity-0 group-hover/bar:opacity-100"
+            )}>
+              {formatNumber(d.count)}
+            </span>
+            <div
+              className={cn(
+                "w-full rounded-t-lg transition-all duration-700",
+                isLast
+                  ? "bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                  : "bg-zinc-800 group-hover/bar:bg-zinc-700"
+              )}
+              style={{ height: `${Math.max(pct, 4)}%` }}
+            />
+            <span className="text-[9px] font-bold text-zinc-600 group-hover/bar:text-zinc-400 transition-colors">
+              {d.month}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function QuickAction({ title, desc, icon: Icon, href }: { title: string; desc: string; icon: React.ElementType; href: string }) {
+// ─── Donut / Ring Chart ───────────────────────────────────────────────────────
+
+interface DonutSlice {
+  label: string;
+  value: number;
+  color: string;
+  stroke: string;
+}
+
+function DonutChart({ slices }: { slices: DonutSlice[] }) {
+  const total = slices.reduce((s, d) => s + d.value, 0);
+  const r = 54;
+  const cx = 70;
+  const cy = 70;
+  const circumference = 2 * Math.PI * r;
+
+  let cumulativeAngle = -90;
+
   return (
-    <Link 
-      href={href}
-      className="p-6 rounded-[32px] bg-zinc-950/40 border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all duration-500"
-    >
-       <div className="flex items-center gap-5">
-          <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-zinc-500 group-hover:text-blue-400 transition-colors">
-             <Icon className="w-5 h-5" />
+    <div className="flex flex-col gap-6 items-center h-full justify-center">
+      <div className="relative">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          {/* track */}
+          <circle
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth="14"
+          />
+          {slices.map((slice, i) => {
+            const fraction = total > 0 ? slice.value / total : 0;
+            const dash = fraction * circumference;
+            const gap = circumference - dash;
+            const rotate = cumulativeAngle;
+            cumulativeAngle += fraction * 360;
+
+            return (
+              <circle
+                key={i}
+                cx={cx} cy={cy} r={r}
+                fill="none"
+                stroke={slice.stroke}
+                strokeWidth="14"
+                strokeDasharray={`${dash} ${gap}`}
+                strokeDashoffset={0}
+                strokeLinecap="round"
+                transform={`rotate(${rotate} ${cx} ${cy})`}
+                className="transition-all duration-1000"
+              />
+            );
+          })}
+        </svg>
+
+        {/* Center label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-lg font-black text-white tabular-nums">
+            {total > 0 ? `$${total.toFixed(0)}` : "—"}
+          </span>
+          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">TOTAL</span>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="w-full space-y-2.5">
+        {slices.map((slice, i) => (
+          <div key={i} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: slice.stroke }} />
+              <span className="text-[10px] font-bold text-zinc-500 truncate">{slice.label}</span>
+            </div>
+            <span className="text-[10px] font-black text-zinc-300 tabular-nums shrink-0">
+              {total > 0 ? `${Math.round((slice.value / total) * 100)}%` : "—"}
+            </span>
           </div>
-          <div>
-             <h4 className="text-sm font-black text-white uppercase tracking-tight">{title}</h4>
-             <p className="text-[10px] text-zinc-600 font-bold">{desc}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Plan Tier Badge ──────────────────────────────────────────────────────────
+
+function PlanBadge({ tier }: { tier: string }) {
+  const key = (tier || "free").toLowerCase();
+  const cls = PLAN_BADGE[key] ?? PLAN_BADGE["free"];
+  return (
+    <span className={cn(
+      "text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border",
+      cls
+    )}>
+      {key}
+    </span>
+  );
+}
+
+// ─── Action Label Map ─────────────────────────────────────────────────────────
+
+const ACTION_COLOR: Record<string, string> = {
+  signup:       "text-emerald-400",
+  login:        "text-blue-400",
+  generate:     "text-purple-400",
+  upgrade:      "text-amber-400",
+  downgrade:    "text-rose-400",
+  delete:       "text-rose-500",
+};
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function AdminDashboardPage() {
+  const t = useI18n();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(getApiPath("/api/admin/dashboard"));
+        if (!res.ok) throw new Error("Failed");
+        const json: DashboardData = await res.json();
+        setData(json);
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return <DashboardSkeleton />;
+
+  if (error || !data) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center py-40 gap-4" dir="rtl">
+          <Activity className="w-10 h-10 text-rose-500" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-500">
+            Failed to load dashboard data
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors px-4 py-2 rounded-xl border border-white/5 hover:border-white/10"
+          >
+            Retry
+          </button>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // ── Derived values ──────────────────────────────────────────────────────────
+
+  const totalCostsMTD = data.apiCostsMTD + data.manualCostsMTD;
+
+  const mrr = data.totalRevenue;
+
+  // Seed monthlyTrend fallback if empty
+  const trendData: Array<{ month: string; count: number }> =
+    data.monthlyTrend && data.monthlyTrend.length > 0
+      ? data.monthlyTrend.slice(-6)
+      : [
+          { month: "Oct", count: 0 },
+          { month: "Nov", count: 0 },
+          { month: "Dec", count: 0 },
+          { month: "Jan", count: 0 },
+          { month: "Feb", count: 0 },
+          { month: "Mar", count: 0 },
+        ];
+
+  const donutSlices: DonutSlice[] = [
+    { label: "LLM API",  value: data.apiCostsMTD,    color: "text-blue-400",    stroke: "#3b82f6" },
+    { label: "Manual",   value: data.manualCostsMTD, color: "text-purple-400",  stroke: "#a78bfa" },
+    { label: "Revenue",  value: mrr,                 color: "text-emerald-400", stroke: "#10b981" },
+  ];
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
+  return (
+    <AdminLayout>
+      <div className="space-y-10 animate-in fade-in duration-700 select-none pb-24" dir="rtl">
+
+        {/* ── Back Link ── */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-600 hover:text-white transition-colors group w-fit"
+        >
+          <ArrowUpRight className="w-3.5 h-3.5 rotate-180 transition-transform group-hover:-translate-x-0.5" />
+          Back to App
+        </Link>
+
+        {/* ── Header ── */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 px-10 py-10 rounded-[40px] border border-white/5">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <ShieldCheck className="w-4 h-4 text-blue-400" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">
+                Operational Authority Level 1
+              </span>
+            </div>
+            <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+              Command Center
+            </h1>
+            <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
+              {t.admin.dashboard.description}
+            </p>
           </div>
-       </div>
-       <ArrowUpRight className="w-4 h-4 text-zinc-800 group-hover:text-white transition-colors" />
-    </Link>
+
+          <div className="flex flex-wrap gap-3 shrink-0">
+            {/* System status */}
+            <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              All Systems Operational
+            </div>
+            {/* Quick date */}
+            <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5">
+              <Clock className="w-3.5 h-3.5" />
+              {new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+            </div>
+          </div>
+        </div>
+
+        {/* ── KPI Row ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <KpiCard
+            label="Total Users"
+            value={formatNumber(data.totalUsers)}
+            sub={`${data.proUsers} pro · ${data.freeUsers} free`}
+            trend="—"
+            icon={Users}
+            color="blue"
+            href="/admin/users"
+          />
+          <KpiCard
+            label="Monthly Revenue"
+            value={formatCurrency(mrr)}
+            sub="MRR"
+            trend="—"
+            icon={DollarSign}
+            color="emerald"
+            href="/admin/users"
+          />
+          <KpiCard
+            label="API Costs MTD"
+            value={formatCurrency(totalCostsMTD)}
+            sub={`LLM $${data.apiCostsMTD.toFixed(2)} · Manual $${data.manualCostsMTD.toFixed(2)}`}
+            trend="—"
+            icon={CircleDollarSign}
+            color="amber"
+            href="/admin/activity"
+          />
+          <KpiCard
+            label="Prompts This Month"
+            value={formatNumber(data.promptsThisMonth)}
+            sub={`${formatNumber(data.promptsToday)} today`}
+            trend="—"
+            icon={Zap}
+            color="purple"
+            href="/admin/prompts"
+          />
+        </div>
+
+        {/* ── Charts Row ── */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+          {/* Cost vs Growth bar chart */}
+          <div className="xl:col-span-2 p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/[0.03] to-transparent pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-blue-400">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white tracking-tight">Cost vs Growth</h3>
+                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">New users — last 6 months</p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin/users"
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-blue-400 transition-colors"
+                >
+                  View All
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+
+              <BarChart data={trendData} />
+            </div>
+          </div>
+
+          {/* Cost breakdown donut */}
+          <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/[0.03] to-transparent pointer-events-none" />
+            <div className="relative h-full flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-purple-400">
+                  <CircleDollarSign className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight">Cost Breakdown</h3>
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">MTD allocation</p>
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <DonutChart slices={donutSlices} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Bottom Row ── */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          {/* Recent Signups */}
+          <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-emerald-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight">Recent Signups</h3>
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">Last 10 users</p>
+                </div>
+              </div>
+              <Link
+                href="/admin/users"
+                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-colors group/link"
+              >
+                All Users
+                <ChevronRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="space-y-2">
+              {data.recentSignups.length === 0 ? (
+                <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest text-center py-8">
+                  No signups yet
+                </p>
+              ) : (
+                data.recentSignups.slice(0, 10).map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors group/row cursor-default"
+                  >
+                    {/* Avatar */}
+                    <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-white/5 flex items-center justify-center shrink-0 text-[10px] font-black text-zinc-400 group-hover/row:border-white/10 transition-colors">
+                      {initials(user.id)}
+                    </div>
+
+                    {/* ID */}
+                    <div className="flex-1 min-w-0 font-mono text-[10px] text-zinc-500 truncate" dir="ltr">
+                      {user.id}
+                    </div>
+
+                    {/* Plan badge */}
+                    <PlanBadge tier={user.plan_tier} />
+
+                    {/* Time */}
+                    <span className="text-[9px] font-bold text-zinc-700 tabular-nums shrink-0">
+                      {relativeTime(user.created_at)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-blue-400">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight">Recent Activity</h3>
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">Last 10 events</p>
+                </div>
+              </div>
+              <Link
+                href="/admin/activity"
+                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-colors group/link"
+              >
+                All Events
+                <ChevronRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="space-y-2 overflow-y-auto max-h-[420px] custom-scrollbar pr-1">
+              {data.recentActivity.length === 0 ? (
+                <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest text-center py-8">
+                  No activity yet
+                </p>
+              ) : (
+                data.recentActivity.slice(0, 10).map((event) => {
+                  const actionColor = ACTION_COLOR[event.action?.toLowerCase()] ?? "text-zinc-400";
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-start gap-3 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors group/ev cursor-default"
+                    >
+                      {/* Action dot */}
+                      <div className="w-1.5 h-1.5 rounded-full bg-current mt-1.5 shrink-0 opacity-60"
+                        style={{ color: "currentColor" }}
+                      />
+
+                      <div className="flex-1 min-w-0">
+                        {/* Action label */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={cn("text-[10px] font-black uppercase tracking-widest", actionColor)}>
+                            {event.action || "event"}
+                          </span>
+                          <span className="font-mono text-[9px] text-zinc-600 truncate max-w-[120px]" dir="ltr">
+                            {event.user_id?.slice(0, 12)}…
+                          </span>
+                        </div>
+                        {/* Details */}
+                        {event.details && typeof event.details === "object" && Object.keys(event.details).length > 0 && (
+                          <p className="text-[9px] text-zinc-700 mt-0.5 truncate font-mono" dir="ltr">
+                            {JSON.stringify(event.details).slice(0, 60)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Timestamp */}
+                      <span className="text-[9px] font-bold text-zinc-700 tabular-nums shrink-0 mt-0.5">
+                        {relativeTime(event.created_at)}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </AdminLayout>
   );
 }

@@ -4,9 +4,9 @@ import { ReactNode, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
-  LayoutDashboard, 
-  FileText, 
-  Settings, 
+  LayoutDashboard,
+  FileText,
+  Settings,
   Users,
   Database,
   LogOut,
@@ -16,7 +16,8 @@ import {
   Cpu,
   ChevronLeft,
   Command,
-  Layers
+  Layers,
+  DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -36,6 +37,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const navigation = [
     { name: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
+    { name: t.admin.layout.costs || "Costs", href: "/admin/costs", icon: DollarSign },
     { name: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
     { name: t.admin.layout.library, href: "/admin/library", icon: FileText },
     { name: t.admin.layout.users, href: "/admin/users", icon: Users },
