@@ -1,11 +1,11 @@
 "use client";
 
-import { Check, Copy, ExternalLink, Plus, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { Check, Copy, ExternalLink, Plus, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
-import { ChatGPTIcon, ClaudeIcon, GeminiIcon } from "@/components/ui/AIPlatformIcons";
+import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
 
 interface ResultSectionProps {
   completion: string;
@@ -21,6 +21,7 @@ interface ResultSectionProps {
   onImproveAgain?: () => void;
   iterationCount?: number;
   originalPrompt?: string;
+  onShare?: () => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -39,6 +40,7 @@ export function ResultSection({
   onImproveAgain,
   iterationCount,
   originalPrompt,
+  onShare,
 }: ResultSectionProps) {
     const t = useI18n();
   // ... rest of logic ...
@@ -153,6 +155,18 @@ export function ResultSection({
                 <span>Gemini</span>
                 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
+              <button
+                onClick={() => {
+                  const text = encodeURIComponent(displayCompletion + "\n\n— נוצר עם Peroot | peroot.ai");
+                  window.open(`https://wa.me/?text=${text}`, "_blank");
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
+                title="שתף בוואטסאפ"
+              >
+                <WhatsAppIcon className="w-4 h-4" />
+                <span>WhatsApp</span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             </div>
           </div>
 
@@ -168,6 +182,15 @@ export function ResultSection({
                 </button>
               </div>
               <div className="flex items-center gap-2">
+                {onShare && (
+                  <button
+                    onClick={onShare}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    שתף
+                  </button>
+                )}
                 <button
                   onClick={onSave}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"

@@ -363,11 +363,41 @@ function PageContent({ user }: { user: User | null }) {
   };
 
   const handleCopyText = async (text: string) => {
-    await navigator.clipboard.writeText(text);
+    const watermarked = text + "\n\n— נוצר עם Peroot | peroot.ai";
+    await navigator.clipboard.writeText(watermarked);
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
     recordUsageSignal("copy", text);
     toast.success("הועתק ללוח!");
+  };
+
+  const handleShare = async () => {
+    if (!user) {
+      showLoginRequired("שיתוף פרומפטים");
+      return;
+    }
+    if (!ps.completion.trim()) return;
+
+    try {
+      const res = await fetch(getApiPath("/api/share"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: ps.completion,
+          original_input: ps.input,
+          category: ps.selectedCategory,
+          capability_mode: ps.selectedCapability,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Share failed");
+      const { id } = await res.json();
+      const shareUrl = `${window.location.origin}/p/${id}`;
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("קישור שיתוף הועתק!");
+    } catch {
+      toast.error("שגיאה בשיתוף");
+    }
   };
 
   const handleUsePrompt = (prompt: LibraryPrompt | PersonalPrompt) => {
@@ -654,6 +684,7 @@ function PageContent({ user }: { user: User | null }) {
                      }}
                      iterationCount={ps.iterationCount}
                      originalPrompt={ps.input}
+                     onShare={handleShare}
                  />
 
                  {ps.questions.length > 0 && (
