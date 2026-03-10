@@ -69,6 +69,11 @@ export async function POST(request: Request) {
         return new NextResponse('Missing subscription data', { status: 400 });
       }
 
+      if (!userId) {
+        console.error('[LemonSqueezy Webhook] Missing user_id in custom_data');
+        return new NextResponse('Missing user_id in custom_data', { status: 400 });
+      }
+
       const subscriptionData = {
         user_id: userId,
         lemonsqueezy_subscription_id: event.data.id,

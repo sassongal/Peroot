@@ -43,7 +43,8 @@ const PersonalLibraryView = dynamic(
 );
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import StreamingProgress from "@/components/ui/StreamingProgress";
-import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2 } from "lucide-react";
+import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Crown } from "lucide-react";
+import UpgradeNudge from "@/components/features/prompt-improver/UpgradeNudge";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
 import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
@@ -125,19 +126,27 @@ function PageContent({ user }: { user: User | null }) {
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Usage & Feedback
-  const [guestPromptCount, setGuestPromptCount] = useState(0);
-
   // Modals
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [loginRequiredConfig, setLoginRequiredConfig] = useState<{title?: string; message?: string; feature?: string}>({});
+  const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
 
   // --- Effects ---
 
+  // Fetch credits for logged-in free users
   useEffect(() => {
-    const stored = sessionStorage.getItem("peroot_guest_count");
-    if (stored) setGuestPromptCount(parseInt(stored, 10));
-  }, []);
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from('profiles')
+      .select('credits_balance')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setCreditsRemaining(data.credits_balance);
+      });
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('peroot_sidebar_expanded', sidebarExpanded.toString());
@@ -188,6 +197,16 @@ function PageContent({ user }: { user: User | null }) {
   }, [ps.completion, dispatch]);
 
   // --- Logic ---
+
+  // Show upgrade popup when user hits rate limit or runs out of credits
+  useEffect(() => {
+    if (ps.error && user) {
+      const err = ps.error.toLowerCase();
+      if (err.includes("too many") || err.includes("insufficient") || err.includes("http 429") || err.includes("http 403")) {
+        setShowUpgradeNudge(true);
+      }
+    }
+  }, [ps.error, user]);
 
   const showLoginRequired = (feature: string, message?: string) => {
     setLoginRequiredConfig({
@@ -278,8 +297,10 @@ function PageContent({ user }: { user: User | null }) {
 
   const handleEnhance = async () => {
     if (!ps.input.trim() || ps.isLoading) return;
-    if (!user && guestPromptCount >= 1) {
-      showLoginRequired("שימוש ללא הגבלה", "ניצלת את הפרומפט החינמי שלך לסשן זה. התחבר כדי להמשיך ללא הגבלה!");
+
+    // Guest users must login first
+    if (!user) {
+      showLoginRequired("יצירת פרומפט", "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!");
       return;
     }
 
@@ -307,11 +328,11 @@ function PageContent({ user }: { user: User | null }) {
         category: ps.selectedCategory,
       });
 
-      if (!user) {
-        const nextCount = guestPromptCount + 1;
-        setGuestPromptCount(nextCount);
-        sessionStorage.setItem("peroot_guest_count", nextCount.toString());
+      // Update credits display after successful use
+      if (creditsRemaining !== null) {
+        setCreditsRemaining(Math.max(0, creditsRemaining - 1));
       }
+
       toast.success(t.prompt_generator.success_toast);
     }
   };
@@ -643,6 +664,26 @@ function PageContent({ user }: { user: User | null }) {
            <LoadingOverlay isVisible={ps.isLoading} />
            <StreamingProgress phase={ps.streamPhase} />
 
+           {/* Credits indicator for free users */}
+           {user && creditsRemaining !== null && creditsRemaining <= 3 && (
+             <div className="flex items-center justify-center gap-2 text-xs py-2" dir="rtl">
+               {creditsRemaining > 0 ? (
+                 <span className="text-amber-400/80">
+                   נותרו לך <strong>{creditsRemaining}</strong> קרדיטים
+                 </span>
+               ) : (
+                 <span className="text-red-400/80">
+                   הקרדיטים נגמרו
+                 </span>
+               )}
+               <span className="text-slate-600">·</span>
+               <a href="/pricing" className="text-amber-500 hover:text-amber-400 flex items-center gap-1">
+                 <Crown className="w-3 h-3" />
+                 שדרג ל-Pro
+               </a>
+             </div>
+           )}
+
            {!ps.completion ? (
              /* INPUT MODE */
              <>
@@ -709,6 +750,15 @@ function PageContent({ user }: { user: User | null }) {
         message={loginRequiredConfig.message}
         feature={loginRequiredConfig.feature}
       />
+
+      {/* Upgrade Nudge Popup */}
+      {showUpgradeNudge && (
+        <UpgradeNudge
+          type="exhausted"
+          onUpgrade={() => { window.location.href = '/pricing'; }}
+          onDismiss={() => setShowUpgradeNudge(false)}
+        />
+      )}
 
       {/* Onboarding Overlay */}
       {showOnboarding && user && (

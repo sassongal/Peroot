@@ -83,7 +83,7 @@ export function LoginRequiredModal({
             <ul className="text-xs text-slate-400 space-y-1.5 text-right">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                יצירת פרומפטים ללא הגבלה
+                פרומפט חינמי כל יום
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
