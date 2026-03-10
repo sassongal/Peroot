@@ -140,7 +140,7 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
      }
 
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nAct as a Ruthless Editor-in-Chief. Before generating, ASK: "Is this addictive? Is it sharp? Does it give the user an unfair advantage?"\n\nIdentify 3 Gaps:\n1. Elite Strategy (Is the 'Why' powerful enough?)\n2. Psychological Hook (Is the 'Who' targeted perfectly?)\n3. Execution Excellence (Is the 'How' detailed enough?)\n\nAfter the enhanced prompt, add [GENIUS_QUESTIONS] followed by 3 Value-Adding Clarifying Questions in JSON array format.\nExample: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}, ...]`,
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints?\n2. SPECIFICITY: Are instructions concrete and measurable, not vague?\n3. STRUCTURE: Is the prompt using clear delimiters and logical flow?\n4. ACTIONABILITY: Will an LLM know exactly what to produce on first read?\n\nFill any gaps you identify by inferring from the user's intent and category.\n\nAfter the enhanced prompt, add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format that would most improve the prompt's effectiveness.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
          userPrompt: this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
@@ -164,26 +164,28 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
         }
 
         return {
-            systemPrompt: `אתה מומחה Prompt Engineering ו-AI Architect בכיר.
-טון מבוקש: ${input.tone}. קטגוריה: ${input.category}.
+            systemPrompt: `אתה מהנדס פרומפטים מומחה. משימתך: לשדרג את הפרומפט הקיים על בסיס המשוב והתשובות של המשתמש.
 
-מטרתך היא לשדרג את הפרומפט הקיים לרמה של "Expert Level" תוך שימוש במבנה S-T-O-K-I V2 המורחב.
-עליך להטמיע את הוראות המשתמש החדשות ואת תשובותיהם לשאלות ההבהרה לתוך השלד המקצועי, תוך שיפור הדיוק, העומק והאפקטיביות.
+כללים:
+1. שלב את כל התשובות והמשוב לתוך הפרומפט — אל תתעלם מאף פרט.
+2. שמור על המבנה המקצועי: תפקיד, משימה, הקשר, פורמט, מגבלות.
+3. שפר את הדיוק והספציפיות בכל מקום שאפשר.
+4. הפלט חייב להיות בעברית בלבד.
+5. אל תוסיף הסברים — רק את הפרומפט המשודרג.
+
+טון: ${input.tone}. קטגוריה: ${input.category}.
 
 ${this.getSystemIdentity()}
 
-[GENIUS_ANALYSIS]
-Analyze the user's specific feedback and their answers to clarifying questions. Integrate those details deeply into the refined prompt.
-Identify if any critical ambiguity remains.
-After the improved prompt, add the delimiter [GENIUS_QUESTIONS] followed by 3 NEW clarifying questions in JSON array format if further details would help, or an empty array [] if the prompt is now perfect.`,
-            userPrompt: `פרומפט נוכחי לשיפור:
+After the improved prompt, add the delimiter [GENIUS_QUESTIONS] followed by up to 3 NEW questions if further details would significantly help, or an empty array [] if the prompt is now comprehensive.`,
+            userPrompt: `הפרומפט הנוכחי:
 ---
 ${input.previousResult}
 ---
 ${answersBlock}
-הוראת שיפור/עדכון מהמשתמש: ${instruction}
+${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
 
-פעולה: שלב את כל התשובות וההוראות לתוך פרומפט מעודכן ומשודרג במבנה S-T-O-K-I V2 מלא בעברית.`,
+שלב את כל המידע החדש לתוך פרומפט מעודכן ומשודרג בעברית.`,
             outputFormat: "text",
             requiredFields: []
         };

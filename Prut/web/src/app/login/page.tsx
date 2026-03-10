@@ -1,6 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { AuthForm } from "@/components/auth/auth-form";
 import { getAssetPath } from "@/lib/asset-path";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "התחברות",
+  robots: { index: false, follow: false },
+};
 
 export default function LoginPage() {
   return (

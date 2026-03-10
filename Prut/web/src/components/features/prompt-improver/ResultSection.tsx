@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, Copy, Plus, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { Check, Copy, ExternalLink, Plus, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
+import { ChatGPTIcon, ClaudeIcon, GeminiIcon } from "@/components/ui/AIPlatformIcons";
 
 interface ResultSectionProps {
   completion: string;
@@ -85,6 +87,52 @@ export function ResultSection({
             dir="rtl"
             dangerouslySetInnerHTML={{ __html: renderStyledPrompt(displayCompletion) }}
           />
+
+          {/* AI Platform Quick-Launch Bar */}
+          <div className="px-6 py-4 border-t border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent">
+            <div className="flex items-center gap-3 justify-center" dir="rtl">
+              <span className="text-xs text-slate-500 ml-2">פתח ב:</span>
+              <button
+                onClick={() => {
+                  onCopy(displayCompletion);
+                  window.open("https://chat.openai.com/", "_blank");
+                  toast.success("הפרומפט הועתק — ChatGPT נפתח!");
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
+                title="העתק והפתח ב-ChatGPT"
+              >
+                <ChatGPTIcon className="w-4 h-4" />
+                <span>ChatGPT</span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+              <button
+                onClick={() => {
+                  onCopy(displayCompletion);
+                  window.open("https://claude.ai/new", "_blank");
+                  toast.success("הפרומפט הועתק — Claude נפתח!");
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
+                title="העתק והפתח ב-Claude"
+              >
+                <ClaudeIcon className="w-4 h-4" />
+                <span>Claude</span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+              <button
+                onClick={() => {
+                  onCopy(displayCompletion);
+                  window.open("https://gemini.google.com/", "_blank");
+                  toast.success("הפרומפט הועתק — Gemini נפתח!");
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
+                title="העתק והפתח ב-Gemini"
+              >
+                <GeminiIcon className="w-4 h-4" />
+                <span>Gemini</span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
+          </div>
 
           <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between mt-auto">
             <div className="flex items-center gap-3">

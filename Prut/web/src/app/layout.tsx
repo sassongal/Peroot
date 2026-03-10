@@ -24,8 +24,6 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://peroot.ai";
 
 export const metadata: Metadata = {
@@ -40,23 +38,13 @@ export const metadata: Metadata = {
   authors: [{ name: "JoyaTech", url: "https://joya-tech.net" }],
   generator: "Next.js",
   keywords: [
-    "פרומפטים",
     "מחולל פרומפטים",
-    "בינה מלאכותית",
-    "כתיבת פרומפטים",
-    "מדריך פרומפטים",
-    "AI בעברית",
-    "ChatGPT",
-    "Claude",
-    "Midjourney",
-    "ג'יני",
-    "פרות",
+    "פרומפטים בעברית",
     "Peroot",
-    "Prompt Engineering Israel",
-    "קורס AI",
-    "כלי AI למנהלים",
-    "שיווק דיגיטלי AI",
-    "יוצר תמונות AI"
+    "prompt engineering",
+    "AI בעברית",
+    "שיפור פרומפטים",
+    "ChatGPT בעברית",
   ],
   referrer: "origin-when-cross-origin",
   creator: "Gal Sasson",
@@ -79,7 +67,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${basePath}/assets/branding/logo.png`,
+        url: `${siteUrl}/assets/branding/logo.png`,
         width: 1200,
         height: 630,
         alt: "Peroot AI Prompt Generator",
@@ -91,7 +79,7 @@ export const metadata: Metadata = {
     title: "Peroot (פירוט) - שדרוג פרומפטים ב-AI",
     description:
       "כתבו פרומפטים טובים יותר בשניות. המערכת היחידה שמותאמת במיוחד לשפה העברית ולמודלים המובילים.",
-    images: [`${basePath}/assets/branding/logo.png`],
+    images: [`${siteUrl}/assets/branding/logo.png`],
     creator: "@joyatech",
   },
   appleWebApp: {
