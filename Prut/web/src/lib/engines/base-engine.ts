@@ -28,12 +28,144 @@ export const CATEGORY_LIST = [
   "Nonprofit",
 ] as const;
 
-const SIGNALS = [
-  { key: "מטרה", priority: 1, patterns: [/מטרה|יעד|goal|objective|conversion|שכנע|להוביל|לייצר/i] },
-  { key: "קהל יעד", priority: 1, patterns: [/קהל יעד|לקוחות|משתמשים|audience|target|persona/i] },
-  { key: "ערוץ/פורמט", priority: 2, patterns: [/מייל|email|landing|דף נחיתה|מודעה|ad|linkedin|facebook|instagram|tiktok|sms|whatsapp|בלוג|blog/i] },
-  { key: "מגבלות", priority: 3, patterns: [/מגבלות|אסור|חובה|רגולציה|compliance|טון|tone|שפה|language/i] },
-  { key: "פורמט פלט", priority: 2, patterns: [/פורמט|מבנה|טבלה|רשימה|bullet|markdown|json|אורך|מילים|characters/i] },
+// ── Scoring Dimensions ──
+// Each dimension contributes points. Raw prompts typically hit 1-2 dimensions → 20-40%.
+// Well-engineered prompts hit 5+ dimensions → 70-95%.
+
+const SCORING_DIMENSIONS: {
+  key: string;
+  maxPoints: number;
+  tip: string;
+  test: (text: string, wordCount: number) => number;
+}[] = [
+  {
+    key: "length",
+    maxPoints: 12,
+    tip: "הוסף עוד פרטים והקשר",
+    test: (_text, wc) => {
+      if (wc <= 3) return 0;
+      if (wc <= 6) return 3;
+      if (wc <= 12) return 6;
+      if (wc <= 25) return 9;
+      return 12;
+    },
+  },
+  {
+    key: "role",
+    maxPoints: 12,
+    tip: "הגדר תפקיד (למשל: ״אתה מומחה שיווק״)",
+    test: (text) => {
+      if (/אתה\s+\S+|you\s+are\s+a|act\s+as|as\s+a\s+\w+\s+(expert|specialist|coach|consultant|writer|designer)/i.test(text)) return 12;
+      if (/מומחה|מנהל|יועץ|כותב|עורך|מתכנת|expert|specialist|coach|consultant/i.test(text)) return 6;
+      return 0;
+    },
+  },
+  {
+    key: "task",
+    maxPoints: 10,
+    tip: "הגדר משימה ברורה (מה בדיוק לעשות)",
+    test: (text) => {
+      const taskVerbs = /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|compare|generate|design|develop/i;
+      if (!taskVerbs.test(text)) return 0;
+      // Bonus for specific task with object
+      if (/כתוב\s+\S+|צור\s+\S+|בנה\s+\S+|write\s+a\s+\S+|create\s+a\s+\S+/i.test(text)) return 10;
+      return 5;
+    },
+  },
+  {
+    key: "context",
+    maxPoints: 12,
+    tip: "ספק הקשר ורקע (למי? למה? מתי?)",
+    test: (text) => {
+      let pts = 0;
+      // Audience/target
+      if (/קהל יעד|לקוחות|משתמשים|audience|target|persona|עבור\s+\S+|ל\S+ים\b|גולשים|עוקבים|מנויים/i.test(text)) pts += 4;
+      // Purpose/goal
+      if (/מטרה|יעד|goal|objective|כדי\s+ל|על\s+מנת\s+ל|purpose|in\s+order\s+to|so\s+that/i.test(text)) pts += 4;
+      // Background/situation
+      if (/רקע|הקשר|מצב|context|background|situation|בגלל|מכיוון|because|since/i.test(text)) pts += 4;
+      return pts;
+    },
+  },
+  {
+    key: "specificity",
+    maxPoints: 10,
+    tip: "הוסף פרטים ספציפיים (מספרים, שמות, דוגמאות)",
+    test: (text) => {
+      let pts = 0;
+      // Numbers/quantities
+      if (/\d+/.test(text)) pts += 3;
+      // Quoted text or examples
+      if (/[""״]|למשל|לדוגמה|for\s+example|e\.g\.|such\s+as/i.test(text)) pts += 4;
+      // Named entities (proper nouns, brands, specific terms)
+      if (/[A-Z][a-z]{2,}/.test(text) || /\b[A-Z]{2,}\b/.test(text)) pts += 3;
+      return Math.min(10, pts);
+    },
+  },
+  {
+    key: "format",
+    maxPoints: 10,
+    tip: "ציין פורמט פלט (רשימה, טבלה, אורך)",
+    test: (text) => {
+      let pts = 0;
+      // Output format specification
+      if (/פורמט|מבנה|טבלה|רשימה|bullet|markdown|json|csv|html/i.test(text)) pts += 5;
+      // Length specification
+      if (/אורך|מילים|שורות|פסקאות|characters|words|sentences|paragraphs|short|long|brief|concise|קצר|ארוך|תמציתי/i.test(text)) pts += 3;
+      // Structure hints
+      if (/כותרת|סעיפים|חלקים|header|section|intro|summary|title|subtitle/i.test(text)) pts += 2;
+      return Math.min(10, pts);
+    },
+  },
+  {
+    key: "constraints",
+    maxPoints: 10,
+    tip: "הגדר מגבלות (מה לא לעשות, טון, שפה)",
+    test: (text) => {
+      let pts = 0;
+      // Negative constraints
+      if (/אל\s+ת|אסור|ללא|בלי|don'?t|avoid|never|without|do\s+not/i.test(text)) pts += 4;
+      // Tone specification
+      if (/טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|חם|professional|friendly|warm|humorous/i.test(text)) pts += 3;
+      // Language/compliance
+      if (/שפה|language|בעברית|באנגלית|in\s+hebrew|in\s+english|רגולציה|compliance/i.test(text)) pts += 3;
+      return Math.min(10, pts);
+    },
+  },
+  {
+    key: "structure",
+    maxPoints: 8,
+    tip: "ארגן את הפרומפט (פסקאות, מספור, הפרדה)",
+    test: (text) => {
+      let pts = 0;
+      // Has line breaks / sections
+      if (/\n/.test(text)) pts += 3;
+      // Has numbered/bulleted lists
+      if (/^\s*[\d•\-\*]\s*/m.test(text)) pts += 3;
+      // Has delimiters or sections
+      if (/---|===|\*\*|##|:$/m.test(text)) pts += 2;
+      return Math.min(8, pts);
+    },
+  },
+  {
+    key: "channel",
+    maxPoints: 8,
+    tip: "ציין ערוץ או פלטפורמה (מייל, אינסטגרם, בלוג)",
+    test: (text) => {
+      if (/מייל|email|landing|דף נחיתה|מודעה|ad|לינקדאין|linkedin|פייסבוק|facebook|אינסטגרם|instagram|טיקטוק|tiktok|sms|וואטסאפ|whatsapp|בלוג|blog|newsletter|ניוזלטר|אתר|website|יוטיוב|youtube|טוויטר|twitter|x\.com|פודקאסט|podcast|וובינר|webinar/i.test(text)) return 8;
+      return 0;
+    },
+  },
+  {
+    key: "examples",
+    maxPoints: 8,
+    tip: "הוסף דוגמאות לפלט הרצוי",
+    test: (text) => {
+      if (/דוגמה לפלט|output\s+example|expected\s+output|כמו\s+זה|like\s+this/i.test(text)) return 8;
+      if (/דוגמה|example|sample|template|תבנית/i.test(text)) return 4;
+      return 0;
+    },
+  },
 ];
 
 export interface PromptScore {
@@ -69,29 +201,48 @@ export abstract class BaseEngine implements PromptEngine {
   }
 
   /**
-   * Scores a prompt based on signals and complexity
+   * Scores a prompt across multiple quality dimensions.
+   *
+   * Scoring scale (total possible = 100):
+   *   - Raw simple prompts ("כתוב מייל"):         15-30%
+   *   - Basic prompts with some detail:             30-45%
+   *   - Good prompts with context & specifics:      45-65%
+   *   - Strong prompts with role, format, constraints: 65-85%
+   *   - Expert-level engineered prompts:            85-100%
    */
   public static scorePrompt(input: string): PromptScore {
     const trimmed = input.trim();
     if (!trimmed) return { score: 0, baseScore: 0, level: 'empty', label: 'חסר', tips: [], usageBoost: 0 };
-    
+
     const wordCount = trimmed.split(/\s+/).length;
-    let score = 40; // Base start
-    if (wordCount > 10) score += 20;
-    if (wordCount > 20) score += 10;
+    const tips: string[] = [];
+    let totalScore = 0;
 
-    SIGNALS.forEach(s => {
-       if (s.patterns.some(p => p.test(trimmed))) score += 10;
-    });
+    for (const dim of SCORING_DIMENSIONS) {
+      const pts = dim.test(trimmed, wordCount);
+      totalScore += pts;
+      // Suggest tip if dimension scored less than half its potential
+      if (pts < dim.maxPoints / 2) {
+        tips.push(dim.tip);
+      }
+    }
 
-    const finalScore = Math.min(100, score);
+    // Cap at 100
+    const finalScore = Math.min(100, totalScore);
+
+    // Show top 3 most impactful tips only
+    const limitedTips = tips.slice(0, 3);
+
+    // Determine usage boost based on word count (encourages detailed prompts)
+    const usageBoost = wordCount > 40 ? 3 : wordCount > 20 ? 2 : wordCount > 10 ? 1 : 0;
+
     return {
         score: finalScore,
         baseScore: finalScore,
-        level: finalScore > 80 ? 'high' : finalScore > 50 ? 'medium' : 'low',
-        label: finalScore > 80 ? 'חזק' : finalScore > 50 ? 'בינוני' : 'חלש',
-        tips: wordCount < 10 ? ['הוסף עוד פרטים', 'ציין מטרה ברורה'] : [],
-        usageBoost: 0
+        level: finalScore >= 70 ? 'high' : finalScore >= 40 ? 'medium' : 'low',
+        label: finalScore >= 70 ? 'חזק' : finalScore >= 40 ? 'בינוני' : 'חלש',
+        tips: limitedTips,
+        usageBoost,
     };
   }
 
