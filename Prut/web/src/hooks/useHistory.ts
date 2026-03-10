@@ -10,6 +10,7 @@ export interface HistoryItem {
   enhanced: string;
   tone: string;
   category: string;
+  title?: string;
   timestamp: number;
 }
 
@@ -52,6 +53,7 @@ export function useHistory() {
             enhanced: row.enhanced_prompt,
             tone: row.tone,
             category: row.category,
+            title: row.title || undefined,
             timestamp: new Date(row.created_at).getTime(),
           }));
           setHistory(formatted);
@@ -111,6 +113,7 @@ export function useHistory() {
       enhanced_prompt: item.enhanced,
       category: item.category,
       tone: item.tone,
+      title: item.title || null,
     });
   };
 

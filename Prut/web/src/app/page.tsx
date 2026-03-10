@@ -314,12 +314,20 @@ function PageContent({ user }: { user: User | null }) {
       }
     }
 
+    // Extract AI-generated title if present
+    const titleMatch = acc.promptText.match(/\[PROMPT_TITLE\](.*?)\[\/PROMPT_TITLE\]/);
+    const generatedTitle = titleMatch ? titleMatch[1].trim() : null;
+    acc.promptText = acc.promptText.replace(/\[PROMPT_TITLE\].*?\[\/PROMPT_TITLE\]\n?/, '').trim();
+
+    // Update displayed completion without the title tag
+    dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
+
     const extracted = extractPlaceholders(acc.promptText);
     const newVars = { ...ps.variableValues };
     extracted.forEach(ph => { if (!(ph in newVars)) newVars[ph] = ""; });
     dispatch({ type: 'SET_VARIABLE_VALUES', payload: newVars });
 
-    return acc.promptText;
+    return { text: acc.promptText, title: generatedTitle };
   };
 
   const enhanceCooldownRef = useRef(false);
@@ -352,16 +360,17 @@ function PageContent({ user }: { user: User | null }) {
       capability_mode: ps.selectedCapability,
     });
 
-    const promptText = processStreamResult("Enhance");
-    if (promptText) {
-      recordUsageSignal("enhance", promptText);
+    const result = processStreamResult("Enhance");
+    if (result.text) {
+      recordUsageSignal("enhance", result.text);
       dispatch({ type: 'SET_DETECTED_CATEGORY', payload: ps.selectedCategory });
 
       addToHistory({
         original: ps.input,
-        enhanced: promptText,
+        enhanced: result.text,
         tone: ps.selectedTone,
         category: ps.selectedCategory,
+        title: result.title || ps.input.slice(0, 40) + (ps.input.length > 40 ? "..." : ""),
       });
 
       // Track usage: decrement credits display for logged-in users, increment guest counter
@@ -415,9 +424,9 @@ function PageContent({ user }: { user: User | null }) {
       answers: stringAnswers,
     });
 
-    const promptText = processStreamResult("Refine");
-    if (promptText) {
-      recordUsageSignal("refine", promptText);
+    const refineResult = processStreamResult("Refine");
+    if (refineResult.text) {
+      recordUsageSignal("refine", refineResult.text);
       dispatch({ type: 'INCREMENT_ITERATION' });
       toast.success("הפרומפט עודכן!");
     }

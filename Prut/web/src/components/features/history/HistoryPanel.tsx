@@ -67,9 +67,11 @@ export function HistoryPanel({
 
   const filteredHistory = useMemo(() => {
     return history.filter(item => {
+      const q = searchQuery.toLowerCase();
       const matchesSearch =
-        item.original.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.enhanced.toLowerCase().includes(searchQuery.toLowerCase());
+        item.original.toLowerCase().includes(q) ||
+        item.enhanced.toLowerCase().includes(q) ||
+        (item.title?.toLowerCase().includes(q) ?? false);
       const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -170,7 +172,12 @@ export function HistoryPanel({
                   {hasHydrated ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true, locale: he }) : "..."}
                 </span>
               </div>
-              <p className="text-sm text-slate-200 mt-2 leading-relaxed max-h-16 overflow-hidden" dir="rtl">
+              {item.title && (
+                <p className="text-sm font-bold text-white mt-2" dir="rtl">
+                  {item.title}
+                </p>
+              )}
+              <p className={cn("text-sm text-slate-200 leading-relaxed max-h-16 overflow-hidden", item.title ? "mt-1 text-xs text-slate-400" : "mt-2")} dir="rtl">
                 {item.original}
               </p>
               <div className="mt-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
