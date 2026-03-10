@@ -110,7 +110,9 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   };
 
   const grouped = filteredLibrary.reduce<Record<string, LibraryPrompt[]>>((acc, prompt) => {
-    const key = prompt.category || "General";
+    const raw = prompt.category || "General";
+    // Normalize to PascalCase to match CATEGORY_LABELS keys (Supabase stores lowercase)
+    const key = CATEGORY_LABELS[raw] ? raw : (CATEGORY_LABELS[raw.charAt(0).toUpperCase() + raw.slice(1)] ? raw.charAt(0).toUpperCase() + raw.slice(1) : raw);
     if (!acc[key]) acc[key] = [];
     acc[key].push(prompt);
     return acc;
