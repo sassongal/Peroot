@@ -11,7 +11,7 @@
 
   /* Fonts */
   --font-serif: var(--font-frank);
-  --font-sans: var(--font-heebo);
+  --font-sans: var(--font-alef);
   --font-mono: var(--font-jb-mono); /* IBM Plex Mono */
 
   /* Colors */
@@ -143,7 +143,7 @@
 }
 
 :focus-visible {
-  outline: 2px solid #e2e8f0;
+  outline: 2px solid rgba(245, 158, 11, 0.7);
   outline-offset: 3px;
 }
 
@@ -336,7 +336,7 @@
 .skip-link {
   position: fixed;
   top: 1rem;
-  right: 1rem;
+  inset-inline-start: 1rem;
   z-index: 10000;
   padding: 0.6rem 1rem;
   border-radius: 999px;

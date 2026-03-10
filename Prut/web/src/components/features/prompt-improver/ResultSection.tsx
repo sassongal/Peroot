@@ -75,8 +75,8 @@ export function ResultSection({
 
       {/* Before/After Comparison */}
       {originalPrompt && (
-        <details className="glass-card rounded-xl border-white/10 bg-white/[0.02] overflow-hidden group/details">
-          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.03] transition-colors list-none" dir="rtl">
+        <details className="glass-card rounded-xl border-white/10 bg-white/2 overflow-hidden group/details">
+          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/3 transition-colors list-none" dir="rtl">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-400">הפרומפט המקורי שלך</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/10">לפני</span>
@@ -96,11 +96,12 @@ export function ResultSection({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Result Area */}
         <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:col-span-2" : "lg:col-span-3")}>
-          <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <div className="absolute top-4 end-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
             <button
               onClick={() => onCopy(displayCompletion)}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
               title={t.result_section.copy_tooltip}
+              aria-label="העתק פרומפט"
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -113,16 +114,16 @@ export function ResultSection({
           />
 
           {/* AI Platform Quick-Launch Bar */}
-          <div className="px-6 py-4 border-t border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent">
+          <div className="px-6 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
             <div className="flex items-center gap-3 justify-center" dir="rtl">
-              <span className="text-xs text-slate-500 ml-2">פתח ב:</span>
+              <span className="text-xs text-slate-500 ms-2">פתח ב:</span>
               <button
                 onClick={() => {
                   onCopy(displayCompletion);
                   window.open("https://chat.openai.com/", "_blank");
                   toast.success("הפרומפט הועתק — ChatGPT נפתח!");
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-ChatGPT"
               >
                 <ChatGPTIcon className="w-4 h-4" />
@@ -135,7 +136,7 @@ export function ResultSection({
                   window.open("https://claude.ai/new", "_blank");
                   toast.success("הפרומפט הועתק — Claude נפתח!");
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-Claude"
               >
                 <ClaudeIcon className="w-4 h-4" />
@@ -148,7 +149,7 @@ export function ResultSection({
                   window.open("https://gemini.google.com/", "_blank");
                   toast.success("הפרומפט הועתק — Gemini נפתח!");
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-Gemini"
               >
                 <GeminiIcon className="w-4 h-4" />
@@ -160,7 +161,7 @@ export function ResultSection({
                   const text = encodeURIComponent(displayCompletion + "\n\n— נוצר עם Peroot | peroot.space");
                   window.open(`https://wa.me/?text=${text}`, "_blank");
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
                 title="שתף בוואטסאפ"
               >
                 <WhatsAppIcon className="w-4 h-4" />
@@ -185,7 +186,7 @@ export function ResultSection({
                 {onShare && (
                   <button
                     onClick={onShare}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                     שתף
@@ -193,7 +194,7 @@ export function ResultSection({
                 )}
                 <button
                   onClick={onSave}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   {t.result_section.save}
@@ -238,9 +239,9 @@ export function ResultSection({
 
         {/* Variables Panel */}
         {placeholders.length > 0 && (
-          <div className="glass-card p-5 rounded-xl border-white/10 bg-white/[0.02] flex flex-col gap-4 h-fit">
+          <div className="glass-card p-5 rounded-xl border-white/10 bg-white/2 flex flex-col gap-4 h-fit">
             <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-               <div className="bg-blue-500/20 text-blue-300 p-1.5 rounded-md">
+               <div className="bg-amber-500/20 text-amber-300 p-1.5 rounded-md">
                  <Plus className="w-4 h-4" />
                </div>
                <span className="text-sm font-semibold text-slate-200">{t.result_section.variables_title}</span>
@@ -248,7 +249,7 @@ export function ResultSection({
             <div className="flex flex-col gap-3">
                {placeholders.map((ph, i) => (
                  <div key={i} className="space-y-1.5">
-                    <label className="text-xs text-slate-500 font-medium ml-1 block text-right" dir="rtl">
+                    <label className="text-xs text-slate-500 font-medium ms-1 block text-right" dir="rtl">
                       {ph}
                     </label>
                     <input 
@@ -256,7 +257,7 @@ export function ResultSection({
                       value={variableValues[ph] || ""}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
                       placeholder={t.result_section.variable_placeholder.replace('{ph}', ph)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500/50 transition-colors placeholder:text-slate-600"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-slate-600"
                     />
                  </div>
                ))}

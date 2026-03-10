@@ -80,7 +80,7 @@ export function AuthForm() {
                 setEmail("");
                 setPassword("");
             }}
-            className="text-sm text-slate-400 hover:text-white transition-colors underline decoration-slate-400/30"
+            className="text-sm text-slate-400 hover:text-white transition-colors underline decoration-slate-400/30 cursor-pointer"
         >
             חזרה להתחברות
         </button>
@@ -116,8 +116,10 @@ export function AuthForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div className="relative group animate-in fade-in zoom-in-95 duration-300">
+                <label htmlFor="full-name" className="sr-only">שם מלא</label>
                 <UserIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
                 <input
+                    id="full-name"
                     dir="rtl"
                     type="text"
                     placeholder="שם מלא"
@@ -128,8 +130,10 @@ export function AuthForm() {
             </div>
           )}
           <div className="relative group">
+              <label htmlFor="email" className="sr-only">כתובת אימייל</label>
               <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
               <input
+                  id="email"
                   dir="rtl"
                   type="email"
                   placeholder="כתובת אימייל"
@@ -139,8 +143,10 @@ export function AuthForm() {
               />
           </div>
           <div className="relative group">
+              <label htmlFor="password" className="sr-only">סיסמה</label>
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
               <input
+                  id="password"
                   dir="rtl"
                   type="password"
                   placeholder="סיסמה"
@@ -170,7 +176,7 @@ export function AuthForm() {
             <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-xs text-slate-400 hover:text-white transition-colors decoration-slate-400/30 font-medium"
+                className="text-xs text-slate-400 hover:text-white transition-colors decoration-slate-400/30 font-medium cursor-pointer"
             >
                 {isLogin ? (
                   <>אין לך חשבון? <span className="text-amber-400 font-bold ml-1">הירשם עכשיו</span></>

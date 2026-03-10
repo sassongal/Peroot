@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Frank_Ruhl_Libre, Heebo, IBM_Plex_Mono } from "next/font/google";
+import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { FAQSchema } from "@/components/features/faq/FAQSchema";
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
@@ -11,9 +11,10 @@ const frankRuhl = Frank_Ruhl_Libre({
   display: "swap",
 });
 
-const heebo = Heebo({
+const alef = Alef({
+  weight: ["400", "700"],
   subsets: ["hebrew", "latin"],
-  variable: "--font-heebo",
+  variable: "--font-alef",
   display: "swap",
 });
 
@@ -124,7 +125,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark">
       <body
-        className={`${frankRuhl.variable} ${heebo.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
+        className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
         suppressHydrationWarning
       >
         <PostHogProvider>
@@ -134,7 +135,7 @@ export default async function RootLayout({
           <div className="noise-overlay" />
           <FAQSchema />
           <I18nProvider dictionary={dictionary}>
-            <Suspense fallback={<div className="flex-grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+            <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
               <GlobalContextWrapper>
                 <main id="main-content" className="flex-grow">
                   {children}

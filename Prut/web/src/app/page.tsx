@@ -529,7 +529,7 @@ function PageContent({ user }: { user: User | null }) {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] mx-auto w-full">
       {/* Background Gradient */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
+      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
       {/* Fixed Elements */}
       <div className="fixed top-6 left-6 z-50">
@@ -574,7 +574,7 @@ function PageContent({ user }: { user: User | null }) {
 
       {/* Sidebar Drawer */}
       <div role="dialog" aria-modal="true" aria-label="History and library sidebar" className={cn(
-        "fixed top-0 right-0 z-40 h-full bg-black/95 backdrop-blur-xl border-l border-white/10 flex flex-col transition-all duration-300 ease-out",
+        "fixed top-0 right-0 z-40 h-full bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full",
         // Mobile: always full width. Desktop: compact or expanded
         "w-full",
@@ -588,12 +588,14 @@ function PageContent({ user }: { user: User | null }) {
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
               className="hidden lg:flex p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
               title={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
+              aria-label={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
             >
               {sidebarExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              aria-label="סגור תפריט"
             >
               <X className="w-4 h-4" />
             </button>
@@ -795,7 +797,7 @@ export default function HomePage() {
           })
         }}
       />
-      <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-black text-slate-200 selection:bg-blue-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+      <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-black text-slate-200 selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
         <PageContent user={user} />
     </div>
     </>

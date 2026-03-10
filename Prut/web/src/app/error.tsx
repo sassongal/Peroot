@@ -40,7 +40,7 @@ export default function GlobalError({
         <div className="grid grid-cols-2 gap-4 pt-4">
           <button
             onClick={() => reset()}
-            className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-white text-zinc-950 font-bold hover:bg-zinc-200 transition-colors"
+            className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-white text-zinc-950 font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
             <span>לנסות שוב</span>
@@ -48,7 +48,7 @@ export default function GlobalError({
           
           <Link
             href="/"
-            className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors"
+            className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors cursor-pointer"
           >
             <Home className="w-4 h-4" />
             <span>חזרה לבית</span>

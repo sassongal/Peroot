@@ -29,7 +29,7 @@ export function GoogleButton() {
     <button
       onClick={handleLogin}
       disabled={isPending}
-      className="w-full flex items-center justify-center gap-2 bg-white text-black font-medium py-2.5 px-4 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-slate-300"
+      className="w-full flex items-center justify-center gap-2 bg-white text-black font-medium min-h-11 py-2.5 px-4 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer group border border-transparent hover:border-slate-300"
     >
       {isPending ? (
         <Loader2 className="w-5 h-5 animate-spin text-slate-600" />

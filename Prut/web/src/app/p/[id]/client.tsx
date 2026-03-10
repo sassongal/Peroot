@@ -19,25 +19,25 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   };
 
   return (
-    <div className="p-4 bg-white/[0.02] border-t border-white/5 flex flex-col gap-3">
+    <div className="p-4 bg-white/2 border-t border-white/5 flex flex-col gap-3">
       <div className="flex items-center gap-2 justify-center">
         <button
           onClick={() => handleOpenIn("https://chat.openai.com/")}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-xs transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-xs transition-all cursor-pointer"
         >
           <ChatGPTIcon className="w-3.5 h-3.5" />
           <span>ChatGPT</span>
         </button>
         <button
           onClick={() => handleOpenIn("https://claude.ai/new")}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-xs transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-xs transition-all cursor-pointer"
         >
           <ClaudeIcon className="w-3.5 h-3.5" />
           <span>Claude</span>
         </button>
         <button
           onClick={() => handleOpenIn("https://gemini.google.com/")}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-xs transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-xs transition-all cursor-pointer"
         >
           <GeminiIcon className="w-3.5 h-3.5" />
           <span>Gemini</span>

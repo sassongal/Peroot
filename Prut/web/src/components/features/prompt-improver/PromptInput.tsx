@@ -111,7 +111,7 @@ export function PromptInput({
                 const inputId = `variable-input-${index}`;
                 return (
                   <div key={`${variable}-${index}`} className="space-y-2">
-                    <label htmlFor={inputId} className="text-xs text-sky-300 font-semibold">
+                    <label htmlFor={inputId} className="text-xs text-amber-300 font-semibold">
                       {`{${variable}}`}
                     </label>
                     <input
@@ -121,7 +121,7 @@ export function PromptInput({
                       onChange={(e) =>
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
-                      className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
+                      className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50"
                       placeholder={t.onboarding.sim_placeholder}
                     />
                   </div>
@@ -209,7 +209,7 @@ export function PromptInput({
 
             {/* Voice Input Trigger */}
             {isSupported && (
-               <div className="absolute top-4 left-4 z-30">
+               <div className="absolute top-4 start-4 z-30">
                    <button 
                      onClick={toggleListening}
                      className={cn(
@@ -219,6 +219,7 @@ export function PromptInput({
                          : "bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
                      )}
                      title={isListening ? "עצור הקלטה" : "הקלט קולית"}
+                     aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
                    >
                        {isListening ? (
                            <MicOff className="w-5 h-5" />
@@ -227,7 +228,7 @@ export function PromptInput({
                        )}
                    </button>
                    {isListening && (
-                       <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                       <span className="absolute top-full start-1/2 -translate-x-1/2 mt-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
                            מקליט...
                        </span>
                    )}
@@ -263,7 +264,8 @@ export function PromptInput({
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/10"
+                    className="w-full ps-10 pe-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/10"
+                    aria-label="בחר קטגוריה"
                   >
                     {CATEGORY_OPTIONS.map(cat => (
                       <option key={cat.id} value={cat.id} className="bg-zinc-900 text-slate-200">
@@ -271,7 +273,7 @@ export function PromptInput({
                       </option>
                     ))}
                   </select>
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <div className="absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>

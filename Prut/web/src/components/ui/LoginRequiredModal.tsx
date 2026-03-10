@@ -53,14 +53,14 @@ export function LoginRequiredModal({
       >
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 p-2 text-slate-500 hover:text-white transition-colors"
+          className="absolute top-4 start-4 p-2 text-slate-500 hover:text-white transition-colors"
           aria-label="סגור"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center text-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center border border-white/10">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/10 to-yellow-500/10 flex items-center justify-center border border-white/10">
             <Image src={getAssetPath("/logo.svg")} alt="Peroot" width={40} height={40} className="w-10 h-10 brightness-110" style={{ width: 'auto', height: 'auto' }} />
           </div>
 
@@ -82,19 +82,19 @@ export function LoginRequiredModal({
             </p>
             <ul className="text-xs text-slate-400 space-y-1.5 text-right">
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 פרומפט חינמי כל יום
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 שמירת פרומפטים לספריה אישית
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 מועדפים והיסטוריה
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 גישה לספריית פרומפטים מלאה
               </li>
             </ul>
@@ -103,7 +103,7 @@ export function LoginRequiredModal({
           <div className="flex flex-col gap-3 w-full pt-4">
             <Link
               href="/login"
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl text-white font-semibold transition-all shadow-lg"
+              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 rounded-xl text-white font-semibold transition-all shadow-lg"
             >
               <LogIn className="w-5 h-5" />
               התחבר עכשיו
