@@ -8,7 +8,7 @@ import { validateAdminSession, logAdminAction } from '@/lib/admin/admin-security
  * Note: Only an existing admin can grant admin to themselves or others.
  * For initial setup, use the SQL editor.
  */
-export async function GET() {
+export async function POST() {
   try {
     // 1. Validate Session (Only admins can grant admin roles)
     const { error, user, supabase } = await validateAdminSession();

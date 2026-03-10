@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
 import { parseCapabilityMode } from "@/lib/capability-mode";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { AIGateway } from "@/lib/ai/gateway";
+import { enqueueJob } from "@/lib/jobs/queue";
 
 export const maxDuration = 30;
 
@@ -12,7 +15,7 @@ const RequestSchema = z.object({
   tone: z.string().default("Professional"),
   category: z.string().default("General"),
   capability_mode: z.string().optional(),
-  mode_params: z.record(z.string(), z.unknown()).optional(),
+  mode_params: z.record(z.string(), z.string()).optional(),
   previousResult: z.string().optional(),
   refinementInstruction: z.string().optional(),
   answers: z.record(z.string(), z.string()).optional(),
@@ -64,7 +67,6 @@ export async function POST(req: Request) {
 
     // 2. Execute Rate Limiting
     const identifier = user?.id || (req.headers.get("x-forwarded-for") || "anonymous");
-    const { checkRateLimit } = await import("@/lib/ratelimit");
     const limitResult = await checkRateLimit(identifier, tier);
 
     if (!limitResult.success) {
@@ -125,8 +127,6 @@ export async function POST(req: Request) {
 
     // 5. Execution with Streaming & Telemetry via Gateway
     const startTime = Date.now();
-    const { AIGateway } = await import("@/lib/ai/gateway");
-
     const { result, modelId } = await AIGateway.generateStream({
         system: engineOutput.systemPrompt,
         prompt: engineOutput.userPrompt,
@@ -149,8 +149,6 @@ export async function POST(req: Request) {
                 });
 
                 try {
-                    const { enqueueJob } = await import("@/lib/jobs/queue");
-
                     const { count } = await supabase
                         .from('activity_logs')
                         .select('*', { count: 'exact', head: true })

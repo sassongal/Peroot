@@ -27,26 +27,18 @@ export const CATEGORY_OPTIONS = [
 export const CATEGORY_LABELS: Record<string, string> = {
   None: "ללא",
   Marketing: "שיווק",
-  marketing: "שיווק",
   Sales: "מכירות",
-  sales: "מכירות",
   CustomerSupport: "תמיכה",
   Product: "מוצר",
   Operations: "תפעול",
   HR: "משאבי אנוש",
   Dev: "פיתוח",
-  dev: "פיתוח",
   Education: "חינוך",
-  education: "חינוך והדרכה",
   Legal: "משפטי",
   Creative: "קריאייטיב",
-  creative: "יצירתיות",
   Social: "סושיאל",
-  social: "רשתות חברתיות",
   General: "כללי",
-  general: "כללי",
   Images: "תמונות AI",
-  images: "תמונות AI",
   Finance: "פיננסים",
   Healthcare: "בריאות",
   Ecommerce: "אי־קומרס",
@@ -57,6 +49,11 @@ export const CATEGORY_LABELS: Record<string, string> = {
   Automation: "אוטומציה",
   Community: "קהילה",
   Nonprofit: "מלכ\"ר",
+};
+
+/** Case-insensitive category label lookup */
+export const getCategoryLabel = (key: string): string => {
+  return CATEGORY_LABELS[key] ?? CATEGORY_LABELS[key.charAt(0).toUpperCase() + key.slice(1)] ?? key;
 };
 
 export const PERSONAL_DEFAULT_CATEGORY = "כללי";

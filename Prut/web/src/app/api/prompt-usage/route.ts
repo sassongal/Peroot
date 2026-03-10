@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ ok: false }), { status: 200 });
+    return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500 });
   }
 }
 

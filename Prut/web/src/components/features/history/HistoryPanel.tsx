@@ -125,10 +125,6 @@ export function HistoryPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-        <div className="flex items-center gap-2 text-xs text-slate-500 opacity-0 h-0 overflow-hidden">
-          <History className="w-3 h-3" />
-          היסטוריה
-        </div>
         {!isLoaded && (
           <div className="text-xs text-slate-500 text-center py-6">טוען היסטוריה...</div>
         )}

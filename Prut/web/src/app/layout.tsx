@@ -113,7 +113,7 @@ export const metadata: Metadata = {
   verification: {
     // ⚠️ IMPORTANT: Replace with your Google Search Console verification token before production!
     // Get it from: https://search.google.com/search-console → Settings → Ownership verification
-    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || 'verification_token',
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || undefined,
   },
 };
 
@@ -146,11 +146,11 @@ export default async function RootLayout({
           <div className="noise-overlay" />
           <FAQSchema />
           <I18nProvider dictionary={dictionary}>
-            <Suspense fallback={null}>
+            <Suspense fallback={<div className="flex-grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
               <GlobalContextWrapper>
-                <div className="flex-grow">
+                <main id="main-content" className="flex-grow">
                   {children}
-                </div>
+                </main>
                 <Footer />
               </GlobalContextWrapper>
             </Suspense>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -20,6 +20,7 @@ export function useFavorites() {
   const [user, setUser] = useState<User | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
+  const userRef = useRef<User | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -77,6 +78,7 @@ export function useFavorites() {
     const init = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data.user ?? null);
+      userRef.current = data.user ?? null;
       await loadFavorites(data.user ?? null);
     };
 
@@ -86,7 +88,7 @@ export function useFavorites() {
       const newUser = session?.user ?? null;
       
       // Migration Logic
-      if (newUser && !user) {
+      if (newUser && !userRef.current) {
          const localStr = localStorage.getItem(STORAGE_KEY);
          if (localStr) {
              try {
@@ -105,15 +107,19 @@ export function useFavorites() {
          }
       }
 
-      setUser(newUser);
-      loadFavorites(newUser);
+      if (userRef.current?.id !== newUser?.id) {
+        userRef.current = newUser;
+        setUser(newUser);
+        loadFavorites(newUser);
+      }
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   useEffect(() => {
     if (!isLoaded) return; // Don't write if not loaded

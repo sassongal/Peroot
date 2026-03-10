@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface SiteSettings {
@@ -38,7 +38,7 @@ let settingsCache: SiteSettings | null = null;
 export function useSiteSettings() {
   const [settings, setSettings] = useState<SiteSettings>(settingsCache || defaultSettings);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     loadSettings();

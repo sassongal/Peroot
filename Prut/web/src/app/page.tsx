@@ -10,7 +10,6 @@ import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { HistoryPanel } from "@/components/features/history/HistoryPanel";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
-import { useFavorites } from "@/hooks/useFavorites";
 import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import dynamic from "next/dynamic";
@@ -65,9 +64,6 @@ const getPromptKey = (text: string) => {
 function PageContent({ user }: { user: User | null }) {
   const t = useI18n();
   const { history, addToHistory, clearHistory, isLoaded } = useHistory();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { toggleFavorite: _toggle } = useFavorites();
-
   const {
     viewMode,
     setViewMode,
@@ -79,14 +75,16 @@ function PageContent({ user }: { user: User | null }) {
 
   const { state: ps, dispatch } = usePromptWorkflow();
 
+  const inputRef = useRef(ps.input);
+  inputRef.current = ps.input;
+
   const setInputVal = useCallback((action: SetStateAction<string>) => {
     if (typeof action === 'function') {
-      // We need current value for functional updates — read from ref
-      dispatch({ type: 'SET_INPUT', payload: action(ps.input) });
+      dispatch({ type: 'SET_INPUT', payload: action(inputRef.current) });
     } else {
       dispatch({ type: 'SET_INPUT', payload: action });
     }
-  }, [dispatch, ps.input]);
+  }, [dispatch]);
 
   // Mutable refs for streaming delimiter parsing
   const streamAccRef = useRef({ promptText: "", questionsPart: "", foundDelimiter: false });
@@ -133,7 +131,6 @@ function PageContent({ user }: { user: User | null }) {
   // --- Effects ---
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const stored = sessionStorage.getItem("peroot_guest_count");
     if (stored) setGuestPromptCount(parseInt(stored, 10));
   }, []);
@@ -499,6 +496,8 @@ function PageContent({ user }: { user: User | null }) {
               : "bg-black/40 border-white/10 text-slate-400 hover:text-white hover:border-white/20"
           )}
           title="היסטוריה וניווט"
+          aria-expanded={sidebarOpen}
+          aria-label="Toggle sidebar"
         >
           <PanelRightOpen className="w-4 h-4" />
           <span className="hidden md:inline">היסטוריה</span>
@@ -508,13 +507,14 @@ function PageContent({ user }: { user: User | null }) {
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div
+          role="presentation"
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Drawer */}
-      <div className={cn(
+      <div role="dialog" aria-modal="true" aria-label="History and library sidebar" className={cn(
         "fixed top-0 right-0 z-40 h-full w-80 lg:w-72 bg-black/95 backdrop-blur-xl border-l border-white/10 flex flex-col transition-transform duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full"
       )}>

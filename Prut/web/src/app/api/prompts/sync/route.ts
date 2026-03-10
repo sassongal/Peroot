@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promptManager } from '@/lib/prompts/prompt-manager';
 import { invalidateEngineCache } from '@/lib/engines';
+import { validateAdminSession } from '@/lib/admin/admin-security';
 
 /**
  * POST /api/prompts/sync
@@ -10,6 +11,11 @@ import { invalidateEngineCache } from '@/lib/engines';
  */
 export async function POST(req: Request) {
   try {
+    const { error, user } = await validateAdminSession();
+    if (error || !user) {
+        return NextResponse.json({ error: error || 'Forbidden' }, { status: error === 'Unauthorized' ? 401 : 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { prompt_key, mode } = body;
 
@@ -39,6 +45,11 @@ export async function POST(req: Request) {
  */
 export async function GET() {
   try {
+    const { error, user } = await validateAdminSession();
+    if (error || !user) {
+        return NextResponse.json({ error: error || 'Forbidden' }, { status: error === 'Unauthorized' ? 401 : 403 });
+    }
+
     const stats = promptManager.getCacheStats();
     return NextResponse.json(stats);
   } catch (error) {

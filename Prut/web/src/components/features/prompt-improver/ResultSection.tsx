@@ -88,10 +88,10 @@ export function ResultSection({
 
           <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between mt-auto">
             <div className="flex items-center gap-3">
-               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer">
+               <button disabled aria-label="Like" className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-default">
                  <ThumbsUp className="w-4 h-4" />
                </button>
-               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer">
+               <button disabled aria-label="Dislike" className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-default">
                  <ThumbsDown className="w-4 h-4" />
                </button>
             </div>

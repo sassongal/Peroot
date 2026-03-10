@@ -29,5 +29,9 @@ export async function isMaintenanceMode(): Promise<boolean> {
 export async function setMaintenanceMode(enabled: boolean): Promise<void> {
   const r = getRedis();
   if (!r) return;
-  await r.set(CACHE_KEY, enabled, { ex: CACHE_TTL });
+  if (enabled) {
+    await r.set(CACHE_KEY, enabled);
+  } else {
+    await r.set(CACHE_KEY, enabled, { ex: CACHE_TTL });
+  }
 }

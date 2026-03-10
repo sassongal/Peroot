@@ -22,23 +22,41 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      let tier: PlanTier = data.user ? 'free' : 'guest';
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan_tier')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        if (profile?.plan_tier === 'pro') tier = 'pro';
+      }
       setState((prev) => ({
         ...prev,
         user: data.user,
         isLoading: false,
-        planTier: data.user ? 'free' : 'guest',
+        planTier: tier,
       }));
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user ?? null;
+      let tier: PlanTier = user ? 'free' : 'guest';
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan_tier')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (profile?.plan_tier === 'pro') tier = 'pro';
+      }
       setState((prev) => ({
         ...prev,
         user,
-        planTier: user ? 'free' : 'guest',
+        planTier: tier,
       }));
     });
 

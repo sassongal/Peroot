@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { getApiPath } from '@/lib/api-path';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -45,6 +45,7 @@ export function useLibrary() {
   const [user, setUser] = useState<User | null>(null);
   
   const supabase = useMemo(() => createClient(), []);
+  const userRef = useRef<User | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -54,6 +55,7 @@ export function useLibrary() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!mounted) return;
       setUser(currentUser);
+      userRef.current = currentUser;
 
       if (currentUser) {
         const orderMap = readOrderMap(currentUser.id);
@@ -134,7 +136,7 @@ export function useLibrary() {
       if (!mounted) return;
       const newUser = session?.user ?? null;
       
-      if (newUser && !user) {
+      if (newUser && !userRef.current) {
           // Just logged in - MIGRATE GUEST DATA
           const localStr = localStorage.getItem(STORAGE_KEY);
           if (localStr) {
@@ -173,19 +175,19 @@ export function useLibrary() {
           }
       }
 
-      setUser((prev) => {
-        if (prev?.id !== newUser?.id) {
-          init();
-        }
-        return newUser;
-      });
+      if (userRef.current?.id !== newUser?.id) {
+        userRef.current = newUser;
+        setUser(newUser);
+        init();
+      }
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, user]); // Added user dependency to detect transition
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   // Sync to local/session storage
   useEffect(() => {
@@ -464,16 +466,16 @@ export function useLibrary() {
   };
 
   const deletePrompts = async (ids: string[]) => {
-      try {
+      setPersonalLibrary(prev => prev.filter(p => !ids.includes(p.id)));
+      if (user) {
         const { error } = await supabase
             .from("personal_library")
             .delete()
-            .in("id", ids);
-        if (error) throw error;
-        
-        setPersonalLibrary(prev => prev.filter(p => !ids.includes(p.id)));
-      } catch (err) {
-        throw err;
+            .in("id", ids)
+            .eq("user_id", user.id);
+        if (error) {
+          console.error("[useLibrary] deletePrompts error:", error);
+        }
       }
   };
 
@@ -591,18 +593,18 @@ export function useLibrary() {
   };
 
   const updateTags = async (id: string, tags: string[]) => {
-      try {
-         const { error } = await supabase
+      setPersonalLibrary(prev => prev.map(p =>
+         p.id === id ? { ...p, tags } : p
+      ));
+      if (user) {
+        const { error } = await supabase
             .from("personal_library")
             .update({ tags })
-            .eq("id", id);
-         if (error) throw error;
-         
-         setPersonalLibrary(prev => prev.map(p => 
-            p.id === id ? { ...p, tags } : p
-         ));
-      } catch (err) {
-         throw err;
+            .eq("id", id)
+            .eq("user_id", user.id);
+        if (error) {
+          console.error("[useLibrary] updateTags error:", error);
+        }
       }
   };
 

@@ -122,7 +122,7 @@ export abstract class BaseEngine implements PromptEngine {
      let contextInjected = systemPrompt;
      if (input.userHistory && input.userHistory.length > 0) {
          const historyBlock = input.userHistory
-            .map(h => `Title: ${h.title}\nPrompt:\n${h.prompt}`)
+            .map(h => `Title: ${h.title}\nPrompt:\n${h.prompt.slice(0, 500)}`)
             .join('\n\n---\n\n');
             
          contextInjected += `\n\n[USER_STYLE_CONTEXT]\nThe following are examples of prompts this user has saved or liked. 

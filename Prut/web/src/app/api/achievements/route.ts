@@ -15,7 +15,9 @@ export async function GET() {
             .select('*')
             .order('points', { ascending: true });
         
-        return NextResponse.json(data || []);
+        return NextResponse.json(data || [], {
+            headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
+        });
     } catch (err) {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }

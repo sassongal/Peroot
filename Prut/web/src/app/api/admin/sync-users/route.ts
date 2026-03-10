@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { validateAdminSession } from '@/lib/admin/admin-security';
 
 /**
  * POST /api/admin/sync-users
@@ -10,40 +10,24 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function POST() {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { error, user, supabase } = await validateAdminSession();
+    if (error || !user || !supabase) {
+        return NextResponse.json({ error: error || 'Forbidden' }, { status: error === 'Unauthorized' ? 401 : 403 });
     }
 
-    const { data: isAdminData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single();
-
-    if (!isAdminData) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    // Get all profiles (these are automatically synced from auth.users)
-    const { data: profiles, error } = await supabase
+    // Count profiles (automatically synced from auth.users via triggers)
+    const { count, error: dbError } = await supabase
       .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id', { count: 'exact', head: true });
 
-    if (error) {
-      console.error('[Sync Users] Error fetching profiles:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      console.error('[Sync Users] Error fetching profiles:', dbError);
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    // Return the synced count
     return NextResponse.json({
       success: true,
-      synced: profiles?.length || 0,
+      synced: count || 0,
       message: 'Users are automatically synced via Supabase triggers'
     });
   } catch (error) {

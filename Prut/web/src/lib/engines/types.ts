@@ -19,7 +19,7 @@ export interface EngineInput {
   tone: string;
   category: string;
   mode: CapabilityMode;
-  modeParams?: Record<string, unknown>;
+  modeParams?: Record<string, string>;
   previousResult?: string;
   refinementInstruction?: string;
   answers?: Record<string, string>;

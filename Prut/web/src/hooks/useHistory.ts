@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -21,6 +21,7 @@ export function useHistory() {
   const [user, setUser] = useState<User | null>(null);
   
   const supabase = useMemo(() => createClient(), []);
+  const userRef = useRef<User | null>(null);
 
   // Initialize Auth & History
   useEffect(() => {
@@ -34,6 +35,7 @@ export function useHistory() {
       if (!mounted) return;
       
       setUser(currentUser);
+      userRef.current = currentUser;
 
       if (currentUser) {
         // Fetch from DB
@@ -71,12 +73,11 @@ export function useHistory() {
       const newUser = session?.user ?? null;
       
       // Only re-run init if the user ID actually changed to avoid cycles
-      setUser((prev) => {
-        if (prev?.id !== newUser?.id) {
-          init();
-        }
-        return newUser;
-      });
+      if (userRef.current?.id !== newUser?.id) {
+        userRef.current = newUser;
+        setUser(newUser);
+        init();
+      }
     });
 
     return () => {

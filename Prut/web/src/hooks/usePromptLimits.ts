@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useSiteSettings } from './useSiteSettings';
 
@@ -16,7 +16,7 @@ export function usePromptLimits() {
   const [credits, setCredits] = useState<number | null>(null);
   const [usage, setUsage] = useState<PromptUsage>({ count: 0, lastReset: new Date().toISOString() });
   const [canUsePrompt, setCanUsePrompt] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     checkUser();

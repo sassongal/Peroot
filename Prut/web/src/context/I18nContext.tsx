@@ -40,7 +40,7 @@ export function I18nProvider({
   lang?: string;
 }) {
   const [dictionary, setDictionary] = useState<Dictionary>(initialDictionary);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function loadOverrides() {

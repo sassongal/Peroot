@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { validateAdminSession } from '@/lib/admin/admin-security';
 
 /**
  * GET /api/admin/stats
@@ -8,23 +8,9 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { data: isAdminData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single();
-
-    if (!isAdminData) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const { error, user, supabase } = await validateAdminSession();
+    if (error || !user || !supabase) {
+        return NextResponse.json({ error: error || 'Forbidden' }, { status: error === 'Unauthorized' ? 401 : 403 });
     }
 
     const [

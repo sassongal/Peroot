@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -9,23 +9,8 @@ const UpdateSchema = z.object({
   delta: z.number().int().min(1).max(5).default(1),
 });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "";
-const isConfigured = Boolean(supabaseUrl && supabaseKey);
-
-const supabase = isConfigured
-  ? createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    })
-  : null;
-
 export async function GET() {
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
-  }
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("prompt_popularity")
@@ -48,8 +33,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
   try {

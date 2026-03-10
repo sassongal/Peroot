@@ -11,13 +11,11 @@ async function getServiceClient() {
 }
 
 export async function GET(req: Request) {
-  // 1. Secure this endpoint (e.g. Cron secret header)
-  // For now, checks for 'Authorization: Bearer <SERVICE_KEY>' or similar shared secret
+  // 1. Secure this endpoint with CRON_SECRET
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`) {
-      // Allow local dev loop or Supabase Cron if configured with service key
-      // If stricter security needed, use a specific CRON_SECRET env var
-      // return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Use service client to fetch/update jobs bypassing RLS

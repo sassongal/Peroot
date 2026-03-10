@@ -21,7 +21,6 @@ export function UserMenu({ user, position }: UserMenuProps) {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const supabase = createClient();
 
   const getErrorMessage = (err: unknown) =>
     err instanceof Error ? err.message : t.auth.unexpected_error;
@@ -32,6 +31,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
+      const supabase = createClient();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success(t.auth.logout_success);

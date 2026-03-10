@@ -58,10 +58,11 @@ export const highlightPlaceholders = (children: ReactNode): ReactNode =>
       if (typeof nodeType === "string" && (nodeType === "code" || nodeType === "pre")) {
         return child;
       }
-      if ((child as any).props?.children) {
-        return cloneElement(child as ReactElement<any>, {
-          ...(child as any).props,
-          children: highlightPlaceholders((child as any).props.children),
+      const elementChild = child as ReactElement<{ children?: ReactNode }>;
+      if (elementChild.props?.children) {
+        return cloneElement(elementChild, {
+          ...elementChild.props,
+          children: highlightPlaceholders(elementChild.props.children),
         });
       }
     }
@@ -135,33 +136,37 @@ import DOMPurify from "isomorphic-dompurify";
 
 // Styled prompt rendering for the ResultSection with yellow headers and blue variables
 export const renderStyledPrompt = (value: string): string => {
-  // Sanitize input to prevent XSS before any manipulation
-  let html = DOMPurify.sanitize(value);
-  html = escapeHtml(html);
-  
-  // Style section headers in brackets [כותרת] or [Title] with amber/orange
+  // Step 1: Escape all HTML entities first
+  let html = escapeHtml(value);
+
+  // Step 2: Apply style replacements on escaped content
+  // Section headers [כותרת] - safe because $1 is already escaped
   html = html.replace(
     /\[([^\]]+)\]/g,
     '<span class="text-amber-500 font-black text-lg tracking-tight bg-amber-500/5 px-2 py-0.5 rounded-lg border border-amber-500/20">[$1]</span>'
   );
-  
-  // Style variables {variable_name} with blue
+
+  // Variables {variable_name} - safe because $1 is already escaped
   html = html.replace(
     /\{([^}]+)\}/g,
     '<span class="text-sky-400 font-semibold bg-sky-900/30 px-1.5 py-0.5 rounded border border-sky-400/30 whitespace-nowrap shadow-[0_0_15px_rgba(56,189,248,0.1)]">{$1}</span>'
   );
-  
-  // Convert bullet points to styled bullets
+
+  // Bullet points
   html = html.replace(
     /^[•\-]\s*/gm,
     '<span class="text-purple-400 mr-2">•</span>'
   );
-  
-  // Add proper line breaks and spacing
+
+  // Line breaks
   html = html
     .replace(/\n\n/g, '</p><p class="mt-4">')
     .replace(/\n/g, '<br />');
-  
-  return `<p>${html}</p>`;
+
+  // Step 3: Final DOMPurify sanitization as safety net
+  return DOMPurify.sanitize(`<p>${html}</p>`, {
+    ALLOWED_TAGS: ['p', 'span', 'br'],
+    ALLOWED_ATTR: ['class'],
+  });
 };
 
