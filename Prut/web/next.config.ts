@@ -3,10 +3,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   compress: true,
-  // Enable basePath for subdirectory deployment (e.g., joya-tech.net/peroot)
-  basePath: '/peroot',
-  // Ensure assets are loaded from the correct path
-  assetPrefix: '/peroot',
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', '@radix-ui/react-slot', 'posthog-js', '@sentry/nextjs'],
   },
