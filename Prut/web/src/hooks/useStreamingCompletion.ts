@@ -49,6 +49,7 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
         const decoder = new TextDecoder();
         let accumulated = '';
 
+        let midStreamInterrupted = false;
         try {
           while (true) {
             const { done, value } = await reader.read();
@@ -58,14 +59,22 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
             onChunk(chunk);
           }
         } catch (streamError) {
-          // Mid-stream failure — signal the caller that the stream was cut short.
+          if (streamError instanceof Error && streamError.name === 'AbortError') throw streamError;
+          // Mid-stream failure — signal the caller and keep the partial text visible.
+          // Do NOT re-throw: the outer catch must not overwrite the interrupted state
+          // with a generic error that resets streamPhase back to 'idle'.
+          midStreamInterrupted = true;
           if (accumulated) {
             onInterrupted?.(accumulated);
+          } else {
+            // Nothing was accumulated — treat as a normal error so the UI shows a message.
+            throw streamError;
           }
-          throw streamError;
         }
 
-        onDone(accumulated);
+        if (!midStreamInterrupted) {
+          onDone(accumulated);
+        }
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return;
         onError(error instanceof Error ? error : new Error(String(error)));
