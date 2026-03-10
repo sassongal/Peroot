@@ -1,0 +1,148 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, Calendar } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { articleSchema } from "@/lib/schema";
+
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const { data: post } = await supabase
+    .from("blog_posts")
+    .select("title, meta_title, meta_description, excerpt, slug")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+
+  if (!post) return { title: "מאמר לא נמצא" };
+
+  const title = post.meta_title || post.title;
+  const description = post.meta_description || post.excerpt || "";
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      title: `${title} | Peroot`,
+      description,
+      url: `/blog/${post.slug}`,
+      siteName: "Peroot",
+      locale: "he_IL",
+      type: "article",
+    },
+    twitter: {
+      card: "summary",
+      title: `${title} | Peroot`,
+      description,
+    },
+  };
+}
+
+export default async function BlogPostPage({ params }: Props) {
+  const { slug } = await params;
+
+  const supabase = await createClient();
+  const { data: post } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+
+  if (!post) notFound();
+
+  const publishedDate = post.published_at
+    ? new Date(post.published_at).toLocaleDateString("he-IL")
+    : "";
+
+  return (
+    <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
+      <article className="max-w-3xl mx-auto">
+        <Link
+          href="/blog"
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-8"
+        >
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
+          <span>חזרה לבלוג</span>
+        </Link>
+
+        <header className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
+              {post.category}
+            </span>
+            {publishedDate && (
+              <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                <Calendar className="w-3 h-3" />
+                <span>{publishedDate}</span>
+              </div>
+            )}
+            {post.read_time && (
+              <span className="text-[10px] text-slate-600">{post.read_time}</span>
+            )}
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-white mb-4 leading-tight">
+            {post.title}
+          </h1>
+          {post.excerpt && (
+            <p className="text-lg text-slate-400 leading-relaxed">
+              {post.excerpt}
+            </p>
+          )}
+        </header>
+
+        {post.thumbnail_url && (
+          <img
+            src={post.thumbnail_url}
+            alt={post.title}
+            className="w-full h-64 object-cover rounded-xl mb-10"
+          />
+        )}
+
+        <div
+          className="prose prose-invert prose-amber max-w-none
+            prose-headings:font-serif prose-headings:text-white
+            prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+            prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
+            prose-li:text-slate-300 prose-li:leading-relaxed
+            prose-strong:text-white
+            prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+
+        <div className="mt-16 pt-8 border-t border-white/10 text-center">
+          <p className="text-slate-400 mb-4">רוצים לשדרג את הפרומפטים שלכם?</p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-black font-semibold hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all"
+          >
+            נסו את Peroot — חינם
+          </Link>
+        </div>
+      </article>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            articleSchema({
+              title: post.title,
+              excerpt: post.meta_description || post.excerpt || "",
+              slug: post.slug,
+              published_at: post.published_at,
+              author: post.author || "Peroot",
+              thumbnail_url: post.thumbnail_url,
+            })
+          ),
+        }}
+      />
+    </div>
+  );
+}
