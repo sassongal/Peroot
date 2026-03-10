@@ -2,7 +2,7 @@
 
 import { useLibraryContext } from "@/context/LibraryContext";
 import { CATEGORY_LABELS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -121,6 +121,16 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
   return (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+        {/* Back Button */}
+        <button
+          onClick={() => setViewMode("home")}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors cursor-pointer group w-fit"
+          dir="rtl"
+        >
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
+          <span>חזרה</span>
+        </button>
 
         <div className="glass-card p-6 rounded-xl border-white/10 bg-black/40">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

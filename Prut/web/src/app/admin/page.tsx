@@ -64,7 +64,16 @@ export default function AdminPage() {
   return (
     <AdminLayout>
       <div className="space-y-12 animate-in fade-in duration-1000 select-none pb-20" dir="rtl">
-        
+
+        {/* Back Button */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit"
+        >
+          <ArrowUpRight className="w-4 h-4 rotate-180 transition-transform group-hover:translate-x-[-2px]" />
+          <span>חזרה</span>
+        </Link>
+
         {/* Header Area */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
           <div className="space-y-4">
