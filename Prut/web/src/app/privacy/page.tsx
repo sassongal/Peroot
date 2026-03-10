@@ -84,7 +84,7 @@ export default function PrivacyPolicy() {
         </section>
 
         <footer className="pt-12 border-t border-white/10 text-sm text-slate-500">
-          עודכן לאחרונה: ינואר 2026 | ליצירת קשר: support@peroot.net
+          עודכן לאחרונה: ינואר 2026 | ליצירת קשר: gal@joya-tech.net
         </footer>
       </div>
     </main>

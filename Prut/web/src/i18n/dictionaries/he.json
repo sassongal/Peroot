@@ -77,7 +77,7 @@
     "unexpected_error": "שגיאה לא צפויה"
   },
   "prompt_generator": {
-    "capability_mode": "מצב יכולת",
+    "capability_mode": "מצב פרומפט",
     "variables": "משתנים",
     "variables_hint": "מלא/י ערכים והחלף אותם בפרומפט בלחיצה.",
     "apply_to_prompt": "הכנס לפרומפט",

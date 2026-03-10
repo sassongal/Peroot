@@ -15,4 +15,4 @@ Peroot turns raw ideas into structured, high-quality prompts in Hebrew (RTL-firs
 - Personal prompt library
 
 ## Contact
-- support@peroot.net
+- gal@joya-tech.net

@@ -32,6 +32,19 @@ interface PromptInputProps {
 
 import { useI18n } from "@/context/I18nContext";
 
+const ALL_EXAMPLES = [
+  "כתוב לי מייל שיווקי להשקת מוצר חדש",
+  "צור תוכן לפוסט אינסטגרם לעסק קטן",
+  "בנה תבנית לתיאור משרה של מפתח Full Stack",
+  "כתוב סקריפט לסרטון הסבר על המוצר שלי",
+  "צור תוכנית לימודים לקורס AI למתחילים",
+  "כתוב מייל מעקב מקצועי ללקוח אחרי פגישה",
+  "בנה prompt ליצירת תמונה של מוצר על רקע סטודיו",
+  "כתוב תיאור מוצר שמוכר לחנות אונליין",
+  "צור שאלון סקר שביעות רצון ללקוחות",
+  "כתוב הודעת WhatsApp שיווקית קצרה ואפקטיבית",
+];
+
 export function PromptInput({
   inputVal,
   setInputVal,
@@ -56,6 +69,11 @@ export function PromptInput({
     // This prevents re-calculation when other props (like loading state) change
     const displayValue = inputVal + (interimResult ? (inputVal && !inputVal.endsWith(' ') ? ' ' : '') + interimResult : '');
     const highlightedContent = useMemo(() => highlightTextWithPlaceholders(displayValue), [displayValue]);
+
+    const displayedExamples = useMemo(() => {
+      const shuffled = [...ALL_EXAMPLES].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 4);
+    }, []);
 
     // Voice Recorder Logic
     const { isListening, toggleListening, isSupported } = useVoiceRecorder({
@@ -260,12 +278,7 @@ export function PromptInput({
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
                 <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-3 text-right" dir="rtl">נסו לדוגמה:</div>
                 <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
-                  {[
-                    "כתוב לי מייל שיווקי להשקת מוצר חדש",
-                    "צור תוכן לפוסט אינסטגרם לעסק קטן",
-                    "בנה תבנית לתיאור משרה של מפתח Full Stack",
-                    "כתוב סקריפט לסרטון הסבר על המוצר שלי",
-                  ].map((example, i) => (
+                  {displayedExamples.map((example, i) => (
                     <button
                       key={i}
                       onClick={() => setInputVal(example)}

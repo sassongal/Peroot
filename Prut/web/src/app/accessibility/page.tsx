@@ -130,7 +130,7 @@ export default function AccessibilityPage() {
             <div className="bg-white/5 p-6 rounded-2xl border border-white/10 flex flex-col items-center text-center gap-3">
               <Mail className="w-6 h-6 text-purple-400" />
               <span className="text-xs text-slate-500 uppercase tracking-widest">אימייל</span>
-              <span className="font-bold text-white">support@peroot.net</span>
+              <span className="font-bold text-white">gal@joya-tech.net</span>
             </div>
             <div className="bg-white/5 p-6 rounded-2xl border border-white/10 flex flex-col items-center text-center gap-3">
               <Phone className="w-6 h-6 text-purple-400" />

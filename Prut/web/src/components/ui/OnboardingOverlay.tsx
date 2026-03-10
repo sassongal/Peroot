@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
+import { logger } from "@/lib/logger";
 
 interface OnboardingOverlayProps {
     onComplete: (data: { role: string; goal: string }) => void;
@@ -37,6 +38,7 @@ const CAPABILITY_MODES = [
         color: "amber",
         labelHe: "בונה סוכנים",
         descriptionHe: "הגדרת GPT מותאמים וסוכני AI עצמאיים",
+        comingSoon: true,
     },
 ];
 
@@ -71,7 +73,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ achievementId: "pioneer" }),
-        }).catch((e) => console.warn("Failed to award pioneer badge", e));
+        }).catch((e) => logger.warn("Failed to award pioneer badge", e));
 
         setIsVisible(false);
         setTimeout(() => {
@@ -164,23 +166,29 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                             <div className="text-center">
                                 <h2 className="text-3xl font-serif font-bold text-white mb-2">
-                                    בחר מצב יכולת
+                                    בחר מצב פרומפט
                                 </h2>
                                 <p className="text-slate-400 text-sm leading-relaxed">
                                     Peroot מציע 4 מצבי עבודה — כל אחד מותאם לסוג משימה אחר
                                 </p>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {CAPABILITY_MODES.map(({ icon: Icon, color, labelHe, descriptionHe }) => {
+                                {CAPABILITY_MODES.map(({ icon: Icon, color, labelHe, descriptionHe, comingSoon }) => {
                                     const c = COLOR_MAP[color];
                                     return (
                                         <div
                                             key={labelHe}
                                             className={cn(
-                                                "flex items-start gap-3 p-4 rounded-2xl border transition-all",
+                                                "flex items-start gap-3 p-4 rounded-2xl border transition-all relative",
+                                                comingSoon && "opacity-50 cursor-not-allowed",
                                                 c.bg, c.border
                                             )}
                                         >
+                                            {comingSoon && (
+                                                <span className="absolute top-2 left-2 text-[9px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                                    בקרוב
+                                                </span>
+                                            )}
                                             <div
                                                 className={cn(
                                                     "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ring-1",

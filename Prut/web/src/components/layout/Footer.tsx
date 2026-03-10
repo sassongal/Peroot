@@ -17,6 +17,12 @@ export function Footer() {
 
         {/* Links */}
         <nav className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+          <Link href="/blog" className="cursor-pointer hover:text-amber-400 transition-colors">
+            בלוג
+          </Link>
+          <Link href="/pricing" className="cursor-pointer hover:text-amber-400 transition-colors">
+            מחירים
+          </Link>
           <Link href="/terms" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
             תנאי שימוש
           </Link>
@@ -26,7 +32,7 @@ export function Footer() {
           <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
             הצהרת נגישות
           </Link>
-          <a href="mailto:support@peroot.space" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
+          <a href="mailto:gal@joya-tech.net" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
             צור קשר
           </a>
         </nav>

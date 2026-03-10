@@ -13,12 +13,14 @@ import { CapabilityMode } from "@/lib/capability-mode";
 import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import dynamic from "next/dynamic";
+import { logger } from "@/lib/logger";
 
 const ResultSection = dynamic(
   () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
   { ssr: false }
 );
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
+import { WhatIsThisModal } from "@/components/ui/WhatIsThisModal";
 const FAQBubble = dynamic(
   () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
   { ssr: false }
@@ -137,8 +139,17 @@ function PageContent({ user }: { user: User | null }) {
   const [loginRequiredConfig, setLoginRequiredConfig] = useState<{title?: string; message?: string; feature?: string}>({});
   const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
+  const [showWhatIsThis, setShowWhatIsThis] = useState(false);
 
   // --- Effects ---
+
+  // Auto-show "What is this?" for first-time visitors
+  useEffect(() => {
+    if (!localStorage.getItem('peroot_seen_explainer')) {
+      setShowWhatIsThis(true);
+      localStorage.setItem('peroot_seen_explainer', 'true');
+    }
+  }, []);
 
   // Fetch credits for logged-in free users
   useEffect(() => {
@@ -169,7 +180,7 @@ function PageContent({ user }: { user: User | null }) {
           .maybeSingle();
 
         if (error) {
-          console.error("Error fetching profile:", error);
+          logger.error("Error fetching profile:", error);
         } else if (data) {
           if (!data.onboarding_completed) {
             setShowOnboarding(true);
@@ -284,7 +295,7 @@ function PageContent({ user }: { user: User | null }) {
         const questions = Array.isArray(parsed) ? parsed : parsed.questions || [];
         dispatch({ type: 'SET_QUESTIONS', payload: questions });
       } catch (e) {
-        console.warn(`[${label}] Questions parse failed, attempting recovery`, e);
+        logger.warn(`[${label}] Questions parse failed, attempting recovery`, e);
         // Try to extract JSON array from malformed response
         const arrayMatch = acc.questionsPart.match(/\[[\s\S]*\]/);
         if (arrayMatch) {
@@ -506,7 +517,7 @@ function PageContent({ user }: { user: User | null }) {
           setShowOnboarding(false);
           toast.success("ברוכים הבאים לפירוט!");
       } catch (e) {
-          console.error('[Onboarding] Error:', e);
+          logger.error('[Onboarding] Error:', e);
           toast.error("שגיאה בשמירת נתוני Onboarding");
       }
   };
@@ -684,6 +695,13 @@ function PageContent({ user }: { user: User | null }) {
              </div>
            </div>
 
+           <button
+             onClick={() => setShowWhatIsThis(true)}
+             className="text-sm text-slate-500 hover:text-amber-400 transition-colors cursor-pointer -mt-2"
+           >
+             מה עושים פה?
+           </button>
+
            <LoadingOverlay isVisible={ps.isLoading} />
            <StreamingProgress phase={ps.streamPhase} />
 
@@ -773,6 +791,9 @@ function PageContent({ user }: { user: User | null }) {
         />
       )}
 
+      {/* What Is This Modal */}
+      <WhatIsThisModal isOpen={showWhatIsThis} onClose={() => setShowWhatIsThis(false)} />
+
       {/* Onboarding Overlay */}
       {showOnboarding && user && (
           <OnboardingOverlay onComplete={handleOnboardingComplete} />
@@ -795,15 +816,13 @@ export default function HomePage() {
             "name": "Peroot",
             "applicationCategory": "ProductivityApplication",
             "operatingSystem": "Web",
+            "description": "מחולל פרומפטים מקצועי בעברית — שדרג כל פרומפט באמצעות AI מתקדם",
+            "url": "https://peroot.space",
+            "inLanguage": "he",
             "offers": {
               "@type": "Offer",
               "price": "0",
               "priceCurrency": "ILS"
-            },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.8",
-              "ratingCount": "120"
             }
           })
         }}
