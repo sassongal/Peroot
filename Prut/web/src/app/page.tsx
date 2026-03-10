@@ -43,7 +43,7 @@ const PersonalLibraryView = dynamic(
 );
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import StreamingProgress from "@/components/ui/StreamingProgress";
-import { BookOpen, Star, Library, PanelRightOpen, X } from "lucide-react";
+import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
 import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
@@ -117,6 +117,10 @@ function PageContent({ user }: { user: User | null }) {
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('peroot_sidebar_expanded') === 'true';
+  });
 
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -134,6 +138,10 @@ function PageContent({ user }: { user: User | null }) {
     const stored = sessionStorage.getItem("peroot_guest_count");
     if (stored) setGuestPromptCount(parseInt(stored, 10));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('peroot_sidebar_expanded', sidebarExpanded.toString());
+  }, [sidebarExpanded]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -495,12 +503,12 @@ function PageContent({ user }: { user: User | null }) {
               ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
               : "bg-black/40 border-white/10 text-slate-400 hover:text-white hover:border-white/20"
           )}
-          title="היסטוריה וניווט"
+          title="תפריט"
           aria-expanded={sidebarOpen}
           aria-label="Toggle sidebar"
         >
           <PanelRightOpen className="w-4 h-4" />
-          <span className="hidden md:inline">היסטוריה</span>
+          <span className="hidden md:inline">תפריט</span>
         </button>
       </div>
 
@@ -515,18 +523,30 @@ function PageContent({ user }: { user: User | null }) {
 
       {/* Sidebar Drawer */}
       <div role="dialog" aria-modal="true" aria-label="History and library sidebar" className={cn(
-        "fixed top-0 right-0 z-40 h-full w-80 lg:w-72 bg-black/95 backdrop-blur-xl border-l border-white/10 flex flex-col transition-transform duration-300 ease-out",
-        sidebarOpen ? "translate-x-0" : "translate-x-full"
+        "fixed top-0 right-0 z-40 h-full bg-black/95 backdrop-blur-xl border-l border-white/10 flex flex-col transition-all duration-300 ease-out",
+        sidebarOpen ? "translate-x-0" : "translate-x-full",
+        // Mobile: always full width. Desktop: compact or expanded
+        "w-full",
+        sidebarExpanded ? "lg:w-[480px]" : "lg:w-72"
       )}>
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/5">
-          <span className="text-sm font-bold text-white">ניווט והיסטוריה</span>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <span className="text-sm font-bold text-white">תפריט</span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSidebarExpanded(!sidebarExpanded)}
+              className="hidden lg:flex p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              title={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
+            >
+              {sidebarExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Buttons */}
@@ -633,6 +653,7 @@ function PageContent({ user }: { user: User | null }) {
                        handleEnhance();
                      }}
                      iterationCount={ps.iterationCount}
+                     originalPrompt={ps.input}
                  />
 
                  {ps.questions.length > 0 && (

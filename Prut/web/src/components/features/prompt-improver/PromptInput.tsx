@@ -234,6 +234,28 @@ export function PromptInput({
                </div>
             )}
 
+            {!inputVal.trim() && !isListening && (
+              <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
+                <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-3 text-right" dir="rtl">נסו לדוגמה:</div>
+                <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
+                  {[
+                    "כתוב לי מייל שיווקי להשקת מוצר חדש",
+                    "צור תוכן לפוסט אינסטגרם לעסק קטן",
+                    "בנה תבנית לתיאור משרה של מפתח Full Stack",
+                    "כתוב סקריפט לסרטון הסבר על המוצר שלי",
+                  ].map((example, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setInputVal(example)}
+                      className="px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-white/5 pt-5 p-5 md:p-7 relative z-20 bg-black/20">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>

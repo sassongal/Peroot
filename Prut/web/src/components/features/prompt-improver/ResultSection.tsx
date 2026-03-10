@@ -20,6 +20,7 @@ interface ResultSectionProps {
   onVariableChange?: (key: string, value: string) => void;
   onImproveAgain?: () => void;
   iterationCount?: number;
+  originalPrompt?: string;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -37,6 +38,7 @@ export function ResultSection({
   onVariableChange,
   onImproveAgain,
   iterationCount,
+  originalPrompt,
 }: ResultSectionProps) {
     const t = useI18n();
   // ... rest of logic ...
@@ -68,6 +70,26 @@ export function ResultSection({
           </div>
         )}
       </div>
+
+      {/* Before/After Comparison */}
+      {originalPrompt && (
+        <details className="glass-card rounded-xl border-white/10 bg-white/[0.02] overflow-hidden group/details">
+          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.03] transition-colors list-none" dir="rtl">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-400">הפרומפט המקורי שלך</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/10">לפני</span>
+            </div>
+            <svg className="w-4 h-4 text-slate-500 transition-transform group-open/details:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div className="px-4 pb-4 border-t border-white/5">
+            <div className="p-4 mt-3 rounded-lg bg-black/30 border border-white/5" dir="rtl">
+              <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">{originalPrompt}</p>
+            </div>
+          </div>
+        </details>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Result Area */}
@@ -134,50 +156,59 @@ export function ResultSection({
             </div>
           </div>
 
-          <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-3">
-               <button disabled aria-label="Like" className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-default">
-                 <ThumbsUp className="w-4 h-4" />
-               </button>
-               <button disabled aria-label="Dislike" className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-default">
-                 <ThumbsDown className="w-4 h-4" />
-               </button>
-            </div>
-            <div className="flex items-center gap-3">
-               <button
+          <div className="p-4 bg-white/5 border-t border-white/5 mt-auto space-y-3">
+            {/* Primary actions row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
                   onClick={onBack}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors font-bold"
-               >
-                 {t.result_section.back_to_edit}
-               </button>
-               <button
+                  className="px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  {t.result_section.back_to_edit}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
                   onClick={onSave}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
-               >
-                  <Plus className="w-4 h-4" />
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
                   {t.result_section.save}
-               </button>
-               {onImproveAgain && (
-                 <button
-                   onClick={onImproveAgain}
-                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-sm font-medium transition-colors min-h-11 cursor-pointer"
-                 >
-                   <RefreshCw className="w-4 h-4" />
-                   {t.result?.improve_again || 'שפר שוב'}
-                   {(iterationCount ?? 0) > 0 && (
-                     <span className="bg-amber-500/30 text-amber-200 text-xs px-1.5 py-0.5 rounded-full">
-                       #{iterationCount}
-                     </span>
-                   )}
-                 </button>
-               )}
-               <button
+                </button>
+                {onImproveAgain && (
+                  <button
+                    onClick={onImproveAgain}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    {t.result?.improve_again || 'שפר שוב'}
+                    {(iterationCount ?? 0) > 0 && (
+                      <span className="bg-amber-500/30 text-amber-200 text-[10px] px-1.5 py-0.5 rounded-full">
+                        #{iterationCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+                <button
                   onClick={() => onCopy(displayCompletion)}
-                  className="flex items-center gap-2 px-6 py-2 rounded-lg accent-gradient text-black font-medium text-sm hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
-               >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-lg accent-gradient text-black font-medium text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? t.result_section.copied : t.result_section.copy_button}
-               </button>
+                </button>
+              </div>
+            </div>
+            {/* Feedback row - subtle */}
+            <div className="flex items-center justify-center gap-4 pt-2 border-t border-white/5">
+              <span className="text-[10px] text-slate-600">מה דעתך על התוצאה?</span>
+              <div className="flex items-center gap-1">
+                <button disabled aria-label="Like" className="p-1.5 rounded-md text-slate-500 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-30 disabled:cursor-default">
+                  <ThumbsUp className="w-3.5 h-3.5" />
+                </button>
+                <button disabled aria-label="Dislike" className="p-1.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-30 disabled:cursor-default">
+                  <ThumbsDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
