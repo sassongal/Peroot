@@ -363,7 +363,7 @@ function PageContent({ user }: { user: User | null }) {
   };
 
   const handleCopyText = async (text: string) => {
-    const watermarked = text + "\n\n— נוצר עם Peroot | peroot.ai";
+    const watermarked = text + "\n\n— נוצר עם Peroot | peroot.space";
     await navigator.clipboard.writeText(watermarked);
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);

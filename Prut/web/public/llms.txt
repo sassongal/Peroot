@@ -3,9 +3,9 @@
 Peroot turns raw ideas into structured, high-quality prompts in Hebrew (RTL-first).
 
 ## Key URLs
-- https://peroot.ai/
-- https://peroot.ai/privacy
-- https://peroot.ai/accessibility
+- https://peroot.space/
+- https://peroot.space/privacy
+- https://peroot.space/accessibility
 
 ## Product Summary
 - Hebrew-first prompt improver

@@ -23,7 +23,7 @@ const defaultSettings: SiteSettings = {
   site_name: 'Peroot',
   site_description: 'מחולל פרומפטים מקצועי מבוסס AI',
   contact_email: 'gal@joya-tech.net',
-  support_url: 'https://peroot.ai/faq',
+  support_url: 'https://peroot.space/faq',
   max_free_prompts: 3, // ACTUAL default for guests
   default_credits: 20, // ACTUAL default for registered users
   theme_primary_color: '#F59E0B', // Amber/Orange from site

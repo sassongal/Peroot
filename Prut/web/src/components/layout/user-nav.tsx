@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { User as UserIcon, Settings, LogOut } from "lucide-react";
+import { User as UserIcon, Settings, LogOut, Crown } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { getAssetPath } from "@/lib/asset-path";
@@ -146,6 +146,14 @@ export function UserMenu({ user, position }: UserMenuProps) {
                    </div>
                </div>
                <div className="p-2 space-y-1">
+                  <Link
+                    href="/pricing"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-xl transition-colors text-right"
+                  >
+                      <Crown className="w-4 h-4" />
+                      <span>שדרג ל-Pro</span>
+                  </Link>
                   <Link
                     href="/settings"
                     onClick={() => setIsOpen(false)}

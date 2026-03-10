@@ -157,7 +157,7 @@ export function ResultSection({
               </button>
               <button
                 onClick={() => {
-                  const text = encodeURIComponent(displayCompletion + "\n\n— נוצר עם Peroot | peroot.ai");
+                  const text = encodeURIComponent(displayCompletion + "\n\n— נוצר עם Peroot | peroot.space");
                   window.open(`https://wa.me/?text=${text}`, "_blank");
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"

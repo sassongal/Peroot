@@ -19,17 +19,25 @@ import {
   Check,
   AlertTriangle,
   ChevronLeft,
+  CreditCard,
+  Crown,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useHistory } from "@/hooks/useHistory";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useSearchParams } from "next/navigation";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<string>("profile");
+  const searchParams = useSearchParams();
+  const initialSection = searchParams.get("tab") || "profile";
+  const billingSuccess = searchParams.get("success") === "true";
+  const [activeSection, setActiveSection] = useState<string>(initialSection);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -40,6 +48,7 @@ export default function SettingsPage() {
   const { history, clearHistory } = useHistory();
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
+  const { subscription, isPro, checkout, loading: subLoading } = useSubscription();
 
   useEffect(() => {
     async function getUser() {
@@ -161,6 +170,7 @@ export default function SettingsPage() {
 
   const sections = [
     { id: "profile", label: "פרופיל", icon: UserIcon },
+    { id: "billing", label: "מנוי וחיוב", icon: CreditCard },
     { id: "data", label: "נתונים ופרטיות", icon: Shield },
     { id: "danger", label: "אזור מסוכן", icon: AlertTriangle },
   ];
@@ -291,6 +301,106 @@ export default function SettingsPage() {
                     day: "numeric",
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Billing Section */}
+            {activeSection === "billing" && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                  <h2 className="text-xl font-bold mb-1">מנוי וחיוב</h2>
+                  <p className="text-sm text-slate-500">נהל את המנוי והתשלום שלך</p>
+                </div>
+
+                {billingSuccess && (
+                  <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-400 shrink-0" />
+                    <span className="text-sm text-green-300">תודה שהצטרפת ל-Peroot Pro! ייתכן שהשינוי ייכנס לתוקף תוך מספר דקות.</span>
+                  </div>
+                )}
+
+                {/* Current Plan */}
+                <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {isPro ? (
+                        <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                          <Crown className="w-5 h-5 text-amber-400" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-slate-400" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-bold text-white">
+                          {isPro ? "Peroot Pro" : "תוכנית חינם"}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          {isPro
+                            ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${new Date(subscription.renews_at).toLocaleDateString("he-IL")}` : ""}`
+                            : "3 פרומפטים ביום"}
+                        </p>
+                      </div>
+                    </div>
+                    {isPro && (
+                      <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-bold rounded-full border border-amber-500/30">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+
+                  {!isPro && (
+                    <Link
+                      href="/pricing"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
+                    >
+                      <Crown className="w-4 h-4" />
+                      <span>שדרג ל-Pro — ₪3.99/חודש</span>
+                    </Link>
+                  )}
+                </div>
+
+                {/* Pro Benefits */}
+                {!isPro && (
+                  <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
+                    <h3 className="font-semibold text-amber-400 flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      מה כולל Pro?
+                    </h3>
+                    <ul className="space-y-2 text-sm text-slate-300">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        פרומפטים ללא הגבלה
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        גישה לכל המנועים
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        שיפור איטרטיבי מתקדם
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        שמירה לספריה אישית ללא הגבלה
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        תמיכה בעדיפות
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {/* Subscription Details (Pro users) */}
+                {isPro && subscription.ends_at && (
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                    <p className="text-sm text-yellow-300">
+                      המנוי שלך יסתיים ב-{new Date(subscription.ends_at).toLocaleDateString("he-IL")}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

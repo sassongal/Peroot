@@ -24,7 +24,7 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://peroot.ai";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://peroot.space";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

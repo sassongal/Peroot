@@ -5,4 +5,4 @@ Disallow: /api/admin/
 Disallow: /auth/
 Disallow: /api/prompts/sync
 
-Sitemap: https://peroot.ai/sitemap.xml
+Sitemap: https://peroot.space/sitemap.xml
