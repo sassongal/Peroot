@@ -26,7 +26,7 @@ ALTER TABLE public.api_usage_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins can read api_usage_logs"
     ON public.api_usage_logs FOR SELECT
-    USING (public.is_admin());
+    USING (public.is_admin(auth.uid()));
 
 CREATE POLICY "Service role can insert api_usage_logs"
     ON public.api_usage_logs FOR INSERT
@@ -51,4 +51,4 @@ ALTER TABLE public.manual_costs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins can manage manual_costs"
     ON public.manual_costs FOR ALL
-    USING (public.is_admin());
+    USING (public.is_admin(auth.uid()));
