@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { logger } from "@/lib/logger"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error || !data.session) {
-    console.log('[Callback] Error:', error?.message)
+    logger.info('[Callback] Error:', error?.message)
     return NextResponse.redirect(`${origin}${basePath}/login?error=auth-failed`)
   }
 
@@ -100,8 +101,38 @@ export async function GET(request: Request) {
     })
   }
 
-  console.log('[Callback] Success! User:', data.session.user.email)
-  console.log('[Callback] Cookies on response:', response.cookies.getAll().map(c => c.name).join(', '))
+  logger.info('[Callback] Success! User:', data.session.user.email)
+  logger.info('[Callback] Cookies on response:', response.cookies.getAll().map(c => c.name).join(', '))
+
+  // Grant registration bonus credits for new users (created within last 60 seconds)
+  const createdAt = new Date(data.session.user.created_at).getTime();
+  const isNewUser = Date.now() - createdAt < 60_000;
+
+  if (isNewUser) {
+    try {
+      // Fetch registration_bonus from site_settings (single source of truth)
+      const { data: siteSettings } = await supabase
+        .from('site_settings')
+        .select('registration_bonus, daily_free_limit')
+        .single();
+
+      const registrationBonus = siteSettings?.registration_bonus ?? 2;
+      const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+      const totalCredits = registrationBonus + dailyLimit;
+
+      await supabase
+        .from('profiles')
+        .update({
+          credits_balance: totalCredits,
+          credits_refreshed_at: new Date().toISOString()
+        })
+        .eq('id', data.session.user.id);
+
+      logger.info('[Callback] New user registration bonus granted:', totalCredits, 'credits');
+    } catch (e) {
+      logger.error('[Callback] Failed to grant registration bonus:', e);
+    }
+  }
 
   return response
 }

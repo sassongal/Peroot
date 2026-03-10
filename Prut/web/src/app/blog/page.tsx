@@ -1,25 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "בלוג — טיפים ומדריכים לפרומפטים ו-AI",
   description: "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
   alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "בלוג Peroot — טיפים ומדריכים לפרומפטים ו-AI",
+    description: "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
+    url: "/blog",
+    siteName: "Peroot",
+    locale: "he_IL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "בלוג Peroot — טיפים ומדריכים לפרומפטים ו-AI",
+    description: "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
+  },
 };
 
-const POSTS = [
-  {
-    slug: "how-to-write-good-prompt",
-    title: "איך לכתוב פרומפט טוב — המדריך המלא",
-    description: "5 עקרונות שיהפכו כל פרומפט שלכם ממשהו בסיסי לפרומפט מקצועי שמוציא תוצאות מדויקות מ-ChatGPT, Claude ו-Gemini.",
-    date: "2026-03-10",
-    readTime: "5 דקות קריאה",
-    category: "מדריכים",
-  },
-];
+export default async function BlogPage() {
+  const supabase = await createClient();
+  const { data: posts } = await supabase
+    .from("blog_posts")
+    .select("slug, title, excerpt, category, read_time, published_at, thumbnail_url")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
 
-export default function BlogPage() {
   return (
     <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
       <div className="max-w-3xl mx-auto">
@@ -39,7 +49,10 @@ export default function BlogPage() {
         </div>
 
         <div className="space-y-4">
-          {POSTS.map((post) => (
+          {(posts ?? []).length === 0 && (
+            <p className="text-center text-slate-500">אין מאמרים עדיין</p>
+          )}
+          {(posts ?? []).map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
@@ -51,15 +64,22 @@ export default function BlogPage() {
                 </span>
                 <div className="flex items-center gap-1 text-[10px] text-slate-500">
                   <Calendar className="w-3 h-3" />
-                  <span>{post.date}</span>
+                  <span>{post.published_at ? new Date(post.published_at).toLocaleDateString("he-IL") : ""}</span>
                 </div>
-                <span className="text-[10px] text-slate-600">{post.readTime}</span>
+                <span className="text-[10px] text-slate-600">{post.read_time}</span>
               </div>
+              {post.thumbnail_url && (
+                <img
+                  src={post.thumbnail_url}
+                  alt={post.title}
+                  className="w-full h-48 object-cover rounded-lg mb-4"
+                />
+              )}
               <h2 className="text-xl font-serif text-white mb-2 group-hover:text-amber-200 transition-colors">
                 {post.title}
               </h2>
               <p className="text-sm text-slate-400 leading-relaxed">
-                {post.description}
+                {post.excerpt}
               </p>
             </Link>
           ))}

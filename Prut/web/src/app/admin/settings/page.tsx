@@ -31,6 +31,8 @@ interface SiteSettings {
   support_url: string;
   max_free_prompts: number;
   default_credits: number;
+  daily_free_limit: number;
+  registration_bonus: number;
   theme_primary_color: string;
   theme_secondary_color: string;
   maintenance_mode: boolean;
@@ -199,6 +201,24 @@ export default function SettingsPage() {
               onChange={(v: string) => updateSetting('max_free_prompts', parseInt(v))}
               description="כמות שימושים המותרת ללא התחברות (Guest access)"
               icon={Layers}
+            />
+
+            <InputField
+              label="מגבלת קרדיטים יומית (חינמי)"
+              type="number"
+              value={(settings.daily_free_limit ?? 2).toString()}
+              onChange={(v: string) => updateSetting('daily_free_limit', parseInt(v))}
+              description="כמות קרדיטים שמתחדשת מדי יום למשתמשים חינמיים"
+              icon={Zap}
+            />
+
+            <InputField
+              label="בונוס הרשמה"
+              type="number"
+              value={(settings.registration_bonus ?? 2).toString()}
+              onChange={(v: string) => updateSetting('registration_bonus', parseInt(v))}
+              description="קרדיטים נוספים חד-פעמיים בעת הרשמה (מעבר למגבלה היומית)"
+              icon={Sparkles}
             />
           </SectionContainer>
 

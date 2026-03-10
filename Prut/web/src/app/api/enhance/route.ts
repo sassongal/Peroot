@@ -8,6 +8,7 @@ import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { enqueueJob } from "@/lib/jobs/queue";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 30;
 
@@ -80,8 +81,15 @@ export async function POST(req: Request) {
 
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
         if (user) {
-            // Daily credit refresh for free users
+            // Daily credit refresh for free users — uses site_settings as single source of truth
             if (tier === 'free') {
+                const { data: siteSettings } = await supabase
+                    .from('site_settings')
+                    .select('daily_free_limit')
+                    .single();
+
+                const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+
                 const { data: refreshData } = await supabase
                     .from('profiles')
                     .select('credits_refreshed_at')
@@ -98,7 +106,7 @@ export async function POST(req: Request) {
                     await supabase
                         .from('profiles')
                         .update({
-                            credits_balance: 3,
+                            credits_balance: dailyLimit,
                             credits_refreshed_at: new Date().toISOString()
                         })
                         .eq('id', user.id);

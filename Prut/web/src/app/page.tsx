@@ -35,6 +35,8 @@ import { BaseEngine } from "@/lib/engines/base-engine";
 import { createClient } from "@/lib/supabase/client";
 import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
 import { useLibraryContext } from "@/context/LibraryContext";
+import { usePromptLimits } from "@/hooks/usePromptLimits";
+import { softwareAppSchema } from "@/lib/schema";
 const LibraryView = dynamic(
   () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
   { ssr: false }
@@ -80,6 +82,7 @@ function PageContent({ user }: { user: User | null }) {
 
   const { state: ps, dispatch } = usePromptWorkflow();
   const { isPro } = useSubscription();
+  const { canUsePrompt, requiredAction, incrementUsage } = usePromptLimits();
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -327,9 +330,13 @@ function PageContent({ user }: { user: User | null }) {
     enhanceCooldownRef.current = true;
     setTimeout(() => { enhanceCooldownRef.current = false; }, 500);
 
-    // Guest users must login first
-    if (!user) {
-      showLoginRequired("יצירת פרומפט", "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!");
+    // Check prompt limits (guest free trial or credit balance)
+    if (!canUsePrompt) {
+      if (requiredAction === 'login') {
+        showLoginRequired("יצירת פרומפט", "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!");
+      } else if (requiredAction === 'upgrade') {
+        setShowUpgradeNudge(true);
+      }
       return;
     }
 
@@ -357,9 +364,12 @@ function PageContent({ user }: { user: User | null }) {
         category: ps.selectedCategory,
       });
 
-      // Update credits display after successful use
-      if (creditsRemaining !== null) {
+      // Track usage: decrement credits display for logged-in users, increment guest counter
+      if (user && creditsRemaining !== null) {
         setCreditsRemaining(Math.max(0, creditsRemaining - 1));
+      }
+      if (!user) {
+        incrementUsage();
       }
 
       toast.success(t.prompt_generator.success_toast);
@@ -809,23 +819,7 @@ export default function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            "name": "Peroot",
-            "applicationCategory": "ProductivityApplication",
-            "operatingSystem": "Web",
-            "description": "מחולל פרומפטים מקצועי בעברית — שדרג כל פרומפט באמצעות AI מתקדם",
-            "url": "https://peroot.space",
-            "inLanguage": "he",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "ILS"
-            }
-          })
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema()) }}
       />
       <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-black text-slate-200 selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
         <PageContent user={user} />

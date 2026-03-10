@@ -155,17 +155,18 @@ export async function POST(
             { status: 400 }
           );
         }
-        const { data: existing } = await supabase
-          .from('user_stats')
-          .select('credits')
-          .eq('user_id', id)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('credits_balance')
+          .eq('id', id)
           .maybeSingle();
 
-        const currentCredits = (existing as { credits?: number } | null)?.credits ?? 0;
+        const currentCredits = profile?.credits_balance ?? 0;
 
         const { error: updateError } = await supabase
-          .from('user_stats')
-          .upsert({ user_id: id, credits: currentCredits + amount }, { onConflict: 'user_id' });
+          .from('profiles')
+          .update({ credits_balance: currentCredits + amount })
+          .eq('id', id);
 
         if (updateError) {
           console.error('[Admin User POST] grant_credits error:', updateError);
@@ -182,18 +183,19 @@ export async function POST(
             { status: 400 }
           );
         }
-        const { data: existing } = await supabase
-          .from('user_stats')
-          .select('credits')
-          .eq('user_id', id)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('credits_balance')
+          .eq('id', id)
           .maybeSingle();
 
-        const currentCredits = (existing as { credits?: number } | null)?.credits ?? 0;
+        const currentCredits = profile?.credits_balance ?? 0;
         const newCredits = Math.max(0, currentCredits - amount);
 
         const { error: updateError } = await supabase
-          .from('user_stats')
-          .upsert({ user_id: id, credits: newCredits }, { onConflict: 'user_id' });
+          .from('profiles')
+          .update({ credits_balance: newCredits })
+          .eq('id', id);
 
         if (updateError) {
           console.error('[Admin User POST] revoke_credits error:', updateError);

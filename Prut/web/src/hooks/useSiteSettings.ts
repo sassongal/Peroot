@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { logger } from "@/lib/logger";
 
 export interface SiteSettings {
   id: string;
@@ -10,6 +11,8 @@ export interface SiteSettings {
   support_url: string;
   max_free_prompts: number;
   default_credits: number;
+  daily_free_limit: number;
+  registration_bonus: number;
   theme_primary_color: string;
   theme_secondary_color: string;
   maintenance_mode: boolean;
@@ -24,8 +27,10 @@ const defaultSettings: SiteSettings = {
   site_description: 'מחולל פרומפטים מקצועי מבוסס AI',
   contact_email: 'gal@joya-tech.net',
   support_url: 'https://peroot.space/faq',
-  max_free_prompts: 3, // ACTUAL default for guests
-  default_credits: 20, // ACTUAL default for registered users
+  max_free_prompts: 1, // Guest gets 1 free trial
+  default_credits: 2, // Registration bonus credits
+  daily_free_limit: 2, // Free users get 2/day
+  registration_bonus: 2, // Bonus credits on registration
   theme_primary_color: '#F59E0B', // Amber/Orange from site
   theme_secondary_color: '#EAB308', // Yellow from site
   maintenance_mode: false,
@@ -50,7 +55,7 @@ export function useSiteSettings() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'site_settings' },
         (payload: any) => {
-          console.log('[Settings] 🔄 Real-time update received:', payload);
+          logger.info('[Settings] Real-time update received:', payload);
           if (payload.new) {
             const newSettings = payload.new as SiteSettings;
             setSettings(newSettings);
@@ -65,7 +70,7 @@ export function useSiteSettings() {
         }
       )
       .subscribe((status) => {
-        console.log('[Settings] 📡 Subscription status:', status);
+        logger.info('[Settings] Subscription status:', status);
       });
 
     return () => {
@@ -82,16 +87,16 @@ export function useSiteSettings() {
         .single();
 
       if (data) {
-        console.log('[Settings] ✅ Loaded from DB:', data);
+        logger.info('[Settings] Loaded from DB:', data);
         setSettings(data);
         settingsCache = data;
         applyThemeColors(data);
       } else if (error) {
-        console.error('[Settings] ❌ Failed to load:', error);
+        logger.error('[Settings] Failed to load:', error);
         applyThemeColors(defaultSettings);
       }
     } catch (error) {
-      console.error('[Settings] ❌ Error:', error);
+      logger.error('[Settings] Error:', error);
       applyThemeColors(defaultSettings);
     } finally {
       setLoading(false);
@@ -109,7 +114,7 @@ export function useSiteSettings() {
       // Also update the glow color for yellow theme
       root.style.setProperty('--glow-color', `45 95% 65%`); // HSL for yellow glow
       
-      console.log('[Settings] 🎨 Applied theme colors:', {
+      logger.info('[Settings] Applied theme colors:', {
         primary: settings.theme_primary_color,
         secondary: settings.theme_secondary_color
       });

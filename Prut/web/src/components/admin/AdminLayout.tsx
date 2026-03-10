@@ -18,11 +18,13 @@ import {
   Command,
   Layers,
   DollarSign,
+  PenTool,
   Menu,
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
+import { logger } from "@/lib/logger";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -46,6 +48,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: t.admin.layout.users, href: "/admin/users", icon: Users },
     { name: t.admin.layout.database, href: "/admin/database", icon: Database },
     { name: t.admin.layout.telemetry, href: "/admin/activity", icon: Activity },
+    { name: "בלוג", href: "/admin/blog", icon: PenTool },
     { name: t.admin.layout.settings, href: "/admin/settings", icon: Settings },
   ];
 
@@ -60,7 +63,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         setIsAdmin(true);
       }
     } catch (error) {
-      console.error('Failed to verify admin status:', error);
+      logger.error('Failed to verify admin status:', error);
       router.push('/');
     }
   }, [router]);
