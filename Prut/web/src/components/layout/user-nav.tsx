@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { User as UserIcon, Settings, LogOut, Crown } from "lucide-react";
+import { User as UserIcon, Settings, LogOut, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { getAssetPath } from "@/lib/asset-path";
@@ -21,13 +21,26 @@ export function UserMenu({ user, position }: UserMenuProps) {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const getErrorMessage = (err: unknown) =>
     err instanceof Error ? err.message : t.auth.unexpected_error;
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (user) {
+      const supabase = createClient();
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setIsAdmin(true);
+        });
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -147,6 +160,16 @@ export function UserMenu({ user, position }: UserMenuProps) {
                    </div>
                </div>
                <div className="p-2 space-y-1">
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsOpen(false)}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-blue-400 hover:bg-blue-500/10 rounded-xl transition-colors text-right"
+                    >
+                        <Shield className="w-4 h-4" />
+                        <span>Admin Dashboard</span>
+                    </Link>
+                  )}
                   <Link
                     href="/pricing"
                     onClick={() => setIsOpen(false)}
