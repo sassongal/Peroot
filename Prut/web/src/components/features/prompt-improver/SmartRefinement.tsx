@@ -122,7 +122,7 @@ export function SmartRefinement({
                    dir="rtl"
                 >
                    <span className={cn(
-                     "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ml-2",
+                     "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ms-2",
                      hasAnswer
                        ? "bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]"
                        : isOpen
@@ -144,7 +144,7 @@ export function SmartRefinement({
                        </div>
                      )}
                    </div>
-                   {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400 mr-2" /> : <ChevronDown className="w-4 h-4 text-slate-600 mr-2" />}
+                   {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400 me-2" /> : <ChevronDown className="w-4 h-4 text-slate-600 me-2" />}
                 </button>
 
                 {isOpen && (

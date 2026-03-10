@@ -296,7 +296,7 @@ export function PersonalLibraryView({
           <div className="flex flex-wrap gap-1.5 mt-2">
               {tags.map(tag => (
                   <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-slate-300 border border-white/5">
-                      <Tag className="w-3 h-3 mr-1 opacity-50" />
+                      <Tag className="w-3 h-3 me-1 opacity-50" />
                       {tag}
                   </span>
               ))}
@@ -375,7 +375,7 @@ export function PersonalLibraryView({
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 pl-8"> {/* pl-8 to avoid overlap with checkbox */}
+            <div className="flex items-center gap-2 ps-8"> {/* ps-8 to avoid overlap with checkbox */}
               <button
                 type="button"
                 onClick={() => handleToggleFavorite("personal", prompt.id)}
@@ -576,7 +576,7 @@ export function PersonalLibraryView({
                   </button>
               </div>
 
-              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ml-2">
+              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ms-2">
                   <button 
                     onClick={() => setSelectionMode(!selectionMode)}
                     className={cn("px-3 py-2 rounded-md transition-all text-xs font-bold flex items-center gap-2", selectionMode ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40" : "text-slate-500 hover:text-slate-300")}
@@ -640,7 +640,7 @@ export function PersonalLibraryView({
                 value={personalQuery}
                 onChange={(e) => setPersonalQuery(e.target.value)}
                 placeholder={personalView === "favorites" ? "חיפוש במועדפים..." : "חיפוש בפרומפטים..."}
-                className="w-full bg-black/30 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+                className="w-full bg-black/30 border border-white/10 rounded-lg py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -788,7 +788,7 @@ export function PersonalLibraryView({
         {/* Floating Batch Actions Toolbar */}
         {selectedIds.size > 0 && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4">
-                <div className="pl-4 pr-3 text-sm font-medium text-white border-r border-white/10">
+                <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
                     {selectedIds.size} נבחרו
                 </div>
                 <button onClick={handleBatchExport} className="p-2 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="יצוא">
@@ -804,7 +804,7 @@ export function PersonalLibraryView({
                 <button onClick={handleBatchDelete} className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 tooltip" title="מחיקה">
                     <Trash2 className="w-5 h-5" />
                 </button>
-                <button onClick={clearSelection} className="ml-2 p-1 hover:bg-white/10 rounded-full text-slate-500">
+                <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500">
                     <X className="w-4 h-4" />
                 </button>
             </div>

@@ -125,7 +125,7 @@ export function AuthForm() {
                     placeholder="שם מלא"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
                 />
             </div>
           )}
@@ -139,7 +139,7 @@ export function AuthForm() {
                   placeholder="כתובת אימייל"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
               />
           </div>
           <div className="relative group">
@@ -152,7 +152,7 @@ export function AuthForm() {
                   placeholder="סיסמה"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
               />
           </div>
 
@@ -179,9 +179,9 @@ export function AuthForm() {
                 className="text-xs text-slate-400 hover:text-white transition-colors decoration-slate-400/30 font-medium cursor-pointer"
             >
                 {isLogin ? (
-                  <>אין לך חשבון? <span className="text-amber-400 font-bold ml-1">הירשם עכשיו</span></>
+                  <>אין לך חשבון? <span className="text-amber-400 font-bold ms-1">הירשם עכשיו</span></>
                 ) : (
-                  <>כבר רשום? <span className="text-amber-400 font-bold ml-1">התחבר כאן</span></>
+                  <>כבר רשום? <span className="text-amber-400 font-bold ms-1">התחבר כאן</span></>
                 )}
             </button>
         </div>

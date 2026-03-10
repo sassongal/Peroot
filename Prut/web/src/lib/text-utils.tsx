@@ -91,7 +91,7 @@ export const STYLE_TEXT_COLORS: Record<string, string> = {
   red: "text-red-300",
   amber: "text-amber-300",
   emerald: "text-emerald-300",
-  blue: "text-sky-300",
+  blue: "text-amber-300",
   violet: "text-violet-300",
   slate: "text-slate-200",
 };
@@ -128,7 +128,7 @@ export const toStyledHtml = (value: string) => {
     .replace(/\[\[\/hl\]\]/g, "</span>");
 
   return withTokens
-    .replace(PLACEHOLDER_REGEX, (match) => `<span class="text-sky-300 font-semibold">${match}</span>`)
+    .replace(PLACEHOLDER_REGEX, (match) => `<span class="text-amber-300 font-semibold">${match}</span>`)
     .replace(/\n/g, "<br />");
 };
 

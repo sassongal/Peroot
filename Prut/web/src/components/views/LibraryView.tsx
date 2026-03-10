@@ -182,7 +182,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 ספריה אישית
               </button>
               
-              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ml-2">
+              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ms-2">
                   <button 
                     onClick={() => setSelectionMode(!selectionMode)}
                     className={cn("px-3 py-2 rounded-md transition-all text-xs font-bold flex items-center gap-2", selectionMode ? "bg-purple-600 text-white shadow-lg shadow-purple-900/40" : "text-slate-500 hover:text-slate-300")}
@@ -223,7 +223,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               value={libraryQuery}
               onChange={(e) => setLibraryQuery(e.target.value)}
               placeholder="חפש/י רעיון לפרומפט לפי מילים, קטגוריה או שימוש..."
-              className="w-full bg-black/30 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+              className="w-full bg-black/30 border border-white/10 rounded-lg py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
             />
           </div>
 
@@ -409,7 +409,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         {/* Floating Batch Actions Toolbar */}
         {selectedIds.size > 0 && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4">
-                <div className="pl-4 pr-3 text-sm font-medium text-white border-r border-white/10">
+                <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
                     {selectedIds.size} נבחרו
                 </div>
                 <button onClick={() => setShowMoveDialog(true)} className="flex items-center gap-2 px-4 py-2 hover:bg-purple-600/20 rounded-xl text-purple-300 transition-all font-bold text-sm">
