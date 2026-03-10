@@ -47,12 +47,20 @@ export function useStreamingCompletion({ onChunk, onDone, onError }: StreamingOp
         const decoder = new TextDecoder();
         let accumulated = '';
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          accumulated += chunk;
-          onChunk(chunk);
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            accumulated += chunk;
+            onChunk(chunk);
+          }
+        } catch (streamError) {
+          // Mid-stream failure — preserve what was received so far
+          if (accumulated) {
+            onDone(accumulated);
+          }
+          throw streamError;
         }
 
         onDone(accumulated);

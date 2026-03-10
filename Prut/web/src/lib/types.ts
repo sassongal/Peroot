@@ -58,6 +58,7 @@ export type LibraryPrompt = {
   variables: string[];
   output_format: string;
   quality_checks: string[];
+  preview_image_url?: string;
   source: {
     name: string;
     url: string;

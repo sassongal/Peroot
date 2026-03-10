@@ -65,10 +65,10 @@ export function UserMenu({ user, position }: UserMenuProps) {
           </div>
           <Link
               href="/login"
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-full text-sm font-semibold text-white transition-all group shadow-2xl"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 rounded-full text-sm font-semibold text-white transition-all group shadow-2xl cursor-pointer"
               suppressHydrationWarning
           >
-              <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform text-purple-400" />
+              <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-400" />
               <span>{t.auth.login_signup}</span>
           </Link>
         </div>
@@ -86,7 +86,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-purple-500/50"
+          className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50"
         >
           {avatarUrl ? (
             <img

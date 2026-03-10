@@ -1,10 +1,11 @@
 'use client';
 
 import type { StreamPhase } from '@/hooks/usePromptWorkflow';
+import { Send, PenLine } from 'lucide-react';
 
-const PHASE_CONFIG: Record<string, { icon: string; labelHe: string; labelEn: string }> = {
-  sending: { icon: '📡', labelHe: 'שולח', labelEn: 'Sending' },
-  writing: { icon: '✍️', labelHe: 'כותב', labelEn: 'Writing' },
+const PHASE_CONFIG: Record<string, { icon: typeof Send; labelHe: string }> = {
+  sending: { icon: Send, labelHe: 'שולח' },
+  writing: { icon: PenLine, labelHe: 'כותב' },
 };
 
 interface StreamingProgressProps {
@@ -17,10 +18,12 @@ export default function StreamingProgress({ phase }: StreamingProgressProps) {
   const config = PHASE_CONFIG[phase];
   if (!config) return null;
 
+  const Icon = config.icon;
+
   return (
-    <div className="flex items-center justify-center gap-2 text-sm text-slate-400 animate-pulse py-2">
-      <span>{config.icon}</span>
-      <span>{config.labelHe}</span>
+    <div className="flex items-center justify-center gap-2.5 text-sm text-amber-400/80 py-3">
+      <Icon className="w-4 h-4 animate-pulse" />
+      <span className="font-medium">{config.labelHe}</span>
       <span className="inline-flex gap-0.5">
         <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
         <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>

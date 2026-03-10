@@ -27,17 +27,22 @@ const RateLimitError = (reset: number) => NextResponse.json(
 );
 
 export async function POST(req: Request) {
+  // Declare outside try so catch block can access for credit refund
+  let userId: string | undefined;
+  let supabase: Awaited<ReturnType<typeof createClient>> | undefined;
+
   try {
     const json = await req.json();
     const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers } = RequestSchema.parse(json);
-    
+
     // Determine if this is a refinement request
     const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
     const isRefinement = !!previousResult && (!!refinementInstruction || !!hasAnswers);
 
-    const supabase = await createClient();
+    supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+    userId = user?.id;
+
     // 1. Parallel Context Fetching (Profile, Library, Personality)
     // We start these early to minimize latency
     const contextPromise = user ? Promise.all([
@@ -49,7 +54,7 @@ export async function POST(req: Request) {
     const [profileRes, historyRes, personalityRes] = await contextPromise;
 
     // 1.1 Process Profile & Tier
-    let tier: 'free' | 'pro' | 'guest' = 'guest'; // Fixed: Use let for reassignment
+    let tier: 'free' | 'pro' | 'guest' = 'guest';
     let profile: { plan_tier: string } | null = null;
 
     if (profileRes.data) {
@@ -61,7 +66,7 @@ export async function POST(req: Request) {
     const identifier = user?.id || (req.headers.get("x-forwarded-for") || "anonymous");
     const { checkRateLimit } = await import("@/lib/ratelimit");
     const limitResult = await checkRateLimit(identifier, tier);
-    
+
     if (!limitResult.success) {
         return RateLimitError(limitResult.reset);
     }
@@ -74,18 +79,18 @@ export async function POST(req: Request) {
         });
 
         if (rpcError || !creditRes || !creditRes.success) {
-            return NextResponse.json({ 
+            return NextResponse.json({
                 error: creditRes?.error || "Insufficient credits or profile not found",
                 balance: creditRes?.current_balance
             }, { status: 403 });
         }
     }
 
-    // 2. Engine Selection & Generation
+    // 4. Engine Selection & Generation
     const mode = parseCapabilityMode(capability_mode);
     const engine = await getEngine(mode);
 
-    // 2.5 Style RAG Processing (using pre-fetched data)
+    // 4.5 Style RAG Processing (using pre-fetched data)
     let userHistory: { title: string; prompt: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined = undefined;
 
@@ -109,15 +114,16 @@ export async function POST(req: Request) {
         modeParams: mode_params,
         previousResult,
         refinementInstruction,
+        answers,
         userHistory,
         userPersonality
     };
 
-    const engineOutput = isRefinement 
+    const engineOutput = isRefinement
         ? engine.generateRefinement(engineInput)
         : engine.generate(engineInput);
 
-    // 3. Execution with Streaming & Telemetry via Gateway
+    // 5. Execution with Streaming & Telemetry via Gateway
     const startTime = Date.now();
     const { AIGateway } = await import("@/lib/ai/gateway");
 
@@ -127,14 +133,13 @@ export async function POST(req: Request) {
         temperature: 0.7,
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;
-            if (user) {
-                // 📝 Log activity
+            if (user && supabase) {
                 await supabase.from('activity_logs').insert({
                     user_id: user.id,
                     action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
                     entity_type: 'prompt',
-                    details: { 
-                        mode, 
+                    details: {
+                        mode,
                         model: modelId,
                         latency_ms: durationMs,
                         tokens: completion.usage,
@@ -143,11 +148,9 @@ export async function POST(req: Request) {
                     }
                 });
 
-                // 🚀 BACKGROUND TASKS: Persistent Queue
                 try {
                     const { enqueueJob } = await import("@/lib/jobs/queue");
-                    
-                    // 1. Style Analysis Check (Every 5th interaction)
+
                     const { count } = await supabase
                         .from('activity_logs')
                         .select('*', { count: 'exact', head: true })
@@ -158,7 +161,6 @@ export async function POST(req: Request) {
                         await enqueueJob('style_analysis', { userId: user.id });
                     }
 
-                    // 2. Achievement Check (Always check)
                     await enqueueJob('achievement_check', { userId: user.id });
 
                 } catch (bgError) {
@@ -171,7 +173,15 @@ export async function POST(req: Request) {
     return result.toTextStreamResponse();
 
   } catch (error) {
-    // console.error("API Error:", error); // Handled by Next.js
+    console.error("[EnhanceAPI] Error:", error);
+    // Best-effort credit refund on failure
+    if (userId && supabase) {
+      try {
+        await supabase.rpc('refund_credit', { target_user_id: userId, amount: 1 });
+      } catch (e: unknown) {
+        console.error('[EnhanceAPI] Credit refund failed:', e);
+      }
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

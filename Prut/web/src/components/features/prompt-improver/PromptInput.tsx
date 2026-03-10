@@ -145,7 +145,7 @@ export function PromptInput({
           </div>
         )}
 
-        <div className="flex-1 glass-card p-1 rounded-2xl border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent shadow-2xl shadow-purple-900/20 group">
+        <div className="flex-1 glass-card p-1 rounded-2xl border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300">
           <div className="bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
              <div
               aria-hidden
@@ -260,30 +260,30 @@ export function PromptInput({
               <button
                 onClick={handleEnhance}
                 disabled={isLoading || !inputVal.trim()}
-                className={`
-                  group relative px-6 py-4 rounded-xl font-bold transition-all duration-300
-                  flex flex-col items-center justify-center gap-2 shadow-lg overflow-hidden min-w-[100px]
-                  ${isLoading || !inputVal.trim() 
-                    ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/5" 
-                    : "bg-white text-black hover:scale-[1.05] hover:shadow-[0_0_40px_rgba(255,255,255,0.25)] border border-white"
-                  }
-                `}
+                className={cn(
+                  "group relative rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg overflow-hidden cursor-pointer",
+                  "px-8 py-4 min-w-[160px]",
+                  isLoading || !inputVal.trim()
+                    ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/5"
+                    : "accent-gradient text-black hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(245,158,11,0.3)] border border-amber-400/50 active:scale-[0.97]"
+                )}
               >
-                <span className="relative z-10 flex flex-col items-center gap-1">
+                <span className="relative z-10 flex items-center gap-2.5">
                   {isLoading ? (
                     <>
                       <AnimatedLogo size="md" />
-                      <span className="text-[10px] uppercase tracking-tighter mt-1">{t.prompt_generator.processing}</span>
+                      <span className="text-sm font-semibold">{t.prompt_generator.processing}</span>
                     </>
                   ) : (
                     <>
-                      <Wand2 className="w-10 h-10 md:w-12 md:h-12 transition-transform group-hover:rotate-12 group-hover:scale-110" />
-                      <span className="text-[10px] opacity-40 font-normal tracking-normal font-sans">⌘+Enter</span>
+                      <Wand2 className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                      <span className="text-base font-bold">שדרג</span>
+                      <kbd className="text-[10px] opacity-50 font-normal font-mono bg-black/10 px-1.5 py-0.5 rounded">⌘↵</kbd>
                     </>
                   )}
                 </span>
                 {!isLoading && inputVal.trim() && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
                 )}
               </button>
             </div>

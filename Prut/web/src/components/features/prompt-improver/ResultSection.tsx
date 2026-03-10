@@ -88,10 +88,10 @@ export function ResultSection({
 
           <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between mt-auto">
             <div className="flex items-center gap-3">
-               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center">
+               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer">
                  <ThumbsUp className="w-4 h-4" />
                </button>
-               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center">
+               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer">
                  <ThumbsDown className="w-4 h-4" />
                </button>
             </div>
@@ -112,12 +112,12 @@ export function ResultSection({
                {onImproveAgain && (
                  <button
                    onClick={onImproveAgain}
-                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-sm font-medium transition-colors min-h-11"
+                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-sm font-medium transition-colors min-h-11 cursor-pointer"
                  >
                    <RefreshCw className="w-4 h-4" />
                    {t.result?.improve_again || 'שפר שוב'}
                    {(iterationCount ?? 0) > 0 && (
-                     <span className="bg-purple-500/30 text-purple-200 text-xs px-1.5 py-0.5 rounded-full">
+                     <span className="bg-amber-500/30 text-amber-200 text-xs px-1.5 py-0.5 rounded-full">
                        #{iterationCount}
                      </span>
                    )}
@@ -125,7 +125,7 @@ export function ResultSection({
                )}
                <button
                   onClick={() => onCopy(displayCompletion)}
-                  className="flex items-center gap-2 px-6 py-2 rounded-lg bg-white text-black font-medium text-sm hover:bg-slate-200 transition-colors"
+                  className="flex items-center gap-2 px-6 py-2 rounded-lg accent-gradient text-black font-medium text-sm hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
                >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   {copied ? t.result_section.copied : t.result_section.copy_button}

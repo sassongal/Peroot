@@ -25,7 +25,12 @@ export async function GET() {
             return NextResponse.json({ error: 'Database error' }, { status: 500 });
         }
         
-        return NextResponse.json(data || []);
+        // Map category_id to category for frontend compatibility
+        const mapped = (data || []).map(({ category_id, ...rest }) => ({
+            ...rest,
+            category: category_id,
+        }));
+        return NextResponse.json(mapped);
     } catch (err) {
         console.error('[Public Library API] Critical Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });

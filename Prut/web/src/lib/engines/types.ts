@@ -22,6 +22,7 @@ export interface EngineInput {
   modeParams?: Record<string, unknown>;
   previousResult?: string;
   refinementInstruction?: string;
+  answers?: Record<string, string>;
   userHistory?: { title: string; prompt: string }[];
   userPersonality?: { tokens: string[]; brief?: string; format?: string };
 }

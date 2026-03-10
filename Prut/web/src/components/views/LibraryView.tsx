@@ -2,7 +2,7 @@
 
 import { useLibraryContext } from "@/context/LibraryContext";
 import { CATEGORY_LABELS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -42,6 +42,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   const [targetMoveCategory, setTargetMoveCategory] = useState("");
   const [isCreatingNewMoveCategory, setIsCreatingNewMoveCategory] = useState(false);
   const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
   
 
   const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
@@ -314,6 +315,30 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                       {prompt.prompt}
                     </div>
 
+                    {prompt.preview_image_url && (
+                      <button
+                        type="button"
+                        onClick={() => setLightboxImage({ url: prompt.preview_image_url!, title: prompt.title })}
+                        className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 group/img cursor-zoom-in"
+                      >
+                        <img
+                          src={prompt.preview_image_url}
+                          alt={`דוגמה שנוצרה מפרומפט: ${prompt.title}`}
+                          loading="lazy"
+                          decoding="async"
+                          width={400}
+                          height={300}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                          <span className="flex items-center gap-1.5 text-xs text-white/90 font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                            <ImageIcon className="w-3.5 h-3.5" />
+                            הגדל תמונה
+                          </span>
+                        </div>
+                      </button>
+                    )}
+
                     {prompt.variables.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {variablePreview.map((variable) => (
@@ -456,6 +481,36 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         {totalCount === 0 && (
           <div className="glass-card p-10 rounded-xl border-white/10 bg-black/40 text-center text-slate-500">
             לא נמצאו פרומפטים תואמים לחיפוש שלך.
+          </div>
+        )}
+
+        {/* Lightbox Modal */}
+        {lightboxImage && (
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 cursor-zoom-out"
+            onClick={() => setLightboxImage(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={lightboxImage.title}
+          >
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+              aria-label="סגור"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="max-w-4xl max-h-[85vh] w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <img
+                src={lightboxImage.url}
+                alt={`דוגמה שנוצרה מפרומפט: ${lightboxImage.title}`}
+                className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
+                decoding="async"
+              />
+              <p className="text-center text-sm text-slate-400 mt-3 font-medium" dir="rtl">
+                {lightboxImage.title}
+              </p>
+            </div>
           </div>
         )}
       </div>

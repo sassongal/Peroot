@@ -41,7 +41,8 @@ export type PromptAction =
   | { type: 'SET_VARIABLE_VALUES'; payload: Record<string, string> }
   | { type: 'SET_COMPLETION'; payload: string }
   | { type: 'SET_COPIED'; payload: boolean }
-  | { type: 'INCREMENT_ITERATION' };
+  | { type: 'INCREMENT_ITERATION' }
+  | { type: 'CLEAR_ANSWERS' };
 
 // --- Initial State ---
 
@@ -145,6 +146,9 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
 
     case 'INCREMENT_ITERATION':
       return { ...state, iterationCount: state.iterationCount + 1 };
+
+    case 'CLEAR_ANSWERS':
+      return { ...state, questionAnswers: {} };
 
     default:
       return state;

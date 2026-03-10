@@ -150,28 +150,40 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
   generateRefinement(input: EngineInput): EngineOutput {
         if (!input.previousResult) throw new Error("Previous result required for refinement");
         const instruction = input.refinementInstruction || "שפר את התוצאה והפוך אותה למקצועית יותר.";
-        
+
+        // Build answers context from individual Q&A pairs
+        let answersBlock = "";
+        if (input.answers && Object.keys(input.answers).length > 0) {
+            const pairs = Object.entries(input.answers)
+                .filter(([, v]) => v.trim())
+                .map(([, answer]) => `- ${answer}`)
+                .join("\n");
+            if (pairs) {
+                answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;
+            }
+        }
+
         return {
-            systemPrompt: `אתה מומחה Prompt Engineering ו-AI Architect בכיר. 
+            systemPrompt: `אתה מומחה Prompt Engineering ו-AI Architect בכיר.
 טון מבוקש: ${input.tone}. קטגוריה: ${input.category}.
 
 מטרתך היא לשדרג את הפרומפט הקיים לרמה של "Expert Level" תוך שימוש במבנה S-T-O-K-I V2 המורחב.
-עליך להטמיע את הוראות המשתמש החדשות לתוך השלד המקצועי, תוך שיפור הדיוק, העומק והאפקטיביות.
+עליך להטמיע את הוראות המשתמש החדשות ואת תשובותיהם לשאלות ההבהרה לתוך השלד המקצועי, תוך שיפור הדיוק, העומק והאפקטיביות.
 
 ${this.getSystemIdentity()}
 
 [GENIUS_ANALYSIS]
-Analyze the user's specific feedback. If they answered previous questions, integrate those details deeply.
+Analyze the user's specific feedback and their answers to clarifying questions. Integrate those details deeply into the refined prompt.
 Identify if any critical ambiguity remains.
 After the improved prompt, add the delimiter [GENIUS_QUESTIONS] followed by 3 NEW clarifying questions in JSON array format if further details would help, or an empty array [] if the prompt is now perfect.`,
             userPrompt: `פרומפט נוכחי לשיפור:
 ---
 ${input.previousResult}
 ---
-
+${answersBlock}
 הוראת שיפור/עדכון מהמשתמש: ${instruction}
 
-פעולה: החזר את הפרומפט המשופר במבנה S-T-O-K-I V2 מלא בעברית.`,
+פעולה: שלב את כל התשובות וההוראות לתוך פרומפט מעודכן ומשודרג במבנה S-T-O-K-I V2 מלא בעברית.`,
             outputFormat: "text",
             requiredFields: []
         };

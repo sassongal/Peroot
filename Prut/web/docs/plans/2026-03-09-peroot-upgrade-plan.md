@@ -1561,7 +1561,7 @@ Ensures all interactive elements meet 44px minimum touch target."
 **Files:**
 - Create: `src/app/api/stripe/checkout/route.ts`
 
-**Step 1: Install Stripe SDK**
+**Step 1: Install Stripe SDK** - wait with that 
 
 Run: `npm install stripe`
 

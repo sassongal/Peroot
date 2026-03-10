@@ -60,15 +60,15 @@ export function AuthForm() {
     return (
       <div className="w-full max-w-sm mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500 text-center">
         <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center animate-bounce">
-            <Mail className="w-10 h-10 text-purple-400" />
+          <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center animate-bounce">
+            <Mail className="w-10 h-10 text-amber-400" />
           </div>
         </div>
         <h2 className="text-2xl font-bold text-white">בדוק את האימייל שלך</h2>
         <p className="text-slate-300">
           שלחנו קישור אימות לכתובת:
           <br />
-          <span className="font-semibold text-purple-300">{email}</span>
+          <span className="font-semibold text-amber-300">{email}</span>
         </p>
         <p className="text-sm text-slate-500">
             יש ללחוץ על הקישור באימייל כדי להפעיל את החשבון ולהתחיל להשתמש בפירוט.
@@ -116,44 +116,44 @@ export function AuthForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div className="relative group animate-in fade-in zoom-in-95 duration-300">
-                <UserIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
+                <UserIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
                 <input
                     dir="rtl"
                     type="text"
                     placeholder="שם מלא"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-inner"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
                 />
             </div>
           )}
           <div className="relative group">
-              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
+              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
               <input
                   dir="rtl"
                   type="email"
                   placeholder="כתובת אימייל"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-inner"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
               />
           </div>
           <div className="relative group">
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
               <input
                   dir="rtl"
                   type="password"
                   placeholder="סיסמה"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-inner"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pr-11 pl-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
               />
           </div>
 
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20 active:scale-[0.98]"
+            className="w-full accent-gradient text-black font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20 active:scale-[0.97] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] cursor-pointer"
           >
             {isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,9 +173,9 @@ export function AuthForm() {
                 className="text-xs text-slate-400 hover:text-white transition-colors decoration-slate-400/30 font-medium"
             >
                 {isLogin ? (
-                  <>אין לך חשבון? <span className="text-purple-400 font-bold ml-1">הירשם עכשיו</span></>
+                  <>אין לך חשבון? <span className="text-amber-400 font-bold ml-1">הירשם עכשיו</span></>
                 ) : (
-                  <>כבר רשום? <span className="text-purple-400 font-bold ml-1">התחבר כאן</span></>
+                  <>כבר רשום? <span className="text-amber-400 font-bold ml-1">התחבר כאן</span></>
                 )}
             </button>
         </div>
