@@ -3,17 +3,18 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { createClient } from "@/lib/supabase/client";
-import { 
-  Activity, 
-  User, 
-  FileText, 
-  Settings as SettingsIcon, 
-  Clock, 
+import {
+  Activity,
+  User,
+  FileText,
+  Settings as SettingsIcon,
+  Clock,
   Search,
   RefreshCw,
   ChevronDown,
   Info,
   Calendar,
+  ShieldAlert,
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,19 @@ export default function ActivityPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'user' | 'prompt' | 'settings'>('all');
   const [search, setSearch] = useState("");
+  const [adminOnly, setAdminOnly] = useState(false);
+
+  const ADMIN_ACTIONS = [
+    'change_tier',
+    'grant_credits',
+    'ban',
+    'unban',
+    'grant_admin',
+    'revoke_admin',
+    'delete_user',
+    'admin_login',
+    'impersonate',
+  ];
 
   const supabase = createClient();
 
@@ -67,10 +81,14 @@ export default function ActivityPage() {
 
   const filteredLogs = logs.filter(log => {
     const matchesFilter = filter === 'all' || log.entity_type === filter;
-    const matchesSearch = 
+    const matchesSearch =
       log.action.toLowerCase().includes(search.toLowerCase()) ||
       log.profiles?.email?.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesAdminFilter = !adminOnly || (
+      ADMIN_ACTIONS.includes(log.action.toLowerCase()) ||
+      log.details?.is_admin === true
+    );
+    return matchesFilter && matchesSearch && matchesAdminFilter;
   });
 
   function getActionIcon(entityType: string): LucideIcon {
@@ -114,7 +132,7 @@ export default function ActivityPage() {
         {/* Filters & Search */}
         <div className="p-2 rounded-[28px] border border-white/10 bg-zinc-950/50 backdrop-blur-xl flex flex-col md:flex-row gap-2">
           <div className="flex-1 relative group">
-            <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+            <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors pointer-events-none" />
             <input
               type="text"
               value={search}
@@ -139,6 +157,22 @@ export default function ActivityPage() {
                 {f === 'all' ? 'הכל' : f === 'user' ? 'משתמשים' : f === 'prompt' ? 'פרומפטים' : 'הגדרות'}
               </button>
             ))}
+          </div>
+
+          {/* Admin Actions toggle */}
+          <div className="flex items-center p-2">
+            <button
+              onClick={() => setAdminOnly((v) => !v)}
+              className={cn(
+                "px-5 py-2.5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border",
+                adminOnly
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400 shadow-lg shadow-amber-500/10"
+                  : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/5"
+              )}
+            >
+              <ShieldAlert className="w-4 h-4" />
+              {adminOnly ? "פעולות אדמין בלבד" : "הכל"}
+            </button>
           </div>
         </div>
 
@@ -175,6 +209,12 @@ export default function ActivityPage() {
                           <span className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-slate-500 font-black uppercase tracking-widest border border-white/5">
                             {log.entity_type}
                           </span>
+                          {(ADMIN_ACTIONS.includes(log.action.toLowerCase()) || log.details?.is_admin === true) && (
+                            <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 font-black uppercase tracking-widest border border-amber-500/20">
+                              <ShieldAlert className="w-3 h-3" />
+                              Admin
+                            </span>
+                          )}
                         </div>
                         
                         <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">

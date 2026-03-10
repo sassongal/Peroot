@@ -43,6 +43,8 @@ export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isClearingHistory, setIsClearingHistory] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   const supabase = createClient();
   const { history, clearHistory } = useHistory();
@@ -54,6 +56,19 @@ export default function SettingsPage() {
     async function getUser() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single();
+        setDisplayName(
+          profile?.display_name ||
+            user.user_metadata?.full_name ||
+            user.email?.split("@")[0] ||
+            ""
+        );
+      }
       setLoading(false);
     }
     getUser();
@@ -150,14 +165,15 @@ export default function SettingsPage() {
 
     setIsDeleting(true);
     try {
-      // Delete user data from all tables
-      await Promise.all([
-        supabase.from("history").delete().eq("user_id", user.id),
-        supabase.from("personal_library").delete().eq("user_id", user.id),
-        supabase.from("prompt_favorites").delete().eq("user_id", user.id),
-      ]);
+      const res = await fetch("/api/user/delete-account", {
+        method: "DELETE",
+      });
 
-      // Sign out
+      if (!res.ok) {
+        throw new Error("Delete failed");
+      }
+
+      // Sign out locally after server-side deletion
       await supabase.auth.signOut();
 
       toast.success("החשבון נמחק בהצלחה");
@@ -165,6 +181,23 @@ export default function SettingsPage() {
     } catch {
       toast.error("שגיאה במחיקת החשבון");
       setIsDeleting(false);
+    }
+  };
+
+  const handleSaveDisplayName = async () => {
+    if (!user || !displayName.trim()) return;
+    setIsSavingName(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: displayName.trim() })
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("השם עודכן בהצלחה");
+    } catch {
+      toast.error("שגיאה בעדכון השם");
+    } finally {
+      setIsSavingName(false);
     }
   };
 
@@ -245,11 +278,30 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <p className="font-bold text-lg">
-                      {metadata.full_name || user.email?.split("@")[0]}
-                    </p>
-                    <p className="text-sm text-slate-500">תמונת פרופיל מחשבון Google</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        dir="rtl"
+                        placeholder="שם תצוגה"
+                        className="bg-white/5 border border-white/10 focus:border-purple-500/50 rounded-lg px-3 py-1.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
+                      />
+                      <button
+                        onClick={handleSaveDisplayName}
+                        disabled={isSavingName || !displayName.trim()}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSavingName ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5" />
+                        )}
+                        <span>שמור</span>
+                      </button>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-1">תמונת פרופיל מחשבון Google</p>
                   </div>
                 </div>
 
@@ -359,6 +411,33 @@ export default function SettingsPage() {
                       <span>שדרג ל-Pro — ₪3.99/חודש</span>
                     </Link>
                   )}
+
+                  {isPro && (
+                    <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                      <a
+                        href={
+                          subscription.lemonsqueezy_subscription_id
+                            ? `https://app.lemonsqueezy.com/my-orders`
+                            : "https://app.lemonsqueezy.com/my-orders"
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-xl transition-colors text-sm border border-amber-500/20"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>ניהול מנוי</span>
+                      </a>
+                      <a
+                        href="https://app.lemonsqueezy.com/my-orders"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium rounded-xl transition-colors text-sm border border-red-500/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>ביטול מנוי</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Pro Benefits */}
@@ -393,12 +472,37 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {/* Subscription Details (Pro users) */}
+                {/* Subscription end notice (Pro — cancelled) */}
                 {isPro && subscription.ends_at && (
-                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-start gap-3">
+                    <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
                     <p className="text-sm text-yellow-300">
-                      המנוי שלך יסתיים ב-{new Date(subscription.ends_at).toLocaleDateString("he-IL")}
+                      המנוי שלך בוטל ויסתיים ב-{new Date(subscription.ends_at).toLocaleDateString("he-IL")}. לאחר מכן תעבור לתוכנית החינם.
                     </p>
+                  </div>
+                )}
+
+                {/* Cancel warning for active Pro users */}
+                {isPro && !subscription.ends_at && (
+                  <p className="text-xs text-slate-500 text-center">
+                    לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב הנוכחית.
+                  </p>
+                )}
+
+                {/* Upgrade CTA for free users */}
+                {!isPro && (
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-white">רוצה פרומפטים ללא הגבלה?</p>
+                      <p className="text-xs text-slate-500 mt-0.5">שדרג ל-Pro ב-₪3.99 בלבד לחודש</p>
+                    </div>
+                    <Link
+                      href="/pricing"
+                      className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all"
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>שדרג ל-Pro</span>
+                    </Link>
                   </div>
                 )}
               </div>

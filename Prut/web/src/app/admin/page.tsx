@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Clock,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getApiPath } from "@/lib/api-path";
@@ -180,6 +181,7 @@ function KpiCard({
   icon: Icon,
   color,
   href,
+  flashing,
 }: {
   label: string;
   value: string;
@@ -188,6 +190,7 @@ function KpiCard({
   icon: React.ElementType;
   color: AccentColor;
   href: string;
+  flashing?: boolean;
 }) {
   const a = ACCENT[color];
   return (
@@ -198,6 +201,7 @@ function KpiCard({
         "transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl group cursor-pointer",
         a.border,
         a.glow,
+        flashing && "animate-pulse-once",
       )}
     >
       <div className="flex items-start justify-between">
@@ -375,27 +379,66 @@ const ACTION_COLOR: Record<string, string> = {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+type RefreshInterval = 30 | 60 | 0; // seconds; 0 = off
+
 export default function AdminDashboardPage() {
   const t = useI18n();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(0);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [secondsSince, setSecondsSince] = useState(0);
+  const [kpiFlash, setKpiFlash] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch(getApiPath("/api/admin/dashboard"));
-        if (!res.ok) throw new Error("Failed");
-        const json: DashboardData = await res.json();
-        setData(json);
-      } catch {
-        setError(true);
-      } finally {
-        setLoading(false);
+  const loadData = useCallback(async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    try {
+      const res = await fetch(getApiPath("/api/admin/dashboard"));
+      if (!res.ok) throw new Error("Failed");
+      const json: DashboardData = await res.json();
+      setData(json);
+      setLastUpdated(new Date());
+      setSecondsSince(0);
+      if (isRefresh) {
+        setKpiFlash(true);
+        setTimeout(() => setKpiFlash(false), 700);
       }
-    };
-    load();
+    } catch {
+      setError(true);
+    } finally {
+      if (!isRefresh) setLoading(false);
+    }
   }, []);
+
+  // Initial load
+  useEffect(() => {
+    loadData(false);
+  }, [loadData]);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (refreshInterval > 0) {
+      intervalRef.current = setInterval(() => loadData(true), refreshInterval * 1000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [refreshInterval, loadData]);
+
+  // "Updated X seconds ago" clock
+  useEffect(() => {
+    if (clockRef.current) clearInterval(clockRef.current);
+    clockRef.current = setInterval(() => {
+      setSecondsSince((s) => s + 1);
+    }, 1000);
+    return () => {
+      if (clockRef.current) clearInterval(clockRef.current);
+    };
+  }, [lastUpdated]);
 
   if (loading) return <DashboardSkeleton />;
 
@@ -477,17 +520,49 @@ export default function AdminDashboardPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3 shrink-0">
-            {/* System status */}
-            <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              All Systems Operational
+          <div className="flex flex-col gap-3 shrink-0 items-end">
+            <div className="flex flex-wrap gap-3">
+              {/* System status */}
+              <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                All Systems Operational
+              </div>
+              {/* Quick date */}
+              <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5">
+                <Clock className="w-3.5 h-3.5" />
+                {new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+              </div>
             </div>
-            {/* Quick date */}
-            <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5">
-              <Clock className="w-3.5 h-3.5" />
-              {new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+
+            {/* Auto-refresh controls */}
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/5">
+              <RefreshCw className="w-3.5 h-3.5 text-zinc-600 mr-1" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 ml-0.5">
+                רענון אוטומטי
+              </span>
+              {([30, 60, 0] as RefreshInterval[]).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setRefreshInterval(opt)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                    refreshInterval === opt
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                      : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5"
+                  )}
+                >
+                  {opt === 0 ? "כבוי" : `${opt}s`}
+                </button>
+              ))}
             </div>
+
+            {/* Last updated timestamp */}
+            {lastUpdated && (
+              <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
+                <Clock className="w-3 h-3" />
+                עודכן לפני {secondsSince} שניות
+              </div>
+            )}
           </div>
         </div>
 
@@ -501,6 +576,7 @@ export default function AdminDashboardPage() {
             icon={Users}
             color="blue"
             href="/admin/users"
+            flashing={kpiFlash}
           />
           <KpiCard
             label="Monthly Revenue"
@@ -510,6 +586,7 @@ export default function AdminDashboardPage() {
             icon={DollarSign}
             color="emerald"
             href="/admin/users"
+            flashing={kpiFlash}
           />
           <KpiCard
             label="API Costs MTD"
@@ -519,6 +596,7 @@ export default function AdminDashboardPage() {
             icon={CircleDollarSign}
             color="amber"
             href="/admin/activity"
+            flashing={kpiFlash}
           />
           <KpiCard
             label="Prompts This Month"
@@ -528,6 +606,7 @@ export default function AdminDashboardPage() {
             icon={Zap}
             color="purple"
             href="/admin/prompts"
+            flashing={kpiFlash}
           />
         </div>
 

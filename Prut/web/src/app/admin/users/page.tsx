@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -44,25 +44,47 @@ export default function UsersPage() {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const supabase = createClient();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    loadUsers();
+    loadUsers(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadUsers() {
+  // Debounced search: re-fetch from Supabase whenever the search term changes
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      loadUsers(search);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  async function loadUsers(searchTerm = "") {
     setLoading(true);
     try {
+      // Build profiles query with optional server-side search
+      let profilesQuery = supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (searchTerm.trim()) {
+        profilesQuery = profilesQuery.or(
+          `email.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,id.eq.${searchTerm}`
+        );
+      }
+
       // Profiles + roles + subscriptions in parallel
       const [
         { data: profiles, error: profileError },
         { data: roles, error: roleError },
         { data: subscriptions, error: subError },
       ] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false }),
+        profilesQuery,
         supabase.from("user_roles").select("user_id, role"),
         supabase
           .from("subscriptions")
@@ -106,7 +128,7 @@ export default function UsersPage() {
             data.synced.toString()
           )
         );
-        loadUsers();
+        loadUsers(search);
       } else {
         toast.error(t.admin.users.toasts.sync_error);
       }
@@ -152,15 +174,8 @@ export default function UsersPage() {
     }
   }
 
+  // Server-side search handles email/name/id filtering; apply only role/status filters client-side
   const filteredUsers = users.filter((user) => {
-    const query = search.toLowerCase();
-    const matchesSearch =
-      user.email.toLowerCase().includes(query) ||
-      user.id.toLowerCase().includes(query) ||
-      (user.customer_name?.toLowerCase().includes(query) ?? false);
-
-    if (!matchesSearch) return false;
-
     if (filter === "admin") return user.role === "admin";
     if (filter === "banned") return user.is_banned;
     if (filter === "active")
@@ -169,7 +184,6 @@ export default function UsersPage() {
         new Date(user.last_sign_in_at) >
           new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       );
-
     return true;
   });
 
@@ -178,25 +192,34 @@ export default function UsersPage() {
       toast.error("No users to export");
       return;
     }
-    const headers = ["ID", "Email", "Name", "Plan", "Role", "Credits", "Created", "Last Sign In"];
-    const rows = users.map((u) => [
-      u.id,
-      u.email,
-      u.customer_name ?? "",
-      u.plan_tier ?? "free",
-      u.role ?? "user",
-      String(u.credits_balance ?? 0),
-      u.created_at,
-      u.last_sign_in_at ?? "",
-    ]);
-    const csv = [headers, ...rows]
-      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+
+    const BOM = "\uFEFF";
+    const headers = "אימייל,שם,מנוי,תפקיד,קרדיטים,סטטוס,תאריך הצטרפות,כניסה אחרונה\n";
+    const rows = users
+      .map((u) => {
+        const cols = [
+          u.email,
+          u.customer_name ?? "",
+          u.plan_tier ?? "free",
+          u.role ?? "user",
+          String(u.credits_balance ?? 0),
+          u.is_banned ? "חסום" : "פעיל",
+          new Date(u.created_at).toLocaleDateString("he-IL"),
+          u.last_sign_in_at
+            ? new Date(u.last_sign_in_at).toLocaleDateString("he-IL")
+            : "",
+        ];
+        return cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
+      })
       .join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+
+    const blob = new Blob([BOM + headers + rows], {
+      type: "text/csv;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `users-export-${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `peroot_users_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success(`Exported ${users.length} users`);
@@ -269,12 +292,12 @@ export default function UsersPage() {
         {/* Filter Strip */}
         <div className="flex flex-col lg:flex-row gap-6 p-1 bg-zinc-950/50 rounded-[32px] border border-white/5 mx-2">
           <div className="flex-1 relative group">
-            <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
+            <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t.admin.users.search_placeholder}
+              placeholder="חפש לפי אימייל, שם או ID..."
               className="w-full pr-16 pl-6 py-5 bg-transparent border-none focus:ring-0 text-white placeholder:text-zinc-700 font-bold"
             />
           </div>

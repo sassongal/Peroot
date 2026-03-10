@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { PersonalPrompt } from '@/lib/types';
 import { CapabilityMode } from '@/lib/capability-mode';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -189,12 +190,11 @@ export function useLibrary() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
-  // Sync to local/session storage
+  // Sync to localStorage (guest data persists across tabs/sessions for up to 7 days)
   useEffect(() => {
     if (isLoaded && !user) {
-      // Guest mode: session-only storage
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(personalLibrary));
-      sessionStorage.setItem(CATEGORIES_KEY, JSON.stringify(personalCategories));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(personalLibrary));
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(personalCategories));
     }
     if (isLoaded && user) {
         localStorage.setItem(CATEGORIES_KEY, JSON.stringify(personalCategories));
@@ -205,6 +205,12 @@ export function useLibrary() {
   }, [personalLibrary, personalCategories, isLoaded, user]);
 
   const addPrompt = async (prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>) => {
+    // Duplicate detection: warn if an identical prompt text already exists
+    const existing = personalLibrary.find(p => p.prompt.trim() === prompt.prompt.trim());
+    if (existing) {
+      toast.warning("פרומפט דומה כבר קיים בספרייה שלך");
+    }
+
     const nextSortIndex = personalLibrary
       .filter((item) => item.personal_category === prompt.personal_category)
       .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;

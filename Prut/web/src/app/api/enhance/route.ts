@@ -80,6 +80,31 @@ export async function POST(req: Request) {
 
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
         if (user) {
+            // Daily credit refresh for free users
+            if (tier === 'free') {
+                const { data: refreshData } = await supabase
+                    .from('profiles')
+                    .select('credits_refreshed_at')
+                    .eq('id', user.id)
+                    .single();
+
+                const lastRefresh = refreshData?.credits_refreshed_at
+                    ? new Date(refreshData.credits_refreshed_at)
+                    : null;
+                const today = new Date();
+                today.setUTCHours(0, 0, 0, 0);
+
+                if (!lastRefresh || lastRefresh < today) {
+                    await supabase
+                        .from('profiles')
+                        .update({
+                            credits_balance: 3,
+                            credits_refreshed_at: new Date().toISOString()
+                        })
+                        .eq('id', user.id);
+                }
+            }
+
             const { data: creditRes, error: rpcError } = await supabase.rpc('check_and_decrement_credits', {
                 target_user_id: user.id,
                 amount_to_spend: 1
@@ -150,6 +175,16 @@ export async function POST(req: Request) {
                 durationMs,
                 endpoint: 'enhance',
             });
+
+            // Auto-refund for abnormally short responses (likely interrupted)
+            if (completion.text.length < 100 && user && supabase) {
+                try {
+                    await supabase.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
+                    console.warn('[EnhanceAPI] Auto-refund for short response:', completion.text.length, 'chars');
+                } catch (e) {
+                    console.error('[EnhanceAPI] Auto-refund failed:', e);
+                }
+            }
 
             if (user && supabase) {
                 await supabase.from('activity_logs').insert({

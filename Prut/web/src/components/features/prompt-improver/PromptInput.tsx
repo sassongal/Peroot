@@ -109,10 +109,12 @@ export function PromptInput({
             <div className="mt-4 space-y-3">
               {variables.map((variable, index) => {
                 const inputId = `variable-input-${index}`;
+                const isEmpty = !(variableValues[variable] ?? "").trim();
                 return (
                   <div key={`${variable}-${index}`} className="space-y-2">
-                    <label htmlFor={inputId} className="text-xs text-amber-300 font-semibold">
+                    <label htmlFor={inputId} className="text-xs text-amber-300 font-semibold flex items-center gap-1">
                       {`{${variable}}`}
+                      <span className="text-red-400" aria-hidden="true">*</span>
                     </label>
                     <input
                       id={inputId}
@@ -121,19 +123,38 @@ export function PromptInput({
                       onChange={(e) =>
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
-                      className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50"
+                      className={cn(
+                        "w-full bg-black/30 border rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none transition-colors",
+                        isEmpty
+                          ? "border-amber-500/50 ring-1 ring-amber-500/30 focus:border-amber-500/70"
+                          : "border-white/10 focus:border-amber-500/50"
+                      )}
                       placeholder={t.onboarding.sim_placeholder}
                     />
                   </div>
                 );
               })}
             </div>
-            <button
-              onClick={onApplyVariables}
-              className="mt-4 w-full px-3 py-2 rounded-lg bg-white text-black text-sm font-semibold hover:bg-slate-200 transition-colors"
-            >
-              {t.prompt_generator.apply_to_prompt}
-            </button>
+            {(() => {
+              const allFilled = variables.every(v => (variableValues[v] ?? "").trim() !== "");
+              return (
+                <button
+                  onClick={() => {
+                    onApplyVariables();
+                    toast.success("משתנים הוחלו בהצלחה");
+                  }}
+                  disabled={!allFilled}
+                  className={cn(
+                    "mt-4 w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+                    allFilled
+                      ? "bg-white text-black hover:bg-slate-200 cursor-pointer"
+                      : "bg-white/20 text-slate-500 cursor-not-allowed"
+                  )}
+                >
+                  {t.prompt_generator.apply_to_prompt}
+                </button>
+              );
+            })()}
             {inputVal.trim() && (
               <div className="mt-4 space-y-2">
                 <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.live_view}</div>

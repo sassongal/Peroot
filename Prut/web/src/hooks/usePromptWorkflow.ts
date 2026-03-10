@@ -6,10 +6,11 @@ import { CapabilityMode } from '@/lib/capability-mode';
 
 // --- Types ---
 
-export type StreamPhase = 'idle' | 'sending' | 'writing' | 'done';
+export type StreamPhase = 'idle' | 'sending' | 'writing' | 'done' | 'interrupted';
 
 export interface PromptState {
   input: string;
+  originalInput: string;
   completion: string;
   isLoading: boolean;
   streamPhase: StreamPhase;
@@ -30,8 +31,10 @@ export type PromptAction =
   | { type: 'START_STREAM' }
   | { type: 'STREAM_CHUNK'; payload: string }
   | { type: 'STREAM_DONE' }
+  | { type: 'STREAM_INTERRUPTED' }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'RESET' }
+  | { type: 'RESET_TO_ORIGINAL' }
   | { type: 'SET_CATEGORY'; payload: string }
   | { type: 'SET_TONE'; payload: string }
   | { type: 'SET_CAPABILITY'; payload: CapabilityMode }
@@ -48,6 +51,7 @@ export type PromptAction =
 
 const initialState: PromptState = {
   input: '',
+  originalInput: '',
   completion: '',
   isLoading: false,
   streamPhase: 'idle',
@@ -78,6 +82,9 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
         streamPhase: 'sending',
         error: null,
         copied: false,
+        // Snapshot the current input as originalInput only on the very first enhance.
+        // Subsequent refinements (iterationCount > 0) preserve the original.
+        originalInput: state.originalInput || state.input,
       };
 
     case 'STREAM_CHUNK':
@@ -94,6 +101,13 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
         streamPhase: 'done',
       };
 
+    case 'STREAM_INTERRUPTED':
+      return {
+        ...state,
+        isLoading: false,
+        streamPhase: 'interrupted',
+      };
+
     case 'SET_ERROR':
       return {
         ...state,
@@ -104,6 +118,19 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
 
     case 'RESET':
       return initialState;
+
+    case 'RESET_TO_ORIGINAL':
+      return {
+        ...state,
+        input: state.originalInput,
+        completion: '',
+        streamPhase: 'idle',
+        error: null,
+        questions: [],
+        questionAnswers: {},
+        iterationCount: 0,
+        copied: false,
+      };
 
     case 'SET_CATEGORY':
       return { ...state, selectedCategory: action.payload };

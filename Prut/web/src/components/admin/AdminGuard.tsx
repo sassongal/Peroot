@@ -31,12 +31,17 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       if (roles && roles.length > 0) {
         setIsAuthorized(true);
       } else {
+        setIsAuthorized(false);
         router.replace("/");
       }
       setLoading(false);
     };
 
     checkAuth();
+
+    // Re-check admin role every 5 minutes (handles role revocation)
+    const interval = setInterval(checkAuth, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, [router]);
 
   if (loading) {

@@ -39,7 +39,7 @@ export function usePromptLimits() {
         .select('credits_balance')
         .eq('id', activeUser.id)
         .maybeSingle();
-      
+
       if (profile) {
         setCredits(profile.credits_balance);
       }
@@ -48,8 +48,19 @@ export function usePromptLimits() {
       const stored = localStorage.getItem(USAGE_STORAGE_KEY);
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
-          setUsage(parsed);
+          const parsed: PromptUsage = JSON.parse(stored);
+
+          // Check if lastReset is from a previous UTC day; if so, reset the counter
+          const lastResetDay = new Date(parsed.lastReset).toISOString().slice(0, 10);
+          const todayDay = new Date().toISOString().slice(0, 10);
+
+          if (lastResetDay !== todayDay) {
+            const freshUsage: PromptUsage = { count: 0, lastReset: new Date().toISOString() };
+            localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(freshUsage));
+            setUsage(freshUsage);
+          } else {
+            setUsage(parsed);
+          }
         } catch (e) {
           console.error('Failed to parse usage:', e);
         }

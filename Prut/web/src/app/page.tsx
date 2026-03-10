@@ -43,12 +43,14 @@ const PersonalLibraryView = dynamic(
 );
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import StreamingProgress from "@/components/ui/StreamingProgress";
-import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Crown } from "lucide-react";
+import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2 } from "lucide-react";
 import UpgradeNudge from "@/components/features/prompt-improver/UpgradeNudge";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
 import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/context/I18nContext";
+import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
 
 // Constants
 
@@ -75,6 +77,7 @@ function PageContent({ user }: { user: User | null }) {
   } = useLibraryContext();
 
   const { state: ps, dispatch } = usePromptWorkflow();
+  const { isPro } = useSubscription();
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -113,6 +116,9 @@ function PageContent({ user }: { user: User | null }) {
     }, [dispatch]),
     onError: useCallback((error: Error) => {
       dispatch({ type: 'SET_ERROR', payload: error.message });
+    }, [dispatch]),
+    onInterrupted: useCallback(() => {
+      dispatch({ type: 'STREAM_INTERRUPTED' });
     }, [dispatch]),
   });
 
@@ -266,13 +272,15 @@ function PageContent({ user }: { user: User | null }) {
 
   const processStreamResult = (label: string) => {
     const acc = streamAccRef.current;
-    if (acc.questionsPart) {
+    if (acc.foundDelimiter) {
+      // Delimiter was found — parse whatever came after it (may be empty array)
       try {
         let jsonStr = acc.questionsPart.trim();
         // Handle common AI formatting issues (markdown code blocks)
         if (jsonStr.startsWith("```json")) jsonStr = jsonStr.replace(/^```json\s*/, "").replace(/```\s*$/, "");
         if (jsonStr.startsWith("```")) jsonStr = jsonStr.replace(/^```\s*/, "").replace(/```\s*$/, "");
-        const parsed = JSON.parse(jsonStr);
+        // Empty string after delimiter means no questions
+        const parsed = jsonStr ? JSON.parse(jsonStr) : [];
         const questions = Array.isArray(parsed) ? parsed : parsed.questions || [];
         dispatch({ type: 'SET_QUESTIONS', payload: questions });
       } catch (e) {
@@ -282,7 +290,12 @@ function PageContent({ user }: { user: User | null }) {
         if (arrayMatch) {
           try {
             dispatch({ type: 'SET_QUESTIONS', payload: JSON.parse(arrayMatch[0]) });
-          } catch { /* truly unrecoverable — no questions shown */ }
+          } catch { /* truly unrecoverable — dispatch empty so UI shows completion state */
+            dispatch({ type: 'SET_QUESTIONS', payload: [] });
+          }
+        } else {
+          // No array found at all — treat as explicitly empty
+          dispatch({ type: 'SET_QUESTIONS', payload: [] });
         }
       }
     }
@@ -295,8 +308,13 @@ function PageContent({ user }: { user: User | null }) {
     return acc.promptText;
   };
 
+  const enhanceCooldownRef = useRef(false);
+
   const handleEnhance = async () => {
-    if (!ps.input.trim() || ps.isLoading) return;
+    if (!ps.input.trim() || ps.isLoading || enhanceCooldownRef.current) return;
+
+    enhanceCooldownRef.current = true;
+    setTimeout(() => { enhanceCooldownRef.current = false; }, 500);
 
     // Guest users must login first
     if (!user) {
@@ -347,6 +365,7 @@ function PageContent({ user }: { user: User | null }) {
 
     dispatch({ type: 'START_STREAM' });
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
+    dispatch({ type: 'CLEAR_ANSWERS' });
     streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
     // Build combined instruction from answers + custom instruction
@@ -383,9 +402,12 @@ function PageContent({ user }: { user: User | null }) {
     }
   };
 
-  const handleCopyText = async (text: string) => {
-    const watermarked = text + "\n\n— נוצר עם Peroot | peroot.space";
-    await navigator.clipboard.writeText(watermarked);
+  const handleCopyText = async (text: string, withWatermark?: boolean) => {
+    // Pro users copy clean by default; free/guest always get watermark.
+    // Callers can override via the withWatermark argument (e.g. toggle checkbox).
+    const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
+    const finalText = shouldWatermark ? `${text}\n\n— נוצר עם Peroot | peroot.space` : text;
+    await navigator.clipboard.writeText(finalText);
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
     recordUsageSignal("copy", text);
@@ -445,7 +467,7 @@ function PageContent({ user }: { user: User | null }) {
       title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
       prompt: item.enhanced,
       category: item.category,
-      personal_category: PERSONAL_DEFAULT_CATEGORY,
+      personal_category: item.category || PERSONAL_DEFAULT_CATEGORY,
       capability_mode: CapabilityMode.STANDARD,
       use_case: "נשמר מהיסטוריה",
       source: "manual"
@@ -464,7 +486,7 @@ function PageContent({ user }: { user: User | null }) {
       title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
       prompt: ps.completion,
       category: ps.detectedCategory || ps.selectedCategory,
-      personal_category: PERSONAL_DEFAULT_CATEGORY,
+      personal_category: ps.selectedCategory || PERSONAL_DEFAULT_CATEGORY,
       capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual"
@@ -536,9 +558,8 @@ function PageContent({ user }: { user: User | null }) {
          <UserMenu user={user} position="top" />
       </div>
 
-      <div className="fixed bottom-6 left-6 z-50">
-         <UserMenu user={user} position="bottom" />
-      </div>
+      {/* Unified credit/tier indicator for all user types */}
+      <PromptLimitIndicator creditsBalance={creditsRemaining} />
 
       <div className="fixed bottom-6 right-6 z-50">
          <FAQBubble />
@@ -666,26 +687,6 @@ function PageContent({ user }: { user: User | null }) {
            <LoadingOverlay isVisible={ps.isLoading} />
            <StreamingProgress phase={ps.streamPhase} />
 
-           {/* Credits indicator for free users */}
-           {user && creditsRemaining !== null && creditsRemaining <= 3 && (
-             <div className="flex items-center justify-center gap-2 text-xs py-2" dir="rtl">
-               {creditsRemaining > 0 ? (
-                 <span className="text-amber-400/80">
-                   נותרו לך <strong>{creditsRemaining}</strong> קרדיטים
-                 </span>
-               ) : (
-                 <span className="text-red-400/80">
-                   הקרדיטים נגמרו
-                 </span>
-               )}
-               <span className="text-slate-600">·</span>
-               <a href="/pricing" className="text-amber-500 hover:text-amber-400 flex items-center gap-1">
-                 <Crown className="w-3 h-3" />
-                 שדרג ל-Pro
-               </a>
-             </div>
-           )}
-
            {!ps.completion ? (
              /* INPUT MODE */
              <>
@@ -711,7 +712,10 @@ function PageContent({ user }: { user: User | null }) {
              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col gap-8">
                  <ResultSection
                      completion={ps.completion}
+                     isLoading={ps.isLoading}
+                     streamPhase={ps.streamPhase}
                      copied={ps.copied}
+                     isPro={isPro}
                      onCopy={handleCopyText}
                      completionScore={completionScore}
                      onSave={saveCompletionToPersonal}
@@ -721,16 +725,23 @@ function PageContent({ user }: { user: User | null }) {
                      improvementDelta={completionScore.baseScore - inputScore.baseScore}
                      onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
                      onImproveAgain={() => {
+                       // Feed the current completion back as the new input so the next
+                       // enhance round works on the improved version, but preserve
+                       // originalInput (set on first START_STREAM) so "Back to Original" works.
                        dispatch({ type: 'SET_INPUT', payload: ps.completion });
                        dispatch({ type: 'INCREMENT_ITERATION' });
-                       handleEnhance();
+                       // Kick off the enhance — START_STREAM will only set originalInput
+                       // if it is still empty, so it won't overwrite the first snapshot.
+                       setTimeout(() => handleEnhance(), 0);
                      }}
+                     onRetryStream={handleEnhance}
+                     onResetToOriginal={() => dispatch({ type: 'RESET_TO_ORIGINAL' })}
                      iterationCount={ps.iterationCount}
-                     originalPrompt={ps.input}
+                     originalPrompt={ps.originalInput || ps.input}
                      onShare={handleShare}
                  />
 
-                 {ps.questions.length > 0 && (
+                 {(ps.questions.length > 0 || ps.iterationCount > 0) && (
                     <SmartRefinement
                        questions={ps.questions}
                        answers={ps.questionAnswers}

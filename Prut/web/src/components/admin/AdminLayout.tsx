@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
+import {
   LayoutDashboard,
   FileText,
   Settings,
@@ -17,7 +17,9 @@ import {
   ChevronLeft,
   Command,
   Layers,
-  DollarSign
+  DollarSign,
+  Menu,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -34,6 +36,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
     { name: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
@@ -94,23 +97,44 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-blue-500">
-      
+
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar Nexus */}
-      <div className="fixed inset-y-0 right-0 z-50 w-80 bg-zinc-950 border-l border-white/5 flex flex-col">
-        
+      <div className={cn(
+        "fixed inset-y-0 end-0 z-50 w-80 bg-zinc-950 border-s border-white/5 flex flex-col transition-transform duration-300",
+        "lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+      )}>
+
         {/* Header Section */}
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-4 group cursor-default">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-2xl shadow-blue-500/20 group-hover:scale-110 transition-transform">
-              < Command className="w-6 h-6 text-white" />
+              <Command className="w-6 h-6 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl font-black tracking-tighter text-white">NEXUS ADMIN</h1>
               <div className="flex items-center gap-2 mt-0.5">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">v2.1 Stable</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">v2.1 Stable</span>
               </div>
             </div>
+            {/* Close button — mobile only */}
+            <button
+              className="lg:hidden p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="סגור תפריט"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
@@ -118,13 +142,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
           <div className="px-4 mb-4 text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Core Subsystems</div>
           {navigation.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive = pathname === item.href ||
               (item.href !== "/admin" && pathname?.startsWith(item.href));
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={cn(
                   "group flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 relative overflow-hidden",
                   isActive
@@ -133,14 +158,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 )}
               >
                 <div className="flex items-center gap-4 relative z-10">
-                   <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "group-hover:text-blue-400")} />
-                   <span className="text-sm font-bold tracking-tight">{item.name}</span>
+                  <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "group-hover:text-blue-400")} />
+                  <span className="text-sm font-bold tracking-tight">{item.name}</span>
                 </div>
                 {isActive && (
-                   <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20" />
+                  <div className="absolute end-0 top-0 bottom-0 w-1 bg-white/20" />
                 )}
                 {!isActive && (
-                   <ChevronLeft className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-all -translate-x-2 group-hover:translate-x-0" />
+                  <ChevronLeft className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-all -translate-x-2 group-hover:translate-x-0" />
                 )}
               </Link>
             );
@@ -150,33 +175,45 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* User Account / Footer */}
         <div className="p-6 border-t border-white/5 bg-zinc-950/80 backdrop-blur-xl">
           <div className="space-y-3">
-             <Link
-               href="/"
-               className="flex items-center gap-4 px-4 py-3 rounded-2xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold"
-             >
-               <Home className="w-4 h-4" />
-               {t.common.back || "חזרה לאתר"}
-             </Link>
-             <button
-               className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all text-sm font-bold border border-rose-500/0 hover:border-rose-500/20"
-               onClick={() => fetch(getApiPath('/api/auth/signout'), { method: 'POST' }).then(() => window.location.href = "/")}
-             >
-               <LogOut className="w-4 h-4" />
-               {t.admin.layout.logout}
-             </button>
+            <Link
+              href="/"
+              className="flex items-center gap-4 px-4 py-3 rounded-2xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold"
+            >
+              <Home className="w-4 h-4" />
+              {t.common.back || "חזרה לאתר"}
+            </Link>
+            <button
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all text-sm font-bold border border-rose-500/0 hover:border-rose-500/20"
+              onClick={() => fetch(getApiPath('/api/auth/signout'), { method: 'POST' }).then(() => window.location.href = "/")}
+            >
+              <LogOut className="w-4 h-4" />
+              {t.admin.layout.logout}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Primary Viewport */}
-      <div className="mr-80">
-        <main className="max-w-6xl mx-auto p-12 min-h-screen">
-           {/* View Transition Effect */}
-           <div className="animate-in fade-in slide-in-from-bottom-2 duration-700">
-             <ErrorBoundary name="AdminContent">
-                {children}
-             </ErrorBoundary>
-           </div>
+      <div className="lg:me-80">
+        {/* Mobile top bar with hamburger */}
+        <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
+          <span className="text-sm font-black tracking-tighter text-white">NEXUS ADMIN</span>
+          <button
+            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="פתח תפריט"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+
+        <main className="max-w-6xl mx-auto p-6 lg:p-12 min-h-screen">
+          {/* View Transition Effect */}
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-700">
+            <ErrorBoundary name="AdminContent">
+              {children}
+            </ErrorBoundary>
+          </div>
         </main>
       </div>
     </div>

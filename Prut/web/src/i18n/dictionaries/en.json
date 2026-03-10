@@ -233,5 +233,16 @@
     "role": "Role",
     "goal": "Goal",
     "not_selected": "Not selected"
+  },
+  "toasts": {
+    "copied": "Copied to clipboard",
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "share_created": "Share link created",
+    "export_started": "Downloading data...",
+    "duplicate_warning": "A similar prompt already exists in your library",
+    "variables_applied": "Variables applied successfully",
+    "error_generic": "An error occurred. Please try again.",
+    "login_required": "You must be logged in to perform this action"
   }
 }

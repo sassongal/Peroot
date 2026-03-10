@@ -38,7 +38,8 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     setSelectedCapabilityFilter,
     libraryCapabilityCounts,
     personalCategories,
-    addPrompts
+    addPrompts,
+    isLibraryFetching
   } = useLibraryContext();
   
   // -- Local State --
@@ -556,9 +557,33 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             </div>
         )}
 
-        {totalCount === 0 && (
-          <div className="glass-card p-10 rounded-xl border-white/10 bg-black/40 text-center text-slate-500">
-            לא נמצאו פרומפטים תואמים לחיפוש שלך.
+        {/* Skeleton — shown while the API fetch is in-flight */}
+        {isLibraryFetching && totalCount === 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-white/[0.04] animate-pulse h-32"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Favorites empty state */}
+        {!isLibraryFetching && libraryView === "favorites" && totalCount === 0 && (
+          <div className="flex flex-col items-center gap-3 text-center py-16" dir="rtl">
+            <Star className="w-12 h-12 text-slate-600 mb-2" />
+            <p className="text-lg font-semibold text-slate-400">עוד לא סימנת מועדפים</p>
+            <p className="text-sm text-slate-500">לחץ על ⭐ כדי לשמור פרומפטים אהובים</p>
+          </div>
+        )}
+
+        {/* Search no-results empty state */}
+        {!isLibraryFetching && libraryView !== "favorites" && totalCount === 0 && (
+          <div className="flex flex-col items-center gap-3 text-center py-16" dir="rtl">
+            <Search className="w-12 h-12 text-slate-600 mb-2" />
+            <p className="text-lg font-semibold text-slate-400">לא נמצאו תוצאות</p>
+            <p className="text-sm text-slate-500">נסה מילות חיפוש אחרות</p>
           </div>
         )}
 

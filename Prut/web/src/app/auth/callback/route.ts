@@ -8,7 +8,10 @@ export async function GET(request: Request) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
   const origin = siteUrl || new URL(request.url).origin
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const type = searchParams.get('type')
+  const next = type === 'recovery'
+    ? `${basePath}/auth/reset-password`
+    : searchParams.get('next') ?? '/'
 
   if (!code) {
     return NextResponse.redirect(`${origin}${basePath}/login?error=no-code`)

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, History, ArrowRight, Plus, Copy, Search, Filter } from "lucide-react";
+import { Trash2, History, ArrowRight, Plus, Copy, Search, Filter, Clock } from "lucide-react";
 import { HistoryItem } from "@/hooks/useHistory";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { formatDistanceToNow } from 'date-fns';
@@ -126,13 +126,24 @@ export function HistoryPanel({
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
         {!isLoaded && (
-          <div className="text-xs text-slate-500 text-center py-6">טוען היסטוריה...</div>
+          <>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-white/[0.04] animate-pulse h-20"
+              />
+            ))}
+          </>
         )}
         {isLoaded && history.length === 0 && (
-          <div className="text-xs text-slate-500 text-center py-6">אין פרומפטים בהיסטוריה</div>
+          <div className="flex flex-col items-center gap-3 text-center py-12" dir="rtl">
+            <Clock className="w-12 h-12 text-slate-600 mb-2" />
+            <p className="text-lg font-semibold text-slate-400">עוד לא שדרגת פרומפטים</p>
+            <p className="text-sm text-slate-500">הפרומפטים המשודרגים שלך יופיעו כאן</p>
+          </div>
         )}
         {isLoaded && history.length > 0 && filteredHistory.length === 0 && (
-           <div className="text-xs text-slate-500 text-center py-6">לא נמצאו תוצאות לחיפוש</div>
+          <div className="text-xs text-slate-500 text-center py-6">לא נמצאו תוצאות לחיפוש</div>
         )}
         {filteredHistory.map((item, index) => {
           const categoryColor = CATEGORY_COLORS[item.category] || "border-l-white/20";

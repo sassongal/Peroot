@@ -34,12 +34,17 @@ export interface RateLimitResult {
 }
 
 export async function checkRateLimit(identifier: string, tier: RateLimitTier = 'guest'): Promise<RateLimitResult> {
-  const limiter = rateLimiters[tier];
-  const result = await limiter.limit(identifier);
-  return {
-    success: result.success,
-    limit: result.limit,
-    remaining: result.remaining,
-    reset: result.reset,
-  };
+  try {
+    const limiter = rateLimiters[tier];
+    const result = await limiter.limit(identifier);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  } catch (error) {
+    console.error('[RateLimit] Redis unavailable, allowing request:', error);
+    return { success: true, limit: 0, remaining: 1, reset: 0 };
+  }
 }

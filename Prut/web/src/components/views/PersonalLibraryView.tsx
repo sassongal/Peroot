@@ -88,9 +88,12 @@ export function PersonalLibraryView({
     cancelRenameCategory,
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
-    personalCapabilityCounts
+    personalCapabilityCounts,
+
+    // Loading state
+    isPersonalLoaded
   } = useLibraryContext();
-  
+
   const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   // -- Local State --
@@ -365,8 +368,13 @@ export function PersonalLibraryView({
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-wrap gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                         <CapabilityBadge mode={prompt.capability_mode} />
+                        {personalView === "favorites" && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            אישי
+                          </span>
+                        )}
                     </div>
                     <h4 className="text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
                     <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
@@ -700,7 +708,12 @@ export function PersonalLibraryView({
                                       // Minimal card for library favorites (read-only mostly)
                                       <GlowingEdgeCard key={p.id} className="rounded-2xl" contentClassName="p-6 flex flex-col gap-4">
                                           <div className="flex justify-between">
-                                              <h4 className="text-white font-semibold">{p.title}</h4>
+                                              <div>
+                                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-2">
+                                                    ספרייה ציבורית
+                                                  </span>
+                                                  <h4 className="text-white font-semibold">{p.title}</h4>
+                                              </div>
                                               <button onClick={() => handleToggleFavorite("library", p.id)}><Star className="w-4 h-4 text-yellow-300 fill-yellow-300"/></button>
                                           </div>
                                           <p className="text-slate-400 text-sm">{p.use_case}</p>
@@ -715,17 +728,52 @@ export function PersonalLibraryView({
                       )}
                       
                       <h3 className="text-2xl text-slate-200 mb-4 font-serif">מועדפים אישיים</h3>
-                      {filteredPersonalLibrary.length > 0 ? (
+                      {!isPersonalLoaded && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+                          {[0, 1, 2, 3].map((i) => (
+                            <div key={i} className="rounded-2xl bg-white/[0.04] animate-pulse h-32" />
+                          ))}
+                        </div>
+                      )}
+                      {isPersonalLoaded && filteredPersonalLibrary.length > 0 ? (
                            <div className={cn("grid gap-4", layoutMode === "grid" ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1")}>
                                {filteredPersonalLibrary.map(layoutMode === "grid" ? renderCard : renderListItem)}
                            </div>
-                      ) : (
-                          <div className="text-slate-500 text-center py-10">אין פרומפטים מועדפים</div>
-                      )}
+                      ) : isPersonalLoaded ? (
+                          <div className="flex flex-col items-center gap-3 text-center py-12" dir="rtl">
+                            <Star className="w-12 h-12 text-slate-600 mb-2" />
+                            <p className="text-lg font-semibold text-slate-400">עוד לא סימנת מועדפים</p>
+                            <p className="text-sm text-slate-500">לחץ על ⭐ כדי לשמור פרומפטים אהובים</p>
+                          </div>
+                      ) : null}
                   </div>
               ) : (
                   // By Category View
                   <>
+                    {/* Skeleton — shown while personal library is loading */}
+                    {!isPersonalLoaded && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div key={i} className="rounded-2xl bg-white/[0.04] animate-pulse h-32" />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Empty state — loaded but no items */}
+                    {isPersonalLoaded && totalCount === 0 && (
+                      <div className="flex flex-col items-center gap-3 text-center py-16" dir="rtl">
+                        <BookOpen className="w-12 h-12 text-slate-600 mb-2" />
+                        <p className="text-lg font-semibold text-slate-400">הספרייה האישית שלך ריקה</p>
+                        <p className="text-sm text-slate-500">שדרג פרומפט ושמור אותו כאן כדי להתחיל</p>
+                        <button
+                          onClick={() => setViewMode("home")}
+                          className="mt-1 px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm"
+                        >
+                          שדרג פרומפט
+                        </button>
+                      </div>
+                    )}
+
                     {orderedCategories.map((category) => {
                          const items = grouped[category] ?? [];
                          if (items.length === 0) return null;

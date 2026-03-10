@@ -47,7 +47,7 @@ export function CapabilitySelector({
 
   return (
     <div className={cn(
-      "flex flex-wrap gap-2",
+      "flex overflow-x-auto scrollbar-none snap-x snap-mandatory min-w-0",
       compact ? "gap-1.5" : "gap-3"
     )}>
       {modes.map((mode) => {
@@ -64,7 +64,7 @@ export function CapabilitySelector({
             onClick={() => onChange(mode)}
             className={cn(
               "flex items-center gap-2 rounded-xl border transition-all duration-200",
-              "hover:scale-[1.02] active:scale-[0.98]",
+              "hover:scale-[1.02] active:scale-[0.98] snap-start shrink-0",
               compact ? "px-3 py-2" : "px-4 py-3",
               isSelected
                 ? colorClasses.selected

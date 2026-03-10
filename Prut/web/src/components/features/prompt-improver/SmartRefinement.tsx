@@ -69,6 +69,22 @@ export function SmartRefinement({
 
   const hasAnyInput = Object.values(answers).some(a => a.trim()) || customInstruction.trim();
 
+  // When questions array is empty and component is rendered, the prompt was deemed comprehensive
+  if (questions.length === 0) {
+    return (
+      <div className="glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+        <div className="p-6">
+          <div className="flex items-center gap-3 justify-center py-4" dir="rtl">
+            <span className="text-emerald-400 text-lg">✓</span>
+            <span className="text-sm text-slate-300 font-medium">
+              הפרומפט מקיף ומפורט — אין שאלות נוספות
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
       <div className="p-6 border-b border-white/5 bg-white/[0.02]">
@@ -149,7 +165,7 @@ export function SmartRefinement({
 
                 {isOpen && (
                    <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-200">
-                      <div className="pr-11">
+                      <div className="ps-11">
                          <div className="mb-3">
                            <textarea
                              dir="rtl"

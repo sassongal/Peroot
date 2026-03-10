@@ -6,9 +6,11 @@ interface StreamingOptions {
   onChunk: (chunk: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: Error) => void;
+  /** Called when the stream is cut mid-response. Receives the partial text accumulated so far. */
+  onInterrupted?: (partialText: string) => void;
 }
 
-export function useStreamingCompletion({ onChunk, onDone, onError }: StreamingOptions) {
+export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted }: StreamingOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -56,9 +58,9 @@ export function useStreamingCompletion({ onChunk, onDone, onError }: StreamingOp
             onChunk(chunk);
           }
         } catch (streamError) {
-          // Mid-stream failure — preserve what was received so far
+          // Mid-stream failure — signal the caller that the stream was cut short.
           if (accumulated) {
-            onDone(accumulated);
+            onInterrupted?.(accumulated);
           }
           throw streamError;
         }
@@ -72,7 +74,7 @@ export function useStreamingCompletion({ onChunk, onDone, onError }: StreamingOp
         abortControllerRef.current = null;
       }
     },
-    [abort, onChunk, onDone, onError]
+    [abort, onChunk, onDone, onError, onInterrupted]
   );
 
   return { startStream, abort, isStreaming };

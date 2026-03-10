@@ -1,24 +1,44 @@
 "use client";
 
-import { Check, Copy, ExternalLink, Plus, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Check, Copy, ExternalLink, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
+import type { StreamPhase } from "@/hooks/usePromptWorkflow";
+
+const blinkKeyframes = `
+@keyframes peroot-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.peroot-streaming-cursor {
+  display: inline;
+  color: #fbbf24;
+  animation: peroot-blink 0.8s step-start infinite;
+  user-select: none;
+}
+`;
 
 interface ResultSectionProps {
   completion: string;
+  isLoading?: boolean;
+  streamPhase?: StreamPhase;
   completionScore: PromptScore | null;
   improvementDelta: number;
   copied: boolean;
-  onCopy: (text: string) => void;
+  isPro?: boolean;
+  onCopy: (text: string, withWatermark?: boolean) => void;
   onBack: () => void;
   onSave: () => void;
   placeholders?: string[];
   variableValues?: Record<string, string>;
   onVariableChange?: (key: string, value: string) => void;
   onImproveAgain?: () => void;
+  onRetryStream?: () => void;
+  onResetToOriginal?: () => void;
   iterationCount?: number;
   originalPrompt?: string;
   onShare?: () => void;
@@ -28,9 +48,12 @@ import { useI18n } from "@/context/I18nContext";
 
 export function ResultSection({
   completion,
+  isLoading = false,
+  streamPhase,
   completionScore,
   improvementDelta,
   copied,
+  isPro = false,
   onCopy,
   onBack,
   onSave,
@@ -38,19 +61,59 @@ export function ResultSection({
   variableValues = {},
   onVariableChange,
   onImproveAgain,
+  onRetryStream,
+  onResetToOriginal,
   iterationCount,
   originalPrompt,
   onShare,
 }: ResultSectionProps) {
     const t = useI18n();
+  // Pro users can toggle the watermark off; free users always get the watermark.
+  const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
+
+  const isInterrupted = streamPhase === 'interrupted';
   // ... rest of logic ...
   const displayCompletion = completion.replace(/\{([^}]+)\}/g, (match, ph) => {
     return variableValues[ph] || match;
   });
 
+  // Append a streaming cursor sentinel that CSS will style as blinking
+  const styledHtml = isLoading && completion
+    ? renderStyledPrompt(displayCompletion) + '<span class="peroot-streaming-cursor" aria-hidden="true">│</span>'
+    : renderStyledPrompt(displayCompletion);
+
+  // Unified copy handler used by all copy entry-points inside this component.
+  // withWatermark is determined by isPro + toggle state unless explicitly overridden.
+  const handleCopy = (text: string, forceWatermark?: boolean) => {
+    const shouldWatermark = forceWatermark !== undefined
+      ? forceWatermark
+      : isPro ? proWatermarkEnabled : true;
+    onCopy(text, shouldWatermark);
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+      {isLoading && <style>{blinkKeyframes}</style>}
+
+      {/* Interrupted Stream Warning */}
+      {isInterrupted && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300" role="alert" dir="rtl">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="text-sm font-medium">התגובה נקטעה באמצע. הטקסט למטה הוא חלקי.</span>
+          </div>
+          {onRetryStream && (
+            <button
+              onClick={onRetryStream}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-xs font-medium transition-colors cursor-pointer shrink-0"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              נסה שוב
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Header Card */}
       <div className="glass-card p-6 rounded-xl border-white/10 flex items-start justify-between group">
         <div className="flex flex-col gap-1">
@@ -98,7 +161,7 @@ export function ResultSection({
         <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:col-span-2" : "lg:col-span-3")}>
           <div className="absolute top-4 end-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
             <button
-              onClick={() => onCopy(displayCompletion)}
+              onClick={() => handleCopy(displayCompletion)}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
               title={t.result_section.copy_tooltip}
               aria-label="העתק פרומפט"
@@ -107,10 +170,10 @@ export function ResultSection({
             </button>
           </div>
           
-          <div 
-            className="p-8 text-lg text-slate-200 leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1" 
+          <div
+            className="p-8 text-lg text-slate-200 leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
             dir="rtl"
-            dangerouslySetInnerHTML={{ __html: renderStyledPrompt(displayCompletion) }}
+            dangerouslySetInnerHTML={{ __html: styledHtml }}
           />
 
           {/* AI Platform Quick-Launch Bar */}
@@ -119,9 +182,9 @@ export function ResultSection({
               <span className="text-xs text-slate-500 ms-2">פתח ב:</span>
               <button
                 onClick={() => {
-                  onCopy(displayCompletion);
+                  handleCopy(displayCompletion);
                   window.open("https://chat.openai.com/", "_blank");
-                  toast.success("הפרומפט הועתק — ChatGPT נפתח!");
+                  toast.success(`${t.toasts.copied} — ChatGPT נפתח!`);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-ChatGPT"
@@ -132,9 +195,9 @@ export function ResultSection({
               </button>
               <button
                 onClick={() => {
-                  onCopy(displayCompletion);
+                  handleCopy(displayCompletion);
                   window.open("https://claude.ai/new", "_blank");
-                  toast.success("הפרומפט הועתק — Claude נפתח!");
+                  toast.success(`${t.toasts.copied} — Claude נפתח!`);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-Claude"
@@ -145,9 +208,9 @@ export function ResultSection({
               </button>
               <button
                 onClick={() => {
-                  onCopy(displayCompletion);
+                  handleCopy(displayCompletion);
                   window.open("https://gemini.google.com/", "_blank");
-                  toast.success("הפרומפט הועתק — Gemini נפתח!");
+                  toast.success(`${t.toasts.copied} — Gemini נפתח!`);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-Gemini"
@@ -173,7 +236,7 @@ export function ResultSection({
 
           <div className="p-4 bg-white/5 border-t border-white/5 mt-auto space-y-3">
             {/* Primary actions row */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={onBack}
@@ -181,6 +244,18 @@ export function ResultSection({
                 >
                   {t.result_section.back_to_edit}
                 </button>
+                {/* Back to Original — only shown after at least one refinement */}
+                {onResetToOriginal && (iterationCount ?? 0) > 0 && (
+                  <button
+                    onClick={onResetToOriginal}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                    title="חזור לפרומפט המקורי שלך"
+                    dir="rtl"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    חזור למקור
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {onShare && (
@@ -214,7 +289,7 @@ export function ResultSection({
                   </button>
                 )}
                 <button
-                  onClick={() => onCopy(displayCompletion)}
+                  onClick={() => handleCopy(displayCompletion)}
                   className="flex items-center gap-1.5 px-5 py-2 rounded-lg accent-gradient text-black font-medium text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -222,6 +297,24 @@ export function ResultSection({
                 </button>
               </div>
             </div>
+
+            {/* Pro watermark toggle — only visible to Pro users */}
+            {isPro && (
+              <div className="flex items-center justify-end gap-2 pt-1" dir="rtl">
+                <label className="flex items-center gap-2 cursor-pointer select-none group">
+                  <input
+                    type="checkbox"
+                    checked={proWatermarkEnabled}
+                    onChange={(e) => setProWatermarkEnabled(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-amber-400 cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">
+                    העתק עם מיתוג Peroot
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* Feedback row - subtle */}
             <div className="flex items-center justify-center gap-4 pt-2 border-t border-white/5">
               <span className="text-[10px] text-slate-600">מה דעתך על התוצאה?</span>

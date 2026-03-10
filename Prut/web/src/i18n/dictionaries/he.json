@@ -233,5 +233,16 @@
     "role": "תפקיד",
     "goal": "מטרה",
     "not_selected": "לא נבחר"
+  },
+  "toasts": {
+    "copied": "הועתק ללוח",
+    "saved": "נשמר בהצלחה",
+    "deleted": "נמחק בהצלחה",
+    "share_created": "קישור שיתוף נוצר",
+    "export_started": "הנתונים יורדו...",
+    "duplicate_warning": "פרומפט דומה כבר קיים בספרייה שלך",
+    "variables_applied": "משתנים הוחלו בהצלחה",
+    "error_generic": "שגיאה. נסה שוב.",
+    "login_required": "יש להתחבר כדי לבצע פעולה זו"
   }
 }

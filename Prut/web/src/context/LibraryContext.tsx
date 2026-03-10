@@ -116,6 +116,10 @@ interface LibraryContextType {
   // Counts
   libraryCapabilityCounts: Record<CapabilityMode, number>;
   personalCapabilityCounts: Record<CapabilityMode, number>;
+
+  // Loading state
+  isPersonalLoaded: boolean;
+  isLibraryFetching: boolean;
 }
 
 const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
@@ -148,6 +152,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   // Dynamic Data State
   const [libraryPrompts, setLibraryPrompts] = useState<LibraryPrompt[]>(fallbackLibraryPrompts);
   const [, setDynamicCategories] = useState<unknown[]>([]);
+  const [isLibraryFetching, setIsLibraryFetching] = useState(true);
 
   // --- Effects ---
   useEffect(() => {
@@ -157,7 +162,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
                 fetch(getApiPath("/api/library/prompts")),
                 fetch(getApiPath("/api/library/categories"))
             ]);
-            
+
             if (pRes.ok) {
                 const pData = await pRes.json();
                 if (pData.length > 0) setLibraryPrompts(pData);
@@ -168,17 +173,20 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
             }
         } catch (e) {
             console.warn("Library synchronization paused:", e);
+        } finally {
+            setIsLibraryFetching(false);
         }
     };
     fetchPublicData();
   }, []);
 
   // --- Hooks ---
-  const { 
-    personalLibrary, 
-    personalCategories, 
-    addPrompt, 
-    removePrompt, 
+  const {
+    personalLibrary,
+    personalCategories,
+    isLoaded: isPersonalLoaded,
+    addPrompt,
+    removePrompt,
     incrementUseCount,
     updatePrompt,
     updatePromptContent,
@@ -296,10 +304,16 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     }
     
     if (query) {
-      result = result.filter(p => 
-        [p.title, p.prompt, p.use_case, p.personal_category]
-          .join(" ").toLowerCase().includes(query)
-      );
+      result = result.filter(p => {
+        const q = query;
+        return (
+          p.title?.toLowerCase().includes(q) ||
+          p.prompt?.toLowerCase().includes(q) ||
+          p.use_case?.toLowerCase().includes(q) ||
+          p.personal_category?.toLowerCase().includes(q) ||
+          (p.tags || []).some(tag => tag.toLowerCase().includes(q))
+        );
+      });
     }
 
     // ... (sorting logic remains the same)
@@ -517,7 +531,11 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     // Capability Filtering
     selectedCapabilityFilter, setSelectedCapabilityFilter,
     favoritesCapabilityFilter, setFavoritesCapabilityFilter,
-    libraryCapabilityCounts, personalCapabilityCounts
+    libraryCapabilityCounts, personalCapabilityCounts,
+
+    // Loading state
+    isPersonalLoaded,
+    isLibraryFetching
   };
 
   return (
