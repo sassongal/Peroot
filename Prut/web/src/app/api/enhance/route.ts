@@ -66,26 +66,31 @@ export async function POST(req: Request) {
         tier = (profile.plan_tier as 'free' | 'pro') || 'free';
     }
 
-    // 2. Execute Rate Limiting
-    const identifier = user?.id || (req.headers.get("x-forwarded-for") || "anonymous");
-    const limitResult = await checkRateLimit(identifier, tier);
+    // Admin bypass: skip rate limiting and credit enforcement entirely
+    const isAdmin = user?.app_metadata?.role === 'admin';
 
-    if (!limitResult.success) {
-        return RateLimitError(limitResult.reset);
-    }
+    if (!isAdmin) {
+        // 2. Execute Rate Limiting
+        const identifier = user?.id || (req.headers.get("x-forwarded-for") || "anonymous");
+        const limitResult = await checkRateLimit(identifier, tier);
 
-    // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
-    if (user) {
-        const { data: creditRes, error: rpcError } = await supabase.rpc('check_and_decrement_credits', {
-            target_user_id: user.id,
-            amount_to_spend: 1
-        });
+        if (!limitResult.success) {
+            return RateLimitError(limitResult.reset);
+        }
 
-        if (rpcError || !creditRes || !creditRes.success) {
-            return NextResponse.json({
-                error: creditRes?.error || "Insufficient credits or profile not found",
-                balance: creditRes?.current_balance
-            }, { status: 403 });
+        // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
+        if (user) {
+            const { data: creditRes, error: rpcError } = await supabase.rpc('check_and_decrement_credits', {
+                target_user_id: user.id,
+                amount_to_spend: 1
+            });
+
+            if (rpcError || !creditRes || !creditRes.success) {
+                return NextResponse.json({
+                    error: creditRes?.error || "Insufficient credits or profile not found",
+                    balance: creditRes?.current_balance
+                }, { status: 403 });
+            }
         }
     }
 
