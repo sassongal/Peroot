@@ -104,6 +104,21 @@ export default function AnalyticsPage() {
         .slice(0, 5)
         .map(([category, count]) => ({ category, count }));
 
+      // Fetch total profiles count for conversion rate denominator
+      const { count: totalProfilesCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch distinct users who have used enhance at least once
+      const { data: enhanceUsers } = await supabase
+        .from('activity_logs')
+        .select('user_id')
+        .eq('action', 'Prmpt Enhance');
+
+      const distinctEnhanceUsers = new Set(enhanceUsers?.map((r: { user_id: string }) => r.user_id)).size;
+      const totalProfiles = totalProfilesCount || 1;
+      const conversionPct = ((distinctEnhanceUsers / totalProfiles) * 100).toFixed(1);
+
       // Summary
       const totalPrompts = promptsData?.length || 0;
       const activeUsers = new Set(promptsData?.map((p: { user_id: string }) => p.user_id)).size || 0;
@@ -116,7 +131,7 @@ export default function AnalyticsPage() {
           totalPrompts,
           activeUsers,
           avgPerDay: Math.round(totalPrompts / daysToFetch),
-          conversionRate: "24.5%" // Synthetic placeholder
+          conversionRate: `${conversionPct}%`
         }
       });
     } catch (error) {
@@ -242,7 +257,10 @@ export default function AnalyticsPage() {
               </div>
 
               <div className="pt-8 border-t border-white/5">
-                 <button className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 text-slate-400 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                 <button
+                    onClick={() => exportCSV(data)}
+                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 text-slate-400 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                 >
                     <Layers className="w-4 h-4" />
                     Full Dataset Export
                  </button>
@@ -253,6 +271,36 @@ export default function AnalyticsPage() {
       </div>
     </AdminLayout>
   );
+}
+
+function exportCSV(data: AnalyticsData) {
+  const rows: string[][] = [];
+
+  rows.push(['--- Summary ---']);
+  rows.push(['Metric', 'Value']);
+  rows.push(['Total Prompts', String(data.summary.totalPrompts)]);
+  rows.push(['Active Users', String(data.summary.activeUsers)]);
+  rows.push(['Avg Per Day', String(data.summary.avgPerDay)]);
+  rows.push(['Conversion Rate', data.summary.conversionRate]);
+  rows.push([]);
+
+  rows.push(['--- Daily Volume ---']);
+  rows.push(['Date', 'Count']);
+  data.promptsPerDay.forEach(d => rows.push([d.date, String(d.count)]));
+  rows.push([]);
+
+  rows.push(['--- Top Categories ---']);
+  rows.push(['Category', 'Count']);
+  data.topCategories.forEach(c => rows.push([c.category, String(c.count)]));
+
+  const csv = rows.map(r => r.map(cell => `"${cell}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `analytics-export-${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function SummaryCard({ label, value, icon: Icon, color }: { label: string; value: string; icon: LucideIcon; color: string }) {

@@ -9,7 +9,7 @@ import {
   Mail,
   Calendar,
   Crown,
-  UserPlus,
+  Download,
   RefreshCw,
   Clock,
   Users,
@@ -173,6 +173,35 @@ export default function UsersPage() {
     return true;
   });
 
+  function exportUsers() {
+    if (users.length === 0) {
+      toast.error("No users to export");
+      return;
+    }
+    const headers = ["ID", "Email", "Name", "Plan", "Role", "Credits", "Created", "Last Sign In"];
+    const rows = users.map((u) => [
+      u.id,
+      u.email,
+      u.customer_name ?? "",
+      u.plan_tier ?? "free",
+      u.role ?? "user",
+      String(u.credits_balance ?? 0),
+      u.created_at,
+      u.last_sign_in_at ?? "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `users-export-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${users.length} users`);
+  }
+
   function lastActiveLabel(lastSignIn: string | null | undefined) {
     if (!lastSignIn) return "Never";
     const diff = Date.now() - new Date(lastSignIn).getTime();
@@ -227,9 +256,12 @@ export default function UsersPage() {
               <RefreshCw className={cn("w-4 h-4", isSyncing && "animate-spin")} />
               {isSyncing ? "Syncing Pipeline..." : "Refetch Data"}
             </button>
-            <button className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3">
-              <UserPlus className="w-4 h-4" />
-              Provision User
+            <button
+              onClick={exportUsers}
+              className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3"
+            >
+              <Download className="w-4 h-4" />
+              Export Users
             </button>
           </div>
         </div>
@@ -463,8 +495,12 @@ export default function UsersPage() {
                             <Crown className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open("mailto:" + user.email);
+                            }}
                             className="p-3 bg-zinc-900 border border-white/5 text-zinc-600 rounded-2xl hover:text-white hover:bg-zinc-800 transition-all duration-500 scale-90 group-hover:scale-100"
+                            title={`Send email to ${user.email}`}
                           >
                             <Mail className="w-5 h-5" />
                           </button>

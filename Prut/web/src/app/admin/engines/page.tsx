@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { createClient } from "@/lib/supabase/client";
-import { 
-  Zap, 
-  Search, 
-  Image as ImageIcon, 
-  Bot, 
-  Cpu, 
+import {
+  Zap,
+  Search,
+  Image as ImageIcon,
+  Bot,
+  Cpu,
   Brain,
   ChevronRight,
   Activity,
@@ -16,6 +16,7 @@ import {
   LucideIcon
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,16 @@ interface EngineRow {
   updated_at: string;
 }
 
+interface EngineMetrics {
+  avgLatencyMs: number;
+  requestCount: number;
+}
+
+interface PipelineMetrics {
+  computeLoadPct: number;
+  tokenVelocityPct: number;
+}
+
 const MODE_ICONS: Record<string, LucideIcon> = {
   [CapabilityMode.STANDARD]: Zap,
   [CapabilityMode.DEEP_RESEARCH]: Search,
@@ -38,21 +49,70 @@ const MODE_ICONS: Record<string, LucideIcon> = {
 export default function EnginesListPage() {
   const [engines, setEngines] = useState<EngineRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [engineMetrics, setEngineMetrics] = useState<Record<string, EngineMetrics>>({});
+  const [pipeline, setPipeline] = useState<PipelineMetrics>({ computeLoadPct: 0, tokenVelocityPct: 0 });
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchEngines = async () => {
+    const fetchAll = async () => {
       const supabase = createClient();
-      const { data, error } = await supabase
+
+      // Fetch engines list
+      const { data: enginesData, error } = await supabase
         .from("prompt_engines")
         .select("*")
         .order("mode");
-      
-      if (!error && data) {
-        setEngines(data);
+
+      if (!error && enginesData) {
+        setEngines(enginesData);
       }
+
+      // Fetch api_usage_logs for metrics
+      const { data: usageLogs } = await supabase
+        .from("api_usage_logs")
+        .select("engine_mode, duration_ms, input_tokens, output_tokens, created_at");
+
+      if (usageLogs && usageLogs.length > 0) {
+        // Per-engine latency and request count
+        const byMode: Record<string, { totalMs: number; count: number }> = {};
+        usageLogs.forEach((row: { engine_mode: string; duration_ms: number | null }) => {
+          const mode = row.engine_mode || "unknown";
+          if (!byMode[mode]) byMode[mode] = { totalMs: 0, count: 0 };
+          byMode[mode].count++;
+          byMode[mode].totalMs += row.duration_ms ?? 0;
+        });
+
+        const metrics: Record<string, EngineMetrics> = {};
+        Object.entries(byMode).forEach(([mode, { totalMs, count }]) => {
+          metrics[mode] = {
+            avgLatencyMs: count > 0 ? Math.round(totalMs / count) : 0,
+            requestCount: count,
+          };
+        });
+        setEngineMetrics(metrics);
+
+        // Compute Load: requests in last hour / 100 capacity, capped at 100
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const recentCount = usageLogs.filter(
+          (r: { created_at: string }) => r.created_at >= oneHourAgo
+        ).length;
+        const computeLoadPct = Math.min(Math.round((recentCount / 100) * 100), 100);
+
+        // Token Velocity: avg total tokens / 4000 max, capped at 100
+        const totalTokens = usageLogs.reduce(
+          (sum: number, r: { input_tokens: number | null; output_tokens: number | null }) =>
+            sum + (r.input_tokens ?? 0) + (r.output_tokens ?? 0),
+          0
+        );
+        const avgTokens = totalTokens / usageLogs.length;
+        const tokenVelocityPct = Math.min(Math.round((avgTokens / 4000) * 100), 100);
+
+        setPipeline({ computeLoadPct, tokenVelocityPct });
+      }
+
       setLoading(false);
     };
-    fetchEngines();
+    fetchAll();
   }, []);
 
   if (loading) {
@@ -88,7 +148,10 @@ export default function EnginesListPage() {
           </div>
 
           <div className="flex gap-4">
-             <button className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all active:scale-95 flex items-center gap-3">
+             <button
+                onClick={() => router.push('/admin/activity')}
+                className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all active:scale-95 flex items-center gap-3"
+             >
                 <HistoryIcon className="w-4 h-4" />
                 Global History
              </button>
@@ -136,8 +199,22 @@ export default function EnginesListPage() {
 
                    <div className="pt-10 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-10">
-                         <Metric label="Latency" value="180ms" />
-                         <Metric label="Success" value="100%" />
+                         <Metric
+                            label="Latency"
+                            value={
+                              engineMetrics[engine.mode]
+                                ? `${engineMetrics[engine.mode].avgLatencyMs}ms`
+                                : "—"
+                            }
+                         />
+                         <Metric
+                            label="Requests"
+                            value={
+                              engineMetrics[engine.mode]
+                                ? engineMetrics[engine.mode].requestCount.toLocaleString()
+                                : "0"
+                            }
+                         />
                       </div>
                       <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-600 group-hover:text-white group-hover:bg-blue-600 group-hover:border-blue-500 transition-all duration-500 shadow-xl">
                          <ChevronRight className="w-6 h-6 rtl-flip" />
@@ -165,15 +242,25 @@ export default function EnginesListPage() {
                  </div>
                  <div className="flex items-center gap-12">
                     <div className="text-right">
-                       <div className="text-[10px] font-black text-zinc-600 uppercase mb-3 tracking-widest">Compute Load</div>
+                       <div className="text-[10px] font-black text-zinc-600 uppercase mb-3 tracking-widest">
+                         Compute Load ({pipeline.computeLoadPct}%)
+                       </div>
                        <div className="h-2 w-48 bg-white/5 rounded-full overflow-hidden">
-                          <div className="h-full w-[14%] bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
+                          <div
+                            className="h-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all duration-700"
+                            style={{ width: `${pipeline.computeLoadPct}%` }}
+                          />
                        </div>
                     </div>
                     <div className="text-right">
-                       <div className="text-[10px] font-black text-zinc-600 uppercase mb-3 tracking-widest">Token Velocity</div>
+                       <div className="text-[10px] font-black text-zinc-600 uppercase mb-3 tracking-widest">
+                         Token Velocity ({pipeline.tokenVelocityPct}%)
+                       </div>
                        <div className="h-2 w-48 bg-white/5 rounded-full overflow-hidden">
-                          <div className="h-full w-[68%] bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.3)]" />
+                          <div
+                            className="h-full bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.3)] transition-all duration-700"
+                            style={{ width: `${pipeline.tokenVelocityPct}%` }}
+                          />
                        </div>
                     </div>
                  </div>

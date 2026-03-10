@@ -2,15 +2,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-    Brain, 
-    Zap, 
-    Activity, 
+import {
+    Brain,
+    Zap,
+    Activity,
     ChevronRight,
     Search,
     Dna
 } from "lucide-react";
 import { getApiPath } from "@/lib/api-path";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface IntelMetrics {
     topTokens: { token: string; count: number }[];
@@ -24,6 +26,10 @@ interface IntelMetrics {
 export function IntelligenceHub() {
     const [data, setData] = useState<IntelMetrics | null>(null);
     const [loading, setLoading] = useState(true);
+    const [healthIndex, setHealthIndex] = useState<string | null>(null);
+
+    const router = useRouter();
+    const supabase = createClient();
 
     useEffect(() => {
         const fetchIntel = async () => {
@@ -37,7 +43,44 @@ export function IntelligenceHub() {
                 setLoading(false);
             }
         };
+
+        const fetchHealthIndex = async () => {
+            try {
+                const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+                // Fetch total and error counts in parallel
+                const [{ count: totalCount }, { count: errorCount }] = await Promise.all([
+                    supabase
+                        .from("api_usage_logs")
+                        .select("*", { count: "exact", head: true })
+                        .gte("created_at", since),
+                    // Rows that have a non-null error column are failures
+                    supabase
+                        .from("api_usage_logs")
+                        .select("*", { count: "exact", head: true })
+                        .gte("created_at", since)
+                        .not("error", "is", null),
+                ]);
+
+                const total = totalCount ?? 0;
+                const errors = errorCount ?? 0;
+                const successful = total - errors;
+
+                if (total === 0) {
+                    setHealthIndex("N/A");
+                } else {
+                    const pct = Math.round((successful / total) * 1000) / 10;
+                    setHealthIndex(`${pct}%`);
+                }
+            } catch (e) {
+                console.error("Failed to fetch health index", e);
+                setHealthIndex("N/A");
+            }
+        };
+
         fetchIntel();
+        fetchHealthIndex();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (loading) {
@@ -51,10 +94,10 @@ export function IntelligenceHub() {
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000" dir="rtl">
-            
+
             {/* Intel Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+
                 {/* 1. Style Token Popularity */}
                 <div className="glass-card p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-1 h-full bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -67,7 +110,7 @@ export function IntelligenceHub() {
                             <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest leading-none mt-1">Linguistic Pattern Detection</p>
                         </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                         {data?.topTokens.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 group/token hover:bg-white/[0.05] transition-colors">
@@ -123,14 +166,19 @@ export function IntelligenceHub() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <Activity className="w-4 h-4 text-emerald-500" />
-                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Health Index: 98.4%</span>
+                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                                        Health Index: {healthIndex ?? "..."}
+                                    </span>
                                 </div>
                                 <span className="text-[9px] font-bold text-zinc-700 italic">Sample: {data?.metrics.sampleSize} sequences</span>
                             </div>
                         </div>
                     </div>
 
-                    <button className="w-full p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex items-center justify-between group hover:border-blue-500/30 transition-all duration-700">
+                    <button
+                        onClick={() => router.push("/admin/analytics")}
+                        className="w-full p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex items-center justify-between group hover:border-blue-500/30 transition-all duration-700"
+                    >
                         <div className="flex items-center gap-6">
                              <div className="p-4 rounded-2xl bg-zinc-900 border border-white/5 text-zinc-600 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-all">
                                 <Search className="w-6 h-6" />
@@ -142,7 +190,7 @@ export function IntelligenceHub() {
                         </div>
                         <ChevronRight className="w-6 h-6 text-zinc-800 transition-transform group-hover:translate-x-[-10px] group-hover:text-white" />
                     </button>
-                    
+
                 </div>
 
             </div>
