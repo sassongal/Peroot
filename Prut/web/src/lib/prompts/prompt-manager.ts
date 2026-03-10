@@ -46,13 +46,13 @@ export class PromptManager {
       const supabase = await createClient();
       const { data, error } = await supabase
         .from('ai_prompts')
-        .select('prompt_content')
+        .select('prompt')
         .eq('prompt_key', key)
         .eq('is_active', true)
         .single();
 
       if (data && !error) {
-        template = data.prompt_content;
+        template = data.prompt;
         console.log(`[PromptManager] DB hit: ${key}`);
       } else {
         console.warn(`[PromptManager] DB miss: ${key}`, error);

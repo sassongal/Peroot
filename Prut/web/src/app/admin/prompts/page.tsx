@@ -24,7 +24,7 @@ import { getApiPath } from "@/lib/api-path";
 interface Prompt {
   id: string;
   prompt_key: string;
-  prompt_content: string;
+  prompt: string;
   version: number;
   is_active: boolean;
   metadata: Record<string, unknown>;
@@ -35,7 +35,7 @@ interface Prompt {
 interface PromptVersion {
   id: string;
   version: number;
-  prompt_content: string;
+  prompt: string;
   created_at: string;
 }
 
@@ -101,7 +101,7 @@ export default function PromptsAdminPage() {
 
   function startEdit(prompt: Prompt) {
     setEditingId(prompt.id);
-    setEditContent(prompt.prompt_content);
+    setEditContent(prompt.prompt);
   }
 
   function cancelEdit() {
@@ -119,7 +119,7 @@ export default function PromptsAdminPage() {
       const { error } = await supabase
         .from('ai_prompts')
         .update({ 
-          prompt_content: editContent,
+          prompt: editContent,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
@@ -158,7 +158,7 @@ export default function PromptsAdminPage() {
       const { error } = await supabase
         .from('ai_prompts')
         .update({ 
-          prompt_content: versionContent,
+          prompt: versionContent,
           updated_at: new Date().toISOString()
         })
         .eq('id', promptId);
@@ -185,7 +185,7 @@ export default function PromptsAdminPage() {
 
   const filteredPrompts = prompts.filter(p => 
     p.prompt_key.toLowerCase().includes(search.toLowerCase()) ||
-    p.prompt_content.toLowerCase().includes(search.toLowerCase())
+    p.prompt.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -336,7 +336,7 @@ export default function PromptsAdminPage() {
                   ) : (
                     <div className="relative group/content bg-zinc-900/50 rounded-[32px] border border-white/5 p-1">
                         <pre className="bg-zinc-950/80 rounded-[30px] p-10 text-xs font-mono text-zinc-500 overflow-x-auto whitespace-pre-wrap max-h-80 overflow-y-auto leading-relaxed custom-scrollbar">
-                          {prompt.prompt_content}
+                          {prompt.prompt}
                         </pre>
                         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none rounded-b-[32px]" />
                     </div>
@@ -367,7 +367,7 @@ export default function PromptsAdminPage() {
                                 </div>
                             </div>
                             <button
-                              onClick={() => rollbackToVersion(prompt.id, version.prompt_content, version.version)}
+                              onClick={() => rollbackToVersion(prompt.id, version.prompt, version.version)}
                               className="flex items-center gap-3 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all scale-0 group-hover/version:scale-100 shadow-2xl"
                             >
                               <RotateCcw className="w-4 h-4" />
