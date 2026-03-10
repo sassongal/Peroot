@@ -1,5 +1,5 @@
 import { streamText, StreamTextResult } from "ai";
-import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId } from "./models";
+import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId, getModelsForTask } from "./models";
 
 export interface GatewayParams {
     system: string;
@@ -13,10 +13,11 @@ export class AIGateway {
      * Attempts to generate text streaming using the defined fallback order.
      * Guaranteed to try all free models before failing.
      */
-    static async generateStream(params: GatewayParams): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
+    static async generateStream(params: GatewayParams & { task?: string }): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
         let lastError: unknown;
+        const models = params.task ? getModelsForTask(params.task) : FALLBACK_ORDER;
 
-        for (const modelId of FALLBACK_ORDER) {
+        for (const modelId of models) {
             try {
                 const config = AVAILABLE_MODELS[modelId];
                 

@@ -63,8 +63,21 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
 };
 
 export const FALLBACK_ORDER: ModelId[] = [
-    'gemini-2.0-flash', 
-    'gemini-1.5-flash', 
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'llama-3-70b',
     'deepseek-chat'
 ];
+
+export type TaskType = 'enhance' | 'research' | 'agent' | 'image';
+
+export const TASK_ROUTING: Record<string, ModelId[]> = {
+  enhance:  ['gemini-2.0-flash', 'deepseek-chat', 'llama-3-70b'],
+  research: ['deepseek-chat', 'gemini-2.0-flash'],
+  agent:    ['gemini-2.0-flash', 'llama-3-70b'],
+  image:    ['gemini-2.0-flash', 'gemini-1.5-flash'],
+};
+
+export function getModelsForTask(task: string): ModelId[] {
+  return TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
+}

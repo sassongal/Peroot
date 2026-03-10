@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import NextImage from "next/image";
 import { getAssetPath } from "@/lib/asset-path";
 import { getApiPath } from "@/lib/api-path";
@@ -13,21 +13,42 @@ import { CapabilityMode } from "@/lib/capability-mode";
 import { useFavorites } from "@/hooks/useFavorites";
 import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
-import { ResultSection } from "@/components/features/prompt-improver/ResultSection";
+import dynamic from "next/dynamic";
+
+const ResultSection = dynamic(
+  () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
+  { ssr: false }
+);
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
-import { FAQBubble } from "@/components/features/faq/FAQBubble";
-import { SmartRefinement } from "@/components/features/prompt-improver/SmartRefinement";
+const FAQBubble = dynamic(
+  () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
+  { ssr: false }
+);
+const SmartRefinement = dynamic(
+  () => import("@/components/features/prompt-improver/SmartRefinement").then(mod => mod.SmartRefinement),
+  { ssr: false }
+);
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
-import { Question, LibraryPrompt, PersonalPrompt } from "@/lib/types";
+import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { createClient } from "@/lib/supabase/client";
 import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
 import { useLibraryContext } from "@/context/LibraryContext";
-import { LibraryView } from "@/components/views/LibraryView";
-import { PersonalLibraryView } from "@/components/views/PersonalLibraryView";
+const LibraryView = dynamic(
+  () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
+  { ssr: false }
+);
+const PersonalLibraryView = dynamic(
+  () => import("@/components/views/PersonalLibraryView").then(mod => mod.PersonalLibraryView),
+  { ssr: false }
+);
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
+import StreamingProgress from "@/components/ui/StreamingProgress";
 import { BookOpen, Star, Library } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
+import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
+import { useI18n } from "@/context/I18nContext";
 
 // Constants
 
@@ -41,49 +62,71 @@ const getPromptKey = (text: string) => {
   return `${Math.abs(hash)}:${normalized.length}`;
 };
 
-import { useI18n } from "@/context/I18nContext";
-
 function PageContent({ user }: { user: User | null }) {
   const t = useI18n();
   const { history, addToHistory, clearHistory, isLoaded } = useHistory();
-  // ... rest of imports stay the same ...
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { toggleFavorite: _toggle } = useFavorites();
-  
-  const { 
-    viewMode, 
-    setViewMode, 
+
+  const {
+    viewMode,
+    setViewMode,
     addPrompt,
     personalView,
     setPersonalView,
     completeOnboarding
   } = useLibraryContext();
 
+  const { state: ps, dispatch } = usePromptWorkflow();
+
+  const setInputVal = useCallback((action: SetStateAction<string>) => {
+    if (typeof action === 'function') {
+      // We need current value for functional updates — read from ref
+      dispatch({ type: 'SET_INPUT', payload: action(ps.input) });
+    } else {
+      dispatch({ type: 'SET_INPUT', payload: action });
+    }
+  }, [dispatch, ps.input]);
+
+  // Mutable refs for streaming delimiter parsing
+  const streamAccRef = useRef({ promptText: "", questionsPart: "", foundDelimiter: false });
+
+  const { startStream } = useStreamingCompletion({
+    onChunk: useCallback((chunk: string) => {
+      const acc = streamAccRef.current;
+      if (!acc.foundDelimiter) {
+        if (chunk.includes("[GENIUS_QUESTIONS]")) {
+          acc.foundDelimiter = true;
+          const [text, json] = chunk.split("[GENIUS_QUESTIONS]");
+          acc.promptText += text;
+          acc.questionsPart += json || "";
+          dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
+        } else {
+          acc.promptText += chunk;
+          dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
+        }
+      } else {
+        acc.questionsPart += chunk;
+      }
+    }, [dispatch]),
+    onDone: useCallback(() => {
+      dispatch({ type: 'STREAM_DONE' });
+    }, [dispatch]),
+    onError: useCallback((error: Error) => {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }, [dispatch]),
+  });
+
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Editor State
-  const [selectedTone, setSelectedTone] = useState("Professional");
-  const [selectedCategory, setSelectedCategory] = useState("General");
-  const [selectedCapability, setSelectedCapability] = useState<CapabilityMode>(CapabilityMode.STANDARD);
-  const [inputVal, setInputVal] = useState("");
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
-  const [copied, setCopied] = useState(false);
-  
-  // Results State
-  const [completion, setCompletion] = useState("");
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [detectedCategory, setDetectedCategory] = useState("");
-  const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-
   // Usage & Feedback
   const [guestPromptCount, setGuestPromptCount] = useState(0);
-  
+
   // Modals
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [loginRequiredConfig, setLoginRequiredConfig] = useState<{title?: string; message?: string; feature?: string}>({});
-  
+
   // --- Effects ---
 
   useEffect(() => {
@@ -101,7 +144,7 @@ function PageContent({ user }: { user: User | null }) {
           .select('onboarding_completed')
           .eq('id', user.id)
           .maybeSingle();
-          
+
         if (error) {
           console.error("Error fetching profile:", error);
         } else if (data) {
@@ -116,6 +159,26 @@ function PageContent({ user }: { user: User | null }) {
     fetchUserProfile();
   }, [user]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (ps.completion) {
+          dispatch({ type: 'SET_COMPLETION', payload: '' });
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'c') {
+        if (ps.completion) {
+          navigator.clipboard.writeText(ps.completion);
+          dispatch({ type: 'SET_COPIED', payload: true });
+          setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [ps.completion, dispatch]);
+
   // --- Logic ---
 
   const showLoginRequired = (feature: string, message?: string) => {
@@ -126,16 +189,13 @@ function PageContent({ user }: { user: User | null }) {
     setIsLoginRequiredModalOpen(true);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const completionKey = useMemo(() => getPromptKey(completion), [completion]);
-  
   const inputScore = useMemo(
-    () => BaseEngine.scorePrompt(inputVal),
-    [inputVal]
+    () => BaseEngine.scorePrompt(ps.input),
+    [ps.input]
   );
   const completionScore = useMemo(
-    () => BaseEngine.scorePrompt(completion),
-    [completion]
+    () => BaseEngine.scorePrompt(ps.completion),
+    [ps.completion]
   );
 
   const scoreTone =
@@ -146,22 +206,22 @@ function PageContent({ user }: { user: User | null }) {
         : inputScore.level === "low"
           ? { text: "text-red-400", bar: "bg-red-500" }
           : { text: "text-slate-500", bar: "bg-slate-600" };
-  
-  const placeholders = useMemo(() => extractPlaceholders(completion), [completion]);
-  const inputVariables = useMemo(() => extractPlaceholders(inputVal), [inputVal]);
+
+  const placeholders = useMemo(() => extractPlaceholders(ps.completion), [ps.completion]);
+  const inputVariables = useMemo(() => extractPlaceholders(ps.input), [ps.input]);
 
   const applyVariablesToPrompt = () => {
     if (inputVariables.length === 0) return;
-    let next = inputVal;
+    let next = ps.input;
     inputVariables.forEach((variable) => {
-      const value = variableValues[variable]?.trim();
+      const value = ps.variableValues[variable]?.trim();
       if (!value) return;
       const pattern = new RegExp(`\\{\\s*${escapeRegExp(variable)}\\s*\\}`, "g");
       next = next.replace(pattern, value);
     });
-    setInputVal(next);
+    dispatch({ type: 'SET_INPUT', payload: next });
   };
-  
+
   const recordUsageSignal = (type: "copy" | "save" | "refine" | "enhance", text: string) => {
     const target = text.trim();
     if (!target) return;
@@ -177,90 +237,53 @@ function PageContent({ user }: { user: User | null }) {
     }).catch(() => {});
   };
 
+  const processStreamResult = (label: string) => {
+    const acc = streamAccRef.current;
+    if (acc.questionsPart) {
+      try {
+        const parsed = JSON.parse(acc.questionsPart.trim());
+        dispatch({ type: 'SET_QUESTIONS', payload: parsed });
+      } catch (e) {
+        console.error(`[${label}] Failed to parse Genius questions:`, e, acc.questionsPart);
+      }
+    }
+
+    const extracted = extractPlaceholders(acc.promptText);
+    const newVars = { ...ps.variableValues };
+    extracted.forEach(ph => { if (!(ph in newVars)) newVars[ph] = ""; });
+    dispatch({ type: 'SET_VARIABLE_VALUES', payload: newVars });
+
+    return acc.promptText;
+  };
+
   const handleEnhance = async () => {
-    if (!inputVal.trim()) return;
+    if (!ps.input.trim()) return;
     if (!user && guestPromptCount >= 1) {
       showLoginRequired("שימוש ללא הגבלה", "ניצלת את הפרומפט החינמי שלך לסשן זה. התחבר כדי להמשיך ללא הגבלה!");
       return;
     }
 
-    setIsLoading(true);
-    setCompletion("");
-    setQuestions([]);
-    setQuestionAnswers({});
-    
-    try {
-      const response = await fetch(getApiPath("/api/enhance"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          prompt: inputVal, 
-          tone: selectedTone, 
-          category: selectedCategory,
-          capability_mode: selectedCapability 
-        }),
-      });
+    dispatch({ type: 'START_STREAM' });
+    dispatch({ type: 'SET_QUESTIONS', payload: [] });
+    streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to enhance prompt");
-      }
+    await startStream(getApiPath("/api/enhance"), {
+      prompt: ps.input,
+      tone: ps.selectedTone,
+      category: ps.selectedCategory,
+      capability_mode: ps.selectedCapability,
+    });
 
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let promptText = "";
-      let questionsPart = "";
-      let foundDelimiter = false;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        
-        if (!foundDelimiter) {
-          if (chunk.includes("[GENIUS_QUESTIONS]")) {
-            foundDelimiter = true;
-            const [text, json] = chunk.split("[GENIUS_QUESTIONS]");
-            promptText += text;
-            questionsPart += json || "";
-            setCompletion(promptText);
-          } else {
-            promptText += chunk;
-            setCompletion(promptText);
-          }
-        } else {
-          questionsPart += chunk;
-        }
-      }
-
-      // Final processing
-      if (questionsPart) {
-        try {
-          const parsed = JSON.parse(questionsPart.trim());
-          setQuestions(parsed);
-        } catch (e) {
-          console.error("[Enhance] Failed to parse Genius questions:", e, questionsPart);
-        }
-      }
-
+    const promptText = processStreamResult("Enhance");
+    if (promptText) {
       recordUsageSignal("enhance", promptText);
-      setDetectedCategory(selectedCategory);
-
-      const extracted = extractPlaceholders(promptText);
-      setVariableValues(prev => {
-        const next = { ...prev };
-        extracted.forEach(ph => { if (!(ph in next)) next[ph] = ""; });
-        return next;
-      });
+      dispatch({ type: 'SET_DETECTED_CATEGORY', payload: ps.selectedCategory });
 
       addToHistory({
-        original: inputVal,
+        original: ps.input,
         enhanced: promptText,
-        tone: selectedTone,
-        category: selectedCategory,
+        tone: ps.selectedTone,
+        category: ps.selectedCategory,
       });
 
       if (!user) {
@@ -269,128 +292,55 @@ function PageContent({ user }: { user: User | null }) {
         sessionStorage.setItem("peroot_guest_count", nextCount.toString());
       }
       toast.success(t.prompt_generator.success_toast);
-
-    } catch (e) {
-      const err = e as Error;
-      console.error("[Enhance] Error:", err);
-      toast.error(err.message || t.prompt_generator.error_toast);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleRefine = async (instruction: string) => {
-    const hasAnswers = Object.values(questionAnswers).some(a => a.trim());
-    if ((!instruction.trim() && !hasAnswers) || !completion) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch(getApiPath("/api/enhance"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: inputVal,
-          tone: selectedTone,
-          category: selectedCategory,
-          capability_mode: selectedCapability,
-          previousResult: completion,
-          refinementInstruction: instruction,
-          questions: questions.map(q => ({ id: q.id, question: q.question })),
-          answers: questionAnswers,
-        }),
-      });
+    const hasAnswers = Object.values(ps.questionAnswers).some(a => a.trim());
+    if ((!instruction.trim() && !hasAnswers) || !ps.completion) return;
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to refine prompt");
-      }
+    dispatch({ type: 'START_STREAM' });
+    streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
-      if (!response.body) throw new Error("No response body");
+    await startStream(getApiPath("/api/enhance"), {
+      prompt: ps.input,
+      tone: ps.selectedTone,
+      category: ps.selectedCategory,
+      capability_mode: ps.selectedCapability,
+      previousResult: ps.completion,
+      refinementInstruction: instruction,
+      questions: ps.questions.map(q => ({ id: q.id, question: q.question })),
+      answers: ps.questionAnswers,
+    });
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let promptText = "";
-      let questionsPart = "";
-      let foundDelimiter = false;
-
-      // Stream the refined text
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        
-        if (!foundDelimiter) {
-          if (chunk.includes("[GENIUS_QUESTIONS]")) {
-            foundDelimiter = true;
-            const [text, json] = chunk.split("[GENIUS_QUESTIONS]");
-            promptText += text;
-            questionsPart += json || "";
-            setCompletion(promptText);
-          } else {
-            promptText += chunk;
-            setCompletion(promptText);
-          }
-        } else {
-          questionsPart += chunk;
-        }
-      }
-
-      if (questionsPart) {
-        try {
-          const parsed = JSON.parse(questionsPart.trim());
-          setQuestions(parsed);
-        } catch (e) {
-          console.error("[Refine] Failed to parse Genius questions:", e, questionsPart);
-        }
-      }
-
+    const promptText = processStreamResult("Refine");
+    if (promptText) {
       recordUsageSignal("refine", promptText);
-      
-      const extracted = extractPlaceholders(promptText);
-      setVariableValues(prev => {
-        const next = { ...prev };
-        extracted.forEach(ph => { if (!(ph in next)) next[ph] = ""; });
-        return next;
-      });
-
-      // For refinement, we don't always get new questions unless logic changes
-      // In current streaming mode, we might need a separate endpoint for metadata
-      // For now, clear questions on finish to avoid stale state
-      setQuestions([]);
-      setQuestionAnswers({});
-
+      dispatch({ type: 'SET_QUESTIONS', payload: [] });
       toast.success("הפרומפט עודכן!");
-
-    } catch (e) {
-      const err = e as Error;
-      console.error("[Refine] Error:", err);
-      toast.error(err.message || "שגיאה בעדכון הפרומפט");
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleCopyText = async (text: string) => {
     await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    dispatch({ type: 'SET_COPIED', payload: true });
+    setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
     recordUsageSignal("copy", text);
     toast.success("הועתק ללוח!");
   };
 
   const handleUsePrompt = (prompt: LibraryPrompt | PersonalPrompt) => {
-    setInputVal(prompt.prompt);
+    dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
     setViewMode("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  
+
   const handleRestore = (item: HistoryItem) => {
-    setInputVal(item.original);
-    setSelectedTone(item.tone);
-    setSelectedCategory(item.category);
-    setCompletion(item.enhanced);
-    setQuestions([]);
+    dispatch({ type: 'SET_INPUT', payload: item.original });
+    dispatch({ type: 'SET_TONE', payload: item.tone });
+    dispatch({ type: 'SET_CATEGORY', payload: item.category });
+    dispatch({ type: 'SET_COMPLETION', payload: item.enhanced });
+    dispatch({ type: 'SET_QUESTIONS', payload: [] });
     toast.success("הפרומפט שוחזר");
   };
 
@@ -417,17 +367,17 @@ function PageContent({ user }: { user: User | null }) {
        showLoginRequired("שמירת פרומפטים");
        return;
     }
-    if (!completion.trim()) return;
+    if (!ps.completion.trim()) return;
     addPrompt({
-      title: inputVal.slice(0, 30) + (inputVal.length > 30 ? "..." : ""),
-      prompt: completion,
-      category: detectedCategory || selectedCategory,
+      title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
+      prompt: ps.completion,
+      category: ps.detectedCategory || ps.selectedCategory,
       personal_category: PERSONAL_DEFAULT_CATEGORY,
-      capability_mode: selectedCapability,
+      capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual"
     });
-    recordUsageSignal("save", completion);
+    recordUsageSignal("save", ps.completion);
     toast.success("נשמר לספריה האישית!");
   };
 
@@ -451,7 +401,7 @@ function PageContent({ user }: { user: User | null }) {
      setViewMode("personal");
      setPersonalView("all");
   };
-  
+
   const handleNavFavorites = () => {
     setViewMode("personal");
     setPersonalView("favorites");
@@ -465,25 +415,25 @@ function PageContent({ user }: { user: User | null }) {
 
   if (viewMode === "library") {
     return (
-        <LibraryView 
-            onUsePrompt={handleUsePrompt} 
-            onCopyText={async (t) => { await handleCopyText(t); }} 
+        <LibraryView
+            onUsePrompt={handleUsePrompt}
+            onCopyText={async (t) => { await handleCopyText(t); }}
         />
     );
   }
 
   if (viewMode === "personal") {
     return (
-        <PersonalLibraryView 
+        <PersonalLibraryView
             onUsePrompt={handleUsePrompt}
-            onCopyText={async (t) => { await handleCopyText(t); }} 
+            onCopyText={async (t) => { await handleCopyText(t); }}
             handleImportHistory={handleImportHistory}
             historyLength={history.length}
         />
     );
   }
 
-  // Home View - Restored Layout
+  // Home View
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] mx-auto w-full">
       {/* Background Gradient */}
@@ -493,7 +443,7 @@ function PageContent({ user }: { user: User | null }) {
       <div className="fixed top-6 left-6 z-50">
          <UserMenu user={user} position="top" />
       </div>
-      
+
       <div className="fixed bottom-6 left-6 z-50">
          <UserMenu user={user} position="bottom" />
       </div>
@@ -507,7 +457,7 @@ function PageContent({ user }: { user: User | null }) {
 
         {/* Right Sidebar (History & Navigation) */}
         <div className="lg:col-span-3 h-[calc(100vh-40px)] sticky top-6 flex flex-col gap-4">
-           
+
            {/* Navigation Buttons */}
            <div className="flex flex-col gap-3">
               <button
@@ -519,7 +469,7 @@ function PageContent({ user }: { user: User | null }) {
                 </div>
                 <span>{t.home.personal_library}</span>
               </button>
-              
+
               <button
                 onClick={handleNavFavorites}
                 className={cn(
@@ -574,65 +524,67 @@ function PageContent({ user }: { user: User | null }) {
              </div>
            </div>
 
-           <LoadingOverlay isVisible={isLoading} />
+           <LoadingOverlay isVisible={ps.isLoading} />
+           <StreamingProgress phase={ps.streamPhase} />
 
-           {!completion ? (
+           {!ps.completion ? (
              /* INPUT MODE */
              <>
                <PromptInput
-                  inputVal={inputVal}
+                  inputVal={ps.input}
                   setInputVal={setInputVal}
                   handleEnhance={handleEnhance}
                   inputScore={inputScore}
                   scoreTone={scoreTone}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
-                   selectedCapability={selectedCapability}
-                   setSelectedCapability={setSelectedCapability}
-                  isLoading={isLoading}
+                  selectedCategory={ps.selectedCategory}
+                  setSelectedCategory={(cat: string) => dispatch({ type: 'SET_CATEGORY', payload: cat })}
+                  selectedCapability={ps.selectedCapability}
+                  setSelectedCapability={(cap: CapabilityMode) => dispatch({ type: 'SET_CAPABILITY', payload: cap })}
+                  isLoading={ps.isLoading}
                   variables={inputVariables}
-                  variableValues={variableValues}
-                  setVariableValues={setVariableValues}
+                  variableValues={ps.variableValues}
+                  setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
                   onApplyVariables={applyVariablesToPrompt}
                />
-
-
              </>
            ) : (
              /* RESULT MODE */
              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col gap-8">
                  <ResultSection
-                     completion={completion}
-                     copied={copied}
+                     completion={ps.completion}
+                     copied={ps.copied}
                      onCopy={handleCopyText}
                      completionScore={completionScore}
                      onSave={saveCompletionToPersonal}
-                     onBack={() => setCompletion("")}
+                     onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
                      placeholders={placeholders}
-                     variableValues={variableValues}
+                     variableValues={ps.variableValues}
                      improvementDelta={completionScore.baseScore - inputScore.baseScore}
-                     onVariableChange={(key, val) => setVariableValues(prev => ({ ...prev, [key]: val }))}
+                     onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
+                     onImproveAgain={() => {
+                       dispatch({ type: 'SET_INPUT', payload: ps.completion });
+                       dispatch({ type: 'INCREMENT_ITERATION' });
+                       handleEnhance();
+                     }}
+                     iterationCount={ps.iterationCount}
                  />
-                 
-                 {questions.length > 0 && (
+
+                 {ps.questions.length > 0 && (
                     <SmartRefinement
-                       questions={questions}
-                       answers={questionAnswers}
-                       onAnswerChange={(id, val) => setQuestionAnswers(prev => ({...prev, [id]: val}))}
+                       questions={ps.questions}
+                       answers={ps.questionAnswers}
+                       onAnswerChange={(id, val) => dispatch({ type: 'SET_QUESTION_ANSWER', payload: { id, answer: val } })}
                        onRefine={() => handleRefine("")}
-                       isLoading={isLoading}
+                       isLoading={ps.isLoading}
                     />
                  )}
              </div>
            )}
 
-           {/* Removed old placement of ResultSection (lines 493-517) as it is now in conditional block */}
-
-
         </div>
 
       </div>
-      
+
       {/* Login Modal */}
       <LoginRequiredModal
         isOpen={isLoginRequiredModalOpen}

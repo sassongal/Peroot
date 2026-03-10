@@ -190,6 +190,40 @@
     "achievements_title": "הישגים ומדליות",
     "unlocked_badge": "שוחרר בהצלחה!"
   },
+  "smart_refinement": {
+    "title": "שאלות חידוד",
+    "subtitle": "ה-AI שאל כמה שאלות כדי לדייק את התוצאה. ענה עליהן לתוצאה טובה יותר.",
+    "placeholder": "הקלד/י תשובה כאן...",
+    "examples_label": "דוגמאות",
+    "recommended": "מומלץ",
+    "free_request": "בקשה חופשית",
+    "free_request_hint": "הוסף/י הוראות חידוד חופשיות (למשל: \"תקצר את הטקסט\", \"תוסיף אימוג'ים\").",
+    "free_request_placeholder": "למשל: שנה את הטון ליותר רשמי...",
+    "processing": "מעבד...",
+    "refine_button": "עדכן פרומפט"
+  },
+  "streaming": {
+    "sending": "שולח",
+    "processing": "מעבד",
+    "writing": "כותב",
+    "done": "הושלם"
+  },
+  "result": {
+    "improve_again": "שפר שוב"
+  },
+  "credits": {
+    "usage": "שימוש בקרדיטים",
+    "upgrade_now": "שדרג עכשיו",
+    "running_low": "הקרדיטים עומדים להיגמר",
+    "reset_date": "איפוס ב-"
+  },
+  "nudge": {
+    "remaining": "נותרו לך קרדיטים בודדים החודש",
+    "exhausted_title": "הקרדיטים נגמרו",
+    "exhausted_message": "שדרג ל-Pro או המתן לאיפוס החודשי",
+    "upgrade_to_pro": "שדרג ל-Pro",
+    "wait_for_reset": "המתן לאיפוס"
+  },
   "common": {
     "next": "המשך",
     "back": "חזרה",

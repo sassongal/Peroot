@@ -1,7 +1,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AIGateway } from '@/lib/ai/gateway';
-import { AVAILABLE_MODELS } from '@/lib/ai/models';
+import { AVAILABLE_MODELS, TASK_ROUTING, getModelsForTask } from '@/lib/ai/models';
 
 // Mock the 'ai' module
 const mockStreamText = vi.fn();
@@ -15,7 +15,7 @@ const originalEnv = process.env;
 describe('AIGateway', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...originalEnv, GROQ_API_KEY: 'test-key' };
+    process.env = { ...originalEnv, GROQ_API_KEY: 'test-key', DEEPSEEK_API_KEY: 'test-key' };
   });
 
   afterEach(() => {
@@ -62,17 +62,15 @@ describe('AIGateway', () => {
 
   it('should skip Groq if API key is missing', async () => {
     delete process.env.GROQ_API_KEY;
-    
-    // Fail first two models
-    mockStreamText.mockRejectedValueOnce(new Error('Fail 1'));
-    mockStreamText.mockRejectedValueOnce(new Error('Fail 2'));
-    // Third call should NOT happen (Groq skipped) - so it throws
+
+    // Fail all available models (Gemini x2 + DeepSeek, Groq skipped)
+    mockStreamText.mockRejectedValue(new Error('Fail'));
 
     await expect(AIGateway.generateStream({ system: 'sys', prompt: 'user' }))
         .rejects
         .toThrow();
-        
-    expect(mockStreamText).toHaveBeenCalledTimes(2); // Only Gemini models attempted
+
+    expect(mockStreamText).toHaveBeenCalledTimes(3); // 2 Gemini + DeepSeek (Groq skipped)
   });
 
   it('should throw if all models fail', async () => {
@@ -81,8 +79,43 @@ describe('AIGateway', () => {
     await expect(AIGateway.generateStream({ system: 'sys', prompt: 'user' }))
       .rejects
       .toThrow('General Failure');
-      
-     // Should try all 3
-     expect(mockStreamText).toHaveBeenCalledTimes(3);
+
+     // Should try all 4
+     expect(mockStreamText).toHaveBeenCalledTimes(4);
+  });
+
+  it('should use task-based routing when task is provided', async () => {
+    mockStreamText.mockResolvedValueOnce({ text: 'success' });
+
+    const result = await AIGateway.generateStream({ system: 'sys', prompt: 'user', task: 'research' });
+
+    expect(result.modelId).toBe('deepseek-chat');
+    expect(mockStreamText).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Task-Based Model Routing', () => {
+  it('returns models for enhance task', () => {
+    const models = getModelsForTask('enhance');
+    expect(models.length).toBeGreaterThan(0);
+    expect(models[0]).toBe('gemini-2.0-flash');
+  });
+
+  it('returns models for research task', () => {
+    const models = getModelsForTask('research');
+    expect(models.length).toBeGreaterThan(0);
+    expect(models[0]).toBe('deepseek-chat');
+  });
+
+  it('falls back to enhance routing for unknown task', () => {
+    const models = getModelsForTask('unknown-task');
+    expect(models).toEqual(TASK_ROUTING.enhance);
+  });
+
+  it('has routing for all expected tasks', () => {
+    expect(TASK_ROUTING).toHaveProperty('enhance');
+    expect(TASK_ROUTING).toHaveProperty('research');
+    expect(TASK_ROUTING).toHaveProperty('agent');
+    expect(TASK_ROUTING).toHaveProperty('image');
   });
 });

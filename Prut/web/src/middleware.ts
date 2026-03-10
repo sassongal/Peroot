@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import * as Sentry from "@sentry/nextjs"
+import { isMaintenanceMode } from '@/lib/maintenance'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -32,12 +33,7 @@ export async function middleware(request: NextRequest) {
 
   // 🛠️ MAINTENANCE MODE ENFORCEMENT
   // We check this first to block all non-admin traffic if maintenance is active
-  const { data: settings } = await supabase
-    .from('site_settings')
-    .select('maintenance_mode')
-    .single();
-
-  const isMaintenance = settings?.maintenance_mode;
+  const isMaintenance = await isMaintenanceMode();
   const isAdmin = user?.app_metadata?.role === 'admin';
 
   if (isMaintenance && !isAdmin) {

@@ -190,6 +190,40 @@
     "achievements_title": "Achievements & Badges",
     "unlocked_badge": "Unlocked Successfully!"
   },
+  "smart_refinement": {
+    "title": "Refinement Questions",
+    "subtitle": "The AI asked some questions to refine the result. Answer them for a better outcome.",
+    "placeholder": "Type your answer here...",
+    "examples_label": "Examples",
+    "recommended": "Recommended",
+    "free_request": "Free Request",
+    "free_request_hint": "Add free-form refinement instructions (e.g., \"shorten the text\", \"add emojis\").",
+    "free_request_placeholder": "e.g., Change the tone to more formal...",
+    "processing": "Processing...",
+    "refine_button": "Update Prompt"
+  },
+  "streaming": {
+    "sending": "Sending",
+    "processing": "Processing",
+    "writing": "Writing",
+    "done": "Complete"
+  },
+  "result": {
+    "improve_again": "Improve Again"
+  },
+  "credits": {
+    "usage": "Credit Usage",
+    "upgrade_now": "Upgrade Now",
+    "running_low": "Credits running low",
+    "reset_date": "Resets on "
+  },
+  "nudge": {
+    "remaining": "You have few credits left this month",
+    "exhausted_title": "Credits Exhausted",
+    "exhausted_message": "Upgrade to Pro or wait for monthly reset",
+    "upgrade_to_pro": "Upgrade to Pro",
+    "wait_for_reset": "Wait for reset"
+  },
   "common": {
     "next": "Next",
     "back": "Back",

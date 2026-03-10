@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Plus, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Check, Copy, Plus, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
@@ -16,6 +16,8 @@ interface ResultSectionProps {
   placeholders?: string[];
   variableValues?: Record<string, string>;
   onVariableChange?: (key: string, value: string) => void;
+  onImproveAgain?: () => void;
+  iterationCount?: number;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -31,6 +33,8 @@ export function ResultSection({
   placeholders = [],
   variableValues = {},
   onVariableChange,
+  onImproveAgain,
+  iterationCount,
 }: ResultSectionProps) {
     const t = useI18n();
   // ... rest of logic ...
@@ -69,7 +73,7 @@ export function ResultSection({
           <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
             <button
               onClick={() => onCopy(displayCompletion)}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
               title={t.result_section.copy_tooltip}
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -84,10 +88,10 @@ export function ResultSection({
 
           <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between mt-auto">
             <div className="flex items-center gap-3">
-               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center">
                  <ThumbsUp className="w-4 h-4" />
                </button>
-               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+               <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-11 min-w-11 flex items-center justify-center">
                  <ThumbsDown className="w-4 h-4" />
                </button>
             </div>
@@ -105,6 +109,20 @@ export function ResultSection({
                   <Plus className="w-4 h-4" />
                   {t.result_section.save}
                </button>
+               {onImproveAgain && (
+                 <button
+                   onClick={onImproveAgain}
+                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-sm font-medium transition-colors min-h-11"
+                 >
+                   <RefreshCw className="w-4 h-4" />
+                   {t.result?.improve_again || 'שפר שוב'}
+                   {(iterationCount ?? 0) > 0 && (
+                     <span className="bg-purple-500/30 text-purple-200 text-xs px-1.5 py-0.5 rounded-full">
+                       #{iterationCount}
+                     </span>
+                   )}
+                 </button>
+               )}
                <button
                   onClick={() => onCopy(displayCompletion)}
                   className="flex items-center gap-2 px-6 py-2 rounded-lg bg-white text-black font-medium text-sm hover:bg-slate-200 transition-colors"
