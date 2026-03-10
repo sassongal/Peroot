@@ -68,23 +68,10 @@ export async function middleware(request: NextRequest) {
     Sentry.setUser({ id: user.id, email: user.email });
 
     // ⛔ Admin Path Protection (Server-side Enforcement)
-    const isAdminPath = request.nextUrl.pathname.startsWith('/admin') || 
-                       request.nextUrl.pathname.startsWith('/api/admin') ||
-                       request.nextUrl.pathname.startsWith('/api/prompts/sync');
-    
-    if (isAdminPath) {
-        // Check admin role from app_metadata (set via Supabase Auth)
-        // Fallback: Also check user_roles table via AdminGuard on client
-        const userIsAdmin = user.app_metadata?.role === 'admin';
-
-        if (!userIsAdmin) {
-            // Not an admin - Redirect to home or return 403 for API
-            if (request.nextUrl.pathname.startsWith('/api/')) {
-                return NextResponse.json({ error: 'Unauthorized access' }, { status: 403 });
-            }
-            return NextResponse.redirect(new URL('/', request.url));
-        }
-    }
+    // API admin routes are protected by validateAdminSession() which checks user_roles table.
+    // Admin pages are protected by AdminGuard component which also checks user_roles table.
+    // Middleware only ensures the user is authenticated (logged in) for admin paths.
+    // No additional middleware blocking needed — auth check above is sufficient.
   } else {
     // Guest accessing admin path
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin') ||
