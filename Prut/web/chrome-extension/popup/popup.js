@@ -4,7 +4,55 @@
  */
 
 const API_BASE = "https://peroot.space";
-const MAX_HISTORY = 5;
+const MAX_HISTORY = 8;
+
+// ─── Quick Action Definitions ───
+const ACTIONS = {
+  enhance: {
+    label: "שדרג",
+    buildPrompt: (text, tone) => ({ prompt: text, tone, category: "General" }),
+  },
+  shorten: {
+    label: "קצר",
+    buildPrompt: (text) => ({
+      prompt: text,
+      tone: "Professional",
+      category: "General",
+      refinementInstruction: "Make this significantly shorter and more concise. Keep the core message but remove all unnecessary words. Output ONLY the shortened text.",
+      previousResult: text,
+    }),
+  },
+  lengthen: {
+    label: "הארך",
+    buildPrompt: (text) => ({
+      prompt: text,
+      tone: "Professional",
+      category: "General",
+      refinementInstruction: "Expand and elaborate on this text. Add more detail, examples, and depth while maintaining the original tone and intent. Output ONLY the expanded text.",
+      previousResult: text,
+    }),
+  },
+  fix: {
+    label: "תקן",
+    buildPrompt: (text) => ({
+      prompt: text,
+      tone: "Professional",
+      category: "General",
+      refinementInstruction: "Fix all grammar, spelling, and punctuation errors. Improve sentence structure where needed. Output ONLY the corrected text with no explanations.",
+      previousResult: text,
+    }),
+  },
+  translate: {
+    label: "תרגם",
+    buildPrompt: (text) => ({
+      prompt: text,
+      tone: "Professional",
+      category: "General",
+      refinementInstruction: "Translate this text to English. If already in English, translate to Hebrew. Output ONLY the translation.",
+      previousResult: text,
+    }),
+  },
+};
 
 // ─── DOM ───
 const $ = (id) => document.getElementById(id);
@@ -15,13 +63,13 @@ const loginBtn = $("login-btn");
 const promptInput = $("prompt-input");
 const charCount = $("char-count");
 const toneSelect = $("tone-select");
-const enhanceBtn = $("enhance-btn");
-const enhanceLabel = $("enhance-label");
-const enhanceSpinner = $("enhance-spinner");
 const resultSection = $("result-section");
+const resultLabel = $("result-label");
+const resultTimer = $("result-timer");
 const resultText = $("result-text");
 const copyBtn = $("copy-btn");
 const insertBtn = $("insert-btn");
+const reuseBtn = $("reuse-btn");
 const openBtn = $("open-btn");
 const errorSection = $("error-section");
 const errorText = $("error-text");
@@ -32,6 +80,8 @@ const clearHistoryBtn = $("clear-history");
 
 let lastEnhanced = "";
 let isEnhancing = false;
+let currentAction = "enhance";
+let timerInterval = null;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
@@ -39,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const stored = await chrome.storage.local.get(["tone"]);
   if (stored.tone) toneSelect.value = stored.tone;
 
-  // Auth check - token is synced from peroot.space via content script
+  // Auth check
   const auth = await checkAuth();
 
   if (auth.authenticated) {
@@ -53,9 +103,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     fetchUserInfo();
   } else {
     show(loginScreen);
-    // Show hint: user needs to have peroot.space open or login
-    const hint = loginScreen.querySelector(".login-hint");
-    if (hint) hint.textContent = "התחבר ל-peroot.space ואז פתח שוב את התוסף";
   }
 });
 
@@ -78,13 +125,12 @@ async function fetchUserInfo() {
       }
     }
   } catch {
-    // Not deployed yet - fine
+    // Not critical
   }
 }
 
 // ═══ LOGIN ═══
 loginBtn.addEventListener("click", async () => {
-  // Open login page - content script will sync token after login
   await chrome.tabs.create({ url: `${API_BASE}/login` });
   window.close();
 });
@@ -104,43 +150,68 @@ toneSelect.addEventListener("change", () => {
 promptInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    doEnhance();
+    doAction("enhance");
   }
 });
 
-// ═══ ENHANCE ═══
-enhanceBtn.addEventListener("click", doEnhance);
+// ═══ QUICK ACTIONS ═══
+document.querySelectorAll(".qa-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const action = btn.dataset.action;
+    if (action) doAction(action);
+  });
+});
 
-async function doEnhance() {
+// ═══ ENHANCE / ACTION ═══
+async function doAction(action) {
   const text = promptInput.value.trim();
   if (!text || isEnhancing) return;
 
+  currentAction = action;
   isEnhancing = true;
   hideError();
   resultSection.classList.add("hidden");
-  setLoading(true);
+
+  // Disable all action buttons
+  document.querySelectorAll(".qa-btn").forEach((b) => (b.disabled = true));
+
+  // Highlight active action
+  document.querySelectorAll(".qa-btn").forEach((b) => b.classList.remove("qa-active"));
+  const activeBtn = document.querySelector(`.qa-btn[data-action="${action}"]`);
+  if (activeBtn) activeBtn.classList.add("qa-active");
+
+  // Start timer
+  const startTime = Date.now();
+  resultTimer.textContent = "0.0s";
+  timerInterval = setInterval(() => {
+    resultTimer.textContent = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
+  }, 100);
+
+  // Show result section immediately with streaming state
+  resultSection.classList.remove("hidden");
+  resultText.textContent = "";
+  resultText.classList.add("streaming");
+  resultLabel.textContent = ACTIONS[action]?.label || "תוצאה";
 
   try {
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
+    const body = ACTIONS[action].buildPrompt(text, toneSelect.value);
 
     const res = await fetch(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        prompt: text,
-        tone: toneSelect.value,
-        category: "General",
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
+      resultSection.classList.add("hidden");
       if (res.status === 403) {
         showError(err.error || "אין מספיק קרדיטים");
       } else if (res.status === 429) {
         showError("יותר מדי בקשות. נסה שוב בעוד כמה דקות.");
       } else if (res.status === 401) {
-        showError("נדרשת התחברות. לחץ על התחבר ל-Peroot.");
+        showError("נדרשת התחברות מחדש.");
         show(loginScreen);
       } else {
         showError(err.error || "שגיאה בשדרוג");
@@ -152,10 +223,6 @@ async function doEnhance() {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
-
-    resultSection.classList.remove("hidden");
-    resultText.textContent = "";
-    resultText.classList.add("streaming");
 
     while (true) {
       const { done, value } = await reader.read();
@@ -170,20 +237,16 @@ async function doEnhance() {
     resultText.classList.remove("streaming");
     lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
 
-    saveToHistory(text, lastEnhanced);
-    fetchUserInfo(); // refresh credits
+    saveToHistory(text, lastEnhanced, action);
+    fetchUserInfo();
   } catch {
+    resultSection.classList.add("hidden");
     showError("שגיאת רשת. בדוק את החיבור.");
   } finally {
     isEnhancing = false;
-    setLoading(false);
+    clearInterval(timerInterval);
+    document.querySelectorAll(".qa-btn").forEach((b) => (b.disabled = false));
   }
-}
-
-function setLoading(on) {
-  enhanceBtn.disabled = on;
-  enhanceLabel.classList.toggle("hidden", on);
-  enhanceSpinner.classList.toggle("hidden", !on);
 }
 
 // ═══ ERROR ═══
@@ -209,6 +272,14 @@ insertBtn.addEventListener("click", async () => {
     chrome.tabs.sendMessage(tab.id, { type: "INSERT_TEXT", text: lastEnhanced });
     flash(insertBtn, "הוכנס!");
   }
+});
+
+reuseBtn.addEventListener("click", () => {
+  if (!lastEnhanced) return;
+  promptInput.value = lastEnhanced;
+  charCount.textContent = lastEnhanced.length;
+  resultSection.classList.add("hidden");
+  promptInput.focus();
 });
 
 openBtn.addEventListener("click", () => {
@@ -238,12 +309,15 @@ async function loadHistory() {
   history.slice(0, MAX_HISTORY).forEach((item) => {
     const el = document.createElement("div");
     el.className = "history-item";
+
     const textSpan = document.createElement("span");
     textSpan.className = "history-item-text";
     textSpan.textContent = item.original;
+
     const timeSpan = document.createElement("span");
     timeSpan.className = "history-item-time";
     timeSpan.textContent = timeAgo(item.time);
+
     el.appendChild(textSpan);
     el.appendChild(timeSpan);
     el.addEventListener("click", () => {
@@ -255,11 +329,12 @@ async function loadHistory() {
   });
 }
 
-async function saveToHistory(original, enhanced) {
+async function saveToHistory(original, enhanced, action) {
   const { history = [] } = await chrome.storage.local.get("history");
   history.unshift({
     original: original.substring(0, 200),
     enhanced: enhanced.substring(0, 500),
+    action: action || "enhance",
     time: Date.now(),
   });
   await chrome.storage.local.set({ history: history.slice(0, MAX_HISTORY) });

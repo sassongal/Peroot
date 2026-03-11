@@ -1,26 +1,49 @@
 /**
  * Peroot Extension - Service Worker
- * Handles: context menu, auth token storage/relay
+ * Handles: context menu with quick actions, auth token storage/relay
  */
 
 const SITE_URL = "https://peroot.space";
 
 // ─── Context Menu ───
 chrome.runtime.onInstalled.addListener(() => {
+  // Parent menu
   chrome.contextMenus.create({
-    id: "peroot-enhance",
-    title: "\u05E9\u05D3\u05E8\u05D2 \u05E2\u05DD Peroot",
+    id: "peroot-parent",
+    title: "Peroot",
     contexts: ["selection"],
+  });
+
+  // Quick actions as sub-items
+  const actions = [
+    { id: "enhance", title: "\u05E9\u05D3\u05E8\u05D2" },
+    { id: "shorten", title: "\u05E7\u05E6\u05E8" },
+    { id: "lengthen", title: "\u05D4\u05D0\u05E8\u05DA" },
+    { id: "fix", title: "\u05EA\u05E7\u05DF \u05E9\u05D2\u05D9\u05D0\u05D5\u05EA" },
+    { id: "translate", title: "Translate EN/HE" },
+  ];
+
+  actions.forEach((a) => {
+    chrome.contextMenus.create({
+      id: `peroot-${a.id}`,
+      title: a.title,
+      parentId: "peroot-parent",
+      contexts: ["selection"],
+    });
   });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "peroot-enhance" && info.selectionText && tab?.id) {
-    chrome.tabs.sendMessage(tab.id, {
-      type: "ENHANCE_SELECTION",
-      text: info.selectionText,
-    });
-  }
+  if (!info.menuItemId.startsWith("peroot-") || !info.selectionText || !tab?.id) return;
+
+  const action = info.menuItemId.replace("peroot-", "");
+  if (action === "parent") return;
+
+  chrome.tabs.sendMessage(tab.id, {
+    type: "ENHANCE_SELECTION",
+    text: info.selectionText,
+    action: action,
+  });
 });
 
 // ─── Message Handler ───
@@ -49,7 +72,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // ─── Force Auth Sync ───
-// Find an open peroot.space tab and inject a fetch call to get the token
 async function forceAuthSync() {
   try {
     let tabs = await chrome.tabs.query({ url: "https://peroot.space/*" });

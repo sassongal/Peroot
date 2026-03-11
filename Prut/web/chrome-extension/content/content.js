@@ -62,10 +62,50 @@ async function getAuthHeaders(extra = {}) {
   return headers;
 }
 
+// ─── Action Definitions (same as popup) ───
+const ACTIONS = {
+  enhance: {
+    label: "שדרג",
+    buildBody: (text) => ({ prompt: text, tone: "Professional", category: "General" }),
+  },
+  shorten: {
+    label: "קצר",
+    buildBody: (text) => ({
+      prompt: text, tone: "Professional", category: "General",
+      refinementInstruction: "Make this significantly shorter and more concise. Keep the core message but remove all unnecessary words. Output ONLY the shortened text.",
+      previousResult: text,
+    }),
+  },
+  lengthen: {
+    label: "הארך",
+    buildBody: (text) => ({
+      prompt: text, tone: "Professional", category: "General",
+      refinementInstruction: "Expand and elaborate on this text. Add more detail, examples, and depth while maintaining the original tone. Output ONLY the expanded text.",
+      previousResult: text,
+    }),
+  },
+  fix: {
+    label: "תקן",
+    buildBody: (text) => ({
+      prompt: text, tone: "Professional", category: "General",
+      refinementInstruction: "Fix all grammar, spelling, and punctuation errors. Improve sentence structure where needed. Output ONLY the corrected text.",
+      previousResult: text,
+    }),
+  },
+  translate: {
+    label: "תרגם",
+    buildBody: (text) => ({
+      prompt: text, tone: "Professional", category: "General",
+      refinementInstruction: "Translate this text to English. If already in English, translate to Hebrew. Output ONLY the translation.",
+      previousResult: text,
+    }),
+  },
+};
+
 // ─── Messages ───
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "ENHANCE_SELECTION") {
-    handleEnhance(message.text);
+    handleEnhance(message.text, message.action || "enhance");
   }
   if (message.type === "INSERT_TEXT") {
     insertIntoActive(message.text);
@@ -77,7 +117,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ─── Enhance Flow ───
-function handleEnhance(text) {
+function handleEnhance(text, action) {
   lastSelectionElement = document.activeElement;
 
   const sel = window.getSelection();
@@ -91,12 +131,13 @@ function handleEnhance(text) {
     if (y + 400 > window.innerHeight) y = Math.max(12, r.top - 410);
   }
 
-  showPanel(Math.max(12, x), Math.max(12, y));
-  doEnhance(text);
+  const actionDef = ACTIONS[action] || ACTIONS.enhance;
+  showPanel(Math.max(12, x), Math.max(12, y), actionDef.label);
+  doEnhance(text, action);
 }
 
 // ─── Panel ───
-function showPanel(x, y) {
+function showPanel(x, y, actionLabel) {
   removePanel();
 
   const p = document.createElement("div");
@@ -107,7 +148,7 @@ function showPanel(x, y) {
       <div class="peroot-hl">
         <span class="peroot-dot"></span>
         <span class="peroot-brand">Peroot</span>
-        <span class="peroot-status" id="peroot-status">משדרג...</span>
+        <span class="peroot-status" id="peroot-status">${actionLabel || "משדרג"}...</span>
       </div>
       <button id="peroot-close">&times;</button>
     </div>
@@ -166,11 +207,13 @@ function flashBtn(btn, text) {
 }
 
 // ─── API Call ───
-async function doEnhance(text) {
+async function doEnhance(text, action) {
   const body = currentPanel?.querySelector("#peroot-body");
   const actions = currentPanel?.querySelector("#peroot-actions");
   const status = currentPanel?.querySelector("#peroot-status");
   if (!body) return;
+
+  const actionDef = ACTIONS[action] || ACTIONS.enhance;
 
   try {
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
@@ -178,7 +221,7 @@ async function doEnhance(text) {
     const res = await fetch(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ prompt: text, tone: "Professional", category: "General" }),
+      body: JSON.stringify(actionDef.buildBody(text)),
     });
 
     if (!res.ok) {
