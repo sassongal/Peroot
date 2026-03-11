@@ -1,18 +1,41 @@
-# Peroot (Hebrew Prompt Engineering)
+# Peroot (פירוט) - Hebrew Prompt Engineering Tool
 
-Peroot turns raw ideas into structured, high-quality prompts in Hebrew (RTL-first).
+> Peroot is an AI-powered prompt generator built specifically for Hebrew. It transforms raw ideas into structured, professional-grade prompts optimized for ChatGPT, Claude, Gemini, and other LLMs.
 
 ## Key URLs
-- https://peroot.space/
-- https://peroot.space/privacy
-- https://peroot.space/accessibility
+- [Homepage](https://peroot.space/): Main app - prompt enhancement tool
+- [Pricing](https://peroot.space/pricing): Free and Pro plan details
+- [Blog](https://peroot.space/blog): Guides and tutorials on prompt engineering
+- [Privacy Policy](https://peroot.space/privacy)
+- [Terms of Service](https://peroot.space/terms)
+- [Contact](https://peroot.space/contact)
 
-## Product Summary
-- Hebrew-first prompt improver
-- Structured "Great Prompt" output
-- Clarifying questions (0-3)
-- Prompt strength scoring
-- Personal prompt library
+## Blog Articles
+- [10 Common Mistakes in Writing Prompts](https://peroot.space/blog/10-common-prompt-mistakes): Common errors and how to fix them
+- [How to Write a Good Prompt - Complete Guide](https://peroot.space/blog/how-to-write-good-prompt): Step-by-step guide for effective prompts
+- [Prompt Engineering for Marketers](https://peroot.space/blog/prompt-engineering-for-marketers): Marketing-focused prompt techniques
+- [Creating Content in Hebrew with AI](https://peroot.space/blog/creating-content-in-hebrew-with-ai): Guide for Hebrew AI content creation
+- [Image Creation Prompts Guide](https://peroot.space/blog/image-creation-prompts-guide): DALL-E, Midjourney, and Stable Diffusion prompts
+- [ChatGPT vs Claude vs Gemini Comparison](https://peroot.space/blog/chatgpt-vs-claude-vs-gemini): Full AI model comparison
+
+## Product Features
+- Hebrew-first prompt improver (RTL-native, not translated)
+- 4 capability modes: Standard text, Deep research, Image prompts, Agent builder
+- "Great Prompt" structured output with context, goal, constraints, and format
+- Clarifying questions (0-3) to refine intent
+- Real-time prompt strength scoring
+- 410+ prompt templates in public library
+- Personal prompt library with favorites and organization
+- Smart variables with {placeholder} syntax
+- Iterative refinement with Refine and Quick Actions
+
+## Key Facts
+- Built by JoyaTech (https://joya-tech.net)
+- Creator: Gal Sasson
+- Language: Hebrew (primary), with English support
+- Free tier available with daily credits
+- Pro plan for unlimited usage
 
 ## Contact
-- gal@joya-tech.net
+- Email: gal@joya-tech.net
+- Website: https://joya-tech.net

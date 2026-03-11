@@ -4,6 +4,7 @@ import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { FAQSchema } from "@/components/features/faq/FAQSchema";
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
+import { organizationSchema } from "@/lib/schema";
 
 const frankRuhl = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
@@ -134,6 +135,10 @@ export default async function RootLayout({
           </a>
           <div className="noise-overlay" />
           <FAQSchema />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
+          />
           <I18nProvider dictionary={dictionary}>
             <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
               <GlobalContextWrapper>

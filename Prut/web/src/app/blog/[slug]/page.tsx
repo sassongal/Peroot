@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { articleSchema } from "@/lib/schema";
+import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${title} | Peroot`,
       description,
     },
@@ -137,9 +137,21 @@ export default async function BlogPostPage({ params }: Props) {
               excerpt: post.meta_description || post.excerpt || "",
               slug: post.slug,
               published_at: post.published_at,
-              author: post.author || "Peroot",
+              author: post.author || "Gal Sasson",
               thumbnail_url: post.thumbnail_url,
             })
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema([
+              { name: "דף הבית", url: "/" },
+              { name: "בלוג", url: "/blog" },
+              { name: post.title, url: `/blog/${post.slug}` },
+            ])
           ),
         }}
       />
