@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import Link from "next/link";
 import { useI18n } from "@/context/I18nContext";
+import { logger } from "@/lib/logger";
 
 interface User {
   id: string;
@@ -93,7 +94,7 @@ export default function UsersPage() {
 
       if (profileError) throw profileError;
       if (roleError) throw roleError;
-      if (subError) console.warn("Subscriptions fetch warning:", subError);
+      if (subError) logger.warn("Subscriptions fetch warning:", subError);
 
       const mergedUsers: User[] = (profiles ?? []).map((p) => {
         const sub = (subscriptions ?? []).find((s) => s.user_id === p.id);
@@ -107,7 +108,7 @@ export default function UsersPage() {
 
       setUsers(mergedUsers);
     } catch (error) {
-      console.error("Failed to load users:", error);
+      logger.error("Failed to load users:", error);
       toast.error(t.admin.users.toasts.load_error);
     } finally {
       setLoading(false);
@@ -169,7 +170,7 @@ export default function UsersPage() {
       toast.success(t.admin.users.toasts.update_success);
       loadUsers();
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error(t.admin.users.toasts.update_error);
     }
   }

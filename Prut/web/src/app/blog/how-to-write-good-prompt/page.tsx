@@ -6,6 +6,19 @@ export const metadata: Metadata = {
   title: "איך לכתוב פרומפט טוב — המדריך המלא",
   description: "5 עקרונות שיהפכו כל פרומפט שלכם ממשהו בסיסי לפרומפט מקצועי שמוציא תוצאות מדויקות מ-ChatGPT, Claude ו-Gemini.",
   alternates: { canonical: "/blog/how-to-write-good-prompt" },
+  openGraph: {
+    title: "איך לכתוב פרומפט טוב — המדריך המלא | Peroot",
+    description: "5 עקרונות שיהפכו כל פרומפט שלכם ממשהו בסיסי לפרומפט מקצועי שמוציא תוצאות מדויקות מ-ChatGPT, Claude ו-Gemini.",
+    url: "/blog/how-to-write-good-prompt",
+    siteName: "Peroot",
+    locale: "he_IL",
+    type: "article",
+  },
+  twitter: {
+    card: "summary",
+    title: "איך לכתוב פרומפט טוב — המדריך המלא | Peroot",
+    description: "5 עקרונות שיהפכו כל פרומפט שלכם ממשהו בסיסי לפרומפט מקצועי.",
+  },
 };
 
 export default function HowToWriteGoodPrompt() {

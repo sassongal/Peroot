@@ -1,5 +1,6 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { logger } from '@/lib/logger';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || '',
@@ -33,6 +34,37 @@ export interface RateLimitResult {
   reset: number;
 }
 
+// In-memory fallback when Redis is unavailable
+// Limits to 10 requests per IP per hour to prevent abuse
+const memoryFallback = new Map<string, { count: number; resetAt: number }>();
+const MEMORY_LIMIT = 10;
+const MEMORY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkMemoryFallback(identifier: string): RateLimitResult {
+  const now = Date.now();
+  const entry = memoryFallback.get(identifier);
+
+  if (!entry || now >= entry.resetAt) {
+    memoryFallback.set(identifier, { count: 1, resetAt: now + MEMORY_WINDOW_MS });
+    return { success: true, limit: MEMORY_LIMIT, remaining: MEMORY_LIMIT - 1, reset: now + MEMORY_WINDOW_MS };
+  }
+
+  entry.count++;
+  if (entry.count > MEMORY_LIMIT) {
+    return { success: false, limit: MEMORY_LIMIT, remaining: 0, reset: entry.resetAt };
+  }
+
+  return { success: true, limit: MEMORY_LIMIT, remaining: MEMORY_LIMIT - entry.count, reset: entry.resetAt };
+}
+
+// Periodic cleanup of expired entries (every 5 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of memoryFallback) {
+    if (now >= entry.resetAt) memoryFallback.delete(key);
+  }
+}, 5 * 60 * 1000).unref?.();
+
 export async function checkRateLimit(identifier: string, tier: RateLimitTier = 'guest'): Promise<RateLimitResult> {
   try {
     const limiter = rateLimiters[tier];
@@ -44,7 +76,7 @@ export async function checkRateLimit(identifier: string, tier: RateLimitTier = '
       reset: result.reset,
     };
   } catch (error) {
-    console.error('[RateLimit] Redis unavailable, allowing request:', error);
-    return { success: true, limit: 0, remaining: 1, reset: 0 };
+    logger.error('[RateLimit] Redis unavailable, using in-memory fallback:', error);
+    return checkMemoryFallback(identifier);
   }
 }

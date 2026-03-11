@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from "@/lib/logger";
 
 export async function GET() {
     const start = Date.now();
@@ -12,7 +13,7 @@ export async function GET() {
         dbStatus = 'healthy';
     } catch (e) {
         dbStatus = 'unhealthy';
-        console.error('Health Check DB Error:', e);
+        logger.error('Health Check DB Error:', e);
     }
 
     return NextResponse.json({

@@ -17,6 +17,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ export default function CostsPage() {
       const json: CostsData = await res.json();
       setData(json);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error("Failed to load cost data");
     } finally {
       setLoading(false);
@@ -160,7 +161,7 @@ export default function CostsPage() {
       const json: { data: ManualCostEntry[] } = await res.json();
       setManualEntries(json.data ?? []);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error("Failed to load manual costs");
     } finally {
       setLoadingManual(false);
@@ -225,7 +226,7 @@ export default function CostsPage() {
       fetchManualCosts();
       fetchCosts();
     } catch (err: unknown) {
-      console.error(err);
+      logger.error(err);
       toast.error(err instanceof Error ? err.message : "Failed to save cost");
     } finally {
       setSubmitting(false);

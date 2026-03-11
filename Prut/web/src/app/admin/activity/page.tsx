@@ -18,6 +18,7 @@ import {
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface ActivityLog {
   id: string;
@@ -67,13 +68,13 @@ export default function ActivityPage() {
         .limit(100);
 
       if (error) {
-        console.error('Supabase Query Error:', error.message, error.details);
+        logger.error('Supabase Query Error:', error.message, error.details);
         throw error;
       }
       setLogs((data as ActivityLog[]) || []);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error('Failed to load activity logs:', message);
+      logger.error('Failed to load activity logs:', message);
     } finally {
       setLoading(false);
     }

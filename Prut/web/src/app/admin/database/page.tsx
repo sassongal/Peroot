@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface BackupData {
   timestamp: string;
@@ -147,7 +148,7 @@ export default function DatabasePage() {
         user_id: user?.id,
       });
     } catch (err) {
-      console.error("Backup failed:", err);
+      logger.error("Backup failed:", err);
       toast.error("גיבוי נכשל");
     } finally {
       setBackupLoading(false);

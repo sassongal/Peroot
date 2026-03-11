@@ -138,7 +138,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                         {avatarUrl ? (
                           <img
                             src={avatarUrl}
-                            alt=""
+                            alt="תמונת פרופיל"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                             onError={(e) => {
@@ -186,6 +186,14 @@ export function UserMenu({ user, position }: UserMenuProps) {
                       <Settings className="w-4 h-4" />
                       <span>{t.auth.account_settings}</span>
                   </Link>
+                  <div className="border-t border-white/5 my-1" />
+                  <button
+                    onClick={() => { setIsOpen(false); handleSignOut(); }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors text-right"
+                  >
+                      <LogOut className="w-4 h-4" />
+                      <span>{t.auth.logout}</span>
+                  </button>
                </div>
             </div>
           </>

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { ModelId } from '@/lib/ai/models';
 import { AVAILABLE_MODELS } from '@/lib/ai/models';
+import { logger } from "@/lib/logger";
 
 /**
  * Pricing per 1M tokens (USD) - updated March 2026
@@ -50,6 +51,6 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
             duration_ms: data.durationMs,
         });
     } catch (error) {
-        console.error('[TrackApiUsage] Failed to log usage:', error);
+        logger.error('[TrackApiUsage] Failed to log usage:', error);
     }
 }

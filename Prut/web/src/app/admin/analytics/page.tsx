@@ -16,6 +16,7 @@ import {
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface AnalyticsData {
   promptsPerDay: Array<{ date: string; count: number }>;
@@ -135,7 +136,7 @@ export default function AnalyticsPage() {
         }
       });
     } catch (error) {
-      console.error('Failed to load analytics:', error);
+      logger.error('Failed to load analytics:', error);
     } finally {
       setLoading(false);
     }

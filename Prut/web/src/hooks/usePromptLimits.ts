@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useSiteSettings } from './useSiteSettings';
+import { logger } from "@/lib/logger";
 
 interface PromptUsage {
   count: number;
@@ -14,6 +15,7 @@ export function usePromptLimits() {
   const { settings } = useSiteSettings();
   const [user, setUser] = useState<any>(null);
   const [credits, setCredits] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [usage, setUsage] = useState<PromptUsage>({ count: 0, lastReset: new Date().toISOString() });
   const [canUsePrompt, setCanUsePrompt] = useState(true);
   const supabase = useMemo(() => createClient(), []);
@@ -26,7 +28,7 @@ export function usePromptLimits() {
   useEffect(() => {
     updateLimits();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, settings, usage]);
+  }, [user, settings, usage, isAdmin]);
 
   async function checkUser() {
     const { data: { user: activeUser } } = await supabase.auth.getUser();
@@ -43,6 +45,15 @@ export function usePromptLimits() {
       if (profile) {
         setCredits(profile.credits_balance);
       }
+
+      // Check admin role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', activeUser.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (roleData) setIsAdmin(true);
     } else {
       // Load guest usage from localStorage
       const stored = localStorage.getItem(USAGE_STORAGE_KEY);
@@ -50,11 +61,15 @@ export function usePromptLimits() {
         try {
           const parsed: PromptUsage = JSON.parse(stored);
 
-          // Check if lastReset is from a previous UTC day; if so, reset the counter
-          const lastResetDay = new Date(parsed.lastReset).toISOString().slice(0, 10);
-          const todayDay = new Date().toISOString().slice(0, 10);
+          // Check if lastReset is before the most recent 14:00 Israel time reset point
+          const nowIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+          const resetToday = new Date(nowIsrael);
+          resetToday.setHours(14, 0, 0, 0);
+          const resetPoint = nowIsrael >= resetToday
+            ? resetToday
+            : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
 
-          if (lastResetDay !== todayDay) {
+          if (new Date(parsed.lastReset) < resetPoint) {
             const freshUsage: PromptUsage = { count: 0, lastReset: new Date().toISOString() };
             localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(freshUsage));
             setUsage(freshUsage);
@@ -62,7 +77,7 @@ export function usePromptLimits() {
             setUsage(parsed);
           }
         } catch (e) {
-          console.error('Failed to parse usage:', e);
+          logger.error('Failed to parse usage:', e);
         }
       }
     }
@@ -70,6 +85,11 @@ export function usePromptLimits() {
 
   function updateLimits() {
     if (user) {
+      // Admin bypass — admins can always use prompts
+      if (isAdmin) {
+        setCanUsePrompt(true);
+        return;
+      }
       // Authenticated users - check actual DB credits
       // If credits is null (loading), we allow (will be caught by server anyway)
       // but once loaded, we hard-lock.
@@ -109,6 +129,7 @@ export function usePromptLimits() {
 
   function getRequiredAction(): 'login' | 'upgrade' | null {
     if (user) {
+        if (isAdmin) return null;
         return (credits !== null && credits < 1) ? 'upgrade' : null;
     }
     if (!user && !settings.allow_guest_access) {
@@ -138,6 +159,7 @@ export function usePromptLimits() {
     incrementUsage,
     resetUsage,
     isGuest: !user,
+    isAdmin,
     guestAccessAllowed: settings.allow_guest_access,
     maxFreePrompts: settings.max_free_prompts,
     settings // Expose settings for debugging

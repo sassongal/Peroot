@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateAdminSession, logAdminAction } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/grant-admin
@@ -30,7 +31,7 @@ export async function POST() {
       .single();
 
     if (dbError) {
-      console.error('[Grant Admin] Error:', dbError);
+      logger.error('[Grant Admin] Error:', dbError);
       return NextResponse.json({ error: 'Failed to grant admin role' }, { status: 500 });
     }
 
@@ -44,7 +45,7 @@ export async function POST() {
       data
     });
   } catch (error) {
-    console.error('[Grant Admin] Error:', error);
+    logger.error('[Grant Admin] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

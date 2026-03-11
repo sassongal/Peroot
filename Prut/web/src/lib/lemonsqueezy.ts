@@ -18,9 +18,9 @@ export const PLANS = {
   free: {
     name: 'Free',
     nameHe: 'חינם',
-    promptsPerDay: 3,
+    creditsPerDay: 2,
     features: [
-      '3 פרומפטים ביום',
+      '2 קרדיטים ביום (מתחדשים ב-14:00)',
       'גישה לספריית פרומפטים',
       'שיתוף פרומפטים',
     ],
@@ -28,10 +28,10 @@ export const PLANS = {
   pro: {
     name: 'Pro',
     nameHe: 'פרו',
-    promptsPerDay: Infinity,
+    creditsPerMonth: 150,
     price: 3.99, // ₪/month
     features: [
-      'פרומפטים ללא הגבלה',
+      '150 קרדיטים בחודש',
       'גישה לכל המנועים',
       'שיפור איטרטיבי מתקדם',
       'שמירה לספריה אישית ללא הגבלה',

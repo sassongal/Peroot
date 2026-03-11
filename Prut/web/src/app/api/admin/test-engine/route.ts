@@ -6,6 +6,7 @@ import { getEngine, EngineInput } from '@/lib/engines';
 import { CapabilityMode } from '@/lib/capability-mode';
 import { validateAdminSession, logAdminAction, parseAdminInput } from '@/lib/admin/admin-security';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const TestEngineSchema = z.object({
     prompt: z.string().min(1),
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-    console.error('[Engine Test] Error:', error);
+    logger.error('[Engine Test] Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface Props {
   children: ReactNode;
@@ -23,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`[ErrorBoundary:${this.props.name || 'Global'}] uncaught error:`, error, errorInfo);
+    logger.error(`[ErrorBoundary:${this.props.name || 'Global'}] uncaught error:`, error, errorInfo);
   }
 
   public render() {

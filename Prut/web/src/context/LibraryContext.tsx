@@ -10,6 +10,7 @@ import promptsData from "../../prompts.he.json";
 import type { User } from "@supabase/supabase-js";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { getApiPath } from "@/lib/api-path";
+import { logger } from "@/lib/logger";
 
 // Define the shape of our context
 interface LibraryContextType {
@@ -172,7 +173,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
                 setDynamicCategories(cData);
             }
         } catch (e) {
-            console.warn("Library synchronization paused:", e);
+            logger.warn("Library synchronization paused:", e);
         } finally {
             setIsLibraryFetching(false);
         }
@@ -400,7 +401,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
           setPopularityMap((prev) => ({ ...prev, ...data.popularity }));
         }
       } catch (error) {
-        console.warn("Failed to load popularity map", error);
+        logger.warn("Failed to load popularity map", error);
       }
     };
     loadPopularity();
@@ -456,7 +457,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       } else {
         setPromptStyles({});
       }
-    } catch (e) { console.warn(e); }
+    } catch (e) { logger.warn(e); }
   }, [user]);
 
   // Sync styles from personal library if available

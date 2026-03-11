@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface Category {
     id: string;
@@ -48,7 +49,7 @@ export function CategoryManager() {
             const data = await res.json();
             setCategories(data);
         } catch (e) {
-            console.error("Failed to fetch categories", e);
+            logger.error("Failed to fetch categories", e);
         } finally {
             setLoading(false);
         }

@@ -1,5 +1,6 @@
 import { streamText, StreamTextResult } from "ai";
 import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId, getModelsForTask } from "./models";
+import { logger } from "@/lib/logger";
 
 export interface GatewayParams {
     system: string;
@@ -23,15 +24,15 @@ export class AIGateway {
                 
                 // Providers safety checks
                 if (config.provider === 'groq' && !process.env.GROQ_API_KEY) {
-                    console.warn('[AIGateway] Skipping Groq (No API Key)');
+                    logger.warn('[AIGateway] Skipping Groq (No API Key)');
                     continue;
                 }
                 if (config.provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY) {
-                    console.warn('[AIGateway] Skipping DeepSeek (No API Key)');
+                    logger.warn('[AIGateway] Skipping DeepSeek (No API Key)');
                     continue;
                 }
 
-                console.log(`[AIGateway] 🟡 Attempting: ${config.label}...`);
+                logger.info(`[AIGateway] 🟡 Attempting: ${config.label}...`);
 
                 const result = await streamText({
                     model: config.model,
@@ -47,11 +48,11 @@ export class AIGateway {
 
             } catch (error: any) {
                 const errorMessage = error?.message || String(error);
-                console.error(`[AIGateway] ❌ Failed with ${modelId}:`, errorMessage);
+                logger.error(`[AIGateway] ❌ Failed with ${modelId}:`, errorMessage);
                 lastError = error;
                 
                 // If it's a 403 or 401, it's a configuration issue, we DEFINITELY want to fallback
-                console.log(`[AIGateway] 🔄 Falling back to next available model...`);
+                logger.info(`[AIGateway] 🔄 Falling back to next available model...`);
                 continue; 
             }
         }

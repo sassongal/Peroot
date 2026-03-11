@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
+import { logger } from "@/lib/logger";
 
 /**
  * Analyzes a user's prompt library and synthesizes a persistent style personality.
@@ -68,7 +69,7 @@ export async function analyzeUserStyle(userId: string) {
         return result;
 
     } catch (e) {
-        console.error("[analyzeUserStyle] Error:", e);
+        logger.error("[analyzeUserStyle] Error:", e);
         return null;
     }
 }

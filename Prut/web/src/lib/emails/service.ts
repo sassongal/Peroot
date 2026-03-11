@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { logger } from "@/lib/logger";
 
 /**
  * Simple Email Service for Peroot
@@ -13,7 +14,7 @@ export class EmailService {
      */
     static async send({ to, subject, html }: { to: string | string[], subject: string, html: string }) {
         if (!this.resend) {
-            console.warn('[EmailService] Resend not configured. Skipping email.');
+            logger.warn('[EmailService] Resend not configured. Skipping email.');
             return null;
         }
 
@@ -28,7 +29,7 @@ export class EmailService {
             if (error) throw error;
             return data;
         } catch (err) {
-            console.error('[EmailService] Failed to send email:', err);
+            logger.error('[EmailService] Failed to send email:', err);
             throw err;
         }
     }

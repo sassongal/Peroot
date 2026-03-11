@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface SiteSettings {
   id: string;
@@ -64,7 +65,7 @@ export default function SettingsPage() {
         setSettings(data);
       }
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      logger.error('Failed to load settings:', error);
       toast.error('שגיאה בטעינת הגדרות');
     } finally {
       setLoading(false);
@@ -95,7 +96,7 @@ export default function SettingsPage() {
       });
 
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      logger.error('Failed to save settings:', error);
       toast.error('שגיאה בשמירת הגדרות');
     } finally {
       setSaving(false);

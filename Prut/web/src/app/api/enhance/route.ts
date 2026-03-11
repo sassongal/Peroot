@@ -92,21 +92,32 @@ export async function POST(req: Request) {
 
                 const { data: refreshData } = await supabase
                     .from('profiles')
-                    .select('credits_refreshed_at')
+                    .select('credits_refreshed_at, credits_balance')
                     .eq('id', user.id)
                     .single();
 
                 const lastRefresh = refreshData?.credits_refreshed_at
                     ? new Date(refreshData.credits_refreshed_at)
                     : null;
-                const today = new Date();
-                today.setUTCHours(0, 0, 0, 0);
+                const currentBalance = refreshData?.credits_balance ?? 0;
 
-                if (!lastRefresh || lastRefresh < today) {
+                // Reset window: every day at 14:00 Israel time (Asia/Jerusalem)
+                const nowIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+                const resetToday = new Date(nowIsrael);
+                resetToday.setHours(14, 0, 0, 0);
+                // If it's before 14:00 today, the last reset point was yesterday at 14:00
+                const resetPoint = nowIsrael >= resetToday
+                    ? resetToday
+                    : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
+
+                if (!lastRefresh || lastRefresh < resetPoint) {
+                    // Only top-up to dailyLimit if balance is lower;
+                    // never overwrite a higher balance (e.g. admin-granted credits)
+                    const newBalance = Math.max(currentBalance, dailyLimit);
                     await supabase
                         .from('profiles')
                         .update({
-                            credits_balance: dailyLimit,
+                            credits_balance: newBalance,
                             credits_refreshed_at: new Date().toISOString()
                         })
                         .eq('id', user.id);
@@ -188,9 +199,9 @@ export async function POST(req: Request) {
             if (completion.text.length < 100 && user && supabase) {
                 try {
                     await supabase.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
-                    console.warn('[EnhanceAPI] Auto-refund for short response:', completion.text.length, 'chars');
+                    logger.warn('[EnhanceAPI] Auto-refund for short response:', completion.text.length, 'chars');
                 } catch (e) {
-                    console.error('[EnhanceAPI] Auto-refund failed:', e);
+                    logger.error('[EnhanceAPI] Auto-refund failed:', e);
                 }
             }
 
@@ -223,7 +234,7 @@ export async function POST(req: Request) {
                     await enqueueJob('achievement_check', { userId: user.id });
 
                 } catch (bgError) {
-                    console.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
+                    logger.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
                 }
             }
         }
@@ -232,13 +243,13 @@ export async function POST(req: Request) {
     return result.toTextStreamResponse();
 
   } catch (error) {
-    console.error("[EnhanceAPI] Error:", error);
+    logger.error("[EnhanceAPI] Error:", error);
     // Best-effort credit refund on failure
     if (userId && supabase) {
       try {
         await supabase.rpc('refund_credit', { target_user_id: userId, amount: 1 });
       } catch (e: unknown) {
-        console.error('[EnhanceAPI] Credit refund failed:', e);
+        logger.error('[EnhanceAPI] Credit refund failed:', e);
       }
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

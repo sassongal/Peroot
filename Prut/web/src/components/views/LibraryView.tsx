@@ -11,6 +11,7 @@ import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { useState } from "react";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useHistory } from "@/hooks/useHistory";
+import { logger } from "@/lib/logger";
 
 const GUEST_FREE_LIMIT = 7;
 
@@ -67,7 +68,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         });
         toast.success("נשמר לספריה האישית");
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         toast.error("שגיאה בשמירה");
     }
   };
@@ -111,7 +112,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         setNewMoveCategoryInput("");
         clearSelection();
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         toast.error("שגיאה בשמירה קבוצתית");
     }
   };

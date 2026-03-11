@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/dashboard
@@ -114,7 +115,7 @@ export async function GET() {
       generatedAt: new Date().toISOString(),
     });
   } catch (err) {
-    console.error('[Admin Dashboard] Error:', err);
+    logger.error('[Admin Dashboard] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

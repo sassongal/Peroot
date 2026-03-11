@@ -98,7 +98,7 @@ export default function PricingPage() {
                 <span className="text-4xl font-black text-white">₪{PLANS.pro.price}</span>
                 <span className="text-slate-500 text-sm">/ חודש</span>
               </div>
-              <p className="text-amber-400/80 text-sm mt-2">הכל ללא הגבלה</p>
+              <p className="text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
             </div>
 
             <ul className="space-y-3 flex-1 mb-8">

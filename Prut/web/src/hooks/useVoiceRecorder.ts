@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { logger } from "@/lib/logger";
 
 
 interface UseVoiceRecorderProps {
@@ -25,7 +26,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
     // Basic browser support check
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.warn("Speech Recognition API not supported in this browser.");
+      logger.warn("Speech Recognition API not supported in this browser.");
       return;
     }
 
@@ -35,17 +36,17 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
     recognition.lang = 'he-IL';
 
     recognition.onstart = () => {
-      console.log("🎤 Recording Started");
+      logger.info("Recording Started");
       setIsListening(true);
     };
 
     recognition.onend = () => {
-      console.log("🎤 Recording Stopped");
+      logger.info("Recording Stopped");
       setIsListening(false);
     };
 
     recognition.onerror = (event: Event & { error: string }) => {
-      console.error("Speech recognition error", event.error);
+      logger.error("Speech recognition error", event.error);
       setIsListening(false);
       if (onErrorRef.current) onErrorRef.current(event.error);
     };
@@ -62,7 +63,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
         }
       }
       
-      console.log("🎤 Result:", { final: finalTranscript, interim: interimTranscript });
+      logger.info("Voice Result:", { final: finalTranscript, interim: interimTranscript });
 
       if (finalTranscript || interimTranscript) {
         onResultRef.current(finalTranscript || interimTranscript, !!finalTranscript);
@@ -83,7 +84,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
       try {
         recognitionRef.current.start();
       } catch (e) {
-        console.error("Failed to start recognition:", e);
+        logger.error("Failed to start recognition:", e);
       }
     }
   }, [isListening]);

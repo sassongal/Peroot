@@ -20,6 +20,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
+import { logger } from "@/lib/logger";
 
 interface Prompt {
   id: string;
@@ -77,7 +78,7 @@ export default function PromptsAdminPage() {
       if (error) throw error;
       setPrompts(data || []);
     } catch (error) {
-      console.error('Failed to load prompts:', error);
+      logger.error('Failed to load prompts:', error);
       toast.error(t.admin.prompts.toasts.load_error);
     } finally {
       setLoading(false);
@@ -95,7 +96,7 @@ export default function PromptsAdminPage() {
       if (error) throw error;
       setVersions(prev => ({ ...prev, [promptId]: data || [] }));
     } catch (error) {
-      console.error('Failed to load versions:', error);
+      logger.error('Failed to load versions:', error);
     }
   }
 
@@ -144,7 +145,7 @@ export default function PromptsAdminPage() {
       });
 
     } catch (error) {
-      console.error('Failed to save:', error);
+      logger.error('Failed to save:', error);
       toast.error(t.admin.prompts.toasts.update_error);
     }
   }
@@ -178,7 +179,7 @@ export default function PromptsAdminPage() {
         user_id: user.id
       });
     } catch (error) {
-      console.error('Failed to rollback:', error);
+      logger.error('Failed to rollback:', error);
       toast.error(t.admin.prompts.toasts.rollback_error);
     }
   }

@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/community/profile/[id]
@@ -38,7 +39,7 @@ export async function GET(
             .maybeSingle();
 
         if (error || !profile) {
-            console.error('[Profile API] Error:', error);
+            logger.error('[Profile API] Error:', error);
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
 
@@ -58,7 +59,7 @@ export async function GET(
         return NextResponse.json(formattedProfile);
 
     } catch (err) {
-        console.error('[Profile API] Critical Error:', err);
+        logger.error('[Profile API] Critical Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

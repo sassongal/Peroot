@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/costs
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     const { data: logs, error: logsError } = await baseQuery;
 
     if (logsError) {
-      console.error('[Admin Costs] Logs query error:', logsError);
+      logger.error('[Admin Costs] Logs query error:', logsError);
       return NextResponse.json({ error: 'Failed to fetch usage logs' }, { status: 500 });
     }
 
@@ -157,7 +158,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ summary, byProvider, byUser, monthly });
   } catch (err) {
-    console.error('[Admin Costs] Error:', err);
+    logger.error('[Admin Costs] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

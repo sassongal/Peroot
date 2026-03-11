@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/stats
@@ -38,7 +39,7 @@ export async function GET() {
       timestamp: new Date().toISOString()
 });
   } catch (error) {
-    console.error('[Admin Stats] Error:', error);
+    logger.error('[Admin Stats] Error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

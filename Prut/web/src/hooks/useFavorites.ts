@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 export type FavoriteType = "library" | "personal";
 
@@ -37,7 +38,7 @@ export function useFavorites() {
         if (!isMounted) return;
 
         if (error) {
-          console.warn("Failed to load favorites", error);
+          logger.warn("Failed to load favorites", error);
           setFavorites([]);
         } else {
           setFavorites(
@@ -67,7 +68,7 @@ export function useFavorites() {
             }
           }
         } catch (error) {
-          console.warn("Failed to parse favorites", error);
+          logger.warn("Failed to parse favorites", error);
           setFavorites([]);
         }
       }
@@ -103,7 +104,7 @@ export function useFavorites() {
                     await supabase.from("prompt_favorites").upsert(toInsert, { onConflict: 'user_id,item_type,item_id' });
                     localStorage.removeItem(STORAGE_KEY);
                 }
-             } catch (e) { console.error("Fav migration failed", e); }
+             } catch (e) { logger.error("Fav migration failed", e); }
          }
       }
 

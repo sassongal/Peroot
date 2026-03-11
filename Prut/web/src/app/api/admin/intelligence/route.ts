@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/intelligence
@@ -62,7 +63,7 @@ export async function GET() {
         });
 
     } catch (err) {
-        console.error('[Admin Intelligence] Error:', err);
+        logger.error('[Admin Intelligence] Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

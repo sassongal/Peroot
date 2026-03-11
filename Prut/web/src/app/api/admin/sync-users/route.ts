@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/admin/sync-users
@@ -21,7 +22,7 @@ export async function POST() {
       .select('id', { count: 'exact', head: true });
 
     if (dbError) {
-      console.error('[Sync Users] Error fetching profiles:', dbError);
+      logger.error('[Sync Users] Error fetching profiles:', dbError);
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
@@ -31,7 +32,7 @@ export async function POST() {
       message: 'Users are automatically synced via Supabase triggers'
     });
   } catch (error) {
-    console.error('[Sync Users] Error:', error);
+    logger.error('[Sync Users] Error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

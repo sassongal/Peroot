@@ -268,7 +268,7 @@ export default function SettingsPage() {
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
-                        alt=""
+                        alt="תמונת פרופיל"
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"
                       />

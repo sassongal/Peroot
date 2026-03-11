@@ -1,5 +1,6 @@
 
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 /**
  * Service to handle awarding and tracking user achievements
@@ -18,7 +19,7 @@ export const AchievementTracker = {
         });
 
         if (error) {
-            console.error(`[AchievementTracker] Error awarding ${achievementId}:`, error);
+            logger.error(`[AchievementTracker] Error awarding ${achievementId}:`, error);
             return false;
         }
 

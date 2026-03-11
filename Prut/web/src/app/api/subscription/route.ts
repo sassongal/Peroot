@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/subscription
@@ -40,7 +41,7 @@ export async function GET() {
 
     return NextResponse.json(subscription);
   } catch (error) {
-    console.error('[Subscription API] Error:', error);
+    logger.error('[Subscription API] Error:', error);
     return NextResponse.json({
       status: 'free',
       plan_name: 'Free',

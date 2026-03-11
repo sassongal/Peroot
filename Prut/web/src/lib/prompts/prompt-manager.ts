@@ -11,6 +11,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { promptCache } from './prompt-cache';
 import { FALLBACK_PROMPTS } from './prompt-fallbacks';
+import { logger } from "@/lib/logger";
 
 export class PromptManager {
   private static instance: PromptManager;
@@ -36,7 +37,7 @@ export class PromptManager {
     const cacheKey = this.getCacheKey(key, variables);
     const cached = promptCache.get(cacheKey);
     if (cached) {
-      console.log(`[PromptManager] Cache hit: ${key}`);
+      logger.info(`[PromptManager] Cache hit: ${key}`);
       return cached;
     }
 
@@ -53,21 +54,21 @@ export class PromptManager {
 
       if (data && !error) {
         template = data.prompt;
-        console.log(`[PromptManager] DB hit: ${key}`);
+        logger.info(`[PromptManager] DB hit: ${key}`);
       } else {
-        console.warn(`[PromptManager] DB miss: ${key}`, error);
+        logger.warn(`[PromptManager] DB miss: ${key}`, error);
       }
     } catch (error) {
-      console.error('[PromptManager] Failed to fetch from DB:', error);
+      logger.error('[PromptManager] Failed to fetch from DB:', error);
     }
 
     // 3. Fallback to hardcoded
     if (!template) {
       template = FALLBACK_PROMPTS[key];
       if (template) {
-        console.warn(`[PromptManager] Using fallback: ${key}`);
+        logger.warn(`[PromptManager] Using fallback: ${key}`);
       } else {
-        console.error(`[PromptManager] No fallback found: ${key}`);
+        logger.error(`[PromptManager] No fallback found: ${key}`);
         return '';
       }
     }
@@ -114,10 +115,10 @@ export class PromptManager {
           promptCache.delete(cacheKey);
         }
       });
-      console.log(`[PromptManager] Invalidated cache: ${key}`);
+      logger.info(`[PromptManager] Invalidated cache: ${key}`);
     } else {
       promptCache.clear();
-      console.log('[PromptManager] Cleared all cache');
+      logger.info('[PromptManager] Cleared all cache');
     }
   }
 

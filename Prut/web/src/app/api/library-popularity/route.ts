@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function GET() {
     .select("prompt_id, count");
 
   if (error) {
-    console.error("Failed to load popularity:", error);
+    logger.error("Failed to load popularity:", error);
     return NextResponse.json({ error: "Failed to load popularity" }, { status: 500 });
   }
 
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      console.error("Failed to update popularity:", error);
+      logger.error("Failed to update popularity:", error);
       return NextResponse.json({ error: "Failed to update popularity" }, { status: 500 });
     }
 
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request data", details: error.issues }, { status: 400 });
     }
-    console.error("Popularity API error:", error);
+    logger.error("Popularity API error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

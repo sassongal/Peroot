@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { logger } from "@/lib/logger";
 
 export interface ActivityLog {
   id: string;
@@ -33,7 +34,7 @@ export async function logActivity(
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('[Activity Log] Failed:', error);
+    logger.error('[Activity Log] Failed:', error);
   }
 }
 
@@ -50,7 +51,7 @@ export async function getRecentActivity(limit = 50) {
     .limit(limit);
 
   if (error) {
-    console.error('[Activity Log] Failed to fetch:', error);
+    logger.error('[Activity Log] Failed to fetch:', error);
     return [];
   }
 

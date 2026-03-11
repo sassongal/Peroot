@@ -9,7 +9,7 @@ export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b' | 
 const google = createGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     headers: {
-        'Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        'Referer': process.env.NEXT_PUBLIC_APP_URL!,
     }
 });
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { EmailService } from "@/lib/emails/service";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/user/onboarding/complete
@@ -32,7 +33,7 @@ export async function POST() {
     const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0];
     
     EmailService.sendWelcome(user.email!, name).catch(err => {
-        console.error("[Onboarding API] Failed to send welcome email:", err);
+        logger.error("[Onboarding API] Failed to send welcome email:", err);
     });
 
     return NextResponse.json({ 
@@ -41,7 +42,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error("[Onboarding API] Error:", error);
+    logger.error("[Onboarding API] Error:", error);
     return NextResponse.json(
         { error: "Failed to complete onboarding" }, 
         { status: 500 }

@@ -13,6 +13,7 @@ import {
 import { getApiPath } from "@/lib/api-path";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 interface IntelMetrics {
     topTokens: { token: string; count: number }[];
@@ -38,7 +39,7 @@ export function IntelligenceHub() {
                 const json = await res.json();
                 setData(json);
             } catch (e) {
-                console.error("Failed to fetch intelligence", e);
+                logger.error("Failed to fetch intelligence", e);
             } finally {
                 setLoading(false);
             }
@@ -73,7 +74,7 @@ export function IntelligenceHub() {
                     setHealthIndex(`${pct}%`);
                 }
             } catch (e) {
-                console.error("Failed to fetch health index", e);
+                logger.error("Failed to fetch health index", e);
                 setHealthIndex("N/A");
             }
         };

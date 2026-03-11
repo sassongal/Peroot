@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
+import { logger } from "@/lib/logger";
 
 interface LeaderboardEntry {
     user_id: string;
@@ -31,7 +32,7 @@ export function Leaderboard() {
                 const data = await res.json();
                 setEntries(data);
             } catch (e) {
-                console.error("Failed to fetch leaderboard", e);
+                logger.error("Failed to fetch leaderboard", e);
             } finally {
                 setLoading(false);
             }
@@ -87,7 +88,7 @@ export function Leaderboard() {
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden">
                                     {entry.avatar_url ? (
-                                        <Image src={entry.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                                        <Image src={entry.avatar_url} alt="תמונת פרופיל" width={40} height={40} className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="text-xs font-black text-blue-400">{entry.full_name[0]}</span>
                                     )}
@@ -135,7 +136,7 @@ function PodiumCard({ entry, rank, color, isCrown }: { entry?: LeaderboardEntry,
                 rank === 1 ? "border-amber-500/50" : "border-white/5"
             )}>
                 {entry.avatar_url ? (
-                    <Image src={entry.avatar_url} alt="" width={80} height={80} className="w-full h-full object-cover" />
+                    <Image src={entry.avatar_url} alt="תמונת פרופיל" width={80} height={80} className="w-full h-full object-cover" />
                 ) : (
                     <div className="text-2xl font-black text-white/20 uppercase">{entry.full_name[0]}</div>
                 )}

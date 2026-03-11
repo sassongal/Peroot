@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getApiPath } from '@/lib/api-path';
+import { logger } from "@/lib/logger";
 
 export type SubscriptionStatus = 'free' | 'active' | 'cancelled' | 'past_due' | 'paused' | 'on_trial' | 'expired';
 
@@ -49,7 +50,7 @@ export function useSubscription() {
   const checkout = useCallback(async (variantId?: string) => {
     const vid = variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID;
     if (!vid) {
-      console.error('No variant ID configured');
+      logger.error('No variant ID configured');
       return;
     }
 
@@ -68,7 +69,7 @@ export function useSubscription() {
       const { url } = await res.json();
       window.location.href = url;
     } catch (error) {
-      console.error('[Checkout]', error);
+      logger.error('[Checkout]', error);
       throw error;
     }
   }, []);

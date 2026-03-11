@@ -588,15 +588,13 @@ function PageContent({ user }: { user: User | null }) {
          <UserMenu user={user} position="top" />
       </div>
 
-      {/* Unified credit/tier indicator for all user types */}
-      <PromptLimitIndicator creditsBalance={creditsRemaining} />
-
       <div className="fixed bottom-6 right-6 z-50">
          <FAQBubble />
       </div>
 
-      {/* Sidebar Toggle Button (Desktop: fixed right, Mobile: fixed right) */}
-      <div className="fixed top-6 right-6 z-50">
+      {/* Sidebar Toggle Button + Credits indicator */}
+      <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
+        <PromptLimitIndicator creditsBalance={creditsRemaining} />
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className={cn(

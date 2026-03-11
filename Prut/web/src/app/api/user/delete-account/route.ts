@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function DELETE() {
   const supabase = await createClient();
@@ -33,7 +34,7 @@ export async function DELETE() {
   );
 
   if (deleteError) {
-    console.error("[delete-account] Failed to delete auth user:", deleteError);
+    logger.error("[delete-account] Failed to delete auth user:", deleteError);
     return NextResponse.json(
       { error: "Failed to delete account" },
       { status: 500 }

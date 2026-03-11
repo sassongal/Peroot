@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { JobType, JobPayload } from "@/lib/jobs/queue";
+import { logger } from "@/lib/logger";
 
 // Helper to get service client for elevated privileges during processing
 async function getServiceClient() {
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
     }
 
     const job = data[0] as { j_id: string; j_type: JobType; j_payload: JobPayload; j_attempts: number }; // RPC returns list
-    console.log(`[Worker] Rate Processing Job: ${job.j_id} (${job.j_type})`);
+    logger.info(`[Worker] Rate Processing Job: ${job.j_id} (${job.j_type})`);
 
     // 3. Process Job
     let success = false;
@@ -58,7 +59,7 @@ export async function GET(req: Request) {
       
       success = true;
     } catch (e: unknown) {
-        console.error(`[Worker] Job Failed:`, e);
+        logger.error(`[Worker] Job Failed:`, e);
         errorMsg = (e instanceof Error) ? e.message : 'Unknown error';
     }
 

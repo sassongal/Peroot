@@ -5,6 +5,7 @@ import {
   logAdminAction,
   parseAdminInput,
 } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 const adminActionSchema = z.object({
   action: z.enum([
@@ -95,7 +96,7 @@ export async function GET(
       recentActivity: recentActivity ?? [],
     });
   } catch (err) {
-    console.error('[Admin User Detail GET] Error:', err);
+    logger.error('[Admin User Detail GET] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -141,7 +142,7 @@ export async function POST(
           .eq('id', id);
 
         if (updateError) {
-          console.error('[Admin User POST] change_tier error:', updateError);
+          logger.error('[Admin User POST] change_tier error:', updateError);
           return NextResponse.json({ error: 'Failed to update plan tier' }, { status: 500 });
         }
         break;
@@ -169,7 +170,7 @@ export async function POST(
           .eq('id', id);
 
         if (updateError) {
-          console.error('[Admin User POST] grant_credits error:', updateError);
+          logger.error('[Admin User POST] grant_credits error:', updateError);
           return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
         }
         break;
@@ -198,7 +199,7 @@ export async function POST(
           .eq('id', id);
 
         if (updateError) {
-          console.error('[Admin User POST] revoke_credits error:', updateError);
+          logger.error('[Admin User POST] revoke_credits error:', updateError);
           return NextResponse.json({ error: 'Failed to revoke credits' }, { status: 500 });
         }
         break;
@@ -211,7 +212,7 @@ export async function POST(
           .eq('id', id);
 
         if (updateError) {
-          console.error('[Admin User POST] ban error:', updateError);
+          logger.error('[Admin User POST] ban error:', updateError);
           return NextResponse.json({ error: 'Failed to ban user' }, { status: 500 });
         }
         break;
@@ -224,7 +225,7 @@ export async function POST(
           .eq('id', id);
 
         if (updateError) {
-          console.error('[Admin User POST] unban error:', updateError);
+          logger.error('[Admin User POST] unban error:', updateError);
           return NextResponse.json({ error: 'Failed to unban user' }, { status: 500 });
         }
         break;
@@ -236,7 +237,7 @@ export async function POST(
           .upsert({ user_id: id, role: 'admin' }, { onConflict: 'user_id' });
 
         if (upsertError) {
-          console.error('[Admin User POST] grant_admin error:', upsertError);
+          logger.error('[Admin User POST] grant_admin error:', upsertError);
           return NextResponse.json({ error: 'Failed to grant admin role' }, { status: 500 });
         }
         break;
@@ -250,7 +251,7 @@ export async function POST(
           .eq('role', 'admin');
 
         if (deleteError) {
-          console.error('[Admin User POST] revoke_admin error:', deleteError);
+          logger.error('[Admin User POST] revoke_admin error:', deleteError);
           return NextResponse.json({ error: 'Failed to revoke admin role' }, { status: 500 });
         }
         break;
@@ -267,7 +268,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, action, target_user_id: id });
   } catch (err) {
-    console.error('[Admin User Detail POST] Error:', err);
+    logger.error('[Admin User Detail POST] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

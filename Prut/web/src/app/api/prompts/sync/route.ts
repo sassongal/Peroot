@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { promptManager } from '@/lib/prompts/prompt-manager';
 import { invalidateEngineCache } from '@/lib/engines';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/prompts/sync
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
         : 'All cache cleared'
     });
   } catch (error) {
-    console.error('[Prompts Sync] Error:', error);
+    logger.error('[Prompts Sync] Error:', error);
     return NextResponse.json(
       { error: 'Failed to sync cache' },
       { status: 500 }
@@ -53,7 +54,7 @@ export async function GET() {
     const stats = promptManager.getCacheStats();
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('[Prompts Sync] Error:', error);
+    logger.error('[Prompts Sync] Error:', error);
     return NextResponse.json(
       { error: 'Failed to get cache stats' },
       { status: 500 }

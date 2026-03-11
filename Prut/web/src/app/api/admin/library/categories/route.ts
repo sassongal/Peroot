@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const CategorySchema = z.object({
     id: z.string(),
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true });
 
     } catch (err) {
-        console.error('[Admin Category] Error:', err);
+        logger.error('[Admin Category] Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

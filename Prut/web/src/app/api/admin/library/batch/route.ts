@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const PromptSchema = z.object({
     id: z.string(),
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
             .upsert(rows, { onConflict: 'id' });
 
         if (upsertError) {
-            console.error('[Batch Import] Upsert Error:', upsertError);
+            logger.error('[Batch Import] Upsert Error:', upsertError);
             return NextResponse.json({ error: upsertError.message }, { status: 500 });
         }
 
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
         });
 
     } catch (err) {
-        console.error('[Batch Import] Critical Error:', err);
+        logger.error('[Batch Import] Critical Error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

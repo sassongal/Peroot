@@ -25,6 +25,7 @@ import {
   Clock,
   Tag,
 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -148,7 +149,7 @@ export default function UserDetailPage() {
       setDetail(json);
       setTierValue(json.profile.plan_tier ?? "free");
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error("Failed to load user details");
     } finally {
       setLoading(false);
@@ -174,7 +175,7 @@ export default function UserDetailPage() {
       setPrompts(data ?? []);
       setPromptsLoaded(true);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error("Failed to load prompts");
     } finally {
       setLoadingPrompts(false);
@@ -205,7 +206,7 @@ export default function UserDetailPage() {
       toast.success(`Action "${action}" completed`);
       fetchDetail();
     } catch (err: unknown) {
-      console.error(err);
+      logger.error(err);
       toast.error(
         err instanceof Error ? err.message : "Action failed"
       );

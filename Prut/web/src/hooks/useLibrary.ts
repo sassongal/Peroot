@@ -7,6 +7,7 @@ import { User } from '@supabase/supabase-js';
 import { PersonalPrompt } from '@/lib/types';
 import { CapabilityMode } from '@/lib/capability-mode';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -25,7 +26,7 @@ const readOrderMap = (userId?: string | null) => {
       return parsed as Record<string, number>;
     }
   } catch (error) {
-    console.warn("Failed to parse personal order map", error);
+    logger.warn("Failed to parse personal order map", error);
   }
   return {};
 };
@@ -121,7 +122,7 @@ export function useLibrary() {
               );
             }
           } catch (error) {
-            console.warn("Failed to parse personal library", error);
+            logger.warn("Failed to parse personal library", error);
           }
         }
         
@@ -144,7 +145,7 @@ export function useLibrary() {
                try {
                    const localItems = JSON.parse(localStr) as PersonalPrompt[];
                    if (Array.isArray(localItems) && localItems.length > 0) {
-                       console.log("Migrating guest items:", localItems.length);
+                       logger.info("Migrating guest items:", localItems.length);
                        
                        const itemsToInsert = localItems.map(item => ({
                            user_id: newUser.id,
@@ -171,7 +172,7 @@ export function useLibrary() {
                        localStorage.removeItem(ORDER_KEY);
                    }
                } catch (e) {
-                   console.error("Migration failed", e);
+                   logger.error("Migration failed", e);
                }
           }
       }
@@ -480,7 +481,7 @@ export function useLibrary() {
             .in("id", ids)
             .eq("user_id", user.id);
         if (error) {
-          console.error("[useLibrary] deletePrompts error:", error);
+          logger.error("[useLibrary] deletePrompts error:", error);
         }
       }
   };
@@ -535,7 +536,7 @@ export function useLibrary() {
             if (error) throw error;
         }
       } catch (err) {
-        console.error("[useLibrary] movePrompts error:", err);
+        logger.error("[useLibrary] movePrompts error:", err);
         throw err;
       }
   };
@@ -609,7 +610,7 @@ export function useLibrary() {
             .eq("id", id)
             .eq("user_id", user.id);
         if (error) {
-          console.error("[useLibrary] updateTags error:", error);
+          logger.error("[useLibrary] updateTags error:", error);
         }
       }
   };
@@ -627,7 +628,7 @@ export function useLibrary() {
       .eq('id', user.id);
 
     if (error) {
-       console.error('[useLibrary] Error updating profile:', error);
+       logger.error('[useLibrary] Error updating profile:', error);
        throw error;
     }
   };
@@ -647,7 +648,7 @@ export function useLibrary() {
         
         return true;
     } catch (error) {
-        console.error('[useLibrary] completeOnboarding error:', error);
+        logger.error('[useLibrary] completeOnboarding error:', error);
         throw error;
     }
   };

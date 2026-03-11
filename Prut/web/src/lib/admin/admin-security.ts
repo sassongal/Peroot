@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logger } from "@/lib/logger";
 
 /**
  * Admin Security Module
@@ -54,7 +55,7 @@ export async function logAdminAction(
     });
 
     // Console track for production visibility
-    console.log(`[ADMIN ACTION] ${user_id}: ${action}`, details);
+    logger.info(`[ADMIN ACTION] ${user_id}: ${action}`, details);
 }
 
 /**

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export type JobType = 'style_analysis' | 'achievement_check';
 
@@ -26,11 +27,11 @@ export async function enqueueJob(type: JobType, payload: JobPayload) {
       });
 
     if (error) {
-      console.error(`[JobQueue] Failed to enqueue ${type}:`, error);
+      logger.error(`[JobQueue] Failed to enqueue ${type}:`, error);
       // Fallback: In critical paths, you might want to throw. 
       // For enhancements, maybe we just log error to not block the user response.
     }
   } catch (err) {
-    console.error(`[JobQueue] Unexpected error enqueuing ${type}:`, err);
+    logger.error(`[JobQueue] Unexpected error enqueuing ${type}:`, err);
   }
 }

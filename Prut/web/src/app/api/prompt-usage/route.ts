@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 const EventSchema = z.object({
   prompt_key: z.string().min(1),
@@ -22,12 +23,12 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      console.warn("Failed to store prompt usage event", error);
+      logger.warn("Failed to store prompt usage event", error);
     }
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500 });
   }
 }

@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AchievementTracker } from '@/lib/intelligence/achievement-tracker';
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/user/achievements/award
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success });
 
     } catch (err) {
-        console.error('[Award API] Error:', err);
+        logger.error('[Award API] Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

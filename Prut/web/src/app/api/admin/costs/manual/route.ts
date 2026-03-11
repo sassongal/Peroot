@@ -5,6 +5,7 @@ import {
   logAdminAction,
   parseAdminInput,
 } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
 
 const manualCostSchema = z.object({
   service_name: z.string().min(1, 'service_name is required'),
@@ -46,13 +47,13 @@ export async function GET(req: NextRequest) {
     const { data, error: dbError } = await query;
 
     if (dbError) {
-      console.error('[Admin Manual Costs GET] DB error:', dbError);
+      logger.error('[Admin Manual Costs GET] DB error:', dbError);
       return NextResponse.json({ error: 'Failed to fetch manual costs' }, { status: 500 });
     }
 
     return NextResponse.json({ data: data ?? [] });
   } catch (err) {
-    console.error('[Admin Manual Costs GET] Error:', err);
+    logger.error('[Admin Manual Costs GET] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('[Admin Manual Costs POST] Update error:', updateError);
+        logger.error('[Admin Manual Costs POST] Update error:', updateError);
         return NextResponse.json({ error: 'Failed to update manual cost' }, { status: 500 });
       }
       result = { data, action: 'updated' };
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (insertError) {
-        console.error('[Admin Manual Costs POST] Insert error:', insertError);
+        logger.error('[Admin Manual Costs POST] Insert error:', insertError);
         return NextResponse.json({ error: 'Failed to create manual cost' }, { status: 500 });
       }
       result = { data, action: 'created' };
@@ -130,7 +131,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result, { status: result.action === 'created' ? 201 : 200 });
   } catch (err) {
-    console.error('[Admin Manual Costs POST] Error:', err);
+    logger.error('[Admin Manual Costs POST] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

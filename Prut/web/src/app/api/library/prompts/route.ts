@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORY_LABELS } from '@/lib/constants';
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/library/prompts
@@ -22,7 +23,7 @@ export async function GET() {
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('[Public Library API] Error:', error);
+            logger.error('[Public Library API] Error:', error);
             return NextResponse.json({ error: 'Database error' }, { status: 500 });
         }
         
@@ -37,7 +38,7 @@ export async function GET() {
         }));
         return NextResponse.json(mapped);
     } catch (err) {
-        console.error('[Public Library API] Critical Error:', err);
+        logger.error('[Public Library API] Critical Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

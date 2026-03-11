@@ -15,6 +15,7 @@ import { useRef, useState } from "react";
 import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
+import { logger } from "@/lib/logger";
 
 interface PersonalLibraryViewProps {
   onUsePrompt: (prompt: PersonalPrompt | LibraryPrompt) => void;
@@ -124,7 +125,7 @@ export function PersonalLibraryView({
         });
         toast.success("נשמר לספריה האישית");
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         toast.error("שגיאה בשמירה");
     }
   };

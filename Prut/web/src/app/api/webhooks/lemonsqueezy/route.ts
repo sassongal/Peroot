@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/webhooks/lemonsqueezy
@@ -20,7 +21,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 export async function POST(request: Request) {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
   if (!secret) {
-    console.error('[LemonSqueezy Webhook] Missing webhook secret');
+    logger.error('[LemonSqueezy Webhook] Missing webhook secret');
     return new NextResponse('Webhook secret not configured', { status: 500 });
   }
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
   );
 
   if (!crypto.timingSafeEqual(digest, signature)) {
-    console.error('[LemonSqueezy Webhook] Invalid signature');
+    logger.error('[LemonSqueezy Webhook] Invalid signature');
     return new NextResponse('Invalid signature', { status: 401 });
   }
 
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
   const customData = event.meta?.custom_data;
   const userId = customData?.user_id;
 
-  console.log(`[LemonSqueezy Webhook] Event: ${eventName}, User: ${userId}`);
+  logger.info(`[LemonSqueezy Webhook] Event: ${eventName}, User: ${userId}`);
 
   if (!eventName) {
     return new NextResponse('Missing event name', { status: 400 });
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseServiceKey) {
-    console.error('[LemonSqueezy Webhook] Missing SUPABASE_SERVICE_ROLE_KEY');
+    logger.error('[LemonSqueezy Webhook] Missing SUPABASE_SERVICE_ROLE_KEY');
     return new NextResponse('Server configuration error', { status: 500 });
   }
 
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
       }
 
       if (!userId) {
-        console.error('[LemonSqueezy Webhook] Missing user_id in custom_data');
+        logger.error('[LemonSqueezy Webhook] Missing user_id in custom_data');
         return new NextResponse('Missing user_id in custom_data', { status: 400 });
       }
 
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
           });
 
         if (error) {
-          console.error('[LemonSqueezy Webhook] Insert error:', error);
+          logger.error('[LemonSqueezy Webhook] Insert error:', error);
           return new NextResponse('Database error', { status: 500 });
         }
       } else {
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
           .eq('lemonsqueezy_subscription_id', event.data.id);
 
         if (error) {
-          console.error('[LemonSqueezy Webhook] Update error:', error);
+          logger.error('[LemonSqueezy Webhook] Update error:', error);
           // Try upsert as fallback
           await supabase
             .from('subscriptions')
@@ -129,7 +130,7 @@ export async function POST(request: Request) {
           .eq('id', userId);
       }
 
-      console.log(`[LemonSqueezy Webhook] Subscription ${eventName}: ${attributes.status} for user ${userId}`);
+      logger.info(`[LemonSqueezy Webhook] Subscription ${eventName}: ${attributes.status} for user ${userId}`);
     }
 
     // Store webhook event for debugging
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
 
     return new NextResponse('OK', { status: 200 });
   } catch (error) {
-    console.error('[LemonSqueezy Webhook] Processing error:', error);
+    logger.error('[LemonSqueezy Webhook] Processing error:', error);
     return new NextResponse('Processing error', { status: 500 });
   }
 }

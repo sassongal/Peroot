@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { AchievementShowcase } from "../gamification/AchievementShowcase";
+import { logger } from "@/lib/logger";
 
 interface ProfileData {
     id: string;
@@ -40,7 +41,7 @@ export function UserProfile({ userId }: { userId: string }) {
                 const data = await res.json();
                 setProfile(data);
             } catch (e) {
-                console.error("Failed to fetch profile", e);
+                logger.error("Failed to fetch profile", e);
             } finally {
                 setLoading(false);
             }
@@ -80,7 +81,7 @@ export function UserProfile({ userId }: { userId: string }) {
                     <div className="relative">
                         <div className="w-32 h-32 rounded-[48px] bg-zinc-900 border-2 border-blue-500/20 flex items-center justify-center overflow-hidden shadow-2xl transition-transform duration-500 hover:rotate-3">
                             {profile.avatar_url ? (
-                                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                                <img src={profile.avatar_url} alt="תמונת פרופיל" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="text-4xl font-black text-white/10">{profile.full_name[0]}</div>
                             )}

@@ -6,6 +6,7 @@ import { Upload, FileJson, CheckCircle2, AlertCircle, X, Download, RefreshCw } f
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 export function BatchImportTool({ onComplete }: { onComplete: () => void }) {
     const [jsonInput, setJsonInput] = useState("");
@@ -42,7 +43,7 @@ export function BatchImportTool({ onComplete }: { onComplete: () => void }) {
             onComplete();
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : "Invalid JSON structure or Server Error";
-            console.error(e);
+            logger.error(e);
             setStatus('error');
             setErrorMsg(msg);
             toast.error("Batch import failed");
