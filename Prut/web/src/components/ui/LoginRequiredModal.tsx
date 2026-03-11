@@ -42,7 +42,7 @@ export function LoginRequiredModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 overscroll-contain overflow-y-auto">
       <div
         ref={dialogRef}
         role="dialog"

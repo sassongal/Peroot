@@ -25,9 +25,9 @@ export default function StreamingProgress({ phase }: StreamingProgressProps) {
       <Icon className="w-4 h-4 animate-pulse" />
       <span className="font-medium">{config.labelHe}</span>
       <span className="inline-flex gap-0.5">
-        <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
-        <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
-        <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+        <span className="animate-pulse" style={{ animationDelay: '0ms' }}>.</span>
+        <span className="animate-pulse" style={{ animationDelay: '150ms' }}>.</span>
+        <span className="animate-pulse" style={{ animationDelay: '300ms' }}>.</span>
       </span>
     </div>
   );

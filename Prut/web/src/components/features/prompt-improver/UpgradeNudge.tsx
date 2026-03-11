@@ -27,7 +27,7 @@ export default function UpgradeNudge({ type, remaining, resetDate, onUpgrade, on
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overscroll-contain">
       <div className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-sm mx-4 space-y-4 shadow-xl">
         <h3 className="text-lg font-semibold text-center text-white" dir="rtl">
           {t.nudge?.exhausted_title || 'הקרדיטים נגמרו'}

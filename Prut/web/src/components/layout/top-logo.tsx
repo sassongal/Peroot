@@ -8,7 +8,7 @@ export function TopLogo({ hidden }: { hidden?: boolean }) {
   if (hidden) return null;
 
   return (
-    <div className="fixed top-6 right-6 z-[9999] pointer-events-none px-2 md:px-6">
+    <div className="fixed top-6 right-6 z-[9999] pointer-events-none px-2 md:px-6 hidden md:block">
       <Link href="/" className="pointer-events-auto block hover:opacity-80 transition-opacity">
         <img
           src={getAssetPath("/assets/branding/logo.svg")}

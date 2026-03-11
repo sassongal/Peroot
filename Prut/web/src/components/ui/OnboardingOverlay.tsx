@@ -91,7 +91,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-500 overscroll-contain overflow-y-auto">
             <div
                 className="w-full max-w-lg glass-card rounded-[40px] border-white/10 bg-zinc-950/90 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-700"
                 dir="rtl"
@@ -113,7 +113,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                 </div>
 
                 {/* Step dots */}
-                <div className="pt-10 px-10 md:px-14 flex items-center justify-center gap-3 relative z-10">
+                <div className="pt-8 sm:pt-10 px-6 sm:px-10 md:px-14 flex items-center justify-center gap-3 relative z-10">
                     {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                         <div
                             key={i}
@@ -128,7 +128,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                 </div>
 
                 {/* Step content */}
-                <div className="px-10 md:px-14 pt-10 pb-0 relative z-10 min-h-[340px]">
+                <div className="px-6 sm:px-10 md:px-14 pt-8 sm:pt-10 pb-0 relative z-10 min-h-[280px] sm:min-h-[340px]">
 
                     {/* Step 1: Welcome */}
                     {step === 1 && (
@@ -137,7 +137,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                                 <Rocket className="w-12 h-12 text-amber-400" />
                             </div>
                             <div className="space-y-4">
-                                <h2 className="text-4xl md:text-5xl font-serif font-bold text-white tracking-tight">
+                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-white tracking-tight">
                                     ברוך הבא ל-Peroot!
                                 </h2>
                                 <p className="text-lg text-slate-400 max-w-md mx-auto leading-relaxed">
@@ -215,7 +215,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                     {/* Step 3: Ready */}
                     {step === 3 && (
                         <div className="text-center space-y-8 animate-in slide-in-from-right-4 duration-500">
-                            <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mx-auto shadow-2xl shadow-emerald-500/10 animate-bounce">
+                            <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mx-auto shadow-2xl shadow-emerald-500/10 animate-pulse-once">
                                 <CheckCircle2 className="w-12 h-12 text-emerald-400" />
                             </div>
                             <div className="space-y-4">
@@ -235,7 +235,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                 </div>
 
                 {/* Footer controls */}
-                <div className="mt-10 px-10 md:px-14 pb-10 md:pb-14 flex items-center justify-between relative z-10">
+                <div className="mt-8 sm:mt-10 px-6 sm:px-10 md:px-14 pb-8 sm:pb-10 md:pb-14 flex items-center justify-between relative z-10">
                     <div>
                         {step > 1 && (
                             <button

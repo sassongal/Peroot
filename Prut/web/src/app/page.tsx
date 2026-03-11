@@ -584,16 +584,16 @@ function PageContent({ user }: { user: User | null }) {
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
       {/* Fixed Elements */}
-      <div className="fixed top-6 left-6 z-50">
+      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50">
          <UserMenu user={user} position="top" />
       </div>
 
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-4 sm:right-6 z-50">
          <FAQBubble />
       </div>
 
       {/* Sidebar Toggle Button + Credits indicator */}
-      <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
+      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 flex items-center gap-2 sm:gap-3">
         <PromptLimitIndicator creditsBalance={creditsRemaining} />
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -695,7 +695,7 @@ function PageContent({ user }: { user: User | null }) {
       </div>
 
       {/* Main Content (Full Width) */}
-      <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-2 md:pt-4">
+      <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-16 md:pt-4">
            <div className="flex justify-center">
              <div className="hero-logo-container">
                <div className="hero-logo-ring hero-logo-ring-1" />

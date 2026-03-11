@@ -38,7 +38,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
   const panelClass =
     mode === "inline"
       ? "absolute bottom-16 right-0"
-      : "fixed bottom-24 right-6";
+      : "fixed bottom-24 right-4 sm:right-6";
 
   const handleFeedback = () => {
      window.location.href = "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
@@ -53,7 +53,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
         aria-hidden={!isOpen}
         className={cn(
           panelClass,
-          "w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out",
+          "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
           isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none"
         )}
         dir="rtl"
@@ -208,7 +208,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
             <X className="w-6 h-6 text-black" />
         ) : (
             <>
-                <div className="absolute inset-0 rounded-full bg-white blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-pulse"></div>
+                <div className="absolute inset-0 rounded-full bg-white blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300"></div>
                 <MessageCircle className="w-7 h-7 text-black relative z-10" fill="currentColor" />
             </>
         )}
