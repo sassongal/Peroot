@@ -130,7 +130,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">v2.1 Stable</span>
               </div>
             </div>
-            {/* Close button — mobile only */}
+            {/* Close button - mobile only */}
             <button
               className="lg:hidden p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
               onClick={() => setSidebarOpen(false)}

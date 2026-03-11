@@ -37,7 +37,7 @@ export function useSubscription() {
           setSubscription(data);
         }
       } catch {
-        // User not logged in or no subscription — stays free
+        // User not logged in or no subscription - stays free
       } finally {
         setLoading(false);
       }

@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
         if (user) {
-            // Daily credit refresh for free users — uses site_settings as single source of truth
+            // Daily credit refresh for free users - uses site_settings as single source of truth
             if (tier === 'free') {
                 const { data: siteSettings } = await supabase
                     .from('site_settings')

@@ -86,7 +86,7 @@ export function usePromptLimits() {
 
   function updateLimits() {
     if (user) {
-      // Admin bypass — admins can always use prompts
+      // Admin bypass - admins can always use prompts
       if (isAdmin) {
         setCanUsePrompt(true);
         return;

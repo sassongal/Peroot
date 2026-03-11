@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     if (parseError) return parseError;
     if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
 
-    // Upsert on (service_name, billing_period) — update if already exists
+    // Upsert on (service_name, billing_period) - update if already exists
     const { data: existing } = await supabase
       .from('manual_costs')
       .select('id')

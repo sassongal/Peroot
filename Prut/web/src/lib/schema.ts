@@ -37,7 +37,7 @@ export function softwareAppSchema() {
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web",
     description:
-      "מחולל פרומפטים מקצועי בעברית — שדרג כל פרומפט באמצעות AI מתקדם",
+      "מחולל פרומפטים מקצועי בעברית - שדרג כל פרומפט באמצעות AI מתקדם",
     url: SITE_URL,
     inLanguage: "he",
     offers: {

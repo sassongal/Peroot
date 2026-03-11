@@ -204,7 +204,7 @@ export default function EnginesListPage() {
                             value={
                               engineMetrics[engine.mode]
                                 ? `${engineMetrics[engine.mode].avgLatencyMs}ms`
-                                : "—"
+                                : "-"
                             }
                          />
                          <Metric

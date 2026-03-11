@@ -4,7 +4,7 @@ import { ArrowRight, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "צור קשר | Peroot",
-  description: "צור קשר עם צוות Peroot — שאלות, הצעות, דיווח על באגים.",
+  description: "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים.",
   alternates: { canonical: "/contact" },
 };
 

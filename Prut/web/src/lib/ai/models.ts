@@ -5,7 +5,7 @@ import { LanguageModel } from "ai";
 
 export type ModelId = 'gemini-2.5-flash' | 'gemini-2.0-flash-lite' | 'llama-3-70b' | 'deepseek-chat';
 
-// Server-side Google provider — no Referer header needed.
+// Server-side Google provider - no Referer header needed.
 // API key restrictions should use "None" or IP-based (not HTTP referrer)
 // since this runs in Vercel serverless functions, not the browser.
 const google = createGoogleGenerativeAI({

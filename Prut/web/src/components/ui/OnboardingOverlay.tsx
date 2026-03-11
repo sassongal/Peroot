@@ -19,7 +19,7 @@ const CAPABILITY_MODES = [
         icon: MessageSquare,
         color: "sky",
         labelHe: "סטנדרטי",
-        descriptionHe: "יצירת טקסט וצ'אט רגיל — מושלם לרוב המשימות",
+        descriptionHe: "יצירת טקסט וצ'אט רגיל - מושלם לרוב המשימות",
     },
     {
         icon: Globe,
@@ -141,7 +141,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                                     ברוך הבא ל-Peroot!
                                 </h2>
                                 <p className="text-lg text-slate-400 max-w-md mx-auto leading-relaxed">
-                                    Peroot משדרג את הפרומפטים שלך באמצעות AI מתקדם — הפוך כל רעיון גולמי לפרומפט מקצועי ומפורט בשניות.
+                                    Peroot משדרג את הפרומפטים שלך באמצעות AI מתקדם - הפוך כל רעיון גולמי לפרומפט מקצועי ומפורט בשניות.
                                 </p>
                             </div>
                             <div className="flex items-center justify-center gap-6 pt-2">
@@ -169,7 +169,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                                     בחר מצב פרומפט
                                 </h2>
                                 <p className="text-slate-400 text-sm leading-relaxed">
-                                    Peroot מציע 4 מצבי עבודה — כל אחד מותאם לסוג משימה אחר
+                                    Peroot מציע 4 מצבי עבודה - כל אחד מותאם לסוג משימה אחר
                                 </p>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

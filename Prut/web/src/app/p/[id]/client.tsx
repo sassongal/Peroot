@@ -8,7 +8,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(prompt + "\n\n— נוצר עם Peroot | peroot.space");
+    await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | peroot.space");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

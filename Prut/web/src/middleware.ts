@@ -71,7 +71,7 @@ export async function middleware(request: NextRequest) {
     // API admin routes are protected by validateAdminSession() which checks user_roles table.
     // Admin pages are protected by AdminGuard component which also checks user_roles table.
     // Middleware only ensures the user is authenticated (logged in) for admin paths.
-    // No additional middleware blocking needed — auth check above is sufficient.
+    // No additional middleware blocking needed - auth check above is sufficient.
   } else {
     // Guest accessing admin path
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin') ||

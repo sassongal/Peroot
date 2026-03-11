@@ -47,7 +47,7 @@ export default function UpgradeNudge({ type, remaining, resetDate, onUpgrade, on
             className="w-full py-2.5 rounded-lg border border-white/10 text-slate-400 text-sm min-h-11 cursor-pointer"
           >
             {resetDate
-              ? `${t.nudge?.wait_for_reset || 'המתן לאיפוס'} — ${resetDate}`
+              ? `${t.nudge?.wait_for_reset || 'המתן לאיפוס'} - ${resetDate}`
               : (t.nudge?.wait_for_reset || 'המתן לאיפוס')}
           </button>
         </div>

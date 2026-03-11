@@ -60,14 +60,14 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
           }
         } catch (streamError) {
           if (streamError instanceof Error && streamError.name === 'AbortError') throw streamError;
-          // Mid-stream failure — signal the caller and keep the partial text visible.
+          // Mid-stream failure - signal the caller and keep the partial text visible.
           // Do NOT re-throw: the outer catch must not overwrite the interrupted state
           // with a generic error that resets streamPhase back to 'idle'.
           midStreamInterrupted = true;
           if (accumulated) {
             onInterrupted?.(accumulated);
           } else {
-            // Nothing was accumulated — treat as a normal error so the UI shows a message.
+            // Nothing was accumulated - treat as a normal error so the UI shows a message.
             throw streamError;
           }
         }

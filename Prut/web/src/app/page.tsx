@@ -287,7 +287,7 @@ function PageContent({ user }: { user: User | null }) {
   const processStreamResult = (label: string) => {
     const acc = streamAccRef.current;
     if (acc.foundDelimiter) {
-      // Delimiter was found — parse whatever came after it (may be empty array)
+      // Delimiter was found - parse whatever came after it (may be empty array)
       try {
         let jsonStr = acc.questionsPart.trim();
         // Handle common AI formatting issues (markdown code blocks)
@@ -304,11 +304,11 @@ function PageContent({ user }: { user: User | null }) {
         if (arrayMatch) {
           try {
             dispatch({ type: 'SET_QUESTIONS', payload: JSON.parse(arrayMatch[0]) });
-          } catch { /* truly unrecoverable — dispatch empty so UI shows completion state */
+          } catch { /* truly unrecoverable - dispatch empty so UI shows completion state */
             dispatch({ type: 'SET_QUESTIONS', payload: [] });
           }
         } else {
-          // No array found at all — treat as explicitly empty
+          // No array found at all - treat as explicitly empty
           dispatch({ type: 'SET_QUESTIONS', payload: [] });
         }
       }
@@ -436,7 +436,7 @@ function PageContent({ user }: { user: User | null }) {
     // Pro users copy clean by default; free/guest always get watermark.
     // Callers can override via the withWatermark argument (e.g. toggle checkbox).
     const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
-    const finalText = shouldWatermark ? `${text}\n\n— נוצר עם Peroot | peroot.space` : text;
+    const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | peroot.space` : text;
     await navigator.clipboard.writeText(finalText);
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
@@ -765,7 +765,7 @@ function PageContent({ user }: { user: User | null }) {
                        // originalInput (set on first START_STREAM) so "Back to Original" works.
                        dispatch({ type: 'SET_INPUT', payload: ps.completion });
                        dispatch({ type: 'INCREMENT_ITERATION' });
-                       // Kick off the enhance — START_STREAM will only set originalInput
+                       // Kick off the enhance - START_STREAM will only set originalInput
                        // if it is still empty, so it won't overwrite the first snapshot.
                        setTimeout(() => handleEnhance(), 0);
                      }}

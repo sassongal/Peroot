@@ -123,7 +123,7 @@ export default async function BlogPostPage({ params }: Props) {
             href="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-black font-semibold hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all"
           >
-            נסו את Peroot — חינם
+            נסו את Peroot - חינם
           </Link>
         </div>
       </article>

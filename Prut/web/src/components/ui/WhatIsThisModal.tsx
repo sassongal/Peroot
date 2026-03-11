@@ -24,15 +24,15 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-serif font-bold text-white">מה עושים פה?</h2>
             <p className="text-slate-400 leading-relaxed">
-              <span className="text-amber-400 font-semibold">Peroot</span> הוא כלי AI שמשדרג כל פרומפט שאתם כותבים לרמה מקצועית — בעברית.
+              <span className="text-amber-400 font-semibold">Peroot</span> הוא כלי AI שמשדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               { icon: Sparkles, title: "שדרוג אוטומטי", desc: "כתבו משפט פשוט וקבלו פרומפט מקצועי ומובנה" },
-              { icon: Target, title: "4 מצבי עבודה", desc: "טקסט, מחקר, תמונות וסוכני AI — הכל במקום אחד" },
-              { icon: Globe, title: "עברית מושלמת", desc: "בנוי מהיסוד לעברית — לא תרגום, אלא יצירה מקורית" },
+              { icon: Target, title: "4 מצבי עבודה", desc: "טקסט, מחקר, תמונות וסוכני AI - הכל במקום אחד" },
+              { icon: Globe, title: "עברית מושלמת", desc: "בנוי מהיסוד לעברית - לא תרגום, אלא יצירה מקורית" },
               { icon: Zap, title: "תוצאות בשניות", desc: "AI מתקדם שמבין את הכוונה ומייצר פרומפט חד ומדויק" },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">

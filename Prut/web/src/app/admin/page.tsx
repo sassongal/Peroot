@@ -327,7 +327,7 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-black text-white tabular-nums">
-            {total > 0 ? `$${total.toFixed(0)}` : "—"}
+            {total > 0 ? `$${total.toFixed(0)}` : "-"}
           </span>
           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">TOTAL</span>
         </div>
@@ -342,7 +342,7 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
               <span className="text-[10px] font-bold text-zinc-500 truncate">{slice.label}</span>
             </div>
             <span className="text-[10px] font-black text-zinc-300 tabular-nums shrink-0">
-              {total > 0 ? `${Math.round((slice.value / total) * 100)}%` : "—"}
+              {total > 0 ? `${Math.round((slice.value / total) * 100)}%` : "-"}
             </span>
           </div>
         ))}
@@ -572,7 +572,7 @@ export default function AdminDashboardPage() {
             label="Total Users"
             value={formatNumber(data.totalUsers)}
             sub={`${data.proUsers} pro · ${data.freeUsers} free`}
-            trend="—"
+            trend="-"
             icon={Users}
             color="blue"
             href="/admin/users"
@@ -582,7 +582,7 @@ export default function AdminDashboardPage() {
             label="Monthly Revenue"
             value={formatCurrency(mrr)}
             sub="MRR"
-            trend="—"
+            trend="-"
             icon={DollarSign}
             color="emerald"
             href="/admin/users"
@@ -592,7 +592,7 @@ export default function AdminDashboardPage() {
             label="API Costs MTD"
             value={formatCurrency(totalCostsMTD)}
             sub={`LLM $${data.apiCostsMTD.toFixed(2)} · Manual $${data.manualCostsMTD.toFixed(2)}`}
-            trend="—"
+            trend="-"
             icon={CircleDollarSign}
             color="amber"
             href="/admin/activity"
@@ -602,7 +602,7 @@ export default function AdminDashboardPage() {
             label="Prompts This Month"
             value={formatNumber(data.promptsThisMonth)}
             sub={`${formatNumber(data.promptsToday)} today`}
-            trend="—"
+            trend="-"
             icon={Zap}
             color="purple"
             href="/admin/prompts"
@@ -624,7 +624,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-white tracking-tight">Cost vs Growth</h3>
-                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">New users — last 6 months</p>
+                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">New users - last 6 months</p>
                   </div>
                 </div>
                 <Link

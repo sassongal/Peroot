@@ -282,7 +282,7 @@ export default function CostsPage() {
           <CostCard
             label="Total MTD"
             value={
-              data ? fmtCostShort(data.summary.totalCost) : "—"
+              data ? fmtCostShort(data.summary.totalCost) : "-"
             }
             icon={TrendingUp}
             color="emerald"
@@ -290,7 +290,7 @@ export default function CostsPage() {
           />
           <CostCard
             label="LLM Costs"
-            value={data ? fmtCostShort(data.summary.llmCost) : "—"}
+            value={data ? fmtCostShort(data.summary.llmCost) : "-"}
             icon={Zap}
             color="blue"
             sub="Auto-tracked via API logs"
@@ -298,7 +298,7 @@ export default function CostsPage() {
           <CostCard
             label="Infrastructure"
             value={
-              data ? fmtCostShort(data.summary.manualCost) : "—"
+              data ? fmtCostShort(data.summary.manualCost) : "-"
             }
             icon={Server}
             color="purple"
@@ -307,7 +307,7 @@ export default function CostsPage() {
           <CostCard
             label="Cost / Prompt"
             value={
-              data ? fmtCost(data.summary.avgCostPerPrompt) : "—"
+              data ? fmtCost(data.summary.avgCostPerPrompt) : "-"
             }
             icon={DollarSign}
             color="amber"
@@ -672,12 +672,12 @@ export default function CostsPage() {
                           {entry.billing_period}
                         </td>
                         <td className="px-8 py-5 text-zinc-600 font-medium text-sm max-w-xs truncate">
-                          {entry.notes || "—"}
+                          {entry.notes || "-"}
                         </td>
                         <td className="px-8 py-5 text-zinc-600 font-bold text-xs">
                           {entry.created_at
                             ? new Date(entry.created_at).toLocaleDateString("en-US")
-                            : "—"}
+                            : "-"}
                         </td>
                       </tr>
                     ))
@@ -694,7 +694,7 @@ export default function CostsPage() {
             icon={TrendingUp}
             color="emerald"
             title="Monthly Cost Trend"
-            sub="Last 12 months — LLM (blue) + Infrastructure (purple)"
+            sub="Last 12 months - LLM (blue) + Infrastructure (purple)"
           />
 
           <div className="rounded-[48px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-10 shadow-2xl">

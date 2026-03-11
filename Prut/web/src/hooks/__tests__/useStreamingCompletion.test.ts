@@ -29,7 +29,7 @@ describe('useStreamingCompletion', () => {
     // Create a stream that never closes so we can observe isStreaming=true
     const neverEndingStream = new ReadableStream({
       start() {
-        // intentionally never close — keeps isStreaming true
+        // intentionally never close - keeps isStreaming true
       },
     });
 

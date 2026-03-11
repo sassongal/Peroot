@@ -435,7 +435,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   })}
                 </div>
 
-                {/* Paywall CTA — rendered once, inside the category section that crosses the free limit */}
+                {/* Paywall CTA - rendered once, inside the category section that crosses the free limit */}
                 {showCtaInThisSection && (
                   <div
                     dir="rtl"
@@ -558,7 +558,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             </div>
         )}
 
-        {/* Skeleton — shown while the API fetch is in-flight */}
+        {/* Skeleton - shown while the API fetch is in-flight */}
         {isLibraryFetching && totalCount === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
             {[0, 1, 2, 3, 4, 5].map((i) => (

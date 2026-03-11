@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 
-// GET — list all posts (including drafts) for admin
+// GET - list all posts (including drafts) for admin
 export async function GET() {
   const { error, supabase } = await validateAdminSession();
   if (error || !supabase)
@@ -17,7 +17,7 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
-// POST — create new post
+// POST - create new post
 export async function POST(req: NextRequest) {
   const { error, supabase } = await validateAdminSession();
   if (error || !supabase)
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data, { status: 201 });
 }
 
-// PUT — update existing post
+// PUT - update existing post
 export async function PUT(req: NextRequest) {
   const { error, supabase } = await validateAdminSession();
   if (error || !supabase)
@@ -59,7 +59,7 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-// DELETE — delete a post
+// DELETE - delete a post
 export async function DELETE(req: NextRequest) {
   const { error, supabase } = await validateAdminSession();
   if (error || !supabase)

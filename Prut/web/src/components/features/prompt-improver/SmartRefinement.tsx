@@ -77,7 +77,7 @@ export function SmartRefinement({
           <div className="flex items-center gap-3 justify-center py-4" dir="rtl">
             <span className="text-emerald-400 text-lg">✓</span>
             <span className="text-sm text-slate-300 font-medium">
-              הפרומפט מקיף ומפורט — אין שאלות נוספות
+              הפרומפט מקיף ומפורט - אין שאלות נוספות
             </span>
           </div>
         </div>

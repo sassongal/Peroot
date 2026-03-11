@@ -4,11 +4,11 @@ import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "בלוג — טיפים ומדריכים לפרומפטים ו-AI",
+  title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
   description: "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
   alternates: { canonical: "/blog" },
   openGraph: {
-    title: "בלוג Peroot — טיפים ומדריכים לפרומפטים ו-AI",
+    title: "בלוג Peroot - טיפים ומדריכים לפרומפטים ו-AI",
     description: "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
     url: "/blog",
     siteName: "Peroot",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "בלוג Peroot — טיפים ומדריכים לפרומפטים ו-AI",
+    title: "בלוג Peroot - טיפים ומדריכים לפרומפטים ו-AI",
     description: "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
   },
 };
@@ -44,7 +44,7 @@ export default async function BlogPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-serif text-white mb-4">הבלוג</h1>
           <p className="text-lg text-slate-400">
-            טיפים, מדריכים ותובנות על AI ופרומפטים — בעברית
+            טיפים, מדריכים ותובנות על AI ופרומפטים - בעברית
           </p>
         </div>
 

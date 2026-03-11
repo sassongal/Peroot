@@ -184,7 +184,7 @@ export function ResultSection({
                 onClick={() => {
                   handleCopy(displayCompletion);
                   window.open("https://chat.openai.com/", "_blank");
-                  toast.success(`${t.toasts.copied} — ChatGPT נפתח!`);
+                  toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-ChatGPT"
@@ -197,7 +197,7 @@ export function ResultSection({
                 onClick={() => {
                   handleCopy(displayCompletion);
                   window.open("https://claude.ai/new", "_blank");
-                  toast.success(`${t.toasts.copied} — Claude נפתח!`);
+                  toast.success(`${t.toasts.copied} - Claude נפתח!`);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-Claude"
@@ -210,7 +210,7 @@ export function ResultSection({
                 onClick={() => {
                   handleCopy(displayCompletion);
                   window.open("https://gemini.google.com/", "_blank");
-                  toast.success(`${t.toasts.copied} — Gemini נפתח!`);
+                  toast.success(`${t.toasts.copied} - Gemini נפתח!`);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
                 title="העתק והפתח ב-Gemini"
@@ -221,7 +221,7 @@ export function ResultSection({
               </button>
               <button
                 onClick={() => {
-                  const text = encodeURIComponent(displayCompletion + "\n\n— נוצר עם Peroot | peroot.space");
+                  const text = encodeURIComponent(displayCompletion + "\n\n- נוצר עם Peroot | peroot.space");
                   window.open(`https://wa.me/?text=${text}`, "_blank");
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
@@ -244,7 +244,7 @@ export function ResultSection({
                 >
                   {t.result_section.back_to_edit}
                 </button>
-                {/* Back to Original — only shown after at least one refinement */}
+                {/* Back to Original - only shown after at least one refinement */}
                 {onResetToOriginal && (iterationCount ?? 0) > 0 && (
                   <button
                     onClick={onResetToOriginal}
@@ -298,7 +298,7 @@ export function ResultSection({
               </div>
             </div>
 
-            {/* Pro watermark toggle — only visible to Pro users */}
+            {/* Pro watermark toggle - only visible to Pro users */}
             {isPro && (
               <div className="flex items-center justify-end gap-2 pt-1" dir="rtl">
                 <label className="flex items-center gap-2 cursor-pointer select-none group">

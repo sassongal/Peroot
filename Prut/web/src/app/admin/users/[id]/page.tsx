@@ -396,10 +396,10 @@ export default function UserDetailPage() {
                     <div className="grid grid-cols-2 gap-6">
                       <InfoRow label="Plan" value={subscription.plan_name} />
                       <InfoRow label="Status" value={subscription.status} highlight={subscription.status === "active"} />
-                      <InfoRow label="Customer" value={subscription.customer_name || "—"} />
+                      <InfoRow label="Customer" value={subscription.customer_name || "-"} />
                       <InfoRow
                         label="Renews"
-                        value={subscription.renews_at ? fmtDate(subscription.renews_at) : "—"}
+                        value={subscription.renews_at ? fmtDate(subscription.renews_at) : "-"}
                       />
                     </div>
                   ) : (
@@ -445,7 +445,7 @@ export default function UserDetailPage() {
                 {stats && (
                   <Panel title="Rank & Stats" icon={Trophy} color="purple">
                     <div className="grid grid-cols-3 gap-6">
-                      <InfoRow label="Rank" value={stats.rank_title || "—"} />
+                      <InfoRow label="Rank" value={stats.rank_title || "-"} />
                       <InfoRow label="Contribution Score" value={stats.contribution_score ?? 0} />
                       <InfoRow label="Total Copies" value={stats.total_copies ?? 0} />
                     </div>

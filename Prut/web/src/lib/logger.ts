@@ -15,7 +15,7 @@ export const logger = {
     if (isDev) {
       console.log(...args);
     }
-    // Production: silent — no log noise
+    // Production: silent - no log noise
   },
 
   warn(...args: unknown[]) {
@@ -42,7 +42,7 @@ export const logger = {
             Sentry.captureMessage(message, 'error');
           }
         }).catch(() => {
-          // Sentry unavailable — last resort
+          // Sentry unavailable - last resort
           console.error(...args);
         });
       } catch {

@@ -412,7 +412,7 @@ export default function SettingsPage() {
                       <Crown className="w-4 h-4 text-amber-400" />
                       <h3 className="font-semibold text-amber-300">מצב קרדיטים</h3>
                     </div>
-                    <p className="text-sm text-slate-300">שימוש ללא הגבלה — אין מגבלת קרדיטים במנוי Pro</p>
+                    <p className="text-sm text-slate-300">שימוש ללא הגבלה - אין מגבלת קרדיטים במנוי Pro</p>
                   </div>
                 )}
 
@@ -480,7 +480,7 @@ export default function SettingsPage() {
                       className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
                     >
                       <Crown className="w-4 h-4" />
-                      <span>שדרג ל-Pro — ₪3.99/חודש</span>
+                      <span>שדרג ל-Pro - ₪3.99/חודש</span>
                     </Link>
                   )}
 
@@ -544,7 +544,7 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {/* Subscription end notice (Pro — cancelled) */}
+                {/* Subscription end notice (Pro - cancelled) */}
                 {isPro && subscription.ends_at && (
                   <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-start gap-3">
                     <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />

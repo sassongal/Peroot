@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "דוגמאות פרומפטים — לפני ואחרי",
+  title: "דוגמאות פרומפטים - לפני ואחרי",
   description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
   alternates: { canonical: "/examples" },
 };
@@ -160,7 +160,7 @@ export default function ExamplesPage() {
                 <div className="p-6 bg-white/[0.01]">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">אחרי — Peroot</span>
+                    <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">אחרי - Peroot</span>
                   </div>
                   <div className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap font-mono text-xs">
                     {example.after}
@@ -178,7 +178,7 @@ export default function ExamplesPage() {
             href="/"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
           >
-            שדרגו פרומפט עכשיו — בחינם
+            שדרגו פרומפט עכשיו - בחינם
           </Link>
         </div>
       </div>

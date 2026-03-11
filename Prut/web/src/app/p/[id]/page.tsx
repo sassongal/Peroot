@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single();
 
   const title = data
-    ? `פרומפט משותף — ${data.category}`
+    ? `פרומפט משותף - ${data.category}`
     : 'פרומפט משותף';
 
   const description = data?.prompt?.slice(0, 160) || 'פרומפט שנוצר עם Peroot';

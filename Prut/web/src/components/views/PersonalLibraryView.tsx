@@ -751,7 +751,7 @@ export function PersonalLibraryView({
               ) : (
                   // By Category View
                   <>
-                    {/* Skeleton — shown while personal library is loading */}
+                    {/* Skeleton - shown while personal library is loading */}
                     {!isPersonalLoaded && (
                       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                         {[0, 1, 2, 3].map((i) => (
@@ -760,7 +760,7 @@ export function PersonalLibraryView({
                       </div>
                     )}
 
-                    {/* Empty state — loaded but no items */}
+                    {/* Empty state - loaded but no items */}
                     {isPersonalLoaded && totalCount === 0 && (
                       <div className="flex flex-col items-center gap-3 text-center py-16" dir="rtl">
                         <BookOpen className="w-12 h-12 text-slate-600 mb-2" />

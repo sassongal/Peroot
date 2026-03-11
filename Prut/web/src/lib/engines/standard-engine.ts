@@ -12,13 +12,13 @@ export class StandardEngine extends BaseEngine {
 
 CRITICAL RULES:
 1. Output ONLY the final prompt. No meta-commentary, no "Here is your prompt".
-2. The ENTIRE output MUST be in HEBREW — headers, content, instructions, everything.
+2. The ENTIRE output MUST be in HEBREW - headers, content, instructions, everything.
 3. Use clear markdown formatting with headers, bullets, and numbered lists.
 
 PROMPT ARCHITECTURE (apply all relevant sections):
 
 ## 🎯 תפקיד וזהות (Role & Identity)
-Define a specific expert persona with domain expertise relevant to the task. Be precise — "מומחה שיווק דיגיטלי עם 15 שנות ניסיון בקמפיינים לסטארטאפים" not "מומחה שיווק".
+Define a specific expert persona with domain expertise relevant to the task. Be precise - "מומחה שיווק דיגיטלי עם 15 שנות ניסיון בקמפיינים לסטארטאפים" not "מומחה שיווק".
 
 ## 📋 המשימה (Task Definition)
 State the exact task in one clear sentence. Then break it into numbered sub-steps if complex.
@@ -38,7 +38,7 @@ Specify exactly what the output should look like: structure, length, format (bul
 - Quality standards and success criteria
 - Length constraints
 
-## 💡 דוגמאות (Examples) — if applicable
+## 💡 דוגמאות (Examples) - if applicable
 Provide 1-2 examples of desired output quality/style.
 
 OPTIMIZATION TECHNIQUES TO APPLY:

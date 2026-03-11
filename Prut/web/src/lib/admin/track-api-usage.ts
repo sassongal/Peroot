@@ -32,7 +32,7 @@ export interface ApiUsageData {
 
 /**
  * Track API usage to api_usage_logs table.
- * Fire-and-forget — errors are logged but don't block the request.
+ * Fire-and-forget - errors are logged but don't block the request.
  */
 export async function trackApiUsage(data: ApiUsageData): Promise<void> {
     try {

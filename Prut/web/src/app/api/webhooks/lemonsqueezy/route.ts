@@ -159,7 +159,7 @@ export async function POST(request: Request) {
         processed: true,
       });
     } catch {
-      // webhook_events table is optional — ignore errors
+      // webhook_events table is optional - ignore errors
     }
 
     return new NextResponse('OK', { status: 200 });
