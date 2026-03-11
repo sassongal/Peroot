@@ -128,6 +128,24 @@ export async function POST(request: Request) {
           .from('profiles')
           .update({ plan_tier: isActivePro ? 'pro' : 'free' })
           .eq('id', userId);
+
+        // Grant monthly credits on subscription creation or renewal payment
+        const PRO_MONTHLY_CREDITS = 150;
+        if (
+          isActivePro &&
+          (eventName === 'subscription_created' || eventName === 'subscription_payment_success')
+        ) {
+          // Set balance to PRO_MONTHLY_CREDITS (monthly reset, not additive)
+          await supabase
+            .from('profiles')
+            .update({
+              credits_balance: PRO_MONTHLY_CREDITS,
+              credits_refreshed_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+
+          logger.info(`[LemonSqueezy Webhook] Granted ${PRO_MONTHLY_CREDITS} credits to pro user ${userId}`);
+        }
       }
 
       logger.info(`[LemonSqueezy Webhook] Subscription ${eventName}: ${attributes.status} for user ${userId}`);

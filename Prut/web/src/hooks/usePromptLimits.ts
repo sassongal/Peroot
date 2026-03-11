@@ -46,14 +46,15 @@ export function usePromptLimits() {
         setCredits(profile.credits_balance);
       }
 
-      // Check admin role
+      // Check admin role (both user_roles table and app_metadata, matching server)
+      const hasAdminMetadata = activeUser.app_metadata?.role === 'admin';
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', activeUser.id)
         .eq('role', 'admin')
         .maybeSingle();
-      if (roleData) setIsAdmin(true);
+      if (roleData || hasAdminMetadata) setIsAdmin(true);
     } else {
       // Load guest usage from localStorage
       const stored = localStorage.getItem(USAGE_STORAGE_KEY);

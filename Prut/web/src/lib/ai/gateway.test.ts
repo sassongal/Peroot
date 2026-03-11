@@ -22,19 +22,19 @@ describe('AIGateway', () => {
     process.env = originalEnv;
   });
 
-  it('should use the primary model (Gemini 2.0) if it succeeds', async () => {
+  it('should use the primary model (Gemini 2.5) if it succeeds', async () => {
     mockStreamText.mockResolvedValueOnce({ text: 'success' });
 
     const result = await AIGateway.generateStream({ system: 'sys', prompt: 'user' });
 
-    expect(result.modelId).toBe('gemini-2.0-flash');
+    expect(result.modelId).toBe('gemini-2.5-flash');
     expect(mockStreamText).toHaveBeenCalledTimes(1);
     expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
-      model: AVAILABLE_MODELS['gemini-2.0-flash'].model
+      model: AVAILABLE_MODELS['gemini-2.5-flash'].model
     }));
   });
 
-  it('should fallback to secondary (Gemini 1.5) if primary fails', async () => {
+  it('should fallback to secondary (Gemini 2.0 Lite) if primary fails', async () => {
     // Fail first call
     mockStreamText.mockRejectedValueOnce(new Error('Rate Limited'));
     // Succeed second call
@@ -42,10 +42,10 @@ describe('AIGateway', () => {
 
     const result = await AIGateway.generateStream({ system: 'sys', prompt: 'user' });
 
-    expect(result.modelId).toBe('gemini-1.5-flash');
+    expect(result.modelId).toBe('gemini-2.0-flash-lite');
     expect(mockStreamText).toHaveBeenCalledTimes(2);
     expect(mockStreamText).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      model: AVAILABLE_MODELS['gemini-1.5-flash'].model
+      model: AVAILABLE_MODELS['gemini-2.0-flash-lite'].model
     }));
   });
 
@@ -98,7 +98,7 @@ describe('Task-Based Model Routing', () => {
   it('returns models for enhance task', () => {
     const models = getModelsForTask('enhance');
     expect(models.length).toBeGreaterThan(0);
-    expect(models[0]).toBe('gemini-2.0-flash');
+    expect(models[0]).toBe('gemini-2.5-flash');
   });
 
   it('returns models for research task', () => {

@@ -40,7 +40,7 @@ interface DashboardData {
     created_at: string;
     details: Record<string, unknown> | null;
   }>;
-  monthlyTrend: Array<{ month: string; count: number }>;
+  monthlyTrend: Array<{ month: string; newUsers: number }>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -470,7 +470,7 @@ export default function AdminDashboardPage() {
   // Seed monthlyTrend fallback if empty
   const trendData: Array<{ month: string; count: number }> =
     data.monthlyTrend && data.monthlyTrend.length > 0
-      ? data.monthlyTrend.slice(-6)
+      ? data.monthlyTrend.slice(-6).map((d) => ({ month: d.month, count: d.newUsers }))
       : [
           { month: "Oct", count: 0 },
           { month: "Nov", count: 0 },

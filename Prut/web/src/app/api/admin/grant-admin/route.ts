@@ -3,7 +3,7 @@ import { validateAdminSession, logAdminAction } from '@/lib/admin/admin-security
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/admin/grant-admin
+ * POST /api/admin/grant-admin
  * 
  * Secure endpoint to grant admin role.
  * Note: Only an existing admin can grant admin to themselves or others.
