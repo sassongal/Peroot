@@ -51,23 +51,35 @@ export default function SettingsPage() {
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
   const { subscription, isPro, checkout, loading: subLoading } = useSubscription();
+  const [credits, setCredits] = useState<{ balance: number; dailyLimit: number; refreshedAt: string | null } | null>(null);
 
   useEffect(() => {
     async function getUser() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", user.id)
-          .single();
+        const [{ data: profile }, { data: settings }] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("display_name, credits_balance, credits_refreshed_at")
+            .eq("id", user.id)
+            .single(),
+          supabase
+            .from("site_settings")
+            .select("daily_free_limit")
+            .single(),
+        ]);
         setDisplayName(
           profile?.display_name ||
             user.user_metadata?.full_name ||
             user.email?.split("@")[0] ||
             ""
         );
+        setCredits({
+          balance: profile?.credits_balance ?? 0,
+          dailyLimit: settings?.daily_free_limit ?? 2,
+          refreshedAt: profile?.credits_refreshed_at ?? null,
+        });
       }
       setLoading(false);
     }
@@ -343,6 +355,66 @@ export default function SettingsPage() {
                     <p className="text-xs text-slate-500">מועדפים</p>
                   </div>
                 </div>
+
+                {/* Credits Status */}
+                {credits && !isPro && (
+                  <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-white flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-amber-400" />
+                        מצב קרדיטים
+                      </h3>
+                      <span className="text-xs text-slate-500">
+                        {credits.balance} / {credits.dailyLimit} נותרו היום
+                      </span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="space-y-2">
+                      <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(100, credits.dailyLimit > 0 ? ((credits.dailyLimit - credits.balance) / credits.dailyLimit) * 100 : 0)}%`,
+                            background: credits.balance === 0
+                              ? "linear-gradient(90deg, #ef4444, #dc2626)"
+                              : credits.balance <= 1
+                              ? "linear-gradient(90deg, #f59e0b, #d97706)"
+                              : "linear-gradient(90deg, #22c55e, #16a34a)",
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>
+                          ניצולת: {credits.dailyLimit > 0 ? Math.round(((credits.dailyLimit - credits.balance) / credits.dailyLimit) * 100) : 0}%
+                        </span>
+                        <span>
+                          {credits.balance === 0 ? "נגמרו הקרדיטים להיום" : `${credits.balance} שימושים נותרו`}
+                        </span>
+                      </div>
+                    </div>
+                    {credits.balance === 0 && (
+                      <div className="flex items-center justify-between gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <p className="text-xs text-amber-300">הקרדיטים מתחדשים מדי יום. רוצה ללא הגבלה?</p>
+                        <Link
+                          href="/pricing"
+                          className="shrink-0 px-3 py-1.5 rounded-lg accent-gradient text-black text-xs font-bold"
+                        >
+                          שדרג ל-Pro
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {credits && isPro && (
+                  <div className="p-5 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <h3 className="font-semibold text-amber-300">מצב קרדיטים</h3>
+                    </div>
+                    <p className="text-sm text-slate-300">שימוש ללא הגבלה — אין מגבלת קרדיטים במנוי Pro</p>
+                  </div>
+                )}
 
                 {/* Account Created */}
                 <div className="text-sm text-slate-500 pt-4 border-t border-white/10">
