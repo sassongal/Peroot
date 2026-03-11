@@ -1,6 +1,5 @@
 import { streamText, StreamTextResult } from "ai";
 import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId, getModelsForTask } from "./models";
-import { logger } from "@/lib/logger";
 
 export interface GatewayParams {
     system: string;
@@ -12,7 +11,7 @@ export interface GatewayParams {
 export class AIGateway {
     /**
      * Attempts to generate text streaming using the defined fallback order.
-     * Guaranteed to try all free models before failing.
+     * Uses console directly for production visibility in Vercel runtime logs.
      */
     static async generateStream(params: GatewayParams & { task?: string }): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
         let lastError: unknown;
@@ -21,18 +20,18 @@ export class AIGateway {
         for (const modelId of models) {
             try {
                 const config = AVAILABLE_MODELS[modelId];
-                
+
                 // Providers safety checks
                 if (config.provider === 'groq' && !process.env.GROQ_API_KEY) {
-                    logger.warn('[AIGateway] Skipping Groq (No API Key)');
+                    console.warn('[AIGateway] Skipping Groq (No API Key)');
                     continue;
                 }
                 if (config.provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY) {
-                    logger.warn('[AIGateway] Skipping DeepSeek (No API Key)');
+                    console.warn('[AIGateway] Skipping DeepSeek (No API Key)');
                     continue;
                 }
 
-                logger.info(`[AIGateway] 🟡 Attempting: ${config.label}...`);
+                console.log(`[AIGateway] Attempting: ${config.label}...`);
 
                 const result = await streamText({
                     model: config.model,
@@ -42,18 +41,16 @@ export class AIGateway {
                     onFinish: params.onFinish
                 });
 
-                // Check if the stream actually started or if it's an error object
-                // The AI SDK sometimes returns a result that throws when accessing the stream
+                console.log(`[AIGateway] Stream initiated with ${config.label}`);
                 return { result, modelId };
 
             } catch (error: any) {
                 const errorMessage = error?.message || String(error);
-                logger.error(`[AIGateway] ❌ Failed with ${modelId}:`, errorMessage);
+                // Use console.error directly (not logger) so it appears in Vercel runtime logs
+                console.error(`[AIGateway] Failed with ${modelId}:`, errorMessage);
                 lastError = error;
-                
-                // If it's a 403 or 401, it's a configuration issue, we DEFINITELY want to fallback
-                logger.info(`[AIGateway] 🔄 Falling back to next available model...`);
-                continue; 
+                console.log(`[AIGateway] Falling back to next available model...`);
+                continue;
             }
         }
 
