@@ -48,15 +48,16 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id;
 
-    // 1. Parallel Context Fetching (Profile, Library, Personality)
+    // 1. Parallel Context Fetching (Profile, Library, Personality, Admin Role)
     // We start these early to minimize latency
     const contextPromise = user ? Promise.all([
         supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
         !isRefinement ? supabase.from('personal_library').select('title, prompt').eq('user_id', user.id).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
-        !isRefinement ? supabase.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null })
-    ]) : Promise.resolve([ { data: null }, { data: null }, { data: null } ]);
+        !isRefinement ? supabase.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
+        supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
+    ]) : Promise.resolve([ { data: null }, { data: null }, { data: null }, { data: null } ]);
 
-    const [profileRes, historyRes, personalityRes] = await contextPromise;
+    const [profileRes, historyRes, personalityRes, adminRoleRes] = await contextPromise;
 
     // 1.1 Process Profile & Tier
     let tier: 'free' | 'pro' | 'guest' = 'guest';
@@ -68,7 +69,8 @@ export async function POST(req: Request) {
     }
 
     // Admin bypass: skip rate limiting and credit enforcement entirely
-    const isAdmin = user?.app_metadata?.role === 'admin';
+    // Check both user_roles table AND app_metadata for admin role
+    const isAdmin = !!adminRoleRes?.data || user?.app_metadata?.role === 'admin';
 
     if (!isAdmin) {
         // 2. Execute Rate Limiting
