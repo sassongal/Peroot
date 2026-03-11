@@ -117,7 +117,22 @@ export default async function BlogPostPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
-        <div className="mt-16 pt-8 border-t border-white/10 text-center">
+        {/* Author Bio */}
+        <div className="mt-12 p-6 rounded-2xl border border-white/10 bg-white/[0.02] flex items-start gap-4" dir="rtl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
+            <span className="text-lg font-bold text-amber-400">G</span>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">{post.author || "Gal Sasson"}</p>
+            <p className="text-xs text-slate-500 mt-0.5">מייסד JoyaTech ויוצר Peroot</p>
+            <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+              מפתח ויזם בתחום ה-AI עם התמחות בעיבוד שפה טבעית ופרומפט אנג&apos;ינירינג.
+              בונה כלים שעוזרים למשתמשים לתקשר טוב יותר עם מודלי AI.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-white/10 text-center">
           <p className="text-slate-400 mb-4">רוצים לשדרג את הפרומפטים שלכם?</p>
           <Link
             href="/"

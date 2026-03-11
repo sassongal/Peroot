@@ -94,6 +94,47 @@ export function softwareAppSchema() {
   };
 }
 
+export function pricingSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "תוכניות ומחירים - Peroot",
+    description: "השוואת תוכניות Peroot: חינם ו-Pro",
+    url: `${SITE_URL}/pricing`,
+    mainEntity: [
+      {
+        "@type": "Product",
+        name: "Peroot Free",
+        description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית פרומפטים ושיתוף פרומפטים",
+        brand: { "@type": "Brand", name: "Peroot" },
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "ILS",
+          availability: "https://schema.org/InStock",
+          url: `${SITE_URL}/pricing`,
+        },
+      },
+      {
+        "@type": "Product",
+        name: "Peroot Pro",
+        description: "150 קרדיטים בחודש, גישה לכל המנועים, שיפור איטרטיבי מתקדם, ספריה אישית ללא הגבלה ותמיכה בעדיפות",
+        brand: { "@type": "Brand", name: "Peroot" },
+        offers: {
+          "@type": "Offer",
+          price: "3.99",
+          priceCurrency: "ILS",
+          billingIncrement: 1,
+          unitCode: "MON",
+          availability: "https://schema.org/InStock",
+          url: `${SITE_URL}/pricing`,
+          priceValidUntil: "2027-12-31",
+        },
+      },
+    ],
+  };
+}
+
 export function faqSchema(
   items: { question: string; answer: string }[]
 ) {
