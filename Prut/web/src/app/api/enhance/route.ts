@@ -12,6 +12,10 @@ import { logger } from "@/lib/logger";
 
 export const maxDuration = 30;
 
+// Simple in-memory cache for user profile/tier (survives within same serverless instance)
+const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: number }>();
+const PROFILE_CACHE_TTL = 60_000; // 60 seconds
+
 const RequestSchema = z.object({
   prompt: z.string(),
   tone: z.string().default("Professional"),
@@ -45,32 +49,51 @@ export async function POST(req: Request) {
     const isRefinement = !!previousResult && (!!refinementInstruction || !!hasAnswers);
 
     supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+
+    // Support Bearer token auth for Chrome extension
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+
+    const { data: { user } } = bearerToken
+        ? await supabase.auth.getUser(bearerToken)
+        : await supabase.auth.getUser();
     userId = user?.id;
 
-    // 1. Parallel Context Fetching (Profile, Library, Personality, Admin Role)
-    // We start these early to minimize latency
+    // 1. Context Fetching - check cache for profile/tier first
+    let tier: 'free' | 'pro' | 'guest' = 'guest';
+    let isAdmin = user?.app_metadata?.role === 'admin' || false;
+    let cachedHit = false;
+
+    if (user) {
+        const cached = profileCache.get(user.id);
+        if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
+            tier = cached.tier as 'free' | 'pro';
+            isAdmin = cached.isAdmin;
+            cachedHit = true;
+        }
+    }
+
+    // Parallel fetch: skip profile+admin queries if cached
     const contextPromise = user ? Promise.all([
-        supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
+        cachedHit ? Promise.resolve({ data: null }) : supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
         !isRefinement ? supabase.from('personal_library').select('title, prompt').eq('user_id', user.id).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
         !isRefinement ? supabase.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
-        supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
+        cachedHit ? Promise.resolve({ data: null }) : supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
     ]) : Promise.resolve([ { data: null }, { data: null }, { data: null }, { data: null } ]);
 
     const [profileRes, historyRes, personalityRes, adminRoleRes] = await contextPromise;
 
-    // 1.1 Process Profile & Tier
-    let tier: 'free' | 'pro' | 'guest' = 'guest';
-    let profile: { plan_tier: string } | null = null;
-
-    if (profileRes.data) {
-        profile = profileRes.data;
+    // 1.1 Process Profile & Tier (from DB if not cached)
+    if (!cachedHit && profileRes.data) {
+        const profile = profileRes.data;
         tier = (profile.plan_tier as 'free' | 'pro') || 'free';
-    }
+        isAdmin = !!adminRoleRes?.data || isAdmin;
 
-    // Admin bypass: skip rate limiting and credit enforcement entirely
-    // Check both user_roles table AND app_metadata for admin role
-    const isAdmin = !!adminRoleRes?.data || user?.app_metadata?.role === 'admin';
+        // Store in cache
+        if (user) {
+            profileCache.set(user.id, { tier, isAdmin, ts: Date.now() });
+        }
+    }
 
     if (!isAdmin) {
         // 2. Execute Rate Limiting
@@ -229,7 +252,7 @@ export async function POST(req: Request) {
                         .eq('user_id', user.id)
                         .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
 
-                    if (count && count % 5 === 0) {
+                    if (count && count % 20 === 0) {
                         await enqueueJob('style_analysis', { userId: user.id });
                     }
 

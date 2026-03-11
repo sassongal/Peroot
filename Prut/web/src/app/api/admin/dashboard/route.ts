@@ -83,21 +83,26 @@ export async function GET() {
       0
     ) ?? 0;
 
-    // Monthly trend: last 6 months, new users per month
+    // Monthly trend: last 6 months, new users per month (single query instead of 6)
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
+    const { data: trendProfiles } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .gte('created_at', sixMonthsAgo);
+
     const monthlyTrend: { month: string; newUsers: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const rangeStart = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
-      const rangeEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
       const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const rangeStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const rangeEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1);
 
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', rangeStart)
-        .lt('created_at', rangeEnd);
+      const newUsers = (trendProfiles ?? []).filter((p) => {
+        const created = new Date(p.created_at);
+        return created >= rangeStart && created < rangeEnd;
+      }).length;
 
-      monthlyTrend.push({ month, newUsers: count ?? 0 });
+      monthlyTrend.push({ month, newUsers });
     }
 
     return NextResponse.json({

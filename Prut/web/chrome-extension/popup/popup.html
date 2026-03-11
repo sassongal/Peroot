@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>Peroot</title>
+</head>
+<body>
+  <!-- ═══ Login Screen ═══ -->
+  <div id="login-screen" class="screen hidden">
+    <div class="login-glow"></div>
+    <div class="login-content">
+      <div class="login-icon">
+        <img src="../icons/icon-128.png" alt="Peroot" width="40" height="40">
+      </div>
+      <h1 class="login-title">Peroot</h1>
+      <p class="login-subtitle">שדרג כל פרומפט עם AI מתקדם</p>
+      <button id="login-btn" class="btn-accent btn-wide">התחבר ל-Peroot</button>
+      <p class="login-hint">ייפתח כרטיסייה חדשה להתחברות</p>
+    </div>
+  </div>
+
+  <!-- ═══ Main Screen ═══ -->
+  <div id="main-screen" class="screen hidden">
+    <!-- Header -->
+    <header class="main-header">
+      <div class="header-brand">
+        <img src="../icons/icon-48.png" alt="" width="20" height="20" class="header-logo">
+        <span class="header-title">Peroot</span>
+      </div>
+      <div class="header-meta">
+        <span id="user-info" class="user-info hidden"></span>
+      </div>
+    </header>
+
+    <!-- Input -->
+    <div class="input-section">
+      <div class="textarea-wrap">
+        <textarea id="prompt-input" placeholder="הכנס פרומפט לשדרוג..." rows="4" maxlength="4000"></textarea>
+        <span id="char-count" class="char-count">0</span>
+      </div>
+
+      <div class="controls-row">
+        <div class="select-wrap">
+          <select id="tone-select">
+            <option value="Professional">מקצועי</option>
+            <option value="Casual">יומיומי</option>
+            <option value="Creative">יצירתי</option>
+            <option value="Academic">אקדמי</option>
+            <option value="Persuasive">משכנע</option>
+            <option value="Friendly">ידידותי</option>
+          </select>
+        </div>
+        <button id="enhance-btn" class="btn-accent">
+          <span id="enhance-label">שדרג</span>
+          <span id="enhance-spinner" class="spinner hidden"></span>
+        </button>
+      </div>
+      <p class="hint">Enter לשדרוג &middot; Shift+Enter לשורה חדשה</p>
+    </div>
+
+    <!-- Result -->
+    <div id="result-section" class="result-section hidden">
+      <div class="result-label">תוצאה:</div>
+      <div id="result-text" class="result-text"></div>
+      <div class="result-actions">
+        <button id="copy-btn" class="btn-sm">העתק</button>
+        <button id="insert-btn" class="btn-sm">הכנס לשדה פעיל</button>
+        <button id="open-btn" class="btn-sm btn-link">peroot.space</button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="error-section" class="error-section hidden">
+      <p id="error-text"></p>
+    </div>
+
+    <!-- History -->
+    <div id="history-section" class="history-section hidden">
+      <div class="history-header">
+        <span>אחרונים</span>
+        <button id="clear-history" class="btn-ghost">נקה</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ Loading ═══ -->
+  <div id="loading-screen" class="screen loading-screen">
+    <span class="spinner large"></span>
+  </div>
+
+  <script src="../lib/auth.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

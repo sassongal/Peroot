@@ -36,7 +36,11 @@ export async function GET() {
             ...rest,
             category: (category_id && categoryKeyMap[category_id.toLowerCase()]) || 'General',
         }));
-        return NextResponse.json(mapped);
+        return NextResponse.json(mapped, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            },
+        });
     } catch (err) {
         logger.error('[Public Library API] Critical Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
