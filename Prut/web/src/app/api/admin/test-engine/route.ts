@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     // 4. Execute AI call with Telemetry
     const startTime = Date.now();
     const result = await generateText({
-      model: google('gemini-2.0-flash'),
+      model: google('gemini-2.5-flash'),
       system: finalSystem,
       prompt: finalUser,
       temperature: 0.7,

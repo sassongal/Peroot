@@ -9,8 +9,8 @@ import { logger } from "@/lib/logger";
  * based on equivalent commercial pricing for budgeting purposes.
  */
 const PRICING: Record<string, { input: number; output: number }> = {
-    'gemini-2.0-flash':  { input: 0.075, output: 0.30 },
-    'gemini-1.5-flash':  { input: 0.075, output: 0.30 },
+    'gemini-2.5-flash':  { input: 0.15, output: 0.60 },
+    'gemini-2.0-flash-lite':  { input: 0.075, output: 0.30 },
     'llama-3-70b':       { input: 0.59,  output: 0.79 },
     'deepseek-chat':     { input: 0.14,  output: 0.28 },
 };

@@ -3,7 +3,7 @@ import { groq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { LanguageModel } from "ai";
 
-export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b' | 'deepseek-chat';
+export type ModelId = 'gemini-2.5-flash' | 'gemini-2.0-flash-lite' | 'llama-3-70b' | 'deepseek-chat';
 
 // Server-side Google provider — no Referer header needed.
 // API key restrictions should use "None" or IP-based (not HTTP referrer)
@@ -27,19 +27,19 @@ export interface ModelConfig {
 }
 
 export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
-    'gemini-2.0-flash': {
-        id: 'gemini-2.0-flash',
+    'gemini-2.5-flash': {
+        id: 'gemini-2.5-flash',
         provider: 'google',
-        model: google('gemini-2.0-flash'),
-        label: 'Gemini 2.0 Flash (Primary)',
+        model: google('gemini-2.5-flash'),
+        label: 'Gemini 2.5 Flash (Primary)',
         contextWindow: 1000000,
         tier: 'free'
     },
-    'gemini-1.5-flash': {
-        id: 'gemini-1.5-flash',
+    'gemini-2.0-flash-lite': {
+        id: 'gemini-2.0-flash-lite',
         provider: 'google',
-        model: google('gemini-1.5-flash'),
-        label: 'Gemini 1.5 Flash (Backup)',
+        model: google('gemini-2.0-flash-lite'),
+        label: 'Gemini 2.0 Flash Lite (Backup)',
         contextWindow: 1000000,
         tier: 'free'
     },
@@ -62,8 +62,8 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
 };
 
 export const FALLBACK_ORDER: ModelId[] = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-lite',
     'llama-3-70b',
     'deepseek-chat'
 ];
@@ -71,10 +71,10 @@ export const FALLBACK_ORDER: ModelId[] = [
 export type TaskType = 'enhance' | 'research' | 'agent' | 'image';
 
 export const TASK_ROUTING: Record<string, ModelId[]> = {
-  enhance:  ['gemini-2.0-flash', 'deepseek-chat', 'llama-3-70b'],
-  research: ['deepseek-chat', 'gemini-2.0-flash'],
-  agent:    ['gemini-2.0-flash', 'llama-3-70b'],
-  image:    ['gemini-2.0-flash', 'gemini-1.5-flash'],
+  enhance:  ['gemini-2.5-flash', 'deepseek-chat', 'llama-3-70b'],
+  research: ['deepseek-chat', 'gemini-2.5-flash'],
+  agent:    ['gemini-2.5-flash', 'llama-3-70b'],
+  image:    ['gemini-2.5-flash', 'gemini-2.0-flash-lite'],
 };
 
 export function getModelsForTask(task: string): ModelId[] {
