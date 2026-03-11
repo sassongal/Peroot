@@ -5,12 +5,11 @@ import { LanguageModel } from "ai";
 
 export type ModelId = 'gemini-2.0-flash' | 'gemini-1.5-flash' | 'llama-3-70b' | 'deepseek-chat';
 
-// Create custom Google provider with Referer header to bypass API restrictions
+// Server-side Google provider — no Referer header needed.
+// API key restrictions should use "None" or IP-based (not HTTP referrer)
+// since this runs in Vercel serverless functions, not the browser.
 const google = createGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-    headers: {
-        'Referer': process.env.NEXT_PUBLIC_APP_URL!,
-    }
 });
 
 const deepseek = createOpenAI({
