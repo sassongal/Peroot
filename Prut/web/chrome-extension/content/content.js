@@ -1,7 +1,7 @@
 /**
  * Peroot Extension - Content Script
  * Handles: right-click enhance panel, text insertion from popup.
- * Auth: gets token from service worker (content scripts can't use chrome.cookies).
+ * Auth: reads token from chrome.storage (synced by this script when on peroot.space).
  */
 
 const API_BASE = "https://peroot.space";
@@ -11,11 +11,46 @@ let lastEnhanced = "";
 let lastSelectionElement = null;
 let isDragging = false;
 
-// ─── Auth: ask service worker for token ───
+// ─── Auth: sync token from peroot.space to chrome.storage ───
+// When content script runs on peroot.space, fetch token via same-origin API call
+// (cookies are always sent for same-origin requests, bypassing all extension cookie issues)
+(async function syncAuthIfOnPeroot() {
+  if (!location.hostname.includes("peroot.space")) return;
+
+  async function fetchToken() {
+    try {
+      const res = await fetch("/api/extension-token", { credentials: "same-origin" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.token || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Sync immediately
+  const token = await fetchToken();
+  if (token) {
+    chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
+  }
+
+  // Poll a few times after page load to catch post-login redirects
+  let polls = 0;
+  const interval = setInterval(async () => {
+    const t = await fetchToken();
+    if (t) {
+      chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token: t });
+      clearInterval(interval);
+    }
+    if (++polls > 5) clearInterval(interval);
+  }, 2000);
+})();
+
+// ─── Auth: get token from storage ───
 function getAuthToken() {
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: "GET_AUTH_TOKEN" }, (response) => {
-      resolve(response?.token || null);
+    chrome.storage.local.get("peroot_token", (data) => {
+      resolve(data.peroot_token || null);
     });
   });
 }

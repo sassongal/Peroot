@@ -1,9 +1,8 @@
 /**
  * Peroot Extension - Service Worker
- * Handles: context menu, auth token relay for content scripts
+ * Handles: context menu, auth token storage/relay
  */
 
-const COOKIE_PREFIX = "sb-ravinxlujmlvxhgbjxti-auth-token";
 const SITE_URL = "https://peroot.space";
 
 // ─── Context Menu ───
@@ -25,50 +24,59 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 // ─── Message Handler ───
-// Content scripts can't use chrome.cookies, so they ask us for the token
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "STORE_AUTH_TOKEN") {
+    if (message.token) {
+      chrome.storage.local.set({ peroot_token: message.token });
+    } else {
+      chrome.storage.local.remove("peroot_token");
+    }
+    sendResponse({ ok: true });
+    return false;
+  }
+
   if (message.type === "GET_AUTH_TOKEN") {
-    getAuthToken().then((token) => sendResponse({ token }));
-    return true; // keep channel open for async
+    chrome.storage.local.get("peroot_token", (data) => {
+      sendResponse({ token: data.peroot_token || null });
+    });
+    return true;
+  }
+
+  if (message.type === "FORCE_AUTH_SYNC") {
+    forceAuthSync().then((token) => sendResponse({ token }));
+    return true;
   }
 });
 
-// ─── Auth Token from Cookies ───
-async function getAuthToken() {
+// ─── Force Auth Sync ───
+// Find an open peroot.space tab and inject a fetch call to get the token
+async function forceAuthSync() {
   try {
-    const cookies = await chrome.cookies.getAll({ url: SITE_URL });
+    let tabs = await chrome.tabs.query({ url: "https://peroot.space/*" });
+    if (tabs.length === 0) {
+      tabs = await chrome.tabs.query({ url: "https://www.peroot.space/*" });
+    }
+    if (tabs.length === 0) return null;
 
-    const authCookies = cookies
-      .filter(
-        (c) =>
-          c.name === COOKIE_PREFIX ||
-          c.name.startsWith(COOKIE_PREFIX + ".")
-      )
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    if (authCookies.length === 0) return null;
-
-    const raw = authCookies.map((c) => c.value).join("");
-    if (!raw) return null;
-
-    let session;
-    try {
-      session = JSON.parse(raw);
-    } catch {
-      try {
-        session = JSON.parse(decodeURIComponent(raw));
-      } catch {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      func: async () => {
         try {
-          session = JSON.parse(
-            atob(raw.replace(/-/g, "+").replace(/_/g, "/"))
-          );
+          const res = await fetch("/api/extension-token", { credentials: "same-origin" });
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data.token || null;
         } catch {
           return null;
         }
-      }
-    }
+      },
+    });
 
-    return session?.access_token || null;
+    const token = results?.[0]?.result || null;
+    if (token) {
+      await chrome.storage.local.set({ peroot_token: token });
+    }
+    return token;
   } catch {
     return null;
   }

@@ -7,10 +7,11 @@
     "contextMenus",
     "activeTab",
     "storage",
-    "cookies"
+    "scripting"
   ],
   "host_permissions": [
-    "https://peroot.space/*"
+    "https://peroot.space/*",
+    "https://www.peroot.space/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"

@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const stored = await chrome.storage.local.get(["tone"]);
   if (stored.tone) toneSelect.value = stored.tone;
 
-  // Auth check (cookie-based, instant, no server call)
+  // Auth check - token is synced from peroot.space via content script
   const auth = await checkAuth();
 
   if (auth.authenticated) {
@@ -50,11 +50,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     loadHistory();
     setTimeout(() => promptInput.focus(), 80);
-
-    // Fetch credits in background (optional, may fail if not deployed)
     fetchUserInfo();
   } else {
     show(loginScreen);
+    // Show hint: user needs to have peroot.space open or login
+    const hint = loginScreen.querySelector(".login-hint");
+    if (hint) hint.textContent = "התחבר ל-peroot.space ואז פתח שוב את התוסף";
   }
 });
 
@@ -82,8 +83,9 @@ async function fetchUserInfo() {
 }
 
 // ═══ LOGIN ═══
-loginBtn.addEventListener("click", () => {
-  chrome.tabs.create({ url: `${API_BASE}/login` });
+loginBtn.addEventListener("click", async () => {
+  // Open login page - content script will sync token after login
+  await chrome.tabs.create({ url: `${API_BASE}/login` });
   window.close();
 });
 
