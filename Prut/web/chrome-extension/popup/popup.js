@@ -1,58 +1,11 @@
 /**
  * Peroot Extension - Popup
- * Uses auth.js (loaded before this script) for authentication.
+ * Tabs: Enhance | Library | Favorites
+ * Credits synced from website
  */
 
 const API_BASE = "https://peroot.space";
 const MAX_HISTORY = 8;
-
-// ─── Quick Action Definitions ───
-const ACTIONS = {
-  enhance: {
-    label: "שדרג",
-    buildPrompt: (text, tone) => ({ prompt: text, tone, category: "General" }),
-  },
-  shorten: {
-    label: "קצר",
-    buildPrompt: (text) => ({
-      prompt: text,
-      tone: "Professional",
-      category: "General",
-      refinementInstruction: "Make this significantly shorter and more concise. Keep the core message but remove all unnecessary words. Output ONLY the shortened text.",
-      previousResult: text,
-    }),
-  },
-  lengthen: {
-    label: "הארך",
-    buildPrompt: (text) => ({
-      prompt: text,
-      tone: "Professional",
-      category: "General",
-      refinementInstruction: "Expand and elaborate on this text. Add more detail, examples, and depth while maintaining the original tone and intent. Output ONLY the expanded text.",
-      previousResult: text,
-    }),
-  },
-  fix: {
-    label: "תקן",
-    buildPrompt: (text) => ({
-      prompt: text,
-      tone: "Professional",
-      category: "General",
-      refinementInstruction: "Fix all grammar, spelling, and punctuation errors. Improve sentence structure where needed. Output ONLY the corrected text with no explanations.",
-      previousResult: text,
-    }),
-  },
-  translate: {
-    label: "תרגם",
-    buildPrompt: (text) => ({
-      prompt: text,
-      tone: "Professional",
-      category: "General",
-      refinementInstruction: "Translate this text to English. If already in English, translate to Hebrew. Output ONLY the translation.",
-      previousResult: text,
-    }),
-  },
-};
 
 // ─── DOM ───
 const $ = (id) => document.getElementById(id);
@@ -63,44 +16,41 @@ const loginBtn = $("login-btn");
 const promptInput = $("prompt-input");
 const charCount = $("char-count");
 const toneSelect = $("tone-select");
+const enhanceBtn = $("enhance-btn");
+const enhanceLabel = $("enhance-label");
+const enhanceSpinner = $("enhance-spinner");
 const resultSection = $("result-section");
-const resultLabel = $("result-label");
 const resultTimer = $("result-timer");
 const resultText = $("result-text");
 const copyBtn = $("copy-btn");
 const insertBtn = $("insert-btn");
 const reuseBtn = $("reuse-btn");
-const openBtn = $("open-btn");
 const errorSection = $("error-section");
 const errorText = $("error-text");
-const userInfo = $("user-info");
+const creditsBadge = $("credits-badge");
+const creditsCount = $("credits-count");
 const historySection = $("history-section");
 const historyList = $("history-list");
 const clearHistoryBtn = $("clear-history");
 
 let lastEnhanced = "";
 let isEnhancing = false;
-let currentAction = "enhance";
 let timerInterval = null;
+let libraryLoaded = false;
+let favoritesLoaded = false;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
-  // Restore saved tone
   const stored = await chrome.storage.local.get(["tone"]);
   if (stored.tone) toneSelect.value = stored.tone;
 
-  // Auth check
   const auth = await checkAuth();
 
   if (auth.authenticated) {
     show(mainScreen);
-    if (auth.email) {
-      userInfo.textContent = auth.email.split("@")[0];
-      userInfo.classList.remove("hidden");
-    }
     loadHistory();
     setTimeout(() => promptInput.focus(), 80);
-    fetchUserInfo();
+    fetchCredits();
   } else {
     show(loginScreen);
   }
@@ -113,21 +63,52 @@ function show(screen) {
   screen.classList.remove("hidden");
 }
 
-async function fetchUserInfo() {
+// ═══ CREDITS ═══
+async function fetchCredits() {
   try {
     const res = await authFetch("/api/me");
     if (res.ok) {
       const user = await res.json();
       if (user.credits_balance != null) {
-        const tier = user.plan_tier === "pro" ? "PRO" : "";
-        userInfo.textContent = `${tier} ${user.credits_balance} קרדיטים`.trim();
-        userInfo.classList.remove("hidden");
+        creditsCount.textContent = user.credits_balance;
+        creditsBadge.classList.remove("hidden");
+
+        // Color based on balance
+        if (user.credits_balance <= 0) {
+          creditsBadge.style.borderColor = "rgba(239,68,68,0.3)";
+          creditsBadge.style.color = "#fca5a5";
+          creditsBadge.style.background = "rgba(239,68,68,0.08)";
+        } else if (user.credits_balance <= 2) {
+          creditsBadge.style.borderColor = "rgba(251,191,36,0.15)";
+          creditsBadge.style.color = "#fbbf24";
+          creditsBadge.style.background = "rgba(251,191,36,0.08)";
+        } else {
+          creditsBadge.style.borderColor = "rgba(52,211,153,0.2)";
+          creditsBadge.style.color = "#34d399";
+          creditsBadge.style.background = "rgba(52,211,153,0.08)";
+        }
       }
     }
   } catch {
     // Not critical
   }
 }
+
+// ═══ TABS ═══
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    // Switch active tab
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+    tab.classList.add("active");
+    const target = tab.dataset.tab;
+    $(`tab-${target}`).classList.add("active");
+
+    // Lazy-load data
+    if (target === "library" && !libraryLoaded) loadLibrary();
+    if (target === "favorites" && !favoritesLoaded) loadFavorites();
+  });
+});
 
 // ═══ LOGIN ═══
 loginBtn.addEventListener("click", async () => {
@@ -150,76 +131,55 @@ toneSelect.addEventListener("change", () => {
 promptInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    doAction("enhance");
+    doEnhance();
   }
 });
 
-// ═══ QUICK ACTIONS ═══
-document.querySelectorAll(".qa-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const action = btn.dataset.action;
-    if (action) doAction(action);
-  });
-});
+enhanceBtn.addEventListener("click", doEnhance);
 
-// ═══ ENHANCE / ACTION ═══
-async function doAction(action) {
+// ═══ ENHANCE ═══
+async function doEnhance() {
   const text = promptInput.value.trim();
   if (!text || isEnhancing) return;
 
-  currentAction = action;
   isEnhancing = true;
   hideError();
   resultSection.classList.add("hidden");
+  setLoading(true);
 
-  // Disable all action buttons
-  document.querySelectorAll(".qa-btn").forEach((b) => (b.disabled = true));
-
-  // Highlight active action
-  document.querySelectorAll(".qa-btn").forEach((b) => b.classList.remove("qa-active"));
-  const activeBtn = document.querySelector(`.qa-btn[data-action="${action}"]`);
-  if (activeBtn) activeBtn.classList.add("qa-active");
-
-  // Start timer
   const startTime = Date.now();
   resultTimer.textContent = "0.0s";
   timerInterval = setInterval(() => {
     resultTimer.textContent = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
   }, 100);
 
-  // Show result section immediately with streaming state
   resultSection.classList.remove("hidden");
   resultText.textContent = "";
   resultText.classList.add("streaming");
-  resultLabel.textContent = ACTIONS[action]?.label || "תוצאה";
 
   try {
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
-    const body = ACTIONS[action].buildPrompt(text, toneSelect.value);
 
     const res = await fetch(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        prompt: text,
+        tone: toneSelect.value,
+        category: "General",
+      }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       resultSection.classList.add("hidden");
-      if (res.status === 403) {
-        showError(err.error || "אין מספיק קרדיטים");
-      } else if (res.status === 429) {
-        showError("יותר מדי בקשות. נסה שוב בעוד כמה דקות.");
-      } else if (res.status === 401) {
-        showError("נדרשת התחברות מחדש.");
-        show(loginScreen);
-      } else {
-        showError(err.error || "שגיאה בשדרוג");
-      }
+      if (res.status === 403) showError(err.error || "אין מספיק קרדיטים");
+      else if (res.status === 429) showError("יותר מדי בקשות. נסה שוב בעוד כמה דקות.");
+      else if (res.status === 401) { showError("נדרשת התחברות מחדש."); show(loginScreen); }
+      else showError(err.error || "שגיאה בשדרוג");
       return;
     }
 
-    // Stream response
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
@@ -228,7 +188,6 @@ async function doAction(action) {
       const { done, value } = await reader.read();
       if (done) break;
       fullText += decoder.decode(value, { stream: true });
-
       const display = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
       resultText.textContent = display;
       resultText.scrollTop = resultText.scrollHeight;
@@ -237,17 +196,23 @@ async function doAction(action) {
     resultText.classList.remove("streaming");
     lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
 
-    saveToHistory(text, lastEnhanced, action);
-    syncToWebsite(text, lastEnhanced, action);
-    fetchUserInfo();
+    saveToHistory(text, lastEnhanced);
+    syncToWebsite(text, lastEnhanced);
+    fetchCredits(); // refresh credits after use
   } catch {
     resultSection.classList.add("hidden");
     showError("שגיאת רשת. בדוק את החיבור.");
   } finally {
     isEnhancing = false;
     clearInterval(timerInterval);
-    document.querySelectorAll(".qa-btn").forEach((b) => (b.disabled = false));
+    setLoading(false);
   }
+}
+
+function setLoading(on) {
+  enhanceBtn.disabled = on;
+  enhanceLabel.classList.toggle("hidden", on);
+  enhanceSpinner.classList.toggle("hidden", !on);
 }
 
 // ═══ ERROR ═══
@@ -259,7 +224,7 @@ function hideError() {
   errorSection.classList.add("hidden");
 }
 
-// ═══ ACTIONS ═══
+// ═══ RESULT ACTIONS ═══
 copyBtn.addEventListener("click", async () => {
   if (!lastEnhanced) return;
   await navigator.clipboard.writeText(lastEnhanced);
@@ -283,24 +248,16 @@ reuseBtn.addEventListener("click", () => {
   promptInput.focus();
 });
 
-openBtn.addEventListener("click", () => {
-  chrome.tabs.create({ url: API_BASE });
-});
-
 function flash(btn, msg) {
   const orig = btn.textContent;
   btn.textContent = msg;
   btn.classList.add("success");
-  setTimeout(() => {
-    btn.textContent = orig;
-    btn.classList.remove("success");
-  }, 1200);
+  setTimeout(() => { btn.textContent = orig; btn.classList.remove("success"); }, 1200);
 }
 
 // ═══ SYNC TO WEBSITE ═══
-async function syncToWebsite(original, enhanced, action) {
+async function syncToWebsite(original, enhanced) {
   try {
-    const actionLabel = ACTIONS[action]?.label || "שדרג";
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
     await fetch(`${API_BASE}/api/history`, {
       method: "POST",
@@ -310,13 +267,161 @@ async function syncToWebsite(original, enhanced, action) {
         enhanced_prompt: enhanced,
         tone: toneSelect.value,
         category: "General",
-        title: `[${actionLabel}] ${original.substring(0, 50)}${original.length > 50 ? "..." : ""}`,
+        title: `[תוסף] ${original.substring(0, 50)}${original.length > 50 ? "..." : ""}`,
         source: "extension",
       }),
     });
   } catch {
-    // Non-critical - local history still saved
+    // Non-critical
   }
+}
+
+// ═══ LIBRARY ═══
+async function loadLibrary() {
+  const loading = $("library-loading");
+  const empty = $("library-empty");
+  const list = $("library-list");
+
+  try {
+    const res = await authFetch("/api/personal-library");
+    loading.classList.add("hidden");
+
+    if (!res.ok) {
+      empty.querySelector(".empty-title").textContent = "שגיאה בטעינה";
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    const { items } = await res.json();
+    libraryLoaded = true;
+
+    if (!items || items.length === 0) {
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    list.innerHTML = "";
+    items.forEach((item) => {
+      list.appendChild(createPromptCard(item));
+    });
+    list.classList.remove("hidden");
+  } catch {
+    loading.classList.add("hidden");
+    empty.classList.remove("hidden");
+  }
+}
+
+// ═══ FAVORITES ═══
+async function loadFavorites() {
+  const loading = $("favorites-loading");
+  const empty = $("favorites-empty");
+  const list = $("favorites-list");
+
+  try {
+    const res = await authFetch("/api/favorites");
+    loading.classList.add("hidden");
+
+    if (!res.ok) {
+      empty.querySelector(".empty-title").textContent = "שגיאה בטעינה";
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    const { items } = await res.json();
+    favoritesLoaded = true;
+
+    if (!items || items.length === 0) {
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    list.innerHTML = "";
+    items.forEach((item) => {
+      list.appendChild(createPromptCard(item));
+    });
+    list.classList.remove("hidden");
+  } catch {
+    loading.classList.add("hidden");
+    empty.classList.remove("hidden");
+  }
+}
+
+// ═══ PROMPT CARD ═══
+function createPromptCard(item) {
+  const card = document.createElement("div");
+  card.className = "prompt-card";
+
+  const header = document.createElement("div");
+  header.className = "prompt-card-header";
+
+  const title = document.createElement("span");
+  title.className = "prompt-card-title";
+  title.textContent = item.title || "ללא כותרת";
+
+  const cat = document.createElement("span");
+  cat.className = "prompt-card-cat";
+  cat.textContent = item.personal_category || item.category || "כללי";
+
+  header.appendChild(title);
+  header.appendChild(cat);
+
+  const text = document.createElement("div");
+  text.className = "prompt-card-text";
+  text.textContent = item.prompt;
+
+  const actions = document.createElement("div");
+  actions.className = "prompt-card-actions";
+
+  const useBtn = document.createElement("button");
+  useBtn.className = "btn-sm prompt-card-btn-use";
+  useBtn.textContent = "השתמש";
+  useBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    // Switch to enhance tab with this prompt
+    promptInput.value = item.prompt;
+    charCount.textContent = item.prompt.length;
+    document.querySelector('.tab[data-tab="enhance"]').click();
+    promptInput.focus();
+  });
+
+  const copyCardBtn = document.createElement("button");
+  copyCardBtn.className = "btn-sm";
+  copyCardBtn.textContent = "העתק";
+  copyCardBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(item.prompt);
+    flash(copyCardBtn, "הועתק!");
+  });
+
+  const insertCardBtn = document.createElement("button");
+  insertCardBtn.className = "btn-sm";
+  insertCardBtn.textContent = "הכנס";
+  insertCardBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      chrome.tabs.sendMessage(tab.id, { type: "INSERT_TEXT", text: item.prompt });
+      flash(insertCardBtn, "הוכנס!");
+    }
+  });
+
+  actions.appendChild(useBtn);
+  actions.appendChild(copyCardBtn);
+  actions.appendChild(insertCardBtn);
+
+  card.appendChild(header);
+  card.appendChild(text);
+  card.appendChild(actions);
+
+  // Click card to expand/use
+  card.addEventListener("click", () => {
+    promptInput.value = item.prompt;
+    charCount.textContent = item.prompt.length;
+    document.querySelector('.tab[data-tab="enhance"]').click();
+    promptInput.focus();
+  });
+
+  return card;
 }
 
 // ═══ HISTORY ═══
@@ -332,15 +437,12 @@ async function loadHistory() {
   history.slice(0, MAX_HISTORY).forEach((item) => {
     const el = document.createElement("div");
     el.className = "history-item";
-
     const textSpan = document.createElement("span");
     textSpan.className = "history-item-text";
     textSpan.textContent = item.original;
-
     const timeSpan = document.createElement("span");
     timeSpan.className = "history-item-time";
     timeSpan.textContent = timeAgo(item.time);
-
     el.appendChild(textSpan);
     el.appendChild(timeSpan);
     el.addEventListener("click", () => {
@@ -352,12 +454,11 @@ async function loadHistory() {
   });
 }
 
-async function saveToHistory(original, enhanced, action) {
+async function saveToHistory(original, enhanced) {
   const { history = [] } = await chrome.storage.local.get("history");
   history.unshift({
     original: original.substring(0, 200),
     enhanced: enhanced.substring(0, 500),
-    action: action || "enhance",
     time: Date.now(),
   });
   await chrome.storage.local.set({ history: history.slice(0, MAX_HISTORY) });
