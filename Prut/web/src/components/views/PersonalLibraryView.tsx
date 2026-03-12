@@ -276,7 +276,9 @@ export function PersonalLibraryView({
   const displayItems = filteredPersonalLibrary;
   
   // Re-derive categories present in display items
-  const categorySet = new Set([PERSONAL_DEFAULT_CATEGORY, ...personalCategories]);
+  // Include categories from actual items so saved prompts with non-custom categories still appear
+  const itemCategories = displayItems.map(p => p.personal_category).filter(Boolean) as string[];
+  const categorySet = new Set([PERSONAL_DEFAULT_CATEGORY, ...personalCategories, ...itemCategories]);
   
   const orderedCategories = Array.from(categorySet).filter((cat) =>
     displayItems.some((prompt) => prompt.personal_category === cat || (!prompt.personal_category && cat === PERSONAL_DEFAULT_CATEGORY))
