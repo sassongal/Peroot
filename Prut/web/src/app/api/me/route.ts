@@ -32,13 +32,21 @@ export async function GET(req: NextRequest) {
         )
       : supabase;
 
-    const { data: profile } = await queryClient
-      .from("profiles")
-      .select("plan_tier, credits_balance, display_name")
-      .eq("id", user.id)
-      .single();
+    const [{ data: profile }, { data: adminRole }] = await Promise.all([
+      queryClient
+        .from("profiles")
+        .select("plan_tier, credits_balance, display_name")
+        .eq("id", user.id)
+        .single(),
+      queryClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle(),
+    ]);
 
-    const isAdmin = user.app_metadata?.role === "admin";
+    const isAdmin = user.app_metadata?.role === "admin" || !!adminRole;
 
     return NextResponse.json({
       id: user.id,
