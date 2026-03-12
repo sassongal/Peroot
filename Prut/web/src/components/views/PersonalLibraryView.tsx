@@ -332,7 +332,7 @@ export function PersonalLibraryView({
             isDragOver && "ring-2 ring-white/30",
             (isSelected || selectionMode) && "ring-2 ring-blue-500/50 bg-blue-500/5"
           )}
-          contentClassName="p-7 md:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-[420px]"
+          contentClassName="p-4 md:p-7 lg:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-0 md:min-h-[420px]"
         >
           {/* Selection Checkbox Overlay */}
           <div className={cn(
@@ -348,7 +348,7 @@ export function PersonalLibraryView({
 
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <GripVertical className={cn("w-4 h-4 mt-1 text-slate-500", !isEditing ? "opacity-100" : "opacity-30")} />
+              <GripVertical className={cn("w-4 h-4 mt-1 text-slate-500 hidden md:block", !isEditing ? "opacity-100" : "opacity-30")} />
               <div>
                 {isEditing ? (
                   <div className="space-y-3">
@@ -377,7 +377,7 @@ export function PersonalLibraryView({
                           </span>
                         )}
                     </div>
-                    <h4 className="text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
+                    <h4 className="text-lg md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
                     <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
                     {renderPromptTags(prompt.tags)}
                   </>
@@ -389,7 +389,7 @@ export function PersonalLibraryView({
                 type="button"
                 onClick={() => handleToggleFavorite("personal", prompt.id)}
                 className={cn(
-                  "p-2 rounded-full border transition-colors",
+                  "p-2.5 rounded-full border transition-colors",
                   isFavorite
                     ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-300"
                     : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
@@ -519,13 +519,13 @@ export function PersonalLibraryView({
               </div>
               
               {/* Stats & Category */}
-              <div className="hidden lg:block text-right text-xs text-slate-500 w-32 shrink-0">
+              <div className="hidden md:block text-right text-xs text-slate-500 w-32 shrink-0">
                   <div className="text-slate-400">{prompt.personal_category}</div>
                   <div>שומש {prompt.use_count} פעמים</div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-2 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white"><Plus className="w-4 h-4"/></button>
                   <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Copy className="w-4 h-4"/></button>
                   <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Pencil className="w-4 h-4"/></button>
@@ -541,12 +541,12 @@ export function PersonalLibraryView({
       <div className="flex flex-col gap-7 animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-24">
 
 
-        <div className="glass-card p-7 md:p-9 rounded-2xl border-white/10 bg-black/40">
+        <div className="glass-card p-4 md:p-7 lg:p-9 rounded-2xl border-white/10 bg-black/40">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-4xl md:text-5xl font-serif text-white">ספריה אישית</h2>
-                <p className="text-base text-slate-400 mt-2">
+                <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-white">ספריה אישית</h2>
+                <p className="text-sm md:text-base text-slate-400 mt-2">
                   {totalCount} פרומפטים {personalView === "favorites" ? "מועדפים" : "אישיים"} · ארגון לפי קטגוריות
                 </p>
               </div>
@@ -571,17 +571,17 @@ export function PersonalLibraryView({
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 mx-2">
                   <button 
                     onClick={() => setLayoutMode("grid")}
-                    className={cn("p-2 rounded-md transition-colors", layoutMode === "grid" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
+                    className={cn("p-2.5 rounded-md transition-colors", layoutMode === "grid" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
                     title="תצוגת כרטיסים"
                   >
-                      <LayoutGrid className="w-5 h-5" />
+                      <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setLayoutMode("list")}
-                    className={cn("p-2 rounded-md transition-colors", layoutMode === "list" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
+                    className={cn("p-2.5 rounded-md transition-colors", layoutMode === "list" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
                     title="תצוגת רשימה"
                   >
-                      <LayoutList className="w-5 h-5" />
+                      <LayoutList className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
               </div>
 
@@ -592,7 +592,7 @@ export function PersonalLibraryView({
                     title="מצב בחירה מרובה"
                   >
                       <CheckSquare className="w-4 h-4" />
-                      <span>ניהול פריטים</span>
+                      <span className="hidden md:inline">ניהול פריטים</span>
                   </button>
                   {selectionMode && (
                       <button 
@@ -609,7 +609,7 @@ export function PersonalLibraryView({
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
               >
                 <BookOpen className="w-4 h-4" />
-                ספריה מלאה
+                <span className="hidden md:inline">ספריה מלאה</span>
               </button>
               <button
                 onClick={() => setPersonalView(personalView === "favorites" ? "all" : "favorites")}
@@ -621,7 +621,7 @@ export function PersonalLibraryView({
                 )}
               >
                 <Star className="w-4 h-4" />
-                מועדפים ({favoritePersonalIds.size})
+                <span className="hidden md:inline">מועדפים</span> ({favoritePersonalIds.size})
               </button>
               <button
                 onClick={() => setViewMode("home")}
@@ -641,15 +641,15 @@ export function PersonalLibraryView({
              />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="relative lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative md:col-span-2">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
                 dir="rtl"
                 value={personalQuery}
                 onChange={(e) => setPersonalQuery(e.target.value)}
                 placeholder={personalView === "favorites" ? "חיפוש במועדפים..." : "חיפוש בפרומפטים..."}
-                className="w-full bg-black/30 border border-white/10 rounded-lg py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+                className="w-full bg-black/30 border border-white/10 rounded-lg py-3.5 md:py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -707,7 +707,7 @@ export function PersonalLibraryView({
                               <div className={cn("grid gap-4", layoutMode === "grid" ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1")}>
                                   {libraryFavorites.map(p => (
                                       // Minimal card for library favorites (read-only mostly)
-                                      <GlowingEdgeCard key={p.id} className="rounded-2xl" contentClassName="p-6 flex flex-col gap-4">
+                                      <GlowingEdgeCard key={p.id} className="rounded-2xl" contentClassName="p-4 md:p-6 flex flex-col gap-4">
                                           <div className="flex justify-between">
                                               <div>
                                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-2">
@@ -783,7 +783,7 @@ export function PersonalLibraryView({
                           <div
                             key={category}
                             id={`personal-category-${category}`}
-                            className="space-y-4 scroll-mt-24 rounded-3xl border border-white/10 bg-gradient-to-l from-white/[0.06] via-white/[0.03] to-transparent px-5 md:px-7 py-7"
+                            className="space-y-4 scroll-mt-24 rounded-3xl border border-white/10 bg-gradient-to-l from-white/[0.06] via-white/[0.03] to-transparent px-3 py-4 md:px-5 md:py-7 lg:px-7"
                             onDragOver={(event) => event.preventDefault()}
                             onDrop={(event) => handlePersonalDropToEnd(event, category)}
                           >
@@ -812,7 +812,7 @@ export function PersonalLibraryView({
                                         </div>
                                      ) : (
                                          <div className="flex items-baseline gap-3 group/cat">
-                                            <h3 className="text-3xl md:text-4xl font-serif font-semibold text-slate-100 tracking-wide">{category}</h3>
+                                            <h3 className="text-xl md:text-3xl lg:text-4xl font-serif font-semibold text-slate-100 tracking-wide">{category}</h3>
                                             {category !== PERSONAL_DEFAULT_CATEGORY && (
                                                 <button onClick={() => startRenameCategory(category)} className="opacity-0 group-hover/cat:opacity-100 text-slate-500 hover:text-white"><Pencil className="w-3 h-3"/></button>
                                             )}
@@ -836,21 +836,21 @@ export function PersonalLibraryView({
 
         {/* Floating Batch Actions Toolbar */}
         {selectedIds.size > 0 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+            <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
                 <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
                     {selectedIds.size} נבחרו
                 </div>
-                <button onClick={handleBatchExport} className="p-2 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="יצוא">
+                <button onClick={handleBatchExport} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="יצוא">
                     <Download className="w-5 h-5" />
                 </button>
-                <button onClick={() => setShowMoveDialog(true)} className="p-2 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="העברה">
+                <button onClick={() => setShowMoveDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="העברה">
                     <FolderInput className="w-5 h-5" />
                 </button>
-                <button onClick={() => setShowTagDialog(true)} className="p-2 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="תגיות">
+                <button onClick={() => setShowTagDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="תגיות">
                     <Tag className="w-5 h-5" />
                 </button>
                 <div className="w-px h-6 bg-white/10 mx-1" />
-                <button onClick={handleBatchDelete} className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 tooltip" title="מחיקה">
+                <button onClick={handleBatchDelete} className="p-2.5 hover:bg-red-500/20 rounded-lg text-red-400 tooltip" title="מחיקה">
                     <Trash2 className="w-5 h-5" />
                 </button>
                 <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500">
@@ -862,9 +862,9 @@ export function PersonalLibraryView({
         {/* Move Dialog Overlay */}
         {showMoveDialog && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">העברת {selectedIds.size} פריטים</h3>
-                    <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
+                    <div className="space-y-2 mb-6 max-h-[80vh] overflow-y-auto">
                         <button
                             onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
                             className={cn(
@@ -926,7 +926,7 @@ export function PersonalLibraryView({
         {/* Tag Dialog Overlay */}
         {showTagDialog && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">הוספת תגיות</h3>
                     <p className="text-slate-400 text-sm mb-4 text-center">הזן תגיות מופרדות בפסיקים</p>
                     <input 

@@ -151,8 +151,8 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-3xl font-serif text-white">ספריית פרומפטים</h2>
-                <p className="text-sm text-slate-500 mt-1">
+                <h2 className="text-2xl md:text-3xl font-serif text-white">ספריית פרומפטים</h2>
+                <p className="text-xs md:text-sm text-slate-500 mt-1">
                   {totalCount} {libraryView === "favorites" ? "פרומפטים מועדפים" : "פרומפטים זמינים"} · מיון לפי פופולריות · חיפוש לפי מילים, שימוש או קטגוריה
                 </p>
               </div>
@@ -175,7 +175,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               <button
                 onClick={() => setLibraryView(libraryView === "favorites" ? "all" : "favorites")}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-3 rounded-lg border text-base transition-colors",
+                  "flex items-center gap-2 px-3 py-2.5 md:px-6 md:py-3 rounded-lg border text-sm md:text-base transition-colors min-h-[44px]",
                   libraryView === "favorites"
                     ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-200"
                     : "border-white/10 text-slate-300 hover:bg-white/10"
@@ -189,7 +189,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
               <button
                 onClick={() => setViewMode("personal")}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-base text-slate-300 hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-3 py-2.5 md:px-6 md:py-3 rounded-lg border border-white/10 text-sm md:text-base text-slate-300 hover:bg-white/10 transition-colors min-h-[44px]"
               >
                 <BookOpen className="w-5 h-5" />
                 ספריה אישית
@@ -202,7 +202,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                     title="מצב בחירה מרובה"
                   >
                       <CheckSquare className="w-4 h-4" />
-                      <span>ניהול פריטים</span>
+                      <span className="hidden md:inline">ניהול פריטים</span>
                   </button>
                   {selectionMode && (
                       <button 
@@ -236,17 +236,17 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               value={libraryQuery}
               onChange={(e) => setLibraryQuery(e.target.value)}
               placeholder="חפש/י רעיון לפרומפט לפי מילים, קטגוריה או שימוש..."
-              className="w-full bg-black/30 border border-white/10 rounded-lg py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+              className="w-full bg-black/30 border border-white/10 rounded-lg py-3.5 md:py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
             />
           </div>
 
           {orderedCategories.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex overflow-x-auto scrollbar-hide flex-nowrap gap-2 pb-1">
               {orderedCategories.map((category) => (
                 <a
                   key={category}
                   href={`#category-${category}`}
-                  className="text-xs px-3 py-1 rounded-full border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
+                  className="shrink-0 text-xs px-3 py-1 rounded-full border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
                   suppressHydrationWarning
                 >
                   {CATEGORY_LABELS[category] ?? category}
@@ -286,7 +286,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-white/10 pb-4">
                 <div className="flex items-baseline gap-3">
-                  <h3 className="text-2xl md:text-3xl font-serif font-semibold text-slate-100 tracking-wide">
+                  <h3 className="text-xl md:text-2xl lg:text-3xl font-serif font-semibold text-slate-100 tracking-wide">
                     {CATEGORY_LABELS[category] ?? category}
                   </h3>
                   <span className="text-sm text-slate-400">{grouped[category].length} פרומפטים</span>
@@ -297,7 +297,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               </div>
 
               <div className="relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 md:gap-5">
                   {sortedPrompts.map((prompt, localIdx) => {
                     const isBlurred = isGuest && (sectionStartIndex + localIdx) >= GUEST_FREE_LIMIT;
                     const variablePreview = prompt.variables.slice(0, 4);
@@ -309,7 +309,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                       <div
                         key={prompt.id}
                         className={cn(
-                          "rounded-3xl border border-white/10 bg-black/30 p-6 md:p-7 transition-colors flex flex-col gap-5 min-h-[360px] relative",
+                          "rounded-3xl border border-white/10 bg-black/30 p-4 md:p-7 transition-colors flex flex-col gap-5 min-h-0 md:min-h-[360px] relative",
                           !isBlurred && "hover:bg-white/5",
                           !isBlurred && (selectedIds.has(prompt.id) || selectionMode) && "ring-2 ring-purple-500/50 bg-purple-500/5",
                           isBlurred && "blur-sm pointer-events-none select-none"
@@ -320,7 +320,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                         {!isBlurred && (
                           <div className={cn(
                             "absolute top-6 left-6 z-10 transition-opacity duration-200",
-                            (selectedIds.has(prompt.id) || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            (selectedIds.has(prompt.id) || selectionMode) ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"
                           )}>
                             <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}>
                               {selectedIds.has(prompt.id)
@@ -335,14 +335,14 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                             <div className="flex items-center gap-2 mb-2">
                               <CapabilityBadge mode={prompt.capability_mode} />
                             </div>
-                            <h4 className="text-xl md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
+                            <h4 className="text-lg md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
                             <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleToggleFavorite("library", prompt.id)}
                             className={cn(
-                              "shrink-0 p-1.5 rounded-full border transition-colors",
+                              "shrink-0 p-2.5 md:p-1.5 rounded-full border transition-colors",
                               isFavorite
                                 ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-300"
                                 : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
@@ -408,14 +408,14 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                         <div className="flex flex-wrap items-center gap-3 pt-1">
                           <button
                             onClick={() => onUsePrompt(prompt)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors"
                           >
                             <Plus className="w-3 h-3" />
                             השתמש בפרומפט
                           </button>
                           <button
                             onClick={() => addPersonalPromptFromLibrary(prompt)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
                           >
                             <BookOpen className="w-3 h-3" />
                             שמור לאישי
@@ -424,7 +424,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                             onClick={async () => {
                               await onCopyText(prompt.prompt);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
                           >
                             <Copy className="w-3 h-3" />
                             העתק
@@ -476,7 +476,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
         {/* Floating Batch Actions Toolbar */}
         {selectedIds.size > 0 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+            <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
                 <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
                     {selectedIds.size} נבחרו
                 </div>
@@ -494,7 +494,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         {/* Save Dialog Overlay (Similar to PersonalLibrary Move Dialog) */}
         {showMoveDialog && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4 max-h-[80vh] overflow-y-auto">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">שמירת {selectedIds.size} פריטים</h3>
                     <p className="text-slate-400 text-sm mb-6 text-center">בחר לאיזו קטגוריה לשמור בספריה האישית שלך</p>
                     
