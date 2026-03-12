@@ -46,7 +46,7 @@ const PersonalLibraryView = dynamic(
 );
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import StreamingProgress from "@/components/ui/StreamingProgress";
-import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2 } from "lucide-react";
+import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb } from "lucide-react";
 import UpgradeNudge from "@/components/features/prompt-improver/UpgradeNudge";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
@@ -76,7 +76,8 @@ function PageContent({ user }: { user: User | null }) {
     addPrompt,
     personalView,
     setPersonalView,
-    completeOnboarding
+    completeOnboarding,
+    filteredLibrary
   } = useLibraryContext();
 
   const { state: ps, dispatch } = usePromptWorkflow();
@@ -330,6 +331,23 @@ function PageContent({ user }: { user: User | null }) {
   };
 
   const enhanceCooldownRef = useRef(false);
+
+  // Prompt of the Day - deterministic daily pick
+  const promptOfTheDay = useMemo(() => {
+    if (!filteredLibrary || filteredLibrary.length === 0) return null;
+    const today = new Date();
+    const dayIndex = (today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate()) % filteredLibrary.length;
+    return filteredLibrary[dayIndex];
+  }, [filteredLibrary]);
+
+  // Surprise Me - random prompt
+  const handleSurpriseMe = () => {
+    if (!filteredLibrary || filteredLibrary.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * filteredLibrary.length);
+    const randomPrompt = filteredLibrary[randomIndex];
+    dispatch({ type: 'SET_INPUT', payload: randomPrompt.prompt });
+    toast.success(`"${randomPrompt.title}" נטען!`);
+  };
 
   const handleEnhance = async () => {
     if (!ps.input.trim() || ps.isLoading || enhanceCooldownRef.current) return;
@@ -740,6 +758,51 @@ function PageContent({ user }: { user: User | null }) {
                   setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
                   onApplyVariables={applyVariablesToPrompt}
                />
+
+               {/* Prompt of the Day + Surprise Me */}
+               {filteredLibrary.length > 0 && (
+                 <div className="flex flex-col gap-4 mt-2">
+                   {/* Surprise Me Button */}
+                   <button
+                     onClick={handleSurpriseMe}
+                     className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-slate-400 hover:text-white text-sm transition-all cursor-pointer group"
+                   >
+                     <Shuffle className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                     <span>הפתע אותי - פרומפט אקראי מהספריה</span>
+                   </button>
+
+                   {/* Prompt of the Day */}
+                   {promptOfTheDay && (
+                     <div className="glass-card rounded-xl border-white/10 bg-gradient-to-l from-amber-500/[0.04] to-transparent overflow-hidden">
+                       <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
+                         <Lightbulb className="w-4 h-4 text-amber-400" />
+                         <span className="text-xs font-bold text-amber-400/80 uppercase tracking-wider">פרומפט היום</span>
+                       </div>
+                       <div className="p-5 flex flex-col gap-3">
+                         <h4 className="text-base font-semibold text-slate-200" dir="rtl">{promptOfTheDay.title}</h4>
+                         <p className="text-sm text-slate-400 leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
+                         <div className="flex items-center gap-2 mt-1">
+                           <button
+                             onClick={() => {
+                               dispatch({ type: 'SET_INPUT', payload: promptOfTheDay.prompt });
+                               toast.success('פרומפט היום נטען!');
+                             }}
+                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium transition-colors cursor-pointer"
+                           >
+                             השתמש בפרומפט
+                           </button>
+                           <button
+                             onClick={() => handleNavLibrary()}
+                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 text-xs transition-colors cursor-pointer"
+                           >
+                             עוד פרומפטים מהספריה
+                           </button>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               )}
              </>
            ) : (
              /* RESULT MODE */

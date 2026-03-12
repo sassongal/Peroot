@@ -453,9 +453,18 @@ export function PersonalLibraryView({
              </div>
           )}
 
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>{prompt.use_count > 0 ? `שומש ${prompt.use_count} פעמים` : "חדש"}</span>
-            <span className="text-slate-500">{prompt.personal_category}</span>
+          <div className="flex items-center justify-between text-xs">
+            {prompt.use_count > 0 ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span className="text-emerald-400 font-medium">שומש {prompt.use_count} פעמים</span>
+              </div>
+            ) : (
+              <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium">חדש</span>
+            )}
+            <span className="text-slate-500 px-2 py-0.5 rounded-full bg-white/5">{prompt.personal_category}</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 pt-1">

@@ -400,9 +400,23 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between text-xs text-slate-400">
-                          <span>{popularityCount > 0 ? `נבחר ${popularityCount} פעמים` : "חדש"}</span>
-                          {isFavorite && <span className="text-yellow-300">מועדף</span>}
+                        <div className="flex items-center justify-between text-xs">
+                          {popularityCount > 0 ? (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                              <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                              </svg>
+                              <span className="text-emerald-400 font-medium">{popularityCount > 99 ? '99+' : popularityCount} משתמשים בחרו</span>
+                            </div>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium">חדש</span>
+                          )}
+                          {isFavorite && (
+                            <span className="px-2.5 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 font-medium flex items-center gap-1">
+                              <svg className="w-3 h-3 fill-yellow-300" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                              מועדף
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 pt-1">
