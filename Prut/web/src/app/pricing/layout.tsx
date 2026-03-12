@@ -2,21 +2,21 @@ import type { Metadata } from "next";
 import { pricingSchema, breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title: "תוכניות ומחירים - Peroot",
-  description: "שדרגו לפרומפטים ללא הגבלה עם Peroot Pro. 150 קרדיטים בחודש, תוסף Chrome, 4 ימי ניסיון חינם. רק ₪3.99/חודש.",
+  title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
+  description: "השוו בין התוכניות של פירוט: חינם עם 2 קרדיטים ביום או Pro עם 150 קרדיטים בחודש. שדרוג פרומפטים וטקסטים בעברית עם AI. 4 ימי ניסיון חינם, רק ₪3.99/חודש.",
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: "תוכניות ומחירים - Peroot",
-    description: "שדרגו לפרומפטים ללא הגבלה עם Peroot Pro. 150 קרדיטים בחודש, תוסף Chrome, 4 ימי ניסיון חינם. רק ₪3.99/חודש.",
-    url: "/pricing",
+    title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
+    description: "השוו בין התוכניות של פירוט: חינם עם 2 קרדיטים ביום או Pro עם 150 קרדיטים בחודש. שדרוג פרומפטים וטקסטים בעברית עם AI. 4 ימי ניסיון חינם, רק ₪3.99/חודש.",
+    url: "https://peroot.space/pricing",
     siteName: "Peroot",
     locale: "he_IL",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "תוכניות ומחירים - Peroot",
-    description: "שדרגו לפרומפטים ללא הגבלה עם Peroot Pro.",
+    title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
+    description: "השוו בין התוכניות של פירוט: חינם או Pro. שדרוג פרומפטים בעברית עם AI. 4 ימי ניסיון חינם.",
   },
 };
 

@@ -3,9 +3,19 @@ import Link from "next/link";
 import { ArrowRight, Accessibility as AccessibilityIcon } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "מדיניות פרטיות | Peroot",
+  title: "מדיניות פרטיות - פירוט",
   description:
-    "מדיניות הפרטיות של Peroot: מידע שנאסף, שימוש, אבטחה וזכויות משתמשים.",
+    "מדיניות הפרטיות של פירוט (Peroot): מידע שנאסף, שימוש במידע, אבטחת מידע, תוסף Chrome וזכויות משתמשים. עדכון אחרון: ינואר 2026.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "מדיניות פרטיות - פירוט",
+    description:
+      "מדיניות הפרטיות של פירוט (Peroot): מידע שנאסף, שימוש במידע, אבטחת מידע, תוסף Chrome וזכויות משתמשים.",
+    url: "https://peroot.space/privacy",
+    siteName: "Peroot",
+    locale: "he_IL",
+    type: "website",
+  },
 };
 
 export default function PrivacyPolicy() {

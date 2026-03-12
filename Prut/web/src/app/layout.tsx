@@ -114,6 +114,7 @@ export const metadata: Metadata = {
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
+import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
 
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/ui/CookieConsent";
@@ -134,6 +135,7 @@ export default async function RootLayout({
         className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
         suppressHydrationWarning
       >
+        <GoogleAnalytics />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             דלג לתוכן הראשי
