@@ -129,7 +129,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
               onClick={() => setIsOpen(false)}
             />
             {/* Dropdown menu */}
-            <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-12 sm:end-0 sm:left-auto sm:right-auto w-auto sm:w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-12 sm:left-0 w-auto sm:w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
                <div className="p-4 border-b border-white/10 flex flex-col gap-3 bg-white/5">
                    {/* Embedded Logo in Menu */}
                    <div className="flex justify-center pb-2 border-b border-white/5">
