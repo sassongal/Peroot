@@ -1,6 +1,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
 import { parseCapabilityMode } from "@/lib/capability-mode";
@@ -59,6 +60,15 @@ export async function POST(req: Request) {
         : await supabase.auth.getUser();
     userId = user?.id;
 
+    // When using Bearer token, RLS won't have auth.uid() set,
+    // so use service role client to bypass RLS for extension requests
+    const queryClient = bearerToken
+        ? createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
+        : supabase;
+
     // 1. Context Fetching - check cache for profile/tier first
     let tier: 'free' | 'pro' | 'guest' = 'guest';
     let isAdmin = user?.app_metadata?.role === 'admin' || false;
@@ -74,11 +84,12 @@ export async function POST(req: Request) {
     }
 
     // Parallel fetch: skip profile+admin queries if cached
+    // Uses queryClient (service role for Bearer token, regular supabase otherwise)
     const contextPromise = user ? Promise.all([
-        cachedHit ? Promise.resolve({ data: null }) : supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
-        !isRefinement ? supabase.from('personal_library').select('title, prompt').eq('user_id', user.id).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
-        !isRefinement ? supabase.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
-        cachedHit ? Promise.resolve({ data: null }) : supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
+        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
+        !isRefinement ? queryClient.from('personal_library').select('title, prompt').eq('user_id', user.id).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
+        !isRefinement ? queryClient.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
+        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
     ]) : Promise.resolve([ { data: null }, { data: null }, { data: null }, { data: null } ]);
 
     const [profileRes, historyRes, personalityRes, adminRoleRes] = await contextPromise;
@@ -108,14 +119,14 @@ export async function POST(req: Request) {
         if (user) {
             // Daily credit refresh for free users - uses site_settings as single source of truth
             if (tier === 'free') {
-                const { data: siteSettings } = await supabase
+                const { data: siteSettings } = await queryClient
                     .from('site_settings')
                     .select('daily_free_limit')
                     .single();
 
                 const dailyLimit = siteSettings?.daily_free_limit ?? 2;
 
-                const { data: refreshData } = await supabase
+                const { data: refreshData } = await queryClient
                     .from('profiles')
                     .select('credits_refreshed_at, credits_balance')
                     .eq('id', user.id)
@@ -139,7 +150,7 @@ export async function POST(req: Request) {
                     // Only top-up to dailyLimit if balance is lower;
                     // never overwrite a higher balance (e.g. admin-granted credits)
                     const newBalance = Math.max(currentBalance, dailyLimit);
-                    await supabase
+                    await queryClient
                         .from('profiles')
                         .update({
                             credits_balance: newBalance,
@@ -149,7 +160,7 @@ export async function POST(req: Request) {
                 }
             }
 
-            const { data: creditRes, error: rpcError } = await supabase.rpc('check_and_decrement_credits', {
+            const { data: creditRes, error: rpcError } = await queryClient.rpc('check_and_decrement_credits', {
                 target_user_id: user.id,
                 amount_to_spend: 1
             });
@@ -223,7 +234,7 @@ export async function POST(req: Request) {
             // Auto-refund for abnormally short responses (likely interrupted)
             if (completion.text.length < 100 && user && supabase) {
                 try {
-                    await supabase.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
+                    await queryClient.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
                     logger.warn('[EnhanceAPI] Auto-refund for short response:', completion.text.length, 'chars');
                 } catch (e) {
                     logger.error('[EnhanceAPI] Auto-refund failed:', e);
@@ -231,7 +242,7 @@ export async function POST(req: Request) {
             }
 
             if (user && supabase) {
-                await supabase.from('activity_logs').insert({
+                await queryClient.from('activity_logs').insert({
                     user_id: user.id,
                     action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
                     entity_type: 'prompt',
@@ -246,7 +257,7 @@ export async function POST(req: Request) {
                 });
 
                 try {
-                    const { count } = await supabase
+                    const { count } = await queryClient
                         .from('activity_logs')
                         .select('*', { count: 'exact', head: true })
                         .eq('user_id', user.id)
@@ -269,10 +280,14 @@ export async function POST(req: Request) {
 
   } catch (error) {
     logger.error("[EnhanceAPI] Error:", error);
-    // Best-effort credit refund on failure
-    if (userId && supabase) {
+    // Best-effort credit refund on failure (use service role to ensure it works for Bearer token)
+    if (userId) {
       try {
-        await supabase.rpc('refund_credit', { target_user_id: userId, amount: 1 });
+        const refundClient = createSupabaseClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        await refundClient.rpc('refund_credit', { target_user_id: userId, amount: 1 });
       } catch (e: unknown) {
         logger.error('[EnhanceAPI] Credit refund failed:', e);
       }

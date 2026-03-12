@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
  * GET /api/me
@@ -22,7 +23,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    // When using Bearer token, RLS won't have auth.uid() set,
+    // so use service role client to query profiles
+    const queryClient = bearerToken
+      ? createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+      : supabase;
+
+    const { data: profile } = await queryClient
       .from("profiles")
       .select("plan_tier, credits_balance, display_name")
       .eq("id", user.id)
