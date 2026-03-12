@@ -238,6 +238,7 @@ async function doAction(action) {
     lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
 
     saveToHistory(text, lastEnhanced, action);
+    syncToWebsite(text, lastEnhanced, action);
     fetchUserInfo();
   } catch {
     resultSection.classList.add("hidden");
@@ -294,6 +295,28 @@ function flash(btn, msg) {
     btn.textContent = orig;
     btn.classList.remove("success");
   }, 1200);
+}
+
+// ═══ SYNC TO WEBSITE ═══
+async function syncToWebsite(original, enhanced, action) {
+  try {
+    const actionLabel = ACTIONS[action]?.label || "שדרג";
+    const headers = await getAuthHeaders({ "Content-Type": "application/json" });
+    await fetch(`${API_BASE}/api/history`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        prompt: original,
+        enhanced_prompt: enhanced,
+        tone: toneSelect.value,
+        category: "General",
+        title: `[${actionLabel}] ${original.substring(0, 50)}${original.length > 50 ? "..." : ""}`,
+        source: "extension",
+      }),
+    });
+  } catch {
+    // Non-critical - local history still saved
+  }
 }
 
 // ═══ HISTORY ═══

@@ -259,6 +259,9 @@ async function doEnhance(text, action) {
     if (status) status.textContent = "הושלם";
     if (actions) actions.style.display = "flex";
 
+    // Sync to website history
+    syncToWebsite(text, lastEnhanced, action);
+
     // Hide replace if not editable
     if (!isEditable(lastSelectionElement)) {
       const rb = currentPanel?.querySelector("#peroot-replace");
@@ -269,6 +272,28 @@ async function doEnhance(text, action) {
     body.classList.add("peroot-error");
     body.textContent = "שגיאת רשת";
     if (status) status.textContent = "שגיאה";
+  }
+}
+
+// ─── Sync to Website ───
+async function syncToWebsite(text, enhanced, action) {
+  try {
+    const actionDef = ACTIONS[action] || ACTIONS.enhance;
+    const headers = await getAuthHeaders({ "Content-Type": "application/json" });
+    await fetch(`${API_BASE}/api/history`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        prompt: text,
+        enhanced_prompt: enhanced,
+        tone: "Professional",
+        category: "General",
+        title: `[${actionDef.label}] ${text.substring(0, 50)}${text.length > 50 ? "..." : ""}`,
+        source: "extension",
+      }),
+    });
+  } catch {
+    // Non-critical
   }
 }
 

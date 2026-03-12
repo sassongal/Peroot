@@ -11,6 +11,7 @@ export interface HistoryItem {
   tone: string;
   category: string;
   title?: string;
+  source?: string; // "web" | "extension"
   timestamp: number;
 }
 
@@ -54,6 +55,7 @@ export function useHistory() {
             tone: row.tone,
             category: row.category,
             title: row.title || undefined,
+            source: row.source || "web",
             timestamp: new Date(row.created_at).getTime(),
           }));
           setHistory(formatted);

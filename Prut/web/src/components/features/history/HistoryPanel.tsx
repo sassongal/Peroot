@@ -162,12 +162,19 @@ export function HistoryPanel({
               onClick={() => onRestore(item)}
             >
               <div className="flex items-center justify-between">
-                <span className={cn(
-                  "text-[10px] px-2 py-0.5 rounded-full border text-slate-400",
-                  isFirst ? "border-amber-500/30 text-amber-400/80" : "border-white/10"
-                )}>
-                  {CATEGORY_LABELS[item.category] ?? item.category}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    "text-[10px] px-2 py-0.5 rounded-full border text-slate-400",
+                    isFirst ? "border-amber-500/30 text-amber-400/80" : "border-white/10"
+                  )}>
+                    {CATEGORY_LABELS[item.category] ?? item.category}
+                  </span>
+                  {item.source === "extension" && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                      Extension
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] text-slate-500" suppressHydrationWarning>
                   {hasHydrated ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true, locale: he }) : "..."}
                 </span>
