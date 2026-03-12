@@ -19,7 +19,8 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
     settings,
   } = usePromptLimits();
 
-  const { isPro, loading: subLoading } = useSubscription();
+  const { isPro } = usePromptLimits();
+  const { loading: subLoading } = useSubscription();
 
   // Credits to display: prefer explicit prop, fall back to hook value
   const displayCredits = creditsBalance !== undefined ? (creditsBalance ?? 0) : remainingPrompts;
@@ -37,14 +38,12 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
     );
   }
 
-  // ----- Pro tier: show actual credits -----
+  // ----- Pro tier: unlimited badge -----
   if (!isGuest && isPro) {
     return (
       <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/40 border border-amber-500/30 backdrop-blur-md">
         <Crown className="w-3.5 h-3.5 text-amber-400" />
-        <span className="text-xs font-semibold text-amber-300">
-          {displayCredits} <span className="text-amber-400/60 font-normal hidden md:inline">קרדיטים</span>
-        </span>
+        <span className="text-xs font-semibold text-amber-300">ללא הגבלה</span>
       </div>
     );
   }
@@ -78,7 +77,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
       <Sparkles className={`w-4 h-4 ${remainingPrompts <= 1 ? "text-red-400" : "text-blue-400"}`} />
       <span className="text-xs font-medium text-white">
         {remainingPrompts}/{totalAllowed}
-        <span className="text-slate-400 font-normal hidden md:inline"> {settings.allow_guest_access ? "נותרו" : "נדרשת הרשמה"}</span>
+        <span className="text-slate-400 font-normal hidden md:inline"> {settings.allow_guest_access ? "פרומפטים היום" : "נדרשת הרשמה"}</span>
       </span>
     </Link>
   );

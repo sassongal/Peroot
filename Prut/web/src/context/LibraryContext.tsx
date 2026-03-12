@@ -28,8 +28,8 @@ interface LibraryContextType {
   personalQuery: string;
   setPersonalQuery: (q: string) => void;
 
-  personalSort: "recent" | "title" | "usage" | "custom";
-  setPersonalSort: (sort: "recent" | "title" | "usage" | "custom") => void;
+  personalSort: "recent" | "title" | "usage" | "custom" | "last_used";
+  setPersonalSort: (sort: "recent" | "title" | "usage" | "custom" | "last_used") => void;
   
   personalView: "all" | "favorites";
   setPersonalView: (view: "all" | "favorites") => void;
@@ -50,7 +50,7 @@ interface LibraryContextType {
   popularityMap: Record<string, number>;
   
   // Actions
-  addPrompt: (prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">) => Promise<void>;
+  addPrompt: (prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">, category?: string) => Promise<void>;
   removePrompt: (id: string) => Promise<void>;
   updatePrompt: (id: string, updates: Partial<PersonalPrompt>) => Promise<void>;
   duplicatePrompt: (prompt: PersonalPrompt) => Promise<void>;
@@ -139,7 +139,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const [libraryView, setLibraryView] = useState<"all" | "favorites">("all");
   const [libraryQuery, setLibraryQuery] = useState("");
   const [personalQuery, setPersonalQuery] = useState("");
-  const [personalSort, setPersonalSort] = useState<"recent" | "title" | "usage" | "custom">("recent");
+  const [personalSort, setPersonalSort] = useState<"recent" | "title" | "usage" | "custom" | "last_used">("recent");
   const [personalView, setPersonalView] = useState<"all" | "favorites">("all");
   
   // Category management UI state
@@ -328,6 +328,13 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
         break;
       case "custom":
         result.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+        break;
+      case "last_used":
+        result.sort((a, b) => {
+          const aTime = a.last_used_at ? new Date(a.last_used_at).getTime() : 0;
+          const bTime = b.last_used_at ? new Date(b.last_used_at).getTime() : 0;
+          return bTime - aTime;
+        });
         break;
       case "recent":
       default:

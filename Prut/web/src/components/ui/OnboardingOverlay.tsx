@@ -51,6 +51,18 @@ const COLOR_MAP: Record<string, { bg: string; border: string; text: string; ring
 
 const TOTAL_STEPS = 3;
 
+// 5.7 Mark onboarding as complete in the DB
+async function markOnboardingComplete(): Promise<void> {
+    try {
+        await fetch(getApiPath("/api/user/onboarding/complete"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+    } catch (e) {
+        logger.warn("Failed to mark onboarding complete", e);
+    }
+}
+
 export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     const [step, setStep] = useState(1);
     const [isVisible, setIsVisible] = useState(true);
@@ -68,7 +80,10 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     };
 
     const handleFinish = async () => {
-        // Award Pioneer achievement
+        // 5.7 Mark onboarding complete in DB
+        await markOnboardingComplete();
+
+        // Award Pioneer achievement (fire-and-forget)
         fetch(getApiPath("/api/user/achievements/award"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -81,7 +96,10 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
         }, 500);
     };
 
-    const handleSkip = () => {
+    const handleSkip = async () => {
+        // 5.7 Mark onboarding complete even when skipped
+        markOnboardingComplete().catch((e) => logger.warn("Failed to mark onboarding complete on skip", e));
+
         setIsVisible(false);
         setTimeout(() => {
             onComplete({ role: "", goal: "" });
@@ -106,7 +124,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                 <div className="absolute top-6 left-6 z-20">
                     <button
                         onClick={handleSkip}
-                        className="text-xs text-slate-500 hover:text-slate-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+                        className="text-xs text-slate-500 hover:text-slate-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     >
                         דלג
                     </button>
@@ -240,7 +258,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                         {step > 1 && (
                             <button
                                 onClick={handleBack}
-                                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold"
+                                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                             >
                                 <ArrowLeft className="w-4 h-4 rtl-flip" />
                                 הקודם
@@ -251,10 +269,10 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                     <button
                         onClick={handleNext}
                         className={cn(
-                            "flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-bold transition-all shadow-xl active:scale-[0.98]",
+                            "flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-bold transition-all shadow-xl active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:outline-none",
                             step === TOTAL_STEPS
-                                ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-900/20 hover:scale-[1.03]"
-                                : "bg-gradient-to-r from-amber-500 to-yellow-500 shadow-amber-900/20 hover:scale-[1.03]"
+                                ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-900/20 hover:scale-[1.03] focus-visible:ring-emerald-500"
+                                : "bg-gradient-to-r from-amber-500 to-yellow-500 shadow-amber-900/20 hover:scale-[1.03] focus-visible:ring-amber-500"
                         )}
                     >
                         <span>{step === TOTAL_STEPS ? "התחל עכשיו" : "הבא"}</span>

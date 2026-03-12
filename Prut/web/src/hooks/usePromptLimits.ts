@@ -11,12 +11,25 @@ interface PromptUsage {
 
 const USAGE_STORAGE_KEY = 'peroot_guest_usage';
 
+/** Returns today's date string in Israel timezone (YYYY-MM-DD) */
+function getIsraelDateString(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+}
+
+export interface PromptLimitsShape {
+  remaining: number;
+  total: number | null;
+  tierLabel: string;
+  isUnlimited: boolean;
+}
+
 export function usePromptLimits() {
   const { settings } = useSiteSettings();
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [usage, setUsage] = useState<PromptUsage>({ count: 0, lastReset: new Date().toISOString() });
+  const [isPro, setIsPro] = useState(false);
+  const [usage, setUsage] = useState<PromptUsage>({ count: 0, lastReset: getIsraelDateString() });
   const [canUsePrompt, setCanUsePrompt] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -35,18 +48,17 @@ export function usePromptLimits() {
     setUser(activeUser);
 
     if (activeUser) {
-      // Load credits from profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('credits_balance')
+        .select('credits_balance, plan_tier')
         .eq('id', activeUser.id)
         .maybeSingle();
 
       if (profile) {
         setCredits(profile.credits_balance);
+        setIsPro(profile.plan_tier === 'pro');
       }
 
-      // Check admin role (both user_roles table and app_metadata, matching server)
       const hasAdminMetadata = activeUser.app_metadata?.role === 'admin';
       const { data: roleData } = await supabase
         .from('user_roles')
@@ -56,22 +68,19 @@ export function usePromptLimits() {
         .maybeSingle();
       if (roleData || hasAdminMetadata) setIsAdmin(true);
     } else {
-      // Load guest usage from localStorage
       const stored = localStorage.getItem(USAGE_STORAGE_KEY);
       if (stored) {
         try {
           const parsed: PromptUsage = JSON.parse(stored);
 
-          // Check if lastReset is before the most recent 14:00 Israel time reset point
-          const nowIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-          const resetToday = new Date(nowIsrael);
-          resetToday.setHours(14, 0, 0, 0);
-          const resetPoint = nowIsrael >= resetToday
-            ? resetToday
-            : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
+          // FIX 4.2: Simple date comparison in Israel timezone
+          const todayIsrael = getIsraelDateString();
+          const storedDate = parsed.lastReset.length === 10
+            ? parsed.lastReset
+            : new Date(parsed.lastReset).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 
-          if (new Date(parsed.lastReset) < resetPoint) {
-            const freshUsage: PromptUsage = { count: 0, lastReset: new Date().toISOString() };
+          if (storedDate !== todayIsrael) {
+            const freshUsage: PromptUsage = { count: 0, lastReset: todayIsrael };
             localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(freshUsage));
             setUsage(freshUsage);
           } else {
@@ -86,26 +95,20 @@ export function usePromptLimits() {
 
   function updateLimits() {
     if (user) {
-      // Admin bypass - admins can always use prompts
       if (isAdmin) {
         setCanUsePrompt(true);
         return;
       }
-      // Authenticated users - check actual DB credits
-      // If credits is null (loading), we allow (will be caught by server anyway)
-      // but once loaded, we hard-lock.
       if (credits !== null) {
         setCanUsePrompt(credits > 0);
       } else {
         setCanUsePrompt(true);
       }
     } else {
-      // Guest users - check free prompts limit
       if (!settings.allow_guest_access) {
         setCanUsePrompt(false);
         return;
       }
-
       setCanUsePrompt(usage.count < settings.max_free_prompts);
     }
   }
@@ -114,7 +117,7 @@ export function usePromptLimits() {
     if (!user) {
       const newUsage = {
         count: usage.count + 1,
-        lastReset: usage.lastReset
+        lastReset: getIsraelDateString(),
       };
       setUsage(newUsage);
       localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(newUsage));
@@ -122,33 +125,42 @@ export function usePromptLimits() {
   }
 
   function getRemainingPrompts(): number {
-    if (user) {
-      return credits ?? 0;
-    }
+    if (user) return credits ?? 0;
     return Math.max(0, settings.max_free_prompts - usage.count);
   }
 
   function getRequiredAction(): 'login' | 'upgrade' | null {
     if (user) {
-        if (isAdmin) return null;
-        return (credits !== null && credits < 1) ? 'upgrade' : null;
+      if (isAdmin) return null;
+      return (credits !== null && credits < 1) ? 'upgrade' : null;
     }
-    if (!user && !settings.allow_guest_access) {
-      return 'login';
-    }
-    if (!user && usage.count >= settings.max_free_prompts) {
-      return 'login';
-    }
+    if (!user && !settings.allow_guest_access) return 'login';
+    if (!user && usage.count >= settings.max_free_prompts) return 'login';
     return null;
   }
 
   function resetUsage() {
-    const newUsage = {
-      count: 0,
-      lastReset: new Date().toISOString()
-    };
+    const newUsage = { count: 0, lastReset: getIsraelDateString() };
     setUsage(newUsage);
     localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(newUsage));
+  }
+
+  function getCreditDisplayShape(): PromptLimitsShape {
+    if (isAdmin) {
+      return { remaining: 0, total: null, tierLabel: 'מנהל', isUnlimited: true };
+    }
+    if (user && isPro) {
+      return { remaining: credits ?? 0, total: null, tierLabel: 'Pro', isUnlimited: true };
+    }
+    if (user) {
+      return { remaining: credits ?? 0, total: null, tierLabel: 'חינמי', isUnlimited: false };
+    }
+    return {
+      remaining: Math.max(0, settings.max_free_prompts - usage.count),
+      total: settings.max_free_prompts,
+      tierLabel: 'אורח',
+      isUnlimited: false,
+    };
   }
 
   return {
@@ -161,8 +173,10 @@ export function usePromptLimits() {
     resetUsage,
     isGuest: !user,
     isAdmin,
+    isPro,
     guestAccessAllowed: settings.allow_guest_access,
     maxFreePrompts: settings.max_free_prompts,
-    settings // Expose settings for debugging
+    creditDisplay: getCreditDisplayShape(),
+    settings,
   };
 }

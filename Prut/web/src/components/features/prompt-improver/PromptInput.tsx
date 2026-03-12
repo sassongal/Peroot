@@ -159,7 +159,7 @@ export function PromptInput({
                 <button
                   onClick={() => {
                     onApplyVariables();
-                    toast.success("משתנים הוחלו בהצלחה");
+                    toast.success(`${variables.length} משתנים הוחלו בהצלחה`);
                   }}
                   disabled={!allFilled}
                   className={cn(
@@ -276,7 +276,7 @@ export function PromptInput({
 
             {!inputVal.trim() && !isListening && (
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
-                <div className="text-xs text-slate-500 uppercase tracking-widest mb-3 text-right" dir="rtl">נסו לדוגמה:</div>
+                <div className="text-xs text-slate-500 uppercase tracking-widest mb-3 text-start" dir="rtl">נסו לדוגמה:</div>
                 <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
                   {displayedExamples.map((example, i) => (
                     <button

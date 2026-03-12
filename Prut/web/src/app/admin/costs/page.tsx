@@ -16,6 +16,7 @@ import {
   Plus,
   RefreshCw,
   X,
+  Download,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
 
@@ -102,6 +103,31 @@ function defaultFrom() {
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
+}
+
+// ── 8.3 CSV export helper ────────────────────────────────────────────────────
+
+function exportToCSV(data: Record<string, unknown>[], filename: string) {
+  if (data.length === 0) {
+    toast.error("אין נתונים לייצוא");
+    return;
+  }
+  const BOM = "\uFEFF"; // UTF-8 BOM for Hebrew
+  const headers = Object.keys(data[0]).join(",");
+  const rows = data.map((row) =>
+    Object.values(row)
+      .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)
+      .join(",")
+  );
+  const csv = BOM + [headers, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast.success(`יוצאו ${data.length} שורות`);
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -264,17 +290,41 @@ export default function CostsPage() {
               ניתוח עלויות LLM ותשתית. מעקב בזמן אמת אחר הוצאות לפי ספק, מודל ומשתמש.
             </p>
           </div>
-          <button
-            onClick={() => {
-              fetchCosts();
-              fetchManualCosts();
-            }}
-            disabled={loading}
-            className="px-8 py-3 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3 shadow-2xl"
-          >
-            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-            Refresh Data
-          </button>
+          <div className="flex gap-3">
+            {/* ── 8.3 CSV Export Button ── */}
+            <button
+              onClick={() => {
+                const rows = sortedByProvider.map((r) => ({
+                  ספק: r.provider,
+                  מודל: r.model,
+                  בקשות: r.requestCount,
+                  "טוקנים_קלט": r.totalInputTokens,
+                  "טוקנים_פלט": r.totalOutputTokens,
+                  "עלות_כוללת_$": r.totalCost.toFixed(4),
+                }));
+                exportToCSV(
+                  rows as Record<string, unknown>[],
+                  `peroot_costs_${new Date().toISOString().slice(0, 10)}.csv`
+                );
+              }}
+              disabled={!data || sortedByProvider.length === 0}
+              className="px-6 py-3 bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3 rounded-2xl disabled:opacity-40"
+            >
+              <Download className="w-4 h-4" />
+              ייצוא CSV
+            </button>
+            <button
+              onClick={() => {
+                fetchCosts();
+                fetchManualCosts();
+              }}
+              disabled={loading}
+              className="px-8 py-3 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3 shadow-2xl"
+            >
+              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              Refresh Data
+            </button>
+          </div>
         </div>
 
         {/* ── Summary Cards ── */}
@@ -517,25 +567,50 @@ export default function CostsPage() {
               title="Manual Costs"
               sub="Infrastructure & service expenses"
             />
-            <button
-              onClick={() => setShowAddForm((v) => !v)}
-              className={cn(
-                "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
-                showAddForm
-                  ? "bg-white/5 border border-white/10 text-zinc-400 hover:text-white"
-                  : "bg-purple-600 text-white hover:bg-purple-500 shadow-2xl shadow-purple-600/20"
-              )}
-            >
-              {showAddForm ? (
-                <>
-                  <X className="w-4 h-4" /> Cancel
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" /> Add Cost
-                </>
-              )}
-            </button>
+            <div className="flex gap-3">
+              {/* ── 8.3 Manual costs CSV export ── */}
+              <button
+                onClick={() => {
+                  const rows = manualEntries.map((e) => ({
+                    שירות: e.service_name,
+                    "סכום_$": e.amount_usd.toFixed(2),
+                    תקופה: e.billing_period,
+                    הערות: e.notes || "",
+                    "נוסף_בתאריך": e.created_at
+                      ? new Date(e.created_at).toLocaleDateString("he-IL")
+                      : "",
+                  }));
+                  exportToCSV(
+                    rows as Record<string, unknown>[],
+                    `peroot_manual_costs_${new Date().toISOString().slice(0, 10)}.csv`
+                  );
+                }}
+                disabled={manualEntries.length === 0}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 hover:text-zinc-200 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+              >
+                <Download className="w-3.5 h-3.5" />
+                ייצוא CSV
+              </button>
+              <button
+                onClick={() => setShowAddForm((v) => !v)}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                  showAddForm
+                    ? "bg-white/5 border border-white/10 text-zinc-400 hover:text-white"
+                    : "bg-purple-600 text-white hover:bg-purple-500 shadow-2xl shadow-purple-600/20"
+                )}
+              >
+                {showAddForm ? (
+                  <>
+                    <X className="w-4 h-4" /> Cancel
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" /> Add Cost
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Inline Add Form */}

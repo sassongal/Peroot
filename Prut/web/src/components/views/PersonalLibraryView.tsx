@@ -6,7 +6,8 @@ import {
     BookOpen, Star, ArrowRight, Plus, Copy, Pencil, Check, X,
     Search, Trash2, GripVertical, LayoutGrid, LayoutList,
     CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles,
-    Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2
+    Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2,
+    Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
@@ -25,11 +26,11 @@ interface PersonalLibraryViewProps {
   historyLength: number;
 }
 
-export function PersonalLibraryView({ 
-    onUsePrompt, 
-    onCopyText, 
+export function PersonalLibraryView({
+    onUsePrompt,
+    onCopyText,
     handleImportHistory,
-    historyLength 
+    historyLength
 }: PersonalLibraryViewProps) {
   const {
     filteredPersonalLibrary,
@@ -54,7 +55,9 @@ export function PersonalLibraryView({
     deletePrompts,
     movePrompts,
     updateTags,
-    
+    addPrompts,
+    personalLibrary,
+
     // Editing
     editingPersonalId,
     editingTitle,
@@ -64,7 +67,7 @@ export function PersonalLibraryView({
     startEditingPersonalPrompt,
     saveEditingPersonalPrompt,
     cancelEditingPersonalPrompt,
-    
+
     // Styling
     editingStylePromptId,
     styleDraft,
@@ -72,7 +75,7 @@ export function PersonalLibraryView({
     openStyleEditor,
     saveStylePrompt,
     closeStyleEditor,
-    
+
     // Drag & Drop
     handlePersonalDragStart,
     handlePersonalDragOver,
@@ -81,7 +84,7 @@ export function PersonalLibraryView({
     handlePersonalDropToEnd,
     draggingPersonalId,
     dragOverPersonalId,
-    
+
     // Categories
     renamingCategory,
     renameCategoryInput,
@@ -98,13 +101,16 @@ export function PersonalLibraryView({
   } = useLibraryContext();
 
   const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  
+
   // -- Local State --
   const [styleEditorExpanded, setStyleEditorExpanded] = useState(false);
   const [layoutMode, setLayoutMode] = useState<"grid" | "list">("grid");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
+
+  // Import file input ref
+  const importFileRef = useRef<HTMLInputElement | null>(null);
+
   // Dialogs State
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showTagDialog, setShowTagDialog] = useState(false);
@@ -141,19 +147,19 @@ export function PersonalLibraryView({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
-    
+
     if (start === end) return; // No selection
 
     const selected = text.slice(start, end);
     const before = text.slice(0, start);
     const after = text.slice(end);
-    
+
     // Wrap selection
     const token = `<${prefix}:${value}>${selected}</${prefix}>`;
     const nextText = before + token + after;
-    
+
     setStyleDraft(nextText);
-    
+
     // Restore selection (approximate)
     requestAnimationFrame(() => {
       if (textarea) {
@@ -213,7 +219,7 @@ export function PersonalLibraryView({
     { label: "קהל יעד", icon: Hash, text: "{{target_audience}}" },
     { label: "טון", icon: Wand2, text: "{{tone}}" },
   ];
-  
+
   const getStyledPromptMarkup = (prompt: PersonalPrompt) => {
     return prompt.prompt_style || prompt.prompt;
   };
@@ -230,7 +236,7 @@ export function PersonalLibraryView({
      const idsInCategory = (grouped[category] || []).map(p => p.id);
      const next = new Set(selectedIds);
      const allSelected = idsInCategory.every(id => next.has(id));
-     
+
      if (allSelected) {
          idsInCategory.forEach(id => next.delete(id));
      } else {
@@ -243,7 +249,7 @@ export function PersonalLibraryView({
     const next = new Set(selectedIds);
     const visibleIds = displayItems.map(p => p.id);
     const allVisibleSelected = visibleIds.every(id => next.has(id));
-    
+
     if (allVisibleSelected) {
         visibleIds.forEach(id => next.delete(id));
     } else {
@@ -259,7 +265,7 @@ export function PersonalLibraryView({
 
   // Clear selection when switching views
   useEffect(() => { clearSelection(); }, [personalView]);
-  
+
   const handleBatchDelete = async () => {
       if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
       try {
@@ -301,7 +307,7 @@ export function PersonalLibraryView({
               const newTags = Array.from(new Set([...(item.tags || []), ...tags]));
               await updateTags(id, newTags);
           });
-          
+
           await Promise.all(promises);
           toast.success("תגיות עודכנו");
           setShowTagDialog(false);
@@ -324,17 +330,76 @@ export function PersonalLibraryView({
       toast.success("יצוא הושלם");
   };
 
+  // -- Import Handler (1.7) --
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset the input so the same file can be re-imported
+    e.target.value = "";
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed)) {
+        toast.error("קובץ לא תקין – נדרש מערך JSON");
+        return;
+      }
+      // Validate structure
+      const valid = parsed.filter(
+        (item: Record<string, unknown>) =>
+          typeof item.title === "string" && typeof item.prompt === "string"
+      );
+      if (valid.length === 0) {
+        toast.error("לא נמצאו פרומפטים תקינים בקובץ");
+        return;
+      }
+
+      // Skip duplicates based on prompt text
+      const existingTexts = new Set(personalLibrary.map(p => p.prompt.trim()));
+      const toImport = valid.filter((item: Record<string, unknown>) => !existingTexts.has((item.prompt as string).trim()));
+      const skipped = valid.length - toImport.length;
+
+      if (toImport.length === 0) {
+        toast.info(`כל ${valid.length} הפרומפטים כבר קיימים בספרייה`);
+        return;
+      }
+
+      const confirmMsg = skipped > 0
+        ? `ייבוא ${toImport.length} פרומפטים (${skipped} כפולים דולגו). להמשיך?`
+        : `ייבוא ${toImport.length} פרומפטים. להמשיך?`;
+
+      if (!confirm(confirmMsg)) return;
+
+      const promptsToAdd = toImport.map((item: Record<string, unknown>) => ({
+        title: item.title as string,
+        prompt: item.prompt as string,
+        category: (item.category as string) || "",
+        personal_category: (item.personal_category as string) || "כללי",
+        use_case: (item.use_case as string) || "",
+        source: "imported" as const,
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        capability_mode: item.capability_mode as PersonalPrompt["capability_mode"],
+        prompt_style: item.prompt_style as string | undefined,
+      }));
+
+      await addPrompts(promptsToAdd);
+      toast.success(`יובאו ${toImport.length} פרומפטים בהצלחה`);
+    } catch {
+      toast.error("שגיאה בקריאת הקובץ – ודא שזהו קובץ JSON תקין");
+    }
+  };
+
   // -- Grouping Logic --
   // We use filteredPersonalLibrary from context, which respects active capability filter?
   // Yes, filteredPersonalLibrary is already filtered by capability and search query.
-  
+
   const displayItems = filteredPersonalLibrary;
-  
+
   // Re-derive categories present in display items
   // Include categories from actual items so saved prompts with non-custom categories still appear
   const itemCategories = displayItems.map(p => p.personal_category).filter(Boolean) as string[];
   const categorySet = new Set([PERSONAL_DEFAULT_CATEGORY, ...personalCategories, ...itemCategories]);
-  
+
   const orderedCategories = Array.from(categorySet).filter((cat) =>
     displayItems.some((prompt) => prompt.personal_category === cat || (!prompt.personal_category && cat === PERSONAL_DEFAULT_CATEGORY))
   );
@@ -397,9 +462,14 @@ export function PersonalLibraryView({
                "absolute top-6 left-6 z-10 transition-opacity duration-200",
                (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
            )}>
-               <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}>
-                   {isSelected 
-                     ? <CheckSquare className="w-6 h-6 text-blue-400 fill-blue-500/20" /> 
+               <button
+                 onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}
+                 role="button"
+                 tabIndex={0}
+                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelection(prompt.id); } }}
+               >
+                   {isSelected
+                     ? <CheckSquare className="w-6 h-6 text-blue-400 fill-blue-500/20" />
                      : <Square className="w-6 h-6 text-slate-500 hover:text-slate-300" />}
                </button>
            </div>
@@ -430,8 +500,8 @@ export function PersonalLibraryView({
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                         <CapabilityBadge mode={prompt.capability_mode} />
                         {personalView === "favorites" && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            אישי
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            ספרייה אישית
                           </span>
                         )}
                     </div>
@@ -449,7 +519,7 @@ export function PersonalLibraryView({
                 aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
                 aria-pressed={isFavorite}
                 className={cn(
-                  "p-2.5 rounded-full border transition-colors",
+                  "p-2.5 rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isFavorite
                     ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-300"
                     : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
@@ -459,17 +529,17 @@ export function PersonalLibraryView({
               </button>
               {isEditing ? (
                 <>
-                  <button onClick={saveEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-300 hover:bg-white/10" aria-label="שמור">
+                  <button onClick={saveEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-300 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="שמור">
                     <Check className="w-4 h-4" />
                   </button>
-                  <button onClick={cancelEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-500 hover:bg-white/10" aria-label="ביטול">
+                  <button onClick={cancelEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-500 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="ביטול">
                     <X className="w-4 h-4" />
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => startEditingPersonalPrompt(prompt)}
-                  className="p-2 rounded-full border border-white/10 text-slate-500 hover:text-slate-200 hover:bg-white/10"
+                  className="p-2 rounded-full border border-white/10 text-slate-500 hover:text-slate-200 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   aria-label="עריכה"
                 >
                   <Pencil className="w-4 h-4" />
@@ -507,14 +577,14 @@ export function PersonalLibraryView({
                  <div className="flex items-center gap-1">
                    <button
                      onClick={() => setStyleEditorExpanded(!styleEditorExpanded)}
-                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                      title={styleEditorExpanded ? "מזער" : "הגדל"}
                    >
                      {styleEditorExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                    </button>
                    <button
                      onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }}
-                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                    >
                      <X className="w-3.5 h-3.5" />
                    </button>
@@ -525,12 +595,12 @@ export function PersonalLibraryView({
                <div className="space-y-3 mb-4">
                  {/* Text formatting */}
                  <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[10px] text-slate-500 uppercase tracking-wider ml-2 shrink-0">צבע טקסט</span>
+                   <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
                    {Object.keys(STYLE_TEXT_COLORS).map((color) => (
                      <button
                        key={`text-${color}`}
                        onClick={() => applyStyleToken("c", color)}
-                       className="w-8 h-8 rounded-lg border border-white/10 hover:border-white/30 hover:scale-110 transition-all flex items-center justify-center"
+                       className="w-8 h-8 rounded-lg border border-white/10 hover:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                        title={color}
                      >
                        <span className={cn("font-bold text-sm", STYLE_TEXT_COLORS[color])}>A</span>
@@ -540,13 +610,13 @@ export function PersonalLibraryView({
 
                  {/* Highlights */}
                  <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[10px] text-slate-500 uppercase tracking-wider ml-2 shrink-0">היילייט</span>
+                   <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">היילייט</span>
                    {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
                      <button
                        key={`hl-${color}`}
                        onClick={() => applyStyleToken("hl", color)}
                        className={cn(
-                         "h-8 px-2.5 rounded-lg border border-white/10 hover:border-white/30 hover:scale-105 transition-all text-xs font-medium",
+                         "h-8 px-2.5 rounded-lg border border-white/10 hover:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                          STYLE_HIGHLIGHT_COLORS[color]
                        )}
                      >
@@ -556,7 +626,7 @@ export function PersonalLibraryView({
                    <div className="w-px h-6 bg-white/10 mx-1" />
                    <button
                      onClick={clearStyleTokens}
-                     className="h-8 px-2.5 rounded-lg border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1"
+                     className="h-8 px-2.5 rounded-lg border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                      title="נקה עיצוב"
                    >
                      <Eraser className="w-3.5 h-3.5" />
@@ -566,14 +636,14 @@ export function PersonalLibraryView({
 
                  {/* Quick insert variables */}
                  <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[10px] text-slate-500 uppercase tracking-wider ml-2 shrink-0">משתנים</span>
+                   <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">משתנים</span>
                    {quickInserts.map((qi) => {
                      const Icon = qi.icon;
                      return (
                        <button
                          key={qi.text}
                          onClick={() => insertTextAtCursor(qi.text)}
-                         className="h-8 px-2.5 rounded-lg border border-dashed border-amber-500/30 text-amber-400/70 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs"
+                         className="h-8 px-2.5 rounded-lg border border-dashed border-amber-500/30 text-amber-400/70 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                        >
                          <Icon className="w-3 h-3" />
                          {qi.label}
@@ -610,13 +680,13 @@ export function PersonalLibraryView({
                  <div className="flex items-center gap-2">
                    <button
                      onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }}
-                     className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition-colors"
+                     className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                    >
                      סגור
                    </button>
                    <button
                      onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }}
-                     className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-sm font-semibold transition-colors"
+                     className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                    >
                      שמור עיצוב
                    </button>
@@ -643,21 +713,21 @@ export function PersonalLibraryView({
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <button
               onClick={() => onUsePrompt(prompt)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Plus className="w-3 h-3" />
               השתמש בפרומפט
             </button>
             <button
               onClick={() => onCopyText(prompt.prompt)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Copy className="w-3 h-3" />
               העתק
             </button>
             <button
               onClick={() => openStyleEditor(prompt)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Pencil className="w-3 h-3" />
               עיצוב
@@ -667,7 +737,7 @@ export function PersonalLibraryView({
                 await duplicatePrompt(prompt);
                 toast.success("פרומפט שוכפל!");
               }}
-              className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-dashed border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-dashed border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Plus className="w-3 h-3" />
               שכפל
@@ -680,49 +750,49 @@ export function PersonalLibraryView({
   const renderListItem = (prompt: PersonalPrompt) => {
       const isSelected = selectedIds.has(prompt.id);
       const isFavorite = favoritePersonalIds.has(prompt.id);
-      
+
       return (
           <div key={prompt.id} className={cn(
               "group flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors",
               isSelected && "bg-blue-500/10 border-blue-500/20"
           )}>
               {/* Checkbox */}
-              <button 
+              <button
                 onClick={() => toggleSelection(prompt.id)}
-                className="shrink-0 text-slate-500 hover:text-slate-300"
+                className="shrink-0 text-slate-500 hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
               >
-                 {isSelected 
-                    ? <CheckSquare className="w-5 h-5 text-blue-400" /> 
+                 {isSelected
+                    ? <CheckSquare className="w-5 h-5 text-blue-400" />
                     : <Square className="w-5 h-5 opacity-50 group-hover:opacity-100" />}
               </button>
-              
+
               {/* Capability Icon */}
               <div className="shrink-0">
                   <CapabilityBadge mode={prompt.capability_mode} className="scale-75 origin-left" />
               </div>
 
               {/* Main Content */}
-              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+              <div className="flex-1 min-w-0 flex flex-col items-end text-start">
                   <div className="flex items-center gap-2 mb-1">
                       {renderPromptTags(prompt.tags)}
                       <h4 className="text-base text-slate-200 font-medium truncate">{prompt.title}</h4>
                   </div>
                   <p className="text-sm text-slate-500 truncate w-full max-w-[60vw]" dir="rtl">{prompt.use_case}</p>
               </div>
-              
+
               {/* Stats & Category */}
-              <div className="hidden md:block text-right text-xs text-slate-500 w-32 shrink-0">
+              <div className="hidden md:block text-start text-xs text-slate-500 w-32 shrink-0">
                   <div className="text-slate-400">{prompt.personal_category}</div>
                   <div>שומש {prompt.use_count} פעמים</div>
               </div>
 
               {/* Actions */}
               <div className="flex items-center gap-2 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white"><Plus className="w-4 h-4"/></button>
-                  <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Copy className="w-4 h-4"/></button>
-                  <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Pencil className="w-4 h-4"/></button>
-                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} title="שכפל" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Plus className="w-4 h-4"/></button>
-                  <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full">
+                  <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Plus className="w-4 h-4"/></button>
+                  <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Copy className="w-4 h-4"/></button>
+                  <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Pencil className="w-4 h-4"/></button>
+                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} title="שכפל" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Plus className="w-4 h-4"/></button>
+                  <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                       <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
                   </button>
               </div>
@@ -747,7 +817,7 @@ export function PersonalLibraryView({
               {/* New Prompt Button */}
               <button
                 onClick={() => setViewMode("home")}
-                className="group flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md hover:shadow-lg"
+                className="group flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               >
                 <div className="relative w-5 h-5">
                   <Sparkles className="absolute inset-0 w-5 h-5 text-yellow-600" />
@@ -758,20 +828,20 @@ export function PersonalLibraryView({
                 </span>
               </button>
             </div>
-            
+
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 mx-2">
-                  <button 
+                  <button
                     onClick={() => setLayoutMode("grid")}
-                    className={cn("p-2.5 rounded-md transition-colors", layoutMode === "grid" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
+                    className={cn("p-2.5 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", layoutMode === "grid" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
                     title="תצוגת כרטיסים"
                   >
                       <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                   <button
                     onClick={() => setLayoutMode("list")}
-                    className={cn("p-2.5 rounded-md transition-colors", layoutMode === "list" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
+                    className={cn("p-2.5 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", layoutMode === "list" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
                     title="תצוגת רשימה"
                   >
                       <LayoutList className="w-4 h-4 md:w-5 md:h-5" />
@@ -779,18 +849,18 @@ export function PersonalLibraryView({
               </div>
 
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ms-2">
-                  <button 
+                  <button
                     onClick={() => setSelectionMode(!selectionMode)}
-                    className={cn("px-3 py-2 rounded-md transition-all text-xs font-bold flex items-center gap-2", selectionMode ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40" : "text-slate-500 hover:text-slate-300")}
+                    className={cn("px-3 py-2 rounded-md transition-all text-xs font-bold flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", selectionMode ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40" : "text-slate-500 hover:text-slate-300")}
                     title="מצב בחירה מרובה"
                   >
                       <CheckSquare className="w-4 h-4" />
                       <span className="hidden md:inline">ניהול פריטים</span>
                   </button>
                   {selectionMode && (
-                      <button 
+                      <button
                          onClick={selectAllVisible}
-                         className="px-3 py-2 rounded-md text-xs font-bold text-slate-300 hover:text-white"
+                         className="px-3 py-2 rounded-md text-xs font-bold text-slate-300 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                       >
                           בחר הכל ({totalCount})
                       </button>
@@ -799,7 +869,7 @@ export function PersonalLibraryView({
 
               <button
                 onClick={() => { setPersonalView("all"); setViewMode("library"); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               >
                 <BookOpen className="w-4 h-4" />
                 <span className="hidden md:inline">ספריה מלאה</span>
@@ -807,7 +877,7 @@ export function PersonalLibraryView({
               <button
                 onClick={() => setPersonalView(personalView === "favorites" ? "all" : "favorites")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors",
+                  "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   personalView === "favorites"
                     ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-200"
                     : "border-white/10 text-slate-300 hover:bg-white/10"
@@ -818,7 +888,7 @@ export function PersonalLibraryView({
               </button>
               <button
                 onClick={() => setViewMode("home")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors font-bold"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               >
                 <ArrowRight className="w-4 h-4" />
                 חזרה
@@ -874,21 +944,37 @@ export function PersonalLibraryView({
                 />
                 <button
                   onClick={addPersonalCategory}
-                  className="px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   צור קטגוריה
                 </button>
               </div>
-              <button
-                onClick={handleImportHistory}
-                disabled={historyLength === 0}
-                className={cn("px-4 py-2 rounded-lg text-sm border border-white/10 transition-colors", historyLength === 0 ? "text-slate-600 cursor-not-allowed" : "text-slate-300 hover:bg-white/10")}
-              >
-                ייבא מהיסטוריה
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleImportHistory}
+                  disabled={historyLength === 0}
+                  className={cn("px-4 py-2 rounded-lg text-sm border border-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", historyLength === 0 ? "text-slate-600 cursor-not-allowed" : "text-slate-300 hover:bg-white/10")}
+                >
+                  ייבא מהיסטוריה
+                </button>
+                <button
+                  onClick={() => importFileRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-white/10 text-slate-300 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                >
+                  <Upload className="w-4 h-4" />
+                  ייבוא
+                </button>
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportFile}
+                  className="hidden"
+                />
+              </div>
             </div>
           )}
-          
+
           {/* Main Content Area */}
           <div className="mt-8 space-y-10">
               {personalView === "favorites" ? (
@@ -908,24 +994,35 @@ export function PersonalLibraryView({
                                                   </span>
                                                   <h4 className="text-white font-semibold">{p.title}</h4>
                                               </div>
-                                              <button onClick={() => handleToggleFavorite("library", p.id)}><Star className="w-4 h-4 text-yellow-300 fill-yellow-300"/></button>
+                                              <button
+                                                onClick={() => handleToggleFavorite("library", p.id)}
+                                                className="focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
+                                              >
+                                                <Star className="w-4 h-4 text-yellow-300 fill-yellow-300"/>
+                                              </button>
                                           </div>
                                           <p className="text-slate-400 text-sm">{p.use_case}</p>
                                           <div className="flex gap-2 mt-auto">
-                                              <button onClick={() => onUsePrompt(p)} className="flex-1 bg-white text-black py-2 rounded text-xs font-bold">השתמש</button>
-                                              <button onClick={() => addPersonalPromptFromLibrary(p)} className="flex-1 border border-white/10 text-slate-300 py-2 rounded text-xs">שמור עותק</button>
+                                              <button onClick={() => onUsePrompt(p)} className="flex-1 bg-white text-black py-2 rounded text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">השתמש</button>
+                                              <button onClick={() => addPersonalPromptFromLibrary(p)} className="flex-1 border border-white/10 text-slate-300 py-2 rounded text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור עותק</button>
                                           </div>
                                       </GlowingEdgeCard>
                                   ))}
                               </div>
                           </div>
                       )}
-                      
+
                       <h3 className="text-2xl text-slate-200 mb-4 font-serif">מועדפים אישיים</h3>
+                      {/* 5.1 Skeleton - glass-card style with content placeholders */}
                       {!isPersonalLoaded && (
                         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
-                          {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="rounded-2xl bg-white/[0.04] animate-pulse h-32" />
+                          {[0, 1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="glass-card p-4 rounded-2xl animate-pulse">
+                              <div className="h-4 bg-white/10 rounded w-3/4 mb-3" />
+                              <div className="h-3 bg-white/10 rounded w-1/2 mb-4" />
+                              <div className="h-3 bg-white/10 rounded w-full mb-2" />
+                              <div className="h-3 bg-white/10 rounded w-5/6" />
+                            </div>
                           ))}
                         </div>
                       )}
@@ -934,36 +1031,54 @@ export function PersonalLibraryView({
                                {filteredPersonalLibrary.map(layoutMode === "grid" ? renderCard : renderListItem)}
                            </div>
                       ) : isPersonalLoaded ? (
-                          <div className="flex flex-col items-center gap-3 text-center py-12" dir="rtl">
-                            <Star className="w-12 h-12 text-slate-600 mb-2" />
-                            <p className="text-lg font-semibold text-slate-400">עוד לא סימנת מועדפים</p>
-                            <p className="text-sm text-slate-500">לחץ על ⭐ כדי לשמור פרומפטים אהובים</p>
+                          /* 5.3 Empty state - favorites */
+                          <div className="flex flex-col items-center gap-4 text-center py-16 glass-card rounded-2xl px-8 animate-in fade-in duration-500" dir="rtl">
+                            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                              <Star className="w-8 h-8 text-amber-500/50" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-lg font-semibold text-slate-300">עוד לא סימנת מועדפים</p>
+                              <p className="text-sm text-slate-500">לחץ על הכוכב כדי לשמור</p>
+                            </div>
                           </div>
                       ) : null}
                   </div>
               ) : (
                   // By Category View
                   <>
-                    {/* Skeleton - shown while personal library is loading */}
+                    {/* 5.1 Skeleton - shown while personal library is loading */}
                     {!isPersonalLoaded && (
                       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-                        {[0, 1, 2, 3].map((i) => (
-                          <div key={i} className="rounded-2xl bg-white/[0.04] animate-pulse h-32" />
+                        {[0, 1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="glass-card p-4 rounded-2xl animate-pulse">
+                            <div className="h-4 bg-white/10 rounded w-3/4 mb-3" />
+                            <div className="h-3 bg-white/10 rounded w-1/2 mb-4" />
+                            <div className="h-3 bg-white/10 rounded w-full mb-2" />
+                            <div className="h-3 bg-white/10 rounded w-5/6 mb-4" />
+                            <div className="flex gap-2">
+                              <div className="h-8 bg-white/10 rounded-lg flex-1" />
+                              <div className="h-8 bg-white/10 rounded-lg w-20" />
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
 
-                    {/* Empty state - loaded but no items */}
+                    {/* 5.3 Empty state - loaded but no items */}
                     {isPersonalLoaded && totalCount === 0 && (
-                      <div className="flex flex-col items-center gap-3 text-center py-16" dir="rtl">
-                        <BookOpen className="w-12 h-12 text-slate-600 mb-2" />
-                        <p className="text-lg font-semibold text-slate-400">הספרייה האישית שלך ריקה</p>
-                        <p className="text-sm text-slate-500">שדרג פרומפט ושמור אותו כאן כדי להתחיל</p>
+                      <div className="flex flex-col items-center gap-4 text-center py-16 glass-card rounded-2xl px-8 animate-in fade-in duration-500" dir="rtl">
+                        <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                          <BookOpen className="w-10 h-10 text-amber-500/50" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xl font-semibold text-slate-200">הספרייה האישית שלך ריקה</p>
+                          <p className="text-sm text-slate-500 max-w-xs mx-auto">שדרג פרומפט ושמור אותו כאן כדי לבנות את האוסף שלך</p>
+                        </div>
                         <button
                           onClick={() => setViewMode("home")}
-                          className="mt-1 px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm"
+                          className="mt-1 px-6 py-2.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                         >
-                          שדרג פרומפט
+                          שדרג פרומפט עכשיו
                         </button>
                       </div>
                     )}
@@ -971,7 +1086,7 @@ export function PersonalLibraryView({
                     {orderedCategories.map((category) => {
                          const items = grouped[category] ?? [];
                          if (items.length === 0) return null;
-                         
+
                          return (
                           <div
                             key={category}
@@ -984,14 +1099,14 @@ export function PersonalLibraryView({
                                <div className="flex items-center gap-4 flex-1">
                                  {/* Category Selection / Rename */}
                                  <div className="flex items-center gap-3">
-                                     <button 
+                                     <button
                                         onClick={() => selectAllCategory(category)}
-                                        className="text-slate-500 hover:text-white"
+                                        className="text-slate-500 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
                                         title="בחר הכל בקטגוריה"
                                      >
                                          <CheckCircle2 className="w-5 h-5"/>
                                      </button>
-                                     
+
                                      {renamingCategory === category ? (
                                         <div className="flex items-center gap-2">
                                             <input
@@ -1000,14 +1115,14 @@ export function PersonalLibraryView({
                                               onKeyDown={(e) => { if(e.key === 'Enter') saveRenameCategory(); if(e.key === 'Escape') cancelRenameCategory(); }}
                                               autoFocus
                                             />
-                                            <button onClick={saveRenameCategory} aria-label="שמור שם קטגוריה"><Check className="w-4 h-4 text-green-400"/></button>
-                                            <button onClick={cancelRenameCategory} aria-label="ביטול שינוי שם"><X className="w-4 h-4 text-red-400"/></button>
+                                            <button onClick={saveRenameCategory} aria-label="שמור שם קטגוריה" className="focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"><Check className="w-4 h-4 text-green-400"/></button>
+                                            <button onClick={cancelRenameCategory} aria-label="ביטול שינוי שם" className="focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"><X className="w-4 h-4 text-red-400"/></button>
                                         </div>
                                      ) : (
                                          <div className="flex items-baseline gap-3 group/cat">
                                             <h3 className="text-xl md:text-3xl lg:text-4xl font-serif font-semibold text-slate-100 tracking-wide">{category}</h3>
                                             {category !== PERSONAL_DEFAULT_CATEGORY && (
-                                                <button onClick={() => startRenameCategory(category)} className="opacity-0 group-hover/cat:opacity-100 text-slate-500 hover:text-white"><Pencil className="w-3 h-3"/></button>
+                                                <button onClick={() => startRenameCategory(category)} className="opacity-0 group-hover/cat:opacity-100 text-slate-500 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"><Pencil className="w-3 h-3"/></button>
                                             )}
                                             <span className="text-sm text-slate-400">{items.length}</span>
                                          </div>
@@ -1015,7 +1130,7 @@ export function PersonalLibraryView({
                                  </div>
                                </div>
                             </div>
-                            
+
                             <div className={cn("grid gap-6", layoutMode === "grid" ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1")}>
                                 {items.map(layoutMode === "grid" ? renderCard : renderListItem)}
                             </div>
@@ -1033,20 +1148,20 @@ export function PersonalLibraryView({
                 <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
                     {selectedIds.size} נבחרו
                 </div>
-                <button onClick={handleBatchExport} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="יצוא" aria-label="ייצוא">
+                <button onClick={handleBatchExport} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title="יצוא" aria-label="ייצוא">
                     <Download className="w-5 h-5" />
                 </button>
-                <button onClick={() => setShowMoveDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="העברה" aria-label="העברה">
+                <button onClick={() => setShowMoveDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title="העברה" aria-label="העברה">
                     <FolderInput className="w-5 h-5" />
                 </button>
-                <button onClick={() => setShowTagDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="תגיות" aria-label="תגיות">
+                <button onClick={() => setShowTagDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title="תגיות" aria-label="תגיות">
                     <Tag className="w-5 h-5" />
                 </button>
                 <div className="w-px h-6 bg-white/10 mx-1" />
-                <button onClick={handleBatchDelete} className="p-2.5 hover:bg-red-500/20 rounded-lg text-red-400 tooltip" title="מחיקה" aria-label="מחיקה">
+                <button onClick={handleBatchDelete} className="p-2.5 hover:bg-red-500/20 rounded-lg text-red-400 focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none" title="מחיקה" aria-label="מחיקה">
                     <Trash2 className="w-5 h-5" />
                 </button>
-                <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500" aria-label="סגור">
+                <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="סגור">
                     <X className="w-4 h-4" />
                 </button>
             </div>
@@ -1061,7 +1176,7 @@ export function PersonalLibraryView({
                         <button
                             onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
                             className={cn(
-                                "w-full text-right px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between",
+                                "w-full text-start px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                                 isCreatingNewMoveCategory ? "bg-blue-600/20 border-blue-500 text-blue-200" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
                             )}
                         >
@@ -1089,7 +1204,7 @@ export function PersonalLibraryView({
                                 key={cat}
                                 onClick={() => { setTargetMoveCategory(cat); setIsCreatingNewMoveCategory(false); }}
                                 className={cn(
-                                    "w-full text-right px-4 py-3 rounded-xl border transition-all text-sm",
+                                    "w-full text-start px-4 py-3 rounded-xl border transition-all text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                                     targetMoveCategory === cat && !isCreatingNewMoveCategory ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
                                 )}
                             >
@@ -1098,16 +1213,16 @@ export function PersonalLibraryView({
                         ))}
                     </div>
                     <div className="flex gap-2">
-                        <button 
-                            onClick={handleBatchMove} 
-                            disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())} 
-                            className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50"
+                        <button
+                            onClick={handleBatchMove}
+                            disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())}
+                            className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                         >
                             אישור
                         </button>
-                        <button 
-                            onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }} 
-                            className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg"
+                        <button
+                            onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }}
+                            className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                         >
                             ביטול
                         </button>
@@ -1122,15 +1237,15 @@ export function PersonalLibraryView({
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">הוספת תגיות</h3>
                     <p className="text-slate-400 text-sm mb-4 text-center">הזן תגיות מופרדות בפסיקים</p>
-                    <input 
-                        value={tagsInput} 
+                    <input
+                        value={tagsInput}
                         onChange={e => setTagsInput(e.target.value)}
                         placeholder="למשל: שיווק, דואל, חשוב"
                         className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white mb-6 focus:border-white/30 outline-none"
                     />
                     <div className="flex gap-2">
-                        <button onClick={handleBatchTag} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium">שמור תגיות</button>
-                        <button onClick={() => setShowTagDialog(false)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg">ביטול</button>
+                        <button onClick={handleBatchTag} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור תגיות</button>
+                        <button onClick={() => setShowTagDialog(false)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
                     </div>
                 </div>
             </div>

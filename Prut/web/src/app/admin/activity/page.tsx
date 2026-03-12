@@ -15,10 +15,12 @@ import {
   Info,
   Calendar,
   ShieldAlert,
+  Download,
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface ActivityLog {
   id: string;
@@ -27,6 +29,37 @@ interface ActivityLog {
   created_at: string;
   profiles: { email: string } | null;
   details: Record<string, unknown>;
+}
+
+// ── 8.3 CSV export helper ────────────────────────────────────────────────────
+
+function exportActivityToCSV(logs: ActivityLog[], filename: string) {
+  if (logs.length === 0) {
+    toast.error("אין נתונים לייצוא");
+    return;
+  }
+  const BOM = "\uFEFF"; // UTF-8 BOM for Hebrew
+  const headers = "מזהה,פעולה,סוג_ישות,אימייל_משתמש,פרטים,תאריך";
+  const rows = logs.map((log) => {
+    const cols = [
+      log.id,
+      log.action,
+      log.entity_type,
+      log.profiles?.email || "System",
+      JSON.stringify(log.details || {}).replace(/"/g, '""'),
+      new Date(log.created_at).toLocaleString("he-IL"),
+    ];
+    return cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
+  });
+  const csv = BOM + [headers, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast.success(`יוצאו ${logs.length} רשומות`);
 }
 
 export default function ActivityPage() {
@@ -120,14 +153,30 @@ export default function ActivityPage() {
             </h1>
             <p className="text-slate-400 font-medium tracking-wide">ניטור מלא של כל הטרנזקציות ומעשי המנהלים במערכת</p>
           </div>
-          
-          <button 
-            onClick={loadLogs}
-            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-sm font-bold flex items-center gap-3 backdrop-blur-md active:scale-95"
-          >
-            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-            <span>רענן יומן</span>
-          </button>
+
+          <div className="flex gap-3">
+            {/* ── 8.3 CSV Export Button ── */}
+            <button
+              onClick={() =>
+                exportActivityToCSV(
+                  filteredLogs,
+                  `peroot_activity_${new Date().toISOString().slice(0, 10)}.csv`
+                )
+              }
+              disabled={filteredLogs.length === 0}
+              className="px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-sm font-bold flex items-center gap-3 backdrop-blur-md active:scale-95 disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span>ייצוא CSV</span>
+            </button>
+            <button
+              onClick={loadLogs}
+              className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-sm font-bold flex items-center gap-3 backdrop-blur-md active:scale-95"
+            >
+              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              <span>רענן יומן</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters & Search */}
@@ -160,7 +209,7 @@ export default function ActivityPage() {
             ))}
           </div>
 
-          {/* Admin Actions toggle */}
+          {/* ── 8.4 Admin Actions toggle ── */}
           <div className="flex items-center p-2">
             <button
               onClick={() => setAdminOnly((v) => !v)}
@@ -172,7 +221,7 @@ export default function ActivityPage() {
               )}
             >
               <ShieldAlert className="w-4 h-4" />
-              {adminOnly ? "פעולות אדמין בלבד" : "הכל"}
+              {adminOnly ? "פעולות אדמין בלבד" : "כל הפעולות"}
             </button>
           </div>
         </div>
@@ -194,6 +243,7 @@ export default function ActivityPage() {
               {filteredLogs.map((log) => {
                 const Icon = getActionIcon(log.entity_type);
                 const colorClasses = getActionColor(log.action);
+                const isAdminAction = ADMIN_ACTIONS.includes(log.action.toLowerCase()) || log.details?.is_admin === true;
 
                 return (
                   <div key={log.id} className="group p-6 hover:bg-white/[0.03] transition-all duration-300">
@@ -201,7 +251,7 @@ export default function ActivityPage() {
                       <div className={cn("p-4 rounded-[22px] border transition-transform group-hover:scale-110", colorClasses)}>
                         <Icon className="w-6 h-6" />
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-3 mb-2">
                           <span className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors uppercase tracking-tight">
@@ -210,14 +260,15 @@ export default function ActivityPage() {
                           <span className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-slate-500 font-black uppercase tracking-widest border border-white/5">
                             {log.entity_type}
                           </span>
-                          {(ADMIN_ACTIONS.includes(log.action.toLowerCase()) || log.details?.is_admin === true) && (
+                          {/* ── 8.4 Admin badge ── */}
+                          {isAdminAction && (
                             <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 font-black uppercase tracking-widest border border-amber-500/20">
                               <ShieldAlert className="w-3 h-3" />
                               Admin
                             </span>
                           )}
                         </div>
-                        
+
                         <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
                            <div className="flex items-center gap-2">
                               <User className="w-4 h-4 opacity-30" />

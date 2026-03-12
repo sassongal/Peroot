@@ -251,11 +251,10 @@ export async function POST(req: Request) {
             });
 
             // Auto-refund only for genuinely interrupted responses (not normal short completions)
-            const finishReason = (completion as { finishReason?: string }).finishReason;
-            if (completion.text.length < 100 && user && supabase && finishReason !== 'stop') {
+            if (completion.text.length < 100 && user && supabase) {
                 try {
                     await queryClient.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
-                    logger.warn('[EnhanceAPI] Auto-refund for interrupted response:', completion.text.length, 'chars, reason:', finishReason);
+                    logger.warn('[Enhance] Short response, refunding credit', { userId: user.id, length: completion.text.length });
                 } catch (e) {
                     logger.error('[EnhanceAPI] Auto-refund failed:', e);
                 }

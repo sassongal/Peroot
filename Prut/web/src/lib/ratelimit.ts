@@ -76,6 +76,7 @@ export async function checkRateLimit(identifier: string, tier: RateLimitTier = '
       reset: result.reset,
     };
   } catch (error) {
+    console.warn('[RateLimit] Redis unavailable, allowing request', { identifier, tier });
     logger.error('[RateLimit] Redis unavailable, using in-memory fallback:', error);
     return checkMemoryFallback(identifier);
   }

@@ -87,6 +87,7 @@ export function useLibrary() {
                 tags: row.tags ?? [],
                 created_at: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
                 updated_at: row.updated_at ? new Date(row.updated_at).getTime() : (row.created_at ? new Date(row.created_at).getTime() : Date.now()),
+                last_used_at: row.last_used_at ? new Date(row.last_used_at).getTime() : null,
                 sort_index:
                   typeof orderMap[row.id] === "number" ? orderMap[row.id] : index,
               }))
@@ -100,14 +101,21 @@ export function useLibrary() {
         }
       } else {
         const orderMap = readOrderMap(null);
-        // Load from LocalStorage
+        // Load from LocalStorage (with 7-day TTL for guest data)
         const storedLib = localStorage.getItem(STORAGE_KEY);
         if (storedLib && mounted) {
           try {
             const parsed = JSON.parse(storedLib);
             if (Array.isArray(parsed)) {
+              const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+              const now = Date.now();
+              const filtered = parsed.filter((row) => {
+                const savedAt = row.savedAt ?? row.created_at ?? 0;
+                const ts = typeof savedAt === 'string' ? new Date(savedAt).getTime() : savedAt;
+                return (now - ts) < SEVEN_DAYS_MS;
+              });
               setPersonalLibrary(
-                parsed.map((row, index) => ({
+                filtered.map((row, index) => ({
                   ...row,
                   sort_index:
                     typeof row.sort_index === "number"
@@ -120,7 +128,9 @@ export function useLibrary() {
                   prompt_style: row.prompt_style ?? undefined,
                   personal_category: row.personal_category ?? null,
                   capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
-                  tags: row.tags || []
+                  tags: row.tags || [],
+                  last_used_at: row.last_used_at ?? null,
+                  savedAt: row.savedAt ?? Date.now()
                 }))
               );
             }
@@ -208,11 +218,20 @@ export function useLibrary() {
     }
   }, [personalLibrary, personalCategories, isLoaded, user]);
 
-  const addPrompt = async (prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>) => {
-    // Duplicate detection: warn if an identical prompt text already exists
+  const addPrompt = async (prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>, category?: string) => {
+    // 1.1 Auto-categorization: use provided category if personal_category is not set
+    if (!prompt.personal_category && category) {
+      prompt = { ...prompt, personal_category: category };
+    }
+    if (!prompt.personal_category) {
+      prompt = { ...prompt, personal_category: 'כללי' };
+    }
+
+    // 1.2 Duplicate detection: block if identical prompt text already exists
     const existing = personalLibrary.find(p => p.prompt.trim() === prompt.prompt.trim());
     if (existing) {
-      toast.warning("פרומפט דומה כבר קיים בספרייה שלך");
+      toast.warning("פרומפט דומה כבר קיים בספרייה");
+      return;
     }
 
     const nextSortIndex = personalLibrary
@@ -227,8 +246,10 @@ export function useLibrary() {
       updated_at: Date.now(),
       sort_index: nextSortIndex,
       capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
-      tags: prompt.tags || []
-    };
+      tags: prompt.tags || [],
+      last_used_at: null,
+      savedAt: Date.now()
+    } as PersonalPrompt & { savedAt: number };
 
     setPersonalLibrary(prev => [newItem, ...prev]);
 
@@ -281,9 +302,10 @@ export function useLibrary() {
     // Read current count before optimistic update to avoid stale closure
     const currentItem = personalLibrary.find(p => p.id === id);
     const currentCount = currentItem?.use_count ?? 0;
-    setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: Date.now() } : p));
+    const now = Date.now();
+    setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: now, last_used_at: now } : p));
     if (user) {
-        await supabase.from('personal_library').update({ use_count: currentCount + 1 }).eq('id', id).eq('user_id', user.id);
+        await supabase.from('personal_library').update({ use_count: currentCount + 1, last_used_at: new Date(now).toISOString() }).eq('id', id).eq('user_id', user.id);
     }
   };
 

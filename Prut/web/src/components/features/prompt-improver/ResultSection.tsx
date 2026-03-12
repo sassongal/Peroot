@@ -119,7 +119,7 @@ export function ResultSection({
           {onRetryStream && (
             <button
               onClick={onRetryStream}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-xs font-medium transition-colors cursor-pointer shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-xs font-medium transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               נסה שוב
@@ -150,9 +150,10 @@ export function ResultSection({
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 5.6 RTL: use flex-col lg:flex-row for variable panel stacking */}
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Result Area */}
-        <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:col-span-2" : "lg:col-span-3")}>
+        <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
 
           {/* Before / After tab strip */}
           {showTabs && (
@@ -160,7 +161,7 @@ export function ResultSection({
               <button
                 onClick={() => setActiveTab('before')}
                 className={cn(
-                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
+                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   activeTab === 'before'
                     ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                     : "text-slate-500 border-transparent hover:text-slate-400"
@@ -172,7 +173,7 @@ export function ResultSection({
               <button
                 onClick={() => setActiveTab('after')}
                 className={cn(
-                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
+                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   activeTab === 'after'
                     ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                     : "text-slate-500 border-transparent hover:text-slate-400"
@@ -189,7 +190,7 @@ export function ResultSection({
             <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
               <button
                 onClick={() => handleCopy(displayCompletion)}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 title={t.result_section.copy_tooltip}
                 aria-label="העתק פרומפט"
               >
@@ -215,22 +216,23 @@ export function ResultSection({
           )}
 
           {/* AI Platform Quick-Launch Bar - hidden in "before" view */}
+          {/* 5.2 Mobile: grid-cols-2 on mobile, flex on sm+ */}
           {!isBeforeTab && (
-            <div className="px-6 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
-              <div className="flex items-center gap-3 justify-center flex-wrap" dir="rtl">
-                <span className="text-xs text-slate-500 ms-2">פתח ב:</span>
+            <div className="px-4 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
+                <span className="hidden sm:inline text-xs text-slate-500 ms-2">פתח ב:</span>
                 <button
                   onClick={() => {
                     handleCopy(displayCompletion);
                     window.open("https://chat.openai.com/", "_blank");
                     toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-ChatGPT"
                 >
                   <ChatGPTIcon className="w-4 h-4" />
                   <span>ChatGPT</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </button>
                 <button
                   onClick={() => {
@@ -238,12 +240,12 @@ export function ResultSection({
                     window.open("https://claude.ai/new", "_blank");
                     toast.success(`${t.toasts.copied} - Claude נפתח!`);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-Claude"
                 >
                   <ClaudeIcon className="w-4 h-4" />
                   <span>Claude</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </button>
                 <button
                   onClick={() => {
@@ -251,24 +253,24 @@ export function ResultSection({
                     window.open("https://gemini.google.com/", "_blank");
                     toast.success(`${t.toasts.copied} - Gemini נפתח!`);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-Gemini"
                 >
                   <GeminiIcon className="w-4 h-4" />
                   <span>Gemini</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </button>
                 <button
                   onClick={() => {
                     const text = encodeURIComponent(displayCompletion + "\n\n- נוצר עם Peroot | peroot.space");
                     window.open(`https://wa.me/?text=${text}`, "_blank");
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="שתף בוואטסאפ"
                 >
                   <WhatsAppIcon className="w-4 h-4" />
                   <span>WhatsApp</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </button>
               </div>
             </div>
@@ -371,9 +373,9 @@ export function ResultSection({
           </div>
         </div>
 
-        {/* Variables Panel */}
+        {/* Variables Panel - 5.6 RTL: stacks vertically on mobile, side-by-side on lg+ */}
         {placeholders.length > 0 && (
-          <div className="glass-card p-5 rounded-xl border-white/10 bg-white/2 flex flex-col gap-4 h-fit">
+          <div className="glass-card p-5 rounded-xl border-white/10 bg-white/2 flex flex-col gap-4 h-fit lg:w-72">
             <div className="flex items-center gap-2 pb-3 border-b border-white/5">
                <div className="bg-amber-500/20 text-amber-300 p-1.5 rounded-md">
                  <Plus className="w-4 h-4" />
@@ -383,7 +385,7 @@ export function ResultSection({
             <div className="flex flex-col gap-3">
                {placeholders.map((ph, i) => (
                  <div key={i} className="space-y-1.5">
-                    <label className="text-xs text-slate-500 font-medium ms-1 block text-right" dir="rtl">
+                    <label className="text-xs text-slate-500 font-medium ms-1 block text-start" dir="rtl">
                       {ph}
                     </label>
                     <input

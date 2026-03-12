@@ -296,6 +296,10 @@ function PageContent({ user }: { user: User | null }) {
           dispatch({ type: 'SET_QUESTIONS', payload: [] });
         }
       }
+    } else {
+      // No [GENIUS_QUESTIONS] delimiter in the response - clear questions
+      // so SmartRefinement shows the "comprehensive prompt" message
+      dispatch({ type: 'SET_QUESTIONS', payload: [] });
     }
 
     // Extract AI-generated title if present
@@ -442,7 +446,7 @@ function PageContent({ user }: { user: User | null }) {
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
     recordUsageSignal("copy", text);
-    toast.success("הועתק ללוח!");
+    toast.success("הועתק ללוח");
   };
 
   // Keep ref in sync for keyboard shortcut handler
@@ -492,7 +496,7 @@ function PageContent({ user }: { user: User | null }) {
       const { id } = await res.json();
       const shareUrl = `${window.location.origin}/p/${id}`;
       await navigator.clipboard.writeText(shareUrl);
-      toast.success("קישור שיתוף הועתק!");
+      toast.success("קישור שיתוף נוצר");
     } catch {
       toast.error("שגיאה בשיתוף");
     }
@@ -725,6 +729,7 @@ function PageContent({ user }: { user: User | null }) {
             onClear={clearHistory}
             onSaveToPersonal={addPersonalPromptFromHistory}
             onCopy={handleCopyText}
+            onStartNew={() => { setViewMode("home"); setSidebarOpen(false); }}
           />
         </div>
       </div>
@@ -789,7 +794,7 @@ function PageContent({ user }: { user: User | null }) {
                        <button
                          key={i}
                          onClick={() => { handleRestore(item); }}
-                         className="shrink-0 w-56 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-right group"
+                         className="shrink-0 w-56 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
                          dir="rtl"
                        >
                          <p className="text-sm text-slate-300 font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>

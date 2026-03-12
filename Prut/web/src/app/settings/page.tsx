@@ -6,7 +6,6 @@ import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
-  ArrowRight,
   User as UserIcon,
   Mail,
   Shield,
@@ -38,6 +37,14 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSearchParams } from "next/navigation";
 
+interface ActivityLogRow {
+  id: string;
+  action: string;
+  entity_type: string;
+  created_at: string;
+  details: Record<string, unknown> | null;
+}
+
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +64,7 @@ export default function SettingsPage() {
   const { history, clearHistory } = useHistory();
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
-  const { subscription, isPro, checkout, loading: subLoading } = useSubscription();
+  const { subscription, isPro } = useSubscription();
   const [credits, setCredits] = useState<{ balance: number; dailyLimit: number; refreshedAt: string | null } | null>(null);
   const [referral, setReferral] = useState<{ code: string; uses: number; maxUses: number; creditsPerReferral: number; totalReferrals: number } | null>(null);
   const [referralLoaded, setReferralLoaded] = useState(false);
@@ -222,19 +229,62 @@ export default function SettingsPage() {
     }
   };
 
+  // ─── 6.3 Expanded Data Export ───────────────────────────────────────────────
   const handleExportData = async () => {
     setIsExporting(true);
     try {
+      // Fetch activity logs for the current user
+      const { data: rawActivityLogs } = await supabase
+        .from("activity_logs")
+        .select("id, action, entity_type, created_at, details")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      const activityLogs = (rawActivityLogs || []) as ActivityLogRow[];
+
+      // Fetch full profile info
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("display_name, credits_balance, credits_refreshed_at, plan_tier, created_at")
+        .eq("id", user.id)
+        .single();
+
       const exportData = {
         exportDate: new Date().toISOString(),
-        user: {
+        userId: user.id,
+        profile: {
           email: user.email,
-          fullName: metadata.full_name,
-          createdAt: user.created_at,
+          fullName: metadata.full_name || profileData?.display_name || null,
+          displayName: profileData?.display_name || null,
+          planTier: profileData?.plan_tier || "free",
+          creditsBalance: profileData?.credits_balance ?? 0,
+          creditsRefreshedAt: profileData?.credits_refreshed_at || null,
+          accountCreatedAt: user.created_at,
+          emailConfirmed: !!user.email_confirmed_at,
+          lastSignIn: user.last_sign_in_at || null,
         },
+        usageStats: usageStats
+          ? {
+              totalEnhancements: usageStats.totalEnhancements,
+              thisMonth: usageStats.thisMonth,
+              thisWeek: usageStats.thisWeek,
+              streakDays: usageStats.streak,
+              topCategories: usageStats.topCategories,
+              recentDailyActivity: usageStats.recentDays,
+            }
+          : null,
         history: history,
-        personalLibrary: personalLibrary,
+        library: personalLibrary,
         favorites: favorites,
+        achievements: [],
+        activityLogs: activityLogs.map((log) => ({
+          id: log.id,
+          action: log.action,
+          entityType: log.entity_type,
+          createdAt: log.created_at,
+          details: log.details,
+        })),
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -249,7 +299,7 @@ export default function SettingsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success("הנתונים יוצאו בהצלחה");
+      toast.success("הנתונים יורדו");
     } catch {
       toast.error("שגיאה בייצוא הנתונים");
     } finally {
@@ -317,6 +367,14 @@ export default function SettingsPage() {
     { id: "danger", label: "אזור מסוכן", icon: AlertTriangle },
   ];
 
+  // ─── 6.1 LemonSqueezy customer portal URL ───────────────────────────────────
+  // LemonSqueezy customer portal: my-orders page is the standard portal entry
+  // If subscription ID available, link directly to that order; otherwise generic portal
+  const lsSubId = subscription.lemonsqueezy_subscription_id;
+  const portalUrl = lsSubId
+    ? `https://app.lemonsqueezy.com/my-orders/${lsSubId}`
+    : "https://app.lemonsqueezy.com/my-orders";
+
   return (
     <main className="min-h-screen bg-black text-white">
       {/* Background */}
@@ -348,7 +406,7 @@ export default function SettingsPage() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all ${
                     activeSection === section.id
                       ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                       : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
@@ -666,7 +724,7 @@ export default function SettingsPage() {
                           navigator.clipboard.writeText(referral.code);
                           setReferralCopied(true);
                           setTimeout(() => setReferralCopied(false), 2000);
-                          toast.success("הקוד הועתק!");
+                          toast.success("הועתק ללוח");
                         }}
                         className="shrink-0 p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg transition-colors"
                       >
@@ -690,7 +748,7 @@ export default function SettingsPage() {
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(`הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://peroot.space`);
-                          toast.success("הטקסט הועתק!");
+                          toast.success("הועתק ללוח");
                         }}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"
                       >
@@ -810,14 +868,11 @@ export default function SettingsPage() {
                     </Link>
                   )}
 
+                  {/* ── 6.1 Pro subscription management buttons ── */}
                   {isPro && (
                     <div className="flex flex-col sm:flex-row gap-2 pt-1">
                       <a
-                        href={
-                          subscription.lemonsqueezy_subscription_id
-                            ? `https://app.lemonsqueezy.com/my-orders`
-                            : "https://app.lemonsqueezy.com/my-orders"
-                        }
+                        href={portalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-xl transition-colors text-sm border border-amber-500/20"
@@ -826,7 +881,7 @@ export default function SettingsPage() {
                         <span>ניהול מנוי</span>
                       </a>
                       <a
-                        href="https://app.lemonsqueezy.com/my-orders"
+                        href={portalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium rounded-xl transition-colors text-sm border border-red-500/20"
@@ -884,11 +939,17 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {/* Cancel warning for active Pro users */}
+                {/* ── 6.1 Cancel warning for active Pro users ── */}
                 {isPro && !subscription.ends_at && (
-                  <p className="text-xs text-slate-500 text-center">
-                    לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב הנוכחית.
-                  </p>
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2">
+                    <p className="text-xs text-slate-400 font-medium flex items-center gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      ביטול יכנס לתוקף בסוף תקופת החיוב הנוכחית
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב הנוכחית.
+                    </p>
+                  </div>
                 )}
 
                 {/* Upgrade CTA for free users */}
@@ -925,7 +986,7 @@ export default function SettingsPage() {
                     <div className="flex-1">
                       <h3 className="font-semibold">ייצוא נתונים</h3>
                       <p className="text-sm text-slate-500">
-                        הורד את כל הנתונים שלך כקובץ JSON - כולל היסטוריה, ספריה אישית ומועדפים
+                        הורד את כל הנתונים שלך כקובץ JSON - כולל פרופיל, היסטוריה, ספריה, מועדפים, סטטיסטיקות ויומן פעילות
                       </p>
                     </div>
                   </div>
