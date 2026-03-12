@@ -50,7 +50,10 @@ export default async function BlogPage() {
 
         <div className="space-y-4">
           {(posts ?? []).length === 0 && (
-            <p className="text-center text-slate-500">אין מאמרים עדיין</p>
+            <div className="text-center py-16 px-8">
+              <p className="text-lg text-slate-400 font-medium">אין מאמרים עדיין</p>
+              <p className="text-sm text-slate-500 mt-2">מאמרים חדשים יופיעו כאן בקרוב</p>
+            </div>
           )}
           {(posts ?? []).map((post) => (
             <Link
@@ -72,7 +75,7 @@ export default async function BlogPage() {
                 <img
                   src={post.thumbnail_url}
                   alt={post.title}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
+                  className="w-full h-48 sm:h-48 aspect-video object-cover rounded-lg mb-4"
                 />
               )}
               <h2 className="text-xl font-serif text-white mb-2 group-hover:text-amber-200 transition-colors">

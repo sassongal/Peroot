@@ -253,7 +253,7 @@ export default function SettingsPage() {
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right transition-all ${
                     activeSection === section.id
-                      ? "bg-purple-600/20 text-purple-400 border border-purple-500/30"
+                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                       : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
                   }`}
                 >
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                         onChange={(e) => setDisplayName(e.target.value)}
                         dir="rtl"
                         placeholder="שם תצוגה"
-                        className="bg-white/5 border border-white/10 focus:border-purple-500/50 rounded-lg px-3 py-1.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
+                        className="bg-white/5 border border-white/10 focus:border-purple-500/50 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
                       />
                       <button
                         onClick={handleSaveDisplayName}
@@ -342,21 +342,21 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Account Stats */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-                    <History className="w-5 h-5 text-purple-400 mx-auto mb-2" />
+                    <History className="w-5 h-5 text-amber-400 mx-auto mb-2" />
                     <p className="text-2xl font-bold">{history.length}</p>
-                    <p className="text-xs text-slate-500">היסטוריה</p>
+                    <p className="text-xs text-slate-400">היסטוריה</p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
                     <BookOpen className="w-5 h-5 text-blue-400 mx-auto mb-2" />
                     <p className="text-2xl font-bold">{personalLibrary.length}</p>
-                    <p className="text-xs text-slate-500">ספריה אישית</p>
+                    <p className="text-xs text-slate-400">ספריה אישית</p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
                     <Star className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
                     <p className="text-2xl font-bold">{favorites.length}</p>
-                    <p className="text-xs text-slate-500">מועדפים</p>
+                    <p className="text-xs text-slate-400">מועדפים</p>
                   </div>
                 </div>
 

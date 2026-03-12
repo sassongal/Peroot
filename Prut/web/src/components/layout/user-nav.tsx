@@ -100,7 +100,9 @@ export function UserMenu({ user, position }: UserMenuProps) {
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label="תפריט משתמש"
-          className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 cursor-pointer"
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none cursor-pointer"
         >
           {avatarUrl ? (
             <img
@@ -129,7 +131,9 @@ export function UserMenu({ user, position }: UserMenuProps) {
               onClick={() => setIsOpen(false)}
             />
             {/* Dropdown menu */}
-            <div className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+            <div
+              onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
                <div className="p-4 border-b border-white/10 flex flex-col gap-3 bg-white/5">
                    {/* Embedded Logo in Menu */}
                    <div className="flex justify-center pb-2 border-b border-white/5">
@@ -156,7 +160,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">
+                        <p className="text-sm font-bold text-white truncate" title={metadata.full_name || user.email?.split('@')[0]}>
                             {metadata.full_name || user.email?.split('@')[0]}
                         </p>
                         <p className="text-[10px] text-slate-500 truncate">{user.email}</p>

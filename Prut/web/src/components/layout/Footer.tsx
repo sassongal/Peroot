@@ -10,29 +10,29 @@ export function Footer() {
         {/* Brand & Copyright */}
         <div className="flex flex-col items-center md:items-start gap-2">
           <span className="text-lg font-serif font-bold text-white tracking-wide">Peroot</span>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             © {currentYear} כל הזכויות שמורות ל-JoyaTech.
           </p>
         </div>
 
         {/* Links */}
         <nav className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
-          <Link href="/blog" className="cursor-pointer hover:text-amber-400 transition-colors">
+          <Link href="/blog" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors">
             בלוג
           </Link>
-          <Link href="/pricing" className="cursor-pointer hover:text-amber-400 transition-colors">
+          <Link href="/pricing" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors">
             מחירים
           </Link>
-          <Link href="/terms" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
+          <Link href="/terms" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors" suppressHydrationWarning>
             תנאי שימוש
           </Link>
-          <Link href="/privacy" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
+          <Link href="/privacy" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors" suppressHydrationWarning>
             מדיניות פרטיות
           </Link>
-          <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
+          <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors" suppressHydrationWarning>
             הצהרת נגישות
           </Link>
-          <a href="mailto:gal@joya-tech.net" className="cursor-pointer hover:text-amber-400 transition-colors" suppressHydrationWarning>
+          <a href="mailto:gal@joya-tech.net" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors" suppressHydrationWarning>
             צור קשר
           </a>
         </nav>

@@ -108,7 +108,7 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
+        <div className="text-xs text-slate-500 uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
         <CapabilitySelector
           value={selectedCapability}
           onChange={setSelectedCapability}
@@ -142,7 +142,7 @@ export function PromptInput({
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
                       className={cn(
-                        "w-full bg-black/30 border rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none transition-colors",
+                        "w-full bg-black/30 border rounded-lg py-2.5 px-3 text-sm text-slate-200 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none transition-colors",
                         isEmpty
                           ? "border-amber-500/50 ring-1 ring-amber-500/30 focus:border-amber-500/70"
                           : "border-white/10 focus:border-amber-500/50"
@@ -203,7 +203,7 @@ export function PromptInput({
                  setInterimResult("");
               }}
               placeholder={t.prompt_generator.placeholder}
-              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-lg md:text-xl text-transparent caret-white placeholder:text-slate-600 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
+              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-lg md:text-xl text-transparent caret-white placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   handleEnhance();
@@ -214,7 +214,7 @@ export function PromptInput({
             
             {inputScore && scoreTone && (
               <div className="px-6 pb-4 pt-2 border-t border-white/5 relative z-20 bg-black/20">
-                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <div className="flex items-center justify-between text-xs text-slate-500">
                   <span className="font-mono tracking-widest">{t.prompt_generator.prompt_strength}</span>
                   <span className={cn("font-semibold", scoreTone.text)}>
                     {inputScore.label} · {inputScore.score}%
@@ -252,7 +252,7 @@ export function PromptInput({
                    <button 
                      onClick={toggleListening}
                      className={cn(
-                       "p-2 rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
+                       "p-2.5 rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
                        isListening 
                          ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse" 
                          : "bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
@@ -276,13 +276,13 @@ export function PromptInput({
 
             {!inputVal.trim() && !isListening && (
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-3 text-right" dir="rtl">נסו לדוגמה:</div>
+                <div className="text-xs text-slate-500 uppercase tracking-widest mb-3 text-right" dir="rtl">נסו לדוגמה:</div>
                 <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
                   {displayedExamples.map((example, i) => (
                     <button
                       key={i}
                       onClick={() => setInputVal(example)}
-                      className="px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer"
+                      className="px-3 py-2.5 rounded-full border border-white/10 bg-white/[0.03] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer"
                     >
                       {example}
                     </button>
@@ -298,7 +298,7 @@ export function PromptInput({
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full ps-10 pe-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/10"
+                    className="w-full ps-10 pe-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
                     aria-label="בחר קטגוריה"
                   >
                     {CATEGORY_OPTIONS.map(cat => (

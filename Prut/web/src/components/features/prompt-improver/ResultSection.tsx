@@ -159,7 +159,7 @@ export function ResultSection({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Result Area */}
         <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:col-span-2" : "lg:col-span-3")}>
-          <div className="absolute top-4 end-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
             <button
               onClick={() => handleCopy(displayCompletion)}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
@@ -240,7 +240,7 @@ export function ResultSection({
               <div className="flex items-center gap-2">
                 <button
                   onClick={onBack}
-                  className="px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  className="px-4 py-2.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                 >
                   {t.result_section.back_to_edit}
                 </button>
@@ -248,7 +248,7 @@ export function ResultSection({
                 {onResetToOriginal && (iterationCount ?? 0) > 0 && (
                   <button
                     onClick={onResetToOriginal}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                     title="חזור לפרומפט המקורי שלך"
                     dir="rtl"
                   >
@@ -261,7 +261,7 @@ export function ResultSection({
                 {onShare && (
                   <button
                     onClick={onShare}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                     שתף
@@ -269,7 +269,7 @@ export function ResultSection({
                 )}
                 <button
                   onClick={onSave}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   {t.result_section.save}
@@ -277,7 +277,7 @@ export function ResultSection({
                 {onImproveAgain && (
                   <button
                     onClick={onImproveAgain}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     {t.result?.improve_again || 'שפר שוב'}
@@ -290,7 +290,7 @@ export function ResultSection({
                 )}
                 <button
                   onClick={() => handleCopy(displayCompletion)}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-lg accent-gradient text-black font-medium text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg accent-gradient text-black font-medium text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? t.result_section.copied : t.result_section.copy_button}
@@ -319,10 +319,10 @@ export function ResultSection({
             <div className="flex items-center justify-center gap-4 pt-2 border-t border-white/5">
               <span className="text-[10px] text-slate-600">מה דעתך על התוצאה?</span>
               <div className="flex items-center gap-1">
-                <button disabled aria-label="Like" className="p-1.5 rounded-md text-slate-500 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-30 disabled:cursor-default">
+                <button disabled aria-label="Like" className="p-1.5 rounded-md text-slate-500 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-60 disabled:cursor-default">
                   <ThumbsUp className="w-3.5 h-3.5" />
                 </button>
-                <button disabled aria-label="Dislike" className="p-1.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-30 disabled:cursor-default">
+                <button disabled aria-label="Dislike" className="p-1.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-60 disabled:cursor-default">
                   <ThumbsDown className="w-3.5 h-3.5" />
                 </button>
               </div>

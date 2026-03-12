@@ -229,7 +229,7 @@ export function SmartRefinement({
         <button
           onClick={() => onRefine(customInstruction)}
           disabled={isLoading || !hasAnyInput}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 accent-gradient text-black text-sm font-bold rounded-lg hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg active:scale-[0.97] cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 accent-gradient text-black text-sm font-bold rounded-lg hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-lg active:scale-[0.97] cursor-pointer"
         >
           {isLoading ? (
              <>

@@ -601,7 +601,7 @@ function PageContent({ user }: { user: User | null }) {
 
   // Home View
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] mx-auto w-full">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full">
       {/* Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
@@ -622,7 +622,7 @@ function PageContent({ user }: { user: User | null }) {
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
+            "flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
             sidebarOpen
               ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
               : "bg-black/40 border-white/10 text-slate-400 hover:text-white hover:border-white/20"
@@ -647,7 +647,7 @@ function PageContent({ user }: { user: User | null }) {
 
       {/* Sidebar Drawer */}
       <div role="dialog" aria-modal="true" aria-label="History and library sidebar" className={cn(
-        "fixed top-0 right-0 z-40 h-full bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
+        "fixed top-0 right-0 z-[41] h-full bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full",
         // Mobile: always full width. Desktop: compact or expanded
         "w-full",
@@ -659,7 +659,7 @@ function PageContent({ user }: { user: User | null }) {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="hidden lg:flex p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="hidden lg:flex p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
               title={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
               aria-label={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
             >
@@ -667,7 +667,7 @@ function PageContent({ user }: { user: User | null }) {
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
               aria-label="סגור תפריט"
             >
               <X className="w-4 h-4" />
@@ -773,7 +773,7 @@ function PageContent({ user }: { user: User | null }) {
                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                      <span className="text-xs font-medium text-slate-500">שימשת לאחרונה</span>
                    </div>
-                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                   <div className="flex gap-3 overflow-x-auto pb-2">
                      {history.slice(0, 5).map((item, i) => (
                        <button
                          key={i}
@@ -781,11 +781,11 @@ function PageContent({ user }: { user: User | null }) {
                          className="shrink-0 w-56 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-right group"
                          dir="rtl"
                        >
-                         <p className="text-sm text-slate-300 font-medium truncate">{item.title || item.original.slice(0, 40)}</p>
-                         <p className="text-xs text-slate-500 mt-1 truncate">{item.original.slice(0, 60)}</p>
+                         <p className="text-sm text-slate-300 font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
+                         <p className="text-xs text-slate-500 mt-1 truncate" title={item.original}>{item.original.slice(0, 60)}</p>
                          <div className="flex items-center gap-2 mt-2">
-                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/5">{item.category || 'כללי'}</span>
-                           <span className="text-[10px] text-slate-600">{item.tone || ''}</span>
+                           <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/5">{item.category || 'כללי'}</span>
+                           <span className="text-xs text-slate-600">{item.tone || ''}</span>
                          </div>
                        </button>
                      ))}
