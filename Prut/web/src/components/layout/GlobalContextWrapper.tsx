@@ -5,6 +5,7 @@ import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { useState } from "react";
 import { TopLogo } from "@/components/layout/top-logo";
+import { ExtensionBanner } from "@/components/ui/ExtensionBanner";
 import dynamic from "next/dynamic";
 
 const Toaster = dynamic(
@@ -17,6 +18,7 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <ExtensionBanner />
       <TopLogo hidden={viewMode === "home"} />
       <Toaster position="top-center" theme="dark" closeButton />
       {children}
