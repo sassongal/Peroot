@@ -32,11 +32,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing prompt or enhanced_prompt" }, { status: 400 });
     }
 
-    // Use service role client to bypass RLS (Bearer token doesn't set auth.uid() context)
-    const serviceClient = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Only use service role client for Bearer token auth (extension) - cookie auth uses RLS
+    const serviceClient = bearerToken
+      ? createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+      : supabase;
 
     // Try with source column first, fall back without it
     const row: Record<string, string> = {
@@ -56,7 +58,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      logger.error("[history] DB error:", error);
+      return NextResponse.json({ error: "Failed to save history" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });

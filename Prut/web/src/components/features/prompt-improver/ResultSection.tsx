@@ -45,7 +45,7 @@ interface ResultSectionProps {
 }
 
 import { useI18n } from "@/context/I18nContext";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 export function ResultSection({
   completion,
@@ -75,6 +75,11 @@ export function ResultSection({
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
   // Before/After tab - only rendered when originalPrompt is provided
   const [activeTab, setActiveTab] = useState<'before' | 'after'>('after');
+
+  // Reset to "after" tab when a new enhancement starts
+  useEffect(() => {
+    if (isLoading) setActiveTab('after');
+  }, [isLoading]);
 
   const isInterrupted = streamPhase === 'interrupted';
   // ... rest of logic ...
@@ -212,7 +217,7 @@ export function ResultSection({
           {/* AI Platform Quick-Launch Bar - hidden in "before" view */}
           {!isBeforeTab && (
             <div className="px-6 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
-              <div className="flex items-center gap-3 justify-center" dir="rtl">
+              <div className="flex items-center gap-3 justify-center flex-wrap" dir="rtl">
                 <span className="text-xs text-slate-500 ms-2">פתח ב:</span>
                 <button
                   onClick={() => {

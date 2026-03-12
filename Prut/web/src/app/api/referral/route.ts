@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { randomBytes } from "crypto";
 
 // GET: Get or create user's referral code
 export async function GET() {
@@ -14,16 +15,16 @@ export async function GET() {
   // Check for existing code
   const { data: existing } = await supabase
     .from("referral_codes")
-    .select("code, uses_count, max_uses, credits_per_referral")
+    .select("id, code, uses_count, max_uses, credits_per_referral")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (existing) {
-    // Also get total credits earned from referrals
+    // Get total credits earned from referrals using the already-fetched id
     const { count } = await supabase
       .from("referral_redemptions")
       .select("*", { count: "exact", head: true })
-      .eq("code_id", (await supabase.from("referral_codes").select("id").eq("user_id", user.id).single()).data?.id);
+      .eq("code_id", existing.id);
 
     return NextResponse.json({
       code: existing.code,
@@ -94,8 +95,8 @@ export async function POST(req: Request) {
 }
 
 function generateCode(userId: string): string {
-  // Create a short readable code: "PR-" + first 4 chars of userId + random 4
+  // Create a short readable code: "PR-" + first 4 chars of userId + crypto-random 6
   const prefix = userId.replace(/-/g, "").slice(0, 4).toUpperCase();
-  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const random = randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
   return `PR-${prefix}${random}`;
 }

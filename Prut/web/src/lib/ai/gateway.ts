@@ -8,6 +8,7 @@ export interface GatewayParams {
     prompt: string;
     temperature?: number;
     onFinish?: (completion: { usage: unknown; text: string }) => Promise<void>;
+    onStreamEnd?: () => void;
 }
 
 export class AIGateway {
@@ -51,16 +52,29 @@ export class AIGateway {
                         system: params.system,
                         prompt: params.prompt,
                         temperature: params.temperature ?? 0.7,
-                        onFinish: params.onFinish
+                        onFinish: async (completion) => {
+                            // Record success only when stream actually completes
+                            recordSuccess(config.provider);
+                            // Release concurrency slot when stream ends
+                            releaseSlot();
+                            // Call user's onFinish handler
+                            if (params.onFinish) {
+                                await params.onFinish(completion);
+                            }
+                        }
                     });
 
-                    // Record success for circuit breaker
-                    recordSuccess(config.provider);
                     console.log(`[AIGateway] Stream initiated with ${config.label}`);
 
-                    // Note: slot is released when streaming completes, not here.
-                    // We release in the onFinish callback wrapper or on error.
-                    // For streaming, we release immediately since the stream is established.
+                    // Slot is released in onFinish when stream actually completes
+                    // Safety timeout: release slot if stream hangs for 5 minutes
+                    const safetyTimeout = setTimeout(() => {
+                        console.warn(`[AIGateway] Safety timeout - releasing slot for ${config.label}`);
+                        releaseSlot();
+                    }, 5 * 60 * 1000);
+                    // Clear timeout when stream finishes (onFinish already releases)
+                    Promise.resolve(result.text).then(() => clearTimeout(safetyTimeout), () => clearTimeout(safetyTimeout));
+
                     return { result, modelId };
 
                 } catch (error: any) {
@@ -75,11 +89,13 @@ export class AIGateway {
                 }
             }
 
-            // All models failed
-            throw lastError || new Error("All AI models failed to respond.");
-        } finally {
-            // Release concurrency slot
+            // All models failed - release slot since no stream was established
             releaseSlot();
+            throw lastError || new Error("All AI models failed to respond.");
+        } catch (err) {
+            // Release slot on any unexpected error
+            releaseSlot();
+            throw err;
         }
     }
 }

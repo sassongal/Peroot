@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
@@ -53,13 +53,14 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const { history, clearHistory } = useHistory();
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
   const { subscription, isPro, checkout, loading: subLoading } = useSubscription();
   const [credits, setCredits] = useState<{ balance: number; dailyLimit: number; refreshedAt: string | null } | null>(null);
   const [referral, setReferral] = useState<{ code: string; uses: number; maxUses: number; creditsPerReferral: number; totalReferrals: number } | null>(null);
+  const [referralLoaded, setReferralLoaded] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [redeemCode, setRedeemCode] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -164,6 +165,8 @@ export default function SettingsPage() {
           }
         } catch {
           // Referral system not yet set up - silently skip
+        } finally {
+          setReferralLoaded(true);
         }
       }
       setLoading(false);
@@ -695,6 +698,10 @@ export default function SettingsPage() {
                         העתק הודעה
                       </button>
                     </div>
+                  </div>
+                ) : referralLoaded ? (
+                  <div className="p-5 bg-white/5 rounded-xl border border-white/10 text-center text-slate-400 text-sm">
+                    מערכת ההפניות תהיה זמינה בקרוב
                   </div>
                 ) : (
                   <div className="flex items-center justify-center py-8">

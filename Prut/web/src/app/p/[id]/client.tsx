@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, Check, Share2, Link } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon, TelegramIcon } from "@/components/ui/AIPlatformIcons";
 
 function XIcon({ className }: { className?: string }) {
@@ -15,8 +15,13 @@ function XIcon({ className }: { className?: string }) {
 export function SharePageClient({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [pageUrl, setPageUrl] = useState('');
+  const [canShare, setCanShare] = useState(false);
 
-  const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+  useEffect(() => {
+    setPageUrl(window.location.href);
+    setCanShare(!!navigator?.share);
+  }, []);
 
   const handleCopyPrompt = async () => {
     await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | peroot.space");
@@ -35,9 +40,9 @@ export function SharePageClient({ prompt }: { prompt: string }) {
     window.open(url, "_blank");
   };
 
-  const whatsappMessage = encodeURIComponent("בדוק את הפרומפט הזה: " + pageUrl);
+  const whatsappMessage = useMemo(() => encodeURIComponent("בדוק את הפרומפט הזה: " + pageUrl), [pageUrl]);
   const twitterMessage = encodeURIComponent("בדוק את הפרומפט הזה שנוצר עם Peroot");
-  const telegramText = encodeURIComponent(prompt.slice(0, 200) + (prompt.length > 200 ? '...' : '') + "\n\n- נוצר עם Peroot | peroot.space");
+  const telegramText = useMemo(() => encodeURIComponent(prompt.slice(0, 200) + (prompt.length > 200 ? '...' : '') + "\n\n- נוצר עם Peroot | peroot.space"), [prompt]);
 
   return (
     <div className="p-4 bg-white/2 border-t border-white/5 flex flex-col gap-4">
@@ -107,7 +112,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
           <span>{linkCopied ? "הקישור הועתק!" : "העתק קישור"}</span>
         </button>
 
-        {typeof navigator !== 'undefined' && navigator.share && (
+        {canShare && (
           <button
             onClick={() => navigator.share({ title: 'פרומפט מ-Peroot', text: prompt.slice(0, 200), url: pageUrl })}
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer min-h-[44px]"

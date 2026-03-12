@@ -149,11 +149,10 @@ export function useFavorites() {
       return false;
     }
     
-    let shouldRemove = false;
+    // Compute shouldRemove before setState to avoid reading from inside setter
+    const shouldRemove = favorites.some((fav) => fav.item_type === itemType && fav.item_id === itemId);
     setFavorites((prev) => {
-      const exists = prev.some((fav) => fav.item_type === itemType && fav.item_id === itemId);
-      shouldRemove = exists;
-      if (exists) {
+      if (shouldRemove) {
         return prev.filter((fav) => !(fav.item_type === itemType && fav.item_id === itemId));
       }
       return [...prev, { item_type: itemType, item_id: itemId }];

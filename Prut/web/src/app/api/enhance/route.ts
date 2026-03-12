@@ -19,7 +19,7 @@ const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: numbe
 const PROFILE_CACHE_TTL = 60_000; // 60 seconds
 
 const RequestSchema = z.object({
-  prompt: z.string(),
+  prompt: z.string().min(1).max(10000),
   tone: z.string().default("Professional"),
   category: z.string().default("General"),
   capability_mode: z.string().optional(),
@@ -109,7 +109,11 @@ export async function POST(req: Request) {
 
     if (!isAdmin) {
         // 2. Execute Rate Limiting
-        const identifier = user?.id || (req.headers.get("x-forwarded-for") || "anonymous");
+        const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+        const identifier = user?.id || clientIp;
+        if (!identifier) {
+            return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
+        }
         const limitResult = await checkRateLimit(identifier, tier);
 
         if (!limitResult.success) {
@@ -117,60 +121,74 @@ export async function POST(req: Request) {
         }
 
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
+        // Uses a single RPC that handles daily refresh + decrement atomically
+        // to prevent race conditions with concurrent requests
         if (user) {
-            // Daily credit refresh for free users - uses site_settings as single source of truth
-            if (tier === 'free') {
-                const { data: siteSettings } = await queryClient
-                    .from('site_settings')
-                    .select('daily_free_limit')
-                    .single();
-
-                const dailyLimit = siteSettings?.daily_free_limit ?? 2;
-
-                const { data: refreshData } = await queryClient
-                    .from('profiles')
-                    .select('credits_refreshed_at, credits_balance')
-                    .eq('id', user.id)
-                    .single();
-
-                const lastRefresh = refreshData?.credits_refreshed_at
-                    ? new Date(refreshData.credits_refreshed_at)
-                    : null;
-                const currentBalance = refreshData?.credits_balance ?? 0;
-
-                // Reset window: every day at 14:00 Israel time (Asia/Jerusalem)
-                const nowIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-                const resetToday = new Date(nowIsrael);
-                resetToday.setHours(14, 0, 0, 0);
-                // If it's before 14:00 today, the last reset point was yesterday at 14:00
-                const resetPoint = nowIsrael >= resetToday
-                    ? resetToday
-                    : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
-
-                if (!lastRefresh || lastRefresh < resetPoint) {
-                    // Only top-up to dailyLimit if balance is lower;
-                    // never overwrite a higher balance (e.g. admin-granted credits)
-                    const newBalance = Math.max(currentBalance, dailyLimit);
-                    await queryClient
-                        .from('profiles')
-                        .update({
-                            credits_balance: newBalance,
-                            credits_refreshed_at: new Date().toISOString()
-                        })
-                        .eq('id', user.id);
-                }
-            }
-
-            const { data: creditRes, error: rpcError } = await queryClient.rpc('check_and_decrement_credits', {
+            const { data: creditRes, error: rpcError } = await queryClient.rpc('refresh_and_decrement_credits', {
                 target_user_id: user.id,
-                amount_to_spend: 1
+                amount_to_spend: 1,
+                user_tier: tier
             });
 
             if (rpcError || !creditRes || !creditRes.success) {
-                return NextResponse.json({
-                    error: creditRes?.error || "Insufficient credits or profile not found",
-                    balance: creditRes?.current_balance
-                }, { status: 403 });
+                // Fallback to old method if new RPC doesn't exist yet
+                if (rpcError?.message?.includes('function') && rpcError?.message?.includes('does not exist')) {
+                    // Legacy path: non-atomic refresh + decrement
+                    if (tier === 'free') {
+                        const { data: siteSettings } = await queryClient
+                            .from('site_settings')
+                            .select('daily_free_limit')
+                            .single();
+
+                        const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+
+                        const { data: refreshData } = await queryClient
+                            .from('profiles')
+                            .select('credits_refreshed_at, credits_balance')
+                            .eq('id', user.id)
+                            .single();
+
+                        const lastRefresh = refreshData?.credits_refreshed_at
+                            ? new Date(refreshData.credits_refreshed_at)
+                            : null;
+                        const currentBalance = refreshData?.credits_balance ?? 0;
+
+                        const nowIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+                        const resetToday = new Date(nowIsrael);
+                        resetToday.setHours(14, 0, 0, 0);
+                        const resetPoint = nowIsrael >= resetToday
+                            ? resetToday
+                            : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
+
+                        if (!lastRefresh || lastRefresh < resetPoint) {
+                            const newBalance = Math.max(currentBalance, dailyLimit);
+                            await queryClient
+                                .from('profiles')
+                                .update({
+                                    credits_balance: newBalance,
+                                    credits_refreshed_at: new Date().toISOString()
+                                })
+                                .eq('id', user.id);
+                        }
+                    }
+
+                    const { data: fallbackRes, error: fallbackErr } = await queryClient.rpc('check_and_decrement_credits', {
+                        target_user_id: user.id,
+                        amount_to_spend: 1
+                    });
+
+                    if (fallbackErr || !fallbackRes || !fallbackRes.success) {
+                        return NextResponse.json({
+                            error: fallbackRes?.error || "Insufficient credits or profile not found",
+                            balance: fallbackRes?.current_balance
+                        }, { status: 403 });
+                    }
+                } else {
+                    return NextResponse.json({
+                        error: creditRes?.error || "Insufficient credits or profile not found",
+                        balance: creditRes?.current_balance
+                    }, { status: 403 });
+                }
             }
         }
     }
@@ -232,11 +250,12 @@ export async function POST(req: Request) {
                 endpoint: 'enhance',
             });
 
-            // Auto-refund for abnormally short responses (likely interrupted)
-            if (completion.text.length < 100 && user && supabase) {
+            // Auto-refund only for genuinely interrupted responses (not normal short completions)
+            const finishReason = (completion as { finishReason?: string }).finishReason;
+            if (completion.text.length < 100 && user && supabase && finishReason !== 'stop') {
                 try {
                     await queryClient.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
-                    logger.warn('[EnhanceAPI] Auto-refund for short response:', completion.text.length, 'chars');
+                    logger.warn('[EnhanceAPI] Auto-refund for interrupted response:', completion.text.length, 'chars, reason:', finishReason);
                 } catch (e) {
                     logger.error('[EnhanceAPI] Auto-refund failed:', e);
                 }

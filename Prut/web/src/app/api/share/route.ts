@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const ShareSchema = z.object({
+  prompt: z.string().min(1).max(50000),
+  original_input: z.string().max(50000).optional(),
+  category: z.string().max(100).default("General"),
+  capability_mode: z.string().max(50).default("STANDARD"),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,11 +20,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { prompt, original_input, category, capability_mode } = body;
-
-    if (!prompt?.trim()) {
-      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+    const parseResult = ShareSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
+    const { prompt, original_input, category, capability_mode } = parseResult.data;
 
     const { data, error } = await supabase
       .from('shared_prompts')

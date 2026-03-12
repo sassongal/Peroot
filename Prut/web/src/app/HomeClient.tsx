@@ -197,23 +197,8 @@ function PageContent({ user }: { user: User | null }) {
     fetchUserProfile();
   }, [user]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (ps.completion) {
-          dispatch({ type: 'SET_COMPLETION', payload: '' });
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'c') {
-        if (ps.completion) {
-          handleCopyText(ps.completion);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [ps.completion, dispatch]);
+  // Keyboard shortcuts - ref initialized below after handleCopyText is defined
+  const handleCopyTextRef = useRef<((text: string, withWatermark?: boolean) => Promise<void>) | null>(null);
 
   // --- Logic ---
 
@@ -391,7 +376,7 @@ function PageContent({ user }: { user: User | null }) {
 
       // Track usage: decrement credits display for logged-in users, increment guest counter
       if (user && creditsRemaining !== null) {
-        setCreditsRemaining(Math.max(0, creditsRemaining - 1));
+        setCreditsRemaining(prev => prev !== null ? Math.max(0, prev - 1) : null);
       }
       if (!user) {
         incrementUsage();
@@ -459,6 +444,30 @@ function PageContent({ user }: { user: User | null }) {
     recordUsageSignal("copy", text);
     toast.success("הועתק ללוח!");
   };
+
+  // Keep ref in sync for keyboard shortcut handler
+  handleCopyTextRef.current = handleCopyText;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+
+      if (e.key === 'Escape' && !isTyping) {
+        if (ps.completion) {
+          dispatch({ type: 'SET_COMPLETION', payload: '' });
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+        if (ps.completion) {
+          e.preventDefault();
+          handleCopyTextRef.current?.(ps.completion);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [ps.completion, dispatch]);
 
   const handleShare = async () => {
     if (!user) {
@@ -542,6 +551,10 @@ function PageContent({ user }: { user: User | null }) {
   };
 
   const handleImportHistory = () => {
+     if (!user) {
+       showLoginRequired("שמירת פרומפטים");
+       return;
+     }
      history.forEach(item => addPersonalPromptFromHistory(item));
      toast.success("כל ההיסטוריה יובאה!");
   };
@@ -744,7 +757,7 @@ function PageContent({ user }: { user: User | null }) {
            <LoadingOverlay isVisible={ps.isLoading} />
            <StreamingProgress phase={ps.streamPhase} />
 
-           {!ps.completion ? (
+           {!ps.completion && !ps.isLoading ? (
              /* INPUT MODE */
              <>
                <PromptInput

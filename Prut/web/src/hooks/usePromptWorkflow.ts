@@ -123,6 +123,7 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
       return {
         ...state,
         input: state.originalInput,
+        originalInput: '',
         completion: '',
         streamPhase: 'idle',
         error: null,
@@ -163,7 +164,12 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
       };
 
     case 'SET_COMPLETION':
-      return { ...state, completion: action.payload };
+      return {
+        ...state,
+        completion: action.payload,
+        // Update streamPhase to 'writing' during active streaming
+        ...(state.isLoading && action.payload ? { streamPhase: 'writing' as const } : {}),
+      };
 
     case 'SET_VARIABLE_VALUES':
       return { ...state, variableValues: action.payload };

@@ -60,11 +60,17 @@ export default async function SharedPromptPage({ params }: Props) {
   }
 
   // Increment views (fire and forget)
-  supabase
-    .from('shared_prompts')
-    .update({ views: (prompt.views || 0) + 1 })
-    .eq('id', id)
-    .then(() => {});
+  // Uses RPC if available, falls back to non-atomic update
+  supabase.rpc('increment_shared_prompt_views', { prompt_id: id })
+    .then(({ error }) => {
+      if (error) {
+        // Fallback: non-atomic increment if RPC doesn't exist
+        supabase.from('shared_prompts')
+          .update({ views: (prompt.views || 0) + 1 })
+          .eq('id', id)
+          .then(() => {});
+      }
+    });
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
 

@@ -43,6 +43,16 @@ export async function POST(req: Request) {
     const json = await req.json();
     const { name, color, icon } = CreateSchema.parse(json);
 
+    // Check folder limit (max 50 per user)
+    const { count } = await supabase
+      .from("prompt_folders")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if ((count ?? 0) >= 50) {
+      return NextResponse.json({ error: "Maximum folder limit reached (50)" }, { status: 400 });
+    }
+
     // Get max sort_index
     const { data: maxData } = await supabase
       .from("prompt_folders")
@@ -131,8 +141,8 @@ export async function DELETE(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
-  if (!id) {
-    return NextResponse.json({ error: "Folder ID required" }, { status: 400 });
+  if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: "Valid folder ID required" }, { status: 400 });
   }
 
   // folder_id column has ON DELETE SET NULL, so prompts will be unfiled automatically

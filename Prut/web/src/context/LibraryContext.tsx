@@ -318,10 +318,29 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       });
     }
 
-    // ... (sorting logic remains the same)
-    
+    // Apply sorting
+    switch (personalSort) {
+      case "title":
+        result.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+        break;
+      case "usage":
+        result.sort((a, b) => (b.use_count || 0) - (a.use_count || 0));
+        break;
+      case "custom":
+        result.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+        break;
+      case "recent":
+      default:
+        result.sort((a, b) => {
+          const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+          const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+          return bTime - aTime;
+        });
+        break;
+    }
+
     return result;
-  }, [personalLibrary, personalQuery, personalView, favoritePersonalIds, selectedCapabilityFilter]);
+  }, [personalLibrary, personalQuery, personalView, favoritePersonalIds, selectedCapabilityFilter, personalSort]);
 
   // Compute Capability Counts for Personal
   const personalCapabilityCounts = useMemo(() => {

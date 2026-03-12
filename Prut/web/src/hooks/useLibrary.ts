@@ -16,6 +16,9 @@ const ORDER_KEY = 'peroot_personal_order';
 const getOrderKey = (userId?: string | null) =>
   userId ? `${ORDER_KEY}_${userId}` : ORDER_KEY;
 
+const getCategoriesKey = (userId?: string | null) =>
+  userId ? `${CATEGORIES_KEY}_${userId}` : CATEGORIES_KEY;
+
 const readOrderMap = (userId?: string | null) => {
   const key = getOrderKey(userId);
   const raw = localStorage.getItem(key);
@@ -91,7 +94,7 @@ export function useLibrary() {
         }
 
         // Categories are derived from items + manual list
-        const storedCats = localStorage.getItem(CATEGORIES_KEY);
+        const storedCats = localStorage.getItem(getCategoriesKey(currentUser?.id));
         if (storedCats && mounted) {
             setPersonalCategories(JSON.parse(storedCats));
         }
@@ -126,7 +129,7 @@ export function useLibrary() {
           }
         }
         
-        const storedCats = localStorage.getItem(CATEGORIES_KEY);
+        const storedCats = localStorage.getItem(getCategoriesKey(null));
         if (storedCats && mounted) setPersonalCategories(JSON.parse(storedCats));
       }
       if (mounted) setIsLoaded(true);
@@ -168,7 +171,7 @@ export function useLibrary() {
                        await supabase.from('personal_library').insert(itemsToInsert);
                        
                        localStorage.removeItem(STORAGE_KEY);
-                       localStorage.removeItem(CATEGORIES_KEY);
+                       localStorage.removeItem(getCategoriesKey(null));
                        localStorage.removeItem(ORDER_KEY);
                    }
                } catch (e) {
@@ -195,10 +198,10 @@ export function useLibrary() {
   useEffect(() => {
     if (isLoaded && !user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(personalLibrary));
-      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(personalCategories));
+      localStorage.setItem(getCategoriesKey(null), JSON.stringify(personalCategories));
     }
     if (isLoaded && user) {
-        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(personalCategories));
+        localStorage.setItem(getCategoriesKey(user.id), JSON.stringify(personalCategories));
     }
     if (isLoaded) {
       persistOrderMap(user?.id ?? null, personalLibrary);
@@ -275,13 +278,12 @@ export function useLibrary() {
   };
 
   const incrementUseCount = async (id: string) => {
+    // Read current count before optimistic update to avoid stale closure
+    const currentItem = personalLibrary.find(p => p.id === id);
+    const currentCount = currentItem?.use_count ?? 0;
     setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: Date.now() } : p));
     if (user) {
-        // We'd ideally use rpc for atomic increment, but this works for now
-        const item = personalLibrary.find(p => p.id === id);
-        if (item) {
-            await supabase.from('personal_library').update({ use_count: item.use_count + 1 }).eq('id', id).eq('user_id', user.id);
-        }
+        await supabase.from('personal_library').update({ use_count: currentCount + 1 }).eq('id', id).eq('user_id', user.id);
     }
   };
 

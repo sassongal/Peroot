@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
@@ -256,6 +256,9 @@ export function PersonalLibraryView({
       setSelectedIds(new Set());
       setSelectionMode(false);
   };
+
+  // Clear selection when switching views
+  useEffect(() => { clearSelection(); }, [personalView]);
   
   const handleBatchDelete = async () => {
       if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
@@ -285,6 +288,10 @@ export function PersonalLibraryView({
 
   const handleBatchTag = async () => {
       const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
+      if (tags.length === 0) {
+          toast.error("יש להזין לפחות תגית אחת");
+          return;
+      }
       try {
           // We Add tags to existing ones
           const promises = Array.from(selectedIds).map(async (id) => {
@@ -478,14 +485,18 @@ export function PersonalLibraryView({
           />
 
           {isStyling && (
-             <div className={cn(
-               "mt-4 rounded-xl border border-amber-500/20 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
-               styleEditorExpanded ? "fixed inset-4 z-50 overflow-auto p-6" : "p-4"
-             )}>
-               {/* Expand overlay backdrop */}
-               {styleEditorExpanded && (
-                 <div className="fixed inset-0 bg-black/70 -z-10" onClick={() => setStyleEditorExpanded(false)} />
+             <>
+             {/* Backdrop - rendered outside editor for proper click handling */}
+             {styleEditorExpanded && (
+               <div className="fixed inset-0 bg-black/70 z-40" onClick={() => setStyleEditorExpanded(false)} />
+             )}
+             <div
+               className={cn(
+                 "mt-4 rounded-xl border border-amber-500/20 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
+                 styleEditorExpanded ? "fixed inset-4 z-50 overflow-auto p-6" : "p-4"
                )}
+               onKeyDown={(e) => { if (e.key === 'Escape' && styleEditorExpanded) setStyleEditorExpanded(false); }}
+             >
 
                {/* Header */}
                <div className="flex items-center justify-between mb-4">
@@ -612,6 +623,7 @@ export function PersonalLibraryView({
                  </div>
                </div>
              </div>
+          </>
           )}
 
           <div className="flex items-center justify-between text-xs">
@@ -1072,7 +1084,7 @@ export function PersonalLibraryView({
 
                         <div className="h-px bg-white/5 my-2" />
 
-                        {personalCategories.concat(PERSONAL_DEFAULT_CATEGORY).map(cat => (
+                        {Array.from(new Set([...personalCategories, PERSONAL_DEFAULT_CATEGORY])).map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => { setTargetMoveCategory(cat); setIsCreatingNewMoveCategory(false); }}
