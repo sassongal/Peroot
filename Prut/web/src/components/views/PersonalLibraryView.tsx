@@ -5,7 +5,8 @@ import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import {
     BookOpen, Star, ArrowRight, Plus, Copy, Pencil, Check, X,
     Search, Trash2, GripVertical, LayoutGrid, LayoutList,
-    CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles
+    CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles,
+    Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
@@ -99,6 +100,7 @@ export function PersonalLibraryView({
   const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   // -- Local State --
+  const [styleEditorExpanded, setStyleEditorExpanded] = useState(false);
   const [layoutMode, setLayoutMode] = useState<"grid" | "list">("grid");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -165,6 +167,52 @@ export function PersonalLibraryView({
   const clearStyleTokens = () => {
       setStyleDraft(stripStyleTokens(styleDraft));
   };
+
+  const insertTextAtCursor = (text: string) => {
+    const textarea = styleTextareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const before = styleDraft.slice(0, start);
+    const after = styleDraft.slice(start);
+    const nextText = before + text + after;
+    setStyleDraft(nextText);
+    requestAnimationFrame(() => {
+      if (textarea) {
+        const newPos = start + text.length;
+        textarea.selectionStart = newPos;
+        textarea.selectionEnd = newPos;
+        textarea.focus();
+      }
+    });
+  };
+
+  const wrapSelectionWith = (before: string, after: string) => {
+    const textarea = styleTextareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    if (start === end) return;
+    const selected = styleDraft.slice(start, end);
+    const nextText = styleDraft.slice(0, start) + before + selected + after + styleDraft.slice(end);
+    setStyleDraft(nextText);
+    requestAnimationFrame(() => {
+      if (textarea) {
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + before.length + selected.length + after.length;
+        textarea.focus();
+      }
+    });
+  };
+
+  // Quick-insert templates for common prompt patterns
+  const quickInserts = [
+    { label: "שם", icon: AtSign, text: "{{name}}" },
+    { label: "חברה", icon: Hash, text: "{{company}}" },
+    { label: "תעשייה", icon: Hash, text: "{{industry}}" },
+    { label: "מוצר", icon: Hash, text: "{{product}}" },
+    { label: "קהל יעד", icon: Hash, text: "{{target_audience}}" },
+    { label: "טון", icon: Wand2, text: "{{tone}}" },
+  ];
   
   const getStyledPromptMarkup = (prompt: PersonalPrompt) => {
     return prompt.prompt_style || prompt.prompt;
@@ -430,30 +478,137 @@ export function PersonalLibraryView({
           />
 
           {isStyling && (
-             <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4 relative z-20">
-               {/* Style Editor UI - Simplified for Brevity (Same as before) */}
-               <div className="text-[11px] text-slate-500 mb-2">בחר/י טקסט ואז צבע/היילייט</div>
-               <div className="flex flex-wrap gap-2 mb-3">
-                 {Object.keys(STYLE_TEXT_COLORS).map((color) => (
-                   <button key={`text-${color}`} onClick={() => applyStyleToken("c", color)} className="px-2 py-1 rounded-full text-[10px] border border-white/10 text-slate-300 hover:bg-white/10">
-                     <span className={cn("font-semibold", STYLE_TEXT_COLORS[color])}>Aa</span>
-                   </button>
-                 ))}
-               </div>
-               <div className="flex flex-wrap gap-2 mb-3">
-                 {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
-                   <button key={`hl-${color}`} onClick={() => applyStyleToken("hl", color)} className={cn("px-2 py-1 rounded-full text-[10px] border border-white/10 hover:bg-white/10", STYLE_HIGHLIGHT_COLORS[color])}>HL</button>
-                 ))}
-               </div>
-               <textarea
-                 ref={styleTextareaRef} dir="rtl" value={styleDraft} onChange={(e) => setStyleDraft(e.target.value)}
-                 className="w-full h-28 bg-black/30 border border-white/10 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-white/30 resize-none"
-               />
-               <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-                 <button onClick={clearStyleTokens} className="px-2 py-1 rounded-full border border-white/10 text-slate-400 hover:bg-white/10">נקה עיצוב</button>
+             <div className={cn(
+               "mt-4 rounded-xl border border-amber-500/20 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
+               styleEditorExpanded ? "fixed inset-4 z-50 overflow-auto p-6" : "p-4"
+             )}>
+               {/* Expand overlay backdrop */}
+               {styleEditorExpanded && (
+                 <div className="fixed inset-0 bg-black/70 -z-10" onClick={() => setStyleEditorExpanded(false)} />
+               )}
+
+               {/* Header */}
+               <div className="flex items-center justify-between mb-4">
                  <div className="flex items-center gap-2">
-                   <button onClick={() => saveStylePrompt(prompt.id)} className="px-3 py-1 rounded-full bg-white text-black hover:bg-slate-200">שמור</button>
-                   <button onClick={closeStyleEditor} className="px-3 py-1 rounded-full border border-white/10 text-slate-400 hover:bg-white/10">סגור</button>
+                   <Wand2 className="w-4 h-4 text-amber-400" />
+                   <span className="text-sm font-semibold text-white">עורך עיצוב</span>
+                 </div>
+                 <div className="flex items-center gap-1">
+                   <button
+                     onClick={() => setStyleEditorExpanded(!styleEditorExpanded)}
+                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                     title={styleEditorExpanded ? "מזער" : "הגדל"}
+                   >
+                     {styleEditorExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                   </button>
+                   <button
+                     onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }}
+                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                   >
+                     <X className="w-3.5 h-3.5" />
+                   </button>
+                 </div>
+               </div>
+
+               {/* Toolbar */}
+               <div className="space-y-3 mb-4">
+                 {/* Text formatting */}
+                 <div className="flex items-center gap-1.5 flex-wrap">
+                   <span className="text-[10px] text-slate-500 uppercase tracking-wider ml-2 shrink-0">צבע טקסט</span>
+                   {Object.keys(STYLE_TEXT_COLORS).map((color) => (
+                     <button
+                       key={`text-${color}`}
+                       onClick={() => applyStyleToken("c", color)}
+                       className="w-8 h-8 rounded-lg border border-white/10 hover:border-white/30 hover:scale-110 transition-all flex items-center justify-center"
+                       title={color}
+                     >
+                       <span className={cn("font-bold text-sm", STYLE_TEXT_COLORS[color])}>A</span>
+                     </button>
+                   ))}
+                 </div>
+
+                 {/* Highlights */}
+                 <div className="flex items-center gap-1.5 flex-wrap">
+                   <span className="text-[10px] text-slate-500 uppercase tracking-wider ml-2 shrink-0">היילייט</span>
+                   {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
+                     <button
+                       key={`hl-${color}`}
+                       onClick={() => applyStyleToken("hl", color)}
+                       className={cn(
+                         "h-8 px-2.5 rounded-lg border border-white/10 hover:border-white/30 hover:scale-105 transition-all text-xs font-medium",
+                         STYLE_HIGHLIGHT_COLORS[color]
+                       )}
+                     >
+                       HL
+                     </button>
+                   ))}
+                   <div className="w-px h-6 bg-white/10 mx-1" />
+                   <button
+                     onClick={clearStyleTokens}
+                     className="h-8 px-2.5 rounded-lg border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1"
+                     title="נקה עיצוב"
+                   >
+                     <Eraser className="w-3.5 h-3.5" />
+                     <span className="text-xs">נקה</span>
+                   </button>
+                 </div>
+
+                 {/* Quick insert variables */}
+                 <div className="flex items-center gap-1.5 flex-wrap">
+                   <span className="text-[10px] text-slate-500 uppercase tracking-wider ml-2 shrink-0">משתנים</span>
+                   {quickInserts.map((qi) => {
+                     const Icon = qi.icon;
+                     return (
+                       <button
+                         key={qi.text}
+                         onClick={() => insertTextAtCursor(qi.text)}
+                         className="h-8 px-2.5 rounded-lg border border-dashed border-amber-500/30 text-amber-400/70 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs"
+                       >
+                         <Icon className="w-3 h-3" />
+                         {qi.label}
+                       </button>
+                     );
+                   })}
+                 </div>
+               </div>
+
+               {/* Tip */}
+               <div className="text-[10px] text-slate-500 mb-2 flex items-center gap-1">
+                 <Type className="w-3 h-3" />
+                 <span>סמנ/י טקסט ולחצ/י על צבע או היילייט כדי לעצב</span>
+               </div>
+
+               {/* Textarea */}
+               <textarea
+                 ref={styleTextareaRef}
+                 dir="rtl"
+                 value={styleDraft}
+                 onChange={(e) => setStyleDraft(e.target.value)}
+                 className={cn(
+                   "w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-slate-200 leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors",
+                   styleEditorExpanded ? "h-[50vh] resize-y" : "h-36 resize-y"
+                 )}
+                 placeholder="הטקסט של הפרומפט..."
+               />
+
+               {/* Footer actions */}
+               <div className="mt-4 flex items-center justify-between">
+                 <div className="text-[10px] text-slate-600">
+                   {styleDraft.length} תווים
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <button
+                     onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }}
+                     className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition-colors"
+                   >
+                     סגור
+                   </button>
+                   <button
+                     onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }}
+                     className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-sm font-semibold transition-colors"
+                   >
+                     שמור עיצוב
+                   </button>
                  </div>
                </div>
              </div>
