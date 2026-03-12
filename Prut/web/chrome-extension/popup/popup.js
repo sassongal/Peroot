@@ -27,6 +27,7 @@ const insertBtn = $("insert-btn");
 const reuseBtn = $("reuse-btn");
 const errorSection = $("error-section");
 const errorText = $("error-text");
+const tierBadge = $("tier-badge");
 const creditsBadge = $("credits-badge");
 const creditsCount = $("credits-count");
 const historySection = $("history-section");
@@ -69,12 +70,24 @@ async function fetchCredits() {
     const res = await authFetch("/api/me");
     if (res.ok) {
       const user = await res.json();
+
+      // Tier badge
+      const tier = user.plan_tier || "free";
+      const tierLabels = { free: "FREE", pro: "PRO", admin: "ADMIN" };
+      tierBadge.textContent = tierLabels[tier] || tier.toUpperCase();
+      tierBadge.className = `tier-badge tier-${tier}`;
+      tierBadge.classList.remove("hidden");
+
+      // Credits
       if (user.credits_balance != null) {
         creditsCount.textContent = user.credits_balance;
         creditsBadge.classList.remove("hidden");
 
-        // Color based on balance
-        if (user.credits_balance <= 0) {
+        if (tier === "admin") {
+          creditsBadge.style.borderColor = "rgba(192,132,252,0.2)";
+          creditsBadge.style.color = "#c084fc";
+          creditsBadge.style.background = "rgba(192,132,252,0.08)";
+        } else if (user.credits_balance <= 0) {
           creditsBadge.style.borderColor = "rgba(239,68,68,0.3)";
           creditsBadge.style.color = "#fca5a5";
           creditsBadge.style.background = "rgba(239,68,68,0.08)";

@@ -57,6 +57,34 @@ body {
 .header-brand { display: flex; align-items: center; gap: 7px; }
 .header-logo { border-radius: 5px; }
 .header-title { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tier-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.tier-free {
+  color: #71717a;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.tier-pro {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.2);
+}
+.tier-admin {
+  color: #c084fc;
+  background: rgba(192,132,252,0.1);
+  border: 1px solid rgba(192,132,252,0.2);
+}
 .credits-badge {
   display: inline-flex;
   align-items: center;

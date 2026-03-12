@@ -28,11 +28,13 @@ export async function GET(req: NextRequest) {
       .eq("id", user.id)
       .single();
 
+    const isAdmin = user.app_metadata?.role === "admin";
+
     return NextResponse.json({
       id: user.id,
       email: user.email,
       display_name: profile?.display_name || user.user_metadata?.full_name || null,
-      plan_tier: profile?.plan_tier || "free",
+      plan_tier: isAdmin ? "admin" : (profile?.plan_tier || "free"),
       credits_balance: profile?.credits_balance ?? 0,
     });
   } catch {
