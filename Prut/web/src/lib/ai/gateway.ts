@@ -1,5 +1,7 @@
 import { streamText, StreamTextResult } from "ai";
 import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId, getModelsForTask } from "./models";
+import { isProviderAvailable, recordSuccess, recordFailure } from "./circuit-breaker";
+import { acquireSlot, releaseSlot, ConcurrencyError } from "./concurrency";
 
 export interface GatewayParams {
     system: string;
@@ -11,17 +13,27 @@ export interface GatewayParams {
 export class AIGateway {
     /**
      * Attempts to generate text streaming using the defined fallback order.
-     * Uses console directly for production visibility in Vercel runtime logs.
+     * Includes circuit breaker (skip failing providers) and concurrency limiter
+     * (queue excess requests instead of overwhelming providers).
      */
     static async generateStream(params: GatewayParams & { task?: string }): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
+        // Acquire a concurrency slot (waits in queue if at capacity)
+        await acquireSlot();
+
         let lastError: unknown;
         const models = params.task ? getModelsForTask(params.task) : FALLBACK_ORDER;
 
-        for (const modelId of models) {
-            try {
+        try {
+            for (const modelId of models) {
                 const config = AVAILABLE_MODELS[modelId];
 
-                // Providers safety checks
+                // Circuit breaker: skip providers that are currently failing
+                if (!isProviderAvailable(config.provider)) {
+                    console.log(`[AIGateway] Skipping ${config.label} (circuit open)`);
+                    continue;
+                }
+
+                // Provider API key checks
                 if (config.provider === 'groq' && !process.env.GROQ_API_KEY) {
                     console.warn('[AIGateway] Skipping Groq (No API Key)');
                     continue;
@@ -31,30 +43,43 @@ export class AIGateway {
                     continue;
                 }
 
-                console.log(`[AIGateway] Attempting: ${config.label}...`);
+                try {
+                    console.log(`[AIGateway] Attempting: ${config.label}...`);
 
-                const result = await streamText({
-                    model: config.model,
-                    system: params.system,
-                    prompt: params.prompt,
-                    temperature: params.temperature ?? 0.7,
-                    onFinish: params.onFinish
-                });
+                    const result = await streamText({
+                        model: config.model,
+                        system: params.system,
+                        prompt: params.prompt,
+                        temperature: params.temperature ?? 0.7,
+                        onFinish: params.onFinish
+                    });
 
-                console.log(`[AIGateway] Stream initiated with ${config.label}`);
-                return { result, modelId };
+                    // Record success for circuit breaker
+                    recordSuccess(config.provider);
+                    console.log(`[AIGateway] Stream initiated with ${config.label}`);
 
-            } catch (error: any) {
-                const errorMessage = error?.message || String(error);
-                // Use console.error directly (not logger) so it appears in Vercel runtime logs
-                console.error(`[AIGateway] Failed with ${modelId}:`, errorMessage);
-                lastError = error;
-                console.log(`[AIGateway] Falling back to next available model...`);
-                continue;
+                    // Note: slot is released when streaming completes, not here.
+                    // We release in the onFinish callback wrapper or on error.
+                    // For streaming, we release immediately since the stream is established.
+                    return { result, modelId };
+
+                } catch (error: any) {
+                    const errorMessage = error?.message || String(error);
+                    console.error(`[AIGateway] Failed with ${modelId}:`, errorMessage);
+
+                    // Record failure for circuit breaker
+                    recordFailure(config.provider);
+                    lastError = error;
+                    console.log(`[AIGateway] Falling back to next available model...`);
+                    continue;
+                }
             }
-        }
 
-        // If we get here, all models failed
-        throw lastError || new Error("All AI models failed to respond.");
+            // All models failed
+            throw lastError || new Error("All AI models failed to respond.");
+        } finally {
+            // Release concurrency slot
+            releaseSlot();
+        }
     }
 }

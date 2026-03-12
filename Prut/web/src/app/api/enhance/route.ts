@@ -7,6 +7,7 @@ import { getEngine, EngineInput } from "@/lib/engines";
 import { parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
+import { ConcurrencyError } from "@/lib/ai/concurrency";
 import { enqueueJob } from "@/lib/jobs/queue";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
@@ -279,6 +280,27 @@ export async function POST(req: Request) {
     return result.toTextStreamResponse();
 
   } catch (error) {
+    // Handle concurrency limit (server too busy)
+    if (error instanceof ConcurrencyError) {
+      logger.warn("[EnhanceAPI] Concurrency limit reached:", error.message);
+      // Refund credit since we never called AI
+      if (userId) {
+        try {
+          const refundClient = createSupabaseClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!
+          );
+          await refundClient.rpc('refund_credit', { target_user_id: userId, amount: 1 });
+        } catch (e: unknown) {
+          logger.error('[EnhanceAPI] Credit refund failed:', e);
+        }
+      }
+      return NextResponse.json(
+        { error: "השרת עמוס כרגע. נסה שוב בעוד כמה שניות." },
+        { status: 503, headers: { "Retry-After": "5" } }
+      );
+    }
+
     logger.error("[EnhanceAPI] Error:", error);
     // Best-effort credit refund on failure (use service role to ensure it works for Bearer token)
     if (userId) {
