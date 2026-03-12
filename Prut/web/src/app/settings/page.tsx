@@ -463,7 +463,7 @@ export default function SettingsPage() {
                         <p className="text-xs text-slate-500">
                           {isPro
                             ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${new Date(subscription.renews_at).toLocaleDateString("he-IL")}` : ""}`
-                            : "3 פרומפטים ביום"}
+                            : "2 קרדיטים ביום"}
                         </p>
                       </div>
                     </div>
@@ -522,11 +522,11 @@ export default function SettingsPage() {
                     <ul className="space-y-2 text-sm text-slate-300">
                       <li className="flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        פרומפטים ללא הגבלה
+                        150 קרדיטים בחודש
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        גישה לכל המנועים
+                        גישה לכל המנועים המתקדמים
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -534,7 +534,11 @@ export default function SettingsPage() {
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        שמירה לספריה אישית ללא הגבלה
+                        ספריה אישית + מועדפים ללא הגבלה
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        תוסף Chrome עם סנכרון מלא
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />

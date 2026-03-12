@@ -105,7 +105,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Free",
-        description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית פרומפטים ושיתוף פרומפטים",
+        description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 410+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
@@ -118,7 +118,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Pro",
-        description: "150 קרדיטים בחודש, גישה לכל המנועים, שיפור איטרטיבי מתקדם, ספריה אישית ללא הגבלה ותמיכה בעדיפות",
+        description: "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, 4 ימי ניסיון חינם",
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",

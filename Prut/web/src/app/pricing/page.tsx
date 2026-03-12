@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Sparkles, Zap, ArrowRight, Crown, Shield } from "lucide-react";
+import { Check, Sparkles, Zap, ArrowRight, Crown, Shield, Chrome, Gift } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -45,7 +45,7 @@ export default function PricingPage() {
             בחר את התוכנית שלך
           </h1>
           <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            התחל בחינם, שדרג כשתרצה. ללא התחייבות.
+            התחל בחינם, שדרג כשתרצה. כולל 4 ימי ניסיון חינם. ללא התחייבות.
           </p>
         </div>
 
@@ -99,6 +99,10 @@ export default function PricingPage() {
                 <span className="text-slate-500 text-sm">/ חודש</span>
               </div>
               <p className="text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
+              <div className="flex items-center gap-1.5 mt-2">
+                <Gift className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-green-400 text-xs font-medium">4 ימי ניסיון חינם</span>
+              </div>
             </div>
 
             <ul className="space-y-3 flex-1 mb-8">
@@ -131,6 +135,10 @@ export default function PricingPage() {
         {/* Trust badges */}
         <div className="flex flex-wrap items-center justify-center gap-8 mt-16 text-xs text-slate-500">
           <div className="flex items-center gap-2">
+            <Gift className="w-4 h-4" />
+            <span>4 ימי ניסיון חינם</span>
+          </div>
+          <div className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             <span>תשלום מאובטח</span>
           </div>
@@ -139,8 +147,23 @@ export default function PricingPage() {
             <span>ביטול בכל עת</span>
           </div>
           <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            <span>גישה מיידית</span>
+            <Chrome className="w-4 h-4" />
+            <span>תוסף Chrome כלול</span>
+          </div>
+        </div>
+
+        {/* Credit system explanation */}
+        <div className="max-w-2xl mx-auto mt-16 p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
+          <h3 className="text-lg font-bold text-white mb-4 text-center">איך עובדת מערכת הקרדיטים?</h3>
+          <div className="grid sm:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-slate-200">תוכנית חינם</h4>
+              <p className="text-slate-400">מקבלים 2 קרדיטים ביום שמתחדשים אוטומטית ב-14:00. כל שדרוג פרומפט = קרדיט אחד.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-semibold text-amber-400">תוכנית Pro</h4>
+              <p className="text-slate-400">150 קרדיטים בחודש שמתחדשים עם כל חיוב. מספיק לשימוש יומיומי אינטנסיבי.</p>
+            </div>
           </div>
         </div>
       </div>
