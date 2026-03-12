@@ -66,7 +66,20 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">5. זכויות המשתמש</h2>
+          <h2 className="text-2xl text-white font-semibold">5. תוסף Chrome (Peroot Extension)</h2>
+          <p>
+            התוסף לדפדפן Chrome מאפשר לשדרג טקסטים ישירות מכל אתר. להלן פירוט בנוגע לפרטיות בתוסף:
+          </p>
+          <ul className="list-disc pr-6 space-y-2">
+            <li><strong>אחסון מקומי:</strong> טוקן ההתחברות נשמר באחסון המקומי של הדפדפן (chrome.storage) בלבד ואינו נשלח לצד שלישי.</li>
+            <li><strong>הרשאות מינימליות:</strong> התוסף מבקש גישה רק לאתר peroot.space לצורך סנכרון ההתחברות. גישה לכרטיסיות אחרות מתבצעת רק כאשר המשתמש מפעיל פעולה באופן ידני (תפריט לחיצה ימנית או כפתור בתוסף).</li>
+            <li><strong>ללא מעקב:</strong> התוסף אינו אוסף נתוני גלישה, אינו עוקב אחר פעילות המשתמש ואינו שולח מידע לשירותי אנליטיקה.</li>
+            <li><strong>טקסטים:</strong> טקסטים שנשלחים לשדרוג מועברים ישירות לשרתי Peroot בלבד ומעובדים בהתאם למדיניות זו.</li>
+          </ul>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-2xl text-white font-semibold">6. זכויות המשתמש</h2>
           <p>
             זכותך לבקש לעיין במידע שנאסף עליך, לבקש את תיקונו או את מחיקת חשבונך לצמיתות דרך פנייה לשירות הלקוחות בכתובת המופיעה מטה.
           </p>
@@ -75,7 +88,7 @@ export default function PrivacyPolicy() {
         <section className="space-y-4">
           <h2 className="text-2xl text-white font-semibold flex items-center gap-2">
             <AccessibilityIcon className="w-5 h-5 text-purple-400" />
-            6. נגישות
+            7. נגישות
           </h2>
           <p>
             אנו מחויבים לספק אתר נגיש לכלל האוכלוסייה. לקבלת פירוט מלא על התאמות הנגישות שביצענו, ניתן לעיין ב-
