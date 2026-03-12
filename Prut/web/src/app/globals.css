@@ -373,6 +373,141 @@
 /* Optimized Animated Logo Keyframes - GPU Accelerated */
 
 /* Smooth rotation using transform3d for GPU acceleration */
+/* === Loading overlay animations === */
+
+@keyframes morph-ring {
+  0% {
+    border-radius: 50%;
+    transform: rotate(0deg) scale(1);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  25% {
+    border-radius: 40% 60% 60% 40%;
+    transform: rotate(90deg) scale(1.05);
+    border-color: rgba(251, 191, 36, 0.5);
+  }
+  50% {
+    border-radius: 50% 40% 50% 60%;
+    transform: rotate(180deg) scale(0.95);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  75% {
+    border-radius: 60% 50% 40% 50%;
+    transform: rotate(270deg) scale(1.05);
+    border-color: rgba(252, 211, 77, 0.5);
+  }
+  100% {
+    border-radius: 50%;
+    transform: rotate(360deg) scale(1);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+}
+
+.animate-morph-ring {
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  animation: morph-ring 4s ease-in-out infinite;
+  will-change: transform, border-radius;
+}
+
+@keyframes helix-dot {
+  0% {
+    transform: rotate(0deg) translateX(48px) translateY(0px) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: rotate(90deg) translateX(48px) translateY(-8px) scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: rotate(180deg) translateX(48px) translateY(0px) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: rotate(270deg) translateX(48px) translateY(8px) scale(0.6);
+    opacity: 0.4;
+  }
+  100% {
+    transform: rotate(360deg) translateX(48px) translateY(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-helix-dot {
+  animation: helix-dot 3s linear infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes logo-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-logo-breathe {
+  animation: logo-breathe 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes glow-ring {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+  }
+}
+
+.animate-glow-ring {
+  animation: glow-ring 2.5s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes spark {
+  0% {
+    transform: rotate(0deg) translateX(20px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(180deg) translateX(52px);
+    opacity: 0.6;
+  }
+  100% {
+    transform: rotate(360deg) translateX(20px);
+    opacity: 0;
+  }
+}
+
+.animate-spark {
+  animation: spark 3.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes wave-dot {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.animate-wave-dot {
+  animation: wave-dot 1.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* === Original logo animations (used elsewhere) === */
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg) translateZ(0);
