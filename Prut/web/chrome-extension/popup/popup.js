@@ -248,8 +248,11 @@ insertBtn.addEventListener("click", async () => {
   if (!lastEnhanced) return;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.id) {
-    chrome.tabs.sendMessage(tab.id, { type: "INSERT_TEXT", text: lastEnhanced });
-    flash(insertBtn, "הוכנס!");
+    // Inject content script on-demand, then insert text
+    chrome.runtime.sendMessage(
+      { type: "INJECT_AND_INSERT", tabId: tab.id, text: lastEnhanced },
+      () => flash(insertBtn, "הוכנס!")
+    );
   }
 });
 
@@ -413,8 +416,10 @@ function createPromptCard(item) {
     e.stopPropagation();
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      chrome.tabs.sendMessage(tab.id, { type: "INSERT_TEXT", text: item.prompt });
-      flash(insertCardBtn, "הוכנס!");
+      chrome.runtime.sendMessage(
+        { type: "INJECT_AND_INSERT", tabId: tab.id, text: item.prompt },
+        () => flash(insertCardBtn, "הוכנס!")
+      );
     }
   });
 
@@ -486,9 +491,9 @@ clearHistoryBtn.addEventListener("click", async () => {
 function timeAgo(ts) {
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "עכשיו";
-  if (mins < 60) return `${mins}d`;
+  if (mins < 1) return "\u05E2\u05DB\u05E9\u05D9\u05D5";
+  if (mins < 60) return `${mins} \u05D3\u05E7'`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}sh`;
-  return `${Math.floor(hours / 24)}y`;
+  if (hours < 24) return `${hours} \u05E9\u05E2'`;
+  return `${Math.floor(hours / 24)} \u05D9\u05DE'`;
 }

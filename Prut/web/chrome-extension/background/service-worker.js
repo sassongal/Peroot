@@ -1,20 +1,19 @@
 /**
  * Peroot Extension - Service Worker
- * Handles: context menu with quick actions, auth token storage/relay
+ * Handles: context menu with quick actions, auth token storage/relay,
+ *          on-demand content script injection for enhance panel.
  */
 
 const SITE_URL = "https://peroot.space";
 
 // ─── Context Menu ───
 chrome.runtime.onInstalled.addListener(() => {
-  // Parent menu
   chrome.contextMenus.create({
     id: "peroot-parent",
     title: "Peroot",
     contexts: ["selection"],
   });
 
-  // Quick actions as sub-items
   const actions = [
     { id: "enhance", title: "\u05E9\u05D3\u05E8\u05D2" },
     { id: "shorten", title: "\u05E7\u05E6\u05E8" },
@@ -33,17 +32,36 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!info.menuItemId.startsWith("peroot-") || !info.selectionText || !tab?.id) return;
 
   const action = info.menuItemId.replace("peroot-", "");
   if (action === "parent") return;
 
-  chrome.tabs.sendMessage(tab.id, {
-    type: "ENHANCE_SELECTION",
-    text: info.selectionText,
-    action: action,
-  });
+  // Inject content script + CSS on demand (idempotent - won't duplicate)
+  try {
+    await chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["content/content.css"],
+    });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content/content.js"],
+    });
+  } catch (err) {
+    // Can't inject into chrome:// or extension pages
+    console.warn("[Peroot] Cannot inject into this page:", err.message);
+    return;
+  }
+
+  // Small delay to let the script initialize, then send message
+  setTimeout(() => {
+    chrome.tabs.sendMessage(tab.id, {
+      type: "ENHANCE_SELECTION",
+      text: info.selectionText,
+      action: action,
+    });
+  }, 100);
 });
 
 // ─── Message Handler ───
@@ -67,6 +85,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "FORCE_AUTH_SYNC") {
     forceAuthSync().then((token) => sendResponse({ token }));
+    return true;
+  }
+
+  // Inject content script into a tab on behalf of popup
+  if (message.type === "INJECT_AND_INSERT") {
+    (async () => {
+      try {
+        await chrome.scripting.insertCSS({
+          target: { tabId: message.tabId },
+          files: ["content/content.css"],
+        });
+        await chrome.scripting.executeScript({
+          target: { tabId: message.tabId },
+          files: ["content/content.js"],
+        });
+        setTimeout(() => {
+          chrome.tabs.sendMessage(message.tabId, {
+            type: "INSERT_TEXT",
+            text: message.text,
+          });
+          sendResponse({ ok: true });
+        }, 100);
+      } catch {
+        sendResponse({ ok: false });
+      }
+    })();
     return true;
   }
 });
