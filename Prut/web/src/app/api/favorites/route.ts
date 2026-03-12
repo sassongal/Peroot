@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/favorites
@@ -66,7 +67,8 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ items: results });
-  } catch {
+  } catch (error) {
+    logger.error("[favorites] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

@@ -78,8 +78,8 @@ describe('usePromptWorkflow', () => {
 
   it('handles SET_CAPABILITY action', () => {
     const { result } = renderHook(() => usePromptWorkflow());
-    act(() => result.current.dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.RESEARCH }));
-    expect(result.current.state.selectedCapability).toBe(CapabilityMode.RESEARCH);
+    act(() => result.current.dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.DEEP_RESEARCH }));
+    expect(result.current.state.selectedCapability).toBe(CapabilityMode.DEEP_RESEARCH);
   });
 
   it('handles SET_QUESTIONS action', () => {

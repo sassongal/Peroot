@@ -3,6 +3,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AchievementTracker } from '@/lib/intelligence/achievement-tracker';
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { z } from "zod";
+
+const AwardSchema = z.object({
+  achievementId: z.string().min(1),
+});
 
 /**
  * POST /api/user/achievements/award
@@ -18,11 +24,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { achievementId } = await req.json();
-
-        if (!achievementId) {
-            return NextResponse.json({ error: 'Missing achievementId' }, { status: 400 });
+        // Rate limit: 10 achievement awards per 24h
+        const rl = await checkRateLimit(`achievement:${user.id}`, "free");
+        if (!rl.success) {
+            return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
         }
+
+        const body = await req.json();
+        const parsed = AwardSchema.safeParse(body);
+        if (!parsed.success) {
+            return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+        }
+        const { achievementId } = parsed.data;
 
         // Only allow certain achievements to be awarded directly from UI
         const whitelist = ['pioneer'];

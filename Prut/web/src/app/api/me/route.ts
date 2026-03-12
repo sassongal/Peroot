@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/me
@@ -55,7 +56,8 @@ export async function GET(req: NextRequest) {
       plan_tier: isAdmin ? "admin" : (profile?.plan_tier || "free"),
       credits_balance: profile?.credits_balance ?? 0,
     });
-  } catch {
+  } catch (error) {
+    logger.error("[me] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

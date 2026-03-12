@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { getAssetPath } from "@/lib/asset-path";
+import Image from "next/image";
 
 interface AnimatedLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -63,9 +64,11 @@ export function AnimatedLogo({ size = "md", className }: AnimatedLogoProps) {
       {/* Logo container */}
       <div className="relative z-10" style={{ willChange: "transform" }}>
         {/* Logo image with subtle float animation */}
-        <img
+        <Image
           src={getAssetPath("/assets/branding/logo.png")}
           alt="פרוט"
+          width={96}
+          height={96}
           className={cn(
             "relative animate-logo-float",
             sizeClasses[size]

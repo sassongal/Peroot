@@ -6,6 +6,19 @@ export const metadata: Metadata = {
   title: "דוגמאות פרומפטים - לפני ואחרי",
   description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
   alternates: { canonical: "/examples" },
+  openGraph: {
+    title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
+    description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
+    url: "/examples",
+    siteName: "Peroot",
+    locale: "he_IL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
+    description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים.",
+  },
 };
 
 const EXAMPLES = [

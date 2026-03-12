@@ -154,7 +154,7 @@ export default function PricingPage() {
 
         {/* Credit system explanation */}
         <div className="max-w-2xl mx-auto mt-16 p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
-          <h3 className="text-lg font-bold text-white mb-4 text-center">איך עובדת מערכת הקרדיטים?</h3>
+          <h2 className="text-lg font-bold text-white mb-4 text-center">איך עובדת מערכת הקרדיטים?</h2>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
               <h4 className="font-semibold text-slate-200">תוכנית חינם</h4>

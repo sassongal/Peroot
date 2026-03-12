@@ -66,8 +66,25 @@ export default async function SharedPromptPage({ params }: Props) {
     .eq('id', id)
     .then(() => {});
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+
   return (
-    <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            name: `פרומפט - ${prompt.category}`,
+            description: prompt.prompt?.slice(0, 160),
+            url: `${siteUrl}/p/${id}`,
+            inLanguage: "he",
+            creator: { "@type": "Organization", name: "Peroot", url: siteUrl },
+          }),
+        }}
+      />
+      <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/"
@@ -124,5 +141,6 @@ export default async function SharedPromptPage({ params }: Props) {
         </div>
       </div>
     </div>
+    </>
   );
 }

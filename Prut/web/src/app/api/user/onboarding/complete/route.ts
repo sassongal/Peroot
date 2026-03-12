@@ -5,8 +5,9 @@ import { logger } from "@/lib/logger";
 
 /**
  * POST /api/user/onboarding/complete
- * 
+ *
  * Marks onboarding as finished and triggers a welcome email.
+ * No request body - this is a trigger-only endpoint; Zod validation is not needed here.
  */
 export async function POST() {
   try {

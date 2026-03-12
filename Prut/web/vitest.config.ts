@@ -7,6 +7,12 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    include: ['**/*.test.ts'],
+    include: ['**/*.test.ts', '**/*.test.tsx'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary'],
+      include: ['src/lib/**', 'src/hooks/**'],
+      exclude: ['**/*.test.*', '**/__tests__/**'],
+    },
   },
 });

@@ -6,6 +6,19 @@ export const metadata: Metadata = {
   title: "צור קשר | Peroot",
   description: "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים.",
   alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "צור קשר | Peroot",
+    description: "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים.",
+    url: "/contact",
+    siteName: "Peroot",
+    locale: "he_IL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "צור קשר | Peroot",
+    description: "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים.",
+  },
 };
 
 export default function ContactPage() {

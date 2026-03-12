@@ -3,6 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 import { configureLemonSqueezy } from '@/lib/lemonsqueezy';
 import { createCheckout } from '@lemonsqueezy/lemonsqueezy.js';
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { z } from "zod";
+
+const CheckoutSchema = z.object({
+  variantId: z.string().min(1),
+});
 
 /**
  * POST /api/checkout
@@ -17,11 +23,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { variantId } = await request.json();
-
-    if (!variantId) {
-      return NextResponse.json({ error: 'Missing variantId' }, { status: 400 });
+    // Rate limit: 10 checkout attempts per 24h
+    const rl = await checkRateLimit(`checkout:${user.id}`, "free");
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
     }
+
+    const body = await request.json();
+    const parsed = CheckoutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+    const { variantId } = parsed.data;
 
     const storeId = process.env.LEMONSQUEEZY_STORE_ID;
     if (!storeId) {

@@ -14,6 +14,7 @@ import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const ResultSection = dynamic(
   () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
@@ -576,21 +577,25 @@ function PageContent({ user }: { user: User | null }) {
 
   if (viewMode === "library") {
     return (
+      <ErrorBoundary name="LibraryView">
         <LibraryView
             onUsePrompt={handleUsePrompt}
             onCopyText={async (t) => { await handleCopyText(t); }}
         />
+      </ErrorBoundary>
     );
   }
 
   if (viewMode === "personal") {
     return (
+      <ErrorBoundary name="PersonalLibraryView">
         <PersonalLibraryView
             onUsePrompt={handleUsePrompt}
             onCopyText={async (t) => { await handleCopyText(t); }}
             handleImportHistory={handleImportHistory}
             historyLength={history.length}
         />
+      </ErrorBoundary>
     );
   }
 
@@ -606,7 +611,9 @@ function PageContent({ user }: { user: User | null }) {
       </div>
 
       <div className="fixed bottom-6 right-4 sm:right-6 z-50">
-         <FAQBubble />
+        <ErrorBoundary name="FAQBubble">
+          <FAQBubble />
+        </ErrorBoundary>
       </div>
 
       {/* Sidebar Toggle Button + Credits indicator */}
@@ -834,45 +841,49 @@ function PageContent({ user }: { user: User | null }) {
            ) : (
              /* RESULT MODE */
              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col gap-8">
-                 <ResultSection
-                     completion={ps.completion}
-                     isLoading={ps.isLoading}
-                     streamPhase={ps.streamPhase}
-                     copied={ps.copied}
-                     isPro={isPro}
-                     onCopy={handleCopyText}
-                     completionScore={completionScore}
-                     onSave={saveCompletionToPersonal}
-                     onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
-                     placeholders={placeholders}
-                     variableValues={ps.variableValues}
-                     improvementDelta={completionScore.baseScore - inputScore.baseScore}
-                     onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
-                     onImproveAgain={() => {
-                       // Feed the current completion back as the new input so the next
-                       // enhance round works on the improved version, but preserve
-                       // originalInput (set on first START_STREAM) so "Back to Original" works.
-                       dispatch({ type: 'SET_INPUT', payload: ps.completion });
-                       dispatch({ type: 'INCREMENT_ITERATION' });
-                       // Kick off the enhance - START_STREAM will only set originalInput
-                       // if it is still empty, so it won't overwrite the first snapshot.
-                       setTimeout(() => handleEnhance(), 0);
-                     }}
-                     onRetryStream={handleEnhance}
-                     onResetToOriginal={() => dispatch({ type: 'RESET_TO_ORIGINAL' })}
-                     iterationCount={ps.iterationCount}
-                     originalPrompt={ps.originalInput || ps.input}
-                     onShare={handleShare}
-                 />
+                 <ErrorBoundary name="ResultSection">
+                   <ResultSection
+                       completion={ps.completion}
+                       isLoading={ps.isLoading}
+                       streamPhase={ps.streamPhase}
+                       copied={ps.copied}
+                       isPro={isPro}
+                       onCopy={handleCopyText}
+                       completionScore={completionScore}
+                       onSave={saveCompletionToPersonal}
+                       onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
+                       placeholders={placeholders}
+                       variableValues={ps.variableValues}
+                       improvementDelta={completionScore.baseScore - inputScore.baseScore}
+                       onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
+                       onImproveAgain={() => {
+                         // Feed the current completion back as the new input so the next
+                         // enhance round works on the improved version, but preserve
+                         // originalInput (set on first START_STREAM) so "Back to Original" works.
+                         dispatch({ type: 'SET_INPUT', payload: ps.completion });
+                         dispatch({ type: 'INCREMENT_ITERATION' });
+                         // Kick off the enhance - START_STREAM will only set originalInput
+                         // if it is still empty, so it won't overwrite the first snapshot.
+                         setTimeout(() => handleEnhance(), 0);
+                       }}
+                       onRetryStream={handleEnhance}
+                       onResetToOriginal={() => dispatch({ type: 'RESET_TO_ORIGINAL' })}
+                       iterationCount={ps.iterationCount}
+                       originalPrompt={ps.originalInput || ps.input}
+                       onShare={handleShare}
+                   />
+                 </ErrorBoundary>
 
                  {(ps.questions.length > 0 || ps.iterationCount > 0) && (
-                    <SmartRefinement
-                       questions={ps.questions}
-                       answers={ps.questionAnswers}
-                       onAnswerChange={(id, val) => dispatch({ type: 'SET_QUESTION_ANSWER', payload: { id, answer: val } })}
-                       onRefine={(instruction) => handleRefine(instruction || "")}
-                       isLoading={ps.isLoading}
-                    />
+                    <ErrorBoundary name="SmartRefinement">
+                      <SmartRefinement
+                         questions={ps.questions}
+                         answers={ps.questionAnswers}
+                         onAnswerChange={(id, val) => dispatch({ type: 'SET_QUESTION_ANSWER', payload: { id, answer: val } })}
+                         onRefine={(instruction) => handleRefine(instruction || "")}
+                         isLoading={ps.isLoading}
+                      />
+                    </ErrorBoundary>
                  )}
              </div>
            )}

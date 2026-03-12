@@ -30,8 +30,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # - name: Type Check
-      #   run: npx tsc --noEmit
+      - name: Type Check
+        run: npx tsc --noEmit
 
       - name: Run Unit Tests
         run: npx vitest run

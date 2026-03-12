@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useTransition } from "react";
@@ -7,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getAssetPath } from "@/lib/asset-path";
+import Image from "next/image";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -72,9 +72,11 @@ export default function ResetPasswordPage() {
         <div className="glass-card p-8 rounded-2xl border border-white/10 bg-black/40 shadow-2xl shadow-black/50">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img
+            <Image
               src={getAssetPath("/assets/branding/logo.svg")}
               alt="Peroot"
+              width={48}
+              height={48}
               className="h-12 w-auto brightness-110 contrast-110"
             />
           </div>
