@@ -104,6 +104,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: "/manifest.json",
   verification: {
     // ⚠️ IMPORTANT: Replace with your Google Search Console verification token before production!
     // Get it from: https://search.google.com/search-console → Settings → Ownership verification

@@ -45,6 +45,7 @@ interface ResultSectionProps {
 }
 
 import { useI18n } from "@/context/I18nContext";
+import { useMemo } from "react";
 
 export function ResultSection({
   completion,
@@ -68,8 +69,12 @@ export function ResultSection({
   onShare,
 }: ResultSectionProps) {
     const t = useI18n();
+  const isMac = useMemo(() => typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform), []);
+  const copyShortcutHint = isMac ? "⌘⇧C" : "Ctrl+⇧C";
   // Pro users can toggle the watermark off; free users always get the watermark.
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
+  // Before/After tab - only rendered when originalPrompt is provided
+  const [activeTab, setActiveTab] = useState<'before' | 'after'>('after');
 
   const isInterrupted = streamPhase === 'interrupted';
   // ... rest of logic ...
@@ -90,6 +95,10 @@ export function ResultSection({
       : isPro ? proWatermarkEnabled : true;
     onCopy(text, shouldWatermark);
   };
+
+  // Whether the before/after toggle is available
+  const showTabs = !!originalPrompt && !isLoading;
+  const isBeforeTab = showTabs && activeTab === 'before';
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -136,103 +145,129 @@ export function ResultSection({
         )}
       </div>
 
-      {/* Before/After Comparison */}
-      {originalPrompt && (
-        <details className="glass-card rounded-xl border-white/10 bg-white/2 overflow-hidden group/details">
-          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/3 transition-colors list-none" dir="rtl">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-400">הפרומפט המקורי שלך</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/10">לפני</span>
-            </div>
-            <svg className="w-4 h-4 text-slate-500 transition-transform group-open/details:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div className="px-4 pb-4 border-t border-white/5">
-            <div className="p-4 mt-3 rounded-lg bg-black/30 border border-white/5" dir="rtl">
-              <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">{originalPrompt}</p>
-            </div>
-          </div>
-        </details>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Result Area */}
         <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:col-span-2" : "lg:col-span-3")}>
-          <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
-            <button
-              onClick={() => handleCopy(displayCompletion)}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
-              title={t.result_section.copy_tooltip}
-              aria-label="העתק פרומפט"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
-          
-          <div
-            className="p-8 text-lg text-slate-200 leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
-            dir="rtl"
-            dangerouslySetInnerHTML={{ __html: styledHtml }}
-          />
 
-          {/* AI Platform Quick-Launch Bar */}
-          <div className="px-6 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
-            <div className="flex items-center gap-3 justify-center" dir="rtl">
-              <span className="text-xs text-slate-500 ms-2">פתח ב:</span>
+          {/* Before / After tab strip */}
+          {showTabs && (
+            <div className="flex items-center gap-1 px-4 pt-4 pb-0" dir="rtl">
               <button
-                onClick={() => {
-                  handleCopy(displayCompletion);
-                  window.open("https://chat.openai.com/", "_blank");
-                  toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
-                title="העתק והפתח ב-ChatGPT"
+                onClick={() => setActiveTab('before')}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
+                  activeTab === 'before'
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                    : "text-slate-500 border-transparent hover:text-slate-400"
+                )}
+                aria-pressed={activeTab === 'before'}
               >
-                <ChatGPTIcon className="w-4 h-4" />
-                <span>ChatGPT</span>
-                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                לפני
               </button>
               <button
-                onClick={() => {
-                  handleCopy(displayCompletion);
-                  window.open("https://claude.ai/new", "_blank");
-                  toast.success(`${t.toasts.copied} - Claude נפתח!`);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
-                title="העתק והפתח ב-Claude"
+                onClick={() => setActiveTab('after')}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer",
+                  activeTab === 'after'
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                    : "text-slate-500 border-transparent hover:text-slate-400"
+                )}
+                aria-pressed={activeTab === 'after'}
               >
-                <ClaudeIcon className="w-4 h-4" />
-                <span>Claude</span>
-                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-              <button
-                onClick={() => {
-                  handleCopy(displayCompletion);
-                  window.open("https://gemini.google.com/", "_blank");
-                  toast.success(`${t.toasts.copied} - Gemini נפתח!`);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
-                title="העתק והפתח ב-Gemini"
-              >
-                <GeminiIcon className="w-4 h-4" />
-                <span>Gemini</span>
-                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-              <button
-                onClick={() => {
-                  const text = encodeURIComponent(displayCompletion + "\n\n- נוצר עם Peroot | peroot.space");
-                  window.open(`https://wa.me/?text=${text}`, "_blank");
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
-                title="שתף בוואטסאפ"
-              >
-                <WhatsAppIcon className="w-4 h-4" />
-                <span>WhatsApp</span>
-                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                אחרי
               </button>
             </div>
-          </div>
+          )}
+
+          {/* Floating copy button - hidden in "before" view */}
+          {!isBeforeTab && (
+            <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
+              <button
+                onClick={() => handleCopy(displayCompletion)}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center"
+                title={t.result_section.copy_tooltip}
+                aria-label="העתק פרומפט"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          )}
+
+          {/* Content area - swaps between before/after */}
+          {isBeforeTab ? (
+            <div
+              className="p-8 text-lg text-slate-400 leading-relaxed font-sans max-h-[60vh] overflow-y-auto flex-1 whitespace-pre-wrap"
+              dir="rtl"
+            >
+              {originalPrompt}
+            </div>
+          ) : (
+            <div
+              className="p-8 text-lg text-slate-200 leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
+              dir="rtl"
+              dangerouslySetInnerHTML={{ __html: styledHtml }}
+            />
+          )}
+
+          {/* AI Platform Quick-Launch Bar - hidden in "before" view */}
+          {!isBeforeTab && (
+            <div className="px-6 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
+              <div className="flex items-center gap-3 justify-center" dir="rtl">
+                <span className="text-xs text-slate-500 ms-2">פתח ב:</span>
+                <button
+                  onClick={() => {
+                    handleCopy(displayCompletion);
+                    window.open("https://chat.openai.com/", "_blank");
+                    toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer"
+                  title="העתק והפתח ב-ChatGPT"
+                >
+                  <ChatGPTIcon className="w-4 h-4" />
+                  <span>ChatGPT</span>
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+                <button
+                  onClick={() => {
+                    handleCopy(displayCompletion);
+                    window.open("https://claude.ai/new", "_blank");
+                    toast.success(`${t.toasts.copied} - Claude נפתח!`);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer"
+                  title="העתק והפתח ב-Claude"
+                >
+                  <ClaudeIcon className="w-4 h-4" />
+                  <span>Claude</span>
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+                <button
+                  onClick={() => {
+                    handleCopy(displayCompletion);
+                    window.open("https://gemini.google.com/", "_blank");
+                    toast.success(`${t.toasts.copied} - Gemini נפתח!`);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer"
+                  title="העתק והפתח ב-Gemini"
+                >
+                  <GeminiIcon className="w-4 h-4" />
+                  <span>Gemini</span>
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+                <button
+                  onClick={() => {
+                    const text = encodeURIComponent(displayCompletion + "\n\n- נוצר עם Peroot | peroot.space");
+                    window.open(`https://wa.me/?text=${text}`, "_blank");
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer"
+                  title="שתף בוואטסאפ"
+                >
+                  <WhatsAppIcon className="w-4 h-4" />
+                  <span>WhatsApp</span>
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="p-4 bg-white/5 border-t border-white/5 mt-auto space-y-3">
             {/* Primary actions row */}
@@ -294,6 +329,7 @@ export function ResultSection({
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? t.result_section.copied : t.result_section.copy_button}
+                  {!copied && <kbd className="text-[10px] opacity-50 font-normal font-mono bg-black/10 px-1.5 py-0.5 rounded">{copyShortcutHint}</kbd>}
                 </button>
               </div>
             </div>
@@ -345,7 +381,7 @@ export function ResultSection({
                     <label className="text-xs text-slate-500 font-medium ms-1 block text-right" dir="rtl">
                       {ph}
                     </label>
-                    <input 
+                    <input
                       dir="rtl"
                       value={variableValues[ph] || ""}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}

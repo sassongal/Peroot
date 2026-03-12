@@ -22,6 +22,13 @@ import {
   CreditCard,
   Crown,
   Zap,
+  BarChart3,
+  TrendingUp,
+  Calendar,
+  Sparkles,
+  Gift,
+  Copy,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -52,6 +59,18 @@ export default function SettingsPage() {
   const { favorites } = useFavorites();
   const { subscription, isPro, checkout, loading: subLoading } = useSubscription();
   const [credits, setCredits] = useState<{ balance: number; dailyLimit: number; refreshedAt: string | null } | null>(null);
+  const [referral, setReferral] = useState<{ code: string; uses: number; maxUses: number; creditsPerReferral: number; totalReferrals: number } | null>(null);
+  const [referralCopied, setReferralCopied] = useState(false);
+  const [redeemCode, setRedeemCode] = useState("");
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [usageStats, setUsageStats] = useState<{
+    totalEnhancements: number;
+    thisMonth: number;
+    thisWeek: number;
+    streak: number;
+    topCategories: { category: string; count: number }[];
+    recentDays: { date: string; count: number }[];
+  } | null>(null);
 
   useEffect(() => {
     async function getUser() {
@@ -80,6 +99,72 @@ export default function SettingsPage() {
           dailyLimit: settings?.daily_free_limit ?? 2,
           refreshedAt: profile?.credits_refreshed_at ?? null,
         });
+
+        // Fetch usage statistics from activity_logs
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        const [{ count: totalCount }, { count: monthCount }, { count: weekCount }, { data: recentActivity }] = await Promise.all([
+          supabase.from("activity_logs").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("action", ["Prmpt Enhance", "Prmpt Refine"]),
+          supabase.from("activity_logs").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("action", ["Prmpt Enhance", "Prmpt Refine"]).gte("created_at", startOfMonth),
+          supabase.from("activity_logs").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("action", ["Prmpt Enhance", "Prmpt Refine"]).gte("created_at", startOfWeek),
+          supabase.from("activity_logs").select("created_at, details").eq("user_id", user.id).in("action", ["Prmpt Enhance", "Prmpt Refine"]).order("created_at", { ascending: false }).limit(100),
+        ]);
+
+        // Calculate category breakdown from recent activity
+        const catCounts: Record<string, number> = {};
+        const dayCounts: Record<string, number> = {};
+        let streak = 0;
+
+        (recentActivity || []).forEach((log: { created_at: string; details: { mode?: string } | null }) => {
+          const mode = log.details?.mode || "standard";
+          catCounts[mode] = (catCounts[mode] || 0) + 1;
+          const day = log.created_at.slice(0, 10);
+          dayCounts[day] = (dayCounts[day] || 0) + 1;
+        });
+
+        // Calculate streak (consecutive days with activity)
+        const today = new Date();
+        for (let i = 0; i < 30; i++) {
+          const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+          const key = d.toISOString().slice(0, 10);
+          if (dayCounts[key]) streak++;
+          else if (i > 0) break; // Allow today to be missing
+        }
+
+        const topCategories = Object.entries(catCounts)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([category, count]) => ({ category, count }));
+
+        // Last 7 days activity
+        const recentDays = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+          const key = d.toISOString().slice(0, 10);
+          recentDays.push({ date: key, count: dayCounts[key] || 0 });
+        }
+
+        setUsageStats({
+          totalEnhancements: totalCount || 0,
+          thisMonth: monthCount || 0,
+          thisWeek: weekCount || 0,
+          streak,
+          topCategories,
+          recentDays,
+        });
+
+        // Fetch referral code
+        try {
+          const refRes = await fetch("/api/referral");
+          if (refRes.ok) {
+            const refData = await refRes.json();
+            setReferral(refData);
+          }
+        } catch {
+          // Referral system not yet set up - silently skip
+        }
       }
       setLoading(false);
     }
@@ -213,8 +298,17 @@ export default function SettingsPage() {
     }
   };
 
+  const modeLabels: Record<string, string> = {
+    standard: "שיפור טקסט",
+    deep_research: "מחקר מעמיק",
+    image_generation: "יצירת תמונות",
+    agent_builder: "בניית סוכן",
+  };
+
   const sections = [
     { id: "profile", label: "פרופיל", icon: UserIcon },
+    { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
+    { id: "referral", label: "הזמן חברים", icon: Gift },
     { id: "billing", label: "מנוי וחיוב", icon: CreditCard },
     { id: "data", label: "נתונים ופרטיות", icon: Shield },
     { id: "danger", label: "אזור מסוכן", icon: AlertTriangle },
@@ -428,6 +522,227 @@ export default function SettingsPage() {
                     month: "long",
                     day: "numeric",
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Statistics Section */}
+            {activeSection === "stats" && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                  <h2 className="text-xl font-bold mb-1">סטטיסטיקות שימוש</h2>
+                  <p className="text-sm text-slate-500">מעקב אחר הפעילות שלך</p>
+                </div>
+
+                {usageStats ? (
+                  <>
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                        <Sparkles className="w-5 h-5 text-amber-400 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{usageStats.totalEnhancements}</p>
+                        <p className="text-xs text-slate-400">סה&quot;כ שיפורים</p>
+                      </div>
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                        <Calendar className="w-5 h-5 text-blue-400 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{usageStats.thisMonth}</p>
+                        <p className="text-xs text-slate-400">החודש</p>
+                      </div>
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                        <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{usageStats.thisWeek}</p>
+                        <p className="text-xs text-slate-400">השבוע</p>
+                      </div>
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                        <Zap className="w-5 h-5 text-orange-400 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{usageStats.streak}</p>
+                        <p className="text-xs text-slate-400">ימים ברצף</p>
+                      </div>
+                    </div>
+
+                    {/* Weekly Activity Chart */}
+                    <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                      <h3 className="font-semibold text-white text-sm">פעילות ב-7 ימים אחרונים</h3>
+                      <div className="flex items-end gap-2 h-24">
+                        {usageStats.recentDays.map((day) => {
+                          const maxCount = Math.max(...usageStats.recentDays.map(d => d.count), 1);
+                          const height = day.count > 0 ? Math.max(12, (day.count / maxCount) * 100) : 4;
+                          const dayName = new Date(day.date).toLocaleDateString("he-IL", { weekday: "short" });
+                          return (
+                            <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                              <span className="text-[10px] text-slate-500">{day.count || ""}</span>
+                              <div
+                                className={`w-full rounded-t-md transition-all ${day.count > 0 ? "bg-amber-500/60" : "bg-white/10"}`}
+                                style={{ height: `${height}%` }}
+                              />
+                              <span className="text-[10px] text-slate-500">{dayName}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Top Modes */}
+                    {usageStats.topCategories.length > 0 && (
+                      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <h3 className="font-semibold text-white text-sm">מצבים פופולריים</h3>
+                        <div className="space-y-2">
+                          {usageStats.topCategories.map((cat) => {
+                            const total = usageStats.totalEnhancements || 1;
+                            const pct = Math.round((cat.count / total) * 100);
+                            return (
+                              <div key={cat.category} className="space-y-1">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-slate-300">{modeLabels[cat.category] || cat.category}</span>
+                                  <span className="text-slate-500 text-xs">{cat.count} ({pct}%)</span>
+                                </div>
+                                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-amber-500/60 rounded-full transition-all"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Referral Section */}
+            {activeSection === "referral" && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                  <h2 className="text-xl font-bold mb-1">הזמן חברים</h2>
+                  <p className="text-sm text-slate-500">שתף את הקוד שלך וקבלו שניכם 5 קרדיטים בונוס</p>
+                </div>
+
+                {/* How it works */}
+                <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
+                  <h3 className="font-semibold text-amber-400 flex items-center gap-2">
+                    <Gift className="w-4 h-4" />
+                    איך זה עובד?
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">1</span>
+                      <span className="text-slate-300">שתף את הקוד שלך עם חבר</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">2</span>
+                      <span className="text-slate-300">החבר נרשם ומזין את הקוד</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">3</span>
+                      <span className="text-slate-300">שניכם מקבלים 5 קרדיטים!</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Your Referral Code */}
+                {referral ? (
+                  <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-4">
+                    <h3 className="font-semibold text-white flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-400" />
+                      הקוד שלך
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 px-4 py-3 bg-black/30 rounded-lg border border-white/10 font-mono text-lg text-amber-300 text-center tracking-wider">
+                        {referral.code}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(referral.code);
+                          setReferralCopied(true);
+                          setTimeout(() => setReferralCopied(false), 2000);
+                          toast.success("הקוד הועתק!");
+                        }}
+                        className="shrink-0 p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg transition-colors"
+                      >
+                        {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>{referral.uses} / {referral.maxUses} הזמנות נוצלו</span>
+                      <span>{referral.uses * referral.creditsPerReferral} קרדיטים הורווחו</span>
+                    </div>
+                    {/* Share buttons */}
+                    <div className="flex gap-2">
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(`הצטרף ל-Peroot - מחולל פרומפטים בעברית! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://peroot.space`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-colors border border-green-600/20"
+                      >
+                        שתף בוואטסאפ
+                      </a>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://peroot.space`);
+                          toast.success("הטקסט הועתק!");
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        העתק הודעה
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
+                  </div>
+                )}
+
+                {/* Redeem a Code */}
+                <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                  <h3 className="font-semibold text-white text-sm">קיבלת קוד מחבר?</h3>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={redeemCode}
+                      onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                      placeholder="הזן קוד הפניה"
+                      dir="ltr"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!redeemCode.trim()) return;
+                        setIsRedeeming(true);
+                        try {
+                          const res = await fetch("/api/referral", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ code: redeemCode.trim() }),
+                          });
+                          const data = await res.json();
+                          if (res.ok && data.success) {
+                            toast.success(`קיבלת ${data.creditsAwarded} קרדיטים!`);
+                            setRedeemCode("");
+                          } else {
+                            toast.error(data.error || "שגיאה במימוש הקוד");
+                          }
+                        } catch {
+                          toast.error("שגיאה במימוש הקוד");
+                        } finally {
+                          setIsRedeeming(false);
+                        }
+                      }}
+                      disabled={isRedeeming || !redeemCode.trim()}
+                      className="shrink-0 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 border border-amber-500/30"
+                    >
+                      {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "מימוש"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

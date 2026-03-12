@@ -207,9 +207,7 @@ function PageContent({ user }: { user: User | null }) {
       }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'c') {
         if (ps.completion) {
-          navigator.clipboard.writeText(ps.completion);
-          dispatch({ type: 'SET_COPIED', payload: true });
-          setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
+          handleCopyText(ps.completion);
         }
       }
     };

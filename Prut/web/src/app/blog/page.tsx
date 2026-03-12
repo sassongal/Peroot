@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -86,6 +87,11 @@ export default async function BlogPage() {
               </p>
             </Link>
           ))}
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="mt-12">
+          <NewsletterSignup />
         </div>
       </div>
     </div>
