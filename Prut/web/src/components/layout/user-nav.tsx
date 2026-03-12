@@ -1,4 +1,3 @@
-
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -8,6 +7,7 @@ import { User } from "@supabase/supabase-js";
 import { User as UserIcon, Settings, LogOut, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import Image from "next/image";
 import { getAssetPath } from "@/lib/asset-path";
 
 interface UserMenuProps {
@@ -108,6 +108,8 @@ export function UserMenu({ user, position }: UserMenuProps) {
               alt="User"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(metadata.full_name || user.email || 'U')}&background=random`;
               }}
@@ -131,7 +133,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                <div className="p-4 border-b border-white/10 flex flex-col gap-3 bg-white/5">
                    {/* Embedded Logo in Menu */}
                    <div className="flex justify-center pb-2 border-b border-white/5">
-                        <img src={getAssetPath("/logo.svg")} alt="Peroot" className="h-5 w-auto opacity-70" />
+                        <Image src={getAssetPath("/logo.svg")} alt="Peroot" width={80} height={20} className="h-5 w-auto opacity-70" />
                    </div>
                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden shrink-0 border border-white/10">
@@ -141,6 +143,8 @@ export function UserMenu({ user, position }: UserMenuProps) {
                             alt="תמונת פרופיל"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(metadata.full_name || user.email || 'U')}&background=random`;
                             }}

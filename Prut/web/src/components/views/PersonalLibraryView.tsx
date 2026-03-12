@@ -389,6 +389,8 @@ export function PersonalLibraryView({
               <button
                 type="button"
                 onClick={() => handleToggleFavorite("personal", prompt.id)}
+                aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                aria-pressed={isFavorite}
                 className={cn(
                   "p-2.5 rounded-full border transition-colors",
                   isFavorite
@@ -400,10 +402,10 @@ export function PersonalLibraryView({
               </button>
               {isEditing ? (
                 <>
-                  <button onClick={saveEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-300 hover:bg-white/10">
+                  <button onClick={saveEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-300 hover:bg-white/10" aria-label="שמור">
                     <Check className="w-4 h-4" />
                   </button>
-                  <button onClick={cancelEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-500 hover:bg-white/10">
+                  <button onClick={cancelEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-500 hover:bg-white/10" aria-label="ביטול">
                     <X className="w-4 h-4" />
                   </button>
                 </>
@@ -411,6 +413,7 @@ export function PersonalLibraryView({
                 <button
                   onClick={() => startEditingPersonalPrompt(prompt)}
                   className="p-2 rounded-full border border-white/10 text-slate-500 hover:text-slate-200 hover:bg-white/10"
+                  aria-label="עריכה"
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
@@ -828,8 +831,8 @@ export function PersonalLibraryView({
                                               onKeyDown={(e) => { if(e.key === 'Enter') saveRenameCategory(); if(e.key === 'Escape') cancelRenameCategory(); }}
                                               autoFocus
                                             />
-                                            <button onClick={saveRenameCategory}><Check className="w-4 h-4 text-green-400"/></button>
-                                            <button onClick={cancelRenameCategory}><X className="w-4 h-4 text-red-400"/></button>
+                                            <button onClick={saveRenameCategory} aria-label="שמור שם קטגוריה"><Check className="w-4 h-4 text-green-400"/></button>
+                                            <button onClick={cancelRenameCategory} aria-label="ביטול שינוי שם"><X className="w-4 h-4 text-red-400"/></button>
                                         </div>
                                      ) : (
                                          <div className="flex items-baseline gap-3 group/cat">
@@ -861,20 +864,20 @@ export function PersonalLibraryView({
                 <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
                     {selectedIds.size} נבחרו
                 </div>
-                <button onClick={handleBatchExport} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="יצוא">
+                <button onClick={handleBatchExport} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="יצוא" aria-label="ייצוא">
                     <Download className="w-5 h-5" />
                 </button>
-                <button onClick={() => setShowMoveDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="העברה">
+                <button onClick={() => setShowMoveDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="העברה" aria-label="העברה">
                     <FolderInput className="w-5 h-5" />
                 </button>
-                <button onClick={() => setShowTagDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="תגיות">
+                <button onClick={() => setShowTagDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 tooltip" title="תגיות" aria-label="תגיות">
                     <Tag className="w-5 h-5" />
                 </button>
                 <div className="w-px h-6 bg-white/10 mx-1" />
-                <button onClick={handleBatchDelete} className="p-2.5 hover:bg-red-500/20 rounded-lg text-red-400 tooltip" title="מחיקה">
+                <button onClick={handleBatchDelete} className="p-2.5 hover:bg-red-500/20 rounded-lg text-red-400 tooltip" title="מחיקה" aria-label="מחיקה">
                     <Trash2 className="w-5 h-5" />
                 </button>
-                <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500">
+                <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500" aria-label="סגור">
                     <X className="w-4 h-4" />
                 </button>
             </div>

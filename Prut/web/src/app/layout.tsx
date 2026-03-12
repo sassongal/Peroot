@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { validateEnv } from "@/lib/env";
+
+validateEnv();
 import { FAQSchema } from "@/components/features/faq/FAQSchema";
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
 import { organizationSchema } from "@/lib/schema";
@@ -112,6 +115,7 @@ import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 
 import { Footer } from "@/components/layout/Footer";
+import { CookieConsent } from "@/components/ui/CookieConsent";
 
 export default async function RootLayout({
   children,
@@ -149,6 +153,7 @@ export default async function RootLayout({
               </GlobalContextWrapper>
             </Suspense>
           </I18nProvider>
+          <CookieConsent />
         </PostHogProvider>
       </body>
     </html>

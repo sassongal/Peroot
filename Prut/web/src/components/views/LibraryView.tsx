@@ -395,7 +395,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                             "absolute top-6 left-6 z-10 transition-opacity duration-200",
                             (selectedIds.has(prompt.id) || selectionMode) ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"
                           )}>
-                            <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}>
+                            <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }} aria-label={selectedIds.has(prompt.id) ? "בטל בחירה" : "בחר פריט"}>
                               {selectedIds.has(prompt.id)
                                 ? <CheckSquare className="w-6 h-6 text-purple-400 fill-purple-500/20" />
                                 : <Square className="w-6 h-6 text-slate-500 hover:text-slate-300" />}
@@ -523,6 +523,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                             })}
                             className="flex items-center gap-1.5 p-2.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                             title="ייצא כתמונה"
+                            aria-label="ייצוא כתמונה"
                           >
                             <ImageIcon className="w-3.5 h-3.5" />
                           </button>
@@ -544,6 +545,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                           </button>
                           <button
                             onClick={() => handleRate(prompt.id, -1)}
+                            aria-label="לא מועיל"
                             className={cn(
                               "flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors cursor-pointer",
                               userRatings[prompt.id] === -1
@@ -609,7 +611,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                     שמור לאישי
                 </button>
                 <div className="w-px h-6 bg-white/10 mx-1" />
-                <button onClick={clearSelection} className="p-1 hover:bg-white/10 rounded-full text-slate-500">
+                <button onClick={clearSelection} className="p-1 hover:bg-white/10 rounded-full text-slate-500" aria-label="סגור">
                     <X className="w-4 h-4" />
                 </button>
             </div>

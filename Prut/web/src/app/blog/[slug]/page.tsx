@@ -4,6 +4,7 @@ import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { articleSchema, breadcrumbSchema } from "@/lib/schema";
+import { SafeHtml } from "@/components/ui/SafeHtml";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -105,7 +106,8 @@ export default async function BlogPostPage({ params }: Props) {
           />
         )}
 
-        <div
+        <SafeHtml
+          html={post.content}
           className="prose prose-invert prose-amber max-w-none
             prose-headings:font-serif prose-headings:text-white
             prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
@@ -114,7 +116,6 @@ export default async function BlogPostPage({ params }: Props) {
             prose-li:text-slate-300 prose-li:leading-relaxed
             prose-strong:text-white
             prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
         {/* Author Bio */}

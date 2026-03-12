@@ -13,6 +13,7 @@ import {
     Trophy,
     ExternalLink
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { AchievementShowcase } from "../gamification/AchievementShowcase";
@@ -81,7 +82,7 @@ export function UserProfile({ userId }: { userId: string }) {
                     <div className="relative">
                         <div className="w-32 h-32 rounded-[48px] bg-zinc-900 border-2 border-blue-500/20 flex items-center justify-center overflow-hidden shadow-2xl transition-transform duration-500 hover:rotate-3">
                             {profile.avatar_url ? (
-                                <img src={profile.avatar_url} alt="תמונת פרופיל" className="w-full h-full object-cover" />
+                                <img src={profile.avatar_url} alt="תמונת פרופיל" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                                 <div className="text-4xl font-black text-white/10">{profile.full_name[0]}</div>
                             )}
@@ -200,7 +201,7 @@ export function UserProfile({ userId }: { userId: string }) {
     );
 }
 
-function MetricCard({ label, value, icon: Icon, color, desc }: { label: string; value: string; icon: any; color: string; desc: string }) {
+function MetricCard({ label, value, icon: Icon, color, desc }: { label: string; value: string; icon: LucideIcon; color: string; desc: string }) {
     return (
         <div className="p-8 rounded-[40px] bg-zinc-950 border border-white/5 space-y-6 group hover:border-white/10 transition-all duration-500">
             <div className="flex items-center justify-between">

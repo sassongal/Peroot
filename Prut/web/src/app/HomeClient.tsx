@@ -17,17 +17,17 @@ import { logger } from "@/lib/logger";
 
 const ResultSection = dynamic(
   () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-64" /> }
 );
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { WhatIsThisModal } from "@/components/ui/WhatIsThisModal";
 const FAQBubble = dynamic(
   () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-white/[0.04] w-12 h-12" /> }
 );
 const SmartRefinement = dynamic(
   () => import("@/components/features/prompt-improver/SmartRefinement").then(mod => mod.SmartRefinement),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-32" /> }
 );
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
@@ -38,11 +38,11 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 const LibraryView = dynamic(
   () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-96" /> }
 );
 const PersonalLibraryView = dynamic(
   () => import("@/components/views/PersonalLibraryView").then(mod => mod.PersonalLibraryView),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-96" /> }
 );
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import StreamingProgress from "@/components/ui/StreamingProgress";

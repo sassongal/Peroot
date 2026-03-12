@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getAssetPath } from "@/lib/asset-path";
 import type { Metadata } from "next";
@@ -25,7 +25,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-500">
         <div className="glass-card p-8 rounded-2xl border-white/10 bg-black/40 shadow-2xl shadow-black/50">
            <div className="flex justify-center mb-8">
-             <img src={getAssetPath("/assets/branding/logo.svg")} alt="Peroot" className="h-12 w-auto brightness-110 contrast-110" />
+             <Image src={getAssetPath("/assets/branding/logo.svg")} alt="Peroot" width={160} height={48} className="h-12 w-auto brightness-110 contrast-110" priority />
            </div>
 
            <AuthForm />

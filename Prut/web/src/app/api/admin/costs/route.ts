@@ -30,6 +30,11 @@ export async function GET(req: NextRequest) {
     const to = searchParams.get('to') ?? now.toISOString();
     const provider = searchParams.get('provider');
 
+    // Validate date params to prevent injection
+    const isValidDate = (d: string) => /^\d{4}-\d{2}-\d{2}/.test(d);
+    if (from && !isValidDate(from)) return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+    if (to && !isValidDate(to)) return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+
     // Build base query for the selected window
     let baseQuery = supabase
       .from('api_usage_logs')

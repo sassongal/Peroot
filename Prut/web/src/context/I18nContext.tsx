@@ -9,8 +9,9 @@ const I18nContext = createContext<Dictionary | null>(null);
 /**
  * Deep merge DB overrides into the static dictionary
  */
-function mergeTranslations(base: any, overrides: Record<string, string>) {
-  const result = JSON.parse(JSON.stringify(base)); // Deep clone
+function mergeTranslations(base: Dictionary, overrides: Record<string, string>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: Record<string, any> = JSON.parse(JSON.stringify(base)); // Deep clone
 
   Object.entries(overrides).forEach(([key, value]) => {
     const parts = key.split('.');
@@ -27,7 +28,7 @@ function mergeTranslations(base: any, overrides: Record<string, string>) {
     }
   });
 
-  return result;
+  return result as Dictionary;
 }
 
 export function I18nProvider({ 
@@ -50,10 +51,10 @@ export function I18nProvider({
             .eq('lang', lang);
         
         if (data && data.length > 0) {
-            const overridesMap = data.reduce((acc: any, row: any) => {
+            const overridesMap = data.reduce((acc: Record<string, string>, row: { key: string; value: string }) => {
                 acc[row.key] = row.value;
                 return acc;
-            }, {});
+            }, {} as Record<string, string>);
             
             setDictionary(prev => mergeTranslations(prev, overridesMap));
         }

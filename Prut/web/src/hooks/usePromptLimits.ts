@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useSiteSettings } from './useSiteSettings';
 import { logger } from "@/lib/logger";
@@ -13,7 +13,7 @@ const USAGE_STORAGE_KEY = 'peroot_guest_usage';
 
 export function usePromptLimits() {
   const { settings } = useSiteSettings();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [usage, setUsage] = useState<PromptUsage>({ count: 0, lastReset: new Date().toISOString() });
