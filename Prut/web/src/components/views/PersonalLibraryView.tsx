@@ -47,7 +47,8 @@ export function PersonalLibraryView({
     handleToggleFavorite,
     libraryFavorites,
     addPrompt,
-    
+    duplicatePrompt,
+
     // Batch & Edit
     deletePrompts,
     movePrompts,
@@ -489,6 +490,16 @@ export function PersonalLibraryView({
               <Pencil className="w-3 h-3" />
               עיצוב
             </button>
+            <button
+              onClick={async () => {
+                await duplicatePrompt(prompt);
+                toast.success("פרומפט שוכפל!");
+              }}
+              className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-dashed border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <Plus className="w-3 h-3" />
+              שכפל
+            </button>
           </div>
         </GlowingEdgeCard>
       );
@@ -538,6 +549,7 @@ export function PersonalLibraryView({
                   <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white"><Plus className="w-4 h-4"/></button>
                   <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Copy className="w-4 h-4"/></button>
                   <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Pencil className="w-4 h-4"/></button>
+                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} title="שכפל" className="p-2 hover:bg-white/10 rounded-full text-slate-300"><Plus className="w-4 h-4"/></button>
                   <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full">
                       <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
                   </button>

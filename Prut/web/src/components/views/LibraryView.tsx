@@ -1,14 +1,15 @@
 "use client";
 
 import { useLibraryContext } from "@/context/LibraryContext";
-import { CATEGORY_LABELS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock } from "lucide-react";
+import { CATEGORY_LABELS, PROMPT_COLLECTIONS } from "@/lib/constants";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ThumbsUp, ThumbsDown, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { useState } from "react";
+import { exportPromptAsImage } from "@/lib/export-prompt-image";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useHistory } from "@/hooks/useHistory";
 import { logger } from "@/lib/logger";
@@ -51,7 +52,30 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   const [isCreatingNewMoveCategory, setIsCreatingNewMoveCategory] = useState(false);
   const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
-  
+
+  // Rating state (localStorage-based)
+  const [userRatings, setUserRatings] = useState<Record<string, 1 | -1>>(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      return JSON.parse(localStorage.getItem('peroot_library_ratings') || '{}');
+    } catch { return {}; }
+  });
+
+  const handleRate = (promptId: string, rating: 1 | -1) => {
+    setUserRatings(prev => {
+      const next = { ...prev };
+      if (next[promptId] === rating) {
+        delete next[promptId]; // toggle off
+      } else {
+        next[promptId] = rating;
+      }
+      localStorage.setItem('peroot_library_ratings', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Active collection filter
+  const [activeCollection, setActiveCollection] = useState<string | null>(null);
 
   const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
     try {
@@ -126,8 +150,22 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     return acc;
   }, {});
 
-  const orderedCategories = Object.keys(CATEGORY_LABELS).filter((cat) => grouped[cat]?.length);
-  const totalCount = filteredLibrary.length;
+  // If a collection is active, filter the grouped prompts to only show matching categories
+  const activeCollectionData = PROMPT_COLLECTIONS.find(c => c.id === activeCollection);
+  const effectiveGrouped = activeCollection && activeCollectionData
+    ? Object.fromEntries(
+        Object.entries(grouped).filter(([key]) =>
+          activeCollectionData.categories.some(cat =>
+            cat.toLowerCase() === key.toLowerCase() || cat === key
+          )
+        )
+      )
+    : grouped;
+
+  const orderedCategories = Object.keys(CATEGORY_LABELS).filter((cat) => effectiveGrouped[cat]?.length);
+  const totalCount = activeCollection
+    ? Object.values(effectiveGrouped).flat().length
+    : filteredLibrary.length;
 
   // Tracks how many items have been rendered across all category sections
   // so the paywall CTA is inserted exactly after the 7th item globally.
@@ -254,10 +292,45 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               ))}
             </div>
           )}
+
+          {/* Collections Strip */}
+          <div className="mt-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-medium text-slate-500">חבילות פרומפטים</span>
+              {activeCollection && (
+                <button
+                  onClick={() => setActiveCollection(null)}
+                  className="text-xs text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                >
+                  הצג הכל
+                </button>
+              )}
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {PROMPT_COLLECTIONS.map((collection) => (
+                <button
+                  key={collection.id}
+                  onClick={() => setActiveCollection(activeCollection === collection.id ? null : collection.id)}
+                  className={cn(
+                    "shrink-0 w-48 md:w-56 p-4 rounded-xl border transition-all cursor-pointer text-right",
+                    activeCollection === collection.id
+                      ? "border-amber-500/40 bg-amber-500/10 ring-1 ring-amber-500/20"
+                      : "border-white/10 bg-gradient-to-l hover:border-white/20 hover:bg-white/[0.04]",
+                    collection.color
+                  )}
+                  dir="rtl"
+                >
+                  <span className="text-2xl mb-2 block">{collection.icon}</span>
+                  <p className="text-sm font-semibold text-slate-200">{collection.title}</p>
+                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">{collection.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {orderedCategories.map((category) => {
-          const sortedPrompts = [...grouped[category]].sort((a, b) => {
+          const sortedPrompts = [...effectiveGrouped[category]].sort((a, b) => {
             const aFavorite = favoriteLibraryIds.has(a.id);
             const bFavorite = favoriteLibraryIds.has(b.id);
             if (aFavorite !== bFavorite) return aFavorite ? -1 : 1;
@@ -289,7 +362,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   <h3 className="text-xl md:text-2xl lg:text-3xl font-serif font-semibold text-slate-100 tracking-wide">
                     {CATEGORY_LABELS[category] ?? category}
                   </h3>
-                  <span className="text-sm text-slate-400">{grouped[category].length} פרומפטים</span>
+                  <span className="text-sm text-slate-400">{effectiveGrouped[category].length} פרומפטים</span>
                 </div>
                 <span className="text-xs px-3 py-1 rounded-full border border-white/10 text-slate-400">
                   {category}
@@ -419,29 +492,66 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 pt-1">
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
                           <button
                             onClick={() => onUsePrompt(prompt)}
-                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors cursor-pointer"
                           >
                             <Plus className="w-3 h-3" />
-                            השתמש בפרומפט
+                            השתמש
                           </button>
                           <button
                             onClick={() => addPersonalPromptFromLibrary(prompt)}
-                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer"
                           >
                             <BookOpen className="w-3 h-3" />
-                            שמור לאישי
+                            שמור
                           </button>
                           <button
-                            onClick={async () => {
-                              await onCopyText(prompt.prompt);
-                            }}
-                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+                            onClick={async () => { await onCopyText(prompt.prompt); }}
+                            className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer"
                           >
                             <Copy className="w-3 h-3" />
                             העתק
+                          </button>
+                          <button
+                            onClick={() => exportPromptAsImage({
+                              title: prompt.title,
+                              prompt: prompt.prompt,
+                              category: CATEGORY_LABELS[prompt.category] || prompt.category,
+                              useCase: prompt.use_case,
+                            })}
+                            className="flex items-center gap-1.5 p-2.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                            title="ייצא כתמונה"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Rating */}
+                        <div className="flex items-center gap-1 pt-1">
+                          <button
+                            onClick={() => handleRate(prompt.id, 1)}
+                            className={cn(
+                              "flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors cursor-pointer",
+                              userRatings[prompt.id] === 1
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                            )}
+                          >
+                            <ThumbsUp className="w-3 h-3" />
+                            <span>מועיל</span>
+                          </button>
+                          <button
+                            onClick={() => handleRate(prompt.id, -1)}
+                            className={cn(
+                              "flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors cursor-pointer",
+                              userRatings[prompt.id] === -1
+                                ? "bg-red-500/20 text-red-400"
+                                : "text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                            )}
+                          >
+                            <ThumbsDown className="w-3 h-3" />
                           </button>
                         </div>
                       </div>

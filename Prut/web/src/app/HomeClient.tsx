@@ -46,7 +46,7 @@ const PersonalLibraryView = dynamic(
 );
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import StreamingProgress from "@/components/ui/StreamingProgress";
-import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb } from "lucide-react";
+import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock } from "lucide-react";
 import UpgradeNudge from "@/components/features/prompt-improver/UpgradeNudge";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
@@ -758,6 +758,33 @@ function PageContent({ user }: { user: User | null }) {
                   setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
                   onApplyVariables={applyVariablesToPrompt}
                />
+
+               {/* Recently Used Prompts Strip */}
+               {history.length > 0 && (
+                 <div className="mt-3">
+                   <div className="flex items-center gap-2 mb-3">
+                     <Clock className="w-3.5 h-3.5 text-slate-500" />
+                     <span className="text-xs font-medium text-slate-500">שימשת לאחרונה</span>
+                   </div>
+                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                     {history.slice(0, 5).map((item, i) => (
+                       <button
+                         key={i}
+                         onClick={() => { handleRestore(item); }}
+                         className="shrink-0 w-56 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-right group"
+                         dir="rtl"
+                       >
+                         <p className="text-sm text-slate-300 font-medium truncate">{item.title || item.original.slice(0, 40)}</p>
+                         <p className="text-xs text-slate-500 mt-1 truncate">{item.original.slice(0, 60)}</p>
+                         <div className="flex items-center gap-2 mt-2">
+                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/5">{item.category || 'כללי'}</span>
+                           <span className="text-[10px] text-slate-600">{item.tone || ''}</span>
+                         </div>
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               )}
 
                {/* Prompt of the Day + Surprise Me */}
                {filteredLibrary.length > 0 && (

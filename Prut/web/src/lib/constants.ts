@@ -65,3 +65,56 @@ export const QUICK_ACTIONS = [
   { label: "יותר אסרטיבי", instruction: "יותר אסרטיבי, ישיר וממוקד תוצאה." },
   { label: "יותר פרקטי", instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות." },
 ];
+
+export interface PromptCollection {
+  id: string;
+  title: string;
+  description: string;
+  icon: string; // emoji for simplicity
+  categories: string[]; // matching category IDs
+  keywords?: string[]; // additional keyword filters
+  color: string; // tailwind color class
+}
+
+export const PROMPT_COLLECTIONS: PromptCollection[] = [
+  {
+    id: "marketing-pro",
+    title: "חבילת שיווק Pro",
+    description: "10 פרומפטים הכי חזקים לשיווק דיגיטלי",
+    icon: "📈",
+    categories: ["Marketing", "Social", "SEO"],
+    color: "from-purple-500/20 to-purple-500/5",
+  },
+  {
+    id: "startup-pack",
+    title: "ערכת סטארטאפ",
+    description: "פרומפטים חיוניים ליזמים ובעלי עסקים",
+    icon: "🚀",
+    categories: ["Strategy", "Sales", "Product"],
+    color: "from-blue-500/20 to-blue-500/5",
+  },
+  {
+    id: "content-creator",
+    title: "יוצרי תוכן",
+    description: "כתיבה, סושיאל, קריאייטיב וקידום",
+    icon: "✍️",
+    categories: ["Creative", "Social", "SEO"],
+    color: "from-pink-500/20 to-pink-500/5",
+  },
+  {
+    id: "business-ops",
+    title: "ניהול ותפעול",
+    description: "HR, פיננסים, משפטי ותפעול",
+    icon: "⚙️",
+    categories: ["Operations", "HR", "Finance", "Legal"],
+    color: "from-emerald-500/20 to-emerald-500/5",
+  },
+  {
+    id: "dev-data",
+    title: "פיתוח ודאטה",
+    description: "קוד, אוטומציה, ניתוח נתונים",
+    icon: "💻",
+    categories: ["Dev", "Data", "Automation"],
+    color: "from-cyan-500/20 to-cyan-500/5",
+  },
+];

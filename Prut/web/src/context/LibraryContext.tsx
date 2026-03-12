@@ -53,6 +53,7 @@ interface LibraryContextType {
   addPrompt: (prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">) => Promise<void>;
   removePrompt: (id: string) => Promise<void>;
   updatePrompt: (id: string, updates: Partial<PersonalPrompt>) => Promise<void>;
+  duplicatePrompt: (prompt: PersonalPrompt) => Promise<void>;
   incrementUseCount: (id: string) => Promise<void>;
   
   // Batch Actions
@@ -506,6 +507,20 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     }
   };
 
+  const duplicatePrompt = async (prompt: PersonalPrompt) => {
+    await addPrompt({
+      title: `${prompt.title} (עותק)`,
+      prompt: prompt.prompt,
+      category: prompt.category,
+      personal_category: prompt.personal_category,
+      use_case: prompt.use_case,
+      source: "manual",
+      prompt_style: prompt.prompt_style,
+      tags: prompt.tags || [],
+      capability_mode: prompt.capability_mode,
+    });
+  };
+
   const value = {
     viewMode, setViewMode,
     libraryView, setLibraryView,
@@ -517,7 +532,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     personalLibrary, personalCategories,
     favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
     popularityMap,
-    addPrompt, removePrompt, updatePrompt, incrementUseCount,
+    addPrompt, removePrompt, updatePrompt, duplicatePrompt, incrementUseCount,
     deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding, // Exposed
     newPersonalCategory, setNewPersonalCategory,
     renamingCategory, setRenamingCategory,
