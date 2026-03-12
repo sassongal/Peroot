@@ -13,6 +13,7 @@ const loginScreen = $("login-screen");
 const mainScreen = $("main-screen");
 const loadingScreen = $("loading-screen");
 const loginBtn = $("login-btn");
+const loginHint = $("login-hint");
 const promptInput = $("prompt-input");
 const charCount = $("char-count");
 const toneSelect = $("tone-select");
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => promptInput.focus(), 80);
     fetchCredits();
   } else {
-    show(loginScreen);
+    showLoginScreen(auth.reason);
   }
 });
 
@@ -62,6 +63,24 @@ function show(screen) {
   loginScreen.classList.add("hidden");
   mainScreen.classList.add("hidden");
   screen.classList.remove("hidden");
+}
+
+/**
+ * Show login screen with contextual messaging based on auth failure reason.
+ */
+function showLoginScreen(reason) {
+  show(loginScreen);
+  if (reason === "token_expired") {
+    if (loginHint) {
+      loginHint.textContent = "פג תוקף ההתחברות. התחבר שוב כדי להמשיך.";
+      loginHint.style.color = "#fbbf24";
+    }
+  } else {
+    if (loginHint) {
+      loginHint.textContent = "התחבר ל-peroot.space ואז פתח שוב את התוסף";
+      loginHint.style.color = "";
+    }
+  }
 }
 
 // ═══ CREDITS ═══
@@ -101,6 +120,9 @@ async function fetchCredits() {
           creditsBadge.style.background = "rgba(52,211,153,0.08)";
         }
       }
+    } else if (res.status === 401) {
+      // Token invalid on server — force re-login
+      showLoginScreen("token_expired");
     }
   } catch {
     // Not critical
@@ -125,7 +147,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
 // ═══ LOGIN ═══
 loginBtn.addEventListener("click", async () => {
-  await chrome.tabs.create({ url: `${API_BASE}/login` });
+  await openLoginTab();
   window.close();
 });
 
@@ -188,7 +210,21 @@ async function doEnhance() {
       resultSection.classList.add("hidden");
       if (res.status === 403) showError(err.error || "אין מספיק קרדיטים");
       else if (res.status === 429) showError("יותר מדי בקשות. נסה שוב בעוד כמה דקות.");
-      else if (res.status === 401) { showError("נדרשת התחברות מחדש."); show(loginScreen); }
+      else if (res.status === 401) {
+        showError("פג תוקף ההתחברות. מנסה להתחבר מחדש...");
+        // Try to refresh token
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          hideError();
+          // Retry the enhance with the new token
+          isEnhancing = false;
+          clearInterval(timerInterval);
+          setLoading(false);
+          doEnhance();
+          return;
+        }
+        showLoginScreen("token_expired");
+      }
       else showError(err.error || "שגיאה בשדרוג");
       return;
     }
@@ -303,6 +339,10 @@ async function loadLibrary() {
     loading.classList.add("hidden");
 
     if (!res.ok) {
+      if (res.status === 401) {
+        showLoginScreen("token_expired");
+        return;
+      }
       empty.querySelector(".empty-title").textContent = "שגיאה בטעינה";
       empty.classList.remove("hidden");
       return;
@@ -338,6 +378,10 @@ async function loadFavorites() {
     loading.classList.add("hidden");
 
     if (!res.ok) {
+      if (res.status === 401) {
+        showLoginScreen("token_expired");
+        return;
+      }
       empty.querySelector(".empty-title").textContent = "שגיאה בטעינה";
       empty.classList.remove("hidden");
       return;

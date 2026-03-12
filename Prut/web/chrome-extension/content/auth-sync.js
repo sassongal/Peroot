@@ -16,20 +16,32 @@
     }
   }
 
+  async function storeToken(token) {
+    if (token) {
+      chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
+    }
+  }
+
   // Sync immediately
   const token = await fetchToken();
-  if (token) {
-    chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
-  }
+  storeToken(token);
 
   // Poll a few times to catch post-login redirects
   let polls = 0;
   const interval = setInterval(async () => {
     const t = await fetchToken();
     if (t) {
-      chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token: t });
+      storeToken(t);
       clearInterval(interval);
     }
     if (++polls > 5) clearInterval(interval);
   }, 2000);
+
+  // Re-sync when user returns to this tab (e.g. after login redirect)
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible") {
+      const t = await fetchToken();
+      storeToken(t);
+    }
+  });
 })();

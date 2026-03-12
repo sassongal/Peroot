@@ -29,8 +29,52 @@ async function forceAuthSync() {
 }
 
 /**
+ * Decode JWT payload safely.
+ */
+function decodeJwtPayload(token) {
+  try {
+    return JSON.parse(
+      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if a JWT token is expired (or will expire within 5 minutes).
+ */
+function isTokenExpired(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  // Consider expired if less than 5 minutes remaining
+  return payload.exp * 1000 < Date.now() + 5 * 60 * 1000;
+}
+
+/**
+ * Try to refresh the token by syncing from an open peroot.space tab.
+ * Returns the new token or null.
+ */
+async function tryRefreshToken() {
+  // First try force-sync from an already-open peroot.space tab
+  const token = await forceAuthSync();
+  if (token && !isTokenExpired(token)) {
+    return token;
+  }
+  return null;
+}
+
+/**
+ * Open peroot.space login in a new tab.
+ */
+async function openLoginTab() {
+  await chrome.tabs.create({ url: `${PEROOT_URL}/login` });
+}
+
+/**
  * Check if user is authenticated (local check, no server call).
  * First checks storage, then tries force-sync from open peroot.space tab.
+ * If token is expired, attempts refresh before giving up.
  */
 async function checkAuth() {
   let token = await getAuthToken();
@@ -40,29 +84,38 @@ async function checkAuth() {
     token = await forceAuthSync();
   }
 
-  if (!token) return { authenticated: false };
+  if (!token) return { authenticated: false, reason: "no_token" };
 
-  // Decode JWT payload for email
-  try {
-    const payload = JSON.parse(
-      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
-    );
+  const payload = decodeJwtPayload(token);
 
-    // Check expiry
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      // Token expired, clear it
-      chrome.storage.local.remove("peroot_token");
-      return { authenticated: false };
+  // Check expiry
+  if (payload?.exp && payload.exp * 1000 < Date.now()) {
+    // Token expired — try to refresh it
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      const newPayload = decodeJwtPayload(refreshed);
+      return {
+        authenticated: true,
+        email: newPayload?.email || null,
+        userId: newPayload?.sub || null,
+      };
     }
 
-    return {
-      authenticated: true,
-      email: payload.email || null,
-      userId: payload.sub || null,
-    };
-  } catch {}
+    // Refresh failed — clear expired token
+    chrome.storage.local.remove("peroot_token");
+    return { authenticated: false, reason: "token_expired" };
+  }
 
-  return { authenticated: true };
+  // Token about to expire (within 5 minutes) — try background refresh
+  if (isTokenExpired(token)) {
+    tryRefreshToken(); // fire-and-forget, don't block
+  }
+
+  return {
+    authenticated: true,
+    email: payload?.email || null,
+    userId: payload?.sub || null,
+  };
 }
 
 /**
@@ -77,8 +130,20 @@ async function getAuthHeaders(extra = {}) {
 
 /**
  * Authenticated fetch to peroot.space.
+ * On 401, tries to refresh token and retry once.
  */
 async function authFetch(path, options = {}) {
   const headers = await getAuthHeaders(options.headers || {});
-  return fetch(`${PEROOT_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${PEROOT_URL}${path}`, { ...options, headers });
+
+  // On 401, try refreshing the token and retry once
+  if (res.status === 401) {
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      const retryHeaders = { ...options.headers, Authorization: `Bearer ${refreshed}` };
+      return fetch(`${PEROOT_URL}${path}`, { ...options, headers: retryHeaders });
+    }
+  }
+
+  return res;
 }

@@ -64,6 +64,23 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }, 100);
 });
 
+// ─── Auto-sync token when user navigates to peroot.space ───
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (
+    changeInfo.status === "complete" &&
+    tab.url &&
+    (tab.url.startsWith("https://peroot.space") || tab.url.startsWith("https://www.peroot.space"))
+  ) {
+    // Inject auth-sync to pick up fresh token after login/navigation
+    chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["content/auth-sync.js"],
+    }).catch(() => {
+      // Ignore errors (page might not be accessible)
+    });
+  }
+});
+
 // ─── Message Handler ───
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "STORE_AUTH_TOKEN") {
