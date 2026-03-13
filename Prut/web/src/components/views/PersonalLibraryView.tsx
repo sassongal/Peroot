@@ -341,7 +341,7 @@ export function PersonalLibraryView({
       const text = await file.text();
       const parsed = JSON.parse(text);
       if (!Array.isArray(parsed)) {
-        toast.error("קובץ לא תקין – נדרש מערך JSON");
+        toast.error("קובץ לא תקין - נדרש מערך JSON");
         return;
       }
       // Validate structure
@@ -385,7 +385,7 @@ export function PersonalLibraryView({
       await addPrompts(promptsToAdd);
       toast.success(`יובאו ${toImport.length} פרומפטים בהצלחה`);
     } catch {
-      toast.error("שגיאה בקריאת הקובץ – ודא שזהו קובץ JSON תקין");
+      toast.error("שגיאה בקריאת הקובץ - ודא שזהו קובץ JSON תקין");
     }
   };
 

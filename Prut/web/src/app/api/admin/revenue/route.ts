@@ -101,7 +101,7 @@ export async function GET() {
     // ── ARPU ───────────────────────────────────────────────────────────────
     const arpu = totalUsers > 0 ? mrr / totalUsers : 0;
 
-    // ── Monthly growth — last 6 months ─────────────────────────────────────
+    // ── Monthly growth - last 6 months ─────────────────────────────────────
     const allSubs = allSubsResult.data ?? [];
     const months: { month: string; label: string; newSubs: number; activeSubs: number }[] = [];
 

@@ -200,7 +200,7 @@ export default function EmailCampaignsPage() {
           <SummaryCard
             label="Total Emails Sent"
             sublabel="סה״כ מיילים שנשלחו"
-            value={data ? fmtCount(data.summary.totalEmailsSent) : "—"}
+            value={data ? fmtCount(data.summary.totalEmailsSent) : "-"}
             icon={Send}
             color="blue"
             loading={loading}
@@ -208,7 +208,7 @@ export default function EmailCampaignsPage() {
           <SummaryCard
             label="Campaigns This Month"
             sublabel="קמפיינים החודש"
-            value={data ? fmtCount(data.summary.campaignsThisMonth) : "—"}
+            value={data ? fmtCount(data.summary.campaignsThisMonth) : "-"}
             icon={Mail}
             color="purple"
             loading={loading}
@@ -307,7 +307,7 @@ export default function EmailCampaignsPage() {
                   >
                     {SEGMENT_OPTIONS.map((s) => (
                       <option key={s.value} value={s.value}>
-                        {s.label} — {s.he}
+                        {s.label} - {s.he}
                       </option>
                     ))}
                   </select>
@@ -498,8 +498,8 @@ export default function EmailCampaignsPage() {
 
                 {(data?.campaigns ?? []).map((c) => {
                   const d = c.details ?? {};
-                  const subjectText = d.subject ?? "—";
-                  const seg = d.segment ?? "—";
+                  const subjectText = d.subject ?? "-";
+                  const seg = d.segment ?? "-";
                   const sent = d.sent_count ?? 1;
                   const failed = d.failed_count ?? 0;
 
@@ -537,7 +537,7 @@ export default function EmailCampaignsPage() {
                             failed > 0 ? "text-rose-400" : "text-zinc-700"
                           )}
                         >
-                          {failed > 0 ? fmtCount(failed) : "—"}
+                          {failed > 0 ? fmtCount(failed) : "-"}
                         </span>
                       </div>
 

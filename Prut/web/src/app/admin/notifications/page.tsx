@@ -598,7 +598,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                       <span className="text-[9px] font-black text-rose-500 uppercase tracking-[0.25em]">
-                        Critical — {criticals.length}
+                        Critical - {criticals.length}
                       </span>
                     </div>
                     <div className="flex-1 h-px bg-rose-500/10" />
@@ -621,7 +621,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-amber-500" />
                       <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.25em]">
-                        Warnings — {warnings.length}
+                        Warnings - {warnings.length}
                       </span>
                     </div>
                     <div className="flex-1 h-px bg-amber-500/10" />
@@ -644,7 +644,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
                       <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.25em]">
-                        Informational — {infos.length}
+                        Informational - {infos.length}
                       </span>
                     </div>
                     <div className="flex-1 h-px bg-blue-500/10" />
@@ -667,7 +667,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-zinc-600" />
                       <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">
-                        Acknowledged — {ackedList.length}
+                        Acknowledged - {ackedList.length}
                       </span>
                     </div>
                     <div className="flex-1 h-px bg-white/5" />

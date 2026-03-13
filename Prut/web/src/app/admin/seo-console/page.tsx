@@ -298,7 +298,7 @@ function ContentCalendar({
               Content Calendar
             </h3>
             <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
-              תוכן פעיל לפי שבוע — 12 שבועות אחרונים
+              תוכן פעיל לפי שבוע - 12 שבועות אחרונים
             </p>
           </div>
         </div>
@@ -408,7 +408,7 @@ function SEOChecklist({ checklist }: { checklist: ChecklistItem[] }) {
             SEO Checklist
           </h3>
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
-            בדיקות SEO — מצב נוכחי
+            בדיקות SEO - מצב נוכחי
           </p>
         </div>
       </div>

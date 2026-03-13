@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function DELETE(request: Request) {
-  // CSRF origin check — only allow requests from the app's own domain
+  // CSRF origin check - only allow requests from the app's own domain
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const allowedOrigin = siteUrl.startsWith("http") ? new URL(siteUrl).origin : siteUrl;
   const rawOrigin = request.headers.get("origin") ?? request.headers.get("referer") ?? "";

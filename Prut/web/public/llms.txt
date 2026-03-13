@@ -12,11 +12,11 @@
 - [Contact](https://peroot.space/contact)
 
 ## Blog Articles
-- [AI לפרילנסרים — איך לעבוד חכם יותר עם בינה מלאכותית](https://peroot.space/blog/ai-for-freelancers-guide)
-- [AI בשירות העסק הקטן — 7 דרכים לחסוך זמן וכסף](https://peroot.space/blog/ai-for-small-business-guide)
-- [פרומפט אנג׳ינירינג למתקדמים — Chain-of-Thought, Few-Shot וטכניקות מתקדמות](https://peroot.space/blog/advanced-prompt-engineering-techniques)
-- [איך להשתמש ב-AI לכתיבת קוד — מדריך למתחילים ולמתקדמים](https://peroot.space/blog/ai-for-coding-beginners-guide)
-- [AI בחינוך — איך מורים משתמשים בפרומפטים כדי ללמד טוב יותר](https://peroot.space/blog/ai-for-teachers-education-guide)
+- [AI לפרילנסרים - איך לעבוד חכם יותר עם בינה מלאכותית](https://peroot.space/blog/ai-for-freelancers-guide)
+- [AI בשירות העסק הקטן - 7 דרכים לחסוך זמן וכסף](https://peroot.space/blog/ai-for-small-business-guide)
+- [פרומפט אנג׳ינירינג למתקדמים - Chain-of-Thought, Few-Shot וטכניקות מתקדמות](https://peroot.space/blog/advanced-prompt-engineering-techniques)
+- [איך להשתמש ב-AI לכתיבת קוד - מדריך למתחילים ולמתקדמים](https://peroot.space/blog/ai-for-coding-beginners-guide)
+- [AI בחינוך - איך מורים משתמשים בפרומפטים כדי ללמד טוב יותר](https://peroot.space/blog/ai-for-teachers-education-guide)
 - [10 טעויות נפוצות בכתיבת פרומפטים - ואיך לתקן אותן](https://peroot.space/blog/10-common-prompt-mistakes)
 - [איך לכתוב פרומפט טוב - המדריך המלא](https://peroot.space/blog/how-to-write-good-prompt)
 - [פרומפט אנג׳ינירינג למשווקים](https://peroot.space/blog/prompt-engineering-for-marketers)

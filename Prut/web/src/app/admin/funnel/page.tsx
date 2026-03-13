@@ -289,7 +289,7 @@ export default function FunnelPage() {
                 המשפך המלא
               </h2>
               <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">
-                Full Conversion Funnel — {RANGE_LABELS[range]}
+                Full Conversion Funnel - {RANGE_LABELS[range]}
               </p>
             </div>
           </div>

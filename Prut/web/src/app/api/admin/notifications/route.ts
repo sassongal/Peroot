@@ -11,11 +11,11 @@ import { logger } from '@/lib/logger';
  * acknowledged state from localStorage.
  *
  * Anomaly checks performed:
- *   1. Traffic spike    – today's activity vs 7-day rolling average (>2x)
- *   2. Cost overrun     – today's API costs vs daily average × 1.5
- *   3. New user burst   – signups today vs daily average × 3
- *   4. Error patterns   – failed actions in activity_logs (>10 in 24h)
- *   5. Inactive pro     – pro users with no activity in 7 days
+ *   1. Traffic spike    - today's activity vs 7-day rolling average (>2x)
+ *   2. Cost overrun     - today's API costs vs daily average × 1.5
+ *   3. New user burst   - signups today vs daily average × 3
+ *   4. Error patterns   - failed actions in activity_logs (>10 in 24h)
+ *   5. Inactive pro     - pro users with no activity in 7 days
  *
  * System health score: 100 - (criticals × 30 + warnings × 10 + infos × 5)
  * clamped to [0, 100].
@@ -251,7 +251,7 @@ export async function GET(req: NextRequest) {
             id: makeId('signup-burst-critical', todayStart.slice(0, 10)),
             type: 'critical',
             title: 'Massive Signup Burst',
-            message: `${signupsToday} הרשמות חדשות היום — פי ${ratio.toFixed(1)} מהממוצע. בדוק אם זה ויראלי, קמפיין, או בוט.`,
+            message: `${signupsToday} הרשמות חדשות היום - פי ${ratio.toFixed(1)} מהממוצע. בדוק אם זה ויראלי, קמפיין, או בוט.`,
             timestamp: now,
             metric: {
               label: 'הרשמות היום',
@@ -265,7 +265,7 @@ export async function GET(req: NextRequest) {
             id: makeId('signup-burst-warning', todayStart.slice(0, 10)),
             type: 'warning',
             title: 'New User Burst',
-            message: `${signupsToday} הרשמות חדשות היום — פי ${ratio.toFixed(1)} מהממוצע היומי של שבוע אחרון.`,
+            message: `${signupsToday} הרשמות חדשות היום - פי ${ratio.toFixed(1)} מהממוצע היומי של שבוע אחרון.`,
             timestamp: now,
             metric: {
               label: 'הרשמות היום',
@@ -325,7 +325,7 @@ export async function GET(req: NextRequest) {
           id: makeId('error-pattern-warning', todayStart.slice(0, 10)),
           type: 'warning',
           title: 'Elevated Error Rate',
-          message: `${errors} פעולות כושלות ב-24 שעות האחרונות — מעל הסף הרגיל.`,
+          message: `${errors} פעולות כושלות ב-24 שעות האחרונות - מעל הסף הרגיל.`,
           timestamp: now,
           metric: {
             label: 'שגיאות (24h)',
@@ -380,7 +380,7 @@ export async function GET(req: NextRequest) {
             id: makeId('inactive-pro-warning', todayStart.slice(0, 10)),
             type: 'warning',
             title: 'Pro Users Inactive',
-            message: `${inactiveProCount} ממשתמשי ה-Pro (${inactivePct}%) לא היו פעילים ב-7 ימים — שקול לשלוח קמפיין re-engagement.`,
+            message: `${inactiveProCount} ממשתמשי ה-Pro (${inactivePct}%) לא היו פעילים ב-7 ימים - שקול לשלוח קמפיין re-engagement.`,
             timestamp: now,
             metric: {
               label: 'Pro משתמשים לא פעילים',

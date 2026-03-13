@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
@@ -128,16 +127,14 @@ export default async function BlogPostPage({ params }: Props) {
           )}
         </header>
 
-        <div className="relative w-full aspect-[1200/630] rounded-xl overflow-hidden mb-10">
-          <Image
-            src={ogImageUrl}
-            alt={post.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 768px"
-            priority
-          />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`}
+          alt={post.title}
+          width={1200}
+          height={630}
+          className="w-full aspect-[1200/630] object-cover rounded-xl mb-10"
+        />
 
         <SafeHtml
           html={post.content}

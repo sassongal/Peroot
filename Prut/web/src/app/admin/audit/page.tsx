@@ -177,7 +177,7 @@ function SectionTitle({
   );
 }
 
-// SVG donut chart — pure CSS/SVG, no external charting lib
+// SVG donut chart - pure CSS/SVG, no external charting lib
 function DonutChart({ data }: { data: ActionsByType[] }) {
   const total = data.reduce((s, d) => s + d.count, 0);
   if (total === 0) return (
@@ -254,7 +254,7 @@ function DonutChart({ data }: { data: ActionsByType[] }) {
   );
 }
 
-// Bar chart — rendered in pure CSS
+// Bar chart - rendered in pure CSS
 function BarChart({ data }: { data: ActionsByDay[] }) {
   const maxVal = Math.max(...data.map((d) => d.count), 1);
 
@@ -373,7 +373,7 @@ export default function AuditPage() {
               Admin Audit
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
-              מעקב אחר כל פעולות האדמין במערכת — מי עשה מה ומתי
+              מעקב אחר כל פעולות האדמין במערכת - מי עשה מה ומתי
             </p>
           </div>
 
@@ -401,28 +401,28 @@ export default function AuditPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           <SummaryCard
             label="Total Admin Actions"
-            value={loading ? "—" : (summary?.totalActions ?? 0).toLocaleString()}
+            value={loading ? "-" : (summary?.totalActions ?? 0).toLocaleString()}
             sub="בטווח הנבחר"
             icon={Activity}
             color="purple"
           />
           <SummaryCard
             label="Unique Admins"
-            value={loading ? "—" : (summary?.uniqueAdmins ?? 0).toString()}
+            value={loading ? "-" : (summary?.uniqueAdmins ?? 0).toString()}
             sub="אדמינים פעילים"
             icon={Users}
             color="blue"
           />
           <SummaryCard
             label="Most Common Action"
-            value={loading ? "—" : (summary?.mostCommonAction ?? "-")}
+            value={loading ? "-" : (summary?.mostCommonAction ?? "-")}
             sub="פעולה נפוצה"
             icon={Zap}
             color="amber"
           />
           <SummaryCard
             label="Actions Today"
-            value={loading ? "—" : (summary?.actionsToday ?? 0).toString()}
+            value={loading ? "-" : (summary?.actionsToday ?? 0).toString()}
             sub="היום"
             icon={Clock}
             color="emerald"
@@ -494,7 +494,7 @@ export default function AuditPage() {
         {/* ── Charts Row ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* Bar chart — actions per day */}
+          {/* Bar chart - actions per day */}
           <div className="lg:col-span-2 rounded-[36px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6">
             <SectionTitle
               icon={Activity}
@@ -511,7 +511,7 @@ export default function AuditPage() {
             )}
           </div>
 
-          {/* Donut — actions by type */}
+          {/* Donut - actions by type */}
           <div className="rounded-[36px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6">
             <SectionTitle
               icon={Zap}
@@ -686,10 +686,10 @@ export default function AuditPage() {
                                     .filter(([k]) => k !== "is_admin" && k !== "timestamp")
                                     .slice(0, 2)
                                     .map(([k, v]) => `${k}: ${String(v)}`)
-                                    .join(" · ") || "—"}
+                                    .join(" · ") || "-"}
                                 </span>
                               ) : (
-                                <span className="text-zinc-800 text-xs">—</span>
+                                <span className="text-zinc-800 text-xs">-</span>
                               )}
                             </td>
 

@@ -220,7 +220,7 @@ function FeatureAdoptionTracker({
             Feature Adoption Tracker
           </h3>
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
-            אחוז משתמשים שהשתמשו בכל פיצ׳ר — 30 יום אחרונים
+            אחוז משתמשים שהשתמשו בכל פיצ׳ר - 30 יום אחרונים
           </p>
         </div>
       </div>
@@ -457,7 +457,7 @@ function PostHogSection({ connected }: { connected: boolean }) {
         </div>
         <div>
           <h3 className="text-lg font-black text-white tracking-tight">
-            A/B Tests — Live Experiments
+            A/B Tests - Live Experiments
           </h3>
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
             PostHog Experiments API
@@ -622,14 +622,14 @@ export default function ExperimentsPage() {
                 <FlaskConical className="w-4 h-4 text-blue-400" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">
-                Hybrid — Supabase + PostHog
+                Hybrid - Supabase + PostHog
               </span>
             </div>
             <h1 className="text-5xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
               Experiments
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-lg">
-              ניסויי A/B, אימוץ פיצ׳רים, השוואת סגמנטים — {data.periodDays} ימים אחרונים
+              ניסויי A/B, אימוץ פיצ׳רים, השוואת סגמנטים - {data.periodDays} ימים אחרונים
             </p>
           </div>
 
@@ -655,7 +655,7 @@ export default function ExperimentsPage() {
           <SummaryCard
             label="Most Adopted"
             value={
-              summary.mostAdopted ? `${summary.mostAdopted.adoptionRate}%` : "—"
+              summary.mostAdopted ? `${summary.mostAdopted.adoptionRate}%` : "-"
             }
             sub={
               summary.mostAdopted
@@ -668,7 +668,7 @@ export default function ExperimentsPage() {
           <SummaryCard
             label="Least Adopted"
             value={
-              summary.leastAdopted ? `${summary.leastAdopted.adoptionRate}%` : "—"
+              summary.leastAdopted ? `${summary.leastAdopted.adoptionRate}%` : "-"
             }
             sub={
               summary.leastAdopted

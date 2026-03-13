@@ -231,7 +231,7 @@ export default function RevenuePage() {
               <KpiCard
                 label="MRR"
                 sublabel="Monthly Recurring Revenue"
-                value={data ? fmtUSD(data.kpi.mrr) : "—"}
+                value={data ? fmtUSD(data.kpi.mrr) : "-"}
                 icon={DollarSign}
                 color="emerald"
                 loading={loading}
@@ -240,7 +240,7 @@ export default function RevenuePage() {
               <KpiCard
                 label="Active Subscribers"
                 sublabel="מנויים פעילים"
-                value={data ? fmtCount(data.kpi.activeSubs) : "—"}
+                value={data ? fmtCount(data.kpi.activeSubs) : "-"}
                 icon={Users}
                 color="blue"
                 loading={loading}
@@ -248,7 +248,7 @@ export default function RevenuePage() {
               <KpiCard
                 label="Churn Rate"
                 sublabel="שיעור נטישה"
-                value={data ? fmtPct(data.kpi.churnRate) : "—"}
+                value={data ? fmtPct(data.kpi.churnRate) : "-"}
                 icon={TrendingUp}
                 color="rose"
                 loading={loading}
@@ -257,7 +257,7 @@ export default function RevenuePage() {
               <KpiCard
                 label="New This Month"
                 sublabel="מנויים חדשים החודש"
-                value={data ? fmtCount(data.kpi.newThisMonth) : "—"}
+                value={data ? fmtCount(data.kpi.newThisMonth) : "-"}
                 icon={ArrowUpRight}
                 color="purple"
                 loading={loading}
@@ -270,21 +270,21 @@ export default function RevenuePage() {
               <SecondaryCard
                 label="Conversion Rate"
                 sublabel="Pro / Total Users"
-                value={data ? fmtPct(data.kpi.conversionRate) : "—"}
+                value={data ? fmtPct(data.kpi.conversionRate) : "-"}
                 icon={CreditCard}
                 loading={loading}
               />
               <SecondaryCard
                 label="ARPU"
                 sublabel="Average Revenue Per User"
-                value={data ? fmtUSD(data.kpi.arpu) : "—"}
+                value={data ? fmtUSD(data.kpi.arpu) : "-"}
                 icon={BarChart3}
                 loading={loading}
               />
               <SecondaryCard
                 label="Total Users"
                 sublabel="סה״כ משתמשים"
-                value={data ? fmtCount(data.kpi.totalUsers) : "—"}
+                value={data ? fmtCount(data.kpi.totalUsers) : "-"}
                 icon={Users}
                 loading={loading}
               />
@@ -299,7 +299,7 @@ export default function RevenuePage() {
                   icon={BarChart3}
                   color="emerald"
                   title="MRR Trend"
-                  sub="Active subscribers — last 6 months"
+                  sub="Active subscribers - last 6 months"
                 />
 
                 {loading ? (
