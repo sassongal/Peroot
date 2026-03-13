@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 import { SafeHtml } from "@/components/ui/SafeHtml";
+import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -127,14 +128,13 @@ export default async function BlogPostPage({ params }: Props) {
           )}
         </header>
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`}
-          alt={post.title}
-          width={1200}
-          height={630}
-          className="w-full aspect-[1200/630] object-cover rounded-xl mb-10"
-        />
+        <div className="mb-10">
+          <BlogHeroImage
+            title={post.title}
+            category={post.category || ""}
+            excerpt={post.excerpt || ""}
+          />
+        </div>
 
         <SafeHtml
           html={post.content}

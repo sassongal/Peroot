@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="60%" cy="40%" r="35%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <!-- Magnifying glass -->
+  <!-- Lens circle -->
+  <circle cx="560" cy="280" r="130" fill="#6366f1" fill-opacity="0.05" stroke="#6366f1" stroke-opacity="0.28" stroke-width="2"/>
+  <circle cx="560" cy="280" r="115" fill="none" stroke="#6366f1" stroke-opacity="0.12" stroke-width="1"/>
+  <!-- Lens glare/reflection -->
+  <path d="M500,220 Q530,200 560,205" fill="none" stroke="#6366f1" stroke-opacity="0.2" stroke-width="2" stroke-linecap="round"/>
+  <!-- Handle -->
+  <line x1="655" y1="375" x2="750" y2="470" stroke="#6366f1" stroke-opacity="0.3" stroke-width="8" stroke-linecap="round"/>
+  <line x1="655" y1="375" x2="750" y2="470" stroke="#6366f1" stroke-opacity="0.15" stroke-width="14" stroke-linecap="round"/>
+  <!-- Content inside magnifying glass - star ratings / review data -->
+  <g stroke="#6366f1" stroke-opacity="0.18" stroke-width="1" fill="none" stroke-linecap="round">
+    <line x1="480" y1="250" x2="640" y2="250"/>
+    <line x1="480" y1="270" x2="620" y2="270"/>
+    <line x1="480" y1="290" x2="630" y2="290"/>
+    <line x1="480" y1="310" x2="610" y2="310"/>
+  </g>
+  <!-- Stars inside lens -->
+  <g fill="#6366f1" fill-opacity="0.3">
+    <!-- Star 1 -->
+    <polygon points="490,235 493,226 496,235 505,235 498,240 501,249 493,244 486,249 489,240 482,235"/>
+    <!-- Star 2 -->
+    <polygon points="510,235 513,226 516,235 525,235 518,240 521,249 513,244 506,249 509,240 502,235"/>
+    <!-- Star 3 -->
+    <polygon points="530,235 533,226 536,235 545,235 538,240 541,249 533,244 526,249 529,240 522,235"/>
+    <!-- Star 4 -->
+    <polygon points="550,235 553,226 556,235 565,235 558,240 561,249 553,244 546,249 549,240 542,235"/>
+    <!-- Star 5 (half) -->
+    <polygon points="570,235 573,226 576,235 585,235 578,240 581,249 573,244 566,249 569,240 562,235" fill-opacity="0.15"/>
+  </g>
+  <!-- Outer search ripples -->
+  <circle cx="560" cy="280" r="155" fill="none" stroke="#6366f1" stroke-opacity="0.08" stroke-width="1" stroke-dasharray="6,8"/>
+  <circle cx="560" cy="280" r="185" fill="none" stroke="#6366f1" stroke-opacity="0.05" stroke-width="1" stroke-dasharray="6,10"/>
+  <!-- Background check marks / evaluation symbols -->
+  <g stroke="#6366f1" stroke-opacity="0.14" stroke-width="1.5" stroke-linecap="round" fill="none">
+    <polyline points="110,180 125,195 155,160"/>
+    <circle cx="130" cy="177" r="22" stroke-opacity="0.1"/>
+  </g>
+  <g stroke="#6366f1" stroke-opacity="0.12" stroke-width="1.5" stroke-linecap="round" fill="none">
+    <polyline points="950,400 965,415 995,380"/>
+    <circle cx="970" cy="397" r="22" stroke-opacity="0.08"/>
+  </g>
+  <g stroke="#6366f1" stroke-opacity="0.1" stroke-width="1" stroke-linecap="round" fill="none">
+    <polyline points="100,420 112,433 135,405"/>
+    <circle cx="117" cy="419" r="18" stroke-opacity="0.08"/>
+  </g>
+  <g stroke="#6366f1" stroke-opacity="0.1" stroke-width="1" stroke-linecap="round" fill="none">
+    <polyline points="1060,170 1072,183 1095,155"/>
+    <circle cx="1077" cy="169" r="18" stroke-opacity="0.08"/>
+  </g>
+  <!-- Floating rating cards right side -->
+  <rect x="830" y="200" width="160" height="55" rx="6" fill="#6366f1" fill-opacity="0.05" stroke="#6366f1" stroke-opacity="0.15" stroke-width="1"/>
+  <line x1="850" y1="220" x2="970" y2="220" stroke="#6366f1" stroke-opacity="0.1" stroke-width="1"/>
+  <line x1="850" y1="238" x2="950" y2="238" stroke="#6366f1" stroke-opacity="0.08" stroke-width="1"/>
+  <rect x="830" y="275" width="160" height="55" rx="6" fill="#6366f1" fill-opacity="0.05" stroke="#6366f1" stroke-opacity="0.12" stroke-width="1"/>
+  <line x1="850" y1="295" x2="970" y2="295" stroke="#6366f1" stroke-opacity="0.08" stroke-width="1"/>
+  <line x1="850" y1="313" x2="940" y2="313" stroke="#6366f1" stroke-opacity="0.06" stroke-width="1"/>
+  <!-- Grid -->
+  <g stroke="#6366f1" stroke-opacity="0.04" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+</svg>

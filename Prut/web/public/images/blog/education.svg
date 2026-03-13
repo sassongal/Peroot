@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a0a14"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="25%" r="30%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <!-- Abstract open book shape in center -->
+  <g stroke="#ec4899" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Book left page -->
+    <path d="M480,200 L480,430 Q540,415 600,420 L600,190 Q540,185 480,200Z" fill="#ec4899" fill-opacity="0.06" stroke-opacity="0.2" stroke-width="1.5"/>
+    <!-- Book right page -->
+    <path d="M720,200 L720,430 Q660,415 600,420 L600,190 Q660,185 720,200Z" fill="#ec4899" fill-opacity="0.06" stroke-opacity="0.2" stroke-width="1.5"/>
+    <!-- Spine -->
+    <line x1="600" y1="190" x2="600" y2="420" stroke-opacity="0.3" stroke-width="1.5"/>
+    <!-- Page lines left -->
+    <line x1="510" y1="255" x2="590" y2="252" stroke-opacity="0.15" stroke-width="1"/>
+    <line x1="510" y1="275" x2="590" y2="273" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="510" y1="295" x2="590" y2="293" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="510" y1="315" x2="590" y2="314" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="510" y1="335" x2="590" y2="335" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="510" y1="355" x2="590" y2="356" stroke-opacity="0.1" stroke-width="1"/>
+    <line x1="510" y1="375" x2="590" y2="377" stroke-opacity="0.08" stroke-width="1"/>
+    <!-- Page lines right -->
+    <line x1="610" y1="252" x2="690" y2="255" stroke-opacity="0.15" stroke-width="1"/>
+    <line x1="610" y1="273" x2="690" y2="275" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="610" y1="293" x2="690" y2="295" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="610" y1="314" x2="690" y2="315" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="610" y1="335" x2="690" y2="335" stroke-opacity="0.12" stroke-width="1"/>
+    <line x1="610" y1="356" x2="690" y2="355" stroke-opacity="0.1" stroke-width="1"/>
+    <line x1="610" y1="377" x2="690" y2="375" stroke-opacity="0.08" stroke-width="1"/>
+  </g>
+  <!-- Floating dots/stars around the book - learning sparks -->
+  <g fill="#ec4899">
+    <circle cx="380" cy="180" r="3" fill-opacity="0.4"/>
+    <circle cx="350" cy="250" r="2" fill-opacity="0.3"/>
+    <circle cx="420" cy="130" r="2" fill-opacity="0.35"/>
+    <circle cx="820" cy="180" r="3" fill-opacity="0.4"/>
+    <circle cx="850" cy="250" r="2" fill-opacity="0.3"/>
+    <circle cx="780" cy="130" r="2" fill-opacity="0.35"/>
+    <circle cx="600" cy="130" r="3" fill-opacity="0.45"/>
+    <circle cx="300" cy="350" r="2" fill-opacity="0.25"/>
+    <circle cx="900" cy="350" r="2" fill-opacity="0.25"/>
+    <circle cx="150" cy="200" r="2" fill-opacity="0.2"/>
+    <circle cx="1050" cy="200" r="2" fill-opacity="0.2"/>
+  </g>
+  <!-- Light ray lines emanating from book -->
+  <g stroke="#ec4899" stroke-opacity="0.07" stroke-width="1">
+    <line x1="600" y1="190" x2="600" y2="50"/>
+    <line x1="600" y1="190" x2="450" y2="80"/>
+    <line x1="600" y1="190" x2="750" y2="80"/>
+    <line x1="600" y1="190" x2="350" y2="140"/>
+    <line x1="600" y1="190" x2="850" y2="140"/>
+    <line x1="600" y1="190" x2="250" y2="230"/>
+    <line x1="600" y1="190" x2="950" y2="230"/>
+  </g>
+  <!-- Concentric arcs above book (knowledge radiating) -->
+  <g stroke="#ec4899" fill="none">
+    <path d="M520,190 Q600,120 680,190" stroke-opacity="0.18" stroke-width="1.5"/>
+    <path d="M470,190 Q600,80 730,190" stroke-opacity="0.1" stroke-width="1"/>
+    <path d="M420,190 Q600,30 780,190" stroke-opacity="0.06" stroke-width="1"/>
+  </g>
+  <!-- Background subtle grid -->
+  <g stroke="#ec4899" stroke-opacity="0.04" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+  <!-- Corner accents -->
+  <g stroke="#ec4899" stroke-opacity="0.15" stroke-width="1.5" fill="none">
+    <polyline points="30,30 30,60 60,60"/>
+    <polyline points="1170,30 1170,60 1140,60"/>
+    <polyline points="30,600 30,570 60,570"/>
+    <polyline points="1170,600 1170,570 1140,570"/>
+  </g>
+</svg>

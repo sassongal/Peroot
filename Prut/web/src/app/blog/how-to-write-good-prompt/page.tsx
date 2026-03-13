@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent("איך לכתוב פרומפט טוב - המדריך המלא")}&subtitle=${encodeURIComponent("5 עקרונות שיהפכו כל פרומפט שלכם לפרומפט מקצועי")}&category=${encodeURIComponent("מדריכים")}`;
 
 export const metadata: Metadata = {
   title: "איך לכתוב פרומפט טוב - המדריך המלא",
@@ -13,11 +17,13 @@ export const metadata: Metadata = {
     siteName: "Peroot",
     locale: "he_IL",
     type: "article",
+    images: [{ url: ogImage, width: 1200, height: 630, alt: "איך לכתוב פרומפט טוב - המדריך המלא" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "איך לכתוב פרומפט טוב - המדריך המלא | Peroot",
     description: "5 עקרונות שיהפכו כל פרומפט שלכם ממשהו בסיסי לפרומפט מקצועי.",
+    images: [ogImage],
   },
 };
 
@@ -46,6 +52,14 @@ export default function HowToWriteGoodPrompt() {
             רוב האנשים כותבים פרומפטים כמו הודעת טקסט - קצר, עמום, בלי הקשר. התוצאה? תשובות גנריות שלא באמת עוזרות. הנה 5 עקרונות שישנו את זה לגמרי, עם דוגמאות מעשיות לפני ואחרי.
           </p>
         </header>
+
+        <div className="mb-10">
+          <BlogHeroImage
+            title="איך לכתוב פרומפט טוב - המדריך המלא"
+            category="מדריכים"
+            excerpt="5 עקרונות שיהפכו כל פרומפט שלכם ממשהו בסיסי לפרומפט מקצועי"
+          />
+        </div>
 
         <div className="prose prose-invert prose-amber max-w-none space-y-8">
 

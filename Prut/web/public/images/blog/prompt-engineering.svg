@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a140a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Neural network nodes - circuit pattern -->
+  <!-- Layer 1 nodes -->
+  <circle cx="150" cy="200" r="8" fill="#f59e0b" fill-opacity="0.25"/>
+  <circle cx="150" cy="315" r="8" fill="#f59e0b" fill-opacity="0.25"/>
+  <circle cx="150" cy="430" r="8" fill="#f59e0b" fill-opacity="0.25"/>
+  <!-- Layer 2 nodes -->
+  <circle cx="350" cy="150" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <circle cx="350" cy="265" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <circle cx="350" cy="380" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <circle cx="350" cy="480" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <!-- Layer 3 - center/larger nodes -->
+  <circle cx="600" cy="175" r="10" fill="#f59e0b" fill-opacity="0.35"/>
+  <circle cx="600" cy="315" r="14" fill="#f59e0b" fill-opacity="0.4"/>
+  <circle cx="600" cy="455" r="10" fill="#f59e0b" fill-opacity="0.35"/>
+  <!-- Layer 4 nodes -->
+  <circle cx="850" cy="150" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <circle cx="850" cy="265" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <circle cx="850" cy="380" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <circle cx="850" cy="480" r="8" fill="#f59e0b" fill-opacity="0.3"/>
+  <!-- Layer 5 nodes -->
+  <circle cx="1050" cy="200" r="8" fill="#f59e0b" fill-opacity="0.25"/>
+  <circle cx="1050" cy="315" r="8" fill="#f59e0b" fill-opacity="0.25"/>
+  <circle cx="1050" cy="430" r="8" fill="#f59e0b" fill-opacity="0.25"/>
+  <!-- Connections layer 1 to 2 -->
+  <g stroke="#f59e0b" stroke-opacity="0.1" stroke-width="1" fill="none">
+    <line x1="150" y1="200" x2="350" y2="150"/>
+    <line x1="150" y1="200" x2="350" y2="265"/>
+    <line x1="150" y1="200" x2="350" y2="380"/>
+    <line x1="150" y1="315" x2="350" y2="150"/>
+    <line x1="150" y1="315" x2="350" y2="265"/>
+    <line x1="150" y1="315" x2="350" y2="380"/>
+    <line x1="150" y1="315" x2="350" y2="480"/>
+    <line x1="150" y1="430" x2="350" y2="265"/>
+    <line x1="150" y1="430" x2="350" y2="380"/>
+    <line x1="150" y1="430" x2="350" y2="480"/>
+    <!-- Layer 2 to 3 -->
+    <line x1="350" y1="150" x2="600" y2="175"/>
+    <line x1="350" y1="150" x2="600" y2="315"/>
+    <line x1="350" y1="265" x2="600" y2="175"/>
+    <line x1="350" y1="265" x2="600" y2="315"/>
+    <line x1="350" y1="265" x2="600" y2="455"/>
+    <line x1="350" y1="380" x2="600" y2="175"/>
+    <line x1="350" y1="380" x2="600" y2="315"/>
+    <line x1="350" y1="380" x2="600" y2="455"/>
+    <line x1="350" y1="480" x2="600" y2="315"/>
+    <line x1="350" y1="480" x2="600" y2="455"/>
+    <!-- Layer 3 to 4 -->
+    <line x1="600" y1="175" x2="850" y2="150"/>
+    <line x1="600" y1="175" x2="850" y2="265"/>
+    <line x1="600" y1="315" x2="850" y2="150"/>
+    <line x1="600" y1="315" x2="850" y2="265"/>
+    <line x1="600" y1="315" x2="850" y2="380"/>
+    <line x1="600" y1="315" x2="850" y2="480"/>
+    <line x1="600" y1="455" x2="850" y2="265"/>
+    <line x1="600" y1="455" x2="850" y2="380"/>
+    <line x1="600" y1="455" x2="850" y2="480"/>
+    <!-- Layer 4 to 5 -->
+    <line x1="850" y1="150" x2="1050" y2="200"/>
+    <line x1="850" y1="150" x2="1050" y2="315"/>
+    <line x1="850" y1="265" x2="1050" y2="200"/>
+    <line x1="850" y1="265" x2="1050" y2="315"/>
+    <line x1="850" y1="380" x2="1050" y2="315"/>
+    <line x1="850" y1="380" x2="1050" y2="430"/>
+    <line x1="850" y1="480" x2="1050" y2="315"/>
+    <line x1="850" y1="480" x2="1050" y2="430"/>
+  </g>
+  <!-- Highlighted active path -->
+  <g stroke="#f59e0b" stroke-opacity="0.35" stroke-width="1.5" fill="none">
+    <line x1="150" y1="315" x2="350" y2="265"/>
+    <line x1="350" y1="265" x2="600" y2="315"/>
+    <line x1="600" y1="315" x2="850" y2="265"/>
+    <line x1="850" y1="265" x2="1050" y2="315"/>
+  </g>
+  <!-- Circuit trace decorations -->
+  <g stroke="#f59e0b" stroke-opacity="0.12" stroke-width="1" fill="none">
+    <polyline points="50,80 100,80 100,130 200,130"/>
+    <polyline points="1150,80 1100,80 1100,130 1000,130"/>
+    <polyline points="50,550 100,550 100,500 200,500"/>
+    <polyline points="1150,550 1100,550 1100,500 1000,500"/>
+    <circle cx="100" cy="80" r="3" fill="#f59e0b" fill-opacity="0.2"/>
+    <circle cx="100" cy="550" r="3" fill="#f59e0b" fill-opacity="0.2"/>
+    <circle cx="1100" cy="80" r="3" fill="#f59e0b" fill-opacity="0.2"/>
+    <circle cx="1100" cy="550" r="3" fill="#f59e0b" fill-opacity="0.2"/>
+  </g>
+  <!-- Center node pulse ring -->
+  <circle cx="600" cy="315" r="25" fill="none" stroke="#f59e0b" stroke-opacity="0.2" stroke-width="1"/>
+  <circle cx="600" cy="315" r="40" fill="none" stroke="#f59e0b" stroke-opacity="0.1" stroke-width="1"/>
+</svg>

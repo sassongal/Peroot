@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
+import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -72,15 +73,13 @@ export default async function BlogPage() {
                 </div>
                 <span className="text-[10px] text-slate-600">{post.read_time}</span>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`}
-                alt={post.title}
-                width={1200}
-                height={630}
-                className="w-full aspect-[1200/630] object-cover rounded-lg mb-4"
-                loading="lazy"
-              />
+              <div className="mb-4">
+                <BlogHeroImage
+                  title={post.title}
+                  category={post.category || ""}
+                  excerpt={post.excerpt || ""}
+                />
+              </div>
               <h2 className="text-xl font-serif text-white mb-2 group-hover:text-amber-200 transition-colors">
                 {post.title}
               </h2>

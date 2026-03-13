@@ -22,7 +22,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://peroot.space",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://generativelanguage.googleapis.com https://api.groq.com https://api.deepseek.com",
       "frame-src 'self' https://*.lemonsqueezy.com",
       "frame-ancestors 'none'",

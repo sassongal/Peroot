@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="20%" r="30%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <!-- Grid lines -->
+  <g stroke="#8b5cf6" stroke-opacity="0.07" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="150" y1="0" x2="150" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="450" y1="0" x2="450" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="750" y1="0" x2="750" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+    <line x1="1050" y1="0" x2="1050" y2="630"/>
+  </g>
+  <!-- Hexagons - productivity/freelancer theme -->
+  <polygon points="600,200 650,228 650,284 600,312 550,284 550,228" fill="none" stroke="#8b5cf6" stroke-opacity="0.3" stroke-width="1.5"/>
+  <polygon points="600,170 670,211 670,293 600,334 530,293 530,211" fill="none" stroke="#8b5cf6" stroke-opacity="0.18" stroke-width="1"/>
+  <polygon points="600,130 700,187 700,301 600,358 500,301 500,187" fill="none" stroke="#8b5cf6" stroke-opacity="0.1" stroke-width="1"/>
+  <polygon points="600,80 740,157 740,311 600,388 460,311 460,157" fill="none" stroke="#8b5cf6" stroke-opacity="0.06" stroke-width="1"/>
+  <!-- Small accent hexagons scattered -->
+  <polygon points="200,150 220,161 220,183 200,194 180,183 180,161" fill="#8b5cf6" fill-opacity="0.15" stroke="#8b5cf6" stroke-opacity="0.4" stroke-width="1"/>
+  <polygon points="950,420 975,434 975,462 950,476 925,462 925,434" fill="#8b5cf6" fill-opacity="0.12" stroke="#8b5cf6" stroke-opacity="0.35" stroke-width="1"/>
+  <polygon points="100,400 118,410 118,430 100,440 82,430 82,410" fill="#8b5cf6" fill-opacity="0.1" stroke="#8b5cf6" stroke-opacity="0.3" stroke-width="1"/>
+  <polygon points="1080,180 1100,191 1100,213 1080,224 1060,213 1060,191" fill="#8b5cf6" fill-opacity="0.1" stroke="#8b5cf6" stroke-opacity="0.3" stroke-width="1"/>
+  <polygon points="350,500 365,508 365,524 350,532 335,524 335,508" fill="#8b5cf6" fill-opacity="0.1" stroke="#8b5cf6" stroke-opacity="0.28" stroke-width="1"/>
+  <polygon points="850,100 868,110 868,130 850,140 832,130 832,110" fill="#8b5cf6" fill-opacity="0.12" stroke="#8b5cf6" stroke-opacity="0.35" stroke-width="1"/>
+  <!-- Checkmark / task lines suggesting productivity -->
+  <g stroke="#8b5cf6" stroke-opacity="0.2" stroke-width="2" fill="none">
+    <polyline points="240,290 255,305 280,275"/>
+    <rect x="225" y="272" width="70" height="50" rx="4" stroke-opacity="0.15"/>
+    <line x1="310" y1="285" x2="380" y2="285" stroke-opacity="0.12"/>
+    <line x1="310" y1="300" x2="360" y2="300" stroke-opacity="0.08"/>
+  </g>
+  <g stroke="#8b5cf6" stroke-opacity="0.18" stroke-width="2" fill="none">
+    <polyline points="820,330 835,345 860,315"/>
+    <rect x="805" y="312" width="70" height="50" rx="4" stroke-opacity="0.13"/>
+    <line x1="890" y1="325" x2="960" y2="325" stroke-opacity="0.1"/>
+    <line x1="890" y1="340" x2="940" y2="340" stroke-opacity="0.07"/>
+  </g>
+  <!-- Diagonal accent lines -->
+  <line x1="0" y1="630" x2="400" y2="0" stroke="#8b5cf6" stroke-opacity="0.04" stroke-width="1"/>
+  <line x1="800" y1="0" x2="1200" y2="630" stroke="#8b5cf6" stroke-opacity="0.04" stroke-width="1"/>
+  <!-- Corner dots -->
+  <circle cx="150" cy="315" r="2" fill="#8b5cf6" fill-opacity="0.4"/>
+  <circle cx="1050" cy="315" r="2" fill="#8b5cf6" fill-opacity="0.4"/>
+  <circle cx="600" cy="80" r="2" fill="#8b5cf6" fill-opacity="0.35"/>
+  <circle cx="600" cy="550" r="2" fill="#8b5cf6" fill-opacity="0.35"/>
+</svg>

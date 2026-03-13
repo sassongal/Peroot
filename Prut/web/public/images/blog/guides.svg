@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a140a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Compass rose in center -->
+  <!-- Outer circle -->
+  <circle cx="600" cy="315" r="160" fill="none" stroke="#f59e0b" stroke-opacity="0.15" stroke-width="1.5"/>
+  <circle cx="600" cy="315" r="130" fill="none" stroke="#f59e0b" stroke-opacity="0.1" stroke-width="1"/>
+  <circle cx="600" cy="315" r="100" fill="none" stroke="#f59e0b" stroke-opacity="0.08" stroke-width="1"/>
+  <circle cx="600" cy="315" r="50" fill="none" stroke="#f59e0b" stroke-opacity="0.18" stroke-width="1"/>
+  <!-- Cardinal direction lines -->
+  <line x1="600" y1="155" x2="600" y2="475" stroke="#f59e0b" stroke-opacity="0.2" stroke-width="1"/>
+  <line x1="440" y1="315" x2="760" y2="315" stroke="#f59e0b" stroke-opacity="0.2" stroke-width="1"/>
+  <!-- Diagonal lines -->
+  <line x1="487" y1="202" x2="713" y2="428" stroke="#f59e0b" stroke-opacity="0.1" stroke-width="1"/>
+  <line x1="713" y1="202" x2="487" y2="428" stroke="#f59e0b" stroke-opacity="0.1" stroke-width="1"/>
+  <!-- North arrow (pointing up) -->
+  <polygon points="600,175 610,315 600,300 590,315" fill="#f59e0b" fill-opacity="0.5"/>
+  <polygon points="600,455 610,315 600,330 590,315" fill="#f59e0b" fill-opacity="0.15"/>
+  <!-- East/West arrows -->
+  <polygon points="455,315 600,305 585,315 600,325" fill="#f59e0b" fill-opacity="0.2"/>
+  <polygon points="745,315 600,305 615,315 600,325" fill="#f59e0b" fill-opacity="0.2"/>
+  <!-- Tick marks on outer circle -->
+  <g stroke="#f59e0b" stroke-opacity="0.25" stroke-width="1">
+    <line x1="600" y1="155" x2="600" y2="165"/>
+    <line x1="600" y1="465" x2="600" y2="475"/>
+    <line x1="440" y1="315" x2="450" y2="315"/>
+    <line x1="750" y1="315" x2="760" y2="315"/>
+    <!-- Minor ticks -->
+    <line x1="680" y1="158" x2="678" y2="168"/>
+    <line x1="520" y1="158" x2="522" y2="168"/>
+    <line x1="680" y1="462" x2="678" y2="472"/>
+    <line x1="520" y1="462" x2="522" y2="472"/>
+    <line x1="443" y1="235" x2="452" y2="237"/>
+    <line x1="443" y1="395" x2="452" y2="393"/>
+    <line x1="748" y1="235" x2="757" y2="237"/>
+    <line x1="748" y1="395" x2="757" y2="393"/>
+  </g>
+  <!-- Path/route dots in background -->
+  <g fill="#f59e0b" fill-opacity="0.18">
+    <circle cx="150" cy="150" r="5"/>
+    <circle cx="220" cy="200" r="4"/>
+    <circle cx="290" cy="170" r="4"/>
+    <circle cx="360" cy="220" r="5"/>
+    <circle cx="430" cy="190" r="4"/>
+  </g>
+  <g stroke="#f59e0b" stroke-opacity="0.12" stroke-width="1.5" stroke-dasharray="5,8" fill="none">
+    <polyline points="150,150 220,200 290,170 360,220 430,190"/>
+  </g>
+  <g fill="#f59e0b" fill-opacity="0.18">
+    <circle cx="770" cy="440" r="5"/>
+    <circle cx="840" cy="470" r="4"/>
+    <circle cx="910" cy="450" r="4"/>
+    <circle cx="980" cy="490" r="5"/>
+    <circle cx="1050" cy="460" r="4"/>
+  </g>
+  <g stroke="#f59e0b" stroke-opacity="0.12" stroke-width="1.5" stroke-dasharray="5,8" fill="none">
+    <polyline points="770,440 840,470 910,450 980,490 1050,460"/>
+  </g>
+  <!-- Center dot -->
+  <circle cx="600" cy="315" r="6" fill="#f59e0b" fill-opacity="0.5"/>
+  <circle cx="600" cy="315" r="3" fill="#f59e0b" fill-opacity="0.8"/>
+  <!-- Subtle grid -->
+  <g stroke="#f59e0b" stroke-opacity="0.04" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+</svg>
