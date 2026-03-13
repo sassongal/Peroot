@@ -20,10 +20,17 @@ const CATEGORY_THEMES: Record<string, { accent: string; glow: string; emoji: str
 
 const DEFAULT_THEME = { accent: "#f59e0b", glow: "rgba(245,158,11,0.15)", emoji: "✨" };
 
+// Fetch and cache the Hebrew font at module level
+const hebrewFont = fetch(
+  "https://fonts.gstatic.com/s/notosanshebrew/v46/or3HQ7v33eiDljA1IufXTtVf7V6RvEEdhQlk0LlGxCyaeNKYZC0sq0G1.woff2"
+).then((res) => res.arrayBuffer());
+
 export async function GET(req: NextRequest) {
+  const fontData = await hebrewFont;
+
   const { searchParams } = req.nextUrl;
   const title = searchParams.get("title") || "Peroot";
-  const subtitle = searchParams.get("subtitle") || "מחולל פרומפטים מקצועי בעברית";
+  const subtitle = searchParams.get("subtitle") || "";
   const category = searchParams.get("category") || "";
 
   const theme = CATEGORY_THEMES[category] || DEFAULT_THEME;
@@ -39,7 +46,7 @@ export async function GET(req: NextRequest) {
           alignItems: "center",
           justifyContent: "center",
           background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)",
-          fontFamily: "sans-serif",
+          fontFamily: '"Noto Sans Hebrew", sans-serif',
           padding: "60px",
           position: "relative",
         }}
@@ -75,7 +82,6 @@ export async function GET(req: NextRequest) {
               fontWeight: 700,
             }}
           >
-            <span>{theme.emoji}</span>
             <span>{category}</span>
           </div>
         )}
@@ -99,12 +105,13 @@ export async function GET(req: NextRequest) {
         {subtitle && (
           <div
             style={{
-              fontSize: "22px",
+              fontSize: "20px",
               color: "#94a3b8",
               marginTop: "20px",
               textAlign: "center",
               direction: "rtl",
               maxWidth: "700px",
+              lineHeight: 1.5,
             }}
           >
             {subtitle}
@@ -159,6 +166,14 @@ export async function GET(req: NextRequest) {
     {
       width: 1200,
       height: 630,
+      fonts: [
+        {
+          name: "Noto Sans Hebrew",
+          data: fontData,
+          style: "normal",
+          weight: 700,
+        },
+      ],
     }
   );
 }
