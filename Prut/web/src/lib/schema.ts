@@ -39,12 +39,16 @@ export function articleSchema(post: {
     author: {
       "@type": "Person",
       name: post.author || "Gal Sasson",
-      url: "https://joya-tech.net",
+      url: SITE_URL,
     },
     publisher: {
       "@type": "Organization",
-      name: "JoyaTech",
-      url: "https://joya-tech.net",
+      name: "Peroot",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/assets/branding/logo.png`,
+      },
     },
     image: post.thumbnail_url || undefined,
     url: `${SITE_URL}/blog/${post.slug}`,
@@ -83,8 +87,8 @@ export function softwareAppSchema() {
     inLanguage: "he",
     author: {
       "@type": "Organization",
-      name: "JoyaTech",
-      url: "https://joya-tech.net",
+      name: "Peroot",
+      url: SITE_URL,
     },
     offers: {
       "@type": "Offer",

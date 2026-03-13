@@ -9,19 +9,25 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/admin/", "/api/", "/auth/", "/settings"],
       },
-      // Block training-only crawlers (keep search crawlers allowed via wildcard)
-      {
-        userAgent: "CCBot",
-        disallow: "/",
-      },
-      {
-        userAgent: "Bytespider",
-        disallow: "/",
-      },
-      {
-        userAgent: "cohere-ai",
-        disallow: "/",
-      },
+      // Block AI training crawlers (keep search crawlers allowed via wildcard)
+      ...[
+        "CCBot",
+        "Bytespider",
+        "cohere-ai",
+        "GPTBot",
+        "ChatGPT-User",
+        "Google-Extended",
+        "ClaudeBot",
+        "anthropic-ai",
+        "Meta-ExternalAgent",
+        "FacebookBot",
+        "Amazonbot",
+        "PerplexityBot",
+        "YouBot",
+      ].map((bot) => ({
+        userAgent: bot,
+        disallow: ["/"],
+      })),
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };

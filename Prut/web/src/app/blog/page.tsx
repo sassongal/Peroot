@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -72,13 +75,15 @@ export default async function BlogPage() {
                 </div>
                 <span className="text-[10px] text-slate-600">{post.read_time}</span>
               </div>
-              {post.thumbnail_url && (
-                <img
-                  src={post.thumbnail_url}
+              <div className="relative w-full aspect-[1200/630] rounded-lg overflow-hidden mb-4">
+                <Image
+                  src={`${siteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`}
                   alt={post.title}
-                  className="w-full h-48 sm:h-48 aspect-video object-cover rounded-lg mb-4"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 768px"
                 />
-              )}
+              </div>
               <h2 className="text-xl font-serif text-white mb-2 group-hover:text-amber-200 transition-colors">
                 {post.title}
               </h2>

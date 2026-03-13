@@ -62,6 +62,14 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "/",
+    languages: {
+      "he-IL": "/",
+    },
+  },
+  other: {
+    "geo.region": "IL",
+    "geo.placename": "Israel",
+    "content-language": "he",
   },
   openGraph: {
     title: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",

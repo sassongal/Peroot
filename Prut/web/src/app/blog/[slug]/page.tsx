@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
@@ -10,25 +11,49 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// Pre-render all published blog posts at build time + ISR every 60 minutes
+export async function generateStaticParams() {
+  const { createClient: createSupabase } = await import("@supabase/supabase-js");
+  const supabase = createSupabase(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data: posts } = await supabase
+    .from("blog_posts")
+    .select("slug")
+    .eq("status", "published");
+
+  return (posts || []).map((post) => ({ slug: post.slug }));
+}
+
+export const revalidate = 3600; // ISR: revalidate every hour
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
   const { data: post } = await supabase
     .from("blog_posts")
-    .select("title, meta_title, meta_description, excerpt, slug")
+    .select("title, meta_title, meta_description, excerpt, slug, thumbnail_url, category")
     .eq("slug", slug)
     .eq("status", "published")
     .single();
 
   if (!post) return { title: "מאמר לא נמצא" };
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
   const title = post.meta_title || post.title;
   const description = post.meta_description || post.excerpt || "";
+
+  // Dynamic OG image with title + category styling
+  const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
   return {
     title,
     description,
-    alternates: { canonical: `/blog/${post.slug}` },
+    alternates: {
+      canonical: `/blog/${post.slug}`,
+      languages: { "he-IL": `/blog/${post.slug}` },
+    },
     openGraph: {
       title: `${title} | Peroot`,
       description,
@@ -36,11 +61,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Peroot",
       locale: "he_IL",
       type: "article",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | Peroot`,
       description,
+      images: [ogImage],
     },
   };
 }
@@ -57,6 +84,9 @@ export default async function BlogPostPage({ params }: Props) {
     .single();
 
   if (!post) notFound();
+
+  const blogSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+  const ogImageUrl = `${blogSiteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
   const publishedDate = post.published_at
     ? new Date(post.published_at).toLocaleDateString("he-IL")
@@ -98,13 +128,16 @@ export default async function BlogPostPage({ params }: Props) {
           )}
         </header>
 
-        {post.thumbnail_url && (
-          <img
-            src={post.thumbnail_url}
+        <div className="relative w-full aspect-[1200/630] rounded-xl overflow-hidden mb-10">
+          <Image
+            src={ogImageUrl}
             alt={post.title}
-            className="w-full h-64 object-cover rounded-xl mb-10"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 768px"
+            priority
           />
-        )}
+        </div>
 
         <SafeHtml
           html={post.content}
@@ -154,7 +187,7 @@ export default async function BlogPostPage({ params }: Props) {
               slug: post.slug,
               published_at: post.published_at,
               author: post.author || "Gal Sasson",
-              thumbnail_url: post.thumbnail_url,
+              thumbnail_url: ogImageUrl,
             })
           ),
         }}

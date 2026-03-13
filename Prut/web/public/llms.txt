@@ -1,22 +1,28 @@
-# Peroot (פירוט) - Hebrew Prompt Engineering Tool
+# Peroot (פירוט) - Hebrew AI Prompt Engineering Tool
 
-> Peroot is an AI-powered prompt generator built specifically for Hebrew. It transforms raw ideas into structured, professional-grade prompts optimized for ChatGPT, Claude, Gemini, and other LLMs.
+> Peroot is an AI-powered prompt generator built specifically for Hebrew. It transforms raw ideas into structured, professional-grade prompts optimized for ChatGPT, Claude, Gemini, DeepSeek, and other LLMs.
 
 ## Key URLs
 - [Homepage](https://peroot.space/): Main app - prompt enhancement tool
 - [Pricing](https://peroot.space/pricing): Free and Pro plan details
 - [Blog](https://peroot.space/blog): Guides and tutorials on prompt engineering
+- [Examples](https://peroot.space/examples): Sample prompts and use cases
 - [Privacy Policy](https://peroot.space/privacy)
 - [Terms of Service](https://peroot.space/terms)
 - [Contact](https://peroot.space/contact)
 
 ## Blog Articles
-- [10 Common Mistakes in Writing Prompts](https://peroot.space/blog/10-common-prompt-mistakes): Common errors and how to fix them
-- [How to Write a Good Prompt - Complete Guide](https://peroot.space/blog/how-to-write-good-prompt): Step-by-step guide for effective prompts
-- [Prompt Engineering for Marketers](https://peroot.space/blog/prompt-engineering-for-marketers): Marketing-focused prompt techniques
-- [Creating Content in Hebrew with AI](https://peroot.space/blog/creating-content-in-hebrew-with-ai): Guide for Hebrew AI content creation
-- [Image Creation Prompts Guide](https://peroot.space/blog/image-creation-prompts-guide): DALL-E, Midjourney, and Stable Diffusion prompts
-- [ChatGPT vs Claude vs Gemini Comparison](https://peroot.space/blog/chatgpt-vs-claude-vs-gemini): Full AI model comparison
+- [AI לפרילנסרים — איך לעבוד חכם יותר עם בינה מלאכותית](https://peroot.space/blog/ai-for-freelancers-guide)
+- [AI בשירות העסק הקטן — 7 דרכים לחסוך זמן וכסף](https://peroot.space/blog/ai-for-small-business-guide)
+- [פרומפט אנג׳ינירינג למתקדמים — Chain-of-Thought, Few-Shot וטכניקות מתקדמות](https://peroot.space/blog/advanced-prompt-engineering-techniques)
+- [איך להשתמש ב-AI לכתיבת קוד — מדריך למתחילים ולמתקדמים](https://peroot.space/blog/ai-for-coding-beginners-guide)
+- [AI בחינוך — איך מורים משתמשים בפרומפטים כדי ללמד טוב יותר](https://peroot.space/blog/ai-for-teachers-education-guide)
+- [10 טעויות נפוצות בכתיבת פרומפטים - ואיך לתקן אותן](https://peroot.space/blog/10-common-prompt-mistakes)
+- [איך לכתוב פרומפט טוב - המדריך המלא](https://peroot.space/blog/how-to-write-good-prompt)
+- [פרומפט אנג׳ינירינג למשווקים](https://peroot.space/blog/prompt-engineering-for-marketers)
+- [איך ליצור תוכן בעברית עם AI](https://peroot.space/blog/ai-content-creation-hebrew)
+- [פרומפטים ליצירת תמונות - DALL-E, Midjourney ו-Stable Diffusion](https://peroot.space/blog/image-prompts-guide-dalle-midjourney)
+- [ChatGPT vs Claude vs Gemini - השוואה מלאה](https://peroot.space/blog/chatgpt-vs-claude-vs-gemini-comparison)
 
 ## Product Features
 - Hebrew-first prompt improver (RTL-native, not translated)
@@ -28,14 +34,21 @@
 - Personal prompt library with favorites and organization
 - Smart variables with {placeholder} syntax
 - Iterative refinement with Refine and Quick Actions
+- Prompt style editor with customizable tone, length, and format
+- Chrome extension with full sync and in-page prompt enhancement
+- Multiple AI engines: GPT-4o, Claude, Gemini, DeepSeek, Groq
+
+## Pricing
+- Free: 2 credits/day, public library access, Chrome extension
+- Pro: 150 credits/month, all engines, iterative refinement, personal library, 4-day free trial, ₪3.99/month
 
 ## Key Facts
-- Built by JoyaTech (https://joya-tech.net)
+- Website: https://peroot.space
 - Creator: Gal Sasson
 - Language: Hebrew (primary), with English support
-- Free tier available with daily credits
-- Pro plan for unlimited usage
+- Target audience: Hebrew-speaking professionals, marketers, educators, developers, freelancers
+- Built with: Next.js, React, Supabase, TypeScript
 
 ## Contact
 - Email: gal@joya-tech.net
-- Website: https://joya-tech.net
+- Website: https://peroot.space
