@@ -19,8 +19,19 @@ import {
   Layers,
   DollarSign,
   PenTool,
+  Globe,
   Menu,
-  X
+  X,
+  Radio,
+  HeartPulse,
+  TrendingUp,
+  Mail,
+  FlaskConical,
+  Search,
+  Filter,
+  Bell,
+  Shield,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -41,6 +52,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
+    // ── Core ──
     { name: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
     { name: t.admin.layout.costs || "Costs", href: "/admin/costs", icon: DollarSign },
     { name: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
@@ -49,6 +61,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: t.admin.layout.database, href: "/admin/database", icon: Database },
     { name: t.admin.layout.telemetry, href: "/admin/activity", icon: Activity },
     { name: "בלוג", href: "/admin/blog", icon: PenTool },
+    // ── Analytics & Insights ──
+    { name: "Google Analytics", href: "/admin/google-analytics", icon: Globe },
+    { name: "הכנסות", href: "/admin/revenue", icon: TrendingUp },
+    { name: "משפך המרה", href: "/admin/funnel", icon: Filter },
+    { name: "ניסויים", href: "/admin/experiments", icon: FlaskConical },
+    // ── Operations ──
+    { name: "זמן אמת", href: "/admin/realtime", icon: Radio },
+    { name: "בריאות מערכת", href: "/admin/health", icon: HeartPulse },
+    { name: "התראות", href: "/admin/notifications", icon: Bell },
+    { name: "ביקורת מנהלים", href: "/admin/audit", icon: Shield },
+    // ── Content & Outreach ──
+    { name: "מודרציה", href: "/admin/moderation", icon: GitBranch },
+    { name: "קמפיינים", href: "/admin/email-campaigns", icon: Mail },
+    { name: "SEO", href: "/admin/seo-console", icon: Search },
+    // ── System ──
     { name: t.admin.layout.settings, href: "/admin/settings", icon: Settings },
   ];
 

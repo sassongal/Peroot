@@ -1,0 +1,249 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { validateAdminSession, logAdminAction } from '@/lib/admin/admin-security';
+import { logger } from '@/lib/logger';
+
+/**
+ * GET /api/admin/moderation
+ *
+ * Query params:
+ *   page       page number (default 1)
+ *   limit      items per page (default 20)
+ *   filter     all | flagged | approved | removed (default all)
+ *   search     search string for prompt_text
+ *
+ * Returns paginated public prompts and summary stats.
+ *
+ * POST /api/admin/moderation
+ *
+ * Body: { action: 'approve' | 'remove' | 'flag', prompt_id: string }
+ *
+ * Moderation state is tracked via activity_logs (action='moderation_review').
+ * "Remove" additionally sets is_public=false on personal_library.
+ * We derive the effective status of each prompt from the most recent
+ * moderation_review log for that prompt_id.
+ */
+
+// ─── GET ─────────────────────────────────────────────────────────────────────
+
+export async function GET(req: NextRequest) {
+  try {
+    const { error, user, supabase } = await validateAdminSession();
+    if (error || !user || !supabase) {
+      return NextResponse.json(
+        { error: error || 'Forbidden' },
+        { status: error === 'Unauthorized' ? 401 : 403 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
+    const filter = searchParams.get('filter') ?? 'all';
+    const search = (searchParams.get('search') ?? '').trim();
+    const offset = (page - 1) * limit;
+
+    // ── 1. Fetch all public prompts (with author info) ──────────────────────
+    let promptsQuery = supabase
+      .from('personal_library')
+      .select('id, user_id, created_at, personal_category, prompt_text, is_public', { count: 'exact' })
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+
+    if (search) {
+      promptsQuery = promptsQuery.ilike('prompt_text', `%${search}%`);
+    }
+
+    const { data: allPublicPrompts, error: promptsError } = await promptsQuery;
+
+    if (promptsError) {
+      logger.error('[Admin Moderation] Prompts query error:', promptsError);
+      return NextResponse.json({ error: 'Failed to fetch prompts' }, { status: 500 });
+    }
+
+    const publicPrompts = allPublicPrompts ?? [];
+
+    // ── 2. Fetch all moderation activity logs ──────────────────────────────
+    const promptIds = publicPrompts.map((p) => p.id);
+
+    // Also fetch removed-prompt IDs (is_public was set to false via moderation)
+    const { data: removedLogs } = await supabase
+      .from('activity_logs')
+      .select('details, created_at')
+      .eq('action', 'moderation_review')
+      .eq('entity_type', 'admin_action')
+      .order('created_at', { ascending: false });
+
+    // Build a map: prompt_id -> latest moderation status
+    const statusMap = new Map<string, { status: string; reviewed_at: string }>();
+    for (const log of removedLogs ?? []) {
+      const details = (log.details ?? {}) as Record<string, unknown>;
+      const pid = details.prompt_id as string | undefined;
+      const status = details.status as string | undefined;
+      if (pid && status && !statusMap.has(pid)) {
+        statusMap.set(pid, { status, reviewed_at: log.created_at });
+      }
+    }
+
+    // ── 3. Enrich prompts with moderation status ───────────────────────────
+    type EnrichedPrompt = {
+      id: string;
+      user_id: string;
+      created_at: string;
+      personal_category: string | null;
+      prompt_text: string;
+      is_public: boolean;
+      moderation_status: string;
+      reviewed_at: string | null;
+    };
+
+    let enriched: EnrichedPrompt[] = publicPrompts.map((p) => {
+      const mod = statusMap.get(p.id);
+      return {
+        ...p,
+        moderation_status: mod?.status ?? 'pending',
+        reviewed_at: mod?.reviewed_at ?? null,
+      };
+    });
+
+    // ── 4. Apply filter ────────────────────────────────────────────────────
+    if (filter === 'flagged') {
+      enriched = enriched.filter((p) => p.moderation_status === 'flagged');
+    } else if (filter === 'approved') {
+      enriched = enriched.filter((p) => p.moderation_status === 'approved');
+    } else if (filter === 'pending') {
+      enriched = enriched.filter((p) => p.moderation_status === 'pending');
+    }
+    // 'all' passes everything through
+
+    const totalFiltered = enriched.length;
+    const paginated = enriched.slice(offset, offset + limit);
+
+    // ── 5. Summary stats ────────────────────────────────────────────────────
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const totalPublic = publicPrompts.length;
+    const flaggedCount = Array.from(statusMap.values()).filter((v) => v.status === 'flagged').length;
+
+    const reviewedToday = (removedLogs ?? []).filter((l) => {
+      return new Date(l.created_at) >= todayStart;
+    }).length;
+
+    const { count: removedThisMonth } = await supabase
+      .from('activity_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('action', 'moderation_review')
+      .eq('entity_type', 'admin_action')
+      .gte('created_at', monthStart.toISOString())
+      .contains('details', { status: 'removed' });
+
+    // Enrich author display names
+    const authorIds = [...new Set(paginated.map((p) => p.user_id))];
+    let authorMap: Record<string, string> = {};
+    if (authorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, display_name, email')
+        .in('id', authorIds);
+      for (const p of profiles ?? []) {
+        authorMap[p.id] = p.display_name || p.email || p.id.slice(0, 8);
+      }
+    }
+
+    const promptsWithAuthor = paginated.map((p) => ({
+      ...p,
+      author_display: authorMap[p.user_id] ?? p.user_id.slice(0, 12) + '...',
+    }));
+
+    return NextResponse.json({
+      prompts: promptsWithAuthor,
+      pagination: {
+        page,
+        limit,
+        total: totalFiltered,
+        totalPages: Math.ceil(totalFiltered / limit),
+      },
+      stats: {
+        totalPublic,
+        reviewedToday,
+        flagged: flaggedCount,
+        removedThisMonth: removedThisMonth ?? 0,
+      },
+    });
+  } catch (err) {
+    logger.error('[Admin Moderation] GET error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ─── POST ────────────────────────────────────────────────────────────────────
+
+export async function POST(req: NextRequest) {
+  try {
+    const { error, user, supabase } = await validateAdminSession();
+    if (error || !user || !supabase) {
+      return NextResponse.json(
+        { error: error || 'Forbidden' },
+        { status: error === 'Unauthorized' ? 401 : 403 }
+      );
+    }
+
+    const body = await req.json();
+    const { action, prompt_id } = body as { action: string; prompt_id: string };
+
+    if (!action || !prompt_id) {
+      return NextResponse.json({ error: 'action and prompt_id are required' }, { status: 400 });
+    }
+
+    const validActions = ['approve', 'remove', 'flag'];
+    if (!validActions.includes(action)) {
+      return NextResponse.json({ error: `action must be one of: ${validActions.join(', ')}` }, { status: 400 });
+    }
+
+    // Verify prompt exists
+    const { data: prompt, error: fetchError } = await supabase
+      .from('personal_library')
+      .select('id, user_id, is_public')
+      .eq('id', prompt_id)
+      .maybeSingle();
+
+    if (fetchError || !prompt) {
+      return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
+    }
+
+    // Map action -> moderation status label
+    const statusLabel = action === 'approve' ? 'approved' : action === 'remove' ? 'removed' : 'flagged';
+
+    // If removing: set is_public = false
+    if (action === 'remove') {
+      const { error: updateError } = await supabase
+        .from('personal_library')
+        .update({ is_public: false })
+        .eq('id', prompt_id);
+
+      if (updateError) {
+        logger.error('[Admin Moderation] Failed to update is_public:', updateError);
+        return NextResponse.json({ error: 'Failed to remove prompt from public library' }, { status: 500 });
+      }
+    }
+
+    // Log the moderation action via the standard admin log helper
+    await logAdminAction(user.id, 'moderation_review', {
+      prompt_id,
+      prompt_owner_id: prompt.user_id,
+      status: statusLabel,
+      action,
+    });
+
+    logger.info(`[Admin Moderation] ${action} on prompt ${prompt_id} by admin ${user.id}`);
+
+    return NextResponse.json({ success: true, prompt_id, action, status: statusLabel });
+  } catch (err) {
+    logger.error('[Admin Moderation] POST error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
