@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { configureLemonSqueezy } from '@/lib/lemonsqueezy';
-import { createCheckout } from '@lemonsqueezy/lemonsqueezy.js';
-import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { z } from "zod";
 
@@ -13,6 +10,7 @@ const CheckoutSchema = z.object({
 /**
  * POST /api/checkout
  * Creates a LemonSqueezy checkout URL for the authenticated user.
+ * Uses direct API call instead of SDK for serverless reliability.
  */
 export async function POST(request: Request) {
   try {
@@ -37,52 +35,76 @@ export async function POST(request: Request) {
     const { variantId } = parsed.data;
 
     const storeId = process.env.LEMONSQUEEZY_STORE_ID;
-    if (!storeId) {
+    const apiKey = process.env.LEMONSQUEEZY_API_KEY;
+    if (!storeId || !apiKey) {
+      console.error('[Checkout] Missing env vars:', { hasStoreId: !!storeId, hasApiKey: !!apiKey });
       return NextResponse.json({ error: 'Store not configured' }, { status: 500 });
     }
-
-    configureLemonSqueezy();
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space';
 
     console.log(`[Checkout] Creating checkout for user ${user.id}, variant ${variantId}, store ${storeId}`);
 
-    const checkout = await createCheckout(storeId, variantId, {
-      checkoutOptions: {
-        embed: false,
-        media: false,
+    // Direct API call - more reliable than SDK in serverless
+    const lsResponse = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+        'Authorization': `Bearer ${apiKey}`,
       },
-      checkoutData: {
-        email: user.email ?? undefined,
-        custom: {
-          user_id: user.id,
+      body: JSON.stringify({
+        data: {
+          type: 'checkouts',
+          attributes: {
+            checkout_options: {
+              embed: false,
+              media: false,
+            },
+            checkout_data: {
+              email: user.email ?? undefined,
+              custom: {
+                user_id: user.id,
+              },
+            },
+            product_options: {
+              redirect_url: `${siteUrl}/settings?tab=billing&success=true`,
+              receipt_button_text: 'חזרה ל-Peroot',
+              receipt_thank_you_note: 'תודה שהצטרפת ל-Peroot Pro! 🎉',
+            },
+          },
+          relationships: {
+            store: {
+              data: {
+                type: 'stores',
+                id: storeId,
+              },
+            },
+            variant: {
+              data: {
+                type: 'variants',
+                id: variantId,
+              },
+            },
+          },
         },
-      },
-      productOptions: {
-        redirectUrl: `${siteUrl}/settings?tab=billing&success=true`,
-        receiptButtonText: 'חזרה ל-Peroot',
-        receiptThankYouNote: 'תודה שהצטרפת ל-Peroot Pro! 🎉',
-      },
+      }),
     });
 
-    // SDK returns { data, error, statusCode }
-    if (checkout.error) {
-      console.error('[Checkout] LemonSqueezy SDK error:', JSON.stringify({
-        message: checkout.error.message,
-        cause: checkout.error.cause,
-        statusCode: checkout.statusCode,
-        data: checkout.data,
-      }));
+    if (!lsResponse.ok) {
+      const errorText = await lsResponse.text();
+      console.error(`[Checkout] LemonSqueezy API error ${lsResponse.status}:`, errorText);
       return NextResponse.json({
         error: 'Payment provider error',
-        details: checkout.error.message,
+        details: `API returned ${lsResponse.status}`,
       }, { status: 502 });
     }
 
-    const checkoutUrl = checkout.data?.data.attributes.url;
+    const lsData = await lsResponse.json();
+    const checkoutUrl = lsData?.data?.attributes?.url;
 
     if (!checkoutUrl) {
-      console.error('[Checkout] No checkout URL in response:', JSON.stringify(checkout.data));
+      console.error('[Checkout] No checkout URL in response:', JSON.stringify(lsData));
       return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
     }
 
