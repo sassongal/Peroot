@@ -3,6 +3,32 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from "@/lib/ratelimit";
 import { z } from "zod";
 
+// TEMP: Debug endpoint - remove after fixing checkout
+export async function GET() {
+  const storeId = process.env.LEMONSQUEEZY_STORE_ID;
+  const apiKey = process.env.LEMONSQUEEZY_API_KEY;
+
+  if (!storeId || !apiKey) {
+    return NextResponse.json({ error: 'Missing env vars', hasStoreId: !!storeId, hasApiKey: !!apiKey });
+  }
+
+  // Test the API key by listing store
+  const testRes = await fetch(`https://api.lemonsqueezy.com/v1/stores/${storeId}`, {
+    headers: {
+      'Accept': 'application/vnd.api+json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+  });
+
+  const testText = await testRes.text();
+  return NextResponse.json({
+    status: testRes.status,
+    apiKeyPrefix: apiKey.substring(0, 10) + '...',
+    storeId,
+    response: testText.substring(0, 2000),
+  });
+}
+
 const CheckoutSchema = z.object({
   variantId: z.string().min(1),
 });
@@ -94,9 +120,14 @@ export async function POST(request: Request) {
     if (!lsResponse.ok) {
       const errorText = await lsResponse.text();
       console.error(`[Checkout] LemonSqueezy API error ${lsResponse.status}:`, errorText);
+      // TEMP: Return full error for debugging - remove after fixing
       return NextResponse.json({
         error: 'Payment provider error',
         details: `API returned ${lsResponse.status}`,
+        _debug: errorText,
+        _storeId: storeId,
+        _variantId: variantId,
+        _apiKeyPrefix: apiKey.substring(0, 10) + '...',
       }, { status: 502 });
     }
 
