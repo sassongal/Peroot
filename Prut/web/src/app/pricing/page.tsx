@@ -1,18 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, Sparkles, Zap, ArrowRight, Crown, Shield, Chrome, Gift } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import { PLANS } from "@/lib/lemonsqueezy";
+import { createClient } from "@/lib/supabase/client";
+import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 
 export default function PricingPage() {
   const { isPro, checkout, loading } = useSubscription();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, [supabase]);
 
   const handleUpgrade = async () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     setCheckoutLoading(true);
     try {
       await checkout();
@@ -123,10 +137,10 @@ export default function PricingPage() {
             ) : (
               <button
                 onClick={handleUpgrade}
-                disabled={checkoutLoading || loading}
+                disabled={checkoutLoading || (loading && isLoggedIn !== false)}
                 className="w-full py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all disabled:opacity-50 cursor-pointer"
               >
-                {checkoutLoading ? "מעבד..." : "שדרג לפרו"}
+                {checkoutLoading ? "מעבד..." : isLoggedIn === false ? "התחבר ושדרג לפרו" : "שדרג לפרו"}
               </button>
             )}
           </div>
@@ -167,6 +181,14 @@ export default function PricingPage() {
           </div>
         </div>
       </div>
+
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        title="נדרשת התחברות לשדרוג"
+        message="כדי לשדרג לתוכנית Pro, יש להתחבר לחשבון שלך תחילה."
+        feature="שדרוג לתוכנית Pro"
+      />
     </div>
   );
 }

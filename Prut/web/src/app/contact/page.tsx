@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Mail } from "lucide-react";
+import { ContactForm } from "@/components/ui/ContactForm";
 
 export const metadata: Metadata = {
   title: "צור קשר | Peroot",
@@ -32,15 +33,19 @@ export default function ContactPage() {
 
         <h1 className="text-4xl md:text-5xl font-serif text-white mb-6">צור קשר</h1>
 
-        <div className="glass-card rounded-2xl border border-white/10 p-8 space-y-6">
-          <p className="text-lg text-slate-300 leading-relaxed">
-            יש לכם שאלה, הצעה או דיווח על באג? נשמח לשמוע!
-          </p>
+        <p className="text-lg text-slate-300 leading-relaxed">
+          יש לכם שאלה, הצעה או דיווח על באג? נשמח לשמוע!
+        </p>
+
+        <ContactForm />
+
+        <div className="text-center pt-4">
+          <p className="text-sm text-slate-500 mb-2">או שלחו מייל ישירות:</p>
           <a
             href="mailto:gal@joya-tech.net"
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all"
+            className="inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 transition-colors"
           >
-            <Mail className="w-5 h-5" />
+            <Mail className="w-4 h-4" />
             gal@joya-tech.net
           </a>
         </div>

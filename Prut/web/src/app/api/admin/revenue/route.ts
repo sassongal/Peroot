@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { validateAdminSession } from '@/lib/admin/admin-security';
 import { logger } from '@/lib/logger';
 
-const PRO_PRICE_USD = 9.99;
+const PRO_PRICE_ILS = 3.99;
 
 /**
  * GET /api/admin/revenue
@@ -89,7 +89,7 @@ export async function GET() {
     const totalUsers = totalUsersResult.count ?? 0;
 
     // ── MRR calculation (active subs × price) ─────────────────────────────
-    const mrr = activeSubs * PRO_PRICE_USD;
+    const mrr = activeSubs * PRO_PRICE_ILS;
 
     // ── Churn rate (churned / (active + churned)) ──────────────────────────
     const churnDenominator = activeSubs + churned;

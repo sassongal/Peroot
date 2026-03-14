@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Check, Loader2 } from "lucide-react";
+import { Mail, Check, Loader2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export function NewsletterSignup() {
@@ -23,9 +23,7 @@ export function NewsletterSignup() {
       setStatus("success");
       setEmail("");
     } catch {
-      // If table doesn't exist yet, silently succeed (we'll create it later)
-      setStatus("success");
-      setEmail("");
+      setStatus("error");
     }
   };
 
@@ -34,6 +32,23 @@ export function NewsletterSignup() {
       <div className="flex items-center justify-center gap-2 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
         <Check className="w-5 h-5 text-green-400" />
         <span className="text-sm text-green-300">תודה! נעדכן אותך כשיעלה תוכן חדש</span>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-3">
+        <div className="flex items-center justify-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-400" />
+          <span className="text-sm text-red-300">שגיאה בהרשמה. נסה שוב.</span>
+        </div>
+        <button
+          onClick={() => setStatus("idle")}
+          className="w-full text-xs text-slate-400 hover:text-white transition-colors"
+        >
+          נסה שוב
+        </button>
       </div>
     );
   }
