@@ -48,7 +48,7 @@ export function useSubscription() {
   const isPro = subscription.status === 'active' || subscription.status === 'on_trial';
 
   const checkout = useCallback(async (variantId?: string) => {
-    const vid = variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID;
+    const vid = (variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || '').trim();
     if (!vid) {
       logger.error('No variant ID configured');
       return;

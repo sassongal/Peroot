@@ -1,36 +1,45 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit } from "@/lib/ratelimit";
+import { z } from "zod";
 
-// TEMP: Minimal POST handler to isolate the checkout bug
+const CheckoutSchema = z.object({
+  variantId: z.string().min(1).transform(v => v.trim()),
+});
+
+/**
+ * POST /api/checkout
+ * Creates a LemonSqueezy checkout URL for the authenticated user.
+ */
 export async function POST(request: Request) {
-  const steps: string[] = [];
-
   try {
-    // Step 1: Auth
-    steps.push('auth-start');
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized', steps }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    steps.push(`auth-ok:${user.email}`);
 
-    // Step 2: Read body
-    steps.push('body-start');
+    const rl = await checkRateLimit(`checkout:${user.id}`, "free");
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+    }
+
     const body = await request.json();
-    const variantId = body.variantId || '1395097';
-    steps.push(`body-ok:${variantId}`);
-
-    // Step 3: Env vars
-    const storeId = process.env.LEMONSQUEEZY_STORE_ID;
-    const apiKey = process.env.LEMONSQUEEZY_API_KEY;
-    if (!storeId || !apiKey) {
-      return NextResponse.json({ error: 'Missing env', steps, hasStore: !!storeId, hasKey: !!apiKey }, { status: 500 });
+    const parsed = CheckoutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
-    steps.push('env-ok');
+    const { variantId } = parsed.data;
 
-    // Step 4: Call LemonSqueezy API (exact same as working GET)
-    steps.push('ls-call-start');
+    const storeId = process.env.LEMONSQUEEZY_STORE_ID?.trim();
+    const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
+    if (!storeId || !apiKey) {
+      return NextResponse.json({ error: 'Store not configured' }, { status: 500 });
+    }
+
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space').trim();
+
     const lsResponse = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
       method: 'POST',
       headers: {
@@ -44,11 +53,13 @@ export async function POST(request: Request) {
           attributes: {
             checkout_options: { embed: false, media: false },
             checkout_data: {
-              email: user.email || 'fallback@peroot.space',
+              ...(user.email ? { email: user.email } : {}),
               custom: { user_id: user.id },
             },
             product_options: {
-              redirect_url: 'https://peroot.space/settings?tab=billing&success=true',
+              redirect_url: `${siteUrl}/settings?tab=billing&success=true`,
+              receipt_button_text: 'Back to Peroot',
+              receipt_thank_you_note: 'Welcome to Peroot Pro!',
             },
           },
           relationships: {
@@ -58,68 +69,23 @@ export async function POST(request: Request) {
         },
       }),
     });
-    steps.push(`ls-status:${lsResponse.status}`);
-
-    // Step 5: Parse response
-    const responseText = await lsResponse.text();
-    steps.push(`ls-body-len:${responseText.length}`);
 
     if (!lsResponse.ok) {
-      return NextResponse.json({
-        error: 'LemonSqueezy API error',
-        steps,
-        lsStatus: lsResponse.status,
-        lsBody: responseText.substring(0, 3000),
-      }, { status: 502 });
+      const errorText = await lsResponse.text();
+      console.error(`[Checkout] LemonSqueezy API error ${lsResponse.status}:`, errorText);
+      return NextResponse.json({ error: 'Payment provider error' }, { status: 502 });
     }
 
-    // Step 6: Extract URL
-    const lsData = JSON.parse(responseText);
+    const lsData = await lsResponse.json();
     const checkoutUrl = lsData?.data?.attributes?.url;
-    steps.push(`url:${checkoutUrl ? 'found' : 'missing'}`);
 
     if (!checkoutUrl) {
-      return NextResponse.json({ error: 'No checkout URL', steps, lsData }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
     }
 
-    return NextResponse.json({ url: checkoutUrl, steps });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: 'Exception', message: msg, steps }, { status: 500 });
+    return NextResponse.json({ url: checkoutUrl });
+  } catch (error) {
+    console.error('[Checkout] Error:', error);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
-}
-
-// TEMP: Debug GET endpoint
-export async function GET() {
-  const storeId = process.env.LEMONSQUEEZY_STORE_ID;
-  const apiKey = process.env.LEMONSQUEEZY_API_KEY;
-  if (!storeId || !apiKey) {
-    return NextResponse.json({ error: 'Missing env vars' });
-  }
-
-  const res = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/vnd.api+json',
-      'Content-Type': 'application/vnd.api+json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      data: {
-        type: 'checkouts',
-        attributes: {
-          checkout_options: { embed: false, media: false },
-          checkout_data: { email: 'test@peroot.space', custom: { user_id: 'debug' } },
-          product_options: { redirect_url: 'https://peroot.space/settings?tab=billing&success=true' },
-        },
-        relationships: {
-          store: { data: { type: 'stores', id: storeId } },
-          variant: { data: { type: 'variants', id: '1395097' } },
-        },
-      },
-    }),
-  });
-
-  const text = await res.text();
-  return NextResponse.json({ status: res.status, body: text.substring(0, 3000) });
 }
