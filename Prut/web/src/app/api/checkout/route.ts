@@ -3,29 +3,54 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from "@/lib/ratelimit";
 import { z } from "zod";
 
-// TEMP: Debug endpoint - remove after fixing checkout
+// TEMP: Debug endpoint - attempts a real checkout creation to see the error
 export async function GET() {
   const storeId = process.env.LEMONSQUEEZY_STORE_ID;
   const apiKey = process.env.LEMONSQUEEZY_API_KEY;
+  const variantId = '1395097'; // Pro variant
 
   if (!storeId || !apiKey) {
     return NextResponse.json({ error: 'Missing env vars', hasStoreId: !!storeId, hasApiKey: !!apiKey });
   }
 
-  // Test the API key by listing store
-  const testRes = await fetch(`https://api.lemonsqueezy.com/v1/stores/${storeId}`, {
+  const checkoutPayload = {
+    data: {
+      type: 'checkouts',
+      attributes: {
+        checkout_options: { embed: false, media: false },
+        checkout_data: {
+          email: 'test@peroot.space',
+          custom: { user_id: 'debug-test' },
+        },
+        product_options: {
+          redirect_url: 'https://peroot.space/settings?tab=billing&success=true',
+        },
+      },
+      relationships: {
+        store: { data: { type: 'stores', id: storeId } },
+        variant: { data: { type: 'variants', id: variantId } },
+      },
+    },
+  };
+
+  const res = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+    method: 'POST',
     headers: {
       'Accept': 'application/vnd.api+json',
+      'Content-Type': 'application/vnd.api+json',
       'Authorization': `Bearer ${apiKey}`,
     },
+    body: JSON.stringify(checkoutPayload),
   });
 
-  const testText = await testRes.text();
+  const responseText = await res.text();
   return NextResponse.json({
-    status: testRes.status,
-    apiKeyPrefix: apiKey.substring(0, 10) + '...',
+    checkoutStatus: res.status,
     storeId,
-    response: testText.substring(0, 2000),
+    variantId,
+    apiKeyPrefix: apiKey.substring(0, 10) + '...',
+    requestPayload: checkoutPayload,
+    response: responseText.substring(0, 5000),
   });
 }
 
