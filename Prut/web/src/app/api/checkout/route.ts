@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space';
 
-    logger.info(`[Checkout] Creating checkout for user ${user.id}, variant ${variantId}, store ${storeId}`);
+    console.log(`[Checkout] Creating checkout for user ${user.id}, variant ${variantId}, store ${storeId}`);
 
     const checkout = await createCheckout(storeId, variantId, {
       checkoutOptions: {
@@ -67,11 +67,12 @@ export async function POST(request: Request) {
 
     // SDK returns { data, error, statusCode }
     if (checkout.error) {
-      logger.error('[Checkout] LemonSqueezy SDK error:', {
+      console.error('[Checkout] LemonSqueezy SDK error:', JSON.stringify({
         message: checkout.error.message,
         cause: checkout.error.cause,
         statusCode: checkout.statusCode,
-      });
+        data: checkout.data,
+      }));
       return NextResponse.json({
         error: 'Payment provider error',
         details: checkout.error.message,
@@ -81,13 +82,13 @@ export async function POST(request: Request) {
     const checkoutUrl = checkout.data?.data.attributes.url;
 
     if (!checkoutUrl) {
-      logger.error('[Checkout] No checkout URL in response:', JSON.stringify(checkout.data));
+      console.error('[Checkout] No checkout URL in response:', JSON.stringify(checkout.data));
       return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
     }
 
     return NextResponse.json({ url: checkoutUrl });
   } catch (error) {
-    logger.error('[Checkout] Error:', error);
+    console.error('[Checkout] Error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
