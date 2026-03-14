@@ -96,7 +96,29 @@ export async function POST(request: Request) {
 
     console.log(`[Checkout] Creating checkout for user ${user.id}, variant ${variantId}, store ${storeId}`);
 
-    // Direct API call - more reliable than SDK in serverless
+    // Build checkout payload - match the working GET debug format exactly
+    const checkoutPayload = {
+      data: {
+        type: 'checkouts',
+        attributes: {
+          checkout_options: { embed: false, media: false },
+          checkout_data: {
+            ...(user.email ? { email: user.email } : {}),
+            custom: { user_id: user.id },
+          },
+          product_options: {
+            redirect_url: `${siteUrl}/settings?tab=billing&success=true`,
+          },
+        },
+        relationships: {
+          store: { data: { type: 'stores', id: storeId } },
+          variant: { data: { type: 'variants', id: variantId } },
+        },
+      },
+    };
+
+    console.log(`[Checkout] Payload: ${JSON.stringify(checkoutPayload)}`);
+
     const lsResponse = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
       method: 'POST',
       headers: {
@@ -104,42 +126,7 @@ export async function POST(request: Request) {
         'Content-Type': 'application/vnd.api+json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        data: {
-          type: 'checkouts',
-          attributes: {
-            checkout_options: {
-              embed: false,
-              media: false,
-            },
-            checkout_data: {
-              email: user.email ?? undefined,
-              custom: {
-                user_id: user.id,
-              },
-            },
-            product_options: {
-              redirect_url: `${siteUrl}/settings?tab=billing&success=true`,
-              receipt_button_text: 'חזרה ל-Peroot',
-              receipt_thank_you_note: 'תודה שהצטרפת ל-Peroot Pro! 🎉',
-            },
-          },
-          relationships: {
-            store: {
-              data: {
-                type: 'stores',
-                id: storeId,
-              },
-            },
-            variant: {
-              data: {
-                type: 'variants',
-                id: variantId,
-              },
-            },
-          },
-        },
-      }),
+      body: JSON.stringify(checkoutPayload),
     });
 
     if (!lsResponse.ok) {
