@@ -46,6 +46,9 @@ export type PersonalPrompt = {
   prompt_style?: string; // HTML with style tokens
   tags?: string[];
   last_used_at?: number | string | null;
+  is_pinned?: boolean;
+  success_count?: number;
+  fail_count?: number;
 };
 
 export type LibraryPrompt = {

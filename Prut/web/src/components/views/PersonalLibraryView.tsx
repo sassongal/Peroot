@@ -7,7 +7,7 @@ import {
     Search, Trash2, GripVertical, LayoutGrid, LayoutList,
     CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles,
     Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2,
-    Upload
+    Upload, Pin, ThumbsUp, ThumbsDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
@@ -18,6 +18,10 @@ import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleToke
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { logger } from "@/lib/logger";
+import { useChains } from "@/hooks/useChains";
+import { ChainsSection } from "@/components/features/chains/ChainsSection";
+import { usePresets } from "@/hooks/usePresets";
+import { VariableFiller } from "@/components/features/variables/VariableFiller";
 
 interface PersonalLibraryViewProps {
   onUsePrompt: (prompt: PersonalPrompt | LibraryPrompt) => void;
@@ -50,6 +54,8 @@ export function PersonalLibraryView({
     libraryFavorites,
     addPrompt,
     duplicatePrompt,
+    togglePin,
+    ratePrompt,
 
     // Batch & Edit
     deletePrompts,
@@ -99,6 +105,15 @@ export function PersonalLibraryView({
     // Loading state
     isPersonalLoaded
   } = useLibraryContext();
+
+  const { chains, addChain, updateChain, deleteChain, incrementChainUseCount } = useChains();
+  const { presets, addPreset, deletePreset } = usePresets();
+
+  const extractVariablesFromPrompt = (text: string): string[] => {
+    const matches = text.match(/\{([^}]+)\}/g);
+    if (!matches) return [];
+    return [...new Set(matches.map(m => m.slice(1, -1)))];
+  };
 
   const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -455,11 +470,11 @@ export function PersonalLibraryView({
             isDragOver && "ring-2 ring-white/30",
             (isSelected || selectionMode) && "ring-2 ring-blue-500/50 bg-blue-500/5"
           )}
-          contentClassName="p-4 md:p-7 lg:p-8 hover:bg-white/5 transition-colors flex flex-col gap-5 min-h-0 md:min-h-[420px]"
+          contentClassName="p-4 md:p-7 lg:p-8 hover:bg-white/5 transition-colors flex flex-col gap-3 md:gap-5 min-h-0"
         >
           {/* Selection Checkbox Overlay */}
           <div className={cn(
-               "absolute top-6 left-6 z-10 transition-opacity duration-200",
+               "absolute top-3 left-3 md:top-6 md:left-6 z-10 transition-opacity duration-200",
                (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
            )}>
                <button
@@ -504,15 +519,34 @@ export function PersonalLibraryView({
                             ספרייה אישית
                           </span>
                         )}
+                        {prompt.is_pinned && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <Pin className="w-3 h-3" />
+                            מוצמד
+                          </span>
+                        )}
                     </div>
-                    <h4 className="text-lg md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
-                    <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
+                    <h4 className="text-base md:text-2xl text-slate-100 font-semibold leading-tight" dir="rtl" title={prompt.title}>{prompt.title}</h4>
+                    <p className="text-sm text-slate-400 mt-2" dir="rtl" title={prompt.use_case}>{prompt.use_case}</p>
                     {renderPromptTags(prompt.tags)}
                   </>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 ps-8"> {/* ps-8 to avoid overlap with checkbox */}
+            <div className="flex items-center gap-1 md:gap-2 ps-2 md:ps-8"> {/* ps to avoid overlap with checkbox */}
+              <button
+                type="button"
+                onClick={() => togglePin(prompt.id)}
+                aria-label={prompt.is_pinned ? "בטל הצמדה" : "הצמד למעלה"}
+                className={cn(
+                  "p-2.5 rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  prompt.is_pinned
+                    ? "border-amber-400/40 bg-amber-400/10 text-amber-400"
+                    : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
+                )}
+              >
+                <Pin className={cn("w-4 h-4", prompt.is_pinned && "fill-amber-400")} />
+              </button>
               <button
                 type="button"
                 onClick={() => handleToggleFavorite("personal", prompt.id)}
@@ -553,6 +587,17 @@ export function PersonalLibraryView({
             dir="rtl"
             dangerouslySetInnerHTML={{ __html: toStyledHtml(styledMarkup) }}
           />
+
+          {/* Variable Filler */}
+          {!isStyling && extractVariablesFromPrompt(prompt.prompt).length > 0 && (
+            <VariableFiller
+              promptText={prompt.prompt}
+              onApply={(filledText) => onUsePrompt({ ...prompt, prompt: filledText })}
+              presets={presets}
+              onSavePreset={addPreset}
+              onDeletePreset={deletePreset}
+            />
+          )}
 
           {isStyling && (
              <>
@@ -696,27 +741,54 @@ export function PersonalLibraryView({
           </>
           )}
 
-          <div className="flex items-center justify-between text-xs">
-            {prompt.use_count > 0 ? (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-                <span className="text-emerald-400 font-medium">שומש {prompt.use_count} פעמים</span>
-              </div>
-            ) : (
-              <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium">חדש</span>
-            )}
-            <span className="text-slate-500 px-2 py-0.5 rounded-full bg-white/5">{prompt.personal_category}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              {prompt.use_count > 0 ? (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  <span className="text-emerald-400 font-medium">שומש {prompt.use_count} פעמים</span>
+                </div>
+              ) : (
+                <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium">חדש</span>
+              )}
+              {/* Performance Score */}
+              {((prompt.success_count ?? 0) + (prompt.fail_count ?? 0)) > 0 && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5">
+                  <span className="text-emerald-400">{prompt.success_count ?? 0}</span>
+                  <span className="text-slate-600">/</span>
+                  <span className="text-red-400">{prompt.fail_count ?? 0}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {/* Quick Rating Buttons */}
+              <button
+                onClick={() => ratePrompt(prompt.id, true)}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                title="הצלחה"
+              >
+                <ThumbsUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => ratePrompt(prompt.id, false)}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                title="כישלון"
+              >
+                <ThumbsDown className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-slate-500 px-2 py-0.5 rounded-full bg-white/5 ms-2">{prompt.personal_category}</span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 pt-1">
             <button
               onClick={() => onUsePrompt(prompt)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Plus className="w-3 h-3" />
-              השתמש בפרומפט
+              השתמש<span className="hidden md:inline"> בפרומפט</span>
             </button>
             <button
               onClick={() => onCopyText(prompt.prompt)}
@@ -727,20 +799,22 @@ export function PersonalLibraryView({
             </button>
             <button
               onClick={() => openStyleEditor(prompt)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="flex items-center gap-1.5 p-2 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              title="עיצוב"
             >
-              <Pencil className="w-3 h-3" />
-              עיצוב
+              <Pencil className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">עיצוב</span>
             </button>
             <button
               onClick={async () => {
                 await duplicatePrompt(prompt);
                 toast.success("פרומפט שוכפל!");
               }}
-              className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-dashed border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="flex items-center gap-1.5 p-2 md:px-4 md:py-2 rounded-lg border border-dashed border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              title="שכפל"
             >
-              <Plus className="w-3 h-3" />
-              שכפל
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">שכפל</span>
             </button>
           </div>
         </GlowingEdgeCard>
@@ -753,48 +827,59 @@ export function PersonalLibraryView({
 
       return (
           <div key={prompt.id} className={cn(
-              "group flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors",
+              "group flex flex-col md:flex-row md:items-center gap-2 md:gap-4 p-3 md:p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors",
               isSelected && "bg-blue-500/10 border-blue-500/20"
           )}>
-              {/* Checkbox */}
-              <button
-                onClick={() => toggleSelection(prompt.id)}
-                className="shrink-0 text-slate-500 hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
-              >
-                 {isSelected
-                    ? <CheckSquare className="w-5 h-5 text-blue-400" />
-                    : <Square className="w-5 h-5 opacity-50 group-hover:opacity-100" />}
-              </button>
-
-              {/* Capability Icon */}
-              <div className="shrink-0">
-                  <CapabilityBadge mode={prompt.capability_mode} className="scale-75 origin-left" />
-              </div>
-
-              {/* Main Content */}
-              <div className="flex-1 min-w-0 flex flex-col items-end text-start">
-                  <div className="flex items-center gap-2 mb-1">
-                      {renderPromptTags(prompt.tags)}
-                      <h4 className="text-base text-slate-200 font-medium truncate">{prompt.title}</h4>
-                  </div>
-                  <p className="text-sm text-slate-500 truncate w-full max-w-[60vw]" dir="rtl">{prompt.use_case}</p>
-              </div>
-
-              {/* Stats & Category */}
-              <div className="hidden md:block text-start text-xs text-slate-500 w-32 shrink-0">
-                  <div className="text-slate-400">{prompt.personal_category}</div>
-                  <div>שומש {prompt.use_count} פעמים</div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Plus className="w-4 h-4"/></button>
-                  <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Copy className="w-4 h-4"/></button>
-                  <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Pencil className="w-4 h-4"/></button>
-                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} title="שכפל" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Plus className="w-4 h-4"/></button>
-                  <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
-                      <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
+              {/* Top Row: Checkbox + Content */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Checkbox */}
+                  <button
+                    onClick={() => toggleSelection(prompt.id)}
+                    className="shrink-0 text-slate-500 hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
+                  >
+                     {isSelected
+                        ? <CheckSquare className="w-5 h-5 text-blue-400" />
+                        : <Square className="w-5 h-5 opacity-50 group-hover:opacity-100" />}
                   </button>
+
+                  {/* Capability Icon */}
+                  <div className="shrink-0 hidden md:block">
+                      <CapabilityBadge mode={prompt.capability_mode} className="scale-75 origin-left" />
+                  </div>
+
+                  {/* Main Content */}
+                  <div className="flex-1 min-w-0 text-end">
+                      <div className="flex items-center gap-2 mb-0.5 justify-end">
+                          {prompt.is_pinned && <Pin className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
+                          <h4 className="text-sm md:text-base text-slate-200 font-medium truncate" title={prompt.title}>{prompt.title}</h4>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate" dir="rtl" title={prompt.use_case}>{prompt.use_case}</p>
+                  </div>
+              </div>
+
+              {/* Bottom Row: Stats + Actions */}
+              <div className="flex items-center justify-between md:justify-end gap-2 ps-8 md:ps-0">
+                  {/* Stats - visible on mobile too */}
+                  <div className="flex items-center gap-2 text-xs text-slate-500 md:w-28 shrink-0">
+                      <span className="text-slate-400 truncate">{prompt.personal_category}</span>
+                      <span className="hidden md:inline">·</span>
+                      <span className="hidden md:inline">x{prompt.use_count}</span>
+                      {((prompt.success_count ?? 0) + (prompt.fail_count ?? 0)) > 0 && (
+                        <span className="hidden md:inline">
+                          <span className="text-emerald-400">{prompt.success_count ?? 0}</span>/<span className="text-red-400">{prompt.fail_count ?? 0}</span>
+                        </span>
+                      )}
+                  </div>
+
+                  {/* Actions - compact on mobile */}
+                  <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Plus className="w-4 h-4"/></button>
+                      <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Copy className="w-4 h-4"/></button>
+                      <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="hidden md:block p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Pencil className="w-4 h-4"/></button>
+                      <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                          <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
+                      </button>
+                  </div>
               </div>
           </div>
       )
@@ -808,7 +893,7 @@ export function PersonalLibraryView({
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-white">ספריה אישית</h2>
+                <h2 className="text-xl md:text-4xl lg:text-5xl font-serif text-white">ספריה אישית</h2>
                 <p className="text-sm md:text-base text-slate-400 mt-2">
                   {totalCount} פרומפטים {personalView === "favorites" ? "מועדפים" : "אישיים"} · ארגון לפי קטגוריות
                 </p>
@@ -919,13 +1004,15 @@ export function PersonalLibraryView({
               <label className="text-xs text-slate-500">מיון</label>
               <select
                 value={personalSort}
-                onChange={(e) => setPersonalSort(e.target.value as "recent" | "title" | "usage" | "custom")}
+                onChange={(e) => setPersonalSort(e.target.value as "recent" | "title" | "usage" | "custom" | "last_used" | "performance")}
                 className="flex-1 bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
               >
                 <option value="recent">עודכן לאחרונה</option>
                 <option value="title">אלפביתי</option>
                 <option value="usage">בשימוש גבוה</option>
                 <option value="custom">סדר ידני</option>
+                <option value="last_used">שימוש אחרון</option>
+                <option value="performance">ביצועים</option>
               </select>
             </div>
           </div>
@@ -972,6 +1059,34 @@ export function PersonalLibraryView({
                   className="hidden"
                 />
               </div>
+            </div>
+          )}
+
+          {/* Chains Section */}
+          {personalView === "all" && (
+            <div className="mt-8">
+              <ChainsSection
+                chains={chains}
+                personalPrompts={personalLibrary}
+                onAddChain={addChain}
+                onUpdateChain={updateChain}
+                onDeleteChain={deleteChain}
+                onIncrementUseCount={incrementChainUseCount}
+                onUseStep={(text) =>
+                  onUsePrompt({
+                    id: '',
+                    title: '',
+                    prompt: text,
+                    category: '',
+                    personal_category: null,
+                    use_case: '',
+                    created_at: 0,
+                    updated_at: 0,
+                    use_count: 0,
+                    source: 'manual',
+                  })
+                }
+              />
             </div>
           )}
 
@@ -1079,6 +1194,31 @@ export function PersonalLibraryView({
                           className="mt-1 px-6 py-2.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                         >
                           שדרג פרומפט עכשיו
+                        </button>
+                      </div>
+                    )}
+
+                    {displayItems.length === 0 && personalQuery.trim() && (
+                      <div className="text-center py-12">
+                        <Search className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+                        <p className="text-slate-400 text-sm">לא נמצאו תוצאות עבור &quot;{personalQuery}&quot;</p>
+                        <button
+                          onClick={() => setPersonalQuery("")}
+                          className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                        >
+                          נקה חיפוש
+                        </button>
+                      </div>
+                    )}
+
+                    {displayItems.length === 0 && !personalQuery.trim() && selectedCapabilityFilter && (
+                      <div className="text-center py-12">
+                        <p className="text-slate-400 text-sm">אין פרומפטים במצב זה</p>
+                        <button
+                          onClick={() => setSelectedCapabilityFilter(null)}
+                          className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                        >
+                          הצג הכל
                         </button>
                       </div>
                     )}

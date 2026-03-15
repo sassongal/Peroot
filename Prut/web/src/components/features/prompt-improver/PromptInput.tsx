@@ -32,18 +32,50 @@ interface PromptInputProps {
 
 import { useI18n } from "@/context/I18nContext";
 
-const ALL_EXAMPLES = [
-  "כתוב לי מייל שיווקי להשקת מוצר חדש",
-  "צור תוכן לפוסט אינסטגרם לעסק קטן",
-  "בנה תבנית לתיאור משרה של מפתח Full Stack",
-  "כתוב סקריפט לסרטון הסבר על המוצר שלי",
-  "צור תוכנית לימודים לקורס AI למתחילים",
-  "כתוב מייל מעקב מקצועי ללקוח אחרי פגישה",
-  "בנה prompt ליצירת תמונה של מוצר על רקע סטודיו",
-  "כתוב תיאור מוצר שמוכר לחנות אונליין",
-  "צור שאלון סקר שביעות רצון ללקוחות",
-  "כתוב הודעת WhatsApp שיווקית קצרה ואפקטיבית",
-];
+const EXAMPLES_BY_MODE: Record<string, string[]> = {
+  [CapabilityMode.STANDARD]: [
+    "כתוב לי מייל שיווקי להשקת מוצר חדש",
+    "צור תוכן לפוסט אינסטגרם לעסק קטן",
+    "בנה תבנית לתיאור משרה של מפתח Full Stack",
+    "כתוב סקריפט לסרטון הסבר על המוצר שלי",
+    "צור תוכנית לימודים לקורס AI למתחילים",
+    "כתוב מייל מעקב מקצועי ללקוח אחרי פגישה",
+    "כתוב תיאור מוצר שמוכר לחנות אונליין",
+    "צור שאלון סקר שביעות רצון ללקוחות",
+    "כתוב הודעת WhatsApp שיווקית קצרה ואפקטיבית",
+  ],
+  [CapabilityMode.DEEP_RESEARCH]: [
+    "חקור את המגמות העדכניות ב-AI לשנת 2026",
+    "נתח את שוק ה-SaaS בישראל - גודל, שחקנים, הזדמנויות",
+    "השווה בין אסטרטגיות שיווק B2B ל-B2C בתעשיית הטכנולוגיה",
+    "בצע מחקר שוק על תעשיית הפודטק בישראל",
+    "נתח את ההשפעה של AI על שוק העבודה ב-5 שנים הקרובות",
+  ],
+  [CapabilityMode.IMAGE_GENERATION]: [
+    "תמונת מוצר על רקע סטודיו לבן מינימליסטי",
+    "איור דיגיטלי של עיר עתידנית עם אלמנטים ירוקים",
+    "לוגו מודרני לחברת טכנולוגיה בסגנון מינימליסטי",
+    "תמונת רקע לאתר - גלי צבע זהב ושחור אבסטרקטי",
+    "פורטרט מקצועי בסגנון תאורת רמברנדט",
+  ],
+  [CapabilityMode.AGENT_BUILDER]: [
+    "סוכן שירות לקוחות לחנות אונליין של אופנה",
+    "עוזר אישי לניהול לוח זמנים ומשימות יומיות",
+    "יועץ שיווק דיגיטלי שמנתח ביצועי קמפיינים",
+    "מורה פרטי למתמטיקה שמתאים את ההסבר לרמת התלמיד",
+    "סוכן מכירות שעונה על שאלות על מוצרי SaaS",
+    "יועץ משפטי ראשוני שמסביר זכויות עובדים",
+    "מנהל קהילה שעונה על שאלות ומנהל דיונים",
+    "עוזר כתיבה שמשפר טקסטים שיווקיים ועסקיים",
+  ],
+};
+
+const PLACEHOLDERS_BY_MODE: Record<string, string> = {
+  [CapabilityMode.STANDARD]: "",
+  [CapabilityMode.DEEP_RESEARCH]: "מה תרצה לחקור? תאר את הנושא, היקף המחקר, והשאלות המרכזיות...",
+  [CapabilityMode.IMAGE_GENERATION]: "תאר את התמונה שתרצה ליצור - נושא, סגנון, צבעים, תאורה...",
+  [CapabilityMode.AGENT_BUILDER]: "תאר את הסוכן שתרצה לבנות - מה התפקיד שלו, מי קהל היעד, ומה הוא צריך לדעת לעשות...",
+};
 
 export function PromptInput({
   inputVal,
@@ -71,9 +103,10 @@ export function PromptInput({
     const highlightedContent = useMemo(() => highlightTextWithPlaceholders(displayValue), [displayValue]);
 
     const displayedExamples = useMemo(() => {
-      const shuffled = [...ALL_EXAMPLES].sort(() => Math.random() - 0.5);
+      const examples = EXAMPLES_BY_MODE[selectedCapability] || EXAMPLES_BY_MODE[CapabilityMode.STANDARD];
+      const shuffled = [...examples].sort(() => Math.random() - 0.5);
       return shuffled.slice(0, 4);
-    }, []);
+    }, [selectedCapability]);
 
     // Voice Recorder Logic
     const { isListening, toggleListening, isSupported } = useVoiceRecorder({
@@ -202,7 +235,7 @@ export function PromptInput({
                  setInputVal(e.target.value);
                  setInterimResult("");
               }}
-              placeholder={t.prompt_generator.placeholder}
+              placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
               className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-lg md:text-xl text-transparent caret-white placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -335,7 +368,7 @@ export function PromptInput({
                   ) : (
                     <>
                       <Wand2 className="w-5 h-5 transition-transform group-hover:rotate-12" />
-                      <span className="text-base font-bold">שדרג</span>
+                      <span className="text-base font-bold">{selectedCapability === CapabilityMode.AGENT_BUILDER ? "בנה סוכן" : "שדרג"}</span>
                       <kbd className="text-[10px] opacity-50 font-normal font-mono bg-black/10 px-1.5 py-0.5 rounded">⌘↵</kbd>
                     </>
                   )}

@@ -8,7 +8,7 @@ import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { exportPromptAsImage } from "@/lib/export-prompt-image";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useHistory } from "@/hooks/useHistory";
@@ -31,6 +31,8 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     setLibraryQuery,
     libraryView,
     setLibraryView,
+    librarySort,
+    setLibrarySort,
     favoriteLibraryIds,
     handleToggleFavorite,
     setViewMode,
@@ -52,6 +54,15 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   const [isCreatingNewMoveCategory, setIsCreatingNewMoveCategory] = useState(false);
   const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
+
+  useEffect(() => {
+    if (!lightboxImage) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxImage(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxImage]);
 
   // Rating state (localStorage-based)
   const [userRatings, setUserRatings] = useState<Record<string, 1 | -1>>(() => {
@@ -173,7 +184,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   let paywallInserted = false;
 
   return (
-      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-7 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* Back Button */}
         <button
@@ -185,13 +196,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           <span>חזרה</span>
         </button>
 
-        <div className="glass-card p-6 rounded-xl border-white/10 bg-black/40">
+        <div className="glass-card p-4 md:p-7 lg:p-9 rounded-2xl border-white/10 bg-black/40">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-2xl md:text-3xl font-serif text-white">ספריית פרומפטים</h2>
+                <h2 className="text-xl md:text-3xl font-serif text-white">ספריית פרומפטים</h2>
                 <p className="text-xs md:text-sm text-slate-500 mt-1">
-                  {totalCount} {libraryView === "favorites" ? "פרומפטים מועדפים" : "פרומפטים זמינים"} · מיון לפי פופולריות · חיפוש לפי מילים, שימוש או קטגוריה
+                  {totalCount} {libraryView === "favorites" ? "פרומפטים מועדפים" : "פרומפטים זמינים"} · חיפוש לפי מילים, שימוש או קטגוריה
                 </p>
               </div>
               
@@ -267,15 +278,30 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             />
           </div>
 
-          <div className="relative mt-5">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              dir="rtl"
-              value={libraryQuery}
-              onChange={(e) => setLibraryQuery(e.target.value)}
-              placeholder="חפש/י רעיון לפרומפט לפי מילים, קטגוריה או שימוש..."
-              className="w-full bg-black/30 border border-white/10 rounded-lg py-3.5 md:py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+            <div className="relative md:col-span-2">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input
+                dir="rtl"
+                value={libraryQuery}
+                onChange={(e) => setLibraryQuery(e.target.value)}
+                placeholder="חפש/י רעיון לפרומפט לפי מילים, קטגוריה או שימוש..."
+                className="w-full bg-black/30 border border-white/10 rounded-lg py-3 md:py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-xs text-slate-500 shrink-0">מיון</label>
+              <select
+                value={librarySort}
+                onChange={(e) => setLibrarySort(e.target.value as "popularity" | "title" | "newest" | "rating")}
+                className="flex-1 bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
+              >
+                <option value="popularity">פופולריות</option>
+                <option value="title">אלפביתי</option>
+                <option value="newest">חדש ביותר</option>
+                <option value="rating">דירוג שלי</option>
+              </select>
+            </div>
           </div>
 
           {orderedCategories.length > 0 && (
@@ -312,7 +338,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   key={collection.id}
                   onClick={() => setActiveCollection(activeCollection === collection.id ? null : collection.id)}
                   className={cn(
-                    "shrink-0 w-48 md:w-56 p-4 rounded-xl border transition-all cursor-pointer text-right",
+                    "shrink-0 w-44 md:w-56 p-4 rounded-xl border transition-all cursor-pointer text-right",
                     activeCollection === collection.id
                       ? "border-amber-500/40 bg-amber-500/10 ring-1 ring-amber-500/20"
                       : "border-white/10 bg-gradient-to-l hover:border-white/20 hover:bg-white/[0.04]",
@@ -331,13 +357,30 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
         {orderedCategories.map((category) => {
           const sortedPrompts = [...effectiveGrouped[category]].sort((a, b) => {
+            // Favorites always float to top
             const aFavorite = favoriteLibraryIds.has(a.id);
             const bFavorite = favoriteLibraryIds.has(b.id);
             if (aFavorite !== bFavorite) return aFavorite ? -1 : 1;
-            const aPopularity = popularityMap[a.id] ?? 0;
-            const bPopularity = popularityMap[b.id] ?? 0;
-            if (aPopularity !== bPopularity) return bPopularity - aPopularity;
-            return a.title.localeCompare(b.title);
+
+            switch (librarySort) {
+              case "title":
+                return a.title.localeCompare(b.title);
+              case "newest":
+                return 0; // preserve API order (already newest first)
+              case "rating": {
+                const aRating = userRatings[a.id] ?? 0;
+                const bRating = userRatings[b.id] ?? 0;
+                if (aRating !== bRating) return bRating - aRating;
+                return (popularityMap[b.id] ?? 0) - (popularityMap[a.id] ?? 0);
+              }
+              case "popularity":
+              default: {
+                const aPopularity = popularityMap[a.id] ?? 0;
+                const bPopularity = popularityMap[b.id] ?? 0;
+                if (aPopularity !== bPopularity) return bPopularity - aPopularity;
+                return a.title.localeCompare(b.title);
+              }
+            }
           });
 
           // Determine which items in this category section are blurred and
@@ -382,9 +425,9 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                       <div
                         key={prompt.id}
                         className={cn(
-                          "rounded-3xl border border-white/10 bg-black/30 p-4 md:p-7 transition-colors flex flex-col gap-5 min-h-0 md:min-h-[360px] relative",
+                          "rounded-3xl border border-white/10 bg-black/30 p-4 md:p-7 transition-colors flex flex-col gap-5 min-h-0 relative",
                           !isBlurred && "hover:bg-white/5",
-                          !isBlurred && (selectedIds.has(prompt.id) || selectionMode) && "ring-2 ring-purple-500/50 bg-purple-500/5",
+                          !isBlurred && (selectedIds.has(prompt.id) || selectionMode) && "ring-2 ring-amber-500/50 bg-amber-500/5",
                           isBlurred && "blur-sm pointer-events-none select-none"
                         )}
                         aria-hidden={isBlurred ? "true" : undefined}
@@ -397,7 +440,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                           )}>
                             <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }} aria-label={selectedIds.has(prompt.id) ? "בטל בחירה" : "בחר פריט"}>
                               {selectedIds.has(prompt.id)
-                                ? <CheckSquare className="w-6 h-6 text-purple-400 fill-purple-500/20" />
+                                ? <CheckSquare className="w-6 h-6 text-amber-400 fill-amber-500/20" />
                                 : <Square className="w-6 h-6 text-slate-500 hover:text-slate-300" />}
                             </button>
                           </div>
@@ -408,8 +451,8 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                             <div className="flex items-center gap-2 mb-2">
                               <CapabilityBadge mode={prompt.capability_mode} />
                             </div>
-                            <h4 className="text-lg md:text-2xl text-slate-100 font-semibold" dir="rtl">{prompt.title}</h4>
-                            <p className="text-sm text-slate-400 mt-2" dir="rtl">{prompt.use_case}</p>
+                            <h4 className="text-base md:text-2xl text-slate-100 font-semibold leading-tight" dir="rtl" title={prompt.title}>{prompt.title}</h4>
+                            <p className="text-sm text-slate-400 mt-2" dir="rtl" title={prompt.use_case}>{prompt.use_case}</p>
                           </div>
                           <button
                             type="button"
@@ -492,7 +535,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <div className="flex flex-wrap items-center gap-2 md:gap-2 pt-1">
                           <button
                             onClick={() => onUsePrompt(prompt)}
                             className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors cursor-pointer"
@@ -505,14 +548,14 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                             className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer"
                           >
                             <BookOpen className="w-3 h-3" />
-                            שמור
+                            <span className="hidden md:inline">שמור</span>
                           </button>
                           <button
                             onClick={async () => { await onCopyText(prompt.prompt); }}
                             className="flex items-center gap-2 px-3 py-2.5 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer"
                           >
                             <Copy className="w-3 h-3" />
-                            העתק
+                            <span className="hidden md:inline">העתק</span>
                           </button>
                           <button
                             onClick={() => exportPromptAsImage({

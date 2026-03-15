@@ -88,6 +88,9 @@ export function useLibrary() {
                 created_at: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
                 updated_at: row.updated_at ? new Date(row.updated_at).getTime() : (row.created_at ? new Date(row.created_at).getTime() : Date.now()),
                 last_used_at: row.last_used_at ? new Date(row.last_used_at).getTime() : null,
+                is_pinned: row.is_pinned ?? false,
+                success_count: row.success_count ?? 0,
+                fail_count: row.fail_count ?? 0,
                 sort_index:
                   typeof orderMap[row.id] === "number" ? orderMap[row.id] : index,
               }))
@@ -306,6 +309,29 @@ export function useLibrary() {
     setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: now, last_used_at: now } : p));
     if (user) {
         await supabase.from('personal_library').update({ use_count: currentCount + 1, last_used_at: new Date(now).toISOString() }).eq('id', id).eq('user_id', user.id);
+    }
+  };
+
+  const togglePin = async (id: string) => {
+    const item = personalLibrary.find(p => p.id === id);
+    if (!item) return;
+    const newPinned = !item.is_pinned;
+    setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, is_pinned: newPinned, updated_at: Date.now() } : p));
+    if (user) {
+      await supabase.from('personal_library').update({ is_pinned: newPinned }).eq('id', id).eq('user_id', user.id);
+    }
+  };
+
+  const ratePrompt = async (id: string, success: boolean) => {
+    const item = personalLibrary.find(p => p.id === id);
+    if (!item) return;
+    const field = success ? 'success_count' : 'fail_count';
+    const currentVal = success ? (item.success_count ?? 0) : (item.fail_count ?? 0);
+    setPersonalLibrary(prev => prev.map(p =>
+      p.id === id ? { ...p, [field]: (p[field as keyof PersonalPrompt] as number ?? 0) + 1 } : p
+    ));
+    if (user) {
+      await supabase.from('personal_library').update({ [field]: currentVal + 1 }).eq('id', id).eq('user_id', user.id);
     }
   };
 
@@ -677,14 +703,16 @@ export function useLibrary() {
     }
   };
 
-  return { 
-    personalLibrary, 
-    personalCategories, 
-    isLoaded, 
-    addPrompt, 
-    removePrompt, 
-    updateCategory, 
-    incrementUseCount, 
+  return {
+    personalLibrary,
+    personalCategories,
+    isLoaded,
+    addPrompt,
+    removePrompt,
+    updateCategory,
+    incrementUseCount,
+    togglePin,
+    ratePrompt,
     updatePrompt,
     updatePromptContent,
     reorderPrompts,

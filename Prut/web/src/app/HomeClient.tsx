@@ -78,7 +78,9 @@ function PageContent({ user }: { user: User | null }) {
     personalView,
     setPersonalView,
     completeOnboarding,
-    filteredLibrary
+    filteredLibrary,
+    personalLibrary,
+    incrementUseCount
   } = useLibraryContext();
 
   const { state: ps, dispatch } = usePromptWorkflow();
@@ -87,6 +89,18 @@ function PageContent({ user }: { user: User | null }) {
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
+
+  // Recent personal prompts (sorted by last_used_at, only those that have been used)
+  const recentPersonalPrompts = useMemo(() => {
+    return personalLibrary
+      .filter(p => p.last_used_at)
+      .sort((a, b) => {
+        const aTime = a.last_used_at ? new Date(a.last_used_at).getTime() : 0;
+        const bTime = b.last_used_at ? new Date(b.last_used_at).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, 5);
+  }, [personalLibrary]);
 
   const setInputVal = useCallback((action: SetStateAction<string>) => {
     if (typeof action === 'function') {
@@ -625,6 +639,36 @@ function PageContent({ user }: { user: User | null }) {
          <UserMenu user={user} position="top" />
       </div>
 
+      {/* Keyboard Shortcuts Hint */}
+      <div className="fixed bottom-6 left-4 sm:left-6 z-40 hidden md:block">
+        <div className="group relative">
+          <button
+            className="p-2 rounded-full bg-black/30 border border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10 backdrop-blur-sm transition-colors"
+            title="קיצורי מקלדת"
+            aria-label="קיצורי מקלדת"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+          </button>
+          <div className="absolute bottom-full left-0 mb-2 w-52 p-3 rounded-xl bg-[#111] border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">קיצורי מקלדת</div>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">שדרוג פרומפט</span>
+                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘↵</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">העתק תוצאה</span>
+                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘⇧C</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">נקה תוצאה</span>
+                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">Esc</kbd>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="fixed bottom-6 right-4 sm:right-6 z-50">
         <ErrorBoundary name="FAQBubble">
           <FAQBubble />
@@ -789,12 +833,12 @@ function PageContent({ user }: { user: User | null }) {
                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                      <span className="text-xs font-medium text-slate-500">שימשת לאחרונה</span>
                    </div>
-                   <div className="flex gap-3 overflow-x-auto pb-2">
+                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                      {history.slice(0, 5).map((item, i) => (
                        <button
                          key={i}
                          onClick={() => { handleRestore(item); }}
-                         className="shrink-0 w-56 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
+                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
                          dir="rtl"
                        >
                          <p className="text-sm text-slate-300 font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
@@ -802,6 +846,51 @@ function PageContent({ user }: { user: User | null }) {
                          <div className="flex items-center gap-2 mt-2">
                            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/5">{item.category || 'כללי'}</span>
                            <span className="text-xs text-slate-600">{item.tone || ''}</span>
+                         </div>
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               )}
+
+               {/* Recent Personal Prompts Widget */}
+               {recentPersonalPrompts.length > 0 && (
+                 <div className="mt-3">
+                   <div className="flex items-center justify-between mb-3">
+                     <div className="flex items-center gap-2">
+                       <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                       <span className="text-xs font-medium text-amber-400/80">פרומפטים אחרונים מהספרייה</span>
+                     </div>
+                     <button
+                       onClick={() => { setViewMode("personal"); }}
+                       className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
+                     >
+                       לכל הספרייה &larr;
+                     </button>
+                   </div>
+                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                     {recentPersonalPrompts.map((prompt) => (
+                       <button
+                         key={prompt.id}
+                         onClick={() => {
+                           handleUsePrompt(prompt);
+                           incrementUseCount(prompt.id);
+                         }}
+                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.06] transition-all cursor-pointer text-start group"
+                         dir="rtl"
+                       >
+                         <div className="flex items-center gap-2 mb-1">
+                           {prompt.is_pinned && (
+                             <span className="text-amber-400 text-[10px]">&#128204;</span>
+                           )}
+                           <p className="text-sm text-slate-300 font-medium truncate flex-1" title={prompt.title}>{prompt.title}</p>
+                         </div>
+                         <p className="text-xs text-slate-500 mt-1 truncate" title={prompt.use_case}>{prompt.use_case}</p>
+                         <div className="flex items-center gap-2 mt-2">
+                           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400/70 border border-amber-500/10">{prompt.personal_category || 'כללי'}</span>
+                           {prompt.use_count > 0 && (
+                             <span className="text-xs text-slate-600">x{prompt.use_count}</span>
+                           )}
                          </div>
                        </button>
                      ))}

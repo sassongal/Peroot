@@ -28,9 +28,11 @@ interface LibraryContextType {
   personalQuery: string;
   setPersonalQuery: (q: string) => void;
 
-  personalSort: "recent" | "title" | "usage" | "custom" | "last_used";
-  setPersonalSort: (sort: "recent" | "title" | "usage" | "custom" | "last_used") => void;
-  
+  personalSort: "recent" | "title" | "usage" | "custom" | "last_used" | "performance";
+  setPersonalSort: (sort: "recent" | "title" | "usage" | "custom" | "last_used" | "performance") => void;
+  librarySort: "popularity" | "title" | "newest" | "rating";
+  setLibrarySort: (sort: "popularity" | "title" | "newest" | "rating") => void;
+
   personalView: "all" | "favorites";
   setPersonalView: (view: "all" | "favorites") => void;
   
@@ -55,6 +57,8 @@ interface LibraryContextType {
   updatePrompt: (id: string, updates: Partial<PersonalPrompt>) => Promise<void>;
   duplicatePrompt: (prompt: PersonalPrompt) => Promise<void>;
   incrementUseCount: (id: string) => Promise<void>;
+  togglePin: (id: string) => Promise<void>;
+  ratePrompt: (id: string, success: boolean) => Promise<void>;
   
   // Batch Actions
   addPrompts: (prompts: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">[]) => Promise<void>;
@@ -139,7 +143,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const [libraryView, setLibraryView] = useState<"all" | "favorites">("all");
   const [libraryQuery, setLibraryQuery] = useState("");
   const [personalQuery, setPersonalQuery] = useState("");
-  const [personalSort, setPersonalSort] = useState<"recent" | "title" | "usage" | "custom" | "last_used">("recent");
+  const [personalSort, setPersonalSort] = useState<"recent" | "title" | "usage" | "custom" | "last_used" | "performance">("recent");
+  const [librarySort, setLibrarySort] = useState<"popularity" | "title" | "newest" | "rating">("popularity");
   const [personalView, setPersonalView] = useState<"all" | "favorites">("all");
   
   // Category management UI state
@@ -190,6 +195,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     addPrompt,
     removePrompt,
     incrementUseCount,
+    togglePin,
+    ratePrompt,
     updatePrompt,
     updatePromptContent,
     reorderPrompts,
@@ -336,6 +343,13 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
           return bTime - aTime;
         });
         break;
+      case "performance":
+        result.sort((a, b) => {
+          const aScore = (a.success_count ?? 0) - (a.fail_count ?? 0);
+          const bScore = (b.success_count ?? 0) - (b.fail_count ?? 0);
+          return bScore - aScore;
+        });
+        break;
       case "recent":
       default:
         result.sort((a, b) => {
@@ -345,6 +359,13 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
         });
         break;
     }
+
+    // Pin to top: pinned items float to top while maintaining their relative sort order
+    result.sort((a, b) => {
+      const aPinned = a.is_pinned ? 1 : 0;
+      const bPinned = b.is_pinned ? 1 : 0;
+      return bPinned - aPinned;
+    });
 
     return result;
   }, [personalLibrary, personalQuery, personalView, favoritePersonalIds, selectedCapabilityFilter, personalSort]);
@@ -553,12 +574,13 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     libraryQuery, setLibraryQuery, filteredLibrary,
     personalQuery, setPersonalQuery,
     personalSort, setPersonalSort,
+    librarySort, setLibrarySort,
     personalView, setPersonalView,
     filteredPersonalLibrary, libraryFavorites,
     personalLibrary, personalCategories,
     favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
     popularityMap,
-    addPrompt, removePrompt, updatePrompt, duplicatePrompt, incrementUseCount,
+    addPrompt, removePrompt, updatePrompt, duplicatePrompt, incrementUseCount, togglePin, ratePrompt,
     deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding, // Exposed
     newPersonalCategory, setNewPersonalCategory,
     renamingCategory, setRenamingCategory,
