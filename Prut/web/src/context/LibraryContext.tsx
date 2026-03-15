@@ -24,6 +24,7 @@ interface LibraryContextType {
   libraryQuery: string;
   setLibraryQuery: (q: string) => void;
   filteredLibrary: LibraryPrompt[];
+  libraryPrompts: LibraryPrompt[];
   
   personalQuery: string;
   setPersonalQuery: (q: string) => void;
@@ -571,7 +572,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const value = {
     viewMode, setViewMode,
     libraryView, setLibraryView,
-    libraryQuery, setLibraryQuery, filteredLibrary,
+    libraryQuery, setLibraryQuery, filteredLibrary, libraryPrompts,
     personalQuery, setPersonalQuery,
     personalSort, setPersonalSort,
     librarySort, setLibrarySort,

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
     description: "השוו בין התוכניות של פירוט: חינם עם 2 קרדיטים ביום או Pro עם 150 קרדיטים בחודש. שדרוג פרומפטים וטקסטים בעברית עם AI. 4 ימי ניסיון חינם, רק ₪3.99/חודש.",
-    url: "https://peroot.space/pricing",
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space"}/pricing`,
     siteName: "Peroot",
     locale: "he_IL",
     type: "website",

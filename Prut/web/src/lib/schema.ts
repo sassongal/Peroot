@@ -19,6 +19,11 @@ export function organizationSchema() {
       name: "Peroot",
       url: SITE_URL,
     },
+    areaServed: {
+      "@type": "Country",
+      name: "Israel",
+    },
+    inLanguage: "he",
   };
 }
 

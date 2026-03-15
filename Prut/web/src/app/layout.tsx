@@ -64,11 +64,14 @@ export const metadata: Metadata = {
     canonical: "/",
     languages: {
       "he-IL": "/",
+      "x-default": "/",
     },
   },
   other: {
     "geo.region": "IL",
     "geo.placename": "Israel",
+    "geo.position": "32.0853;34.7818",
+    "ICBM": "32.0853, 34.7818",
     "content-language": "he",
   },
   openGraph: {

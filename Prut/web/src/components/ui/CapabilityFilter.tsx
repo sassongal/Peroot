@@ -49,21 +49,21 @@ export function CapabilityFilter({
   // For UI simplicity we won't show "All" count unless provided
   
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-1.5 md:gap-2 overflow-x-auto scrollbar-hide pb-1", className)}>
       <button
         onClick={() => onChange(null)}
         className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200",
+          "shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium border transition-all duration-200",
           value === null
             ? "bg-white/10 text-white border-white/20 shadow-sm"
             : "bg-transparent text-slate-400 border-transparent hover:bg-white/5 hover:text-slate-200"
         )}
       >
-        <LayoutGrid className="w-4 h-4" />
+        <LayoutGrid className="w-3.5 h-3.5 md:w-4 md:h-4" />
         <span>הכל</span>
       </button>
-      
-      <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
+
+      <div className="w-px h-5 bg-white/10 shrink-0 hidden sm:block" />
 
       {modes.map((mode) => {
         const config = CAPABILITY_CONFIGS[mode];
@@ -77,14 +77,14 @@ export function CapabilityFilter({
             key={mode}
             onClick={() => onChange(isSelected ? null : mode)}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200",
+              "shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium border transition-all duration-200",
               isSelected
                 ? colorClasses.selected
                 : cn("bg-transparent text-slate-400 border-transparent", colorClasses.default)
             )}
             title={config.descriptionHe}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>{config.labelHe}</span>
             {count > 0 && (
               <span className={cn(

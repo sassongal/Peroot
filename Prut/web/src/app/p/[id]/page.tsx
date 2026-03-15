@@ -37,6 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: 'he_IL',
       type: 'article',
     },
+    alternates: {
+      canonical: `/p/${id}`,
+    },
     twitter: {
       card: 'summary',
       title,

@@ -335,14 +335,22 @@ export function useLibrary() {
     }
   };
 
-  const updatePrompt = async (id: string, updates: { title?: string; use_case?: string }) => {
+  const updatePrompt = async (id: string, updates: Partial<PersonalPrompt>) => {
+    // Build update object with only defined fields
+    const defined: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        defined[key] = value;
+      }
+    }
+    if (Object.keys(defined).length === 0) return;
+
     setPersonalLibrary(prev =>
       prev.map(p =>
         p.id === id
           ? {
               ...p,
-              title: updates.title ?? p.title,
-              use_case: updates.use_case ?? p.use_case,
+              ...defined,
               updated_at: Date.now(),
             }
           : p
@@ -352,10 +360,7 @@ export function useLibrary() {
     if (user) {
       await supabase
         .from('personal_library')
-        .update({
-          title: updates.title,
-          use_case: updates.use_case,
-        })
+        .update(defined)
         .eq('id', id)
         .eq('user_id', user.id);
     }
@@ -403,13 +408,11 @@ export function useLibrary() {
 
     if (user) {
         // Update sort indices in Supabase
-        const updates = orderedIds.map((id, index) => ({
-            id,
-            user_id: user.id,
-            sort_index: index
-        }));
-        
-        await supabase.from('personal_library').upsert(updates, { onConflict: 'id' });
+        await Promise.all(
+          orderedIds.map((id, index) =>
+            supabase.from('personal_library').update({ sort_index: index }).eq('id', id).eq('user_id', user.id)
+          )
+        );
     }
   };
 
@@ -462,7 +465,11 @@ export function useLibrary() {
         }));
 
       if (targetUpdates.length > 0) {
-        await supabase.from('personal_library').upsert(targetUpdates, { onConflict: 'id' });
+        await Promise.all(
+          targetUpdates.map(({ id, sort_index }) =>
+            supabase.from('personal_library').update({ sort_index }).eq('id', id).eq('user_id', user.id)
+          )
+        );
       }
     }
   };
@@ -517,12 +524,17 @@ export function useLibrary() {
         }));
 
       if (updates.length > 0) {
-        await supabase.from('personal_library').upsert(updates, { onConflict: 'id' });
+        await Promise.all(
+          updates.map(({ id, personal_category, sort_index }) =>
+            supabase.from('personal_library').update({ personal_category, sort_index }).eq('id', id).eq('user_id', user.id)
+          )
+        );
       }
     }
   };
 
   const deletePrompts = async (ids: string[]) => {
+      if (ids.length === 0) return;
       setPersonalLibrary(prev => prev.filter(p => !ids.includes(p.id)));
       if (user) {
         const { error } = await supabase
@@ -579,10 +591,12 @@ export function useLibrary() {
                     updated_at: new Date(p.updated_at).toISOString()
                 }));
             
-            const { error } = await supabase
-                .from("personal_library")
-                .upsert(dbUpdates, { onConflict: 'id' });
-            
+            const results = await Promise.all(
+              dbUpdates.map(({ id, personal_category, sort_index, updated_at }) =>
+                supabase.from('personal_library').update({ personal_category, sort_index, updated_at }).eq('id', id).eq('user_id', user.id)
+              )
+            );
+            const error = results.find(r => r.error)?.error;
             if (error) throw error;
         }
       } catch (err) {

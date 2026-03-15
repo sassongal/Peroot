@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "תנאי השימוש של Peroot - כלי AI לשדרוג פרומפטים בעברית. מידע על קניין רוחני, אחריות, פרטיות ושימוש מותר במערכת.",
   alternates: { canonical: "/terms" },
+  twitter: {
+    card: "summary",
+    title: "תנאי שימוש | Peroot",
+    description:
+      "תנאי השימוש של Peroot - כלי AI לשדרוג פרומפטים בעברית. מידע על קניין רוחני, אחריות, פרטיות ושימוש מותר במערכת.",
+    images: ["/assets/branding/logo.png"],
+  },
 };
 
 export default function TermsPage() {

@@ -79,6 +79,7 @@ function PageContent({ user }: { user: User | null }) {
     setPersonalView,
     completeOnboarding,
     filteredLibrary,
+    libraryPrompts,
     personalLibrary,
     incrementUseCount
   } = useLibraryContext();
@@ -336,11 +337,11 @@ function PageContent({ user }: { user: User | null }) {
 
   // Prompt of the Day - deterministic daily pick
   const promptOfTheDay = useMemo(() => {
-    if (!filteredLibrary || filteredLibrary.length === 0) return null;
+    if (!libraryPrompts || libraryPrompts.length === 0) return null;
     const today = new Date();
-    const dayIndex = (today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate()) % filteredLibrary.length;
-    return filteredLibrary[dayIndex];
-  }, [filteredLibrary]);
+    const dayIndex = (today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate()) % libraryPrompts.length;
+    return libraryPrompts[dayIndex];
+  }, [libraryPrompts]);
 
   // Surprise Me - random prompt
   const handleSurpriseMe = () => {

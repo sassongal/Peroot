@@ -11,10 +11,17 @@ export const metadata: Metadata = {
     title: "מדיניות פרטיות - פירוט",
     description:
       "מדיניות הפרטיות של פירוט (Peroot): מידע שנאסף, שימוש במידע, אבטחת מידע, תוסף Chrome וזכויות משתמשים.",
-    url: "https://peroot.space/privacy",
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space"}/privacy`,
     siteName: "Peroot",
     locale: "he_IL",
     type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "מדיניות פרטיות - פירוט",
+    description:
+      "מדיניות הפרטיות של פירוט (Peroot): מידע שנאסף, שימוש במידע, אבטחת מידע, תוסף Chrome וזכויות משתמשים.",
+    images: ["/assets/branding/logo.png"],
   },
 };
 

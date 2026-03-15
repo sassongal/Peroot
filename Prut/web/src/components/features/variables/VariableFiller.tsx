@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Save, Trash2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VariablePreset } from "@/hooks/usePresets";
@@ -15,7 +15,7 @@ interface VariableFillerProps {
 }
 
 function extractVariables(text: string): string[] {
-  const matches = text.match(/\{([^}]+)\}/g);
+  const matches = text.match(/\{([a-zA-Z_\u0590-\u05FF][a-zA-Z0-9_\u0590-\u05FF ]*)\}/g);
   if (!matches) return [];
   return [...new Set(matches.map(m => m.slice(1, -1)))];
 }
@@ -24,6 +24,8 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
   const variables = useMemo(() => extractVariables(promptText), [promptText]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [showPresets, setShowPresets] = useState(false);
+
+  useEffect(() => { setValues({}); }, [promptText]);
   const [presetName, setPresetName] = useState("");
   const [showSavePreset, setShowSavePreset] = useState(false);
 

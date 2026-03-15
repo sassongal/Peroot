@@ -50,7 +50,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/(.*)',
-        headers: securityHeaders,
+        headers: [
+          ...securityHeaders,
+          { key: 'Content-Language', value: 'he' },
+        ],
       },
       {
         source: '/api/:path*',
