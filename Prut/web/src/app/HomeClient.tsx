@@ -6,6 +6,7 @@ import { getAssetPath } from "@/lib/asset-path";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
+import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, trackFeatureUse, identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 const HistoryPanel = dynamic(
   () => import("@/components/features/history/HistoryPanel").then(mod => mod.HistoryPanel),
@@ -195,6 +196,13 @@ function PageContent({ user }: { user: User | null }) {
   }, []);
 
   // Fetch credits for logged-in free users
+  // Identify user in PostHog when logged in
+  useEffect(() => {
+    if (user) {
+      identifyUser(user.id, { email: user.email });
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -397,6 +405,9 @@ function PageContent({ user }: { user: User | null }) {
     dispatch({ type: 'CLEAR_ANSWERS' });
     streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
+    const enhanceStart = Date.now();
+    trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
+
     await startStream(getApiPath("/api/enhance"), {
       prompt: ps.input,
       tone: ps.selectedTone,
@@ -406,6 +417,7 @@ function PageContent({ user }: { user: User | null }) {
 
     const result = processStreamResult("Enhance");
     if (result.text) {
+      trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
       recordUsageSignal("enhance", result.text);
       dispatch({ type: 'SET_DETECTED_CATEGORY', payload: ps.selectedCategory });
 
@@ -485,6 +497,7 @@ function PageContent({ user }: { user: User | null }) {
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
     recordUsageSignal("copy", text);
+    trackPromptCopy('result');
     toast.success("הועתק ללוח");
   };
 

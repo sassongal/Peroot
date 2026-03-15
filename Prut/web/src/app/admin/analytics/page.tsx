@@ -44,6 +44,7 @@ export default function AnalyticsPage() {
   });
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('week');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -54,6 +55,7 @@ export default function AnalyticsPage() {
 
   async function loadAnalytics() {
     setLoading(true);
+    setError(null);
     try {
       const daysToFetch = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365;
       const startDate = new Date(Date.now() - daysToFetch * 24 * 60 * 60 * 1000);
@@ -135,8 +137,9 @@ export default function AnalyticsPage() {
           conversionRate: `${conversionPct}%`
         }
       });
-    } catch (error) {
-      logger.error('Failed to load analytics:', error);
+    } catch (err) {
+      logger.error('Failed to load analytics:', err);
+      setError('שגיאה בטעינת הנתונים. נסה שוב.');
     } finally {
       setLoading(false);
     }
@@ -172,6 +175,20 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </div>
+
+        {/* Error State */}
+        {error && (
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 flex items-center justify-between">
+            <span className="text-sm text-red-400">{error}</span>
+            <button
+              onClick={() => loadAnalytics()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              נסה שוב
+            </button>
+          </div>
+        )}
 
         {/* Dynamic Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

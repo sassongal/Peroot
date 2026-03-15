@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface BlogPost {
   id: string;
@@ -73,7 +74,11 @@ export default function AdminBlogPage() {
       toast.error("שגיאה בעדכון סטטוס");
     } else {
       toast.success(newStatus === "published" ? "המאמר פורסם" : "המאמר הועבר לטיוטה");
-      loadPosts();
+      setPosts(prev => prev.map(p =>
+        p.id === post.id
+          ? { ...p, status: newStatus, updated_at: updates.updated_at as string, published_at: (updates.published_at as string) ?? p.published_at }
+          : p
+      ));
     }
   }
 
@@ -86,6 +91,7 @@ export default function AdminBlogPage() {
   }
 
   return (
+    <AdminLayout>
     <div dir="rtl" className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
@@ -169,5 +175,6 @@ export default function AdminBlogPage() {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 }
