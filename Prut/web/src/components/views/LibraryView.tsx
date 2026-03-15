@@ -2,19 +2,20 @@
 
 import { useLibraryContext } from "@/context/LibraryContext";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ThumbsUp, ThumbsDown, Download } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { exportPromptAsImage } from "@/lib/export-prompt-image";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useHistory } from "@/hooks/useHistory";
 import { logger } from "@/lib/logger";
 
 const GUEST_FREE_LIMIT = 7;
+const ITEMS_PER_PAGE = 10;
 
 interface LibraryViewProps {
   onUsePrompt: (prompt: LibraryPrompt) => void;
@@ -45,7 +46,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     addPrompts,
     isLibraryFetching
   } = useLibraryContext();
-  
+
   // -- Local State --
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
@@ -54,6 +55,11 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   const [isCreatingNewMoveCategory, setIsCreatingNewMoveCategory] = useState(false);
   const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Active collection filter
+  const [activeCollection, setActiveCollection] = useState<string | null>(null);
 
   useEffect(() => {
     if (!lightboxImage) return;
@@ -76,7 +82,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     setUserRatings(prev => {
       const next = { ...prev };
       if (next[promptId] === rating) {
-        delete next[promptId]; // toggle off
+        delete next[promptId];
       } else {
         next[promptId] = rating;
       }
@@ -85,8 +91,14 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     });
   };
 
-  // Active collection filter
-  const [activeCollection, setActiveCollection] = useState<string | null>(null);
+  const toggleExpanded = (id: string) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
     try {
@@ -124,7 +136,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   const handleBatchSave = async () => {
     const category = isCreatingNewMoveCategory ? newMoveCategoryInput.trim() : targetMoveCategory;
     if (!category) return;
-    
+
     const selectedPrompts = filteredLibrary.filter(p => selectedIds.has(p.id));
     if (selectedPrompts.length === 0) return;
 
@@ -152,39 +164,80 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     }
   };
 
-  const grouped = filteredLibrary.reduce<Record<string, LibraryPrompt[]>>((acc, prompt) => {
-    const raw = prompt.category || "General";
-    // Normalize to PascalCase to match CATEGORY_LABELS keys (Supabase stores lowercase)
-    const key = CATEGORY_LABELS[raw] ? raw : (CATEGORY_LABELS[raw.charAt(0).toUpperCase() + raw.slice(1)] ? raw.charAt(0).toUpperCase() + raw.slice(1) : raw);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(prompt);
-    return acc;
-  }, {});
+  // Filter by collection if active
+  const collectionFilteredLibrary = useMemo(() => {
+    if (!activeCollection) return filteredLibrary;
+    const col = PROMPT_COLLECTIONS.find(c => c.id === activeCollection);
+    if (!col) return filteredLibrary;
+    return filteredLibrary.filter(p => {
+      const cat = p.category || "";
+      return col.categories.some(c => c.toLowerCase() === cat.toLowerCase() || c === cat);
+    });
+  }, [filteredLibrary, activeCollection]);
 
-  // If a collection is active, filter the grouped prompts to only show matching categories
-  const activeCollectionData = PROMPT_COLLECTIONS.find(c => c.id === activeCollection);
-  const effectiveGrouped = activeCollection && activeCollectionData
-    ? Object.fromEntries(
-        Object.entries(grouped).filter(([key]) =>
-          activeCollectionData.categories.some(cat =>
-            cat.toLowerCase() === key.toLowerCase() || cat === key
-          )
-        )
-      )
-    : grouped;
+  // Sort
+  const sortedPrompts = useMemo(() => {
+    return [...collectionFilteredLibrary].sort((a, b) => {
+      const aFavorite = favoriteLibraryIds.has(a.id);
+      const bFavorite = favoriteLibraryIds.has(b.id);
+      if (aFavorite !== bFavorite) return aFavorite ? -1 : 1;
 
-  const orderedCategories = Object.keys(CATEGORY_LABELS).filter((cat) => effectiveGrouped[cat]?.length);
-  const totalCount = activeCollection
-    ? Object.values(effectiveGrouped).flat().length
-    : filteredLibrary.length;
+      switch (librarySort) {
+        case "title":
+          return a.title.localeCompare(b.title);
+        case "newest":
+          return 0;
+        case "rating": {
+          const aRating = userRatings[a.id] ?? 0;
+          const bRating = userRatings[b.id] ?? 0;
+          if (aRating !== bRating) return bRating - aRating;
+          return (popularityMap[b.id] ?? 0) - (popularityMap[a.id] ?? 0);
+        }
+        case "popularity":
+        default: {
+          const aP = popularityMap[a.id] ?? 0;
+          const bP = popularityMap[b.id] ?? 0;
+          if (aP !== bP) return bP - aP;
+          return a.title.localeCompare(b.title);
+        }
+      }
+    });
+  }, [collectionFilteredLibrary, librarySort, favoriteLibraryIds, popularityMap, userRatings]);
 
-  // Tracks how many items have been rendered across all category sections
-  // so the paywall CTA is inserted exactly after the 7th item globally.
-  let globalItemIndex = 0;
-  let paywallInserted = false;
+  const totalCount = sortedPrompts.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setCurrentPage(1); }, [libraryQuery, libraryView, selectedCapabilityFilter, activeCollection]);
+
+  const pagePrompts = useMemo(() => {
+    const start = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+    return sortedPrompts.slice(start, start + ITEMS_PER_PAGE);
+  }, [sortedPrompts, safeCurrentPage]);
+
+  // Guest paywall: block after GUEST_FREE_LIMIT globally
+  const globalStart = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+
+  // Unique categories for quick-jump (from current filtered set)
+  const uniqueCategories = useMemo(() => {
+    const cats = new Set<string>();
+    collectionFilteredLibrary.forEach(p => {
+      const raw = p.category || "General";
+      const key = CATEGORY_LABELS[raw] ? raw : (CATEGORY_LABELS[raw.charAt(0).toUpperCase() + raw.slice(1)] ? raw.charAt(0).toUpperCase() + raw.slice(1) : raw);
+      cats.add(key);
+    });
+    return Object.keys(CATEGORY_LABELS).filter(c => cats.has(c));
+  }, [collectionFilteredLibrary]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    // Scroll to top of library
+    document.getElementById("library-top")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-      <div className="flex flex-col gap-7 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div id="library-top" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full overflow-x-hidden">
 
         {/* Back Button */}
         <button
@@ -196,13 +249,15 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           <span>חזרה</span>
         </button>
 
-        <div className="glass-card p-3 md:p-7 lg:p-9 rounded-2xl border-white/10 bg-black/40">
+        <div className="glass-card p-3 md:p-5 lg:p-6 rounded-2xl border-white/10 bg-black/40">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-lg md:text-3xl font-serif text-white">ספריית פרומפטים</h2>
-              <p className="text-[11px] md:text-sm text-slate-500 mt-0.5 md:mt-1 truncate">
-                {totalCount} {libraryView === "favorites" ? "מועדפים" : "פרומפטים"} · חיפוש לפי מילים או קטגוריה
+              <h2 className="text-lg md:text-2xl font-serif text-white">ספריית פרומפטים</h2>
+              <p className="text-[11px] md:text-sm text-slate-500 mt-0.5">
+                {totalCount} {libraryView === "favorites" ? "מועדפים" : "פרומפטים"}
+                {totalPages > 1 && <span className="mx-1">|</span>}
+                {totalPages > 1 && `עמוד ${safeCurrentPage} מתוך ${totalPages}`}
               </p>
             </div>
 
@@ -221,7 +276,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             </button>
           </div>
 
-          {/* Action buttons - horizontal scroll on mobile */}
+          {/* Action buttons */}
           <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-hide pb-1">
             <button
               onClick={() => setLibraryView(libraryView === "favorites" ? "all" : "favorites")}
@@ -258,7 +313,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             {selectionMode && (
               <button
                 onClick={() => {
-                  const allIds = filteredLibrary.map(p => p.id);
+                  const allIds = sortedPrompts.map(p => p.id);
                   const allSelected = allIds.every(id => selectedIds.has(id));
                   if (allSelected) setSelectedIds(new Set());
                   else setSelectedIds(new Set(allIds));
@@ -269,8 +324,8 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               </button>
             )}
           </div>
-          
-          <div className="mt-4 md:mt-6">
+
+          <div className="mt-3">
             <CapabilityFilter
               value={selectedCapabilityFilter}
               onChange={setSelectedCapabilityFilter}
@@ -279,7 +334,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           </div>
 
           {/* Search + Sort */}
-          <div className="flex gap-2 mt-4 md:mt-5">
+          <div className="flex gap-2 mt-3">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
@@ -287,13 +342,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 value={libraryQuery}
                 onChange={(e) => setLibraryQuery(e.target.value)}
                 placeholder="חיפוש פרומפטים..."
-                className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 md:py-3 pe-10 ps-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+                className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 pe-10 ps-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
               />
             </div>
             <select
               value={librarySort}
               onChange={(e) => setLibrarySort(e.target.value as "popularity" | "title" | "newest" | "rating")}
-              className="shrink-0 bg-black/30 border border-white/10 rounded-lg py-2.5 px-2.5 md:px-3 text-xs md:text-sm text-slate-200 focus:outline-none focus:border-white/30"
+              className="shrink-0 bg-black/30 border border-white/10 rounded-lg py-2.5 px-2.5 text-xs md:text-sm text-slate-200 focus:outline-none focus:border-white/30"
             >
               <option value="popularity">פופולריות</option>
               <option value="title">א-ב</option>
@@ -303,24 +358,26 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           </div>
 
           {/* Category quick-jump chips */}
-          {orderedCategories.length > 0 && (
-            <div className="mt-3 md:mt-4 flex overflow-x-auto scrollbar-hide flex-nowrap gap-1.5 md:gap-2 pb-1">
-              {orderedCategories.map((category) => (
-                <a
+          {uniqueCategories.length > 0 && (
+            <div className="mt-3 flex overflow-x-auto scrollbar-hide flex-nowrap gap-1.5 pb-1">
+              {uniqueCategories.map((category) => (
+                <button
                   key={category}
-                  href={`#category-${category}`}
+                  onClick={() => {
+                    setLibraryQuery(CATEGORY_LABELS[category] ?? category);
+                    setCurrentPage(1);
+                  }}
                   className="shrink-0 text-[11px] md:text-xs px-2.5 py-1 rounded-full border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
-                  suppressHydrationWarning
                 >
                   {CATEGORY_LABELS[category] ?? category}
-                </a>
+                </button>
               ))}
             </div>
           )}
 
           {/* Collections Strip */}
-          <div className="mt-4 md:mt-5">
-            <div className="flex items-center gap-2 mb-2 md:mb-3">
+          <div className="mt-3">
+            <div className="flex items-center gap-2 mb-2">
               <span className="text-[11px] md:text-xs font-medium text-slate-500">חבילות פרומפטים</span>
               {activeCollection && (
                 <button
@@ -331,13 +388,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 </button>
               )}
             </div>
-            <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {PROMPT_COLLECTIONS.map((collection) => (
                 <button
                   key={collection.id}
                   onClick={() => setActiveCollection(activeCollection === collection.id ? null : collection.id)}
                   className={cn(
-                    "shrink-0 w-36 md:w-56 p-3 md:p-4 rounded-xl border transition-all cursor-pointer text-right",
+                    "shrink-0 w-32 md:w-44 p-2.5 md:p-3 rounded-xl border transition-all cursor-pointer text-right",
                     activeCollection === collection.id
                       ? "border-amber-500/40 bg-amber-500/10 ring-1 ring-amber-500/20"
                       : "border-white/10 bg-gradient-to-l hover:border-white/20 hover:bg-white/[0.04]",
@@ -345,309 +402,305 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   )}
                   dir="rtl"
                 >
-                  <span className="text-xl md:text-2xl mb-1 md:mb-2 block">{collection.icon}</span>
+                  <span className="text-lg md:text-xl mb-1 block">{collection.icon}</span>
                   <p className="text-xs md:text-sm font-semibold text-slate-200 truncate">{collection.title}</p>
-                  <p className="text-[10px] md:text-[11px] text-slate-500 mt-0.5 md:mt-1 line-clamp-1">{collection.description}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">{collection.description}</p>
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        {orderedCategories.map((category) => {
-          const sortedPrompts = [...effectiveGrouped[category]].sort((a, b) => {
-            // Favorites always float to top
-            const aFavorite = favoriteLibraryIds.has(a.id);
-            const bFavorite = favoriteLibraryIds.has(b.id);
-            if (aFavorite !== bFavorite) return aFavorite ? -1 : 1;
+        {/* Prompt Cards - Paginated flat list */}
+        <div className="space-y-2.5 md:space-y-3 relative">
+          {pagePrompts.map((prompt, localIdx) => {
+            const absoluteIdx = globalStart + localIdx;
+            const isBlurred = isGuest && absoluteIdx >= GUEST_FREE_LIMIT;
+            const isExpanded = expandedIds.has(prompt.id);
+            const isFavorite = favoriteLibraryIds.has(prompt.id);
+            const popularityCount = popularityMap[prompt.id] ?? 0;
+            const categoryLabel = CATEGORY_LABELS[prompt.category] ?? CATEGORY_LABELS[prompt.category?.charAt(0).toUpperCase() + prompt.category?.slice(1)] ?? prompt.category;
 
-            switch (librarySort) {
-              case "title":
-                return a.title.localeCompare(b.title);
-              case "newest":
-                return 0; // preserve API order (already newest first)
-              case "rating": {
-                const aRating = userRatings[a.id] ?? 0;
-                const bRating = userRatings[b.id] ?? 0;
-                if (aRating !== bRating) return bRating - aRating;
-                return (popularityMap[b.id] ?? 0) - (popularityMap[a.id] ?? 0);
-              }
-              case "popularity":
-              default: {
-                const aPopularity = popularityMap[a.id] ?? 0;
-                const bPopularity = popularityMap[b.id] ?? 0;
-                if (aPopularity !== bPopularity) return bPopularity - aPopularity;
-                return a.title.localeCompare(b.title);
-              }
-            }
-          });
+            return (
+              <div
+                key={prompt.id}
+                className={cn(
+                  "rounded-xl md:rounded-2xl border border-white/10 bg-black/30 transition-colors relative group",
+                  !isBlurred && "hover:bg-white/[0.04]",
+                  !isBlurred && (selectedIds.has(prompt.id) || selectionMode) && "ring-2 ring-amber-500/50 bg-amber-500/5",
+                  isBlurred && "blur-sm pointer-events-none select-none"
+                )}
+                aria-hidden={isBlurred ? "true" : undefined}
+              >
+                {/* Selection Checkbox */}
+                {!isBlurred && (
+                  <div className={cn(
+                    "absolute top-3 left-3 z-10 transition-opacity duration-200",
+                    (selectedIds.has(prompt.id) || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}>
+                    <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }} aria-label={selectedIds.has(prompt.id) ? "בטל בחירה" : "בחר פריט"}>
+                      {selectedIds.has(prompt.id)
+                        ? <CheckSquare className="w-5 h-5 text-amber-400 fill-amber-500/20" />
+                        : <Square className="w-5 h-5 text-slate-500 hover:text-slate-300" />}
+                    </button>
+                  </div>
+                )}
 
-          // Determine which items in this category section are blurred and
-          // whether the paywall CTA banner should be inserted in this section.
-          const sectionStartIndex = globalItemIndex;
-          const ctaInsertLocalIndex = isGuest && !paywallInserted
-            ? GUEST_FREE_LIMIT - sectionStartIndex
-            : -1;
-          const showCtaInThisSection = ctaInsertLocalIndex >= 0 && ctaInsertLocalIndex <= sortedPrompts.length;
-
-          if (showCtaInThisSection) paywallInserted = true;
-          globalItemIndex += sortedPrompts.length;
-
-          return (
-            <div
-              key={category}
-              id={`category-${category}`}
-              className="space-y-3 md:space-y-4 scroll-mt-24 rounded-2xl md:rounded-3xl border border-white/5 bg-gradient-to-l from-white/[0.035] via-white/[0.015] to-transparent px-3 md:px-6 py-4 md:py-6"
-            >
-              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3 md:pb-4">
-                <div className="flex items-baseline gap-2 md:gap-3 min-w-0">
-                  <h3 className="text-base md:text-2xl lg:text-3xl font-serif font-semibold text-slate-100 tracking-wide truncate">
-                    {CATEGORY_LABELS[category] ?? category}
-                  </h3>
-                  <span className="text-xs text-slate-400 shrink-0">{effectiveGrouped[category].length}</span>
-                </div>
-                <span className="text-[10px] md:text-xs px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/10 text-slate-400 shrink-0 hidden md:inline">
-                  {category}
-                </span>
-              </div>
-
-              <div className="relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 md:gap-5">
-                  {sortedPrompts.map((prompt, localIdx) => {
-                    const isBlurred = isGuest && (sectionStartIndex + localIdx) >= GUEST_FREE_LIMIT;
-                    const variablePreview = prompt.variables.slice(0, 3);
-                    const remainingVars = prompt.variables.length - variablePreview.length;
-                    const popularityCount = popularityMap[prompt.id] ?? 0;
-                    const isFavorite = favoriteLibraryIds.has(prompt.id);
-
-                    return (
-                      <div
-                        key={prompt.id}
-                        className={cn(
-                          "rounded-2xl md:rounded-3xl border border-white/10 bg-black/30 p-3 md:p-6 transition-colors flex flex-col gap-3 md:gap-4 min-h-0 relative group",
-                          !isBlurred && "hover:bg-white/5",
-                          !isBlurred && (selectedIds.has(prompt.id) || selectionMode) && "ring-2 ring-amber-500/50 bg-amber-500/5",
-                          isBlurred && "blur-sm pointer-events-none select-none"
-                        )}
-                        aria-hidden={isBlurred ? "true" : undefined}
-                      >
-                        {/* Selection Checkbox */}
-                        {!isBlurred && (
-                          <div className={cn(
-                            "absolute top-3 left-3 md:top-5 md:left-5 z-10 transition-opacity duration-200",
-                            (selectedIds.has(prompt.id) || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                          )}>
-                            <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }} aria-label={selectedIds.has(prompt.id) ? "בטל בחירה" : "בחר פריט"}>
-                              {selectedIds.has(prompt.id)
-                                ? <CheckSquare className="w-5 h-5 md:w-6 md:h-6 text-amber-400 fill-amber-500/20" />
-                                : <Square className="w-5 h-5 md:w-6 md:h-6 text-slate-500 hover:text-slate-300" />}
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Title row */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <CapabilityBadge mode={prompt.capability_mode} />
-                            <h4 className="text-sm md:text-xl text-slate-100 font-semibold leading-tight mt-1.5 line-clamp-2" dir="rtl" title={prompt.title}>{prompt.title}</h4>
-                            <p className="text-xs md:text-sm text-slate-400 mt-1 line-clamp-1" dir="rtl" title={prompt.use_case}>{prompt.use_case}</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleFavorite("library", prompt.id)}
-                            className={cn(
-                              "shrink-0 p-2 rounded-full border transition-colors",
-                              isFavorite
-                                ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-300"
-                                : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
-                            )}
-                            aria-pressed={isFavorite}
-                            aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
-                          >
-                            <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-400 fill-yellow-400" : "text-yellow-400/50")} />
-                          </button>
-                        </div>
-
-                        {/* Prompt text */}
-                        <div className="text-xs md:text-sm text-slate-300 leading-relaxed max-h-24 md:max-h-40 overflow-hidden" dir="rtl">
-                          {prompt.prompt}
-                        </div>
-
-                        {/* Preview image */}
-                        {prompt.preview_image_url && (
-                          <button
-                            type="button"
-                            onClick={() => setLightboxImage({ url: prompt.preview_image_url!, title: prompt.title })}
-                            className="relative w-full aspect-[4/3] rounded-xl md:rounded-2xl overflow-hidden border border-white/10 group/img cursor-zoom-in"
-                          >
-                            <img
-                              src={prompt.preview_image_url}
-                              alt={`דוגמה שנוצרה מפרומפט: ${prompt.title}`}
-                              loading="lazy"
-                              decoding="async"
-                              width={400}
-                              height={300}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                              <span className="flex items-center gap-1.5 text-xs text-white/90 font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                                <ImageIcon className="w-3.5 h-3.5" />
-                                הגדל תמונה
-                              </span>
-                            </div>
-                          </button>
-                        )}
-
-                        {/* Variables */}
-                        {prompt.variables.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {variablePreview.map((variable) => (
-                              <span
-                                key={variable}
-                                className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-white/5 border border-white/10 text-slate-300"
-                              >
-                                {variable}
-                              </span>
-                            ))}
-                            {remainingVars > 0 && (
-                              <span className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-white/5 border border-white/10 text-slate-500">
-                                +{remainingVars}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Popularity + Favorite badge */}
-                        <div className="flex items-center justify-between text-[10px] md:text-xs">
-                          {popularityCount > 0 ? (
-                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                              <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                              </svg>
-                              <span className="text-emerald-400 font-medium">{popularityCount > 99 ? '99+' : popularityCount} בחרו</span>
-                            </div>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium">חדש</span>
-                          )}
-                          {isFavorite && (
-                            <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 font-medium flex items-center gap-1">
-                              <svg className="w-3 h-3 fill-yellow-300" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                              מועדף
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Action buttons + Rating row */}
-                        <div className="flex items-center gap-1.5 md:gap-2 pt-0.5 overflow-x-auto scrollbar-hide">
-                          <button
-                            onClick={() => onUsePrompt(prompt)}
-                            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white text-black text-xs md:text-sm hover:bg-slate-200 transition-colors cursor-pointer"
-                          >
-                            <Plus className="w-3 h-3" />
-                            השתמש
-                          </button>
-                          <button
-                            onClick={() => addPersonalPromptFromLibrary(prompt)}
-                            className="shrink-0 flex items-center gap-1.5 p-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
-                            title="שמור לספריה אישית"
-                          >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span className="hidden md:inline text-sm">שמור</span>
-                          </button>
-                          <button
-                            onClick={async () => { await onCopyText(prompt.prompt); }}
-                            className="shrink-0 flex items-center gap-1.5 p-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
-                            title="העתק"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                            <span className="hidden md:inline text-sm">העתק</span>
-                          </button>
-                          <button
-                            onClick={() => exportPromptAsImage({
-                              title: prompt.title,
-                              prompt: prompt.prompt,
-                              category: CATEGORY_LABELS[prompt.category] || prompt.category,
-                              useCase: prompt.use_case,
-                            })}
-                            className="shrink-0 p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                            title="ייצא כתמונה"
-                            aria-label="ייצוא כתמונה"
-                          >
-                            <ImageIcon className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Divider */}
-                          <div className="w-px h-5 bg-white/10 shrink-0" />
-
-                          {/* Rating inline */}
-                          <button
-                            onClick={() => handleRate(prompt.id, 1)}
-                            className={cn(
-                              "shrink-0 p-2 rounded-lg text-xs transition-colors cursor-pointer",
-                              userRatings[prompt.id] === 1
-                                ? "bg-emerald-500/20 text-emerald-400"
-                                : "text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10"
-                            )}
-                            title="מועיל"
-                          >
-                            <ThumbsUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleRate(prompt.id, -1)}
-                            aria-label="לא מועיל"
-                            className={cn(
-                              "shrink-0 p-2 rounded-lg text-xs transition-colors cursor-pointer",
-                              userRatings[prompt.id] === -1
-                                ? "bg-red-500/20 text-red-400"
-                                : "text-slate-500 hover:text-red-400 hover:bg-red-500/10"
-                            )}
-                          >
-                            <ThumbsDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Paywall CTA - rendered once, inside the category section that crosses the free limit */}
-                {showCtaInThisSection && (
-                  <div
-                    dir="rtl"
-                    className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-8 pt-32 bg-gradient-to-t from-black via-black/90 to-transparent rounded-b-3xl pointer-events-auto z-10"
+                {/* Compact Header - always visible */}
+                <button
+                  type="button"
+                  onClick={() => !isBlurred && toggleExpanded(prompt.id)}
+                  className="w-full text-right p-3 md:p-4 flex items-center gap-3 cursor-pointer"
+                  dir="rtl"
+                >
+                  {/* Favorite star */}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleToggleFavorite("library", prompt.id); }}
+                    className={cn(
+                      "shrink-0 p-1.5 rounded-full transition-colors",
+                      isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-slate-400"
+                    )}
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
                   >
-                    <div className="flex flex-col items-center gap-4 text-center max-w-md px-4">
-                      <div className="flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 mb-1">
-                        <Lock className="w-7 h-7 text-amber-400" />
+                    <Star className={cn("w-4 h-4", isFavorite && "fill-yellow-400")} />
+                  </button>
+
+                  {/* Title + meta */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm md:text-base text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h4>
+                      <CapabilityBadge mode={prompt.capability_mode} />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">{prompt.use_case}</p>
+                  </div>
+
+                  {/* Right side: category + popularity + expand icon */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="hidden md:inline text-[10px] px-2 py-0.5 rounded-full border border-white/10 text-slate-400">
+                      {categoryLabel}
+                    </span>
+                    {popularityCount > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
+                        {popularityCount > 99 ? '99+' : popularityCount}
+                      </span>
+                    )}
+                    {isExpanded
+                      ? <ChevronUp className="w-4 h-4 text-slate-500" />
+                      : <ChevronDown className="w-4 h-4 text-slate-500" />
+                    }
+                  </div>
+                </button>
+
+                {/* Expanded Content */}
+                {isExpanded && !isBlurred && (
+                  <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 border-t border-white/5">
+                    {/* Prompt text */}
+                    <div className="text-xs md:text-sm text-slate-300 leading-relaxed mt-3 whitespace-pre-wrap max-h-48 overflow-y-auto" dir="rtl">
+                      {prompt.prompt}
+                    </div>
+
+                    {/* Preview image */}
+                    {prompt.preview_image_url && (
+                      <button
+                        type="button"
+                        onClick={() => setLightboxImage({ url: prompt.preview_image_url!, title: prompt.title })}
+                        className="relative w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group/img cursor-zoom-in"
+                      >
+                        <img
+                          src={prompt.preview_image_url}
+                          alt={`דוגמה: ${prompt.title}`}
+                          loading="lazy"
+                          decoding="async"
+                          width={400}
+                          height={300}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+                        />
+                      </button>
+                    )}
+
+                    {/* Variables */}
+                    {prompt.variables.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5" dir="rtl">
+                        {prompt.variables.map((variable) => (
+                          <span
+                            key={variable}
+                            className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300"
+                          >
+                            {variable}
+                          </span>
+                        ))}
                       </div>
-                      <h3 className="text-2xl font-serif font-semibold text-white">
-                        רוצה לראות את כל הספריה?
-                      </h3>
-                      <p className="text-sm text-slate-400 leading-relaxed">
-                        הצטרף כמשתמש רשום ושדרג ל-Pro כדי לגלות את כל הפרומפטים
-                      </p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <a
-                          href="/login"
-                          className="px-6 py-2.5 rounded-lg border border-white/20 text-white text-sm font-medium hover:bg-white/10 transition-colors"
-                        >
-                          התחבר
-                        </a>
-                        <a
-                          href="/pricing"
-                          className="px-6 py-2.5 rounded-lg text-sm font-semibold text-black transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
-                          style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
-                        >
-                          שדרג ל-Pro
-                        </a>
-                      </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1.5 pt-1 flex-wrap" dir="rtl">
+                      <button
+                        onClick={() => onUsePrompt(prompt)}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white text-black text-xs md:text-sm hover:bg-slate-200 transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        השתמש
+                      </button>
+                      <button
+                        onClick={() => addPersonalPromptFromLibrary(prompt)}
+                        className="shrink-0 flex items-center gap-1.5 p-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                        title="שמור לספריה אישית"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span className="hidden md:inline text-sm">שמור</span>
+                      </button>
+                      <button
+                        onClick={async () => { await onCopyText(prompt.prompt); }}
+                        className="shrink-0 flex items-center gap-1.5 p-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                        title="העתק"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span className="hidden md:inline text-sm">העתק</span>
+                      </button>
+                      <button
+                        onClick={() => exportPromptAsImage({
+                          title: prompt.title,
+                          prompt: prompt.prompt,
+                          category: categoryLabel,
+                          useCase: prompt.use_case,
+                        })}
+                        className="shrink-0 p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        title="ייצא כתמונה"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="w-px h-5 bg-white/10 shrink-0 mx-0.5" />
+
+                      <button
+                        onClick={() => handleRate(prompt.id, 1)}
+                        className={cn(
+                          "shrink-0 p-2 rounded-lg text-xs transition-colors cursor-pointer",
+                          userRatings[prompt.id] === 1
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                        )}
+                        title="מועיל"
+                      >
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleRate(prompt.id, -1)}
+                        className={cn(
+                          "shrink-0 p-2 rounded-lg text-xs transition-colors cursor-pointer",
+                          userRatings[prompt.id] === -1
+                            ? "bg-red-500/20 text-red-400"
+                            : "text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                        )}
+                        title="לא מועיל"
+                      >
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
+            );
+          })}
+
+          {/* Guest paywall overlay */}
+          {isGuest && globalStart < GUEST_FREE_LIMIT && globalStart + ITEMS_PER_PAGE > GUEST_FREE_LIMIT && (
+            <div
+              dir="rtl"
+              className="flex flex-col items-center justify-center py-10 mt-2 rounded-2xl border border-white/10 bg-gradient-to-t from-black/80 to-black/40"
+            >
+              <div className="flex flex-col items-center gap-4 text-center max-w-md px-4">
+                <div className="flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 mb-1">
+                  <Lock className="w-7 h-7 text-amber-400" />
+                </div>
+                <h3 className="text-xl font-serif font-semibold text-white">
+                  רוצה לראות את כל הספריה?
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  הצטרף כמשתמש רשום ושדרג ל-Pro כדי לגלות את כל הפרומפטים
+                </p>
+                <div className="flex items-center gap-3 mt-2">
+                  <a
+                    href="/login"
+                    className="px-6 py-2.5 rounded-lg border border-white/20 text-white text-sm font-medium hover:bg-white/10 transition-colors"
+                  >
+                    התחבר
+                  </a>
+                  <a
+                    href="/pricing"
+                    className="px-6 py-2.5 rounded-lg text-sm font-semibold text-black transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                    style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
+                  >
+                    שדרג ל-Pro
+                  </a>
+                </div>
+              </div>
             </div>
-          );
-        })}
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1 py-3" dir="rtl">
+            <button
+              onClick={() => goToPage(1)}
+              disabled={safeCurrentPage === 1}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="עמוד ראשון"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => goToPage(safeCurrentPage - 1)}
+              disabled={safeCurrentPage === 1}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="עמוד קודם"
+            >
+              <ChevronLeft className="w-4 h-4 rotate-180" />
+            </button>
+
+            {/* Page numbers */}
+            {(() => {
+              const pages: number[] = [];
+              const start = Math.max(1, safeCurrentPage - 2);
+              const end = Math.min(totalPages, safeCurrentPage + 2);
+              for (let i = start; i <= end; i++) pages.push(i);
+              return pages.map(page => (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={cn(
+                    "min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors",
+                    page === safeCurrentPage
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      : "text-slate-400 hover:text-white hover:bg-white/10"
+                  )}
+                >
+                  {page}
+                </button>
+              ));
+            })()}
+
+            <button
+              onClick={() => goToPage(safeCurrentPage + 1)}
+              disabled={safeCurrentPage === totalPages}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="עמוד הבא"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => goToPage(totalPages)}
+              disabled={safeCurrentPage === totalPages}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="עמוד אחרון"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Floating Batch Actions Toolbar */}
         {selectedIds.size > 0 && (
@@ -666,13 +719,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             </div>
         )}
 
-        {/* Save Dialog Overlay (Similar to PersonalLibrary Move Dialog) */}
+        {/* Save Dialog Overlay */}
         {showMoveDialog && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4 max-h-[80vh] overflow-y-auto">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">שמירת {selectedIds.size} פריטים</h3>
                     <p className="text-slate-400 text-sm mb-6 text-center">בחר לאיזו קטגוריה לשמור בספריה האישית שלך</p>
-                    
+
                     <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
                         <button
                             onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
@@ -715,15 +768,15 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                     </div>
 
                     <div className="flex gap-2">
-                        <button 
-                            onClick={handleBatchSave} 
-                            disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())} 
+                        <button
+                            onClick={handleBatchSave}
+                            disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())}
                             className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium disabled:opacity-50 hover:bg-purple-500"
                         >
                             שמור
                         </button>
-                        <button 
-                            onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }} 
+                        <button
+                            onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }}
                             className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg"
                         >
                             ביטול
@@ -733,13 +786,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             </div>
         )}
 
-        {/* Skeleton - shown while the API fetch is in-flight */}
+        {/* Skeleton */}
         {isLibraryFetching && totalCount === 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div className="space-y-3">
+            {[0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="rounded-2xl bg-white/[0.04] animate-pulse h-32"
+                className="rounded-xl bg-white/[0.04] animate-pulse h-16"
               />
             ))}
           </div>
@@ -750,7 +803,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           <div className="flex flex-col items-center gap-3 text-center py-16" dir="rtl">
             <Star className="w-12 h-12 text-slate-600 mb-2" />
             <p className="text-lg font-semibold text-slate-400">עוד לא סימנת מועדפים</p>
-            <p className="text-sm text-slate-500">לחץ על ⭐ כדי לשמור פרומפטים אהובים</p>
+            <p className="text-sm text-slate-500">לחץ על הכוכב כדי לשמור פרומפטים אהובים</p>
           </div>
         )}
 
@@ -782,7 +835,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             <div className="max-w-4xl max-h-[85vh] w-full mx-4" onClick={(e) => e.stopPropagation()}>
               <img
                 src={lightboxImage.url}
-                alt={`דוגמה שנוצרה מפרומפט: ${lightboxImage.title}`}
+                alt={`דוגמה: ${lightboxImage.title}`}
                 className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
                 decoding="async"
               />

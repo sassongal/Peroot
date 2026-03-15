@@ -19,7 +19,7 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ExtensionBanner />
-      <TopLogo hidden={viewMode === "home"} />
+      <TopLogo hidden={viewMode === "home" || viewMode === "library" || viewMode === "personal"} />
       <Toaster position="top-center" theme="dark" closeButton />
       {children}
     </>
