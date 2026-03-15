@@ -977,6 +977,7 @@ function PageContent({ user }: { user: User | null }) {
                        iterationCount={ps.iterationCount}
                        originalPrompt={ps.originalInput || ps.input}
                        onShare={handleShare}
+                       onReset={() => dispatch({ type: 'RESET' })}
                    />
                  </ErrorBoundary>
 

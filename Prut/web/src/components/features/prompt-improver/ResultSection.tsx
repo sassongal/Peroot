@@ -42,6 +42,7 @@ interface ResultSectionProps {
   iterationCount?: number;
   originalPrompt?: string;
   onShare?: () => void;
+  onReset?: () => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -67,6 +68,7 @@ export function ResultSection({
   iterationCount,
   originalPrompt,
   onShare,
+  onReset,
 }: ResultSectionProps) {
     const t = useI18n();
   const isMac = useMemo(() => typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform), []);
@@ -286,6 +288,18 @@ export function ResultSection({
                 >
                   {t.result_section.back_to_edit}
                 </button>
+                {/* Reset - start fresh with a new prompt */}
+                {onReset && (
+                  <button
+                    onClick={onReset}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 border border-white/10 transition-colors cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    title="לאפס ולהתחיל מחדש"
+                    dir="rtl"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    לאפס
+                  </button>
+                )}
                 {/* Back to Original - only shown after at least one refinement */}
                 {onResetToOriginal && (iterationCount ?? 0) > 0 && (
                   <button
