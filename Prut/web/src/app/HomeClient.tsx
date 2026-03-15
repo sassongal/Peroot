@@ -739,28 +739,28 @@ function PageContent({ user }: { user: User | null }) {
         <div className="flex flex-col gap-2 p-4">
           <button
             onClick={() => { handleNavPersonal(); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-5 h-5" />
             <span>{t.home.personal_library}</span>
           </button>
 
           <button
             onClick={() => { handleNavFavorites(); setSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group cursor-pointer",
+              "w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group cursor-pointer",
               personalView === "favorites" ? "bg-amber-500/20 text-amber-300 border-amber-400/50" : "bg-black/20"
             )}
           >
-            <Star className="w-4 h-4" />
+            <Star className="w-5 h-5" />
             <span>{t.home.favorites}</span>
           </button>
 
           <button
             onClick={() => { handleNavLibrary(); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
           >
-            <Library className="w-4 h-4" />
+            <Library className="w-5 h-5" />
             <span>{t.home.public_library}</span>
           </button>
         </div>
@@ -799,7 +799,7 @@ function PageContent({ user }: { user: User | null }) {
 
            <button
              onClick={() => setShowWhatIsThis(true)}
-             className="text-sm text-slate-500 hover:text-amber-400 transition-colors cursor-pointer -mt-2"
+             className="text-sm text-slate-500 hover:text-amber-400 transition-colors cursor-pointer -mt-2 min-h-[44px] flex items-center justify-center px-4"
            >
              מה עושים פה?
            </button>

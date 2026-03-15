@@ -351,13 +351,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 value={libraryQuery}
                 onChange={(e) => setLibraryQuery(e.target.value)}
                 placeholder="חיפוש פרומפטים..."
-                className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 pe-10 ps-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+                className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 pe-10 ps-3 text-base md:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
               />
             </div>
             <select
               value={librarySort}
               onChange={(e) => setLibrarySort(e.target.value as "popularity" | "title" | "newest" | "rating")}
-              className="shrink-0 bg-black/30 border border-white/10 rounded-lg py-2.5 px-2.5 text-xs md:text-sm text-slate-200 focus:outline-none focus:border-white/30"
+              className="shrink-0 bg-black/30 border border-white/10 rounded-lg py-2.5 px-2.5 min-h-[44px] text-base md:text-sm text-slate-200 focus:outline-none focus:border-white/30"
             >
               <option value="popularity">פופולריות</option>
               <option value="title">א-ב</option>
@@ -376,7 +376,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                     setLibraryQuery(CATEGORY_LABELS[category] ?? category);
                     setCurrentPage(1);
                   }}
-                  className="shrink-0 text-[11px] md:text-xs px-2.5 py-1 rounded-full border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
+                  className="shrink-0 text-[11px] md:text-xs px-3 py-2 min-h-[44px] flex items-center rounded-full border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
                 >
                   {CATEGORY_LABELS[category] ?? category}
                 </button>
@@ -547,25 +547,25 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                     <div className="flex items-center gap-1.5 pt-1 flex-wrap" dir="rtl">
                       <button
                         onClick={() => onUsePrompt(prompt)}
-                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white text-black text-xs md:text-sm hover:bg-slate-200 transition-colors cursor-pointer"
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg bg-white text-black text-xs md:text-sm hover:bg-slate-200 transition-colors cursor-pointer"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                         השתמש
                       </button>
                       <button
                         onClick={() => addPersonalPromptFromLibrary(prompt)}
-                        className="shrink-0 flex items-center gap-1.5 p-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                        className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
                         title="שמור לספריה אישית"
                       >
-                        <BookOpen className="w-3.5 h-3.5" />
+                        <BookOpen className="w-4 h-4" />
                         <span className="hidden md:inline text-sm">שמור</span>
                       </button>
                       <button
                         onClick={async () => { await onCopyText(prompt.prompt); }}
-                        className="shrink-0 flex items-center gap-1.5 p-2 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                        className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer"
                         title="העתק"
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-4 h-4" />
                         <span className="hidden md:inline text-sm">העתק</span>
                       </button>
                       <button
@@ -575,10 +575,10 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                           category: categoryLabel,
                           useCase: prompt.use_case,
                         })}
-                        className="shrink-0 p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        className="shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                         title="ייצא כתמונה"
                       >
-                        <ImageIcon className="w-3.5 h-3.5" />
+                        <ImageIcon className="w-4 h-4" />
                       </button>
 
                       <div className="w-px h-5 bg-white/10 shrink-0 mx-0.5" />
@@ -586,26 +586,26 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                       <button
                         onClick={() => handleRate(prompt.id, 1)}
                         className={cn(
-                          "shrink-0 p-2 rounded-lg text-xs transition-colors cursor-pointer",
+                          "shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer",
                           userRatings[prompt.id] === 1
                             ? "bg-emerald-500/20 text-emerald-400"
                             : "text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10"
                         )}
                         title="מועיל"
                       >
-                        <ThumbsUp className="w-3.5 h-3.5" />
+                        <ThumbsUp className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleRate(prompt.id, -1)}
                         className={cn(
-                          "shrink-0 p-2 rounded-lg text-xs transition-colors cursor-pointer",
+                          "shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer",
                           userRatings[prompt.id] === -1
                             ? "bg-red-500/20 text-red-400"
                             : "text-slate-500 hover:text-red-400 hover:bg-red-500/10"
                         )}
                         title="לא מועיל"
                       >
-                        <ThumbsDown className="w-3.5 h-3.5" />
+                        <ThumbsDown className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -656,18 +656,18 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             <button
               onClick={() => goToPage(1)}
               disabled={safeCurrentPage === 1}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
               aria-label="עמוד ראשון"
             >
-              <ChevronsRight className="w-4 h-4" />
+              <ChevronsRight className="w-5 h-5" />
             </button>
             <button
               onClick={() => goToPage(safeCurrentPage - 1)}
               disabled={safeCurrentPage === 1}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
               aria-label="עמוד קודם"
             >
-              <ChevronLeft className="w-4 h-4 rotate-180" />
+              <ChevronLeft className="w-5 h-5 rotate-180" />
             </button>
 
             {/* Page numbers */}
@@ -681,7 +681,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   key={page}
                   onClick={() => goToPage(page)}
                   className={cn(
-                    "min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors",
+                    "min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-sm font-medium transition-colors",
                     page === safeCurrentPage
                       ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                       : "text-slate-400 hover:text-white hover:bg-white/10"
@@ -695,18 +695,18 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             <button
               onClick={() => goToPage(safeCurrentPage + 1)}
               disabled={safeCurrentPage === totalPages}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
               aria-label="עמוד הבא"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={() => goToPage(totalPages)}
               disabled={safeCurrentPage === totalPages}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
               aria-label="עמוד אחרון"
             >
-              <ChevronsLeft className="w-4 h-4" />
+              <ChevronsLeft className="w-5 h-5" />
             </button>
           </div>
         )}
@@ -754,7 +754,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                                     value={newMoveCategoryInput}
                                     onChange={e => setNewMoveCategoryInput(e.target.value)}
                                     placeholder="שם הקטגוריה..."
-                                    className="w-full bg-black/40 border border-purple-500/50 rounded-lg p-3 text-white focus:outline-none"
+                                    className="w-full bg-black/40 border border-purple-500/50 rounded-lg p-3 text-base text-white focus:outline-none"
                                     autoFocus
                                 />
                             </div>
@@ -846,6 +846,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 src={lightboxImage.url}
                 alt={`דוגמה: ${lightboxImage.title}`}
                 className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
+                loading="lazy"
                 decoding="async"
               />
               <p className="text-center text-sm text-slate-400 mt-3 font-medium" dir="rtl">

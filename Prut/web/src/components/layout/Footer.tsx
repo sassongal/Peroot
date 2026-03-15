@@ -16,23 +16,23 @@ export function Footer() {
         </div>
 
         {/* Links */}
-        <nav aria-label="ניווט תחתון" className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
-          <Link href="/blog" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center">
+        <nav aria-label="ניווט תחתון" className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-slate-400">
+          <Link href="/blog" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             בלוג
           </Link>
-          <Link href="/pricing" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center">
+          <Link href="/pricing" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             מחירים
           </Link>
-          <Link href="/terms" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center" suppressHydrationWarning>
+          <Link href="/terms" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             תנאי שימוש
           </Link>
-          <Link href="/privacy" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center" suppressHydrationWarning>
+          <Link href="/privacy" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             מדיניות פרטיות
           </Link>
-          <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center" suppressHydrationWarning>
+          <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             הצהרת נגישות
           </Link>
-          <a href="mailto:gal@joya-tech.net" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] flex items-center" suppressHydrationWarning>
+          <a href="mailto:gal@joya-tech.net" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             צור קשר
           </a>
         </nav>

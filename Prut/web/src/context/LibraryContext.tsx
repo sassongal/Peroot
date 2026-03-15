@@ -582,7 +582,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
     popularityMap,
     addPrompt, removePrompt, updatePrompt, duplicatePrompt, incrementUseCount, togglePin, ratePrompt,
-    deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding, // Exposed
+    deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding,
     newPersonalCategory, setNewPersonalCategory,
     renamingCategory, setRenamingCategory,
     renameCategoryInput, setRenameCategoryInput,
@@ -592,7 +592,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     promptStyles, editingStylePromptId, styleDraft, setStyleDraft,
     openStyleEditor, saveStylePrompt, closeStyleEditor,
     ...dragAndDrop,
-    
+
     // Capability Filtering
     selectedCapabilityFilter, setSelectedCapabilityFilter,
     favoritesCapabilityFilter, setFavoritesCapabilityFilter,
