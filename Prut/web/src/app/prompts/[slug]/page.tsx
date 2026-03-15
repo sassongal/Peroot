@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { ArrowRight, Copy, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_SLUG_MAP, CATEGORY_ID_TO_SLUG } from "@/lib/category-slugs";
@@ -195,6 +196,20 @@ export default async function CategoryPage({ params }: Props) {
                          prompt.capability_mode === 'AGENT_BUILDER' ? 'בונה סוכנים' :
                          prompt.capability_mode}
                       </span>
+                    )}
+
+                    {/* Preview image for image generation prompts */}
+                    {prompt.preview_image_url && (
+                      <div className="rounded-xl overflow-hidden border border-white/10">
+                        <Image
+                          src={prompt.preview_image_url}
+                          alt={prompt.title}
+                          width={400}
+                          height={400}
+                          className="w-full h-auto object-cover"
+                          loading="lazy"
+                        />
+                      </div>
                     )}
 
                     {/* Prompt preview */}
