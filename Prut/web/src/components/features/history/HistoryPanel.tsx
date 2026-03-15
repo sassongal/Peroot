@@ -131,6 +131,7 @@ export function HistoryPanel({
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pe-9 ps-3 text-xs text-slate-300 appearance-none focus:outline-none focus:border-amber-500/40 transition-all cursor-pointer"
                     dir="rtl"
+                    aria-label="סינון לפי קטגוריה"
                 >
                     <option value="all">כל הקטגוריות</option>
                     {uniqueCategories.map(cat => (
