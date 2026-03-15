@@ -692,7 +692,7 @@ function PageContent({ user }: { user: User | null }) {
           )}
           title="תפריט"
           aria-expanded={sidebarOpen}
-          aria-label="Toggle sidebar"
+          aria-label="תפריט"
         >
           <PanelRightOpen className="w-5 h-5" />
           <span className="hidden md:inline">תפריט</span>

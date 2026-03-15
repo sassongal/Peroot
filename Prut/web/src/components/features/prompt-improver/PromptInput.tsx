@@ -146,7 +146,7 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-xs text-slate-500 uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
+        <div className="text-xs text-slate-400 uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
         <CapabilitySelector
           value={selectedCapability}
           onChange={setSelectedCapability}

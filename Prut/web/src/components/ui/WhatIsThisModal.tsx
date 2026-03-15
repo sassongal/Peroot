@@ -16,6 +16,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
         <button
           onClick={onClose}
           className="absolute top-4 left-4 p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          aria-label="סגור"
         >
           <X className="w-5 h-5" />
         </button>
