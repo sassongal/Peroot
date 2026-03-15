@@ -3,6 +3,8 @@ import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { validateAdminSession } from '@/lib/admin/admin-security';
 import { logger } from '@/lib/logger';
 
+export const maxDuration = 30; // Allow up to 30s for GA4 API calls
+
 function getAnalyticsClient(): BetaAnalyticsDataClient | null {
   const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   if (!credentialsJson) return null;
