@@ -84,10 +84,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/assets/branding/logo.png`,
+        url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Peroot AI Prompt Generator",
+        alt: "Peroot - מחולל פרומפטים מקצועי בעברית",
       },
     ],
   },
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
     title: "Peroot (פירוט) - שדרוג פרומפטים ב-AI",
     description:
       "כתבו פרומפטים טובים יותר בשניות. המערכת היחידה שמותאמת במיוחד לשפה העברית ולמודלים המובילים.",
-    images: [`${siteUrl}/assets/branding/logo.png`],
+    images: [`${siteUrl}/og-image.png`],
     creator: "@joyatech",
   },
   appleWebApp: {
@@ -144,6 +144,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark">
+      <head>
+        {/* PWA Splash Screens */}
+        <link rel="apple-touch-startup-image" href="/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+        <link rel="apple-touch-startup-image" href="/splash-iphone-pro.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+        <link rel="apple-touch-startup-image" href="/splash-ipad.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" />
+      </head>
       <body
         className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
         suppressHydrationWarning

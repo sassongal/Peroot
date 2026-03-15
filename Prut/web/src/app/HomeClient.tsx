@@ -682,16 +682,16 @@ function PageContent({ user }: { user: User | null }) {
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
+            "flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold transition-all border backdrop-blur-md cursor-pointer shadow-lg",
             sidebarOpen
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
-              : "bg-black/40 border-white/10 text-slate-400 hover:text-white hover:border-white/20"
+              ? "bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-amber-500/10"
+              : "bg-black/60 border-amber-500/20 text-amber-200 hover:text-amber-100 hover:border-amber-500/40 hover:bg-black/70 shadow-amber-500/5 animate-menu-pulse"
           )}
           title="תפריט"
           aria-expanded={sidebarOpen}
           aria-label="Toggle sidebar"
         >
-          <PanelRightOpen className="w-4 h-4" />
+          <PanelRightOpen className="w-5 h-5" />
           <span className="hidden md:inline">תפריט</span>
         </button>
       </div>

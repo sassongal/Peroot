@@ -69,6 +69,7 @@ interface LibraryRow {
   variables: string[] | null;
   category_id: string | null;
   preview_image_url: string | null;
+  capability_mode: string | null;
 }
 
 export default async function CategoryPage({ params }: Props) {
@@ -84,7 +85,7 @@ export default async function CategoryPage({ params }: Props) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("public_library_prompts")
-    .select("id, title, use_case, prompt, variables, category_id, preview_image_url")
+    .select("id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode")
     .eq("is_active", true)
     .ilike("category_id", categoryData.id.toLowerCase())
     .order("created_at", { ascending: false })
@@ -181,8 +182,28 @@ export default async function CategoryPage({ params }: Props) {
                       )}
                     </div>
 
+                    {/* Capability badge */}
+                    {prompt.capability_mode && prompt.capability_mode !== 'STANDARD' && (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
+                        prompt.capability_mode === 'IMAGE_GENERATION' ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20' :
+                        prompt.capability_mode === 'DEEP_RESEARCH' ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20' :
+                        prompt.capability_mode === 'AGENT_BUILDER' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
+                        'bg-white/5 text-slate-400 border border-white/10'
+                      }`}>
+                        {prompt.capability_mode === 'IMAGE_GENERATION' ? 'יצירת תמונה' :
+                         prompt.capability_mode === 'DEEP_RESEARCH' ? 'מחקר מעמיק' :
+                         prompt.capability_mode === 'AGENT_BUILDER' ? 'בונה סוכנים' :
+                         prompt.capability_mode}
+                      </span>
+                    )}
+
                     {/* Prompt preview */}
-                    <div className="text-sm md:text-base text-slate-400 leading-relaxed line-clamp-4 bg-white/[0.03] rounded-xl p-3 border border-white/5 font-mono">
+                    <div
+                      className={`text-sm md:text-base text-slate-400 leading-relaxed line-clamp-4 bg-white/[0.03] rounded-xl p-3 border border-white/5 ${
+                        prompt.capability_mode === 'IMAGE_GENERATION' ? 'font-mono text-left dir-ltr' : ''
+                      }`}
+                      dir={prompt.capability_mode === 'IMAGE_GENERATION' ? 'ltr' : undefined}
+                    >
                       {prompt.prompt}
                     </div>
 
