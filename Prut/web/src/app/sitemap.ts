@@ -1,8 +1,21 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { HEBREW_BLOG_SLUGS } from '@/lib/blog-slug-map';
+import { CATEGORY_SLUG_MAP } from '@/lib/category-slugs';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space';
+
+  // Prompts library index + category pages
+  const promptsPages: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/prompts`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
+    ...Object.keys(CATEGORY_SLUG_MAP).map((slug) => ({
+      url: `${baseUrl}/prompts/${encodeURIComponent(slug)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.75,
+    })),
+  ];
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
@@ -14,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/terms`, lastModified: new Date('2026-03-10'), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${baseUrl}/accessibility`, lastModified: new Date('2026-03-10'), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${baseUrl}/examples`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   // Dynamic blog posts from DB
@@ -31,8 +45,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    return [...staticPages, ...blogEntries];
+    // Hebrew slug URLs pointing to same content (lower priority)
+    const hebrewEntries: MetadataRoute.Sitemap = Object.entries(
+      HEBREW_BLOG_SLUGS
+    ).map(([heSlug]) => ({
+      url: `${baseUrl}/blog/${encodeURIComponent(heSlug)}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    }));
+
+    return [...promptsPages, ...staticPages, ...blogEntries, ...hebrewEntries];
   } catch {
-    return staticPages;
+    return [...promptsPages, ...staticPages];
   }
 }

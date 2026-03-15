@@ -4,6 +4,7 @@ import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
+import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -89,6 +90,19 @@ export default async function BlogPage() {
             </Link>
           ))}
         </div>
+
+        {/* Hidden Hebrew slug links for SEO crawlability */}
+        <nav className="sr-only" aria-hidden="true">
+          {(posts ?? []).map((post) => {
+            const hebrewSlug = ENGLISH_TO_HEBREW_SLUG[post.slug];
+            if (!hebrewSlug) return null;
+            return (
+              <Link key={`he-${post.slug}`} href={`/blog/${hebrewSlug}`}>
+                {post.title}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* Newsletter Signup */}
         <div className="mt-12">

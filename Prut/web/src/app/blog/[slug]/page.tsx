@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { articleSchema, breadcrumbSchema } from "@/lib/schema";
+import { HEBREW_BLOG_SLUGS } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 
@@ -23,13 +24,22 @@ export async function generateStaticParams() {
     .select("slug")
     .eq("status", "published");
 
-  return (posts || []).map((post) => ({ slug: post.slug }));
+  const englishSlugs = (posts || []).map((post) => ({ slug: post.slug }));
+  const hebrewSlugs = Object.keys(HEBREW_BLOG_SLUGS).map((heSlug) => ({
+    slug: heSlug,
+  }));
+  return [...englishSlugs, ...hebrewSlugs];
 }
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
+  const hebrewRedirect = HEBREW_BLOG_SLUGS[decodedSlug];
+  if (hebrewRedirect) {
+    return { title: "Redirecting..." };
+  }
   const supabase = await createClient();
   const { data: post } = await supabase
     .from("blog_posts")
@@ -74,6 +84,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
+  const hebrewRedirect = HEBREW_BLOG_SLUGS[decodedSlug];
+  if (hebrewRedirect) {
+    redirect(`/blog/${hebrewRedirect}`);
+  }
 
   const supabase = await createClient();
   const { data: post } = await supabase

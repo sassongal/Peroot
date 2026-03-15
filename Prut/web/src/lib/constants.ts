@@ -23,6 +23,12 @@ export const CATEGORY_OPTIONS = [
   { id: "Automation", label: "אוטומציה" },
   { id: "Community", label: "קהילה" },
   { id: "Nonprofit", label: "מלכ\"ר" },
+  { id: "Cooking", label: "בישול" },
+  { id: "Travel", label: "טיולים" },
+  { id: "Sports", label: "ספורט וכושר" },
+  { id: "PersonalDev", label: "פיתוח אישי" },
+  { id: "Greetings", label: "ברכות ואיחולים" },
+  { id: "Music", label: "מוזיקה" },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -51,6 +57,12 @@ export const CATEGORY_LABELS: Record<string, string> = {
   Automation: "אוטומציה",
   Community: "קהילה",
   Nonprofit: "מלכ\"ר",
+  Cooking: "בישול",
+  Travel: "טיולים",
+  Sports: "ספורט וכושר",
+  PersonalDev: "פיתוח אישי",
+  Greetings: "ברכות ואיחולים",
+  Music: "מוזיקה",
 };
 
 /** Case-insensitive category label lookup */
@@ -116,5 +128,13 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     icon: "💻",
     categories: ["Dev", "Data", "Automation"],
     color: "from-cyan-500/20 to-cyan-500/5",
+  },
+  {
+    id: "lifestyle",
+    title: "חיים ופנאי",
+    description: "פרומפטים לבישול, טיולים, ספורט ועוד",
+    icon: "🌟",
+    categories: ["Cooking", "Travel", "Sports", "PersonalDev", "Greetings", "Music"],
+    color: "from-rose-500/10 to-transparent",
   },
 ];

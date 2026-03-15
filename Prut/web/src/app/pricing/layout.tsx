@@ -59,7 +59,7 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
           <h2>תוכנית חינם</h2>
           <ul>
             <li>2 קרדיטים ביום (מתחדשים ב-14:00)</li>
-            <li>גישה לספריית 410+ פרומפטים מקצועיים</li>
+            <li>גישה לספריית 480+ פרומפטים מקצועיים</li>
             <li>שיתוף פרומפטים</li>
             <li>תוסף Chrome לשדרוג מהיר</li>
           </ul>

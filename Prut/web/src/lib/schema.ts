@@ -114,7 +114,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Free",
-        description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 410+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
+        description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
@@ -158,5 +158,42 @@ export function faqSchema(
         text: item.answer,
       },
     })),
+  };
+}
+
+export function promptCreativeWorkSchema(prompt: {
+  title: string;
+  description: string;
+  category: string;
+  url: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: prompt.title,
+    description: prompt.description,
+    inLanguage: "he",
+    genre: prompt.category,
+    url: prompt.url,
+    creator: { "@type": "Organization", name: "Peroot" },
+    datePublished: new Date().toISOString().split("T")[0],
+  };
+}
+
+export function promptCollectionSchema(collection: {
+  name: string;
+  description: string;
+  url: string;
+  itemCount: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: collection.name,
+    description: collection.description,
+    url: collection.url,
+    inLanguage: "he",
+    numberOfItems: collection.itemCount,
+    provider: { "@type": "Organization", name: "Peroot" },
   };
 }

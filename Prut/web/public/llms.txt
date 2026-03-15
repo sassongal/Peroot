@@ -10,6 +10,8 @@
 - [Privacy Policy](https://peroot.space/privacy)
 - [Terms of Service](https://peroot.space/terms)
 - [Contact](https://peroot.space/contact)
+- [Prompt Writing Guide](https://peroot.space/guide): Professional Hebrew prompt engineering guide
+- [Prompt Library Index](https://peroot.space/prompts): Browse 480+ prompts by category
 
 ## Blog Articles (20 posts)
 - [איך לכתוב פרומפט טוב - המדריך המלא](https://peroot.space/blog/how-to-write-good-prompt)
@@ -39,7 +41,7 @@
 - "Great Prompt" structured output with context, goal, constraints, and format
 - Clarifying questions (0-3) to refine intent
 - Real-time prompt strength scoring
-- 410+ prompt templates in public library
+- 480+ prompt templates in public library
 - Personal prompt library with favorites and organization
 - Smart variables with {placeholder} syntax
 - Iterative refinement with Refine and Quick Actions
