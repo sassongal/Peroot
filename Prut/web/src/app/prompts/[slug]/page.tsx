@@ -175,14 +175,14 @@ export default async function CategoryPage({ params }: Props) {
                         {prompt.title}
                       </h2>
                       {prompt.use_case && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
                           {prompt.use_case}
                         </p>
                       )}
                     </div>
 
                     {/* Prompt preview */}
-                    <div className="text-xs md:text-sm text-slate-400 leading-relaxed line-clamp-4 bg-white/[0.03] rounded-xl p-3 border border-white/5 font-mono">
+                    <div className="text-sm md:text-base text-slate-400 leading-relaxed line-clamp-4 bg-white/[0.03] rounded-xl p-3 border border-white/5 font-mono">
                       {prompt.prompt}
                     </div>
 
@@ -192,13 +192,13 @@ export default async function CategoryPage({ params }: Props) {
                         {prompt.variables.slice(0, 4).map((v) => (
                           <span
                             key={v}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400"
+                            className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400"
                           >
                             {v}
                           </span>
                         ))}
                         {prompt.variables.length > 4 && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-500">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-500">
                             +{prompt.variables.length - 4}
                           </span>
                         )}
@@ -278,7 +278,7 @@ export default async function CategoryPage({ params }: Props) {
                   <Link
                     key={catSlug}
                     href={`/prompts/${encodeURIComponent(catSlug)}`}
-                    className="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-colors text-center group"
+                    className="flex flex-col items-center gap-2 p-3 min-h-[44px] rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-colors text-center group"
                   >
                     <span className="text-2xl">{catData.emoji}</span>
                     <span className="text-xs text-slate-400 group-hover:text-white transition-colors leading-snug">

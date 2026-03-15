@@ -53,7 +53,7 @@ export function LoginRequiredModal({
       >
         <button
           onClick={onClose}
-          className="absolute top-4 start-4 p-2 text-slate-500 hover:text-white transition-colors"
+          className="absolute top-4 start-4 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-500 hover:text-white transition-colors"
           aria-label="סגור"
         >
           <X className="w-5 h-5" />
@@ -110,7 +110,7 @@ export function LoginRequiredModal({
             </Link>
             <button
               onClick={onClose}
-              className="w-full py-2 px-4 text-slate-400 hover:text-white text-sm transition-colors"
+              className="w-full py-3 px-5 text-slate-400 hover:text-white text-sm transition-colors"
             >
               אולי מאוחר יותר
             </button>

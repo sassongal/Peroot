@@ -175,7 +175,7 @@ export function PromptInput({
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
                       className={cn(
-                        "w-full bg-black/30 border rounded-lg py-2.5 px-3 text-sm text-slate-200 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none transition-colors",
+                        "w-full bg-black/30 border rounded-lg py-2.5 px-3 text-base md:text-sm text-slate-200 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none transition-colors",
                         isEmpty
                           ? "border-amber-500/50 ring-1 ring-amber-500/30 focus:border-amber-500/70"
                           : "border-white/10 focus:border-amber-500/50"
@@ -221,7 +221,7 @@ export function PromptInput({
           <div className="bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
              <div
               aria-hidden
-              className="absolute inset-0 p-6 md:p-8 text-lg md:text-xl text-slate-200 font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
+              className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-slate-200 font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
               dir="rtl"
              >
               {highlightedContent}
@@ -236,7 +236,7 @@ export function PromptInput({
                  setInterimResult("");
               }}
               placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
-              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-lg md:text-xl text-transparent caret-white placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
+              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-white placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   handleEnhance();
@@ -315,7 +315,8 @@ export function PromptInput({
                     <button
                       key={i}
                       onClick={() => setInputVal(example)}
-                      className="px-3 py-2.5 rounded-full border border-white/10 bg-white/[0.03] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer"
+                      aria-label={`השתמש בדוגמה: ${example}`}
+                      className="px-3 py-2.5 rounded-full border border-white/10 bg-white/[0.03] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     >
                       {example}
                     </button>
@@ -331,7 +332,7 @@ export function PromptInput({
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full ps-10 pe-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
+                    className="w-full ps-10 pe-4 py-2 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
                     aria-label="בחר קטגוריה"
                   >
                     {CATEGORY_OPTIONS.map(cat => (

@@ -2,7 +2,7 @@
 
 import { useLibraryContext } from "@/context/LibraryContext";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronLeft, ChevronsLeft, ChevronsRight, TrendingUp, Rocket, PenTool, Settings, Code, Sparkles as SparklesIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -13,6 +13,15 @@ import { exportPromptAsImage } from "@/lib/export-prompt-image";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useHistory } from "@/hooks/useHistory";
 import { logger } from "@/lib/logger";
+
+const COLLECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  TrendingUp,
+  Rocket,
+  PenTool,
+  Settings,
+  Code,
+  SparklesIcon,
+};
 
 const GUEST_FREE_LIMIT = 7;
 const ITEMS_PER_PAGE = 10;
@@ -402,7 +411,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   )}
                   dir="rtl"
                 >
-                  <span className="text-lg md:text-xl mb-1 block">{collection.icon}</span>
+                  {(() => { const IconComponent = COLLECTION_ICONS[collection.icon]; return IconComponent ? <IconComponent className="w-5 h-5 md:w-6 md:h-6 text-slate-300 mb-1" /> : null; })()}
                   <p className="text-xs md:text-sm font-semibold text-slate-200 truncate">{collection.title}</p>
                   <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">{collection.description}</p>
                 </button>

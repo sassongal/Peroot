@@ -186,7 +186,7 @@ export default function PromptsIndexPage() {
                       <span className="text-3xl group-hover:scale-110 transition-transform duration-200">
                         {emoji}
                       </span>
-                      <span className="text-xs text-slate-400 group-hover:text-white transition-colors leading-snug">
+                      <span className="text-sm text-slate-400 group-hover:text-white transition-colors leading-snug">
                         {labelHe}
                       </span>
                     </Link>

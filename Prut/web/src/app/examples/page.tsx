@@ -151,7 +151,7 @@ export default function ExamplesPage() {
 
         <div className="space-y-8">
           {EXAMPLES.map((example, i) => (
-            <div key={i} className="glass-card rounded-xl border border-white/10 overflow-hidden">
+            <div key={i} className="glass-card rounded-xl border border-white/10 overflow-hidden cursor-pointer">
               <div className="p-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-400 bg-white/5 px-3 py-1 rounded-full">
                   {example.category}
@@ -189,7 +189,7 @@ export default function ExamplesPage() {
           <h2 className="text-2xl font-serif text-white mb-4">רוצים לנסות בעצמכם?</h2>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             שדרגו פרומפט עכשיו - בחינם
           </Link>

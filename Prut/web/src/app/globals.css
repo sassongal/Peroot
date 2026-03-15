@@ -112,7 +112,7 @@
   --secondary-foreground: #e2e8f0;
 
   --muted: rgba(255, 255, 255, 0.05);
-  --muted-foreground: #94a3b8;
+  --muted-foreground: #cbd5e1;
 
   --accent: rgba(255, 255, 255, 0.05);
   --accent-foreground: #e2e8f0;
@@ -1240,4 +1240,33 @@ a:focus-visible,
 
 .animate-orbit {
   animation: orbit 3.6s linear infinite;
+}
+
+/* Disable all custom animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-morph-ring,
+  .animate-helix-dot,
+  .animate-logo-breathe,
+  .animate-glow-ring,
+  .animate-spark,
+  .animate-wave-dot,
+  .animate-logo-spin,
+  .animate-logo-pulse,
+  .animate-logo-float,
+  .animate-logo-orbit,
+  .animate-hero-entrance,
+  .animate-hero-glow,
+  .hero-logo-image,
+  .hero-logo-ring-1,
+  .hero-logo-ring-2,
+  .hero-logo-ring-3,
+  .animate-cursor-blink,
+  .animate-spin-slow,
+  .animate-breathe,
+  .animate-float,
+  .animate-shimmer-diagonal,
+  .animate-orbit {
+    animation: none !important;
+    transition: none !important;
+  }
 }

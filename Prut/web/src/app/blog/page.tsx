@@ -62,7 +62,7 @@ export default async function BlogPage() {
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="block glass-card rounded-xl border border-white/10 p-6 hover:bg-white/[0.03] hover:border-white/20 transition-all group"
+              className="block glass-card rounded-xl border border-white/10 p-6 hover:bg-white/[0.03] hover:border-white/20 transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">

@@ -38,14 +38,14 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
   const panelClass =
     mode === "inline"
       ? "absolute bottom-16 right-0"
-      : "fixed bottom-24 right-4 sm:right-6";
+      : "fixed bottom-24 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6";
 
   const handleFeedback = () => {
      window.location.href = "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
   };
 
   return (
-    <div className={cn("flex flex-col items-end gap-3", mode === "inline" ? "relative" : "z-[9999]")}>
+    <div className={cn("flex flex-col items-end gap-3", mode === "inline" ? "relative" : "z-50")}>
       <div
         id={panelId}
         role="region"
@@ -68,7 +68,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2.5 rounded-full border border-white/5 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+            className="p-2.5 rounded-full border border-white/5 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="סגור"
           >
             <X className="w-4 h-4" />
@@ -88,6 +88,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="איך אפשר לעזור לך?"
+                    aria-label="חיפוש שאלות נפוצות"
                     className="w-full bg-transparent border-none py-3 text-sm text-white placeholder:text-slate-500 focus:ring-0 focus:outline-none"
                   />
                </div>
@@ -102,7 +103,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                      setOpenIndex(0);
                    }}
                    className={cn(
-                     "px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-300",
+                     "px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                      activeCategory === category
                        ? "bg-white text-black border-white shadow-lg shadow-white/10 scale-105"
                        : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"
@@ -130,8 +131,9 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                  >
                    <button
                      onClick={() => setOpenIndex(isItemOpen ? null : index)}
-                     className="w-full flex items-start justify-between px-5 py-4 text-right gap-4"
+                     className="w-full flex items-start justify-between px-5 py-4 text-right gap-4 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                      aria-expanded={isItemOpen}
+                     aria-label={item.question}
                    >
                      <div className="flex flex-col gap-1.5">
                         <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">{item.category}</span>

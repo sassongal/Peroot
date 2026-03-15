@@ -54,7 +54,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
     return (
       <Link
         href="/pricing"
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-md transition-all hover:bg-black/60 ${
+        className={`flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl border backdrop-blur-md transition-all hover:bg-black/60 ${
           isLow ? "border-red-500/50 bg-red-500/10" : "border-white/10 bg-black/40"
         }`}
       >
@@ -70,7 +70,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
   return (
     <Link
       href="/login"
-      className={`flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-md transition-all hover:bg-black/60 ${
+      className={`flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl border backdrop-blur-md transition-all hover:bg-black/60 ${
         remainingPrompts <= 1 ? "border-red-500/50 bg-red-500/10" : "border-white/10 bg-black/40"
       }`}
     >

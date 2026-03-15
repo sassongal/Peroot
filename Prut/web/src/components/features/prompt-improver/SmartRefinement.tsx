@@ -172,7 +172,7 @@ export function SmartRefinement({
                              value={answers[q.id] || ""}
                              onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                              placeholder={t.smart_refinement.placeholder}
-                             className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-slate-600 resize-y transition-colors"
+                             className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-base md:text-sm text-white focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-slate-600 resize-y transition-colors"
                            />
                          </div>
 
@@ -184,7 +184,7 @@ export function SmartRefinement({
                                    <button
                                      key={i}
                                      onClick={() => handleAnswerChange(q.id, example)}
-                                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/5 bg-white/[0.02] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-colors cursor-pointer"
+                                     className="flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-full border border-white/5 bg-white/[0.02] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-colors cursor-pointer"
                                    >
                                      <Plus className="w-3 h-3" />
                                      <span>{example}</span>
@@ -219,7 +219,7 @@ export function SmartRefinement({
                value={customInstruction}
                onChange={(e) => setCustomInstruction(e.target.value)}
                placeholder={t.smart_refinement.free_request_placeholder}
-               className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-slate-600 resize-y transition-colors"
+               className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-base md:text-sm text-white focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-slate-600 resize-y transition-colors"
              />
           </div>
         </div>

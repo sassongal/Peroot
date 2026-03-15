@@ -40,7 +40,7 @@ export function ExtensionBanner() {
         href={CHROME_STORE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors cursor-pointer"
+        className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors cursor-pointer"
         onClick={(e) => {
           if (CHROME_STORE_URL === "#") {
             e.preventDefault();
@@ -51,7 +51,7 @@ export function ExtensionBanner() {
       </a>
       <button
         onClick={handleDismiss}
-        className="absolute left-3 top-1/2 -translate-y-1/2 p-1 text-slate-600 hover:text-slate-400 transition-colors"
+        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-slate-400 transition-colors"
         aria-label="סגור באנר"
       >
         <X className="w-3.5 h-3.5" />

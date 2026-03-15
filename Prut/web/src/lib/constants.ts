@@ -82,7 +82,7 @@ export interface PromptCollection {
   id: string;
   title: string;
   description: string;
-  icon: string; // emoji for simplicity
+  icon: string; // Lucide icon component name
   categories: string[]; // matching category IDs
   keywords?: string[]; // additional keyword filters
   color: string; // tailwind color class
@@ -93,7 +93,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     id: "marketing-pro",
     title: "חבילת שיווק Pro",
     description: "10 פרומפטים הכי חזקים לשיווק דיגיטלי",
-    icon: "📈",
+    icon: "TrendingUp",
     categories: ["Marketing", "Social", "SEO"],
     color: "from-purple-500/20 to-purple-500/5",
   },
@@ -101,7 +101,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     id: "startup-pack",
     title: "ערכת סטארטאפ",
     description: "פרומפטים חיוניים ליזמים ובעלי עסקים",
-    icon: "🚀",
+    icon: "Rocket",
     categories: ["Strategy", "Sales", "Product"],
     color: "from-blue-500/20 to-blue-500/5",
   },
@@ -109,7 +109,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     id: "content-creator",
     title: "יוצרי תוכן",
     description: "כתיבה, סושיאל, קריאייטיב וקידום",
-    icon: "✍️",
+    icon: "PenTool",
     categories: ["Creative", "Social", "SEO"],
     color: "from-pink-500/20 to-pink-500/5",
   },
@@ -117,7 +117,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     id: "business-ops",
     title: "ניהול ותפעול",
     description: "HR, פיננסים, משפטי ותפעול",
-    icon: "⚙️",
+    icon: "Settings",
     categories: ["Operations", "HR", "Finance", "Legal"],
     color: "from-emerald-500/20 to-emerald-500/5",
   },
@@ -125,7 +125,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     id: "dev-data",
     title: "פיתוח ודאטה",
     description: "קוד, אוטומציה, ניתוח נתונים",
-    icon: "💻",
+    icon: "Code",
     categories: ["Dev", "Data", "Automation"],
     color: "from-cyan-500/20 to-cyan-500/5",
   },
@@ -133,7 +133,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     id: "lifestyle",
     title: "חיים ופנאי",
     description: "פרומפטים לבישול, טיולים, ספורט ועוד",
-    icon: "🌟",
+    icon: "SparklesIcon",
     categories: ["Cooking", "Travel", "Sports", "PersonalDev", "Greetings", "Music"],
     color: "from-rose-500/10 to-transparent",
   },

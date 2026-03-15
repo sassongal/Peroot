@@ -325,7 +325,7 @@ export default function GuidePage() {
                 <li key={item.id}>
                   <a
                     href={`#${item.id}`}
-                    className="flex items-center gap-3 group text-slate-300 hover:text-amber-400 transition-colors text-sm"
+                    className="flex items-center gap-3 group text-slate-300 hover:text-amber-400 transition-colors text-sm cursor-pointer"
                   >
                     <span className="w-5 h-5 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-[10px] text-slate-500 group-hover:border-amber-500/40 group-hover:text-amber-400 transition-colors shrink-0">
                       {i + 1}

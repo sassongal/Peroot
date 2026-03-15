@@ -124,7 +124,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                 <div className="absolute top-6 left-6 z-20">
                     <button
                         onClick={handleSkip}
-                        className="text-xs text-slate-500 hover:text-slate-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                        className="text-xs text-slate-500 hover:text-slate-300 transition-colors px-4 py-2.5 min-h-[44px] flex items-center rounded-lg hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     >
                         דלג
                     </button>
@@ -172,7 +172,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                                         <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
                                             <Icon className="w-5 h-5 text-amber-400" />
                                         </div>
-                                        <span className="text-[11px] text-slate-500">{label}</span>
+                                        <span className="text-xs text-slate-500">{label}</span>
                                     </div>
                                 ))}
                             </div>

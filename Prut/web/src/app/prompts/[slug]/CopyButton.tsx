@@ -33,7 +33,7 @@ export function CopyButton({ text }: CopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-xs hover:bg-white/10 transition-colors"
+      className="flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-lg border border-white/10 bg-white/5 text-slate-300 text-xs hover:bg-white/10 transition-colors"
       aria-label="העתק פרומפט"
     >
       {copied ? (
