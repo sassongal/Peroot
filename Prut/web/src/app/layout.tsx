@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { validateEnv } from "@/lib/env";
@@ -64,6 +65,7 @@ export const metadata: Metadata = {
     canonical: "/",
     languages: {
       "he-IL": "/",
+      "en": "/",
       "x-default": "/",
     },
   },
@@ -137,9 +139,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Default to Hebrew for now. 
-  // Future: Detect from URL or cookie
-  const locale = 'he';
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
+  const locale = localeCookie === "en" ? "en" : "he";
   const dictionary = await getDictionary(locale);
 
   return (
@@ -158,7 +160,7 @@ export default async function RootLayout({
         <ServiceWorkerRegistration />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
-            דלג לתוכן הראשי
+            {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
           </a>
           <div className="noise-overlay" />
           <FAQSchema />
@@ -166,7 +168,7 @@ export default async function RootLayout({
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
           />
-          <I18nProvider dictionary={dictionary}>
+          <I18nProvider dictionary={dictionary} lang={locale}>
             <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
               <GlobalContextWrapper>
                 <ErrorBoundary name="AppRoot">
