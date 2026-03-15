@@ -102,10 +102,15 @@ export function PromptInput({
     const displayValue = inputVal + (interimResult ? (inputVal && !inputVal.endsWith(' ') ? ' ' : '') + interimResult : '');
     const highlightedContent = useMemo(() => highlightTextWithPlaceholders(displayValue), [displayValue]);
 
-    const displayedExamples = useMemo(() => {
+    const [displayedExamples, setDisplayedExamples] = useState(() => {
+      const examples = EXAMPLES_BY_MODE[selectedCapability] || EXAMPLES_BY_MODE[CapabilityMode.STANDARD];
+      return examples.slice(0, 4); // deterministic on SSR
+    });
+
+    useEffect(() => {
       const examples = EXAMPLES_BY_MODE[selectedCapability] || EXAMPLES_BY_MODE[CapabilityMode.STANDARD];
       const shuffled = [...examples].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, 4);
+      setDisplayedExamples(shuffled.slice(0, 4));
     }, [selectedCapability]);
 
     // Voice Recorder Logic
