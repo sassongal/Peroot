@@ -145,10 +145,13 @@ function PageContent({ user }: { user: User | null }) {
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('peroot_sidebar_expanded') === 'true';
-  });
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+
+  // Restore sidebar state from localStorage after hydration
+  useEffect(() => {
+    const stored = localStorage.getItem('peroot_sidebar_expanded');
+    if (stored === 'true') setSidebarExpanded(true);
+  }, []);
 
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
