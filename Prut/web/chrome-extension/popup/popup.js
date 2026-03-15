@@ -142,6 +142,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
     // Lazy-load data
     if (target === "library" && !libraryLoaded) loadLibrary();
     if (target === "favorites" && !favoritesLoaded) loadFavorites();
+    if (target === "settings") loadApiKeySettings();
   });
 });
 
@@ -540,4 +541,56 @@ function timeAgo(ts) {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours} \u05E9\u05E2'`;
   return `${Math.floor(hours / 24)} \u05D9\u05DE'`;
+}
+
+// ═══ SETTINGS ═══
+const apiKeyInput = $("api-key-input");
+const apiKeyToggle = $("api-key-toggle");
+const saveApiKeyBtn = $("save-api-key");
+const clearApiKeyBtn = $("clear-api-key");
+const apiKeyStatus = $("api-key-status");
+
+// Load saved API key on settings tab open
+async function loadApiKeySettings() {
+  const key = await getApiKey();
+  if (key) {
+    apiKeyInput.value = key;
+  }
+}
+
+if (apiKeyToggle) {
+  apiKeyToggle.addEventListener("click", () => {
+    apiKeyInput.type = apiKeyInput.type === "password" ? "text" : "password";
+  });
+}
+
+if (saveApiKeyBtn) {
+  saveApiKeyBtn.addEventListener("click", async () => {
+    const key = apiKeyInput.value.trim();
+    if (!key) {
+      showApiKeyStatus("הזן מפתח API", "error");
+      return;
+    }
+    if (!key.startsWith("prk_")) {
+      showApiKeyStatus("מפתח חייב להתחיל ב-prk_", "error");
+      return;
+    }
+    await saveApiKey(key);
+    showApiKeyStatus("מפתח נשמר בהצלחה", "success");
+  });
+}
+
+if (clearApiKeyBtn) {
+  clearApiKeyBtn.addEventListener("click", async () => {
+    await saveApiKey(null);
+    apiKeyInput.value = "";
+    showApiKeyStatus("מפתח הוסר", "success");
+  });
+}
+
+function showApiKeyStatus(msg, type) {
+  apiKeyStatus.textContent = msg;
+  apiKeyStatus.className = `settings-status ${type}`;
+  apiKeyStatus.classList.remove("hidden");
+  setTimeout(() => apiKeyStatus.classList.add("hidden"), 3000);
 }

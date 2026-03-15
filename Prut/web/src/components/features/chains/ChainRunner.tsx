@@ -15,6 +15,7 @@ interface ChainRunnerProps {
 export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
 
   const step = chain.steps[currentStep];
   if (!step) return null;
@@ -97,6 +98,26 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             {step.prompt_text}
           </p>
         </div>
+
+        {/* Step Output */}
+        {currentStep > 0 && stepOutputs[currentStep - 1] && (
+          <div className="mt-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+            <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">פלט שלב קודם</div>
+            <p className="text-xs text-slate-400 line-clamp-3">{stepOutputs[currentStep - 1]}</p>
+          </div>
+        )}
+
+        {completedSteps.has(currentStep) && (
+          <div className="mt-3">
+            <label className="text-[10px] text-slate-500 uppercase tracking-wider">הדבק את הפלט של שלב זה (אופציונלי):</label>
+            <textarea
+              value={stepOutputs[currentStep] || ""}
+              onChange={e => setStepOutputs(prev => ({ ...prev, [currentStep]: e.target.value }))}
+              placeholder="הדבק כאן את התוצאה..."
+              className="w-full mt-1 h-20 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
+            />
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3 mt-5">

@@ -7,7 +7,7 @@ import {
     Search, Trash2, GripVertical, LayoutGrid, LayoutList,
     CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles,
     Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2,
-    Upload, Pin, ThumbsUp, ThumbsDown
+    Upload, Pin, ThumbsUp, ThumbsDown, History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
@@ -22,6 +22,7 @@ import { useChains } from "@/hooks/useChains";
 import { ChainsSection } from "@/components/features/chains/ChainsSection";
 import { usePresets } from "@/hooks/usePresets";
 import { VariableFiller } from "@/components/features/variables/VariableFiller";
+import { VersionHistoryModal } from "@/components/features/library/VersionHistoryModal";
 
 interface PersonalLibraryViewProps {
   onUsePrompt: (prompt: PersonalPrompt | LibraryPrompt) => void;
@@ -53,6 +54,7 @@ export function PersonalLibraryView({
     handleToggleFavorite,
     libraryFavorites,
     addPrompt,
+    updatePrompt,
     duplicatePrompt,
     togglePin,
     ratePrompt,
@@ -106,7 +108,7 @@ export function PersonalLibraryView({
     isPersonalLoaded
   } = useLibraryContext();
 
-  const { chains, addChain, updateChain, deleteChain, incrementChainUseCount } = useChains();
+  const { chains, addChain, updateChain, deleteChain, incrementChainUseCount, duplicateChain, exportChain, importChain } = useChains();
   const { presets, addPreset, deletePreset } = usePresets();
 
   const extractVariablesFromPrompt = (text: string): string[] => {
@@ -133,6 +135,7 @@ export function PersonalLibraryView({
   const [targetMoveCategory, setTargetMoveCategory] = useState("");
   const [isCreatingNewMoveCategory, setIsCreatingNewMoveCategory] = useState(false);
   const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
+  const [versionHistoryPrompt, setVersionHistoryPrompt] = useState<PersonalPrompt | null>(null);
 
   const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
     try {
@@ -816,6 +819,14 @@ export function PersonalLibraryView({
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden md:inline">שכפל</span>
             </button>
+            <button
+              onClick={() => setVersionHistoryPrompt(prompt)}
+              className="flex items-center gap-1.5 p-2 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              title="היסטוריית גרסאות"
+            >
+              <History className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">גרסאות</span>
+            </button>
           </div>
         </GlowingEdgeCard>
       );
@@ -1072,6 +1083,9 @@ export function PersonalLibraryView({
                 onUpdateChain={updateChain}
                 onDeleteChain={deleteChain}
                 onIncrementUseCount={incrementChainUseCount}
+                onDuplicateChain={duplicateChain}
+                onExportChain={exportChain}
+                onImportChain={importChain}
                 onUseStep={(text) =>
                   onUsePrompt({
                     id: '',
@@ -1389,6 +1403,20 @@ export function PersonalLibraryView({
                     </div>
                 </div>
             </div>
+        )}
+
+        {/* Version History Modal */}
+        {versionHistoryPrompt && (
+          <VersionHistoryModal
+            promptId={versionHistoryPrompt.id}
+            promptTitle={versionHistoryPrompt.title}
+            onClose={() => setVersionHistoryPrompt(null)}
+            onRestore={(content, title) => {
+              const updates: Partial<PersonalPrompt> = { prompt: content };
+              if (title) updates.title = title;
+              updatePrompt(versionHistoryPrompt.id, updates);
+            }}
+          />
         )}
       </div>
   );

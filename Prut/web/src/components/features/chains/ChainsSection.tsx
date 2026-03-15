@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, ChevronDown } from "lucide-react";
+import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, ChevronDown, Copy, Download, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { PersonalPrompt } from "@/lib/types";
 import { ChainBuilder } from "./ChainBuilder";
 import { ChainRunner } from "./ChainRunner";
+import { toast } from "sonner";
 
 interface ChainsSectionProps {
   chains: PromptChain[];
@@ -21,6 +22,9 @@ interface ChainsSectionProps {
   onDeleteChain: (id: string) => Promise<void>;
   onIncrementUseCount: (id: string) => Promise<void>;
   onUseStep: (promptText: string) => void;
+  onDuplicateChain?: (chain: PromptChain) => Promise<string>;
+  onExportChain?: (chain: PromptChain) => string;
+  onImportChain?: (json: string) => Promise<string>;
 }
 
 export function ChainsSection({
@@ -31,6 +35,9 @@ export function ChainsSection({
   onDeleteChain,
   onIncrementUseCount,
   onUseStep,
+  onDuplicateChain,
+  onExportChain,
+  onImportChain,
 }: ChainsSectionProps) {
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingChain, setEditingChain] = useState<PromptChain | null>(null);
@@ -194,6 +201,28 @@ export function ChainsSection({
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
+                {onDuplicateChain && (
+                  <button
+                    onClick={async () => { await onDuplicateChain(chain); }}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 transition-colors"
+                    title="שכפל"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {onExportChain && (
+                  <button
+                    onClick={() => {
+                      const json = onExportChain(chain);
+                      navigator.clipboard.writeText(json);
+                      toast.success("שרשרת הועתקה ללוח");
+                    }}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 transition-colors"
+                    title="ייצוא"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => onDeleteChain(chain.id)}
                   className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 transition-colors"

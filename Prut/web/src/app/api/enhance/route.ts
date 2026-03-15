@@ -11,6 +11,7 @@ import { ConcurrencyError } from "@/lib/ai/concurrency";
 import { enqueueJob } from "@/lib/jobs/queue";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
+import { validateApiKey } from "@/lib/api-auth";
 
 export const maxDuration = 30;
 
@@ -52,18 +53,31 @@ export async function POST(req: Request) {
 
     supabase = await createClient();
 
-    // Support Bearer token auth for Chrome extension
+    // Support Bearer token auth for Chrome extension + Developer API keys
     const authHeader = req.headers.get("authorization");
     const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
 
-    const { data: { user } } = bearerToken
-        ? await supabase.auth.getUser(bearerToken)
-        : await supabase.auth.getUser();
-    userId = user?.id;
+    let useServiceClient = false;
 
-    // When using Bearer token, RLS won't have auth.uid() set,
-    // so use service role client to bypass RLS for extension requests
-    const queryClient = bearerToken
+    if (bearerToken?.startsWith("prk_")) {
+      // Developer API key auth
+      const apiKeyResult = await validateApiKey(bearerToken);
+      if (!apiKeyResult.valid) {
+        return NextResponse.json({ error: apiKeyResult.error || "Invalid API key" }, { status: 401 });
+      }
+      userId = apiKeyResult.userId;
+      useServiceClient = true;
+    } else {
+      const { data: { user } } = bearerToken
+          ? await supabase.auth.getUser(bearerToken)
+          : await supabase.auth.getUser();
+      userId = userId;
+      if (bearerToken) useServiceClient = true;
+    }
+
+    // When using Bearer token or API key, RLS won't have auth.uid() set,
+    // so use service role client to bypass RLS
+    const queryClient = useServiceClient
         ? createSupabaseClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -72,11 +86,11 @@ export async function POST(req: Request) {
 
     // 1. Context Fetching - check cache for profile/tier first
     let tier: 'free' | 'pro' | 'guest' = 'guest';
-    let isAdmin = user?.app_metadata?.role === 'admin' || false;
+    let isAdmin = false;
     let cachedHit = false;
 
-    if (user) {
-        const cached = profileCache.get(user.id);
+    if (userId) {
+        const cached = profileCache.get(userId);
         if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
             tier = cached.tier as 'free' | 'pro';
             isAdmin = cached.isAdmin;
@@ -86,11 +100,11 @@ export async function POST(req: Request) {
 
     // Parallel fetch: skip profile+admin queries if cached
     // Uses queryClient (service role for Bearer token, regular supabase otherwise)
-    const contextPromise = user ? Promise.all([
-        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle(),
-        !isRefinement ? queryClient.from('personal_library').select('title, prompt').eq('user_id', user.id).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
-        !isRefinement ? queryClient.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
-        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
+    const contextPromise = userId ? Promise.all([
+        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('profiles').select('plan_tier').eq('id', userId).maybeSingle(),
+        !isRefinement ? queryClient.from('personal_library').select('title, prompt').eq('user_id', userId).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
+        !isRefinement ? queryClient.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null }),
+        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle()
     ]) : Promise.resolve([ { data: null }, { data: null }, { data: null }, { data: null } ]);
 
     const [profileRes, historyRes, personalityRes, adminRoleRes] = await contextPromise;
@@ -102,15 +116,15 @@ export async function POST(req: Request) {
         isAdmin = !!adminRoleRes?.data || isAdmin;
 
         // Store in cache
-        if (user) {
-            profileCache.set(user.id, { tier, isAdmin, ts: Date.now() });
+        if (userId) {
+            profileCache.set(userId, { tier, isAdmin, ts: Date.now() });
         }
     }
 
     if (!isAdmin) {
         // 2. Execute Rate Limiting
         const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-        const identifier = user?.id || clientIp;
+        const identifier = userId || clientIp;
         if (!identifier) {
             return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
         }
@@ -123,9 +137,9 @@ export async function POST(req: Request) {
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
         // Uses a single RPC that handles daily refresh + decrement atomically
         // to prevent race conditions with concurrent requests
-        if (user) {
+        if (userId) {
             const { data: creditRes, error: rpcError } = await queryClient.rpc('refresh_and_decrement_credits', {
-                target_user_id: user.id,
+                target_user_id: userId,
                 amount_to_spend: 1,
                 user_tier: tier
             });
@@ -145,7 +159,7 @@ export async function POST(req: Request) {
                         const { data: refreshData } = await queryClient
                             .from('profiles')
                             .select('credits_refreshed_at, credits_balance')
-                            .eq('id', user.id)
+                            .eq('id', userId)
                             .single();
 
                         const lastRefresh = refreshData?.credits_refreshed_at
@@ -168,12 +182,12 @@ export async function POST(req: Request) {
                                     credits_balance: newBalance,
                                     credits_refreshed_at: new Date().toISOString()
                                 })
-                                .eq('id', user.id);
+                                .eq('id', userId);
                         }
                     }
 
                     const { data: fallbackRes, error: fallbackErr } = await queryClient.rpc('check_and_decrement_credits', {
-                        target_user_id: user.id,
+                        target_user_id: userId,
                         amount_to_spend: 1
                     });
 
@@ -201,7 +215,7 @@ export async function POST(req: Request) {
     let userHistory: { title: string; prompt: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined = undefined;
 
-    if (user && !isRefinement) {
+    if (userId && !isRefinement) {
         if (historyRes.data) userHistory = historyRes.data;
 
         if (personalityRes.data) {
@@ -242,7 +256,7 @@ export async function POST(req: Request) {
             // Track API usage for cost analysis
             const usage = completion.usage as { promptTokens?: number; completionTokens?: number } | undefined;
             trackApiUsage({
-                userId: user?.id,
+                userId: userId,
                 modelId,
                 inputTokens: usage?.promptTokens || 0,
                 outputTokens: usage?.completionTokens || 0,
@@ -251,18 +265,18 @@ export async function POST(req: Request) {
             });
 
             // Auto-refund only for genuinely interrupted responses (not normal short completions)
-            if (completion.text.length < 100 && user && supabase) {
+            if (completion.text.length < 100 && userId && supabase) {
                 try {
-                    await queryClient.rpc('refund_credit', { target_user_id: user.id, amount: 1 });
-                    logger.warn('[Enhance] Short response, refunding credit', { userId: user.id, length: completion.text.length });
+                    await queryClient.rpc('refund_credit', { target_user_id: userId, amount: 1 });
+                    logger.warn('[Enhance] Short response, refunding credit', { userId: userId, length: completion.text.length });
                 } catch (e) {
                     logger.error('[EnhanceAPI] Auto-refund failed:', e);
                 }
             }
 
-            if (user && supabase) {
+            if (userId && supabase) {
                 await queryClient.from('activity_logs').insert({
-                    user_id: user.id,
+                    user_id: userId,
                     action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
                     entity_type: 'prompt',
                     details: {
@@ -279,14 +293,14 @@ export async function POST(req: Request) {
                     const { count } = await queryClient
                         .from('activity_logs')
                         .select('*', { count: 'exact', head: true })
-                        .eq('user_id', user.id)
+                        .eq('user_id', userId)
                         .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
 
                     if (count && count % 20 === 0) {
-                        await enqueueJob('style_analysis', { userId: user.id });
+                        await enqueueJob('style_analysis', { userId: userId });
                     }
 
-                    await enqueueJob('achievement_check', { userId: user.id });
+                    await enqueueJob('achievement_check', { userId: userId });
 
                 } catch (bgError) {
                     logger.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);

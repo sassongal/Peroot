@@ -119,11 +119,39 @@ async function checkAuth() {
 }
 
 /**
- * Build fetch headers with Authorization bearer token.
+ * Get API key from storage (user-configured in settings).
+ */
+async function getApiKey() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("peroot_api_key", (data) => {
+      resolve(data.peroot_api_key || null);
+    });
+  });
+}
+
+/**
+ * Save API key to storage.
+ */
+async function saveApiKey(key) {
+  if (key) {
+    await chrome.storage.local.set({ peroot_api_key: key });
+  } else {
+    await chrome.storage.local.remove("peroot_api_key");
+  }
+}
+
+/**
+ * Build fetch headers with Authorization.
+ * Prefers API key (prk_*) if configured, falls back to Bearer token.
  */
 async function getAuthHeaders(extra = {}) {
-  const token = await getAuthToken();
   const headers = { ...extra };
+  const apiKey = await getApiKey();
+  if (apiKey && apiKey.startsWith("prk_")) {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+    return headers;
+  }
+  const token = await getAuthToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
   return headers;
 }

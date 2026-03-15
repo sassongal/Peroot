@@ -129,6 +129,40 @@ export async function GET(request: Request) {
         .eq('id', data.session.user.id);
 
       logger.info('[Callback] New user registration bonus granted:', totalCredits, 'credits');
+
+      // Auto-redeem referral code if present in cookie
+      const referralCode = cookieStore.get('referral_code')?.value;
+      if (referralCode) {
+        try {
+          const { data: redeemResult } = await supabase.rpc('redeem_referral_code', {
+            referral_code: referralCode,
+          });
+          if (redeemResult?.success) {
+            logger.info('[Callback] Referral code redeemed:', referralCode, 'credits:', redeemResult.credits_awarded);
+          } else {
+            logger.info('[Callback] Referral code not redeemed:', redeemResult?.error);
+          }
+          // Clear the cookie regardless of outcome
+          response.cookies.set('referral_code', '', { path: '/', maxAge: 0 });
+        } catch (refErr) {
+          logger.error('[Callback] Failed to redeem referral code:', refErr);
+        }
+      }
+
+      // Start onboarding email sequence
+      try {
+        await supabase
+          .from('email_sequences')
+          .insert({
+            user_id: data.session.user.id,
+            sequence_type: 'onboarding',
+            current_step: 0,
+            status: 'active',
+          });
+        logger.info('[Callback] Onboarding email sequence started');
+      } catch (seqErr) {
+        logger.error('[Callback] Failed to start email sequence:', seqErr);
+      }
     } catch (e) {
       logger.error('[Callback] Failed to grant registration bonus:', e);
     }

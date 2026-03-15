@@ -10,8 +10,8 @@ import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { toast } from "sonner"; // Assuming sonner is available for error toasts
+import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
+import { toast } from "sonner";
 
 interface PromptInputProps {
   inputVal: string;
@@ -96,7 +96,9 @@ export function PromptInput({
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [interimResult, setInterimResult] = useState("");
-    
+    const [voiceLang, setVoiceLang] = useState<VoiceLang>('he-IL');
+    const [showLangPicker, setShowLangPicker] = useState(false);
+
     // Performance optimization: Memoize heavy text processing
     // This prevents re-calculation when other props (like loading state) change
     const displayValue = inputVal + (interimResult ? (inputVal && !inputVal.endsWith(' ') ? ' ' : '') + interimResult : '');
@@ -129,7 +131,8 @@ export function PromptInput({
         onError: (err) => {
             toast.error("שגיאה בהקלטה: " + err);
             setInterimResult("");
-        }
+        },
+        lang: voiceLang,
     });
 
   useEffect(() => {
@@ -284,15 +287,15 @@ export function PromptInput({
               </div>
             )}
 
-            {/* Voice Input Trigger */}
+            {/* Voice Input Trigger + Language Picker */}
             {isSupported && (
-               <div className="absolute top-4 start-4 z-30">
-                   <button 
+               <div className="absolute top-4 start-4 z-30 flex items-center gap-1.5">
+                   <button
                      onClick={toggleListening}
                      className={cn(
                        "p-2.5 rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
-                       isListening 
-                         ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse" 
+                       isListening
+                         ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
                          : "bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
                      )}
                      title={isListening ? "עצור הקלטה" : "הקלט קולית"}
@@ -304,8 +307,38 @@ export function PromptInput({
                            <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
                        )}
                    </button>
+                   {/* Language picker */}
+                   <div className="relative">
+                     <button
+                       onClick={() => setShowLangPicker(prev => !prev)}
+                       className="px-2 py-1.5 rounded-full text-xs bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
+                       title="שפת הקלטה"
+                       aria-label="בחר שפת הקלטה"
+                     >
+                       {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.flag ?? '🌐'}
+                     </button>
+                     {showLangPicker && (
+                       <div className="absolute top-full start-0 mt-1.5 bg-zinc-900/95 border border-white/10 rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 min-w-[140px]">
+                         {VOICE_LANGUAGES.map(lang => (
+                           <button
+                             key={lang.code}
+                             onClick={() => { setVoiceLang(lang.code); setShowLangPicker(false); }}
+                             className={cn(
+                               "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
+                               voiceLang === lang.code
+                                 ? "bg-amber-500/10 text-amber-300"
+                                 : "text-slate-300 hover:bg-white/5"
+                             )}
+                           >
+                             <span>{lang.flag}</span>
+                             <span>{lang.label}</span>
+                           </button>
+                         ))}
+                       </div>
+                     )}
+                   </div>
                    {isListening && (
-                       <span className="absolute top-full start-1/2 -translate-x-1/2 mt-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                       <span className="absolute top-full start-0 mt-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
                            מקליט...
                        </span>
                    )}

@@ -64,6 +64,34 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }, 100);
 });
 
+// ─── Keyboard Shortcut: Alt+Shift+E to enhance selection ───
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== "enhance-selection") return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+
+  try {
+    await chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["content/content.css"],
+    });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content/content.js"],
+    });
+  } catch (err) {
+    console.warn("[Peroot] Cannot inject into this page:", err.message);
+    return;
+  }
+
+  // Get selected text and trigger enhancement
+  setTimeout(() => {
+    chrome.tabs.sendMessage(tab.id, {
+      type: "ENHANCE_KEYBOARD_SHORTCUT",
+    });
+  }, 100);
+});
+
 // ─── Auto-sync token when user navigates to peroot.space ───
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (

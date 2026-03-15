@@ -64,6 +64,20 @@ export function ChainBuilder({
     });
   };
 
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => setDragIndex(index);
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
+    const newSteps = [...steps];
+    const [moved] = newSteps.splice(dragIndex, 1);
+    newSteps.splice(index, 0, moved);
+    setSteps(newSteps.map((s, i) => ({ ...s, order: i })));
+    setDragIndex(index);
+  };
+  const handleDragEnd = () => setDragIndex(null);
+
   const handleSave = () => {
     if (!title.trim()) return;
     const validSteps = steps.filter(s => s.prompt_text.trim());
@@ -122,9 +136,18 @@ export function ChainBuilder({
                   <ArrowDown className="w-4 h-4 text-amber-500/50" />
                 </div>
               )}
-              <div className="border border-white/10 rounded-xl p-4 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+              <div
+                className={cn(
+                  "border border-white/10 rounded-xl p-4 bg-white/[0.02] hover:bg-white/[0.04] transition-colors",
+                  dragIndex === index && "opacity-50 border-amber-500/30"
+                )}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={e => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+              >
                 <div className="flex items-center gap-3 mb-3">
-                  <GripVertical className="w-4 h-4 text-slate-600 cursor-grab" />
+                  <GripVertical className="w-4 h-4 text-slate-600 cursor-grab active:cursor-grabbing" />
                   <span className="text-xs font-bold text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-full">
                     שלב {index + 1}
                   </span>

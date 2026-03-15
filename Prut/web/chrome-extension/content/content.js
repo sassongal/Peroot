@@ -82,6 +82,12 @@ if (!window.__peerootContentLoaded) {
     if (message.type === "INSERT_TEXT") {
       insertIntoActive(message.text);
     }
+    if (message.type === "ENHANCE_KEYBOARD_SHORTCUT") {
+      const sel = window.getSelection()?.toString()?.trim();
+      if (sel) {
+        handleEnhance(sel, "enhance");
+      }
+    }
   });
 
   document.addEventListener("keydown", (e) => {
@@ -350,5 +356,121 @@ if (!window.__peerootContentLoaded) {
       document.addEventListener("mouseup", up);
       e.preventDefault();
     });
+  }
+
+  // ─── Inline Enhance Button ───
+  // Shows a small floating button when user focuses a text input with content
+  let inlineBtn = null;
+  let inlineTarget = null;
+  let inlineHideTimer = null;
+
+  function createInlineBtn() {
+    if (inlineBtn) return inlineBtn;
+    const btn = document.createElement("div");
+    btn.id = "peroot-inline-btn";
+    btn.innerHTML = `<span class="peroot-inline-icon">⚡</span><span class="peroot-inline-label">שדרג</span>`;
+    btn.style.cssText = `
+      all: initial;
+      position: fixed;
+      z-index: 2147483646;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #111113;
+      border: 1px solid rgba(251,191,36,0.25);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fbbf24;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.15s, transform 0.15s;
+      pointer-events: auto;
+      direction: rtl;
+    `;
+    btn.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!inlineTarget) return;
+      const text = getFieldValue(inlineTarget);
+      if (text) handleEnhance(text, "enhance");
+    });
+    btn.addEventListener("mouseenter", () => clearTimeout(inlineHideTimer));
+    btn.addEventListener("mouseleave", () => scheduleHideInline());
+    document.body.appendChild(btn);
+    inlineBtn = btn;
+    return btn;
+  }
+
+  function getFieldValue(el) {
+    if (!el) return "";
+    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") return el.value.trim();
+    if (el.isContentEditable) return el.textContent.trim();
+    return "";
+  }
+
+  function showInlineBtn(el) {
+    clearTimeout(inlineHideTimer);
+    const text = getFieldValue(el);
+    if (!text || text.length < 10) { hideInlineBtn(); return; }
+
+    inlineTarget = el;
+    const btn = createInlineBtn();
+    const rect = el.getBoundingClientRect();
+
+    // Position at top-left of field
+    let top = rect.top - 32;
+    let left = rect.left;
+    if (top < 4) top = rect.bottom + 4;
+    if (left + 80 > window.innerWidth) left = window.innerWidth - 84;
+
+    btn.style.top = `${top}px`;
+    btn.style.left = `${left}px`;
+    requestAnimationFrame(() => {
+      btn.style.opacity = "1";
+      btn.style.transform = "translateY(0)";
+    });
+  }
+
+  function hideInlineBtn() {
+    if (!inlineBtn) return;
+    inlineBtn.style.opacity = "0";
+    inlineBtn.style.transform = "translateY(4px)";
+    inlineTarget = null;
+  }
+
+  function scheduleHideInline() {
+    clearTimeout(inlineHideTimer);
+    inlineHideTimer = setTimeout(hideInlineBtn, 300);
+  }
+
+  // Skip inline button on peroot.space itself
+  if (!window.location.hostname.includes("peroot.space")) {
+    document.addEventListener("focusin", (e) => {
+      const el = e.target;
+      if (
+        el.tagName === "TEXTAREA" ||
+        (el.tagName === "INPUT" && ["text", "search", "url", "email", ""].includes(el.type)) ||
+        el.isContentEditable
+      ) {
+        // Check after short delay to let value populate
+        setTimeout(() => showInlineBtn(el), 200);
+      }
+    }, true);
+
+    document.addEventListener("focusout", (e) => {
+      scheduleHideInline();
+    }, true);
+
+    // Update button visibility on input
+    document.addEventListener("input", (e) => {
+      if (e.target === inlineTarget) {
+        showInlineBtn(e.target);
+      }
+    }, true);
   }
 }

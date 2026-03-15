@@ -153,5 +153,48 @@ export function useChains() {
     }
   };
 
-  return { chains, isLoaded, addChain, updateChain, deleteChain, incrementChainUseCount };
+  const duplicateChain = async (chain: PromptChain) => {
+    return addChain({
+      title: `${chain.title} (עותק)`,
+      description: chain.description,
+      steps: chain.steps.map(s => ({ ...s, id: crypto.randomUUID() })),
+      is_pinned: false,
+    });
+  };
+
+  const reorderSteps = (chainId: string, fromIndex: number, toIndex: number) => {
+    setChains(prev => prev.map(c => {
+      if (c.id !== chainId) return c;
+      const newSteps = [...c.steps];
+      const [moved] = newSteps.splice(fromIndex, 1);
+      newSteps.splice(toIndex, 0, moved);
+      return { ...c, steps: newSteps.map((s, i) => ({ ...s, order: i })), updated_at: new Date().toISOString() };
+    }));
+    if (user) {
+      const chain = chains.find(c => c.id === chainId);
+      if (chain) {
+        const newSteps = [...chain.steps];
+        const [moved] = newSteps.splice(fromIndex, 1);
+        newSteps.splice(toIndex, 0, moved);
+        supabase.from('prompt_chains').update({ steps: newSteps.map((s, i) => ({ ...s, order: i })) }).eq('id', chainId).eq('user_id', user.id);
+      }
+    }
+  };
+
+  const exportChain = (chain: PromptChain): string => {
+    return JSON.stringify({ title: chain.title, description: chain.description, steps: chain.steps }, null, 2);
+  };
+
+  const importChain = async (json: string) => {
+    const parsed = JSON.parse(json);
+    if (!parsed.title || !Array.isArray(parsed.steps)) throw new Error("Invalid chain format");
+    return addChain({
+      title: parsed.title,
+      description: parsed.description || "",
+      steps: parsed.steps.map((s: ChainStep, i: number) => ({ ...s, id: crypto.randomUUID(), order: i })),
+      is_pinned: false,
+    });
+  };
+
+  return { chains, isLoaded, addChain, updateChain, deleteChain, incrementChainUseCount, duplicateChain, reorderSteps, exportChain, importChain };
 }

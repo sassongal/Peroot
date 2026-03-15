@@ -4,15 +4,25 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { logger } from "@/lib/logger";
 
 
+export const VOICE_LANGUAGES = [
+  { code: 'he-IL', label: 'עברית', flag: '🇮🇱' },
+  { code: 'en-US', label: 'English', flag: '🇺🇸' },
+  { code: 'ar-SA', label: 'العربية', flag: '🇸🇦' },
+  { code: 'ru-RU', label: 'Русский', flag: '🇷🇺' },
+] as const;
+
+export type VoiceLang = typeof VOICE_LANGUAGES[number]['code'];
+
 interface UseVoiceRecorderProps {
   onResult: (text: string, isFinal: boolean) => void;
   onError?: (error: string) => void;
+  lang?: VoiceLang;
 }
 
-export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
+export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoiceRecorderProps) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  
+
   // Keep callbacks in refs to prevent effect re-running
   const onResultRef = useRef(onResult);
   const onErrorRef = useRef(onError);
@@ -33,7 +43,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'he-IL';
+    recognition.lang = lang;
 
     recognition.onstart = () => {
       logger.info("Recording Started");
@@ -62,7 +72,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
           interimTranscript += event.results[i][0].transcript;
         }
       }
-      
+
       logger.info("Voice Result:", { final: finalTranscript, interim: interimTranscript });
 
       if (finalTranscript || interimTranscript) {
@@ -77,7 +87,7 @@ export function useVoiceRecorder({ onResult, onError }: UseVoiceRecorderProps) {
         recognitionRef.current.abort();
       }
     };
-  }, []); // Empty dependency array - only init once!
+  }, [lang]); // Re-init when language changes
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {

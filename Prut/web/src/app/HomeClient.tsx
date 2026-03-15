@@ -509,21 +509,44 @@ function PageContent({ user }: { user: User | null }) {
       const target = e.target as HTMLElement;
       const isTyping = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 
+      // Escape — clear result (when not typing)
       if (e.key === 'Escape' && !isTyping) {
         if (ps.completion) {
           dispatch({ type: 'SET_COMPLETION', payload: '' });
         }
       }
+      // Cmd+Shift+C — copy result
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
         if (ps.completion) {
           e.preventDefault();
           handleCopyTextRef.current?.(ps.completion);
         }
       }
+      // Cmd+K — focus prompt input
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      // Cmd+L — open library
+      if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
+        e.preventDefault();
+        setViewMode("personal");
+      }
+      // Cmd+B — toggle sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        if (!isTyping) {
+          e.preventDefault();
+          setSidebarOpen(prev => !prev);
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [ps.completion, dispatch]);
+  }, [ps.completion, dispatch, setViewMode, setSidebarOpen]);
 
   const handleShare = async () => {
     if (!user) {
@@ -701,6 +724,18 @@ function PageContent({ user }: { user: User | null }) {
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">העתק תוצאה</span>
                 <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘⇧C</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">מיקוד על קלט</span>
+                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘K</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">ספריה אישית</span>
+                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘L</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">תפריט צד</span>
+                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘B</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">נקה תוצאה</span>

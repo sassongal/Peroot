@@ -45,6 +45,17 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Capture referral code from URL (?ref=CODE) into a cookie for redemption after signup
+  const refCode = request.nextUrl.searchParams.get('ref');
+  if (refCode && !request.cookies.get('referral_code')) {
+    supabaseResponse.cookies.set('referral_code', refCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      httpOnly: true,
+      sameSite: 'lax',
+    });
+  }
+
   // 🛠️ MAINTENANCE MODE ENFORCEMENT
   // We check this first to block all non-admin traffic if maintenance is active
   const isMaintenance = await getCachedMaintenanceMode();
