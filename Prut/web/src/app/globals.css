@@ -625,12 +625,13 @@ a:focus-visible,
 
 /* ===== MENU BUTTON PULSE ===== */
 @keyframes menu-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
-  50% { box-shadow: 0 0 12px 2px rgba(245, 158, 11, 0.15); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
 }
 
 .animate-menu-pulse {
   animation: menu-pulse 3s ease-in-out 2;
+  will-change: opacity;
 }
 
 /* ===== HERO LOGO ANIMATION SYSTEM ===== */
@@ -655,9 +656,11 @@ a:focus-visible,
   position: relative;
   z-index: 10;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   animation: hero-logo-float 4s ease-in-out infinite;
   filter: drop-shadow(0 0 30px rgba(245, 158, 11, 0.3));
+  contain: layout;
 }
 
 /* Floating animation for logo */

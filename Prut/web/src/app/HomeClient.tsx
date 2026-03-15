@@ -919,7 +919,7 @@ function PageContent({ user }: { user: User | null }) {
                          <span className="text-xs font-bold text-amber-400/80 uppercase tracking-wider">פרומפט היום</span>
                        </div>
                        <div className="p-5 flex flex-col gap-3">
-                         <h4 className="text-base font-semibold text-slate-200" dir="rtl">{promptOfTheDay.title}</h4>
+                         <h3 className="text-base font-semibold text-slate-200" dir="rtl">{promptOfTheDay.title}</h3>
                          <p className="text-sm text-slate-400 leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
                          <div className="flex items-center gap-2 mt-1">
                            <button

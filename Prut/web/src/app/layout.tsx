@@ -145,8 +145,10 @@ export default async function RootLayout({
   const dictionary = await getDictionary(locale);
 
   return (
-    <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark">
+    <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
       <head>
+        {/* Preload LCP image to eliminate load delay */}
+        <link rel="preload" href="/Peroot.svg" as="image" type="image/svg+xml" fetchPriority="high" />
         {/* PWA Splash Screens */}
         <link rel="apple-touch-startup-image" href="/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
         <link rel="apple-touch-startup-image" href="/splash-iphone-pro.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />

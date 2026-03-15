@@ -358,6 +358,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               value={librarySort}
               onChange={(e) => setLibrarySort(e.target.value as "popularity" | "title" | "newest" | "rating")}
               className="shrink-0 bg-black/30 border border-white/10 rounded-lg py-2.5 px-2.5 min-h-[44px] text-base md:text-sm text-slate-200 focus:outline-none focus:border-white/30"
+              aria-label="מיון פרומפטים"
             >
               <option value="popularity">פופולריות</option>
               <option value="title">א-ב</option>
@@ -479,7 +480,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   {/* Title + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm md:text-base text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h4>
+                      <h3 className="text-sm md:text-base text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
                       <CapabilityBadge mode={prompt.capability_mode} />
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">{prompt.use_case}</p>
