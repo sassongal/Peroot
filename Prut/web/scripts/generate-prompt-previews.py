@@ -8,7 +8,10 @@ import time
 import base64
 import requests
 
-API_KEY = os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY", "AIzaSyDiDxtKfFybjEPo-EhsikLVnXT7CPneUHo")
+API_KEY = os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY")
+if not API_KEY:
+    print("ERROR: Set GOOGLE_GENERATIVE_AI_API_KEY environment variable")
+    sys.exit(1)
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "images", "prompts")
 MODEL = "gemini-2.5-flash-image"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
