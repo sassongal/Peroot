@@ -124,6 +124,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
+import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/ui/CookieConsent";
@@ -145,6 +146,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <GoogleAnalytics />
+        <ServiceWorkerRegistration />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             דלג לתוכן הראשי

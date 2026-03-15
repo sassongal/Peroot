@@ -12,7 +12,7 @@ export function TopLogo({ hidden }: { hidden?: boolean }) {
       <Link href="/" className="pointer-events-auto block hover:opacity-80 transition-opacity">
         <Image
           src={getAssetPath("/assets/branding/logo.svg")}
-          alt="Peroot"
+          alt="לוגו פרוט"
           width={40}
           height={40}
           className="h-8 md:h-10 w-auto drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)]"

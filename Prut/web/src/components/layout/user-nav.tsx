@@ -107,7 +107,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
           {avatarUrl ? (
             <img
               src={avatarUrl}
-              alt="User"
+              alt="תמונת פרופיל"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
               loading="lazy"
@@ -137,7 +137,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                <div className="p-4 border-b border-white/10 flex flex-col gap-3 bg-white/5">
                    {/* Embedded Logo in Menu */}
                    <div className="flex justify-center pb-2 border-b border-white/5">
-                        <Image src={getAssetPath("/logo.svg")} alt="Peroot" width={80} height={20} className="h-5 w-auto opacity-70" />
+                        <Image src={getAssetPath("/logo.svg")} alt="לוגו פרוט" width={80} height={20} className="h-5 w-auto opacity-70" />
                    </div>
                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden shrink-0 border border-white/10">

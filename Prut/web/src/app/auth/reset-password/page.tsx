@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
           <div className="flex justify-center mb-8">
             <Image
               src={getAssetPath("/assets/branding/logo.svg")}
-              alt="Peroot"
+              alt="לוגו פרוט"
               width={48}
               height={48}
               className="h-12 w-auto brightness-110 contrast-110"
