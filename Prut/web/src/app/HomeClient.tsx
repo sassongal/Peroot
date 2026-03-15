@@ -613,6 +613,10 @@ function PageContent({ user }: { user: User | null }) {
       }
   };
 
+  const prefetchPersonalLibrary = useCallback(() => {
+    import("@/components/views/PersonalLibraryView");
+  }, []);
+
   const handleNavPersonal = () => {
      setViewMode("personal");
      setPersonalView("all");
@@ -763,6 +767,8 @@ function PageContent({ user }: { user: User | null }) {
         <div className="flex flex-col gap-2 p-4">
           <button
             onClick={() => { handleNavPersonal(); setSidebarOpen(false); }}
+            onMouseEnter={prefetchPersonalLibrary}
+            onTouchStart={prefetchPersonalLibrary}
             className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
           >
             <BookOpen className="w-5 h-5" />
