@@ -7,7 +7,10 @@ import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
-import { HistoryPanel } from "@/components/features/history/HistoryPanel";
+const HistoryPanel = dynamic(
+  () => import("@/components/features/history/HistoryPanel").then(mod => mod.HistoryPanel),
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-64" /> }
+);
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { UserMenu } from "@/components/layout/user-nav";
@@ -20,8 +23,14 @@ const ResultSection = dynamic(
   () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-64" /> }
 );
-import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
-import { WhatIsThisModal } from "@/components/ui/WhatIsThisModal";
+const LoginRequiredModal = dynamic(
+  () => import("@/components/ui/LoginRequiredModal").then(mod => mod.LoginRequiredModal),
+  { ssr: false }
+);
+const WhatIsThisModal = dynamic(
+  () => import("@/components/ui/WhatIsThisModal").then(mod => mod.WhatIsThisModal),
+  { ssr: false }
+);
 const FAQBubble = dynamic(
   () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
   { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-white/[0.04] w-12 h-12" /> }
@@ -34,7 +43,10 @@ import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { createClient } from "@/lib/supabase/client";
-import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
+const OnboardingOverlay = dynamic(
+  () => import("@/components/ui/OnboardingOverlay").then(mod => mod.OnboardingOverlay),
+  { ssr: false }
+);
 import { useLibraryContext } from "@/context/LibraryContext";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 const LibraryView = dynamic(
@@ -45,10 +57,19 @@ const PersonalLibraryView = dynamic(
   () => import("@/components/views/PersonalLibraryView").then(mod => mod.PersonalLibraryView),
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-96" /> }
 );
-import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
-import StreamingProgress from "@/components/ui/StreamingProgress";
+const LoadingOverlay = dynamic(
+  () => import("@/components/ui/LoadingOverlay").then(mod => mod.LoadingOverlay),
+  { ssr: false }
+);
+const StreamingProgress = dynamic(
+  () => import("@/components/ui/StreamingProgress"),
+  { ssr: false }
+);
 import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock } from "lucide-react";
-import UpgradeNudge from "@/components/features/prompt-improver/UpgradeNudge";
+const UpgradeNudge = dynamic(
+  () => import("@/components/features/prompt-improver/UpgradeNudge"),
+  { ssr: false }
+);
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
 import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
