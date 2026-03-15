@@ -3,45 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from "@/lib/ratelimit";
 import { z } from "zod";
 
-// TEMP debug
-export async function GET() {
-  const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
-  const storeId = process.env.LEMONSQUEEZY_STORE_ID?.trim();
-  if (!apiKey || !storeId) {
-    return NextResponse.json({ error: 'missing', hasKey: !!apiKey, hasStore: !!storeId });
-  }
-  const res = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/vnd.api+json',
-      'Content-Type': 'application/vnd.api+json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      data: {
-        type: 'checkouts',
-        attributes: {
-          checkout_options: { embed: false, media: false },
-          checkout_data: { email: 'test@peroot.space', custom: { user_id: 'debug' } },
-          product_options: { redirect_url: 'https://peroot.space/settings?tab=billing&success=true' },
-        },
-        relationships: {
-          store: { data: { type: 'stores', id: storeId } },
-          variant: { data: { type: 'variants', id: '1395097' } },
-        },
-      },
-    }),
-  });
-  const text = await res.text();
-  return NextResponse.json({
-    status: res.status,
-    keyLen: apiKey.length,
-    keyStart: apiKey.substring(0, 15),
-    keyEnd: apiKey.substring(apiKey.length - 10),
-    body: text.substring(0, 2000),
-  });
-}
-
 const CheckoutSchema = z.object({
   variantId: z.string().min(1).transform(v => v.trim()),
 });

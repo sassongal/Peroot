@@ -15,8 +15,8 @@ export const rateLimiters = {
   }),
   free: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(100, '24 h'),
-    prefix: '@peroot/ratelimit:free2',
+    limiter: Ratelimit.slidingWindow(10, '24 h'),
+    prefix: '@peroot/ratelimit:free',
   }),
   pro: new Ratelimit({
     redis,
