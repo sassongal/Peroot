@@ -44,9 +44,10 @@ const SCORING_DIMENSIONS: {
     tip: "הוסף עוד פרטים והקשר",
     test: (_text, wc) => {
       if (wc <= 3) return 0;
-      if (wc <= 6) return 3;
-      if (wc <= 12) return 6;
-      if (wc <= 25) return 9;
+      if (wc <= 6) return 2;
+      if (wc <= 12) return 4;
+      if (wc <= 25) return 7;
+      if (wc <= 50) return 10;
       return 12;
     },
   },
@@ -291,7 +292,7 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
      }
 
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints?\n2. SPECIFICITY: Are instructions concrete and measurable, not vague?\n3. STRUCTURE: Is the prompt using clear delimiters and logical flow?\n4. ACTIONABILITY: Will an LLM know exactly what to produce on first read?\n\nFill any gaps you identify by inferring from the user's intent and category.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format that would most improve the prompt's effectiveness.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs — what should the LLM do if info is missing?\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own — that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format that would most improve the prompt's effectiveness. Questions should target the HIGHEST-IMPACT gaps — the details that would most change the output quality.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
          userPrompt: this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
@@ -315,20 +316,22 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
         }
 
         return {
-            systemPrompt: `אתה מהנדס פרומפטים מומחה. משימתך: לשדרג את הפרומפט הקיים על בסיס המשוב והתשובות של המשתמש.
+            systemPrompt: `אתה מהנדס פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מקצוענות מושלמת, על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
 
 כללים:
-1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט.
-2. שמור על המבנה המקצועי: תפקיד, משימה, הקשר, פורמט, מגבלות.
-3. שפר את הדיוק והספציפיות בכל מקום שאפשר.
+1. שלב את כל התשובות והמשוב לתוך הפרומפט — אל תתעלם מאף פרט, גם הקטן ביותר.
+2. שמור ושפר את המבנה המקצועי: תפקיד, משימה, הקשר, פורמט, מגבלות.
+3. שפר את הדיוק והספציפיות בכל מקום שאפשר — החלף הוראות מעורפלות בהוראות מדידות.
 4. הפלט חייב להיות בעברית בלבד.
-5. אל תוסיף הסברים - רק את הפרומפט המשודרג.
+5. אל תוסיף הסברים — רק את הפרומפט המשודרג.
+6. כל גרסה חדשה חייבת להיות טובה משמעותית מהקודמת — לא רק שינוי קוסמטי.
+7. אם התשובות חושפות כיוון חדש — הרחב את הפרומפט בהתאם, אל תשאיר פערים.
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
 ${this.getSystemIdentity()}
 
-After the improved prompt, add the delimiter [GENIUS_QUESTIONS] followed by up to 3 NEW questions if further details would significantly help, or an empty array [] if the prompt is now comprehensive.`,
+After the improved prompt, add the delimiter [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact gaps, or an empty array [] if the prompt is now comprehensive.`,
             userPrompt: `הפרומפט הנוכחי:
 ---
 ${input.previousResult}

@@ -441,7 +441,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     let isMounted = true;
     const loadPopularity = async () => {
       try {
-        const response = await fetch(getApiPath("/api/library-popularity"), { cache: "no-store" });
+        const response = await fetch(getApiPath("/api/library-popularity"), { next: { revalidate: 60 } });
         if (!response.ok) throw new Error(`Failed to load popularity: ${response.status}`);
         const data = await response.json();
         if (!data?.popularity) return;

@@ -181,11 +181,15 @@ export function useLibrary() {
                        }));
                        
                        // Perform Bulk Insert
-                       await supabase.from('personal_library').insert(itemsToInsert);
-                       
-                       localStorage.removeItem(STORAGE_KEY);
-                       localStorage.removeItem(getCategoriesKey(null));
-                       localStorage.removeItem(ORDER_KEY);
+                       const { error: insertError } = await supabase.from('personal_library').insert(itemsToInsert);
+
+                       if (insertError) {
+                         logger.error("Migration insert failed", insertError);
+                       } else {
+                         localStorage.removeItem(STORAGE_KEY);
+                         localStorage.removeItem(getCategoriesKey(null));
+                         localStorage.removeItem(ORDER_KEY);
+                       }
                    }
                } catch (e) {
                    logger.error("Migration failed", e);

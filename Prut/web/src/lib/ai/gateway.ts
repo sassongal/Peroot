@@ -77,8 +77,8 @@ export class AIGateway {
 
                     return { result, modelId };
 
-                } catch (error: any) {
-                    const errorMessage = error?.message || String(error);
+                } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
                     console.error(`[AIGateway] Failed with ${modelId}:`, errorMessage);
 
                     // Record failure for circuit breaker

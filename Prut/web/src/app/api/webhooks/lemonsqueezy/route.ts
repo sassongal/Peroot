@@ -115,19 +115,25 @@ export async function POST(request: Request) {
         if (error) {
           logger.error('[LemonSqueezy Webhook] Update error:', error);
           // Try upsert as fallback
-          await supabase
+          const { error: upsertError } = await supabase
             .from('subscriptions')
             .upsert(subscriptionData, { onConflict: 'user_id' });
+          if (upsertError) {
+            logger.error('[LemonSqueezy Webhook] Upsert fallback error:', upsertError);
+          }
         }
       }
 
       // Sync plan_tier in profiles table (used by rate limiter / enhance API)
       if (userId) {
         const isActivePro = ['active', 'on_trial'].includes(attributes.status);
-        await supabase
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({ plan_tier: isActivePro ? 'pro' : 'free' })
           .eq('id', userId);
+        if (profileError) {
+          logger.error('[LemonSqueezy Webhook] Profile plan_tier update error:', profileError);
+        }
 
         // Grant monthly credits on subscription creation or renewal payment
         const PRO_MONTHLY_CREDITS = 150;
@@ -136,13 +142,16 @@ export async function POST(request: Request) {
           (eventName === 'subscription_created' || eventName === 'subscription_payment_success')
         ) {
           // Set balance to PRO_MONTHLY_CREDITS (monthly reset, not additive)
-          await supabase
+          const { error: creditsError } = await supabase
             .from('profiles')
             .update({
               credits_balance: PRO_MONTHLY_CREDITS,
               credits_refreshed_at: new Date().toISOString(),
             })
             .eq('id', userId);
+          if (creditsError) {
+            logger.error('[LemonSqueezy Webhook] Credits update error:', creditsError);
+          }
 
           logger.info(`[LemonSqueezy Webhook] Granted ${PRO_MONTHLY_CREDITS} credits to pro user ${userId}`);
         }

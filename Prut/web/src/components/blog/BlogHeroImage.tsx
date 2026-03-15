@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Image from "next/image";
 
 interface BlogHeroImageProps {
@@ -42,7 +43,7 @@ function truncateExcerpt(text: string, maxLength = 100): string {
   return (lastSpace > maxLength * 0.7 ? truncated.slice(0, lastSpace) : truncated) + "...";
 }
 
-export function BlogHeroImage({ title, category, excerpt }: BlogHeroImageProps) {
+export const BlogHeroImage = memo(function BlogHeroImage({ title, category, excerpt }: BlogHeroImageProps) {
   const config = resolveConfig(category);
   const displayedCategory = category || "מדריכים";
   const truncatedExcerpt = excerpt ? truncateExcerpt(excerpt) : undefined;
@@ -151,4 +152,6 @@ export function BlogHeroImage({ title, category, excerpt }: BlogHeroImageProps) 
       </div>
     </div>
   );
-}
+});
+
+BlogHeroImage.displayName = "BlogHeroImage";

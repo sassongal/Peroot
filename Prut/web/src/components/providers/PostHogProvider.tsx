@@ -26,7 +26,10 @@ function PostHogPageView() {
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
-        initAnalytics();
+        const timer = setTimeout(() => {
+            initAnalytics();
+        }, 5000);
+        return () => clearTimeout(timer);
     }, []);
 
     return (

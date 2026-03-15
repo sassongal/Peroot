@@ -23,7 +23,7 @@ const DEFAULT_THEME = { accent: "#f59e0b", glow: "rgba(245,158,11,0.15)", emoji:
 // Fetch and cache the Hebrew font at module level
 const hebrewFont = fetch(
   "https://fonts.gstatic.com/s/notosanshebrew/v46/or3HQ7v33eiDljA1IufXTtVf7V6RvEEdhQlk0LlGxCyaeNKYZC0sq0G1.woff2"
-).then((res) => res.arrayBuffer());
+).then((res) => res.arrayBuffer()).catch(() => null);
 
 export async function GET(req: NextRequest) {
   const fontData = await hebrewFont;
@@ -166,14 +166,16 @@ export async function GET(req: NextRequest) {
     {
       width: 1200,
       height: 630,
-      fonts: [
-        {
-          name: "Noto Sans Hebrew",
-          data: fontData,
-          style: "normal",
-          weight: 700,
-        },
-      ],
+      fonts: fontData
+        ? [
+            {
+              name: "Noto Sans Hebrew",
+              data: fontData,
+              style: "normal",
+              weight: 700,
+            },
+          ]
+        : undefined,
     }
   );
 }

@@ -3,8 +3,32 @@
 import { Trash2, History, ArrowRight, Plus, Copy, Search, Filter, Clock } from "lucide-react";
 import { HistoryItem } from "@/hooks/useHistory";
 import { CATEGORY_LABELS } from "@/lib/constants";
-import { formatDistanceToNow } from 'date-fns';
-import { he } from 'date-fns/locale';
+/**
+ * Lightweight Hebrew relative-time formatter replacing date-fns.
+ */
+function formatTimeAgo(date: Date): string {
+  const seconds = Math.round((Date.now() - date.getTime()) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+  const weeks = Math.round(days / 7);
+  const months = Math.round(days / 30);
+  const years = Math.round(days / 365);
+
+  if (seconds < 60) return 'לפני כמה שניות';
+  if (minutes === 1) return 'לפני דקה';
+  if (minutes < 60) return `לפני ${minutes} דקות`;
+  if (hours === 1) return 'לפני שעה';
+  if (hours < 24) return `לפני ${hours} שעות`;
+  if (days === 1) return 'לפני יום';
+  if (days < 7) return `לפני ${days} ימים`;
+  if (weeks === 1) return 'לפני שבוע';
+  if (weeks < 4) return `לפני ${weeks} שבועות`;
+  if (months === 1) return 'לפני חודש';
+  if (months < 12) return `לפני ${months} חודשים`;
+  if (years === 1) return 'לפני שנה';
+  return `לפני ${years} שנים`;
+}
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
@@ -207,7 +231,7 @@ export function HistoryPanel({
                   )}
                 </div>
                 <span className="text-[10px] text-slate-500" suppressHydrationWarning>
-                  {hasHydrated ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true, locale: he }) : "..."}
+                  {hasHydrated ? formatTimeAgo(new Date(item.timestamp)) : "..."}
                 </span>
               </div>
               {item.title && (
