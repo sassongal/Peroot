@@ -14,6 +14,11 @@ export const VOICE_LANGUAGES = [
 export type VoiceLang = typeof VOICE_LANGUAGES[number]['code'];
 
 interface UseVoiceRecorderProps {
+  /**
+   * Called with accumulated transcript.
+   * - isFinal=false: `text` is the current interim preview (not yet committed)
+   * - isFinal=true: `text` is the new finalized segment to append
+   */
   onResult: (text: string, isFinal: boolean) => void;
   onError?: (error: string) => void;
   lang?: VoiceLang;
@@ -32,8 +37,11 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
     onErrorRef.current = onError;
   }, [onResult, onError]);
 
+  // Track which result indices have already been committed as final
+  // This prevents mobile browsers from re-firing the same final result
+  const committedIndicesRef = useRef<Set<number>>(new Set());
+
   useEffect(() => {
-    // Basic browser support check
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       logger.warn("Speech Recognition API not supported in this browser.");
@@ -47,6 +55,7 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
 
     recognition.onstart = () => {
       logger.info("Recording Started");
+      committedIndicesRef.current.clear();
       setIsListening(true);
     };
 
@@ -63,20 +72,36 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
 
     recognition.onresult = (event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => {
       let interimTranscript = '';
-      let finalTranscript = '';
+      let newFinalTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+        const result = event.results[i];
+        const transcript = result[0].transcript;
+
+        if (result.isFinal) {
+          // Only process this final result if we haven't already committed it
+          if (!committedIndicesRef.current.has(i)) {
+            committedIndicesRef.current.add(i);
+            newFinalTranscript += transcript;
+          }
         } else {
-          interimTranscript += event.results[i][0].transcript;
+          interimTranscript += transcript;
         }
       }
 
-      logger.info("Voice Result:", { final: finalTranscript, interim: interimTranscript });
+      logger.info("Voice Result:", { final: newFinalTranscript, interim: interimTranscript });
 
-      if (finalTranscript || interimTranscript) {
-        onResultRef.current(finalTranscript || interimTranscript, !!finalTranscript);
+      // Emit new final text (deduplicated)
+      if (newFinalTranscript) {
+        onResultRef.current(newFinalTranscript, true);
+      }
+
+      // Emit interim preview (always replaces previous interim)
+      if (interimTranscript) {
+        onResultRef.current(interimTranscript, false);
+      } else if (newFinalTranscript) {
+        // Clear interim when final arrives with no remaining interim
+        onResultRef.current('', false);
       }
     };
 
@@ -87,11 +112,12 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
         recognitionRef.current.abort();
       }
     };
-  }, [lang]); // Re-init when language changes
+  }, [lang]);
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
       try {
+        committedIndicesRef.current.clear();
         recognitionRef.current.start();
       } catch (e) {
         logger.error("Failed to start recognition:", e);

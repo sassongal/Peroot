@@ -119,12 +119,14 @@ export function PromptInput({
     const { isListening, toggleListening, isSupported } = useVoiceRecorder({
         onResult: (text, isFinal) => {
             if (isFinal) {
+                // Append only the new finalized segment (already deduplicated in hook)
                 setInputVal((prev: string) => {
-                    const prefix = prev.trim() ? prev.trim() + " " : "";
-                    return prefix + text;
+                    const trimmed = prev.trim();
+                    return trimmed ? trimmed + " " + text.trim() : text.trim();
                 });
                 setInterimResult("");
             } else {
+                // Replace interim preview (not committed to inputVal)
                 setInterimResult(text);
             }
         },
