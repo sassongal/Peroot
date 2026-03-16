@@ -362,7 +362,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       await addLibCategory(newPersonalCategory.trim());
       setNewPersonalCategory("");
       toast.success("קטגוריה נוצרה");
-    } catch {
+    } catch (e) {
+      console.error("Failed to create category:", e);
       toast.error("שגיאה ביצירת קטגוריה");
     }
   };
@@ -375,7 +376,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       }
       await deleteCategory(categoryName, mode);
       toast.success(mode === 'delete' ? "התיקייה והפרומפטים נמחקו" : "התיקייה נמחקה, הפרומפטים הועברו לכללי");
-    } catch {
+    } catch (e) {
+      console.error("Failed to delete category:", e);
       toast.error("שגיאה במחיקת קטגוריה");
     }
   };
@@ -400,7 +402,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
         await renameCategory(renamingCategory, renameCategoryInput.trim());
         toast.success("הקטגוריה עודכנה");
         cancelRenameCategory();
-    } catch {
+    } catch (e) {
+        console.error("Failed to rename category:", e);
         toast.error("שגיאה בעדכון הקטגוריה");
     }
   };
@@ -454,7 +457,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       });
       toast.success("הפרומפט עודכן");
       cancelEditingPersonalPrompt();
-    } catch {
+    } catch (e) {
+      console.error("Failed to update prompt:", e);
       toast.error("שגיאה בעדכון הפרומפט");
     }
   };
@@ -518,7 +522,8 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
         toast.success("עיצוב נשמר");
         closeStyleEditor();
-    } catch {
+    } catch (e) {
+        console.error("Failed to save style:", e);
         toast.error("שגיאה בשמירת עיצוב");
     }
   };

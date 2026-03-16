@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Gift, Check, Copy, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [referralLink, setReferralLink] = useState<string | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -30,6 +31,13 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated]);
+
+  // Cleanup copied timer on unmount
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
 
   // Auto-dismiss after 12 seconds
   useEffect(() => {
@@ -52,7 +60,8 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
       await navigator.clipboard.writeText(link);
       setCopied(true);
       toast.success("קישור ההזמנה הועתק!");
-      setTimeout(() => setCopied(false), 2500);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 2500);
     } catch {
       toast.error("שגיאה בהעתקת הקישור");
     }

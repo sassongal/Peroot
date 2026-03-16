@@ -11,6 +11,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [revoked, setRevoked] = useState(false);
   const initialCheckDone = useRef(false);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (initialCheckDone.current) {
           setIsAuthorized(false);
           setRevoked(true);
-          setTimeout(() => {
+          redirectTimerRef.current = setTimeout(() => {
             router.replace("/");
           }, 2500);
         } else {
@@ -56,7 +57,10 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     checkAuth();
 
     const interval = setInterval(checkAuth, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
   }, [router]);
 
   if (loading) {

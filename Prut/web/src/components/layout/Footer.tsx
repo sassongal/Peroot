@@ -25,6 +25,9 @@ export function Footer() {
 
         {/* Links */}
         <nav aria-label={isHe ? "ניווט תחתון" : "Footer navigation"} className="flex flex-wrap justify-center items-center gap-4 md:gap-6 text-sm text-slate-400">
+          <Link href="/features" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "מה עושים פה?" : "Features"}
+          </Link>
           <Link href="/blog" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "בלוג" : "Blog"}
           </Link>

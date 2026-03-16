@@ -42,6 +42,7 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
   const committedIndicesRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       logger.warn("Speech Recognition API not supported in this browser.");
