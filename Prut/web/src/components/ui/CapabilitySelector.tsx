@@ -14,9 +14,7 @@ const ICONS: Record<IconName, LucideIcon> = {
 };
 
 /** Modes shown in the UI but not yet available */
-const COMING_SOON_MODES = new Set<CapabilityMode>([
-  CapabilityMode.VIDEO_GENERATION,
-]);
+const COMING_SOON_MODES = new Set<CapabilityMode>([]);
 
 const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
   sky: {

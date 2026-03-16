@@ -1,4 +1,4 @@
-export type ImagePlatform = 'general' | 'midjourney' | 'dalle' | 'flux' | 'stable-diffusion' | 'imagen';
+export type ImagePlatform = 'general' | 'midjourney' | 'dalle' | 'flux' | 'stable-diffusion' | 'imagen' | 'nanobanana';
 export type ImageOutputFormat = 'text' | 'json';
 
 export interface ImagePlatformConfig {
@@ -19,4 +19,5 @@ export const IMAGE_PLATFORMS: ImagePlatformConfig[] = [
   { id: 'flux', name: 'Flux', nameHe: 'Flux', description: 'שפה טבעית, תמיכה בצבעי hex', supportsNegativePrompt: false, supportsJson: false, promptStyle: 'natural', icon: 'FX' },
   { id: 'stable-diffusion', name: 'Stable Diffusion', nameHe: 'Stable Diffusion', description: 'מילות מפתח, משקלות (word:1.5), negative prompt', supportsNegativePrompt: true, supportsJson: true, promptStyle: 'keywords', icon: 'SD' },
   { id: 'imagen', name: 'Imagen', nameHe: 'Imagen', description: 'תיאור נרטיבי, עד 480 טוקנים', supportsNegativePrompt: true, supportsJson: false, promptStyle: 'narrative', icon: 'IG' },
+  { id: 'nanobanana', name: 'Nano Banana', nameHe: 'Nano Banana', description: 'שפה טבעית מובנית, תמיכה ב-JSON מובנה, עקביות דמויות', supportsNegativePrompt: false, supportsJson: true, promptStyle: 'natural', icon: 'NB' },
 ];

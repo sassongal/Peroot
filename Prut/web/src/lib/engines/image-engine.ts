@@ -137,6 +137,71 @@ PROMPT ARCHITECTURE:
 
 Tone: {{tone}}.`,
 
+  nanobanana: `You are an elite Nano Banana / Gemini Image prompt engineer. Your mission: transform any concept into a precisely crafted Nano Banana prompt.
+
+CRITICAL RULES:
+1. Output ONLY the final image prompt in ENGLISH. No explanations, no preamble.
+2. Use natural language with structured ordering: Subject → Action → Setting → Style → Composition → Lighting → Constraints.
+3. Earlier details carry MORE weight — put the most important elements first.
+4. Be specific and directive like a Creative Director brief, NOT keyword soup.
+5. Include constraints at the end for exclusions (e.g., "no watermark", "no text overlay", "no deformed hands").
+6. For text in images: enclose the exact text in double quotes and specify the font family.
+7. Supports aspect ratios: 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9.
+8. Include [aspectRatio: X:Y] at the very end.
+9. Sweet spot: 40-100 words. Be descriptive but structured.
+10. NO special syntax — no :: weighting, no --ar flags, no (word:1.5).
+
+PROMPT ARCHITECTURE:
+- Subject + action → style/medium → composition/camera → lighting/color → key details → constraints → [aspectRatio: X:Y]
+
+Tone: {{tone}}.`,
+
+  'nanobanana-json': `You are an elite Nano Banana / Gemini Image prompt engineer specializing in structured JSON output. Your mission: transform any concept into a precise Nano Banana JSON generation config.
+
+CRITICAL RULES:
+1. Output ONLY valid JSON. No explanations, no markdown code fences, no preamble.
+2. Use the exact JSON structure shown below.
+3. consistency_id keeps a character visually consistent across multiple generations (95%+ accuracy) — always include it for human subjects.
+4. Choose lens, aperture, and angle appropriate to the subject and style.
+5. Include all relevant constraints to prevent common artifacts.
+
+OUTPUT FORMAT (strict JSON):
+{
+  "subject": {
+    "description": "detailed subject description",
+    "expression": "emotional state",
+    "consistency_id": "character_01"
+  },
+  "camera": {
+    "lens": "85mm",
+    "aperture": "f/1.8",
+    "angle": "eye level"
+  },
+  "lighting": {
+    "type": "golden hour",
+    "direction": "side",
+    "quality": "soft"
+  },
+  "style": "editorial photography",
+  "aspect_ratio": "16:9",
+  "constraints": ["no watermark", "no text overlay"]
+}
+
+GUIDELINES:
+- subject.description: rich, specific detail about appearance, pose, clothing, environment
+- subject.expression: precise emotional state (e.g., "calm confidence", "joyful surprise")
+- camera.lens: 24mm for wide/environmental, 50mm for standard, 85mm for portrait, 135mm for telephoto compression
+- camera.aperture: f/1.4-f/2.8 for shallow DOF/bokeh, f/5.6-f/11 for sharp landscapes
+- camera.angle: eye level, low angle, high angle, bird's eye, Dutch angle, over-the-shoulder
+- lighting.type: golden hour, blue hour, studio softbox, Rembrandt, split, rim light, neon, volumetric
+- lighting.direction: front, side, 45-degree key, backlight, top-down
+- lighting.quality: soft/diffused, hard/dramatic, mixed
+- style: be specific — "editorial fashion photography", "cinematic still", "product photography on white", "watercolor illustration"
+- aspect_ratio: choose from 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
+- constraints: always include "no watermark", add others as relevant
+
+Tone: {{tone}}.`,
+
   general: `You are an Elite Visual Prompt Architect — the top image generation prompt engineer, specializing in DALL-E 3, Midjourney v6, Stable Diffusion XL, and Gemini Imagen. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
 
 CRITICAL RULES:
@@ -244,12 +309,27 @@ Output ONLY valid JSON. No explanations or code fences.`,
 Concept: {{input}}
 
 Output ONLY the Imagen prompt. No meta-text.`,
+
+  nanobanana: `Create an elite Nano Banana prompt for the following concept. Use structured natural English with Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering. Include constraints and an [aspectRatio: X:Y] tag at the end. 40-100 words.
+
+Concept: {{input}}
+
+Output ONLY the Nano Banana prompt. No meta-text.`,
+
+  'nanobanana-json': `Create a complete Nano Banana generation config in JSON format for the following concept. Include subject (with consistency_id), camera settings, lighting, style, aspect_ratio, and constraints.
+
+Concept: {{input}}
+
+Output ONLY valid JSON. No explanations or code fences.`,
 };
 
 function getPlatformKey(platform?: string, outputFormat?: string): string {
   if (!platform || platform === 'general') return 'general';
   if (platform === 'stable-diffusion') {
     return outputFormat === 'json' ? 'stable-diffusion-json' : 'stable-diffusion-text';
+  }
+  if (platform === 'nanobanana') {
+    return outputFormat === 'json' ? 'nanobanana-json' : 'nanobanana';
   }
   return platform;
 }
@@ -321,7 +401,7 @@ export class ImageEngine extends BaseEngine {
       return {
           systemPrompt: finalSystem,
           userPrompt,
-          outputFormat: (platform === 'stable-diffusion' && outputFormat === 'json') ? 'json' : 'text',
+          outputFormat: ((platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json') ? 'json' : 'text',
           requiredFields: [],
       };
   }

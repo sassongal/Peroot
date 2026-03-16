@@ -15,6 +15,7 @@ const HistoryPanel = dynamic(
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
+import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import dynamic from "next/dynamic";
@@ -117,6 +118,7 @@ function PageContent({ user }: { user: User | null }) {
 
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
   const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
+  const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>('general');
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -441,6 +443,11 @@ function PageContent({ user }: { user: User | null }) {
           output_format: imageOutputFormat,
         },
       }),
+      ...(ps.selectedCapability === CapabilityMode.VIDEO_GENERATION && {
+        mode_params: {
+          video_platform: videoPlatform,
+        },
+      }),
     });
 
     const result = processStreamResult("Enhance");
@@ -506,6 +513,11 @@ function PageContent({ user }: { user: User | null }) {
         mode_params: {
           image_platform: imagePlatform,
           output_format: imageOutputFormat,
+        },
+      }),
+      ...(ps.selectedCapability === CapabilityMode.VIDEO_GENERATION && {
+        mode_params: {
+          video_platform: videoPlatform,
         },
       }),
       previousResult: currentCompletion,
@@ -947,6 +959,8 @@ function PageContent({ user }: { user: User | null }) {
                   setImagePlatform={setImagePlatform}
                   imageOutputFormat={imageOutputFormat}
                   setImageOutputFormat={setImageOutputFormat}
+                  videoPlatform={videoPlatform}
+                  setVideoPlatform={setVideoPlatform}
                />
 
                {/* Recently Used Prompts Strip */}

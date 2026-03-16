@@ -8,7 +8,9 @@ import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
 import { ImagePlatformSelector } from "./ImagePlatformSelector";
+import { VideoPlatformSelector } from "./VideoPlatformSelector";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
+import { VideoPlatform } from "@/lib/video-platforms";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
@@ -34,6 +36,8 @@ interface PromptInputProps {
   setImagePlatform: (platform: ImagePlatform) => void;
   imageOutputFormat: ImageOutputFormat;
   setImageOutputFormat: (format: ImageOutputFormat) => void;
+  videoPlatform: VideoPlatform;
+  setVideoPlatform: (platform: VideoPlatform) => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -109,6 +113,8 @@ export function PromptInput({
   setImagePlatform,
   imageOutputFormat,
   setImageOutputFormat,
+  videoPlatform,
+  setVideoPlatform,
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -185,6 +191,17 @@ export function PromptInput({
             onPlatformChange={setImagePlatform}
             outputFormat={imageOutputFormat}
             onOutputFormatChange={setImageOutputFormat}
+            disabled={isLoading}
+          />
+        </div>
+      )}
+
+      {/* Video Platform Selector — only visible in VIDEO_GENERATION mode */}
+      {selectedCapability === CapabilityMode.VIDEO_GENERATION && (
+        <div className="w-full max-w-4xl mx-auto">
+          <VideoPlatformSelector
+            selectedPlatform={videoPlatform}
+            onPlatformChange={setVideoPlatform}
             disabled={isLoading}
           />
         </div>
