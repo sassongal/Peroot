@@ -9,6 +9,7 @@ import { PromptScore } from "@/lib/engines/base-engine";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
 import { ReferralShareCTA } from "@/components/features/referral/ReferralShareCTA";
+import { CapabilityMode } from "@/lib/capability-mode";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -45,10 +46,32 @@ interface ResultSectionProps {
   onShare?: () => void;
   onReset?: () => void;
   isAuthenticated?: boolean;
+  /** Current capability mode — used to show platform-specific launch links */
+  capabilityMode?: CapabilityMode;
+  /** Selected platform for image/video modes (e.g. 'midjourney', 'runway') */
+  selectedPlatform?: string;
 }
 
 import { useI18n } from "@/context/I18nContext";
 import { useEffect, useMemo } from "react";
+
+/** Platform URLs for image/video generation tools — opens the platform so users can paste the prompt */
+const GENERATION_PLATFORM_URLS: Record<string, { name: string; url: string; color: string }> = {
+  // Image platforms
+  midjourney: { name: "Midjourney", url: "https://www.midjourney.com/", color: "#0A84FF" },
+  dalle: { name: "DALL-E 3", url: "https://chat.openai.com/", color: "#10a37f" },
+  flux: { name: "Flux", url: "https://flux.ai/", color: "#7C3AED" },
+  'stable-diffusion': { name: "Stable Diffusion", url: "https://stablediffusionweb.com/", color: "#A855F7" },
+  imagen: { name: "Google Imagen", url: "https://aitestkitchen.withgoogle.com/", color: "#4285f4" },
+  nanobanana: { name: "Gemini Image", url: "https://gemini.google.com/", color: "#4285f4" },
+  // Video platforms
+  runway: { name: "Runway", url: "https://app.runwayml.com/", color: "#00D4AA" },
+  kling: { name: "Kling", url: "https://klingai.com/", color: "#FF6B35" },
+  sora: { name: "Sora", url: "https://sora.com/", color: "#10a37f" },
+  veo: { name: "Google Veo", url: "https://deepmind.google/technologies/veo/", color: "#4285f4" },
+  higgsfield: { name: "Higgsfield", url: "https://higgsfield.ai/", color: "#8B5CF6" },
+  minimax: { name: "Minimax", url: "https://hailuoai.video/", color: "#3B82F6" },
+};
 
 export function ResultSection({
   completion,
@@ -72,6 +95,8 @@ export function ResultSection({
   onShare,
   onReset,
   isAuthenticated = false,
+  capabilityMode,
+  selectedPlatform,
 }: ResultSectionProps) {
     const t = useI18n();
   const isMac = useMemo(() => typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform), []);
@@ -226,6 +251,31 @@ export function ResultSection({
             <div className="px-4 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
                 <span className="hidden sm:inline text-xs text-slate-500 ms-2">פתח ב:</span>
+
+                {/* Target platform link — shown for image/video modes with a specific platform selected */}
+                {selectedPlatform && selectedPlatform !== 'general' && GENERATION_PLATFORM_URLS[selectedPlatform] && (() => {
+                  const plat = GENERATION_PLATFORM_URLS[selectedPlatform];
+                  return (
+                    <button
+                      onClick={() => {
+                        handleCopy(displayCompletion);
+                        window.open(plat.url, "_blank");
+                        toast.success(`${t.toasts.copied} - ${plat.name} נפתח!`);
+                      }}
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border-2 text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none col-span-2 sm:col-span-1 font-medium"
+                      style={{
+                        borderColor: `${plat.color}40`,
+                        backgroundColor: `${plat.color}15`,
+                        color: plat.color,
+                      }}
+                      title={`העתק ופתח ב-${plat.name}`}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>פתח ב-{plat.name}</span>
+                    </button>
+                  );
+                })()}
+
                 <button
                   onClick={() => {
                     handleCopy(displayCompletion);
@@ -390,7 +440,7 @@ export function ResultSection({
           </div>
         </div>
 
-        {/* Referral Share CTA - shown after successful enhancement */}
+        {/* Referral Share CTA - floating popup, rendered via portal-like fixed position */}
         {!isLoading && completion && (
           <ReferralShareCTA isAuthenticated={isAuthenticated} />
         )}

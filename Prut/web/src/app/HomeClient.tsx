@@ -150,14 +150,16 @@ function PageContent({ user }: { user: User | null }) {
     onChunk: useCallback((chunk: string) => {
       const acc = streamAccRef.current;
       if (!acc.foundDelimiter) {
-        if (chunk.includes("[GENIUS_QUESTIONS]")) {
+        // Append chunk first, then check for delimiter in accumulated text
+        // This handles cases where the delimiter is split across chunks
+        acc.promptText += chunk;
+        const delimIdx = acc.promptText.indexOf("[GENIUS_QUESTIONS]");
+        if (delimIdx !== -1) {
           acc.foundDelimiter = true;
-          const [text, json] = chunk.split("[GENIUS_QUESTIONS]");
-          acc.promptText += text;
-          acc.questionsPart += json || "";
+          acc.questionsPart = acc.promptText.slice(delimIdx + "[GENIUS_QUESTIONS]".length);
+          acc.promptText = acc.promptText.slice(0, delimIdx);
           dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
         } else {
-          acc.promptText += chunk;
           dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
         }
       } else {
@@ -424,9 +426,23 @@ function PageContent({ user }: { user: User | null }) {
       return;
     }
 
+    // Build mode_params for this generation
+    const currentModeParams: Record<string, string> | undefined =
+      ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
+        ? { image_platform: imagePlatform, output_format: imageOutputFormat }
+        : ps.selectedCapability === CapabilityMode.VIDEO_GENERATION
+          ? { video_platform: videoPlatform }
+          : undefined;
+
     dispatch({ type: 'START_STREAM' });
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
-    dispatch({ type: 'CLEAR_ANSWERS' });
+    // Store generation context for refinement (BUG #2 fix)
+    dispatch({ type: 'SET_GENERATION_CONTEXT', payload: {
+      mode: ps.selectedCapability,
+      modeParams: currentModeParams,
+      category: ps.selectedCategory,
+      tone: ps.selectedTone,
+    }});
     streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
     const enhanceStart = Date.now();
@@ -437,17 +453,7 @@ function PageContent({ user }: { user: User | null }) {
       tone: ps.selectedTone,
       category: ps.selectedCategory,
       capability_mode: ps.selectedCapability,
-      ...(ps.selectedCapability === CapabilityMode.IMAGE_GENERATION && {
-        mode_params: {
-          image_platform: imagePlatform,
-          output_format: imageOutputFormat,
-        },
-      }),
-      ...(ps.selectedCapability === CapabilityMode.VIDEO_GENERATION && {
-        mode_params: {
-          video_platform: videoPlatform,
-        },
-      }),
+      ...(currentModeParams && { mode_params: currentModeParams }),
     });
 
     const result = processStreamResult("Enhance");
@@ -484,14 +490,16 @@ function PageContent({ user }: { user: User | null }) {
     // Capture before START_STREAM resets completion to ""
     const currentCompletion = ps.completion;
 
+    // Upgrade 3: Store current score before refinement for delta display
+    dispatch({ type: 'SET_PREVIOUS_SCORE', payload: completionScore.score });
+
     dispatch({ type: 'START_STREAM' });
-    dispatch({ type: 'CLEAR_ANSWERS' });
     streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
     // Build combined instruction from answers + custom instruction
     const answerParts = ps.questions
-      .filter(q => ps.questionAnswers[q.id]?.trim())
-      .map(q => `שאלה: ${q.question}\nתשובה: ${ps.questionAnswers[q.id]}`);
+      .filter(q => ps.questionAnswers[String(q.id)]?.trim())
+      .map(q => `שאלה: ${q.question}\nתשובה: ${ps.questionAnswers[String(q.id)]}`);
 
     const combinedInstruction = [
       ...answerParts,
@@ -504,25 +512,19 @@ function PageContent({ user }: { user: User | null }) {
       if (v.trim()) filteredAnswers[k] = v;
     }
 
+    // BUG #2 fix: Use stored generation context instead of current UI state
+    const ctx = ps.generationContext;
+
     await startStream(getApiPath("/api/enhance"), {
       prompt: ps.input,
-      tone: ps.selectedTone,
-      category: ps.selectedCategory,
-      capability_mode: ps.selectedCapability,
-      ...(ps.selectedCapability === CapabilityMode.IMAGE_GENERATION && {
-        mode_params: {
-          image_platform: imagePlatform,
-          output_format: imageOutputFormat,
-        },
-      }),
-      ...(ps.selectedCapability === CapabilityMode.VIDEO_GENERATION && {
-        mode_params: {
-          video_platform: videoPlatform,
-        },
-      }),
+      tone: ctx?.tone || ps.selectedTone,
+      category: ctx?.category || ps.selectedCategory,
+      capability_mode: ctx?.mode || ps.selectedCapability,
+      ...(ctx?.modeParams && { mode_params: ctx.modeParams }),
       previousResult: currentCompletion,
       refinementInstruction: combinedInstruction,
       answers: filteredAnswers,
+      iteration: ps.iterationCount + 1, // Upgrade 2: iteration-aware refinement
     });
 
     const refineResult = processStreamResult("Refine");
@@ -1096,7 +1098,9 @@ function PageContent({ user }: { user: User | null }) {
                        onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
                        placeholders={placeholders}
                        variableValues={ps.variableValues}
-                       improvementDelta={completionScore.baseScore - inputScore.baseScore}
+                       improvementDelta={ps.previousScore !== null && ps.iterationCount > 0
+                         ? completionScore.baseScore - ps.previousScore
+                         : completionScore.baseScore - inputScore.baseScore}
                        onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
                        onImproveAgain={() => {
                          // Feed the current completion back as the new input so the next
@@ -1115,6 +1119,13 @@ function PageContent({ user }: { user: User | null }) {
                        onShare={handleShare}
                        onReset={() => dispatch({ type: 'RESET' })}
                        isAuthenticated={!!user}
+                       capabilityMode={ps.generationContext?.mode || ps.selectedCapability}
+                       selectedPlatform={
+                         ps.generationContext?.modeParams?.image_platform
+                         || ps.generationContext?.modeParams?.video_platform
+                         || (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION ? imagePlatform : undefined)
+                         || (ps.selectedCapability === CapabilityMode.VIDEO_GENERATION ? videoPlatform : undefined)
+                       }
                    />
                  </ErrorBoundary>
 

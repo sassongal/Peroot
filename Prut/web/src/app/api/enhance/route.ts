@@ -28,6 +28,7 @@ const RequestSchema = z.object({
   previousResult: z.string().optional(),
   refinementInstruction: z.string().optional(),
   answers: z.record(z.string(), z.string()).optional(),
+  iteration: z.number().int().min(0).optional(),
 });
 
 /**
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers } = RequestSchema.parse(json);
+    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers, iteration } = RequestSchema.parse(json);
 
     // Determine if this is a refinement request
     const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
@@ -82,10 +83,8 @@ export async function POST(req: Request) {
       if (bearerToken) useServiceClient = true;
     }
 
-    // Require authentication - no anonymous access
-    if (!userId) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-    }
+    // Guest access: allow unauthenticated users with IP-based rate limiting
+    const isGuest = !userId;
 
     // When using Bearer token or API key, RLS won't have auth.uid() set,
     // so use service role client to bypass RLS
@@ -140,15 +139,17 @@ export async function POST(req: Request) {
         if (!identifier) {
             return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
         }
-        const limitResult = await checkRateLimit(identifier, tier);
+
+        // Guests get stricter rate limiting (5/hour via 'guest' tier)
+        const rateLimitTier = isGuest ? 'guest' : tier;
+        const limitResult = await checkRateLimit(identifier, rateLimitTier);
 
         if (!limitResult.success) {
             return RateLimitError(limitResult.reset);
         }
 
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
-        // Uses a single RPC that handles daily refresh + decrement atomically
-        // to prevent race conditions with concurrent requests
+        // Skip credit checks for guests — they are rate-limited by IP instead
         if (userId) {
             const { data: creditRes, error: rpcError } = await queryClient.rpc('refresh_and_decrement_credits', {
                 target_user_id: userId,
@@ -227,7 +228,7 @@ export async function POST(req: Request) {
     let userHistory: { title: string; prompt: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined = undefined;
 
-    if (userId && !isRefinement) {
+    if (userId && !isGuest && !isRefinement) {
         if (historyRes.data) userHistory = historyRes.data;
 
         if (personalityRes.data) {
@@ -249,7 +250,8 @@ export async function POST(req: Request) {
         refinementInstruction,
         answers,
         userHistory,
-        userPersonality
+        userPersonality,
+        iteration,
     };
 
     const engineOutput = isRefinement

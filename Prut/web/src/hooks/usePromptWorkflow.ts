@@ -8,6 +8,14 @@ import { CapabilityMode } from '@/lib/capability-mode';
 
 export type StreamPhase = 'idle' | 'sending' | 'writing' | 'done' | 'interrupted';
 
+/** Context captured at generation time — used for refinement to avoid platform drift */
+export interface GenerationContext {
+  mode: CapabilityMode;
+  modeParams?: Record<string, string>;
+  category: string;
+  tone: string;
+}
+
 export interface PromptState {
   input: string;
   originalInput: string;
@@ -24,6 +32,10 @@ export interface PromptState {
   variableValues: Record<string, string>;
   copied: boolean;
   iterationCount: number;
+  /** Snapshot of generation params — used in refinement to prevent platform drift (BUG #2) */
+  generationContext: GenerationContext | null;
+  /** Score of the previous completion — used to show score delta */
+  previousScore: number | null;
 }
 
 export type PromptAction =
@@ -45,7 +57,9 @@ export type PromptAction =
   | { type: 'SET_COMPLETION'; payload: string }
   | { type: 'SET_COPIED'; payload: boolean }
   | { type: 'INCREMENT_ITERATION' }
-  | { type: 'CLEAR_ANSWERS' };
+  | { type: 'CLEAR_ANSWERS' }
+  | { type: 'SET_GENERATION_CONTEXT'; payload: GenerationContext }
+  | { type: 'SET_PREVIOUS_SCORE'; payload: number };
 
 // --- Initial State ---
 
@@ -65,6 +79,8 @@ const initialState: PromptState = {
   variableValues: {},
   copied: false,
   iterationCount: 0,
+  generationContext: null,
+  previousScore: null,
 };
 
 // --- Reducer ---
@@ -131,6 +147,8 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
         questionAnswers: {},
         iterationCount: 0,
         copied: false,
+        generationContext: null,
+        previousScore: null,
       };
 
     case 'SET_CATEGORY':
@@ -143,9 +161,12 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
       return { ...state, selectedCapability: action.payload };
 
     case 'SET_QUESTIONS':
+      // BUG #3 fix + Upgrade 4: Clear old answers when new questions arrive
+      // Old answer keys from previous round don't match new question IDs
       return {
         ...state,
         questions: action.payload,
+        questionAnswers: {},
       };
 
     case 'SET_DETECTED_CATEGORY':
@@ -182,6 +203,12 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
 
     case 'CLEAR_ANSWERS':
       return { ...state, questionAnswers: {} };
+
+    case 'SET_GENERATION_CONTEXT':
+      return { ...state, generationContext: action.payload };
+
+    case 'SET_PREVIOUS_SCORE':
+      return { ...state, previousScore: action.payload };
 
     default:
       return state;
