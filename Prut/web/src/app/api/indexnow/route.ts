@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { validateAdminSession } from "@/lib/admin/admin-security";
 
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
@@ -7,12 +8,17 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
 /**
  * POST /api/indexnow
  * Submits URLs to IndexNow (Bing, Yandex, etc.) for faster indexing.
- * Call this after publishing/updating blog posts or important pages.
+ * Requires admin authentication.
  *
  * Body: { urls?: string[] }
  * If no URLs provided, submits all published blog posts + static pages.
  */
 export async function POST(req: NextRequest) {
+  const { error: authError } = await validateAdminSession();
+  if (authError) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   if (!INDEXNOW_KEY) {
     return NextResponse.json({ error: "INDEXNOW_KEY not configured" }, { status: 500 });
   }

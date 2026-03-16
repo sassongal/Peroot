@@ -26,11 +26,14 @@ export async function isMaintenanceMode(): Promise<boolean> {
   }
 }
 
+const MAX_MAINTENANCE_TTL = 3600; // 1 hour safety net
+
 export async function setMaintenanceMode(enabled: boolean): Promise<void> {
   const r = getRedis();
   if (!r) return;
   if (enabled) {
-    await r.set(CACHE_KEY, enabled);
+    // Auto-expire after 1 hour as safety net
+    await r.set(CACHE_KEY, enabled, { ex: MAX_MAINTENANCE_TTL });
   } else {
     await r.set(CACHE_KEY, enabled, { ex: CACHE_TTL });
   }

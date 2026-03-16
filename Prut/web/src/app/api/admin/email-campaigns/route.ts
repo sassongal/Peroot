@@ -199,6 +199,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Filter out users who have unsubscribed from email sequences
+    if (emails.length > 0) {
+      const { data: unsubscribed } = await supabase
+        .from('email_sequences')
+        .select('user_id')
+        .eq('status', 'unsubscribed');
+
+      if (unsubscribed && unsubscribed.length > 0) {
+        // Get emails of unsubscribed users
+        const unsubIds = new Set(unsubscribed.map((u) => u.user_id));
+        const { data: unsubProfiles } = await supabase
+          .from('profiles')
+          .select('email')
+          .in('id', [...unsubIds])
+          .not('email', 'is', null);
+        const unsubEmails = new Set((unsubProfiles ?? []).map((p) => p.email));
+        emails = emails.filter((e) => !unsubEmails.has(e));
+      }
+    }
+
     if (emails.length === 0) {
       return NextResponse.json({
         success: true,

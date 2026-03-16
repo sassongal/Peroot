@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     'utf8'
   );
 
-  if (!crypto.timingSafeEqual(digest, signature)) {
+  if (digest.length !== signature.length || !crypto.timingSafeEqual(digest, signature)) {
     logger.error('[LemonSqueezy Webhook] Invalid signature');
     return new NextResponse('Invalid signature', { status: 401 });
   }

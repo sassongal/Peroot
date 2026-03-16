@@ -50,7 +50,9 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (search) {
-      promptsQuery = promptsQuery.ilike('prompt_text', `%${search}%`);
+      // Escape special LIKE characters to prevent wildcard DOS
+      const escaped = search.replace(/[%_\\]/g, '\\$&');
+      promptsQuery = promptsQuery.ilike('prompt_text', `%${escaped}%`);
     }
 
     const { data: allPublicPrompts, error: promptsError } = await promptsQuery;

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 const EventSchema = z.object({
   prompt_key: z.string().min(1),
@@ -10,6 +11,12 @@ const EventSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rl = await checkRateLimit(`prompt-usage:${ip}`, 'guest');
+    if (!rl.success) {
+      return new Response(JSON.stringify({ ok: false }), { status: 429 });
+    }
+
     const json = await req.json();
     const payload = EventSchema.parse(json);
     const supabase = await createClient();

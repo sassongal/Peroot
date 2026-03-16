@@ -37,6 +37,10 @@ export async function POST(request: Request) {
     const { name, email, subject, message } = parsed.data;
     const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@joya-tech.net';
+    const contactRecipient = process.env.CONTACT_EMAIL || 'gal@joya-tech.net';
+
+    // HTML-escape user input to prevent email HTML injection
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
     if (!apiKey) {
       logger.error('[Contact] Missing RESEND_API_KEY');
@@ -47,18 +51,18 @@ export async function POST(request: Request) {
 
     await resend.emails.send({
       from: `Peroot Contact <${fromEmail}>`,
-      to: 'gal@joya-tech.net',
+      to: contactRecipient,
       replyTo: email,
-      subject: `[Peroot Contact] ${SUBJECT_LABELS[subject] || subject} - ${name}`,
+      subject: `[Peroot Contact] ${SUBJECT_LABELS[subject] || subject} - ${esc(name)}`,
       html: `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px;">
           <h2 style="color: #F59E0B;">הודעה חדשה מ-Peroot</h2>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 8px; font-weight: bold; color: #888;">שם:</td><td style="padding: 8px;">${name}</td></tr>
-            <tr><td style="padding: 8px; font-weight: bold; color: #888;">אימייל:</td><td style="padding: 8px;"><a href="mailto:${email}">${email}</a></td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; color: #888;">שם:</td><td style="padding: 8px;">${esc(name)}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; color: #888;">אימייל:</td><td style="padding: 8px;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
             <tr><td style="padding: 8px; font-weight: bold; color: #888;">נושא:</td><td style="padding: 8px;">${SUBJECT_LABELS[subject] || subject}</td></tr>
           </table>
-          <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px; white-space: pre-wrap;">${message}</div>
+          <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px; white-space: pre-wrap;">${esc(message)}</div>
         </div>
       `,
     });

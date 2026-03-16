@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const BlogPostSchema = z.object({
+  title: z.string().min(1).max(500),
+  slug: z.string().min(1).max(300),
+  content: z.string().min(1),
+  excerpt: z.string().max(1000).optional(),
+  status: z.enum(["draft", "published", "archived"]).optional(),
+  category: z.string().max(100).optional(),
+  tags: z.array(z.string()).optional(),
+  meta_title: z.string().max(200).optional(),
+  meta_description: z.string().max(500).optional(),
+  featured_image: z.string().url().optional().or(z.literal("")),
+}).passthrough();
 
 // GET - list all posts (including drafts) for admin
 export async function GET() {
@@ -30,10 +44,14 @@ export async function POST(req: NextRequest) {
     if (error || !supabase)
       return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
 
-    const body = await req.json();
+    const raw = await req.json();
+    const parsed = BlogPostSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid blog post data", details: parsed.error.flatten() }, { status: 400 });
+    }
     const { data, error: dbError } = await supabase
       .from("blog_posts")
-      .insert(body)
+      .insert(parsed.data)
       .select()
       .single();
 

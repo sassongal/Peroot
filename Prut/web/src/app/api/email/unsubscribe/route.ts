@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
-  if (!token) {
-    return new NextResponse("חסר טוקן", { status: 400 });
+  if (!token || !UUID_REGEX.test(token)) {
+    return new NextResponse("טוקן לא תקין", { status: 400 });
   }
 
   const supabase = createClient(
@@ -13,14 +15,28 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { error } = await supabase
+  // Verify token exists before updating
+  const { data: sequence } = await supabase
     .from("email_sequences")
-    .update({ status: "unsubscribed" })
-    .eq("id", token);
+    .select("id, status")
+    .eq("id", token)
+    .maybeSingle();
 
-  if (error) {
-    logger.error("[Unsubscribe] Failed:", error);
-    return new NextResponse("שגיאה בהסרה מרשימת התפוצה", { status: 500 });
+  if (!sequence) {
+    return new NextResponse("טוקן לא תקין", { status: 400 });
+  }
+  if (sequence.status === "unsubscribed") {
+    // Already unsubscribed — show success page anyway
+  } else {
+    const { error } = await supabase
+      .from("email_sequences")
+      .update({ status: "unsubscribed" })
+      .eq("id", token);
+
+    if (error) {
+      logger.error("[Unsubscribe] Failed:", error);
+      return new NextResponse("שגיאה בהסרה מרשימת התפוצה", { status: 500 });
+    }
   }
 
   return new NextResponse(

@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       const { data: { user } } = bearerToken
           ? await supabase.auth.getUser(bearerToken)
           : await supabase.auth.getUser();
-      userId = userId;
+      userId = user?.id;
       if (bearerToken) useServiceClient = true;
     }
 

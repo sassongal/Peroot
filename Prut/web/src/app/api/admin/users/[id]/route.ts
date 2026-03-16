@@ -156,22 +156,28 @@ export async function POST(
             { status: 400 }
           );
         }
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('credits_balance')
-          .eq('id', id)
-          .maybeSingle();
-
-        const currentCredits = profile?.credits_balance ?? 0;
-
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ credits_balance: currentCredits + amount })
-          .eq('id', id);
+        // Atomic increment to avoid race conditions
+        const { error: updateError } = await supabase.rpc('admin_adjust_credits', {
+          target_user_id: id,
+          delta: amount,
+        });
 
         if (updateError) {
-          logger.error('[Admin User POST] grant_credits error:', updateError);
-          return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
+          // Fallback if RPC doesn't exist
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits_balance')
+            .eq('id', id)
+            .maybeSingle();
+          const currentCredits = profile?.credits_balance ?? 0;
+          const { error: fallbackError } = await supabase
+            .from('profiles')
+            .update({ credits_balance: currentCredits + amount })
+            .eq('id', id);
+          if (fallbackError) {
+            logger.error('[Admin User POST] grant_credits error:', fallbackError);
+            return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
+          }
         }
         break;
       }
@@ -184,23 +190,29 @@ export async function POST(
             { status: 400 }
           );
         }
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('credits_balance')
-          .eq('id', id)
-          .maybeSingle();
-
-        const currentCredits = profile?.credits_balance ?? 0;
-        const newCredits = Math.max(0, currentCredits - amount);
-
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ credits_balance: newCredits })
-          .eq('id', id);
+        // Atomic decrement to avoid race conditions
+        const { error: updateError } = await supabase.rpc('admin_adjust_credits', {
+          target_user_id: id,
+          delta: -amount,
+        });
 
         if (updateError) {
-          logger.error('[Admin User POST] revoke_credits error:', updateError);
-          return NextResponse.json({ error: 'Failed to revoke credits' }, { status: 500 });
+          // Fallback if RPC doesn't exist
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits_balance')
+            .eq('id', id)
+            .maybeSingle();
+          const currentCredits = profile?.credits_balance ?? 0;
+          const newCredits = Math.max(0, currentCredits - amount);
+          const { error: fallbackError } = await supabase
+            .from('profiles')
+            .update({ credits_balance: newCredits })
+            .eq('id', id);
+          if (fallbackError) {
+            logger.error('[Admin User POST] revoke_credits error:', fallbackError);
+            return NextResponse.json({ error: 'Failed to revoke credits' }, { status: 500 });
+          }
         }
         break;
       }
