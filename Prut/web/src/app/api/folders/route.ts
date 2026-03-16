@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 // GET: List user's folders
 export async function GET() {
@@ -37,6 +38,11 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const rateLimit = await checkRateLimit(user.id, 'folders');
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
   }
 
   try {

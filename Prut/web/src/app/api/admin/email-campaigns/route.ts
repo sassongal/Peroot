@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { validateAdminSession } from '@/lib/admin/admin-security';
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/ratelimit';
+import DOMPurify from 'isomorphic-dompurify';
 
 type Segment = 'all' | 'pro' | 'free' | 'inactive';
 
@@ -122,6 +124,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Rate limit
+    const rateLimit = await checkRateLimit(user.id, 'adminEmailCampaign');
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
+    }
+
     let body: { subject?: unknown; htmlContent?: unknown; segment?: unknown };
     try {
       body = await req.json();
@@ -136,6 +144,9 @@ export async function POST(req: NextRequest) {
     }
     if (typeof htmlContent !== 'string' || htmlContent.trim().length === 0) {
       return NextResponse.json({ error: 'htmlContent is required' }, { status: 400 });
+    }
+    if (htmlContent.length > 500000) {
+      return NextResponse.json({ error: 'htmlContent exceeds maximum length' }, { status: 400 });
     }
     const validSegments: Segment[] = ['all', 'pro', 'free', 'inactive'];
     if (!validSegments.includes(segment as Segment)) {
@@ -228,6 +239,22 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // ── Sanitize HTML content ─────────────────────────────────────────────
+    const sanitizedHtml = DOMPurify.sanitize(htmlContent as string, {
+      ALLOWED_TAGS: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+        'strong', 'b', 'em', 'i', 'u', 'a', 'img',
+        'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td',
+        'div', 'span', 'header', 'footer', 'section',
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'style', 'class',
+        'width', 'height', 'target', 'rel',
+        'align', 'valign', 'bgcolor', 'border', 'cellpadding', 'cellspacing',
+      ],
+    });
+
     // ── Send via Resend ───────────────────────────────────────────────────
     const resend = new Resend(process.env.RESEND_API_KEY);
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@example.com';
@@ -246,7 +273,7 @@ export async function POST(req: NextRequest) {
               from: fromEmail,
               to,
               subject: subject.trim(),
-              html: htmlContent,
+              html: sanitizedHtml,
             });
             if (sendError) {
               failures.push({ email: to, error: sendError.message });

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Copy, Check, Share2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface OutputDisplayProps {
   prompt: string;
@@ -11,11 +12,31 @@ interface OutputDisplayProps {
 
 export function OutputDisplay({ prompt }: OutputDisplayProps) {
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(prompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: prompt });
+        return;
+      } catch {
+        // User cancelled or share failed, fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setShared(true);
+      toast.success("הפרומפט הועתק ללוח");
+      setTimeout(() => setShared(false), 2000);
+    } catch {
+      toast.error("שגיאה בהעתקה");
+    }
   };
 
   if (!prompt) return null;
@@ -36,8 +57,8 @@ export function OutputDisplay({ prompt }: OutputDisplayProps) {
         </div>
       </CardContent>
       <CardFooter className="justify-end gap-2">
-        <Button variant="outline" size="sm" className="gap-2">
-          <Share2 className="w-4 h-4" />
+        <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
+          {shared ? <Check className="w-4 h-4 text-green-600" /> : <Share2 className="w-4 h-4" />}
           שתף
         </Button>
         <Button size="sm" onClick={handleCopy} className="gap-2">

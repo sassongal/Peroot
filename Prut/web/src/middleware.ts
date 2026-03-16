@@ -79,10 +79,17 @@ export async function middleware(request: NextRequest) {
     Sentry.setUser({ id: user.id, email: user.email });
 
     // ⛔ Admin Path Protection (Server-side Enforcement)
-    // API admin routes are protected by validateAdminSession() which checks user_roles table.
-    // Admin pages are protected by AdminGuard component which also checks user_roles table.
-    // Middleware only ensures the user is authenticated (logged in) for admin paths.
-    // No additional middleware blocking needed - auth check above is sufficient.
+    // Check admin role from JWT app_metadata for admin paths
+    const isAdminPath = request.nextUrl.pathname.startsWith('/admin') ||
+                       request.nextUrl.pathname.startsWith('/api/admin') ||
+                       request.nextUrl.pathname.startsWith('/api/prompts/sync');
+
+    if (isAdminPath && !isAdmin) {
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   } else {
     // Guest accessing admin path
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin') ||

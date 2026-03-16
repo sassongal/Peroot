@@ -43,8 +43,15 @@ export async function POST(req: Request) {
   let userId: string | undefined;
   let supabase: Awaited<ReturnType<typeof createClient>> | undefined;
 
+  // Parse JSON before main try block so SyntaxError doesn't trigger credit refund
+  let json: unknown;
   try {
-    const json = await req.json();
+    json = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  try {
     const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers } = RequestSchema.parse(json);
 
     // Determine if this is a refinement request
@@ -73,6 +80,11 @@ export async function POST(req: Request) {
           : await supabase.auth.getUser();
       userId = user?.id;
       if (bearerToken) useServiceClient = true;
+    }
+
+    // Require authentication - no anonymous access
+    if (!userId) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
     // When using Bearer token or API key, RLS won't have auth.uid() set,

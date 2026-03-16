@@ -7,6 +7,7 @@ import { CapabilityMode } from '@/lib/capability-mode';
 import { validateAdminSession, logAdminAction, parseAdminInput } from '@/lib/admin/admin-security';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/ratelimit';
 
 const TestEngineSchema = z.object({
     prompt: z.string().min(1),
@@ -31,7 +32,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: authError }, { status: authError === 'Unauthorized' ? 401 : 403 });
     }
 
-    // 2. Parse Input
+    // 2. Rate limit
+    const rateLimit = await checkRateLimit(user.id, 'adminTestEngine');
+    if (!rateLimit.success) {
+        return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
+    }
+
+    // 3. Parse Input
     const { data, error: validationError } = await parseAdminInput(req, TestEngineSchema);
     if (validationError) return validationError;
 

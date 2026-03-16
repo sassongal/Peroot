@@ -22,11 +22,15 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401 });
+    }
+
     const { error } = await supabase.from("prompt_usage_events").insert({
       prompt_id: payload.prompt_key, // Map key to id column
       event_type: payload.event_type,
       prompt_length: payload.prompt_length ?? null,
-      user_id: user?.id ?? null,
+      user_id: user.id,
     });
 
     if (error) {

@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const HistoryBodySchema = z.object({
+  prompt: z.string().min(1).max(10000),
+  enhanced_prompt: z.string().min(1).max(10000),
+  tone: z.string().max(200).optional(),
+  category: z.string().max(200).optional(),
+  title: z.string().max(500).optional(),
+  source: z.string().max(200).optional(),
+});
 
 /**
  * POST /api/history
@@ -26,11 +36,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { prompt, enhanced_prompt, tone, category, title, source } = body;
-
-    if (!prompt || !enhanced_prompt) {
-      return NextResponse.json({ error: "Missing prompt or enhanced_prompt" }, { status: 400 });
+    const parsed = HistoryBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request data", details: parsed.error.flatten() }, { status: 400 });
     }
+    const { prompt, enhanced_prompt, tone, category, title, source } = parsed.data;
 
     // Only use service role client for Bearer token auth (extension) - cookie auth uses RLS
     const serviceClient = bearerToken

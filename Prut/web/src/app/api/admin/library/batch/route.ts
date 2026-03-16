@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
         if (upsertError) {
             logger.error('[Batch Import] Upsert Error:', upsertError);
-            return NextResponse.json({ error: upsertError.message }, { status: 500 });
+            return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
         }
 
         // 3. Log Admin Action

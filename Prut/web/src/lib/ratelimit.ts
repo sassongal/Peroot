@@ -23,9 +23,34 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(200, '1 h'),
     prefix: '@peroot/ratelimit:pro',
   }),
+  adminTestEngine: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, '1 h'),
+    prefix: '@peroot/ratelimit:admin-test-engine',
+  }),
+  adminEmailCampaign: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1 h'),
+    prefix: '@peroot/ratelimit:admin-email-campaign',
+  }),
+  share: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1 h'),
+    prefix: '@peroot/ratelimit:share',
+  }),
+  referral: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1 h'),
+    prefix: '@peroot/ratelimit:referral',
+  }),
+  folders: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(50, '1 h'),
+    prefix: '@peroot/ratelimit:folders',
+  }),
 };
 
-export type RateLimitTier = 'guest' | 'free' | 'pro';
+export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders';
 
 export interface RateLimitResult {
   success: boolean;

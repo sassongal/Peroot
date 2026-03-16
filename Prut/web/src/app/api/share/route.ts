@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 const ShareSchema = z.object({
   prompt: z.string().min(1).max(50000),
@@ -17,6 +18,11 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimit(user.id, 'share');
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
     }
 
     const body = await request.json();

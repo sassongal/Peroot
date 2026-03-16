@@ -13,8 +13,10 @@ export async function GET() {
       .eq("status", "published")
       .order("published_at", { ascending: false });
 
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      logger.error("[blog] DB error:", error);
+      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
+    }
     return NextResponse.json(data);
   } catch (error) {
     logger.error("[blog] Error:", error);

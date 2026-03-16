@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { randomBytes } from "crypto";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 // GET: Get or create user's referral code
 export async function GET() {
@@ -65,6 +66,11 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const rateLimit = await checkRateLimit(user.id, 'referral');
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
   }
 
   try {

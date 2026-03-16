@@ -74,8 +74,10 @@ export default function UsersPage() {
         .order("created_at", { ascending: false });
 
       if (searchTerm.trim()) {
+        // Escape special PostgREST filter characters to prevent injection
+        const escaped = searchTerm.replace(/[,.*()\\]/g, (ch) => `\\${ch}`);
         profilesQuery = profilesQuery.or(
-          `email.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,id.eq.${searchTerm}`
+          `email.ilike.%${escaped}%,full_name.ilike.%${escaped}%,id.eq.${escaped}`
         );
       }
 

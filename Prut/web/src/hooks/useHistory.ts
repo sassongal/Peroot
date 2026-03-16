@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -92,10 +92,11 @@ export function useHistory() {
 
   // No localStorage sync for guests - history is login-only
 
-  const addToHistory = async (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+  const addToHistory = useCallback(async (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
     // Only save history for logged-in users
-    if (!user) return;
-    
+    const currentUser = userRef.current;
+    if (!currentUser) return;
+
     const newItem: HistoryItem = {
       ...item,
       id: crypto.randomUUID(),
@@ -110,14 +111,14 @@ export function useHistory() {
 
     // Sync to DB
     await supabase.from('history').insert({
-      user_id: user.id,
+      user_id: currentUser.id,
       prompt: item.original,
       enhanced_prompt: item.enhanced,
       category: item.category,
       tone: item.tone,
       title: item.title || null,
     });
-  };
+  }, [supabase]);
 
   const clearHistory = async () => {
     if (!user) return;

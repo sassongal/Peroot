@@ -159,7 +159,6 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   // Dynamic Data State
   const [libraryPrompts, setLibraryPrompts] = useState<LibraryPrompt[]>(fallbackLibraryPrompts);
-  const [, setDynamicCategories] = useState<unknown[]>([]);
   const [isLibraryFetching, setIsLibraryFetching] = useState(true);
 
   // --- Effects ---
@@ -176,8 +175,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
                 if (pData.length > 0) setLibraryPrompts(pData);
             }
             if (cRes.ok) {
-                const cData = await cRes.json();
-                setDynamicCategories(cData);
+                await cRes.json();
             }
         } catch (e) {
             logger.warn("Library synchronization paused:", e);
@@ -569,7 +567,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     });
   };
 
-  const value = {
+  const value = useMemo(() => ({
     viewMode, setViewMode,
     libraryView, setLibraryView,
     libraryQuery, setLibraryQuery, filteredLibrary, libraryPrompts,
@@ -601,7 +599,26 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     // Loading state
     isPersonalLoaded,
     isLibraryFetching
-  };
+  }), [
+    viewMode, libraryView, libraryQuery, filteredLibrary, libraryPrompts,
+    personalQuery, personalSort, librarySort, personalView,
+    filteredPersonalLibrary, libraryFavorites,
+    personalLibrary, personalCategories,
+    favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite,
+    popularityMap,
+    addPrompt, removePrompt, updatePrompt, duplicatePrompt, incrementUseCount, togglePin, ratePrompt,
+    deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding,
+    newPersonalCategory, renamingCategory, renameCategoryInput,
+    addPersonalCategory, startRenameCategory, cancelRenameCategory, saveRenameCategory,
+    editingPersonalId, editingTitle, editingUseCase,
+    startEditingPersonalPrompt, saveEditingPersonalPrompt, cancelEditingPersonalPrompt,
+    promptStyles, editingStylePromptId, styleDraft,
+    openStyleEditor, saveStylePrompt, closeStyleEditor,
+    dragAndDrop,
+    selectedCapabilityFilter, favoritesCapabilityFilter,
+    libraryCapabilityCounts, personalCapabilityCounts,
+    isPersonalLoaded, isLibraryFetching
+  ]);
 
   return (
     <LibraryContext.Provider value={value}>

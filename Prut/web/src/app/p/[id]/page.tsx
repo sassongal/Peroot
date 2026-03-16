@@ -63,8 +63,8 @@ export default async function SharedPromptPage({ params }: Props) {
   }
 
   // Increment views (fire and forget) via atomic RPC
-  supabase.rpc('increment_shared_prompt_views', { prompt_id: id })
-    .then(() => {});
+  void Promise.resolve(supabase.rpc('increment_shared_prompt_views', { prompt_id: id }))
+    .catch((err: unknown) => console.error('Failed to increment views:', err));
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
 

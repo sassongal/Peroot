@@ -42,13 +42,6 @@ export async function GET() {
     return NextResponse.json(subscription);
   } catch (error) {
     logger.error('[Subscription API] Error:', error);
-    return NextResponse.json({
-      status: 'free',
-      plan_name: 'Free',
-      renews_at: null,
-      ends_at: null,
-      trial_ends_at: null,
-      lemonsqueezy_subscription_id: null,
-    });
+    return NextResponse.json({ error: "Failed to fetch subscription status" }, { status: 500 });
   }
 }

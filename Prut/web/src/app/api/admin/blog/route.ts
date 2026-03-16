@@ -14,7 +14,15 @@ const BlogPostSchema = z.object({
   meta_title: z.string().max(200).optional(),
   meta_description: z.string().max(500).optional(),
   featured_image: z.string().url().optional().or(z.literal("")),
-}).passthrough();
+});
+
+const BlogPostUpdateSchema = BlogPostSchema.partial().extend({
+  id: z.string().uuid(),
+});
+
+const BlogPostDeleteSchema = z.object({
+  id: z.string().uuid(),
+});
 
 // GET - list all posts (including drafts) for admin
 export async function GET() {
@@ -28,8 +36,10 @@ export async function GET() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    if (dbError) {
+      logger.error("[admin/blog] GET DB error:", dbError);
+      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
+    }
     return NextResponse.json(data);
   } catch (error) {
     logger.error("[admin/blog] Error:", error);
@@ -55,8 +65,10 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    if (dbError) {
+      logger.error("[admin/blog] POST DB error:", dbError);
+      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
+    }
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     logger.error("[admin/blog] Error:", error);
@@ -72,10 +84,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
 
     const body = await req.json();
-    const { id, ...updates } = body;
-
-    if (!id)
-      return NextResponse.json({ error: "Missing post id" }, { status: 400 });
+    const parsed = BlogPostUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid update data", details: parsed.error.flatten() }, { status: 400 });
+    }
+    const { id, ...updates } = parsed.data;
 
     const { data, error: dbError } = await supabase
       .from("blog_posts")
@@ -84,8 +97,10 @@ export async function PUT(req: NextRequest) {
       .select()
       .single();
 
-    if (dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    if (dbError) {
+      logger.error("[admin/blog] PUT DB error:", dbError);
+      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
+    }
     return NextResponse.json(data);
   } catch (error) {
     logger.error("[admin/blog] Error:", error);
@@ -100,18 +115,21 @@ export async function DELETE(req: NextRequest) {
     if (error || !supabase)
       return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
 
-    const { id } = await req.json();
-
-    if (!id)
-      return NextResponse.json({ error: "Missing post id" }, { status: 400 });
+    const body = await req.json();
+    const parsed = BlogPostDeleteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid or missing post id" }, { status: 400 });
+    }
 
     const { error: dbError } = await supabase
       .from("blog_posts")
       .delete()
-      .eq("id", id);
+      .eq("id", parsed.data.id);
 
-    if (dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    if (dbError) {
+      logger.error("[admin/blog] DELETE DB error:", dbError);
+      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("[admin/blog] Error:", error);

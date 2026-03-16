@@ -23,7 +23,7 @@ export async function POST() {
 
     if (dbError) {
       logger.error('[Sync Users] Error fetching profiles:', dbError);
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
     }
 
     return NextResponse.json({
