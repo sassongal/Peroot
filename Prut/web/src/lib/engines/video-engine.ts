@@ -118,6 +118,68 @@ Rules:
 - Output in English only.`,
 };
 
+const VIDEO_USER_PROMPTS: Record<VideoPlatform, string> = {
+  general: `Create an elite video prompt for the following concept. Be specific about camera movement, subject motion, lighting, and cinematic style. The prompt must convey clear motion and produce stunning results on first attempt.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  runway: `Create a Runway Gen-4.5 prompt for the following concept. Lead with camera movement. Write in natural sentences, 30-60 words. One scene only.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  kling: `Create a Kling 3.0 prompt for the following concept. Use four-part structure: Subject + Action + Context + Style. Describe physics-based motion with explicit endpoints. 50-200 words.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  pika: `Create a Pika 2.5 prompt for the following concept. ONE subject only. Maximum 300 characters. Max 2 motion types. Keep it simple and direct.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  sora: `Create a Sora 2 prompt for the following concept in director's brief format. Use labeled blocks: Camera, Scene, Subject, Action, Lighting, Style. Include virtual lens specs. 50-150 words.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  luma: `Create a Luma Ray3 prompt for the following concept. Conversational style, 20-40 words. Use @character if needed. Describe like telling a story to a cinematographer.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  minimax: `Create a Minimax Hailuo 2.3 prompt for the following concept. Focus on body movement and facial expressions. Include specific choreography. 40-100 words.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  higgsfield: `Create a Higgsfield prompt for the following concept. CLI-style directives. Active verbs. Include timing cues. 30-60 words.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  nanobanana: `Create a Nano Banana video prompt for the following concept. Precise, literal descriptions. Focus on character consistency. 30-60 words.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+
+  vidu: `Create a Vidu Q3 prompt for the following concept. Include audio description (SFX + BGM). One shot per prompt. 2-4 sentences.
+
+Concept: {{input}}
+
+Output ONLY the video prompt. No meta-text.`,
+};
+
 const DEFAULT_SYSTEM_PROMPT = `You are an Elite Video Prompt Architect — the world's foremost expert in crafting prompts for AI video generation platforms (Runway, Kling, Pika, Sora, Luma, Minimax/Hailuo, Higgsfield, Nano Banana, Vidu). Your mission: transform any concept into a precisely engineered video generation prompt that produces cinematic, professional-quality results on first attempt.
 
 CRITICAL RULES:
@@ -183,30 +245,107 @@ export class VideoEngine extends BaseEngine {
       mode: CapabilityMode.VIDEO_GENERATION,
       name: "Video Generation Engine",
       system_prompt_template: DEFAULT_SYSTEM_PROMPT,
-      user_prompt_template: `Create an elite video generation prompt in English for the following concept. Be extremely specific about camera movement, subject motion, lighting, and cinematic style. The prompt must produce stunning results on first attempt in any major AI video platform.
-
-Concept: {{input}}
-
-Output ONLY the video prompt. No meta-text.`,
+      user_prompt_template: VIDEO_USER_PROMPTS['general'],
     });
   }
 
   generate(input: EngineInput): EngineOutput {
-    // Determine platform from modeParams
     const platform = (input.modeParams?.video_platform as VideoPlatform) || 'general';
     const platformOverride = PLATFORM_OVERRIDES[platform] || PLATFORM_OVERRIDES.general;
 
-    // Inject platform override into the system prompt
-    const modifiedInput: EngineInput = {
-      ...input,
-      modeParams: {
-        ...input.modeParams,
-        platform_override: platformOverride,
-      },
+    const variables: Record<string, string> = {
+      input: input.prompt,
+      tone: input.tone,
+      category: input.category,
+      platform_override: platformOverride,
+      ...(input.modeParams as Record<string, string> || {}),
     };
 
-    const result = super.generate(modifiedInput);
-    result.outputFormat = "text";
-    return result;
+    const systemPrompt = this.buildTemplate(DEFAULT_SYSTEM_PROMPT, variables);
+    const userTemplate = VIDEO_USER_PROMPTS[platform] || VIDEO_USER_PROMPTS['general'];
+    const userPrompt = this.buildTemplate(userTemplate, variables);
+
+    // Video prompts are English-only — skip text-focused style/personality context
+    // which adds noise to cinematic generation
+
+    const identity = this.getSystemIdentity();
+    let finalSystem = systemPrompt;
+    if (identity) {
+      finalSystem += `\n\n${identity}`;
+    }
+
+    // English cinematic GENIUS_QUESTIONS focused on the 7 video layers
+    finalSystem += `\n\n[GENIUS_ANALYSIS]
+Before generating, perform this rigorous internal quality check (do NOT output this analysis):
+1. CAMERA: Is the shot type, lens choice, and camera movement clearly specified?
+2. SUBJECT: Is the subject's appearance, position, and emotional state vividly described?
+3. MOTION: Is there a clear motion arc with physical detail (weight, momentum, endpoints)?
+4. ENVIRONMENT: Is the setting, time of day, and atmosphere established?
+5. SCENE MOTION: Are environmental dynamics (wind, particles, ambient life) addressed?
+6. LIGHTING: Is the light direction, quality, color temperature, and mood defined?
+7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?
+
+After the enhanced prompt, on a new line add a short descriptive Hebrew title:
+[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+
+Then add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions about cinematic aspects that would most elevate the prompt. Focus on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.
+Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
+If the prompt is already comprehensive across all 7 layers, return [GENIUS_QUESTIONS][]`;
+
+    return {
+      systemPrompt: finalSystem,
+      userPrompt,
+      outputFormat: "text",
+      requiredFields: [],
+    };
+  }
+
+  generateRefinement(input: EngineInput): EngineOutput {
+    if (!input.previousResult) throw new Error("Previous result required for refinement");
+
+    const platform = (input.modeParams?.video_platform as VideoPlatform) || 'general';
+    const instruction = (input.refinementInstruction || "Refine the video prompt and make it more cinematic and precise.").trim().slice(0, 2000);
+
+    let answersBlock = "";
+    if (input.answers && Object.keys(input.answers).length > 0) {
+      const pairs = Object.entries(input.answers)
+        .filter(([, v]) => v.trim())
+        .map(([key, answer]) => `- [${key}] ${answer}`)
+        .join("\n");
+      if (pairs) {
+        answersBlock = `\n\nUser answers to clarifying questions:\n${pairs}\n`;
+      }
+    }
+
+    const identity = this.getSystemIdentity();
+
+    return {
+      systemPrompt: `You are an Elite Video Prompt Architect performing a precision refinement. Your task: upgrade the existing video prompt based on user feedback and answers.
+
+Rules:
+1. Integrate ALL user answers and feedback into the prompt — miss nothing, even minor details.
+2. Maintain and enhance the cinematic structure across all 7 layers: camera, subject, subject motion, environment, scene motion, lighting, style.
+3. Every refinement must be a significant upgrade — not cosmetic. Replace vague language with precise cinematic direction.
+4. Output ONLY the refined video prompt in English.
+5. If answers reveal a new creative direction, expand the prompt accordingly — leave no gaps.
+6. Never add meta-commentary, explanations, or preamble to the output.
+
+Platform: ${platform}. Tone: ${input.tone}. Category: ${input.category}.
+
+${identity ? `${identity}\n\n` : ''}After the improved prompt, add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact cinematic gaps — camera angle, motion detail, lighting mood, color grading, or style reference. Return an empty array [] if the prompt is now comprehensive across all 7 layers.
+Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+
+      userPrompt: `Current video prompt:
+---
+${input.previousResult}
+---
+${answersBlock}
+${instruction ? `Additional instructions from user: ${instruction}` : ''}
+
+Integrate all new information and produce an upgraded, refined video prompt in English.`,
+
+      outputFormat: "text",
+      requiredFields: [],
+    };
   }
 }

@@ -292,12 +292,12 @@ function PageContent({ user }: { user: User | null }) {
   };
 
   const inputScore = useMemo(
-    () => BaseEngine.scorePrompt(ps.input),
-    [ps.input]
+    () => BaseEngine.scorePrompt(ps.input, ps.selectedCapability),
+    [ps.input, ps.selectedCapability]
   );
   const completionScore = useMemo(
-    () => BaseEngine.scorePrompt(ps.completion),
-    [ps.completion]
+    () => BaseEngine.scorePrompt(ps.completion, ps.selectedCapability),
+    [ps.completion, ps.selectedCapability]
   );
 
   const scoreTone =

@@ -369,21 +369,8 @@ export class ImageEngine extends BaseEngine {
 
       let finalSystem = systemPrompt;
 
-      // Add user style context if available
-      if (input.userHistory && input.userHistory.length > 0) {
-          const historyBlock = input.userHistory
-              .map(h => `Title: ${h.title}\nPrompt:\n${h.prompt.slice(0, 500)}`)
-              .join('\n\n---\n\n');
-          finalSystem += `\n\n[USER_STYLE_CONTEXT]\nThe following are examples of prompts this user has saved or liked. Analyze their tone and preferences:\n${historyBlock}\n`;
-      }
-
-      if (input.userPersonality) {
-          const { tokens, brief, format } = input.userPersonality;
-          finalSystem += `\n\n[USER_PERSONALITY_TRAITS]\n`;
-          if (tokens.length > 0) finalSystem += `- Key Style Tokens: ${tokens.join(', ')}\n`;
-          if (format) finalSystem += `- Preferred Format: ${format}\n`;
-          if (brief) finalSystem += `- Personality Profile: ${brief}\n`;
-      }
+      // User text-style context (userHistory / userPersonality) is intentionally
+      // skipped for image mode — text-mode preferences are noise for visual prompts.
 
       const identity = this.getSystemIdentity();
       if (identity) {
