@@ -280,7 +280,7 @@ export function PromptInput({
                        title="שפת הקלטה"
                        aria-label="בחר שפת הקלטה"
                      >
-                       {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.flag ?? '🌐'}
+                       {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.short ?? 'HE'}
                      </button>
                      {showLangPicker && (
                        <div className="absolute bottom-full end-0 mb-1.5 bg-zinc-900/95 border border-white/10 rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
@@ -295,7 +295,7 @@ export function PromptInput({
                                  : "text-slate-300 hover:bg-white/5"
                              )}
                            >
-                             <span>{lang.flag}</span>
+                             <span className="font-mono font-bold text-[10px]">{lang.short}</span>
                              <span>{lang.label}</span>
                            </button>
                          ))}

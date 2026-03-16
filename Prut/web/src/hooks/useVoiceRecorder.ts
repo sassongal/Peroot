@@ -5,10 +5,10 @@ import { logger } from "@/lib/logger";
 
 
 export const VOICE_LANGUAGES = [
-  { code: 'he-IL', label: 'עברית', flag: '🇮🇱' },
-  { code: 'en-US', label: 'English', flag: '🇺🇸' },
-  { code: 'ar-SA', label: 'العربية', flag: '🇸🇦' },
-  { code: 'ru-RU', label: 'Русский', flag: '🇷🇺' },
+  { code: 'he-IL', label: 'עברית', flag: '🇮🇱', short: 'HE' },
+  { code: 'en-US', label: 'English', flag: '🇺🇸', short: 'EN' },
+  { code: 'ar-SA', label: 'العربية', flag: '🇸🇦', short: 'AR' },
+  { code: 'ru-RU', label: 'Русский', flag: '🇷🇺', short: 'RU' },
 ] as const;
 
 export type VoiceLang = typeof VOICE_LANGUAGES[number]['code'];
