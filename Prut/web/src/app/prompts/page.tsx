@@ -196,6 +196,24 @@ export default function PromptsIndexPage() {
             ))}
           </div>
 
+          {/* Cross-links */}
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Link
+              href="/guide"
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+            >
+              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">איך לכתוב פרומפט טוב?</p>
+              <p className="text-xs text-slate-500 mt-1">המדריך המלא עם עקרונות זהב וטכניקות</p>
+            </Link>
+            <Link
+              href="/features"
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+            >
+              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">מצבי עבודה מתקדמים</p>
+              <p className="text-xs text-slate-500 mt-1">תמונות, סרטונים, מחקר מעמיק וסוכני AI</p>
+            </Link>
+          </div>
+
           {/* CTA */}
           <section
             className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-gradient-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"

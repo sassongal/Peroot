@@ -295,6 +295,31 @@ export default function PricingPage() {
           </div>
         </div>
 
+        {/* Cross-links */}
+        <div className="max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link
+            href="/features"
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+          >
+            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">מה כלול? ראו כל היכולות</p>
+            <p className="text-xs text-slate-500 mt-1">5 מנועי AI, תמונות, סרטונים וסוכנים</p>
+          </Link>
+          <Link
+            href="/examples"
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+          >
+            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">דוגמאות לפרומפטים שיוצרים</p>
+            <p className="text-xs text-slate-500 mt-1">לפני ואחרי — שדרוג אמיתי</p>
+          </Link>
+          <Link
+            href="/prompts"
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+          >
+            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">גישה לספריית 480+ תבניות</p>
+            <p className="text-xs text-slate-500 mt-1">פרומפטים מוכנים ב-30+ קטגוריות</p>
+          </Link>
+        </div>
+
         {/* Credit system explanation */}
         <div className="max-w-2xl mx-auto mt-16 p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
           <h2 className="text-lg font-bold text-white mb-4 text-center">איך עובדת מערכת הקרדיטים?</h2>

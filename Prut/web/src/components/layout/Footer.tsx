@@ -43,9 +43,9 @@ export function Footer() {
           <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             {isHe ? "הצהרת נגישות" : "Accessibility"}
           </Link>
-          <a href="mailto:gal@joya-tech.net" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link href="/contact" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             {isHe ? "צור קשר" : "Contact"}
-          </a>
+          </Link>
           <a
             href="https://www.facebook.com/profile.php?id=61579689932777"
             target="_blank"

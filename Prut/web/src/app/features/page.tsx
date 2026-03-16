@@ -403,6 +403,36 @@ export default function FeaturesPage() {
           </div>
         </section>
 
+        {/* Cross-links */}
+        <section className="py-12 space-y-4">
+          <h2 className="text-lg font-serif font-bold text-white text-center mb-6">
+            המשיכו לגלות
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              href="/prompts"
+              className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+            >
+              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">ספריית 480+ תבניות פרומפטים</p>
+              <p className="text-xs text-slate-500 mt-1">פרומפטים מוכנים לכל תחום ופלטפורמה</p>
+            </Link>
+            <Link
+              href="/examples"
+              className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+            >
+              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">דוגמאות לפרומפטים משודרגים</p>
+              <p className="text-xs text-slate-500 mt-1">ראו לפני ואחרי — איך Peroot משפר פרומפטים</p>
+            </Link>
+            <Link
+              href="/blog"
+              className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+            >
+              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">טיפים נוספים בבלוג</p>
+              <p className="text-xs text-slate-500 mt-1">מדריכים מקצועיים לכתיבת פרומפטים ו-AI</p>
+            </Link>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="py-20 text-center space-y-6">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">
@@ -427,6 +457,9 @@ export default function FeaturesPage() {
               מדריך כתיבת פרומפטים
             </Link>
           </div>
+          <p className="text-slate-600 text-xs mt-4">
+            <Link href="/pricing" className="hover:text-amber-400 transition-colors">מחירים ותוכניות</Link>
+          </p>
         </section>
       </main>
     </div>

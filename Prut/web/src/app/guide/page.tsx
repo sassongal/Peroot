@@ -503,6 +503,31 @@ export default function GuidePage() {
           </GlassCard>
         </section>
 
+        {/* Cross-links */}
+        <section className="mt-8 mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link
+            href="/prompts"
+            className="rounded-xl border border-white/10 bg-black/40 p-5 hover:border-amber-500/30 transition-colors group"
+          >
+            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">התחילו עם תבניות מוכנות</p>
+            <p className="text-xs text-slate-500 mt-1">480+ פרומפטים מוכנים לשימוש מיידי</p>
+          </Link>
+          <Link
+            href="/features"
+            className="rounded-xl border border-white/10 bg-black/40 p-5 hover:border-amber-500/30 transition-colors group"
+          >
+            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">כל היכולות של המערכת</p>
+            <p className="text-xs text-slate-500 mt-1">5 מנועי AI, תמונות, סרטונים וסוכנים</p>
+          </Link>
+          <Link
+            href="/pricing"
+            className="rounded-xl border border-white/10 bg-black/40 p-5 hover:border-amber-500/30 transition-colors group"
+          >
+            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">שדרגו לתוכנית מתקדמת</p>
+            <p className="text-xs text-slate-500 mt-1">150 קרדיטים בחודש ומודלים פרימיום</p>
+          </Link>
+        </section>
+
       </div>
     </div>
   );
