@@ -252,44 +252,9 @@ export function PromptInput({
               }}
             />
 
-            
-            {inputScore && scoreTone && (
-              <div className="px-6 pb-4 pt-2 border-t border-white/5 relative z-20 bg-black/20">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span className="font-mono tracking-widest">{t.prompt_generator.prompt_strength}</span>
-                  <span className={cn("font-semibold", scoreTone.text)}>
-                    {inputScore.label} · {inputScore.score}%
-                  </span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden">
-                  <div
-                    className={cn("h-full transition-all duration-500", scoreTone.bar)}
-                    style={{ width: `${inputScore.score}%` }}
-                  />
-                </div>
-                {inputScore.usageBoost > 0 && (
-                  <div className="mt-2 text-[10px] text-slate-500">
-                    {t.prompt_generator.usage_boost} +{inputScore.usageBoost}
-                  </div>
-                )}
-                {inputScore.tips.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {inputScore.tips.map((tip, index) => (
-                      <span
-                        key={`${tip}-${index}`}
-                        className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-300 border border-white/10"
-                      >
-                        {tip}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Voice Input Trigger + Language Picker — bottom-left of textarea */}
+            {/* Voice Input Trigger + Language Picker — above prompt strength bar */}
             {isSupported && (
-               <div className="absolute bottom-4 end-4 z-30 flex items-center gap-1.5">
+               <div className="flex items-center gap-1.5 px-6 pt-2 relative z-20">
                    <button
                      onClick={toggleListening}
                      className={cn(
@@ -338,12 +303,47 @@ export function PromptInput({
                      )}
                    </div>
                    {isListening && (
-                       <span className="absolute bottom-full end-0 mb-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                       <span className="text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
                            מקליט...
                        </span>
                    )}
                </div>
             )}
+
+            {inputScore && scoreTone && (
+              <div className="px-6 pb-4 pt-2 border-t border-white/5 relative z-20 bg-black/20">
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span className="font-mono tracking-widest">{t.prompt_generator.prompt_strength}</span>
+                  <span className={cn("font-semibold", scoreTone.text)}>
+                    {inputScore.label} · {inputScore.score}%
+                  </span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className={cn("h-full transition-all duration-500", scoreTone.bar)}
+                    style={{ width: `${inputScore.score}%` }}
+                  />
+                </div>
+                {inputScore.usageBoost > 0 && (
+                  <div className="mt-2 text-[10px] text-slate-500">
+                    {t.prompt_generator.usage_boost} +{inputScore.usageBoost}
+                  </div>
+                )}
+                {inputScore.tips.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {inputScore.tips.map((tip, index) => (
+                      <span
+                        key={`${tip}-${index}`}
+                        className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-300 border border-white/10"
+                      >
+                        {tip}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
 
             {!inputVal.trim() && !isListening && (
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
