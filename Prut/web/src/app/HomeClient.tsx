@@ -119,7 +119,9 @@ function PageContent({ user }: { user: User | null }) {
 
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
   const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
+  const [imageAspectRatio, setImageAspectRatio] = useState("");
   const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>('general');
+  const [videoAspectRatio, setVideoAspectRatio] = useState("");
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -430,9 +432,9 @@ function PageContent({ user }: { user: User | null }) {
     // Build mode_params for this generation
     const currentModeParams: Record<string, string> | undefined =
       ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
-        ? { image_platform: imagePlatform, output_format: imageOutputFormat }
+        ? { image_platform: imagePlatform, output_format: imageOutputFormat, ...(imageAspectRatio && { aspect_ratio: imageAspectRatio }) }
         : ps.selectedCapability === CapabilityMode.VIDEO_GENERATION
-          ? { video_platform: videoPlatform }
+          ? { video_platform: videoPlatform, ...(videoAspectRatio && { aspect_ratio: videoAspectRatio }) }
           : undefined;
 
     dispatch({ type: 'START_STREAM' });
@@ -1003,8 +1005,12 @@ function PageContent({ user }: { user: User | null }) {
                   setImagePlatform={setImagePlatform}
                   imageOutputFormat={imageOutputFormat}
                   setImageOutputFormat={setImageOutputFormat}
+                  imageAspectRatio={imageAspectRatio}
+                  setImageAspectRatio={setImageAspectRatio}
                   videoPlatform={videoPlatform}
                   setVideoPlatform={setVideoPlatform}
+                  videoAspectRatio={videoAspectRatio}
+                  setVideoAspectRatio={setVideoAspectRatio}
                />
 
                {/* Recently Used Prompts Strip */}

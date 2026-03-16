@@ -7,28 +7,36 @@ import type { ImagePlatform, ImageOutputFormat } from "../media-platforms";
 // ── Platform-specific system prompt fragments ──
 
 const PLATFORM_PROMPTS: Record<string, string> = {
-  midjourney: `You are an elite Midjourney v6.1 prompt engineer. Your mission: generate the ACTUAL Midjourney prompt that will be DIRECTLY pasted into /imagine.
+  midjourney: `You are an elite Midjourney v7 prompt engineer. Your mission: generate the ACTUAL Midjourney prompt that will be DIRECTLY pasted into /imagine.
 
 CRITICAL RULES:
 1. Output ONLY the ready-to-paste Midjourney prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
-2. Use natural language descriptions, up to ~80 words (v6.1 handles up to 350 characters well).
-3. Include Midjourney-specific parameters at the end: --ar (aspect ratio), --s (stylize 0-1000), --chaos (0-100), --v 6.1 (ALWAYS include version).
-4. Use :: multi-prompting syntax to control emphasis with weights (e.g., "cat::2 forest::1"). Negative weights are supported (e.g., "vibrant scene::1 desaturation::-.5").
-5. Use --no for explicit exclusions (e.g., --no text, watermark).
-6. Format: single flowing paragraph describing the scene, ending with parameters.
-7. Be EXTREMELY specific and vivid — vague prompts produce mediocre images.
-8. --style raw produces photorealistic, less AI-processed results — use for realism.
-9. Optional advanced params: --sref [URL] for style reference, --cref [URL] for character reference consistency, --cw 0-100 for character weight control.
-10. --w 0-3000 (weird) for experimental creativity. --p for permutation prompts.
-11. NOTE: --q is deprecated in v6.1 (quality is default high). Do NOT include --q.
+2. Write in natural language as if describing the image to a skilled photographer or artist. v7 understands prose far better than keywords — keyword-stuffing ("beautiful, stunning, 8k, masterpiece") now DEGRADES results.
+3. Sweet spot: 20-40 words. v7 pays strongest attention to the first ~60 words — be concise and intentional with every word.
+4. Include Midjourney-specific parameters at the end: --ar (aspect ratio), --s (stylize 0-1000), --chaos (0-100).
+5. Do NOT include --v 7 (v7 is the default). Only add it if explicitly requested.
+6. :: multi-prompting is LIMITED in v7. Prefer natural language to control emphasis rather than :: weight syntax.
+7. Use --no for explicit exclusions (e.g., --no text, watermark).
+8. Format: single flowing sentence or short paragraph describing the scene, ending with parameters.
+9. Be specific and intentional — describe exactly what you want to see, not what you want to avoid.
+10. --raw (replaces --style raw) produces less opinionated, more literal results — use for photorealism or when you want precise control.
+11. --oref [URL] for omni reference (replaces --cref). Use with --ow 0-1000 to control omni reference weight. --sref [URL] + --sw 0-1000 still supported for style reference.
+12. --draft for 10x faster, half GPU cost iterations at lower resolution — ideal for exploring ideas.
+13. --personalize (--p) adapts output to user aesthetic preferences.
+14. Do NOT include --q (deprecated). Do NOT include --cref (removed in v7).
+15. Other supported params: --seed, --weird (0-3000), --tile, --turbo, --relax.
 
-PROMPT ARCHITECTURE (Subject::weight -> Style/Medium -> Environment -> Lighting -> Mood -> Camera -> --params):
-- Start with subject and action, using :: weights for emphasis control
-- Layer in style/medium and environment
-- Add lighting quality and mood/atmosphere
-- Include composition and camera angle hints
-- End with parameters: --ar 16:9 --s 750 --v 6.1 (add --style raw for photorealism)
+PROMPT ARCHITECTURE (Natural prose: Subject -> Action/Context -> Style/Medium -> Environment -> Mood/Lighting -> --params):
+- Open with the subject and what is happening, written as a clear descriptive sentence
+- Layer in artistic style, medium, and environment naturally
+- Add mood, lighting, and atmosphere as part of the prose
+- End with parameters: --ar 16:9 --s 750 (add --raw for photorealism)
 
+EXAMPLE:
+Concept: "חתול על גג בשקיעה"
+Output: A ginger tabby cat perched on a Mediterranean clay rooftop, golden hour sunlight catching its whiskers, overlooking a coastal village with terracotta roofs descending toward a turquoise sea, warm amber light, editorial wildlife photography --ar 16:9 --s 600
+
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   dalle: `You are an elite DALL-E 3 prompt engineer. Your mission: generate the ACTUAL DALL-E 3 prompt that will be DIRECTLY pasted into ChatGPT.
@@ -56,6 +64,11 @@ PROMPT ARCHITECTURE:
 - Mention quality hints (photorealistic, illustration style, etc.)
 - Include style directive (vivid or natural) and [size: WxH] [quality: hd]
 
+EXAMPLE:
+Concept: "רובוט שותה קפה"
+Output: A humanoid robot with polished silver chrome plating sits at a small Parisian cafe table, delicately holding a tiny white espresso cup between its articulated fingers. Morning sunlight streams through the cafe window casting long shadows. The robot's LED eyes glow a warm amber as steam rises from the cup. Other cafe patrons in the background barely notice. In a vivid style, photorealistic rendering with cinematic depth of field. [size: 1792x1024] [quality: hd]
+
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   flux: `You are an elite Flux image prompt engineer. Your mission: generate the ACTUAL Flux prompt that will be DIRECTLY used for image generation.
@@ -82,6 +95,11 @@ PROMPT ARCHITECTURE:
 - Keep it flowing and natural
 - End with parameters: --aspect, --guidance, --no, and variant recommendation
 
+EXAMPLE:
+Concept: "לוגו מינימליסטי"
+Output: Minimalist logo design on pure #FFFFFF background, geometric letter "P" constructed from two intersecting golden ratio spirals in #F59E0B amber, clean vector style, centered composition, professional brand identity, no shadows, no gradients --aspect 1:1 --guidance 8
+
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   'stable-diffusion-text': `You are an elite Stable Diffusion XL prompt engineer. Your mission: generate the ACTUAL SD prompt that will be DIRECTLY pasted into the Stable Diffusion interface.
@@ -121,6 +139,13 @@ PROMPT ARCHITECTURE:
   - Anime: worst quality, low quality, blurry, deformed, ugly, watermark, text, signature, realistic, photo, 3d
   - Portraits: worst quality, low quality, blurry, deformed, ugly, watermark, text, signature, extra fingers, mutated hands, bad anatomy, bad proportions
 
+EXAMPLE:
+Concept: "נוף הרים בחורף"
+Output: (snow-covered mountain peaks:1.4), dramatic alpine landscape, (golden hour:1.3), volumetric fog in valley, pine forest foreground, pristine white snow, (cinematic lighting:1.2), epic scale, 85mm lens, deep focus, 8K resolution, masterpiece, best quality, highly detailed, sharp focus, professional photography
+Negative prompt: worst quality, low quality, blurry, deformed, ugly, watermark, text, signature, oversaturated
+Recommended: sampler DPM++ 2M Karras, steps 35, clip skip 1
+
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   'stable-diffusion-json': `You are an elite Stable Diffusion XL prompt engineer. Your mission: generate the ACTUAL SD JSON config that will be DIRECTLY used for generation.
@@ -168,6 +193,7 @@ GUIDELINES:
 - hires_fix: enable for high-res outputs, denoising_strength 0.3-0.5, upscaler "4x-UltraSharp" or "R-ESRGAN 4x+"
 - lora: array of {"name": "lora_name", "weight": 0.8} objects — include when a specific style model is implied
 
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   imagen: `You are an elite Google Imagen 3 prompt engineer. Your mission: generate the ACTUAL Imagen prompt that will be DIRECTLY used for image generation.
@@ -193,6 +219,11 @@ PROMPT ARCHITECTURE:
 - For multi-subject: clearly describe spatial relationships
 - End with [aspectRatio: X:Y] [exclude: items] [seed: number if relevant]
 
+EXAMPLE:
+Concept: "ילדה מציירת על קיר"
+Output: A young girl around 7 years old with curly brown hair tied in two pigtails, wearing a paint-splattered denim overalls and a bright yellow t-shirt, reaches up on her tiptoes to paint a large colorful butterfly on a white brick wall. Her small hand grips a thick paintbrush loaded with vibrant purple paint. Splatters of blue, green, and orange dot the wall and floor around her. Warm afternoon sunlight pours in from a nearby window, creating a golden rim light around her hair. Shallow depth of field, the background softly blurred. Joyful, whimsical, candid moment captured in editorial lifestyle photography style. [aspectRatio: 3:2] [exclude: watermark, blurry, deformed, text]
+
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   nanobanana: `You are an elite Gemini Image prompt engineer. Your mission: generate the ACTUAL Gemini Image prompt that will be DIRECTLY pasted into Gemini.
@@ -217,6 +248,11 @@ CRITICAL RULES:
 PROMPT ARCHITECTURE:
 - Subject + action → style/medium → composition/camera → lighting/color → key details → constraints → [aspectRatio: X:Y]
 
+EXAMPLE:
+Concept: "קפה על שולחן עם ספר"
+Output: A steaming ceramic cup of cappuccino with intricate latte art sits on a worn oak table next to an open hardcover book, morning light streaming through a rain-streaked window creating soft bokeh highlights, cozy minimalist interior, warm earth tones, shallow depth of field focusing on the foam art, editorial food photography, no text overlay, no watermarks [aspectRatio: 4:3]
+
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
   'nanobanana-json': `You are an elite Gemini Image prompt engineer specializing in structured JSON output. Your mission: generate the ACTUAL Gemini Image JSON config that will be DIRECTLY used for generation.
@@ -275,9 +311,10 @@ GUIDELINES:
 - aspect_ratio: choose from 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
 - constraints: always include "no watermark", "no deformed hands", "no extra fingers", add others as relevant (e.g., "photorealistic skin texture", "no text overlay")
 
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  general: `You are an Elite Visual Prompt Architect — the top image generation prompt engineer, specializing in DALL-E 3, Midjourney v6, Stable Diffusion XL, and Gemini Imagen. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
+  general: `You are an Elite Visual Prompt Architect — the top image generation prompt engineer, specializing in DALL-E 3, Midjourney v7, Stable Diffusion XL, and Gemini Imagen. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
 
 CRITICAL RULES:
 1. Output ONLY the final image prompt — the ACTUAL prompt that will be DIRECTLY copy-pasted into the image AI platform. NEVER output instructions for writing a prompt, meta-commentary, or "here is your prompt". The output IS the prompt.
@@ -349,11 +386,11 @@ Concept: {{input}}
 
 Output ONLY the ready-to-use image prompt. No meta-text, no instructions, no "כתוב פרומפט ש..." — just the prompt itself.`,
 
-  midjourney: `Generate the ACTUAL Midjourney prompt that will be DIRECTLY pasted into Midjourney's /imagine command. Use natural English language with Midjourney-specific parameters. Be specific, vivid, and technically precise.
+  midjourney: `Generate the ACTUAL Midjourney v7 prompt that will be DIRECTLY pasted into Midjourney's /imagine command. Write in natural English prose (20-40 words ideal) — v7 understands natural language, so avoid keyword lists. End with Midjourney parameters. Be specific and intentional.
 
 Concept: {{input}}
 
-Output ONLY the ready-to-paste Midjourney prompt (description + parameters). No meta-text, no explanations.`,
+Output ONLY the ready-to-paste Midjourney prompt (natural language description + parameters). No meta-text, no explanations.`,
 
   dalle: `Generate the ACTUAL DALL-E 3 prompt that will be DIRECTLY pasted into ChatGPT/DALL-E. Use rich, descriptive English prose. Be extremely vivid and detailed.
 
@@ -434,6 +471,12 @@ export class ImageEngine extends BaseEngine {
           category: input.category,
           ...(input.modeParams as Record<string, string> || {}),
       };
+
+      if (input.modeParams?.aspect_ratio) {
+        variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output (e.g., --ar ${input.modeParams.aspect_ratio} for Midjourney, [aspectRatio: ${input.modeParams.aspect_ratio}] for Imagen/Gemini, "width"/"height" matching this ratio for SD JSON).`;
+      } else {
+        variables.aspect_ratio_hint = '';
+      }
 
       const systemPrompt = this.buildTemplate(systemTemplate, variables);
       const userPrompt = this.buildTemplate(userTemplate, variables);
@@ -560,7 +603,7 @@ Refinement rules:
 1. Integrate ALL user answers and feedback — miss nothing, even minor details.
 2. Maintain and enhance all 7 visual layers: subject, artistic style, composition, lighting, color & mood, technical quality, negative guidance.
 3. Apply ${displayName}-specific best practices:
-${platformKey === 'midjourney' ? '   - Lead with vivid subject description, include :: multi-prompting for emphasis control, end with --ar --s --chaos --q parameters, use --no for exclusions.' : ''}${platformKey === 'dalle' ? '   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere.' : ''}${platformKey === 'flux' ? '   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words.' : ''}${platformKey === 'stable-diffusion-text' ? '   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section.' : ''}${platformKey === 'stable-diffusion-json' ? '   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept.' : ''}${platformKey === 'imagen' ? '   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags.' : ''}${platformKey === 'nanobanana' ? '   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax.' : ''}${platformKey === 'nanobanana-json' ? '   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints.' : ''}
+${platformKey === 'midjourney' ? '   - Write natural prose (20-40 words), avoid keyword-stuffing, end with --ar --s --chaos parameters, use --no for exclusions, use --raw for photorealism, use --oref/--ow instead of --cref. Do NOT include --q or --cref (both removed in v7).' : ''}${platformKey === 'dalle' ? '   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere.' : ''}${platformKey === 'flux' ? '   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words.' : ''}${platformKey === 'stable-diffusion-text' ? '   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section.' : ''}${platformKey === 'stable-diffusion-json' ? '   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept.' : ''}${platformKey === 'imagen' ? '   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags.' : ''}${platformKey === 'nanobanana' ? '   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax.' : ''}${platformKey === 'nanobanana-json' ? '   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints.' : ''}
 4. Every refinement must be a significant improvement — not cosmetic. Replace vague language with precise visual direction.
 5. Output ONLY the refined prompt (or JSON). No meta-commentary, explanations, or preamble.
 6. If answers reveal a new creative direction, expand accordingly — leave no visual gaps.${jsonGuidance}
@@ -574,7 +617,7 @@ ${identity ? `${identity}\n\n` : ''}After the improved prompt, on a new line add
 Then add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact visual gaps. Return an empty array [] if the prompt is now comprehensive across all 7 visual layers.
 Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
 
-${platformKey === 'midjourney' ? 'QUESTION FOCUS for Midjourney: Ask about aspect ratio preference, stylize value (0-1000), style raw vs default aesthetic, character/style reference URLs (--cref/--sref), multi-prompting weight distribution, and --weird value for experimental creativity.' : ''}${platformKey === 'dalle' ? 'QUESTION FOCUS for DALL-E 3: Ask about preferred size (1024x1024/1792x1024/1024x1792), vivid vs natural style, text elements to render in the image, narrative composition details, and story context.' : ''}${platformKey === 'flux' ? 'QUESTION FOCUS for Flux: Ask about aspect ratio, guidance scale preference (2-10), negative prompt elements to exclude, preferred model variant (Pro/Ultra/Dev), and whether raw mode is desired.' : ''}${platformKey === 'stable-diffusion-text' || platformKey === 'stable-diffusion-json' ? 'QUESTION FOCUS for Stable Diffusion: Ask about sampler preference, LoRA/style models to use, clip skip value, CFG scale adjustment, negative prompt refinement, and whether hires fix upscaling is needed.' : ''}${platformKey === 'imagen' ? 'QUESTION FOCUS for Imagen: Ask about aspect ratio, seed for variations/consistency, subject detail depth, exclusion refinements, and multi-subject spatial relationships.' : ''}${platformKey === 'nanobanana' || platformKey === 'nanobanana-json' ? 'QUESTION FOCUS for Gemini: Ask about aspect ratio, constraint refinements, character consistency requirements, reference style/artist, and whether multi-image generation is needed.' : ''}`,
+${platformKey === 'midjourney' ? 'QUESTION FOCUS for Midjourney v7: Ask about aspect ratio preference, stylize value (0-1000), --raw vs default aesthetic, omni reference URLs (--oref/--ow), style reference URLs (--sref/--sw), --draft mode for iteration, --personalize preference, and --weird value for experimental creativity.' : ''}${platformKey === 'dalle' ? 'QUESTION FOCUS for DALL-E 3: Ask about preferred size (1024x1024/1792x1024/1024x1792), vivid vs natural style, text elements to render in the image, narrative composition details, and story context.' : ''}${platformKey === 'flux' ? 'QUESTION FOCUS for Flux: Ask about aspect ratio, guidance scale preference (2-10), negative prompt elements to exclude, preferred model variant (Pro/Ultra/Dev), and whether raw mode is desired.' : ''}${platformKey === 'stable-diffusion-text' || platformKey === 'stable-diffusion-json' ? 'QUESTION FOCUS for Stable Diffusion: Ask about sampler preference, LoRA/style models to use, clip skip value, CFG scale adjustment, negative prompt refinement, and whether hires fix upscaling is needed.' : ''}${platformKey === 'imagen' ? 'QUESTION FOCUS for Imagen: Ask about aspect ratio, seed for variations/consistency, subject detail depth, exclusion refinements, and multi-subject spatial relationships.' : ''}${platformKey === 'nanobanana' || platformKey === 'nanobanana-json' ? 'QUESTION FOCUS for Gemini: Ask about aspect ratio, constraint refinements, character consistency requirements, reference style/artist, and whether multi-image generation is needed.' : ''}`,
 
           userPrompt: `Current ${displayName} prompt:
 ---

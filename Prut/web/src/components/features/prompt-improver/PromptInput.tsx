@@ -37,8 +37,12 @@ interface PromptInputProps {
   setImagePlatform: (platform: ImagePlatform) => void;
   imageOutputFormat: ImageOutputFormat;
   setImageOutputFormat: (format: ImageOutputFormat) => void;
+  imageAspectRatio: string;
+  setImageAspectRatio: (ratio: string) => void;
   videoPlatform: VideoPlatform;
   setVideoPlatform: (platform: VideoPlatform) => void;
+  videoAspectRatio: string;
+  setVideoAspectRatio: (ratio: string) => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -114,8 +118,12 @@ export function PromptInput({
   setImagePlatform,
   imageOutputFormat,
   setImageOutputFormat,
+  imageAspectRatio,
+  setImageAspectRatio,
   videoPlatform,
   setVideoPlatform,
+  videoAspectRatio,
+  setVideoAspectRatio,
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -192,6 +200,8 @@ export function PromptInput({
             onPlatformChange={setImagePlatform}
             outputFormat={imageOutputFormat}
             onOutputFormatChange={setImageOutputFormat}
+            aspectRatio={imageAspectRatio}
+            onAspectRatioChange={setImageAspectRatio}
             disabled={isLoading}
           />
         </div>
@@ -203,6 +213,8 @@ export function PromptInput({
           <VideoPlatformSelector
             selectedPlatform={videoPlatform}
             onPlatformChange={setVideoPlatform}
+            aspectRatio={videoAspectRatio}
+            onAspectRatioChange={setVideoAspectRatio}
             disabled={isLoading}
           />
         </div>

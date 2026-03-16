@@ -10,7 +10,11 @@ import { VideoPlatform } from "../video-platforms";
 
 const PLATFORM_OVERRIDES: Record<VideoPlatform, string> = {
   general: `OUTPUT STRUCTURE — weave ALL 7 mandatory layers into one flowing English paragraph.
-The paragraph must read as a seamless cinematic description, not a list. Transition naturally between camera, subject, motion, environment, lighting, and style. Every sentence should serve the motion narrative. 30-80 words.`,
+The paragraph must read as a seamless cinematic description, not a list. Transition naturally between camera, subject, motion, environment, lighting, and style. Every sentence should serve the motion narrative. 30-80 words.
+
+EXAMPLE:
+Concept: "ציפור ממריאה מענף"
+Output: A slow-motion close-up captures a vibrant blue kingfisher launching from a moss-covered branch, wings spreading wide as droplets of morning dew scatter into the golden sunrise light, the background of a misty forest lake blurs into a dreamy bokeh, filmed with a 200mm telephoto lens.`,
 
   runway: `PLATFORM: Runway Gen-4
 Runway's model interprets prompts as a single continuous shot. The camera directive is the #1 priority — it MUST be the first element.
@@ -31,7 +35,11 @@ Rules:
 - Aspect ratios: 16:9 (cinematic), 9:16 (vertical/mobile), 1:1 (social).
 - Duration: Gen-4 generates ~4-second clips — design all action to fit within this window.
 - Sweet spot: 30-60 words. Over 80 words degrades coherence.
-- Output in English only.`,
+- Output in English only.
+
+EXAMPLE:
+Concept: "אישה הולכת ברחוב גשום"
+Output: Slow tracking shot follows a woman in a red coat walking along a rain-soaked cobblestone street at dusk. Neon shop signs reflect in puddles as she passes. Shallow depth of field, anamorphic lens flare from distant headlights. Moody neo-noir atmosphere.`,
 
   kling: `PLATFORM: Kling 2.0
 Kling excels at physics-based motion. Its model understands weight, momentum, and realistic body dynamics better than any competitor. Use this to your advantage.
@@ -53,7 +61,11 @@ Rules:
 - Image-to-video: When extending a still image, describe only the MOTION that should happen, not the scene that already exists.
 - Multi-character scenes: When multiple characters interact, describe each character's motion separately then their interaction.
 - Sweet spot: 50-200 words. The model rewards detail.
-- Output in English only.`,
+- Output in English only.
+
+EXAMPLE:
+Concept: "רקדנית בלט"
+Output: A professional ballerina in a flowing white tutu rises from plie to full releve en pointe, her weight shifting smoothly upward through her core as arms sweep from bras bas through first position to fifth position overhead. Her back arches slightly as momentum carries her into a controlled single pirouette, spotted head whipping around. Shot on ARRI Alexa, 85mm lens, dramatic side lighting from a single spotlight creating long shadows across the wooden stage floor. Professional mode.`,
 
   sora: `PLATFORM: Sora
 Sora produces the most cinematic results when given structured director's-brief format with labeled blocks. Think of it as writing a shot list.
@@ -80,7 +92,16 @@ Rules:
 - Transition guidance: Use "Match cut to...", "Dissolve to...", "Hard cut to..." between shots.
 - More descriptive = more controlled output. Sora rewards specificity.
 - Sweet spot: 50-150 words.
-- Output in English only.`,
+- Output in English only.
+
+EXAMPLE:
+Concept: "עיר עתידנית"
+Output: Camera: 35mm anamorphic virtual lens, slow crane up revealing the cityscape. Duration: 8s.
+Scene: A sprawling futuristic metropolis at blue hour, towering glass skyscrapers with holographic billboards, flying vehicles leaving light trails between buildings.
+Subject: In the foreground, a young woman stands at a rooftop observation deck, wind catching her silver hair.
+Action: She places her hand on the glass railing and looks up as a massive transport ship glides silently overhead.
+Lighting: Cool blue ambient from the city below, warm golden rim light from the setting sun on the horizon, holographic advertisements casting colored light.
+Style: Blade Runner 2049 aesthetic, Deakins-inspired backlight, teal and orange color grading.`,
 
   veo: `PLATFORM: Google Veo 3
 Veo 3 is Google DeepMind's video model — the ONLY platform with native audio generation (dialogue, SFX, ambient sound, music). Character consistency is a core strength.
@@ -108,7 +129,17 @@ Rules:
 - Duration: For specific timing, add "Duration: Xs" (5-15 seconds supported).
 - Resolution: Veo generates up to 4K resolution.
 - Sweet spot: 50-100 words visual + 20-40 words audio.
-- Output in English only.`,
+- Output in English only.
+
+EXAMPLE:
+Concept: "שף מבשל"
+Output: Close-up of a chef's hands expertly julienning carrots on a wooden cutting board, the knife moving in rapid precise strokes. Steam rises from a copper pot simmering on the gas range behind. Warm kitchen lighting with practical overhead pendants. Film grain, documentary style.
+
+Audio:
+Dialogue: None.
+SFX: "knife hitting board -> rhythmic sharp taps", "pot simmering -> gentle bubbling."
+Ambient: "busy restaurant kitchen murmur, distant clanging of pots."
+Music: "acoustic guitar, gentle fingerpicking, warm and inviting."`,
 
   higgsfield: `PLATFORM: Higgsfield
 Higgsfield uses a directive command syntax — think movie set instructions, not prose descriptions. Remove all filler words. Each line is an instruction.
@@ -131,7 +162,14 @@ Rules:
 - Character consistency: Higgsfield excels at human likenesses — describe face, body type, and outfit in detail for consistency.
 - Camera compound moves: Supports compound camera moves — "crane up while pushing in", "orbit left while tilting down."
 - Sweet spot: 30-60 words. Tight, punchy, no fluff.
-- Output in English only.`,
+- Output in English only.
+
+EXAMPLE:
+Concept: "ריקוד ברחוב"
+Output: Wide angle, handheld.
+Young man in white sneakers and black joggers, urban backdrop.
+Launches into fluid breakdance -- drops to one knee at 0s, spins into windmill at 1s, freezes in baby freeze at 3s, snaps upright at 3.5s.
+Shot on full-frame cinema camera, golden hour backlight, music video aesthetic.`,
 
   minimax: `PLATFORM: Minimax Hailuo
 Minimax/Hailuo excels at human body movement and facial expressions. Its motion model is best-in-class for choreography, gestures, and micro-expressions.
@@ -153,7 +191,11 @@ Rules:
 - Group choreography: For multiple subjects, use "simultaneously" and "in response to" to create cause-effect motion chains.
 - Camera awareness: Minimax handles complex camera work — combine tracking + zoom + focus pull.
 - Sweet spot: 40-100 words.
-- Output in English only.`,
+- Output in English only.
+
+EXAMPLE:
+Concept: "אישה מקבלת בשורה טובה"
+Output: Medium close-up, slow push-in. A woman in her late 20s, dark wavy hair, wearing a casual cream sweater, sits at a desk holding her phone. Her eyes scan the screen -- brow slightly furrowed. Then her eyebrows rise, corners of mouth twitch upward, eyes widen. She gasps softly, free hand rises to cover her mouth as a full smile breaks through. Shoulders lift with excitement, she bounces slightly in her chair. Soft natural window light from the left, warm tones, shallow depth of field.`,
 };
 
 // ── Platform-specific user prompts ──
@@ -261,6 +303,7 @@ VIDEO PROMPT ARCHITECTURE — 7 mandatory layers:
 
 {{platform_override}}
 
+{{aspect_ratio_hint}}
 Tone: {{tone}}.`;
 
 export class VideoEngine extends BaseEngine {
@@ -284,6 +327,12 @@ export class VideoEngine extends BaseEngine {
       platform_override: platformOverride,
       ...(input.modeParams as Record<string, string> || {}),
     };
+
+    if (input.modeParams?.aspect_ratio) {
+      variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output. Design the shot composition for a ${input.modeParams.aspect_ratio} frame.`;
+    } else {
+      variables.aspect_ratio_hint = '';
+    }
 
     const systemPrompt = this.buildTemplate(DEFAULT_SYSTEM_PROMPT, variables);
     const userTemplate = VIDEO_USER_PROMPTS[platform] || VIDEO_USER_PROMPTS['general'];

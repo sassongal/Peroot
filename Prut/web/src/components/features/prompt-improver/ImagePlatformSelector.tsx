@@ -4,11 +4,22 @@ import { cn } from "@/lib/utils";
 import { IMAGE_PLATFORMS, ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { IMAGE_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
 
+const ASPECT_RATIO_OPTIONS = [
+  { value: '', label: 'אוטומטי' },
+  { value: '1:1', label: '1:1' },
+  { value: '16:9', label: '16:9' },
+  { value: '9:16', label: '9:16' },
+  { value: '4:3', label: '4:3' },
+  { value: '3:2', label: '3:2' },
+] as const;
+
 interface ImagePlatformSelectorProps {
   selectedPlatform: ImagePlatform;
   onPlatformChange: (platform: ImagePlatform) => void;
   outputFormat: ImageOutputFormat;
   onOutputFormatChange: (format: ImageOutputFormat) => void;
+  aspectRatio?: string;
+  onAspectRatioChange?: (ratio: string) => void;
   disabled?: boolean;
 }
 
@@ -17,6 +28,8 @@ export function ImagePlatformSelector({
   onPlatformChange,
   outputFormat,
   onOutputFormatChange,
+  aspectRatio = '',
+  onAspectRatioChange,
   disabled,
 }: ImagePlatformSelectorProps) {
   const selectedConfig = IMAGE_PLATFORMS.find(p => p.id === selectedPlatform);
@@ -92,6 +105,31 @@ export function ImagePlatformSelector({
             >
               JSON
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Aspect Ratio selector */}
+      {onAspectRatioChange && (
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-[11px] text-slate-500">יחס תמונה:</span>
+          <div className="flex rounded-md border border-white/10 overflow-hidden">
+            {ASPECT_RATIO_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                disabled={disabled}
+                onClick={() => onAspectRatioChange(option.value)}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium transition-colors",
+                  aspectRatio === option.value
+                    ? "bg-purple-500/20 text-purple-300"
+                    : "text-slate-400 hover:bg-white/5"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
