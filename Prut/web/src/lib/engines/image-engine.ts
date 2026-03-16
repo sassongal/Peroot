@@ -392,4 +392,121 @@ export class ImageEngine extends BaseEngine {
           requiredFields: [],
       };
   }
+
+  generateRefinement(input: EngineInput): EngineOutput {
+      if (!input.previousResult) throw new Error("Previous result required for refinement");
+
+      const platform = (input.modeParams?.image_platform || 'general') as ImagePlatform;
+      const outputFormat = (input.modeParams?.output_format || 'text') as ImageOutputFormat;
+      const platformKey = getPlatformKey(platform, outputFormat);
+      const isGeneral = platform === 'general';
+      const isJsonOutput = (platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json';
+
+      const instruction = (input.refinementInstruction || (isGeneral ? "שפר את פרומפט התמונה והפוך אותו לויזואלי ומדויק יותר." : "Refine the image prompt and make it more visually precise and detailed.")).trim().slice(0, 2000);
+
+      let answersBlock = "";
+      if (input.answers && Object.keys(input.answers).length > 0) {
+          const pairs = Object.entries(input.answers)
+              .filter(([, v]) => v.trim())
+              .map(([key, answer]) => `- [${key}] ${answer}`)
+              .join("\n");
+          if (pairs) {
+              answersBlock = isGeneral
+                  ? `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`
+                  : `\n\nUser answers to clarifying questions:\n${pairs}\n`;
+          }
+      }
+
+      const identity = this.getSystemIdentity();
+
+      if (isGeneral) {
+          // General mode: Hebrew refinement focused on the 7 visual layers
+          return {
+              systemPrompt: `אתה ארכיטקט פרומפטים ויזואליים ברמה הגבוהה ביותר. משימתך: לשדרג את פרומפט התמונה הקיים לרמת מושלמות ויזואלית על בסיס המשוב והפרטים החדשים שסופקו.
+
+כללי שדרוג פרומפט תמונה:
+1. שלב את כל התשובות והמשוב — אל תתעלם מאף פרט, גם הקטן ביותר.
+2. בדוק ושפר את כל 7 שכבות הפרומפט הויזואלי:
+   - נושא מרכזי: האם הנושא מתואר בפירוט קיצוני? תנוחה, ביטוי, מיקום, גיל, לבוש — כל פרט?
+   - סגנון אמנותי: האם סגנון הצילום/ציור/רנדור מוגדר בבהירות? האם ישנה הפניה לאמן/מותג?
+   - קומפוזיציה ומסגור: האם זווית המצלמה, סוג הצילום, וחוקי הקומפוזיציה מפורטים?
+   - תאורה: האם סוג האור, כיוון, איכות וטמפרטורת צבע מוגדרים במדויק?
+   - צבעים ואווירה: האם פלטת הצבעים ספציפית? האם האווירה המבוקשת מתוארת?
+   - פרטים טכניים ואיכות: האם מפרטי מצלמה, עומק שדה, ורזולוציה כלולים?
+   - הנחיה שלילית: האם הוספו הדרות מפורשות (ללא עיוותים, ללא טקסט, ללא סימני מים)?
+3. החלף כל תיאור מעורפל בתיאור קונקרטי וויזואלי: "אישה" → "אישה בשנות ה-30, שיער כהה גלי, עיניים חומות, לובשת בלייזר כחול נייבי"
+4. שמור על שפה עברית כשפה ראשית עם מונחים טכניים באנגלית (שמות מצלמות, סגנונות, רנדרינג).
+5. אל תוסיף הסברים — רק את הפרומפט הויזואלי המשודרג.
+6. כל גרסה חדשה חייבת לייצר תמונה טובה יותר על הניסיון הראשון.
+
+טון: ${input.tone}. קטגוריה: ${input.category}.
+
+${identity ? `${identity}\n\n` : ''}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
+[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+
+לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הויזואליים הגבוהים ביותר שנותרו — נושא, סגנון, תאורה, קומפוזיציה, או אווירה. החזר מערך ריק [] אם הפרומפט עכשיו מקיף את כל 7 השכבות.
+פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+
+              userPrompt: `הפרומפט הנוכחי:
+---
+${input.previousResult}
+---
+${answersBlock}
+${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
+
+שלב את כל המידע החדש לתוך פרומפט תמונה מעודכן ומשודרג בעברית. בדוק ספציפית: האם כל 7 השכבות הויזואליות מכוסות? האם התיאורים ספציפיים וקונקרטיים? האם הנחיות שליליות מוסיפות הגנה מפני תוצרי AI נפוצים?`,
+
+              outputFormat: "text",
+              requiredFields: [],
+          };
+      }
+
+      // Platform-specific mode: English refinement with platform-aware guidance
+      const platformDisplayName: Record<string, string> = {
+          midjourney: 'Midjourney',
+          dalle: 'DALL-E 3',
+          flux: 'Flux',
+          'stable-diffusion': 'Stable Diffusion',
+          imagen: 'Google Imagen',
+          nanobanana: 'Nano Banana',
+      };
+      const displayName = platformDisplayName[platform] || platform;
+
+      const jsonGuidance = isJsonOutput
+          ? `\n7. OUTPUT FORMAT: The result MUST be valid JSON — no markdown code fences, no explanations, no preamble. Preserve all required JSON fields for ${displayName}.`
+          : '';
+
+      return {
+          systemPrompt: `You are an Elite ${displayName} Prompt Engineer performing a precision refinement. Your task: upgrade the existing ${displayName} prompt based on user feedback and answers.
+
+Refinement rules:
+1. Integrate ALL user answers and feedback — miss nothing, even minor details.
+2. Maintain and enhance all 7 visual layers: subject, artistic style, composition, lighting, color & mood, technical quality, negative guidance.
+3. Apply ${displayName}-specific best practices:
+${platformKey === 'midjourney' ? '   - Lead with vivid subject description, include :: multi-prompting for emphasis control, end with --ar --s --chaos --q parameters, use --no for exclusions.' : ''}${platformKey === 'dalle' ? '   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere.' : ''}${platformKey === 'flux' ? '   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words.' : ''}${platformKey === 'stable-diffusion-text' ? '   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section.' : ''}${platformKey === 'stable-diffusion-json' ? '   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept.' : ''}${platformKey === 'imagen' ? '   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags.' : ''}${platformKey === 'nanobanana' ? '   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax.' : ''}${platformKey === 'nanobanana-json' ? '   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints.' : ''}
+4. Every refinement must be a significant improvement — not cosmetic. Replace vague language with precise visual direction.
+5. Output ONLY the refined prompt (or JSON). No meta-commentary, explanations, or preamble.
+6. If answers reveal a new creative direction, expand accordingly — leave no visual gaps.${jsonGuidance}
+
+Platform: ${displayName}. Tone: ${input.tone}. Category: ${input.category}.
+
+${identity ? `${identity}\n\n` : ''}After the improved prompt, on a new line add a short descriptive Hebrew title:
+[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+
+Then add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact visual gaps — subject detail, style reference, lighting mood, composition, or platform-specific parameters. Return an empty array [] if the prompt is now comprehensive across all 7 visual layers.
+Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+
+          userPrompt: `Current ${displayName} prompt:
+---
+${input.previousResult}
+---
+${answersBlock}
+${instruction ? `Additional instructions from user: ${instruction}` : ''}
+
+Integrate all new information and produce an upgraded, refined ${displayName} prompt${isJsonOutput ? ' as valid JSON' : ' in English'}.`,
+
+          outputFormat: isJsonOutput ? 'json' : 'text',
+          requiredFields: [],
+      };
+  }
 }

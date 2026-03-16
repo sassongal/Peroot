@@ -89,4 +89,69 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
       // Standard engine logic additions if needed
       return result;
   }
+
+  generateRefinement(input: EngineInput): EngineOutput {
+      if (!input.previousResult) throw new Error("Previous result required for refinement");
+
+      const instruction = (input.refinementInstruction || "שפר את הפרומפט והפוך אותו למקצועי, ספציפי וניתן לפעולה יותר.").trim().slice(0, 2000);
+
+      let answersBlock = "";
+      if (input.answers && Object.keys(input.answers).length > 0) {
+          const pairs = Object.entries(input.answers)
+              .filter(([, v]) => v.trim())
+              .map(([key, answer]) => `- [${key}] ${answer}`)
+              .join("\n");
+          if (pairs) {
+              answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;
+          }
+      }
+
+      const identity = this.getSystemIdentity();
+
+      return {
+          systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
+
+כללי שדרוג:
+1. שלב את כל התשובות והמשוב לתוך הפרומפט — אל תתעלם מאף פרט, גם הקטן ביותר.
+2. בדוק ושפר את כל 6 רכיבי ארכיטקטורת הפרומפט:
+   - תפקיד וזהות: האם הפרסונה מוגדרת ב-hyperspecific? האם כוללת תחום, שנות ניסיון, מתודולוגיה?
+   - המשימה: האם המשימה ברורה? האם פורקה לצעדים ממוספרים עם תלויות ברורות?
+   - הקשר ורקע: האם כל המידע שה-LLM צריך כדי להצליח מסופק?
+   - קהל יעד: האם הקהל מוגדר במדויק (דמוגרפיה, תפקיד, רמת בקיאות, כאבים)?
+   - פורמט פלט: האם המבנה, האורך, וסוג הפלט מצוינים במדויק?
+   - הנחיות ומגבלות: האם ישנן לפחות 2-3 מגבלות שליליות מפורשות?
+3. החל את 7 טכניקות האופטימיזציה המתקדמות היכן שרלוונטי:
+   - Chain-of-Thought למשימות אנליטיות
+   - Self-Verification להבטחת איכות הפלט
+   - Multi-Perspective לבחינת גישות שונות
+   - Structured Thinking עם דלימיטרים ברורים
+   - Negative Constraints למניעת טעויות נפוצות
+   - Grounding לעיגון בעובדות
+   - Output Trigger לפתיחה ברורה
+4. בדוק ספציפיות, מדידות, וניתנות לפעולה — החלף כל הוראה מעורפלת בהוראה מדויקת ומדידה.
+5. הפלט חייב להיות בעברית בלבד.
+6. אל תוסיף הסברים — רק את הפרומפט המשודרג.
+7. כל גרסה חדשה חייבת להיות שיפור משמעותי — לא שינוי קוסמטי.
+
+טון: ${input.tone}. קטגוריה: ${input.category}.
+
+${identity ? `${identity}\n\n` : ''}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
+[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+
+לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים בעלי ההשפעה הגבוהה ביותר שנותרו — ספציפיות, מדידות, ניתנות לפעולה. החזר מערך ריק [] אם הפרומפט כעת מקיף ומלא.
+פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+
+          userPrompt: `הפרומפט הנוכחי:
+---
+${input.previousResult}
+---
+${answersBlock}
+${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
+
+שלב את כל המידע החדש לתוך פרומפט מעודכן ומשודרג בעברית. בדוק ספציפית את הפערים בתפקיד, הקשר, פורמט פלט, ומגבלות — אלה הם האזורים בעלי ההשפעה הגבוהה ביותר על איכות הפלט.`,
+
+          outputFormat: "text",
+          requiredFields: [],
+      };
+  }
 }
