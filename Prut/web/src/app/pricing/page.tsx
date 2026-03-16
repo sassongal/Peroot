@@ -55,7 +55,7 @@ export default function PricingPage() {
             <Sparkles className="w-3.5 h-3.5" />
             שדרג את הפרומפטים שלך
           </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-gradient-to-l from-white to-zinc-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-linear-to-l from-white to-zinc-500 bg-clip-text text-transparent">
             בחר את התוכנית שלך
           </h1>
           <p className="text-lg text-slate-400 max-w-xl mx-auto">
@@ -94,9 +94,9 @@ export default function PricingPage() {
           </div>
 
           {/* Pro Plan */}
-          <div className="rounded-3xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/5 to-zinc-950 p-8 flex flex-col relative overflow-hidden">
+          <div className="rounded-3xl border-2 border-amber-500/40 bg-linear-to-b from-amber-500/5 to-zinc-950 p-8 flex flex-col relative overflow-hidden">
             {/* Popular badge */}
-            <div className="absolute top-0 left-0 right-0 bg-gradient-to-l from-amber-500 to-amber-600 text-black text-xs font-bold text-center py-1.5">
+            <div className="absolute top-0 left-0 right-0 bg-linear-to-l from-amber-500 to-amber-600 text-black text-xs font-bold text-center py-1.5">
               <div className="flex items-center justify-center gap-1.5">
                 <Crown className="w-3.5 h-3.5" />
                 הכי פופולרי

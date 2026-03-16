@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Plus, Trash2, Copy, Key, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 interface ApiKey {
   id: string;
@@ -20,6 +22,9 @@ interface ApiKey {
 }
 
 export default function DeveloperPage() {
+  const supabase = useMemo(() => createClient(), []);
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState("");
@@ -27,7 +32,16 @@ export default function DeveloperPage() {
   const [showKey, setShowKey] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => { loadKeys(); }, []);
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setAuthChecked(true);
+      if (user) loadKeys();
+      else setLoading(false);
+    }
+    checkAuth();
+  }, [supabase]);
 
   async function loadKeys() {
     try {
@@ -82,6 +96,37 @@ export default function DeveloperPage() {
   }
 
   const APP_URL = typeof window !== "undefined" ? window.location.origin : "";
+
+  // Auth loading state
+  if (!authChecked) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="animate-pulse text-slate-500">טוען...</div>
+      </div>
+    );
+  }
+
+  // Not logged in
+  if (!user) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <Key className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">API למפתחים</h1>
+          <p className="text-slate-400 mb-6">צריך להתחבר כדי ליצור ולנהל מפתחות API</p>
+          <Link
+            href="/login?redirect=/developer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-black font-bold text-sm hover:bg-amber-400 transition-colors cursor-pointer"
+          >
+            התחבר כדי להמשיך
+          </Link>
+          <div className="mt-4">
+            <Link href="/" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">← חזרה לדף הבית</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#0a0a0a] text-white">

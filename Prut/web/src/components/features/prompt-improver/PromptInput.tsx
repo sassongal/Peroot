@@ -287,9 +287,9 @@ export function PromptInput({
               </div>
             )}
 
-            {/* Voice Input Trigger + Language Picker */}
+            {/* Voice Input Trigger + Language Picker — bottom-left of textarea */}
             {isSupported && (
-               <div className="absolute top-4 start-4 z-30 flex items-center gap-1.5">
+               <div className="absolute bottom-4 end-4 z-30 flex items-center gap-1.5">
                    <button
                      onClick={toggleListening}
                      className={cn(
@@ -318,7 +318,7 @@ export function PromptInput({
                        {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.flag ?? '🌐'}
                      </button>
                      {showLangPicker && (
-                       <div className="absolute top-full start-0 mt-1.5 bg-zinc-900/95 border border-white/10 rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 min-w-[140px]">
+                       <div className="absolute bottom-full end-0 mb-1.5 bg-zinc-900/95 border border-white/10 rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
                          {VOICE_LANGUAGES.map(lang => (
                            <button
                              key={lang.code}
@@ -338,7 +338,7 @@ export function PromptInput({
                      )}
                    </div>
                    {isListening && (
-                       <span className="absolute top-full start-0 mt-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                       <span className="absolute bottom-full end-0 mb-2 text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
                            מקליט...
                        </span>
                    )}
