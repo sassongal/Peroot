@@ -32,6 +32,7 @@ import {
   Bell,
   Shield,
   GitBranch,
+  Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -75,6 +76,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "מודרציה", href: "/admin/moderation", icon: GitBranch },
     { name: "קמפיינים", href: "/admin/email-campaigns", icon: Mail },
     { name: "SEO", href: "/admin/seo-console", icon: Search },
+    { name: "אינטגרציות", href: "/admin/integrations", icon: Plug },
     // ── System ──
     { name: t.admin.layout.settings, href: "/admin/settings", icon: Settings },
   ];
