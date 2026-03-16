@@ -5,6 +5,7 @@ import { Save, Trash2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VariablePreset } from "@/hooks/usePresets";
 import { toast } from "sonner";
+import { getVariablePlaceholder } from "@/lib/variable-utils";
 
 interface VariableFillerProps {
   promptText: string;
@@ -18,37 +19,6 @@ function extractVariables(text: string): string[] {
   const matches = text.match(/\{([a-zA-Z_\u0590-\u05FF][a-zA-Z0-9_\u0590-\u05FF ]*)\}/g);
   if (!matches) return [];
   return [...new Set(matches.map(m => m.slice(1, -1)))];
-}
-
-// Contextual placeholder examples per variable name
-const VARIABLE_EXAMPLES: Record<string, string> = {
-  name: "לירן שמעוני",
-  company: "סטארט-אפ טכנולוגי",
-  industry: "פינטק",
-  product: "אפליקציית ניהול תקציב",
-  target_audience: "בעלי עסקים קטנים",
-  tone: "מקצועי ונגיש",
-  role: "מנהל שיווק",
-  topic: "אוטומציה בשירות לקוחות",
-  blog_name: "TechPulse",
-  language: "עברית",
-  platform: "LinkedIn",
-  brand: "Peroot",
-  goal: "הגדלת המרות ב-20%",
-  audience: "מפתחים ויזמים",
-  subject: "השקת מוצר חדש",
-  city: "תל אביב",
-  field: "בינה מלאכותית",
-};
-
-function getVariablePlaceholder(varName: string): string {
-  const lower = varName.toLowerCase().replace(/\s+/g, '_');
-  if (VARIABLE_EXAMPLES[lower]) return VARIABLE_EXAMPLES[lower];
-  // Check partial matches
-  for (const [key, val] of Object.entries(VARIABLE_EXAMPLES)) {
-    if (lower.includes(key) || key.includes(lower)) return val;
-  }
-  return `לדוגמה: ערך עבור ${varName}`;
 }
 
 export function VariableFiller({ promptText, onApply, presets, onSavePreset, onDeletePreset }: VariableFillerProps) {

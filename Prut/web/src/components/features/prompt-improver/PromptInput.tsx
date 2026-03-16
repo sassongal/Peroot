@@ -13,6 +13,7 @@ import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
+import { getVariablePlaceholder } from "@/lib/variable-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
@@ -237,7 +238,7 @@ export function PromptInput({
                           ? "border-amber-500/50 ring-1 ring-amber-500/30 focus:border-amber-500/70"
                           : "border-white/10 focus:border-amber-500/50"
                       )}
-                      placeholder={t.onboarding.sim_placeholder}
+                      placeholder={getVariablePlaceholder(variable)}
                     />
                   </div>
                 );

@@ -143,6 +143,9 @@ export function PersonalLibraryView({
 
   // Dropdown for per-card more menu
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showMoveSubMenu, setShowMoveSubMenu] = useState(false);
+  const [newMoveInlineName, setNewMoveInlineName] = useState("");
+  const [showNewMoveInlineInput, setShowNewMoveInlineInput] = useState(false);
 
   // Context menu for folders
   const [folderContextMenu, setFolderContextMenu] = useState<{ folder: string; x: number; y: number } | null>(null);
@@ -215,7 +218,7 @@ export function PersonalLibraryView({
   useEffect(() => { setSelectedIds(new Set()); setSelectionMode(false); }, [effectiveFolder]);
   useEffect(() => { setLocalPage(1); }, [effectiveFolder, personalQuery, selectedCapabilityFilter]);
   useEffect(() => {
-    const handleClick = () => { setOpenMenuId(null); setFolderContextMenu(null); };
+    const handleClick = () => { setOpenMenuId(null); setFolderContextMenu(null); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, []);
@@ -588,7 +591,7 @@ export function PersonalLibraryView({
             </button>
             <div className="relative">
               <button
-                onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : prompt.id); }}
+                onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : prompt.id); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
                 title="עוד"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               >
@@ -596,35 +599,198 @@ export function PersonalLibraryView({
               </button>
               {isMenuOpen && (
                 <div
-                  className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-150"
+                  className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-150"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Pencil className="w-3.5 h-3.5" /> ערוך
-                  </button>
-                  <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Wand2 className="w-3.5 h-3.5" /> עיצוב
-                  </button>
-                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Plus className="w-3.5 h-3.5" /> שכפל
-                  </button>
-                  <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <History className="w-3.5 h-3.5" /> גרסאות
-                  </button>
-                  <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
-                  </button>
-                  <button onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Star className={cn("w-3.5 h-3.5", isFavorite && "fill-yellow-300 text-yellow-300")} /> {isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
-                  </button>
-                  <div className="h-px bg-white/5 my-1" />
-                  <button onClick={() => { toggleSelection(prompt.id); setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Square className="w-3.5 h-3.5" /> בחר
-                  </button>
-                  <div className="h-px bg-white/5 my-1" />
-                  <button onClick={() => { handleBatchDelete(); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10">
-                    <Trash2 className="w-3.5 h-3.5" /> מחק
-                  </button>
+                  {showMoveSubMenu ? (
+                    <>
+                      {/* Sub-menu header / back button */}
+                      <button
+                        onClick={() => { setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:bg-white/10 hover:text-white"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" /> העבר לתיקייה
+                      </button>
+                      <div className="h-px bg-white/5 my-1" />
+                      {/* Folder list */}
+                      {allPersonalCategories.map((cat) => {
+                        const isCurrent = (prompt.personal_category || PERSONAL_DEFAULT_CATEGORY) === cat;
+                        return (
+                          <button
+                            key={cat}
+                            onClick={async () => {
+                              if (isCurrent) return;
+                              try {
+                                await movePrompts([prompt.id], cat);
+                                toast.success(`הועבר לתיקייה "${cat}"`);
+                              } catch { toast.error("שגיאה בהעברה"); }
+                              setOpenMenuId(null);
+                              setShowMoveSubMenu(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/10",
+                              isCurrent ? "text-amber-400 cursor-default" : "text-slate-300 hover:text-white"
+                            )}
+                          >
+                            <Folder className="w-3.5 h-3.5 shrink-0" />
+                            <span className="flex-1 text-right">{cat}</span>
+                            {isCurrent && <Check className="w-3 h-3 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                      <div className="h-px bg-white/5 my-1" />
+                      {/* New folder inline creation */}
+                      {showNewMoveInlineInput ? (
+                        <div className="px-3 py-2 flex flex-col gap-1.5">
+                          <input
+                            autoFocus
+                            dir="rtl"
+                            value={newMoveInlineName}
+                            onChange={(e) => setNewMoveInlineName(e.target.value)}
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter") {
+                                const name = newMoveInlineName.trim();
+                                if (!name) return;
+                                if (allPersonalCategories.includes(name)) {
+                                  toast.error("תיקייה בשם זה כבר קיימת");
+                                  return;
+                                }
+                                try {
+                                  await movePrompts([prompt.id], name);
+                                  toast.success(`הועבר לתיקייה "${name}"`);
+                                } catch { toast.error("שגיאה בהעברה"); }
+                                setOpenMenuId(null);
+                                setShowMoveSubMenu(false);
+                                setShowNewMoveInlineInput(false);
+                                setNewMoveInlineName("");
+                              }
+                              if (e.key === "Escape") {
+                                setShowNewMoveInlineInput(false);
+                                setNewMoveInlineName("");
+                              }
+                            }}
+                            placeholder="שם תיקייה חדשה"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-white/30"
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={async () => {
+                                const name = newMoveInlineName.trim();
+                                if (!name) return;
+                                if (allPersonalCategories.includes(name)) {
+                                  toast.error("תיקייה בשם זה כבר קיימת");
+                                  return;
+                                }
+                                try {
+                                  await movePrompts([prompt.id], name);
+                                  toast.success(`הועבר לתיקייה "${name}"`);
+                                } catch { toast.error("שגיאה בהעברה"); }
+                                setOpenMenuId(null);
+                                setShowMoveSubMenu(false);
+                                setShowNewMoveInlineInput(false);
+                                setNewMoveInlineName("");
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1 py-1 bg-white/10 rounded text-xs text-white hover:bg-white/20"
+                            >
+                              <Check className="w-3 h-3" /> צור
+                            </button>
+                            <button
+                              onClick={() => { setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
+                              className="flex-1 flex items-center justify-center gap-1 py-1 border border-white/10 rounded text-xs text-slate-400 hover:bg-white/10"
+                            >
+                              <X className="w-3 h-3" /> ביטול
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowNewMoveInlineInput(true)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> תיקייה חדשה
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {/* Group 1: Actions */}
+                      <button onClick={() => { onUsePrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <ArrowRight className="w-3.5 h-3.5" /> השתמש
+                      </button>
+                      <button onClick={() => { onCopyText(prompt.prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Copy className="w-3.5 h-3.5" /> העתק
+                      </button>
+                      <button onClick={() => { onCopyText(prompt.prompt); toast.success("קישור הועתק!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Link2 className="w-3.5 h-3.5" /> שתף
+                      </button>
+                      <div className="h-px bg-white/5 my-1" />
+                      {/* Group 2: Edit */}
+                      <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Pencil className="w-3.5 h-3.5" /> ערוך
+                      </button>
+                      <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Wand2 className="w-3.5 h-3.5" /> עיצוב
+                      </button>
+                      <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Plus className="w-3.5 h-3.5" /> שכפל
+                      </button>
+                      <div className="h-px bg-white/5 my-1" />
+                      {/* Group 3: Organize */}
+                      <button
+                        onClick={() => { setShowMoveSubMenu(true); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                      >
+                        <FolderInput className="w-3.5 h-3.5" />
+                        <span className="flex-1 text-right">העבר לתיקייה</span>
+                        <ChevronLeft className="w-3 h-3 text-slate-500" />
+                      </button>
+                      <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
+                      </button>
+                      <button onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Star className={cn("w-3.5 h-3.5", isFavorite && "fill-yellow-300 text-yellow-300")} /> {isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                      </button>
+                      <button onClick={() => { toggleSelection(prompt.id); setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <Square className="w-3.5 h-3.5" /> בחר
+                      </button>
+                      <div className="h-px bg-white/5 my-1" />
+                      {/* Group 4: Info */}
+                      <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                        <History className="w-3.5 h-3.5" /> גרסאות
+                      </button>
+                      <button
+                        onClick={() => {
+                          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(prompt, null, 2));
+                          const a = document.createElement("a");
+                          a.setAttribute("href", dataStr);
+                          a.setAttribute("download", `prompt_${prompt.id}.json`);
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          toast.success("יצוא הושלם");
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                      >
+                        <Download className="w-3.5 h-3.5" /> ייצוא
+                      </button>
+                      <div className="h-px bg-white/5 my-1" />
+                      {/* Group 5: Danger */}
+                      <button
+                        onClick={async () => {
+                          if (!confirm("האם למחוק פרומפט זה?")) return;
+                          try {
+                            await deletePrompts([prompt.id]);
+                            toast.success("נמחק בהצלחה");
+                          } catch { toast.error("שגיאה במחיקה"); }
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> מחק
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -1162,17 +1328,26 @@ export function PersonalLibraryView({
             </div>
           </div>
 
-          {/* New prompt button */}
-          <button
-            onClick={() => setViewMode("home")}
-            className="group flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none shrink-0"
-          >
-            <div className="relative w-4 h-4 md:w-5 md:h-5">
-              <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
-              <Plus className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
-            </div>
-            <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setViewMode("library")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 hover:text-white transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden lg:inline">ספרייה מלאה</span>
+            </button>
+            {/* New prompt button */}
+            <button
+              onClick={() => setViewMode("home")}
+              className="group flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none shrink-0"
+            >
+              <div className="relative w-4 h-4 md:w-5 md:h-5">
+                <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
+                <Plus className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+              </div>
+              <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
+            </button>
+          </div>
         </div>
 
         {/* Search + Sort + Actions row */}
