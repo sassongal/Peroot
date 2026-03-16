@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 
 export interface SiteSettings {
@@ -63,9 +64,7 @@ export function useSiteSettings() {
             applyThemeColors(newSettings);
             
             // Show toast notification
-            if (typeof window !== 'undefined' && (window as any).toast) {
-              (window as any).toast.success('הגדרות האתר עודכנו מהשרת');
-            }
+            toast.success('הגדרות האתר עודכנו מהשרת');
           }
         }
       )

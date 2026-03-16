@@ -306,13 +306,17 @@ export function useLibrary() {
   };
 
   const incrementUseCount = async (id: string) => {
-    // Read current count before optimistic update to avoid stale closure
-    const currentItem = personalLibrary.find(p => p.id === id);
-    const currentCount = currentItem?.use_count ?? 0;
     const now = Date.now();
     setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: now, last_used_at: now } : p));
     if (user) {
-        await supabase.from('personal_library').update({ use_count: currentCount + 1, last_used_at: new Date(now).toISOString() }).eq('id', id).eq('user_id', user.id);
+        // Use raw SQL increment via rpc to avoid race conditions
+        await supabase.rpc('increment_use_count', { item_id: id, user_id_input: user.id }).then(async (res) => {
+          if (res.error) {
+            // Fallback: read current value from DB and update
+            const { data: current } = await supabase.from('personal_library').select('use_count').eq('id', id).eq('user_id', user.id).single();
+            await supabase.from('personal_library').update({ use_count: (current?.use_count ?? 0) + 1, last_used_at: new Date(now).toISOString() }).eq('id', id).eq('user_id', user.id);
+          }
+        });
     }
   };
 
@@ -658,10 +662,14 @@ export function useLibrary() {
 
           const { data, error } = await supabase.from('personal_library').insert(insertData).select();
           if (!error && data) {
-              // Sync IDs from DB
+              // Sync IDs from DB - match by index position (insert order matches return order)
+              const tempIds = newItems.map(item => item.id);
               setPersonalLibrary(prev => prev.map(p => {
-                  const dbMatch = data.find(d => d.title === p.title && d.prompt === p.prompt);
-                  return dbMatch ? { ...p, id: dbMatch.id } : p;
+                  const batchIndex = tempIds.indexOf(p.id);
+                  if (batchIndex !== -1 && batchIndex < data.length) {
+                    return { ...p, id: data[batchIndex].id };
+                  }
+                  return p;
               }));
           }
       }

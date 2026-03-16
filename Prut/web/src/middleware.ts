@@ -17,7 +17,78 @@ async function getCachedMaintenanceMode(): Promise<boolean> {
   return result;
 }
 
+// Routes exempt from CSRF origin checks (they use their own auth mechanisms)
+const CSRF_EXEMPT_PREFIXES = [
+  '/api/webhooks/',  // External service webhooks (HMAC-verified)
+  '/api/cron/',      // Cron jobs (CRON_SECRET header auth)
+  '/api/health',     // Public health check
+]
+
+function isStateChangingMethod(method: string): boolean {
+  return !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
+}
+
+function isCsrfExempt(pathname: string, request: NextRequest): boolean {
+  // Exempt routes
+  if (CSRF_EXEMPT_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
+    return true
+  }
+  // Bearer token auth — API key/token authenticated, not cookie-based
+  const authHeader = request.headers.get('authorization') || ''
+  if (authHeader.startsWith('Bearer ')) {
+    return true
+  }
+  return false
+}
+
+function validateCsrfOrigin(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl
+  const method = request.method
+
+  // Only check state-changing requests to API routes
+  if (!isStateChangingMethod(method) || !pathname.startsWith('/api/')) {
+    return null
+  }
+
+  // Skip exempt routes
+  if (isCsrfExempt(pathname, request)) {
+    return null
+  }
+
+  // Determine allowed origin
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin
+  let allowedOrigin: string
+  try {
+    allowedOrigin = new URL(siteUrl).origin
+  } catch {
+    allowedOrigin = request.nextUrl.origin
+  }
+
+  // Extract request origin from Origin or Referer header
+  const rawOrigin = request.headers.get('origin') ?? request.headers.get('referer') ?? ''
+  let requestOrigin = ''
+  try {
+    if (rawOrigin.startsWith('http')) {
+      requestOrigin = new URL(rawOrigin).origin
+    }
+  } catch {
+    // Malformed URL — requestOrigin stays empty, will fail validation
+  }
+
+  if (!requestOrigin || requestOrigin !== allowedOrigin) {
+    return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 })
+  }
+
+  return null
+}
+
 export async function middleware(request: NextRequest) {
+  // CSRF protection: validate origin for state-changing API requests
+  const csrfResponse = validateCsrfOrigin(request)
+  if (csrfResponse) {
+    return csrfResponse
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })

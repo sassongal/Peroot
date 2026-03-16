@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { createClient } from "@/lib/supabase/client";
 import {
   Download,
   ShieldAlert,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
 
 interface BackupData {
@@ -33,19 +33,6 @@ interface DbStats {
   statsLoading: boolean;
 }
 
-const KEY_TABLES = [
-  "profiles",
-  "personal_library",
-  "library_favorites",
-  "ai_prompts",
-  "ai_prompt_versions",
-  "site_settings",
-  "user_roles",
-  "activity_logs",
-  "api_usage_logs",
-  "subscriptions",
-] as const;
-
 export default function DatabasePage() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [dbStats, setDbStats] = useState<DbStats>({
@@ -60,44 +47,29 @@ export default function DatabasePage() {
     statsLoading: true,
   });
 
-  const supabase = createClient();
-
   const fetchStats = useCallback(async () => {
     setDbStats((prev) => ({ ...prev, statsLoading: true, health: "Checking..." }));
+    try {
+      const res = await fetch(getApiPath("/api/admin/database?action=stats"));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-    // Health check: query profiles with limit 1
-    const { error: healthError } = await supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .limit(1);
-
-    const health: DbStats["health"] = healthError ? "Error" : "Healthy";
-
-    // Row counts for display tables in parallel
-    const [
-      { count: profilesCount },
-      { count: libraryCount },
-      { count: activityCount },
-      { count: apiUsageCount },
-    ] = await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("personal_library").select("*", { count: "exact", head: true }),
-      supabase.from("activity_logs").select("*", { count: "exact", head: true }),
-      supabase.from("api_usage_logs").select("*", { count: "exact", head: true }),
-    ]);
-
-    setDbStats({
-      tableCount: KEY_TABLES.length,
-      health,
-      rowCounts: {
-        profiles: profilesCount ?? 0,
-        personal_library: libraryCount ?? 0,
-        activity_logs: activityCount ?? 0,
-        api_usage_logs: apiUsageCount ?? 0,
-      },
-      statsLoading: false,
-    });
-  }, [supabase]);
+      setDbStats({
+        tableCount: data.tableCount ?? 0,
+        health: data.health ?? "Error",
+        rowCounts: {
+          profiles: data.rowCounts?.profiles ?? 0,
+          personal_library: data.rowCounts?.personal_library ?? 0,
+          activity_logs: data.rowCounts?.activity_logs ?? 0,
+          api_usage_logs: data.rowCounts?.api_usage_logs ?? 0,
+        },
+        statsLoading: false,
+      });
+    } catch (err) {
+      logger.error("Failed to fetch stats:", err);
+      setDbStats((prev) => ({ ...prev, health: "Error", statsLoading: false }));
+    }
+  }, []);
 
   useEffect(() => {
     fetchStats();
@@ -106,26 +78,9 @@ export default function DatabasePage() {
   async function createBackup() {
     setBackupLoading(true);
     try {
-      const tables = [
-        "profiles",
-        "personal_library",
-        "library_favorites",
-        "ai_prompts",
-        "ai_prompt_versions",
-        "site_settings",
-        "user_roles",
-      ];
-
-      const backup: BackupData = {
-        timestamp: new Date().toISOString(),
-        version: "2.0",
-        tables: {},
-      };
-
-      for (const table of tables) {
-        const { data, error } = await supabase.from(table).select("*");
-        if (!error && data) backup.tables[table] = data;
-      }
+      const res = await fetch(getApiPath("/api/admin/database?action=backup"));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const backup: BackupData = await res.json();
 
       const blob = new Blob([JSON.stringify(backup, null, 2)], {
         type: "application/json",
@@ -138,15 +93,6 @@ export default function DatabasePage() {
       URL.revokeObjectURL(url);
 
       toast.success("System Backup Completed");
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      await supabase.from("activity_logs").insert({
-        action: "DB Backup Genesis",
-        entity_type: "database",
-        user_id: user?.id,
-      });
     } catch (err) {
       logger.error("Backup failed:", err);
       toast.error("גיבוי נכשל");

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { getApiPath } from "@/lib/api-path";
 
 interface BlogPost {
   id: string;
@@ -22,7 +22,6 @@ interface BlogPost {
 export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     loadPosts();
@@ -31,54 +30,57 @@ export default function AdminBlogPage() {
 
   async function loadPosts() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      const res = await fetch(getApiPath("/api/admin/blog"));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: BlogPost[] = await res.json();
+      setPosts(data);
+    } catch {
       toast.error("שגיאה בטעינת מאמרים");
-    } else {
-      setPosts(data ?? []);
     }
     setLoading(false);
   }
 
   async function deletePost(id: string) {
     if (!confirm("למחוק את המאמר?")) return;
-    const { error } = await supabase.from("blog_posts").delete().eq("id", id);
-    if (error) {
-      toast.error("שגיאה במחיקה");
-    } else {
+    try {
+      const res = await fetch(getApiPath("/api/admin/blog"), {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       toast.success("המאמר נמחק");
       setPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch {
+      toast.error("שגיאה במחיקה");
     }
   }
 
   async function toggleStatus(post: BlogPost) {
     const newStatus = post.status === "published" ? "draft" : "published";
     const updates: Record<string, unknown> = {
+      id: post.id,
       status: newStatus,
-      updated_at: new Date().toISOString(),
     };
     if (newStatus === "published" && !post.published_at) {
       updates.published_at = new Date().toISOString();
     }
 
-    const { error } = await supabase
-      .from("blog_posts")
-      .update(updates)
-      .eq("id", post.id);
-
-    if (error) {
-      toast.error("שגיאה בעדכון סטטוס");
-    } else {
+    try {
+      const res = await fetch(getApiPath("/api/admin/blog"), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const updatedPost: BlogPost = await res.json();
       toast.success(newStatus === "published" ? "המאמר פורסם" : "המאמר הועבר לטיוטה");
       setPosts(prev => prev.map(p =>
-        p.id === post.id
-          ? { ...p, status: newStatus, updated_at: updates.updated_at as string, published_at: (updates.published_at as string) ?? p.published_at }
-          : p
+        p.id === post.id ? updatedPost : p
       ));
+    } catch {
+      toast.error("שגיאה בעדכון סטטוס");
     }
   }
 

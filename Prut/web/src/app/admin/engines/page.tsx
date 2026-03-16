@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { createClient } from "@/lib/supabase/client";
 import {
   Zap,
   Search,
@@ -19,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
+import { getApiPath } from "@/lib/api-path";
 
 interface EngineRow {
   id: string;
@@ -55,61 +55,17 @@ export default function EnginesListPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const supabase = createClient();
+      try {
+        const res = await fetch(getApiPath("/api/admin/engines"));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-      // Fetch engines list
-      const { data: enginesData, error } = await supabase
-        .from("prompt_engines")
-        .select("*")
-        .order("mode");
-
-      if (!error && enginesData) {
-        setEngines(enginesData);
+        setEngines(data.engines ?? []);
+        setEngineMetrics(data.engineMetrics ?? {});
+        setPipeline(data.pipeline ?? { computeLoadPct: 0, tokenVelocityPct: 0 });
+      } catch {
+        // silently fail - loading state will still be cleared
       }
-
-      // Fetch api_usage_logs for metrics
-      const { data: usageLogs } = await supabase
-        .from("api_usage_logs")
-        .select("engine_mode, duration_ms, input_tokens, output_tokens, created_at");
-
-      if (usageLogs && usageLogs.length > 0) {
-        // Per-engine latency and request count
-        const byMode: Record<string, { totalMs: number; count: number }> = {};
-        usageLogs.forEach((row: { engine_mode: string; duration_ms: number | null }) => {
-          const mode = row.engine_mode || "unknown";
-          if (!byMode[mode]) byMode[mode] = { totalMs: 0, count: 0 };
-          byMode[mode].count++;
-          byMode[mode].totalMs += row.duration_ms ?? 0;
-        });
-
-        const metrics: Record<string, EngineMetrics> = {};
-        Object.entries(byMode).forEach(([mode, { totalMs, count }]) => {
-          metrics[mode] = {
-            avgLatencyMs: count > 0 ? Math.round(totalMs / count) : 0,
-            requestCount: count,
-          };
-        });
-        setEngineMetrics(metrics);
-
-        // Compute Load: requests in last hour / 100 capacity, capped at 100
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-        const recentCount = usageLogs.filter(
-          (r: { created_at: string }) => r.created_at >= oneHourAgo
-        ).length;
-        const computeLoadPct = Math.min(Math.round((recentCount / 100) * 100), 100);
-
-        // Token Velocity: avg total tokens / 4000 max, capped at 100
-        const totalTokens = usageLogs.reduce(
-          (sum: number, r: { input_tokens: number | null; output_tokens: number | null }) =>
-            sum + (r.input_tokens ?? 0) + (r.output_tokens ?? 0),
-          0
-        );
-        const avgTokens = totalTokens / usageLogs.length;
-        const tokenVelocityPct = Math.min(Math.round((avgTokens / 4000) * 100), 100);
-
-        setPipeline({ computeLoadPct, tokenVelocityPct });
-      }
-
       setLoading(false);
     };
     fetchAll();

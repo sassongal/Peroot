@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useSiteSettings } from './useSiteSettings';
@@ -33,17 +33,7 @@ export function usePromptLimits() {
   const [canUsePrompt, setCanUsePrompt] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
-  useEffect(() => {
-    checkUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    updateLimits();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, settings, usage, isAdmin]);
-
-  async function checkUser() {
+  const checkUser = useCallback(async () => {
     const { data: { user: activeUser } } = await supabase.auth.getUser();
     setUser(activeUser);
 
@@ -91,7 +81,15 @@ export function usePromptLimits() {
         }
       }
     }
-  }
+  }, [supabase]);
+
+  useEffect(() => {
+    checkUser();
+  }, [checkUser]);
+
+  useEffect(() => {
+    updateLimits();
+  }, [user, settings, usage, isAdmin, credits]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function updateLimits() {
     if (user) {

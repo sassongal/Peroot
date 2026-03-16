@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { createClient } from "@/lib/supabase/client";
 import {
   Search,
   Shield,
@@ -44,7 +43,6 @@ export default function UsersPage() {
   const [filter, setFilter] = useState<"all" | "admin" | "active" | "banned">("all");
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const supabase = createClient();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -67,48 +65,18 @@ export default function UsersPage() {
   async function loadUsers(searchTerm = "") {
     setLoading(true);
     try {
-      // Build profiles query with optional server-side search
-      let profilesQuery = supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      const url = new URL(getApiPath("/api/admin/users"), window.location.origin);
       if (searchTerm.trim()) {
-        // Escape special PostgREST filter characters to prevent injection
-        const escaped = searchTerm.replace(/[,.*()\\]/g, (ch) => `\\${ch}`);
-        profilesQuery = profilesQuery.or(
-          `email.ilike.%${escaped}%,full_name.ilike.%${escaped}%,id.eq.${escaped}`
-        );
+        url.searchParams.set("search", searchTerm.trim());
       }
 
-      // Profiles + roles + subscriptions in parallel
-      const [
-        { data: profiles, error: profileError },
-        { data: roles, error: roleError },
-        { data: subscriptions, error: subError },
-      ] = await Promise.all([
-        profilesQuery,
-        supabase.from("user_roles").select("user_id, role"),
-        supabase
-          .from("subscriptions")
-          .select("user_id, plan_name, status, customer_name"),
-      ]);
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
 
-      if (profileError) throw profileError;
-      if (roleError) throw roleError;
-      if (subError) logger.warn("Subscriptions fetch warning:", subError);
-
-      const mergedUsers: User[] = (profiles ?? []).map((p) => {
-        const sub = (subscriptions ?? []).find((s) => s.user_id === p.id);
-        return {
-          ...p,
-          role: (roles ?? []).find((r) => r.user_id === p.id)?.role ?? "user",
-          plan_tier: sub?.plan_name ?? p.plan_tier ?? "free",
-          customer_name: sub?.customer_name ?? null,
-        };
-      });
-
-      setUsers(mergedUsers);
+      const data: User[] = await res.json();
+      setUsers(data);
     } catch (error) {
       logger.error("Failed to load users:", error);
       toast.error(t.admin.users.toasts.load_error);
@@ -156,19 +124,14 @@ export default function UsersPage() {
       return;
 
     try {
-      if (isNowAdmin) {
-        const { error } = await supabase
-          .from("user_roles")
-          .delete()
-          .eq("user_id", userId)
-          .eq("role", "admin");
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("user_roles")
-          .insert({ user_id: userId, role: "admin" });
-        if (error) throw error;
-      }
+      const action = isNowAdmin ? "revoke_admin" : "grant_admin";
+      const res = await fetch(getApiPath(`/api/admin/users/${userId}`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       toast.success(t.admin.users.toasts.update_success);
       loadUsers();
     } catch (err) {
