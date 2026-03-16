@@ -129,6 +129,8 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
+import { MicrosoftClarity } from "@/components/providers/MicrosoftClarity";
+import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 
 import { Footer } from "@/components/layout/Footer";
@@ -159,6 +161,8 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <GoogleAnalytics />
+        <MicrosoftClarity />
+        <VercelAnalytics />
         <ServiceWorkerRegistration />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
