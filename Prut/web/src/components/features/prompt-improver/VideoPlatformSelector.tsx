@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { VIDEO_PLATFORMS, VideoPlatform } from "@/lib/video-platforms";
+import { VIDEO_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
 
 interface VideoPlatformSelectorProps {
   selectedPlatform: VideoPlatform;
@@ -21,6 +22,7 @@ export function VideoPlatformSelector({
         {VIDEO_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
           const isEmoji = platform.icon.length <= 2 && /\p{Emoji}/u.test(platform.icon);
+          const IconComponent = VIDEO_PLATFORM_ICONS[platform.id];
           return (
             <button
               key={platform.id}
@@ -38,7 +40,9 @@ export function VideoPlatformSelector({
               aria-pressed={isSelected}
               title={platform.description}
             >
-              {isEmoji ? (
+              {IconComponent ? (
+                <IconComponent className="w-4 h-4 shrink-0" />
+              ) : isEmoji ? (
                 <span className="text-sm">{platform.icon}</span>
               ) : (
                 <span className="text-[10px] font-bold font-mono leading-none bg-white/10 rounded px-1 py-0.5">

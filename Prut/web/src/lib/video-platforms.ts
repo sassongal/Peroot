@@ -1,4 +1,4 @@
-export type VideoPlatform = 'general' | 'runway' | 'kling' | 'pika' | 'sora' | 'luma' | 'minimax' | 'higgsfield' | 'nanobanana' | 'vidu';
+export type VideoPlatform = 'general' | 'runway' | 'kling' | 'sora' | 'veo' | 'higgsfield' | 'minimax';
 
 export interface VideoPlatformConfig {
   id: VideoPlatform;
@@ -10,15 +10,12 @@ export interface VideoPlatformConfig {
 
 export const VIDEO_PLATFORMS: VideoPlatformConfig[] = [
   { id: 'general', name: 'General', nameHe: 'כללי', description: 'פרומפט אופטימלי לכל פלטפורמת וידאו', icon: '🎬' },
-  { id: 'runway', name: 'Runway Gen-4.5', nameHe: 'Runway', description: 'תנועת מצלמה + נושא + סצנה', icon: 'RW' },
-  { id: 'kling', name: 'Kling 3.0', nameHe: 'Kling', description: 'הבנת תנועה פיזית מתקדמת', icon: 'KL' },
-  { id: 'pika', name: 'Pika 2.5', nameHe: 'Pika', description: 'נושא בודד, תנועה פשוטה', icon: 'PK' },
-  { id: 'sora', name: 'Sora 2', nameHe: 'Sora', description: 'סטוריבורד קולנועי מפורט', icon: 'SR' },
-  { id: 'luma', name: 'Luma Ray3', nameHe: 'Luma', description: 'שפה שיחתית, @character refs', icon: 'LM' },
-  { id: 'minimax', name: 'Minimax Hailuo 2.3', nameHe: 'Minimax', description: 'תנועות גוף מורכבות', icon: 'MM' },
-  { id: 'higgsfield', name: 'Higgsfield', nameHe: 'Higgsfield', description: 'תיזמור מרובה מודלים, סטוריבורד שכבתי', icon: 'HF' },
-  { id: 'nanobanana', name: 'Nano Banana', nameHe: 'Nano Banana', description: 'עקביות דמויות, שילוב מדויק, Gemini', icon: 'NB' },
-  { id: 'vidu', name: 'Vidu', nameHe: 'Vidu', description: 'וידאו + אודיו מקורי, דיאלוג, אפקטים', icon: 'VD' },
+  { id: 'runway', name: 'Runway Gen-4', nameHe: 'Runway', description: 'מצלמה מובילה, סצנה אחת, שפה טבעית', icon: 'runway' },
+  { id: 'kling', name: 'Kling 2.0', nameHe: 'Kling', description: 'תנועה פיזיקלית, מבנה 4 חלקים', icon: 'kling' },
+  { id: 'sora', name: 'Sora', nameHe: 'Sora', description: 'סטוריבורד קולנועי, עדשות וירטואליות', icon: 'sora' },
+  { id: 'veo', name: 'Veo 3', nameHe: 'Veo', description: 'Google Veo — אודיו מקורי, עקביות דמויות', icon: 'veo' },
+  { id: 'higgsfield', name: 'Higgsfield', nameHe: 'Higgsfield', description: 'סינטקס פקודות, תזמון מדויק', icon: 'higgsfield' },
+  { id: 'minimax', name: 'Minimax Hailuo', nameHe: 'Minimax', description: 'תנועות גוף, הבעות פנים, כוריאוגרפיה', icon: 'minimax' },
 ];
 
 export function getVideoPlatform(id: VideoPlatform): VideoPlatformConfig | undefined {

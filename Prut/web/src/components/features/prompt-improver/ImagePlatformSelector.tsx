@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { IMAGE_PLATFORMS, ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
+import { IMAGE_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
 
 interface ImagePlatformSelectorProps {
   selectedPlatform: ImagePlatform;
@@ -27,6 +28,7 @@ export function ImagePlatformSelector({
         {IMAGE_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
           const isEmoji = platform.icon.length <= 2 && /\p{Emoji}/u.test(platform.icon);
+          const IconComponent = IMAGE_PLATFORM_ICONS[platform.id];
           return (
             <button
               key={platform.id}
@@ -44,7 +46,9 @@ export function ImagePlatformSelector({
               aria-pressed={isSelected}
               title={platform.description}
             >
-              {isEmoji ? (
+              {IconComponent ? (
+                <IconComponent className="w-4 h-4 shrink-0" />
+              ) : isEmoji ? (
                 <span className="text-sm">{platform.icon}</span>
               ) : (
                 <span className="text-[10px] font-bold font-mono leading-none bg-white/10 rounded px-1 py-0.5">
@@ -57,7 +61,7 @@ export function ImagePlatformSelector({
         })}
       </div>
 
-      {/* SD JSON/Text toggle */}
+      {/* JSON/Text toggle for platforms that support it */}
       {selectedConfig?.supportsJson && (
         <div className="flex items-center gap-2 px-1">
           <span className="text-[11px] text-slate-500">פורמט פלט:</span>

@@ -7,6 +7,7 @@ import {
   Search,
   Image as ImageIcon,
   Bot,
+  Video,
   Cpu,
   Brain,
   ChevronRight,
@@ -44,6 +45,7 @@ const MODE_ICONS: Record<string, LucideIcon> = {
   [CapabilityMode.DEEP_RESEARCH]: Search,
   [CapabilityMode.IMAGE_GENERATION]: ImageIcon,
   [CapabilityMode.AGENT_BUILDER]: Bot,
+  [CapabilityMode.VIDEO_GENERATION]: Video,
 };
 
 export default function EnginesListPage() {
