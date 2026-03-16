@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/", "/auth/", "/settings"],
+        disallow: ["/admin/", "/api/", "/auth/", "/settings", "/developer"],
       },
       // Block AI training crawlers (keep search crawlers allowed via wildcard)
       ...[

@@ -7,13 +7,14 @@
 - [Pricing](https://peroot.space/pricing): Free and Pro plan details
 - [Blog](https://peroot.space/blog): Guides and tutorials on prompt engineering
 - [Examples](https://peroot.space/examples): Sample prompts and use cases
+- [Developer Portal](https://peroot.space/developer): API access and developer API keys
+- [Prompt Writing Guide](https://peroot.space/guide): Professional Hebrew prompt engineering guide
+- [Prompt Library Index](https://peroot.space/prompts): Browse 480+ prompts by category
 - [Privacy Policy](https://peroot.space/privacy)
 - [Terms of Service](https://peroot.space/terms)
 - [Contact](https://peroot.space/contact)
-- [Prompt Writing Guide](https://peroot.space/guide): Professional Hebrew prompt engineering guide
-- [Prompt Library Index](https://peroot.space/prompts): Browse 480+ prompts by category
 
-## Blog Articles (20 posts)
+## Blog Articles (30 posts)
 - [איך לכתוב פרומפט טוב - המדריך המלא](https://peroot.space/blog/how-to-write-good-prompt)
 - [Few-Shot Prompting - איך ללמד AI מדוגמאות](https://peroot.space/blog/few-shot-prompting-guide)
 - [פרומפטים לאימייל שיווקי - 5 תבניות מוכנות](https://peroot.space/blog/ai-email-marketing-prompts)
@@ -46,7 +47,14 @@
 - Smart variables with {placeholder} syntax
 - Iterative refinement with Refine and Quick Actions
 - Prompt style editor with customizable tone, length, and format
-- Chrome extension with full sync and in-page prompt enhancement
+- Prompt chains/workflows with drag-and-drop builder
+- Prompt version history with auto-save and restore
+- Multi-language voice input (Hebrew, English, Arabic, Russian)
+- Keyboard shortcuts (Cmd+K, Cmd+L, Cmd+B)
+- Chrome extension v2 with inline enhancement and API key auth
+- Developer API with prk_ API keys for programmatic access
+- Referral program with automatic reward system
+- Onboarding email sequence for new users
 - Multiple AI engines: GPT-4o, Claude, Gemini, DeepSeek, Groq
 
 ## Pricing
@@ -59,6 +67,9 @@
 - Language: Hebrew (primary), with English support
 - Target audience: Hebrew-speaking professionals, marketers, educators, developers, freelancers
 - Built with: Next.js, React, Supabase, TypeScript
+
+## Social
+- Facebook: https://www.facebook.com/profile.php?id=61579689932777
 
 ## Contact
 - Email: gal@joya-tech.net
