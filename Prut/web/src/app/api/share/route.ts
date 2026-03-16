@@ -7,7 +7,7 @@ import { checkRateLimit } from "@/lib/ratelimit";
 const ShareSchema = z.object({
   prompt: z.string().min(1).max(50000),
   original_input: z.string().max(50000).optional(),
-  category: z.string().max(100).default("General"),
+  category: z.string().max(100).default("כללי"),
   capability_mode: z.string().max(50).default("STANDARD"),
 });
 

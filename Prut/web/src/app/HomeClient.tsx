@@ -12,7 +12,7 @@ const HistoryPanel = dynamic(
   () => import("@/components/features/history/HistoryPanel").then(mod => mod.HistoryPanel),
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-64" /> }
 );
-import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
+import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
@@ -68,7 +68,7 @@ const StreamingProgress = dynamic(
   () => import("@/components/ui/StreamingProgress"),
   { ssr: false }
 );
-import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock } from "lucide-react";
+import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock, ArrowRight } from "lucide-react";
 const UpgradeNudge = dynamic(
   () => import("@/components/features/prompt-improver/UpgradeNudge"),
   { ssr: false }
@@ -103,6 +103,7 @@ function PageContent({ user }: { user: User | null }) {
     viewMode,
     setViewMode,
     addPrompt,
+    addPrompts,
     personalView,
     setPersonalView,
     completeOnboarding,
@@ -624,10 +625,26 @@ function PageContent({ user }: { user: User | null }) {
     }
   };
 
+  // Track where user came from so they can go back
+  const [previousView, setPreviousView] = useState<string | null>(null);
+
   const handleUsePrompt = (prompt: LibraryPrompt | PersonalPrompt) => {
+    setPreviousView(viewMode); // Remember where user was
     dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
+    // Reset any previous completion so prompt feels fresh
+    dispatch({ type: 'SET_COMPLETION', payload: '' });
+    dispatch({ type: 'SET_QUESTIONS', payload: [] });
     setViewMode("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBackToLibrary = () => {
+    if (previousView === "personal" || previousView === "library") {
+      setViewMode(previousView);
+    } else {
+      setViewMode("personal");
+    }
+    setPreviousView(null);
   };
 
   const handleRestore = (item: HistoryItem) => {
@@ -648,7 +665,7 @@ function PageContent({ user }: { user: User | null }) {
       title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
       prompt: item.enhanced,
       category: item.category,
-      personal_category: item.category || PERSONAL_DEFAULT_CATEGORY,
+      personal_category: PERSONAL_DEFAULT_CATEGORY,
       capability_mode: CapabilityMode.STANDARD,
       use_case: "נשמר מהיסטוריה",
       source: "manual"
@@ -667,7 +684,7 @@ function PageContent({ user }: { user: User | null }) {
       title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
       prompt: ps.completion,
       category: ps.detectedCategory || ps.selectedCategory,
-      personal_category: ps.selectedCategory || PERSONAL_DEFAULT_CATEGORY,
+      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
       capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual"
@@ -676,12 +693,23 @@ function PageContent({ user }: { user: User | null }) {
     toast.success("נשמר לספריה האישית!");
   };
 
-  const handleImportHistory = () => {
+  const handleImportHistory = async () => {
      if (!user) {
        showLoginRequired("שמירת פרומפטים");
        return;
      }
-     history.forEach(item => addPersonalPromptFromHistory(item));
+     // Use batch insert with dedup instead of concurrent individual adds
+     const itemsToAdd = history.map(item => ({
+       title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
+       prompt: item.enhanced,
+       category: item.category,
+       personal_category: PERSONAL_DEFAULT_CATEGORY,
+       capability_mode: CapabilityMode.STANDARD,
+       use_case: "נשמר מהיסטוריה",
+       source: "manual" as const,
+       tags: [] as string[]
+     }));
+     await addPrompts(itemsToAdd);
      toast.success("כל ההיסטוריה יובאה!");
   };
 
@@ -939,6 +967,20 @@ function PageContent({ user }: { user: User | null }) {
                {user && isNewUser && (
                  <div className="w-full max-w-3xl mb-2">
                    <ReferralBanner isNewUser={isNewUser} />
+                 </div>
+               )}
+
+               {/* Back to library button when user came from library */}
+               {previousView && (previousView === "personal" || previousView === "library") && (
+                 <div className="w-full max-w-3xl mb-2">
+                   <button
+                     onClick={handleBackToLibrary}
+                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/20 transition-colors"
+                     dir="rtl"
+                   >
+                     <ArrowRight className="w-3.5 h-3.5" />
+                     חזרה לספרייה
+                   </button>
                  </div>
                )}
 

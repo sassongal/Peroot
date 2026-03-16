@@ -22,7 +22,7 @@ const PROFILE_CACHE_TTL = 300_000; // 5 minutes
 const RequestSchema = z.object({
   prompt: z.string().min(1).max(10000),
   tone: z.string().default("Professional"),
-  category: z.string().default("General"),
+  category: z.string().default("כללי"),
   capability_mode: z.string().optional(),
   mode_params: z.record(z.string(), z.string()).optional(),
   previousResult: z.string().optional(),

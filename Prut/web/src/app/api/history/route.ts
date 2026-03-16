@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       prompt: prompt.substring(0, 10000),
       enhanced_prompt: enhanced_prompt.substring(0, 10000),
       tone: tone || "Professional",
-      category: category || "General",
+      category: category || "כללי",
       title: title || prompt.substring(0, 60) + (prompt.length > 60 ? "..." : ""),
     };
 

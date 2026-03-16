@@ -97,6 +97,7 @@ export function PersonalLibraryView({
     startRenameCategory,
     saveRenameCategory,
     cancelRenameCategory,
+    deletePersonalCategory,
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
     personalCapabilityCounts,
@@ -163,8 +164,10 @@ export function PersonalLibraryView({
 
   // ─── Derived Data ─────────────────────────────────────────────────────────
 
-  // Determine effective active folder
-  const effectiveFolder = ctxActiveFolder !== undefined ? ctxActiveFolder : activeLocalFolder;
+  // Determine effective active folder (null from context = "all")
+  const effectiveFolder = ctxActiveFolder !== undefined
+    ? (ctxActiveFolder === null ? "all" : ctxActiveFolder)
+    : activeLocalFolder;
 
   // Display items filtered by active folder (local filtering when context doesn't handle it)
   const allDisplayItems = filteredPersonalLibrary;
@@ -230,9 +233,10 @@ export function PersonalLibraryView({
   };
 
   const setFolder = useCallback((folder: string) => {
+    // Send virtual folders as-is to useLibrary (it handles favorites/pinned/all specially)
     if (ctxSetActiveFolder) ctxSetActiveFolder(folder === "all" ? null : folder);
     setActiveLocalFolder(folder);
-    // Map folder to personalView
+    // Map to personalView for legacy context filtering
     if (folder === "favorites") setPersonalView("favorites");
     else setPersonalView("all");
     setSidebarOpen(false);
@@ -302,12 +306,12 @@ export function PersonalLibraryView({
   };
 
   const quickInserts = [
-    { label: "שם", icon: AtSign, text: "{{name}}" },
-    { label: "חברה", icon: Hash, text: "{{company}}" },
-    { label: "תעשייה", icon: Hash, text: "{{industry}}" },
-    { label: "מוצר", icon: Hash, text: "{{product}}" },
-    { label: "קהל יעד", icon: Hash, text: "{{target_audience}}" },
-    { label: "טון", icon: Wand2, text: "{{tone}}" },
+    { label: "שם", icon: AtSign, text: "{name}" },
+    { label: "חברה", icon: Hash, text: "{company}" },
+    { label: "תעשייה", icon: Hash, text: "{industry}" },
+    { label: "מוצר", icon: Hash, text: "{product}" },
+    { label: "קהל יעד", icon: Hash, text: "{target_audience}" },
+    { label: "טון", icon: Wand2, text: "{tone}" },
   ];
 
   // ─── Batch Logic ──────────────────────────────────────────────────────────
@@ -1120,9 +1124,16 @@ export function PersonalLibraryView({
           </button>
           <div className="h-px bg-white/5 my-1" />
           <button
-            onClick={() => {
-              if (!confirm(`למחוק את התיקייה "${folderContextMenu.folder}"?`)) return;
+            onClick={async () => {
+              const folder = folderContextMenu.folder;
+              const count = folderCounts[folder] ?? 0;
+              const msg = count > 0
+                ? `למחוק את התיקייה "${folder}"? (${count} פרומפטים יועברו לתיקיית "כללי")`
+                : `למחוק את התיקייה הריקה "${folder}"?`;
+              if (!confirm(msg)) return;
               setFolderContextMenu(null);
+              if (effectiveFolder === folder) setFolder("all");
+              await deletePersonalCategory(folder, 'move');
             }}
             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"
           >

@@ -81,6 +81,7 @@ interface LibraryContextType {
   renameCategoryInput: string;
   setRenameCategoryInput: (val: string) => void;
   addPersonalCategory: () => Promise<void>;
+  deletePersonalCategory: (categoryName: string, mode?: 'move' | 'delete') => Promise<void>;
   startRenameCategory: (category: string) => void;
   cancelRenameCategory: () => void;
   saveRenameCategory: () => Promise<void>;
@@ -231,6 +232,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     movePrompt,
     renameCategory,
     addCategory: addLibCategory,
+    deleteCategory,
     deletePrompts,
     movePrompts,
     addPrompts,
@@ -309,15 +311,10 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   }, [libraryPrompts]);
 
   // Personal library items are now pre-filtered/sorted/paginated by useLibrary.
-  // filteredPersonalLibrary is kept for backward compatibility — it's the current page items
-  // with any client-side favorites filtering applied on top.
+  // filteredPersonalLibrary is the current page items. Server handles folder/favorites/pinned filtering.
+  // Only apply legacy client-side text filter if personalQuery is used directly.
   const filteredPersonalLibrary = useMemo(() => {
     let result = [...personalLibrary];
-
-    // Apply favorites filter client-side if viewing favorites
-    if (personalView === "favorites") {
-        result = result.filter(p => favoritePersonalIds.has(p.id));
-    }
 
     // Client-side text filter for legacy personalQuery (if used directly instead of searchQuery)
     const query = personalQuery.trim().toLowerCase();
@@ -334,7 +331,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     }
 
     return result;
-  }, [personalLibrary, personalQuery, personalView, favoritePersonalIds]);
+  }, [personalLibrary, personalQuery]);
 
   // Compute Capability Counts for Personal
   const personalCapabilityCounts = useMemo(() => {
@@ -367,6 +364,19 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
       toast.success("קטגוריה נוצרה");
     } catch {
       toast.error("שגיאה ביצירת קטגוריה");
+    }
+  };
+
+  const deletePersonalCategory = async (categoryName: string, mode: 'move' | 'delete' = 'move') => {
+    try {
+      if (!user) {
+        showLoginRequired("מחיקת קטגוריה");
+        return;
+      }
+      await deleteCategory(categoryName, mode);
+      toast.success(mode === 'delete' ? "התיקייה והפרומפטים נמחקו" : "התיקייה נמחקה, הפרומפטים הועברו לכללי");
+    } catch {
+      toast.error("שגיאה במחיקת קטגוריה");
     }
   };
 
@@ -544,7 +554,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     newPersonalCategory, setNewPersonalCategory,
     renamingCategory, setRenamingCategory,
     renameCategoryInput, setRenameCategoryInput,
-    addPersonalCategory, startRenameCategory, cancelRenameCategory, saveRenameCategory,
+    addPersonalCategory, deletePersonalCategory, startRenameCategory, cancelRenameCategory, saveRenameCategory,
     editingPersonalId, editingTitle, setEditingTitle, editingUseCase, setEditingUseCase,
     startEditingPersonalPrompt, saveEditingPersonalPrompt, cancelEditingPersonalPrompt,
     promptStyles, editingStylePromptId, styleDraft, setStyleDraft,
@@ -574,7 +584,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     addPrompt, removePrompt, updatePrompt, duplicatePrompt, incrementUseCount, togglePin, ratePrompt,
     deletePrompts, movePrompts, addPrompts, updateTags, updateProfile, completeOnboarding,
     newPersonalCategory, renamingCategory, renameCategoryInput,
-    addPersonalCategory, startRenameCategory, cancelRenameCategory, saveRenameCategory,
+    addPersonalCategory, deletePersonalCategory, startRenameCategory, cancelRenameCategory, saveRenameCategory,
     editingPersonalId, editingTitle, editingUseCase,
     startEditingPersonalPrompt, saveEditingPersonalPrompt, cancelEditingPersonalPrompt,
     promptStyles, editingStylePromptId, styleDraft,

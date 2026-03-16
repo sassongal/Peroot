@@ -20,6 +20,37 @@ function extractVariables(text: string): string[] {
   return [...new Set(matches.map(m => m.slice(1, -1)))];
 }
 
+// Contextual placeholder examples per variable name
+const VARIABLE_EXAMPLES: Record<string, string> = {
+  name: "לירן שמעוני",
+  company: "סטארט-אפ טכנולוגי",
+  industry: "פינטק",
+  product: "אפליקציית ניהול תקציב",
+  target_audience: "בעלי עסקים קטנים",
+  tone: "מקצועי ונגיש",
+  role: "מנהל שיווק",
+  topic: "אוטומציה בשירות לקוחות",
+  blog_name: "TechPulse",
+  language: "עברית",
+  platform: "LinkedIn",
+  brand: "Peroot",
+  goal: "הגדלת המרות ב-20%",
+  audience: "מפתחים ויזמים",
+  subject: "השקת מוצר חדש",
+  city: "תל אביב",
+  field: "בינה מלאכותית",
+};
+
+function getVariablePlaceholder(varName: string): string {
+  const lower = varName.toLowerCase().replace(/\s+/g, '_');
+  if (VARIABLE_EXAMPLES[lower]) return VARIABLE_EXAMPLES[lower];
+  // Check partial matches
+  for (const [key, val] of Object.entries(VARIABLE_EXAMPLES)) {
+    if (lower.includes(key) || key.includes(lower)) return val;
+  }
+  return `לדוגמה: ערך עבור ${varName}`;
+}
+
 export function VariableFiller({ promptText, onApply, presets, onSavePreset, onDeletePreset }: VariableFillerProps) {
   const variables = useMemo(() => extractVariables(promptText), [promptText]);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -106,7 +137,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
             <input
               value={values[v] || ""}
               onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
-              placeholder={`ערך עבור ${v}`}
+              placeholder={getVariablePlaceholder(v)}
               className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
             />
           </div>

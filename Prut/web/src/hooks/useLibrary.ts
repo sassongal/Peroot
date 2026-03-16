@@ -119,15 +119,42 @@ export function useLibrary() {
   // ---------------------------------------------------------------------------
 
   const fetchFolderCounts = useCallback(async (userId: string) => {
+    // Fetch category counts from RPC
     const { data, error } = await supabase.rpc('get_library_folder_counts', { p_user_id: userId });
     if (error) {
       logger.warn('[useLibrary] fetchFolderCounts error:', error);
-      return;
     }
-    // RPC returns JSON directly as Record<string, number>
+
+    const counts: Record<string, number> = {};
     if (data && typeof data === 'object' && !Array.isArray(data)) {
-      setFolderCounts(data as Record<string, number>);
+      Object.assign(counts, data as Record<string, number>);
     }
+
+    // Compute virtual folder counts
+    // "all" = total items
+    const { count: totalAll } = await supabase
+      .from('personal_library')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    counts['all'] = totalAll ?? 0;
+
+    // "pinned"
+    const { count: pinnedCount } = await supabase
+      .from('personal_library')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_pinned', true);
+    counts['pinned'] = pinnedCount ?? 0;
+
+    // "favorites"
+    const { count: favCount } = await supabase
+      .from('prompt_favorites')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('item_type', 'personal');
+    counts['favorites'] = favCount ?? 0;
+
+    setFolderCounts(counts);
   }, [supabase]);
 
   const fetchPage = useCallback(async (
@@ -151,9 +178,28 @@ export function useLibrary() {
         .select('*', { count: 'exact' })
         .eq('user_id', userId);
 
-      if (opts.activeFolder) {
+      // Handle virtual folders vs real category folders
+      if (opts.activeFolder === 'favorites') {
+        // Fetch favorite IDs first, then filter
+        const { data: favRows } = await supabase
+          .from('prompt_favorites')
+          .select('item_id')
+          .eq('user_id', userId)
+          .eq('item_type', 'personal');
+        if (favRows && favRows.length > 0) {
+          query = query.in('id', favRows.map((r: { item_id: string }) => r.item_id));
+        } else {
+          setPersonalLibrary([]);
+          setTotalCount(0);
+          setIsPageLoading(false);
+          return;
+        }
+      } else if (opts.activeFolder === 'pinned') {
+        query = query.eq('is_pinned', true);
+      } else if (opts.activeFolder && opts.activeFolder !== 'all') {
         query = query.eq('personal_category', opts.activeFolder);
       }
+      // "all" (null) → no category filter — returns everything
       if (opts.capabilityFilter) {
         query = query.eq('capability_mode', opts.capabilityFilter);
       }
@@ -235,9 +281,16 @@ export function useLibrary() {
   ) => {
     let filtered = [...allItems];
 
-    if (opts.activeFolder) {
+    // Handle virtual folders for guests
+    if (opts.activeFolder === 'pinned') {
+      filtered = filtered.filter(p => p.is_pinned);
+    } else if (opts.activeFolder === 'favorites') {
+      // Guest favorites handled via localStorage Set in PersonalLibraryView
+      // This is a no-op here; filtering happens in the view component
+    } else if (opts.activeFolder && opts.activeFolder !== 'all') {
       filtered = filtered.filter(p => p.personal_category === opts.activeFolder);
     }
+    // "all" (null) → no filter
     if (opts.capabilityFilter) {
       filtered = filtered.filter(p => p.capability_mode === opts.capabilityFilter);
     }
@@ -881,6 +934,40 @@ export function useLibrary() {
     }
   };
 
+  const deleteCategory = async (categoryName: string, mode: 'move' | 'delete' = 'move') => {
+    // Remove from local categories list
+    setPersonalCategories(prev => prev.filter(c => c !== categoryName));
+
+    if (user) {
+      if (mode === 'delete') {
+        // Delete all prompts in this category
+        await supabase
+          .from('personal_library')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('personal_category', categoryName);
+      } else {
+        // Move all prompts to default category (כללי)
+        await supabase
+          .from('personal_library')
+          .update({ personal_category: 'כללי' })
+          .eq('user_id', user.id)
+          .eq('personal_category', categoryName);
+      }
+      await refreshCurrentPage();
+    } else {
+      if (mode === 'delete') {
+        setAllLocalItems(prev => prev.filter(item => item.personal_category !== categoryName));
+      } else {
+        setAllLocalItems(prev => prev.map(item =>
+          item.personal_category === categoryName
+            ? { ...item, personal_category: 'כללי', updated_at: Date.now() }
+            : item
+        ));
+      }
+    }
+  };
+
   const movePrompt = async (id: string, targetCategory: string, targetIndex?: number) => {
     const trimmed = targetCategory.replace(/\s+/g, " ").trim();
     if (!trimmed) return;
@@ -1049,8 +1136,34 @@ export function useLibrary() {
     if (prompts.length === 0) return;
 
     if (user) {
+      // Deduplicate: fetch existing prompt texts to avoid inserting duplicates
+      const { data: existingRows } = await supabase
+        .from('personal_library')
+        .select('prompt')
+        .eq('user_id', user.id);
+      const existingTexts = new Set((existingRows ?? []).map((r: { prompt: string }) => r.prompt.trim()));
+
+      // Also deduplicate within the batch itself
+      const seenInBatch = new Set<string>();
+      const uniquePrompts = prompts.filter(p => {
+        const key = p.prompt.trim();
+        if (existingTexts.has(key) || seenInBatch.has(key)) return false;
+        seenInBatch.add(key);
+        return true;
+      });
+
+      if (uniquePrompts.length === 0) {
+        toast.warning("כל הפרומפטים כבר קיימים בספרייה");
+        return;
+      }
+
+      if (uniquePrompts.length < prompts.length) {
+        const skipped = prompts.length - uniquePrompts.length;
+        toast.info(`${skipped} פרומפטים כפולים דולגו`);
+      }
+
       // Compute sort indices per category
-      const categoriesInBatch = Array.from(new Set(prompts.map(p => p.personal_category ?? 'כללי')));
+      const categoriesInBatch = Array.from(new Set(uniquePrompts.map(p => p.personal_category ?? 'כללי')));
       const catCountMap: Record<string, number> = {};
       await Promise.all(
         categoriesInBatch.map(async (cat) => {
@@ -1064,7 +1177,7 @@ export function useLibrary() {
       );
 
       const runningIdx: Record<string, number> = { ...catCountMap };
-      const insertData = prompts.map(p => {
+      const insertData = uniquePrompts.map(p => {
         const cat = p.personal_category ?? 'כללי';
         const sortIndex = runningIdx[cat] ?? 0;
         runningIdx[cat] = sortIndex + 1;
@@ -1213,6 +1326,7 @@ export function useLibrary() {
     movePrompt,
     renameCategory,
     addCategory,
+    deleteCategory,
     deletePrompts,
     movePrompts,
     addPrompts,

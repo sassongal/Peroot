@@ -153,7 +153,7 @@ export default function AnalyticsPage() {
     // Categories
     const catMap: Record<string, number> = {};
     allPrompts?.forEach((p) => {
-      const c = (p.personal_category as string) || "General";
+      const c = (p.personal_category as string) || "כללי";
       catMap[c] = (catMap[c] || 0) + 1;
     });
     const topCategories = Object.entries(catMap)
