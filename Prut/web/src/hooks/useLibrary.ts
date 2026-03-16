@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { getApiPath } from '@/lib/api-path';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
 const ORDER_KEY = 'peroot_personal_order';
+const DEFAULT_PAGE_SIZE = 15;
 
 const getOrderKey = (userId?: string | null) =>
   userId ? `${ORDER_KEY}_${userId}` : ORDER_KEY;
@@ -19,7 +20,7 @@ const getOrderKey = (userId?: string | null) =>
 const getCategoriesKey = (userId?: string | null) =>
   userId ? `${CATEGORIES_KEY}_${userId}` : CATEGORIES_KEY;
 
-const readOrderMap = (userId?: string | null) => {
+const readOrderMap = (userId?: string | null): Record<string, number> => {
   const key = getOrderKey(userId);
   const raw = localStorage.getItem(key);
   if (!raw) return {};
@@ -43,14 +44,259 @@ const persistOrderMap = (userId: string | null, items: PersonalPrompt[]) => {
   localStorage.setItem(key, JSON.stringify(next));
 };
 
+/** Map a raw Supabase row to a PersonalPrompt, applying the orderMap for sort_index. */
+function rowToPrompt(row: Record<string, unknown>, index: number, orderMap: Record<string, number>): PersonalPrompt {
+  const id = row.id as string;
+  return {
+    id,
+    title: row.title as string,
+    prompt: row.prompt as string,
+    prompt_style: (row.prompt_style as string | undefined) ?? undefined,
+    category: (row.category as string) ?? "",
+    personal_category: (row.personal_category as string | null) ?? null,
+    use_case: row.use_case as string,
+    source: row.source as PersonalPrompt['source'],
+    use_count: (row.use_count as number) ?? 0,
+    capability_mode: (row.capability_mode as CapabilityMode) ?? CapabilityMode.STANDARD,
+    tags: (row.tags as string[]) ?? [],
+    created_at: row.created_at ? new Date(row.created_at as string).getTime() : Date.now(),
+    updated_at: row.updated_at
+      ? new Date(row.updated_at as string).getTime()
+      : row.created_at
+        ? new Date(row.created_at as string).getTime()
+        : Date.now(),
+    last_used_at: row.last_used_at ? new Date(row.last_used_at as string).getTime() : null,
+    is_pinned: (row.is_pinned as boolean) ?? false,
+    success_count: (row.success_count as number) ?? 0,
+    fail_count: (row.fail_count as number) ?? 0,
+    sort_index: typeof orderMap[id] === "number" ? orderMap[id] : index,
+  };
+}
+
 export function useLibrary() {
+  // Current page items (server users) or sliced local items (guests)
   const [personalLibrary, setPersonalLibrary] = useState<PersonalPrompt[]>([]);
+  // Full in-memory set for guest users only (used for duplicate checks, sort calculations)
+  const [allLocalItems, setAllLocalItems] = useState<PersonalPrompt[]>([]);
   const [personalCategories, setPersonalCategories] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  
+
+  // Pagination state
+  const [page, setPageState] = useState(1);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [totalCount, setTotalCount] = useState(0);
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
+
+  // Filter / sort state
+  const [activeFolder, setActiveFolderState] = useState<string | null>(null);
+  const [sortBy, setSortByState] = useState<string>('recent');
+  const [searchQuery, setSearchQueryState] = useState<string>('');
+  const [capabilityFilter, setCapabilityFilterState] = useState<string | null>(null);
+
   const supabase = useMemo(() => createClient(), []);
   const userRef = useRef<User | null>(null);
+
+  // Debounce timer for search
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep a ref to current pagination/filter state so callbacks can always read latest values
+  const stateRef = useRef({
+    page,
+    pageSize,
+    activeFolder,
+    sortBy,
+    searchQuery,
+    capabilityFilter,
+  });
+  useEffect(() => {
+    stateRef.current = { page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter };
+  }, [page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter]);
+
+  // ---------------------------------------------------------------------------
+  // SERVER-SIDE FETCH
+  // ---------------------------------------------------------------------------
+
+  const fetchFolderCounts = useCallback(async (userId: string) => {
+    const { data, error } = await supabase.rpc('get_library_folder_counts', { p_user_id: userId });
+    if (error) {
+      logger.warn('[useLibrary] fetchFolderCounts error:', error);
+      return;
+    }
+    // RPC returns JSON directly as Record<string, number>
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      setFolderCounts(data as Record<string, number>);
+    }
+  }, [supabase]);
+
+  const fetchPage = useCallback(async (
+    userId: string,
+    opts: {
+      page: number;
+      pageSize: number;
+      activeFolder: string | null;
+      sortBy: string;
+      searchQuery: string;
+      capabilityFilter: string | null;
+    }
+  ) => {
+    setIsPageLoading(true);
+    try {
+      const orderMap = readOrderMap(userId);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query: any = supabase
+        .from('personal_library')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId);
+
+      if (opts.activeFolder) {
+        query = query.eq('personal_category', opts.activeFolder);
+      }
+      if (opts.capabilityFilter) {
+        query = query.eq('capability_mode', opts.capabilityFilter);
+      }
+      if (opts.searchQuery) {
+        query = query.or(
+          `title.ilike.%${opts.searchQuery}%,prompt.ilike.%${opts.searchQuery}%,use_case.ilike.%${opts.searchQuery}%`
+        );
+      }
+
+      switch (opts.sortBy) {
+        case 'title':
+          query = query.order('title', { ascending: true });
+          break;
+        case 'usage':
+          query = query.order('use_count', { ascending: false });
+          break;
+        case 'custom':
+          query = query.order('sort_index', { ascending: true });
+          break;
+        case 'last_used':
+          query = query.order('last_used_at', { ascending: false, nullsFirst: false });
+          break;
+        case 'performance':
+        default:
+          query = query.order('updated_at', { ascending: false });
+          break;
+      }
+
+      // Pinned items always float to top
+      query = query.order('is_pinned', { ascending: false });
+
+      const offset = (opts.page - 1) * opts.pageSize;
+      const { data, count, error } = await query.range(offset, offset + opts.pageSize - 1);
+
+      if (error) {
+        logger.error('[useLibrary] fetchPage error:', error);
+        return;
+      }
+
+      if (data) {
+        setPersonalLibrary(
+          (data as Record<string, unknown>[]).map((row, index) =>
+            rowToPrompt(row, offset + index, orderMap)
+          )
+        );
+      }
+      if (typeof count === 'number') {
+        setTotalCount(count);
+      }
+    } finally {
+      setIsPageLoading(false);
+    }
+  }, [supabase]);
+
+  const refreshCurrentPage = useCallback(async () => {
+    const currentUser = userRef.current;
+    if (!currentUser) return;
+    const s = stateRef.current;
+    await Promise.all([
+      fetchPage(currentUser.id, s),
+      fetchFolderCounts(currentUser.id),
+    ]);
+  }, [fetchPage, fetchFolderCounts]);
+
+  // ---------------------------------------------------------------------------
+  // GUEST CLIENT-SIDE PAGINATION HELPER
+  // ---------------------------------------------------------------------------
+
+  const applyGuestPagination = useCallback((
+    allItems: PersonalPrompt[],
+    opts: {
+      page: number;
+      pageSize: number;
+      activeFolder: string | null;
+      sortBy: string;
+      searchQuery: string;
+      capabilityFilter: string | null;
+    }
+  ) => {
+    let filtered = [...allItems];
+
+    if (opts.activeFolder) {
+      filtered = filtered.filter(p => p.personal_category === opts.activeFolder);
+    }
+    if (opts.capabilityFilter) {
+      filtered = filtered.filter(p => p.capability_mode === opts.capabilityFilter);
+    }
+    if (opts.searchQuery) {
+      const q = opts.searchQuery.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        p.prompt.toLowerCase().includes(q) ||
+        (p.use_case ?? '').toLowerCase().includes(q)
+      );
+    }
+
+    switch (opts.sortBy) {
+      case 'title':
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'usage':
+        filtered.sort((a, b) => (b.use_count ?? 0) - (a.use_count ?? 0));
+        break;
+      case 'custom':
+        filtered.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+        break;
+      case 'last_used':
+        filtered.sort((a, b) => {
+          const aT = typeof a.last_used_at === 'number' ? a.last_used_at : (a.last_used_at ? new Date(a.last_used_at).getTime() : 0);
+          const bT = typeof b.last_used_at === 'number' ? b.last_used_at : (b.last_used_at ? new Date(b.last_used_at).getTime() : 0);
+          return bT - aT;
+        });
+        break;
+      case 'performance':
+      default:
+        filtered.sort((a, b) => {
+          const aT = typeof a.updated_at === 'number' ? a.updated_at : new Date(a.updated_at).getTime();
+          const bT = typeof b.updated_at === 'number' ? b.updated_at : new Date(b.updated_at).getTime();
+          return bT - aT;
+        });
+        break;
+    }
+
+    // Pinned to top
+    filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+
+    setTotalCount(filtered.length);
+
+    // Compute folder counts
+    const counts: Record<string, number> = {};
+    for (const item of allItems) {
+      const folder = item.personal_category ?? 'כללי';
+      counts[folder] = (counts[folder] ?? 0) + 1;
+    }
+    setFolderCounts(counts);
+
+    const offset = (opts.page - 1) * opts.pageSize;
+    setPersonalLibrary(filtered.slice(offset, offset + opts.pageSize));
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // INITIALISATION & AUTH
+  // ---------------------------------------------------------------------------
 
   useEffect(() => {
     let mounted = true;
@@ -63,50 +309,32 @@ export function useLibrary() {
       userRef.current = currentUser;
 
       if (currentUser) {
-        const orderMap = readOrderMap(currentUser.id);
-        // Fetch Library from DB
-        const { data: libData } = await supabase
-          .from('personal_library')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('updated_at', { ascending: false });
+        // Reset pagination on init
+        setPageState(1);
+        const opts = {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          activeFolder: stateRef.current.activeFolder,
+          sortBy: stateRef.current.sortBy,
+          searchQuery: stateRef.current.searchQuery,
+          capabilityFilter: stateRef.current.capabilityFilter,
+        };
+        await Promise.all([
+          fetchPage(currentUser.id, opts),
+          fetchFolderCounts(currentUser.id),
+        ]);
 
-        if (libData && mounted) {
-            setPersonalLibrary(
-              libData.map((row, index) => ({
-                id: row.id,
-                title: row.title,
-                prompt: row.prompt,
-                prompt_style: row.prompt_style ?? undefined,
-                category: row.category ?? "",
-                personal_category: row.personal_category ?? null,
-                use_case: row.use_case,
-                source: row.source,
-                use_count: row.use_count,
-                capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
-                tags: row.tags ?? [],
-                created_at: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
-                updated_at: row.updated_at ? new Date(row.updated_at).getTime() : (row.created_at ? new Date(row.created_at).getTime() : Date.now()),
-                last_used_at: row.last_used_at ? new Date(row.last_used_at).getTime() : null,
-                is_pinned: row.is_pinned ?? false,
-                success_count: row.success_count ?? 0,
-                fail_count: row.fail_count ?? 0,
-                sort_index:
-                  typeof orderMap[row.id] === "number" ? orderMap[row.id] : index,
-              }))
-            );
-        }
-
-        // Categories are derived from items + manual list
-        const storedCats = localStorage.getItem(getCategoriesKey(currentUser?.id));
+        const storedCats = localStorage.getItem(getCategoriesKey(currentUser.id));
         if (storedCats && mounted) {
-            setPersonalCategories(JSON.parse(storedCats));
+          setPersonalCategories(JSON.parse(storedCats));
         }
       } else {
+        // GUEST — load from localStorage
         const orderMap = readOrderMap(null);
-        // Load from LocalStorage (with 7-day TTL for guest data)
         const storedLib = localStorage.getItem(STORAGE_KEY);
-        if (storedLib && mounted) {
+        let localItems: PersonalPrompt[] = [];
+
+        if (storedLib) {
           try {
             const parsed = JSON.parse(storedLib);
             if (Array.isArray(parsed)) {
@@ -117,34 +345,46 @@ export function useLibrary() {
                 const ts = typeof savedAt === 'string' ? new Date(savedAt).getTime() : savedAt;
                 return (now - ts) < SEVEN_DAYS_MS;
               });
-              setPersonalLibrary(
-                filtered.map((row, index) => ({
-                  ...row,
-                  sort_index:
-                    typeof row.sort_index === "number"
-                      ? row.sort_index
-                      : typeof orderMap[row.id] === "number"
-                        ? orderMap[row.id]
-                        : index,
-                  created_at: row.created_at ?? Date.now(),
-                  updated_at: row.updated_at ?? Date.now(),
-                  prompt_style: row.prompt_style ?? undefined,
-                  personal_category: row.personal_category ?? null,
-                  capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
-                  tags: row.tags || [],
-                  last_used_at: row.last_used_at ?? null,
-                  savedAt: row.savedAt ?? Date.now()
-                }))
-              );
+              localItems = filtered.map((row, index) => ({
+                ...row,
+                sort_index:
+                  typeof row.sort_index === "number"
+                    ? row.sort_index
+                    : typeof orderMap[row.id] === "number"
+                      ? orderMap[row.id]
+                      : index,
+                created_at: row.created_at ?? Date.now(),
+                updated_at: row.updated_at ?? Date.now(),
+                prompt_style: row.prompt_style ?? undefined,
+                personal_category: row.personal_category ?? null,
+                capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
+                tags: row.tags || [],
+                last_used_at: row.last_used_at ?? null,
+                savedAt: row.savedAt ?? Date.now()
+              }));
             }
           } catch (error) {
             logger.warn("Failed to parse personal library", error);
           }
         }
-        
+
+        if (mounted) {
+          setAllLocalItems(localItems);
+          applyGuestPagination(localItems, {
+            page: 1,
+            pageSize: DEFAULT_PAGE_SIZE,
+            activeFolder: stateRef.current.activeFolder,
+            sortBy: stateRef.current.sortBy,
+            searchQuery: stateRef.current.searchQuery,
+            capabilityFilter: stateRef.current.capabilityFilter,
+          });
+          setPageState(1);
+        }
+
         const storedCats = localStorage.getItem(getCategoriesKey(null));
         if (storedCats && mounted) setPersonalCategories(JSON.parse(storedCats));
       }
+
       if (mounted) setIsLoaded(true);
     }
 
@@ -153,53 +393,57 @@ export function useLibrary() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       const newUser = session?.user ?? null;
-      
-      if (newUser && !userRef.current) {
-          // Just logged in - MIGRATE GUEST DATA
-          const localStr = localStorage.getItem(STORAGE_KEY);
-          if (localStr) {
-               try {
-                   const localItems = JSON.parse(localStr) as PersonalPrompt[];
-                   if (Array.isArray(localItems) && localItems.length > 0) {
-                       logger.info("Migrating guest items:", localItems.length);
-                       
-                       const itemsToInsert = localItems.map(item => ({
-                           user_id: newUser.id,
-                           title: item.title,
-                           prompt: item.prompt,
-                           prompt_style: item.prompt_style ?? null,
-                           category: item.category,
-                           personal_category: item.personal_category,
-                           use_case: item.use_case,
-                           source: item.source,
-                           use_count: item.use_count,
-                           created_at: new Date(item.created_at ?? Date.now()).toISOString(),
-                           updated_at: new Date(item.updated_at ?? Date.now()).toISOString(),
-                           sort_index: item.sort_index ?? 0,
-                           capability_mode: item.capability_mode ?? CapabilityMode.STANDARD,
-                           tags: item.tags ?? []
-                       }));
-                       
-                       // Perform Bulk Insert
-                       const { error: insertError } = await supabase.from('personal_library').insert(itemsToInsert);
 
-                       if (insertError) {
-                         logger.error("Migration insert failed", insertError);
-                       } else {
-                         localStorage.removeItem(STORAGE_KEY);
-                         localStorage.removeItem(getCategoriesKey(null));
-                         localStorage.removeItem(ORDER_KEY);
-                       }
-                   }
-               } catch (e) {
-                   logger.error("Migration failed", e);
-               }
+      if (newUser && !userRef.current) {
+        // Just logged in — MIGRATE GUEST DATA
+        const localStr = localStorage.getItem(STORAGE_KEY);
+        if (localStr) {
+          try {
+            const localItems = JSON.parse(localStr) as PersonalPrompt[];
+            if (Array.isArray(localItems) && localItems.length > 0) {
+              logger.info("Migrating guest items:", localItems.length);
+
+              const itemsToInsert = localItems.map(item => ({
+                user_id: newUser.id,
+                title: item.title,
+                prompt: item.prompt,
+                prompt_style: item.prompt_style ?? null,
+                category: item.category,
+                personal_category: item.personal_category,
+                use_case: item.use_case,
+                source: item.source,
+                use_count: item.use_count,
+                created_at: new Date(item.created_at ?? Date.now()).toISOString(),
+                updated_at: new Date(item.updated_at ?? Date.now()).toISOString(),
+                sort_index: item.sort_index ?? 0,
+                capability_mode: item.capability_mode ?? CapabilityMode.STANDARD,
+                tags: item.tags ?? []
+              }));
+
+              const { error: insertError } = await supabase.from('personal_library').insert(itemsToInsert);
+              if (insertError) {
+                logger.error("Migration insert failed", insertError);
+              } else {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(getCategoriesKey(null));
+                localStorage.removeItem(ORDER_KEY);
+              }
+            }
+          } catch (e) {
+            logger.error("Migration failed", e);
           }
+        }
       }
 
       if (userRef.current?.id !== newUser?.id) {
         userRef.current = newUser;
         setUser(newUser);
+        // Reset filters on user change
+        setPageState(1);
+        setActiveFolderState(null);
+        setSortByState('recent');
+        setSearchQueryState('');
+        setCapabilityFilterState(null);
         init();
       }
     });
@@ -211,22 +455,86 @@ export function useLibrary() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
-  // Sync to localStorage (guest data persists across tabs/sessions for up to 7 days)
-  useEffect(() => {
-    if (isLoaded && !user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(personalLibrary));
-      localStorage.setItem(getCategoriesKey(null), JSON.stringify(personalCategories));
-    }
-    if (isLoaded && user) {
-        localStorage.setItem(getCategoriesKey(user.id), JSON.stringify(personalCategories));
-    }
-    if (isLoaded) {
-      persistOrderMap(user?.id ?? null, personalLibrary);
-    }
-  }, [personalLibrary, personalCategories, isLoaded, user]);
+  // ---------------------------------------------------------------------------
+  // RE-FETCH WHEN PAGINATION / FILTER STATE CHANGES (authenticated users)
+  // ---------------------------------------------------------------------------
 
-  const addPrompt = async (prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>, category?: string) => {
-    // 1.1 Auto-categorization: use provided category if personal_category is not set
+  useEffect(() => {
+    if (!isLoaded) return;
+    const currentUser = userRef.current;
+    if (!currentUser) return;
+
+    fetchPage(currentUser.id, { page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter });
+  // We intentionally omit fetchPage from deps to avoid double-fetching on init
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter, isLoaded]);
+
+  // ---------------------------------------------------------------------------
+  // RE-PAGINATE GUESTS WHEN FILTER STATE CHANGES
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (userRef.current) return; // handled above
+    applyGuestPagination(allLocalItems, { page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter, allLocalItems, isLoaded]);
+
+  // ---------------------------------------------------------------------------
+  // SYNC GUEST DATA TO LOCALSTORAGE
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allLocalItems));
+      localStorage.setItem(getCategoriesKey(null), JSON.stringify(personalCategories));
+      persistOrderMap(null, allLocalItems);
+    } else {
+      localStorage.setItem(getCategoriesKey(user.id), JSON.stringify(personalCategories));
+      persistOrderMap(user.id, personalLibrary);
+    }
+  }, [allLocalItems, personalLibrary, personalCategories, isLoaded, user]);
+
+  // ---------------------------------------------------------------------------
+  // NAVIGATION HELPERS
+  // ---------------------------------------------------------------------------
+
+  const setPage = useCallback((nextPage: number) => {
+    setPageState(nextPage);
+  }, []);
+
+  const setActiveFolder = useCallback((folder: string | null) => {
+    setActiveFolderState(folder);
+    setPageState(1);
+  }, []);
+
+  const setSortBy = useCallback((sort: string) => {
+    setSortByState(sort);
+    setPageState(1);
+  }, []);
+
+  const setCapabilityFilter = useCallback((cap: string | null) => {
+    setCapabilityFilterState(cap);
+    setPageState(1);
+  }, []);
+
+  const setSearchQuery = useCallback((query: string) => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setSearchQueryState(query);
+      setPageState(1);
+    }, 300);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // MUTATIONS
+  // ---------------------------------------------------------------------------
+
+  const addPrompt = async (
+    prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>,
+    category?: string
+  ) => {
     if (!prompt.personal_category && category) {
       prompt = { ...prompt, personal_category: category };
     }
@@ -234,120 +542,204 @@ export function useLibrary() {
       prompt = { ...prompt, personal_category: 'כללי' };
     }
 
-    // 1.2 Duplicate detection: block if identical prompt text already exists
-    const existing = personalLibrary.find(p => p.prompt.trim() === prompt.prompt.trim());
-    if (existing) {
-      toast.warning("פרומפט דומה כבר קיים בספרייה");
-      return;
-    }
-
-    const nextSortIndex = personalLibrary
-      .filter((item) => item.personal_category === prompt.personal_category)
-      .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
-
-    const newItem: PersonalPrompt = {
-      ...prompt,
-      id: crypto.randomUUID(),
-      use_count: 0,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-      sort_index: nextSortIndex,
-      capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
-      tags: prompt.tags || [],
-      last_used_at: null,
-      savedAt: Date.now()
-    } as PersonalPrompt & { savedAt: number };
-
-    setPersonalLibrary(prev => [newItem, ...prev]);
-
     if (user) {
-        // Prepare data for DB
-        const insertData = {
-           user_id: user.id,
-           title: prompt.title,
-           prompt: prompt.prompt,
-           prompt_style: prompt.prompt_style ?? null,
-           category: prompt.category,
-           personal_category: prompt.personal_category,
-           use_case: prompt.use_case,
-           source: prompt.source,
-           sort_index: nextSortIndex,
-           capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
-           tags: prompt.tags || []
-        };
+      // For logged-in users: duplicate check via a quick select
+      const { data: existing } = await supabase
+        .from('personal_library')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('prompt', prompt.prompt.trim())
+        .limit(1);
 
-      const { data, error } = await supabase.from('personal_library').insert(insertData).select().single();
-      if (!error && data) {
-          // Update the item in local state with the actual DB ID
-          setPersonalLibrary(prev => prev.map(p => p.id === newItem.id ? { ...p, id: data.id } : p));
+      if (existing && existing.length > 0) {
+        toast.warning("פרומפט דומה כבר קיים בספרייה");
+        return;
       }
+
+      // Compute next sort index for the target category using a count query
+      const { count: catCount } = await supabase
+        .from('personal_library')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('personal_category', prompt.personal_category ?? 'כללי');
+
+      const nextSortIndex = (catCount ?? 0);
+
+      const insertData = {
+        user_id: user.id,
+        title: prompt.title,
+        prompt: prompt.prompt,
+        prompt_style: prompt.prompt_style ?? null,
+        category: prompt.category,
+        personal_category: prompt.personal_category,
+        use_case: prompt.use_case,
+        source: prompt.source,
+        sort_index: nextSortIndex,
+        capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
+        tags: prompt.tags || []
+      };
+
+      const { error } = await supabase.from('personal_library').insert(insertData);
+      if (error) {
+        logger.error('[useLibrary] addPrompt error:', error);
+        return;
+      }
+
+      await refreshCurrentPage();
+    } else {
+      // GUEST path
+      const existing = allLocalItems.find(p => p.prompt.trim() === prompt.prompt.trim());
+      if (existing) {
+        toast.warning("פרומפט דומה כבר קיים בספרייה");
+        return;
+      }
+
+      const nextSortIndex = allLocalItems
+        .filter((item) => item.personal_category === prompt.personal_category)
+        .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
+
+      const newItem: PersonalPrompt = {
+        ...prompt,
+        id: crypto.randomUUID(),
+        use_count: 0,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+        sort_index: nextSortIndex,
+        capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
+        tags: prompt.tags || [],
+        last_used_at: null,
+        savedAt: Date.now()
+      } as PersonalPrompt & { savedAt: number };
+
+      setAllLocalItems(prev => [newItem, ...prev]);
     }
   };
 
   const removePrompt = async (id: string) => {
-    setPersonalLibrary(prev => prev.filter(p => p.id !== id));
     if (user) {
       await supabase.from('personal_library').delete().eq('id', id).eq('user_id', user.id);
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => prev.filter(p => p.id !== id));
     }
   };
 
   const updateCategory = async (id: string, category: string) => {
-    const nextSortIndex = personalLibrary
-      .filter((item) => item.personal_category === category && item.id !== id)
-      .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
-
-    setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, personal_category: category, sort_index: nextSortIndex, updated_at: Date.now() } : p));
     if (user) {
+      const { count: catCount } = await supabase
+        .from('personal_library')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('personal_category', category)
+        .neq('id', id);
+
+      const nextSortIndex = (catCount ?? 0);
+
       const { error } = await supabase.from('personal_library').update({
         personal_category: category,
         sort_index: nextSortIndex
       }).eq('id', id).eq('user_id', user.id);
       if (error) logger.error('[useLibrary] updateCategory error:', error);
+
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => {
+        const nextSortIndex = prev
+          .filter((item) => item.personal_category === category && item.id !== id)
+          .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
+        return prev.map(p =>
+          p.id === id ? { ...p, personal_category: category, sort_index: nextSortIndex, updated_at: Date.now() } : p
+        );
+      });
     }
   };
 
   const incrementUseCount = async (id: string) => {
     const now = Date.now();
-    setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: now, last_used_at: now } : p));
     if (user) {
-        // Use raw SQL increment via rpc to avoid race conditions
-        await supabase.rpc('increment_use_count', { item_id: id, user_id_input: user.id }).then(async (res) => {
-          if (res.error) {
-            // Fallback: read current value from DB and update
-            const { data: current } = await supabase.from('personal_library').select('use_count').eq('id', id).eq('user_id', user.id).single();
-            await supabase.from('personal_library').update({ use_count: (current?.use_count ?? 0) + 1, last_used_at: new Date(now).toISOString() }).eq('id', id).eq('user_id', user.id);
-          }
-        });
+      await supabase.rpc('increment_use_count', { item_id: id, user_id_input: user.id }).then(async (res) => {
+        if (res.error) {
+          const { data: current } = await supabase
+            .from('personal_library')
+            .select('use_count')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .single();
+          await supabase
+            .from('personal_library')
+            .update({ use_count: (current?.use_count ?? 0) + 1, last_used_at: new Date(now).toISOString() })
+            .eq('id', id)
+            .eq('user_id', user.id);
+        }
+      });
+      // Optimistically update the visible page item without a full re-fetch
+      setPersonalLibrary(prev =>
+        prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: now, last_used_at: now } : p)
+      );
+    } else {
+      setAllLocalItems(prev =>
+        prev.map(p => p.id === id ? { ...p, use_count: p.use_count + 1, updated_at: now, last_used_at: now } : p)
+      );
     }
   };
 
   const togglePin = async (id: string) => {
-    const item = personalLibrary.find(p => p.id === id);
-    if (!item) return;
-    const newPinned = !item.is_pinned;
-    setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, is_pinned: newPinned, updated_at: Date.now() } : p));
     if (user) {
-      const { error } = await supabase.from('personal_library').update({ is_pinned: newPinned }).eq('id', id).eq('user_id', user.id);
+      // Read current state from page
+      const item = personalLibrary.find(p => p.id === id);
+      if (!item) return;
+      const newPinned = !item.is_pinned;
+      const { error } = await supabase
+        .from('personal_library')
+        .update({ is_pinned: newPinned })
+        .eq('id', id)
+        .eq('user_id', user.id);
       if (error) logger.error('[useLibrary] togglePin error:', error);
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => {
+        const item = prev.find(p => p.id === id);
+        if (!item) return prev;
+        const newPinned = !item.is_pinned;
+        return prev.map(p => p.id === id ? { ...p, is_pinned: newPinned, updated_at: Date.now() } : p);
+      });
     }
   };
 
   const ratePrompt = async (id: string, success: boolean) => {
-    const item = personalLibrary.find(p => p.id === id);
-    if (!item) return;
     const field = success ? 'success_count' : 'fail_count';
-    const currentVal = success ? (item.success_count ?? 0) : (item.fail_count ?? 0);
-    setPersonalLibrary(prev => prev.map(p =>
-      p.id === id ? { ...p, [field]: (p[field as keyof PersonalPrompt] as number ?? 0) + 1 } : p
-    ));
     if (user) {
-      const { error } = await supabase.from('personal_library').update({ [field]: currentVal + 1 }).eq('id', id).eq('user_id', user.id);
+      const { data: current } = await supabase
+        .from('personal_library')
+        .select('success_count, fail_count')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+      const currentVal = success
+        ? (current?.success_count ?? 0)
+        : (current?.fail_count ?? 0);
+      const { error } = await supabase
+        .from('personal_library')
+        .update({ [field]: currentVal + 1 })
+        .eq('id', id)
+        .eq('user_id', user.id);
       if (error) logger.error('[useLibrary] ratePrompt error:', error);
+      // Optimistic update to visible page
+      setPersonalLibrary(prev =>
+        prev.map(p =>
+          p.id === id ? { ...p, [field]: (p[field as keyof PersonalPrompt] as number ?? 0) + 1 } : p
+        )
+      );
+    } else {
+      setAllLocalItems(prev =>
+        prev.map(p =>
+          p.id === id ? { ...p, [field]: (p[field as keyof PersonalPrompt] as number ?? 0) + 1 } : p
+        )
+      );
     }
   };
 
   const updatePrompt = async (id: string, updates: Partial<PersonalPrompt>) => {
-    // Build update object with only defined fields
     const defined: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
@@ -356,46 +748,26 @@ export function useLibrary() {
     }
     if (Object.keys(defined).length === 0) return;
 
-    setPersonalLibrary(prev =>
-      prev.map(p =>
-        p.id === id
-          ? {
-              ...p,
-              ...defined,
-              updated_at: Date.now(),
-            }
-          : p
-      )
-    );
-
     if (user) {
       await supabase
         .from('personal_library')
         .update(defined)
         .eq('id', id)
         .eq('user_id', user.id);
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev =>
+        prev.map(p =>
+          p.id === id ? { ...p, ...defined, updated_at: Date.now() } : p
+        )
+      );
     }
   };
 
   const updatePromptContent = async (id: string, prompt: string, prompt_style?: string) => {
     const trimmed = prompt.trim();
-    setPersonalLibrary(prev =>
-      prev.map(p =>
-        p.id === id
-          ? {
-              ...p,
-              prompt: trimmed || p.prompt,
-              prompt_style: typeof prompt_style === "string" ? prompt_style : p.prompt_style,
-              updated_at: Date.now(),
-            }
-          : p
-      )
-    );
-
     if (user) {
-      const updates: { prompt?: string; prompt_style?: string } = {
-        prompt: trimmed || prompt,
-      };
+      const updates: { prompt?: string; prompt_style?: string } = { prompt: trimmed || prompt };
       if (typeof prompt_style === "string") {
         updates.prompt_style = prompt_style;
       }
@@ -404,31 +776,45 @@ export function useLibrary() {
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id);
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev =>
+        prev.map(p =>
+          p.id === id
+            ? {
+                ...p,
+                prompt: trimmed || p.prompt,
+                prompt_style: typeof prompt_style === "string" ? prompt_style : p.prompt_style,
+                updated_at: Date.now(),
+              }
+            : p
+        )
+      );
     }
   };
 
   const reorderPrompts = async (category: string, orderedIds: string[]) => {
-    setPersonalLibrary(prev => {
-      const orderMap = new Map(orderedIds.map((promptId, index) => [promptId, index]));
-      return prev.map(item =>
-        item.personal_category === category && orderMap.has(item.id)
-          ? { ...item, sort_index: orderMap.get(item.id) }
-          : item
-      );
-    });
-
     if (user) {
-        // Batch updates in groups of 10 to avoid overwhelming the API
-        const BATCH_SIZE = 10;
-        const updates = orderedIds.map((id, index) => ({ id, sort_index: index }));
-        for (let i = 0; i < updates.length; i += BATCH_SIZE) {
-          const batch = updates.slice(i, i + BATCH_SIZE);
-          await Promise.all(
-            batch.map(u =>
-              supabase.from('personal_library').update({ sort_index: u.sort_index }).eq('id', u.id).eq('user_id', user.id)
-            )
-          );
-        }
+      const BATCH_SIZE = 10;
+      const updates = orderedIds.map((id, index) => ({ id, sort_index: index }));
+      for (let i = 0; i < updates.length; i += BATCH_SIZE) {
+        const batch = updates.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map(u =>
+            supabase.from('personal_library').update({ sort_index: u.sort_index }).eq('id', u.id).eq('user_id', user.id)
+          )
+        );
+      }
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => {
+        const orderMap = new Map(orderedIds.map((promptId, index) => [promptId, index]));
+        return prev.map(item =>
+          item.personal_category === category && orderMap.has(item.id)
+            ? { ...item, sort_index: orderMap.get(item.id) }
+            : item
+        );
+      });
     }
   };
 
@@ -442,24 +828,6 @@ export function useLibrary() {
     const trimmed = toName.replace(/\s+/g, " ").trim();
     if (!trimmed || trimmed === fromName) return;
 
-    let updatedItems: PersonalPrompt[] = [];
-    setPersonalLibrary(prev => {
-      const updated = prev.map(item =>
-        item.personal_category === fromName
-          ? { ...item, personal_category: trimmed, updated_at: Date.now() }
-          : item
-      );
-
-      const targetItems = updated
-        .filter(item => item.personal_category === trimmed)
-        .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0))
-        .map((item, index) => ({ ...item, sort_index: index }));
-
-      const targetMap = new Map(targetItems.map(item => [item.id, item]));
-      updatedItems = updated.map(item => targetMap.get(item.id) ?? item);
-      return updatedItems;
-    });
-
     setPersonalCategories(prev => {
       const next = prev.map(cat => (cat === fromName ? trimmed : cat));
       return Array.from(new Set(next.filter(Boolean)));
@@ -472,19 +840,19 @@ export function useLibrary() {
         .eq('user_id', user.id)
         .eq('personal_category', fromName);
 
-      const targetUpdates = updatedItems
-        .filter(item => item.personal_category === trimmed)
-        .map(item => ({
-          id: item.id,
-          user_id: user.id,
-          sort_index: item.sort_index ?? 0,
-        }));
+      // Re-index the renamed category
+      const { data: renamedItems } = await supabase
+        .from('personal_library')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('personal_category', trimmed)
+        .order('sort_index', { ascending: true });
 
-      if (targetUpdates.length > 0) {
-        // Batch updates in groups of 10 to avoid overwhelming the API
+      if (renamedItems && renamedItems.length > 0) {
         const BATCH_SIZE = 10;
-        for (let i = 0; i < targetUpdates.length; i += BATCH_SIZE) {
-          const batch = targetUpdates.slice(i, i + BATCH_SIZE);
+        const indexUpdates = renamedItems.map((row, index) => ({ id: row.id, sort_index: index }));
+        for (let i = 0; i < indexUpdates.length; i += BATCH_SIZE) {
+          const batch = indexUpdates.slice(i, i + BATCH_SIZE);
           await Promise.all(
             batch.map(({ id, sort_index }) =>
               supabase.from('personal_library').update({ sort_index }).eq('id', id).eq('user_id', user.id)
@@ -492,6 +860,24 @@ export function useLibrary() {
           );
         }
       }
+
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => {
+        const updated = prev.map(item =>
+          item.personal_category === fromName
+            ? { ...item, personal_category: trimmed, updated_at: Date.now() }
+            : item
+        );
+
+        const targetItems = updated
+          .filter(item => item.personal_category === trimmed)
+          .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0))
+          .map((item, index) => ({ ...item, sort_index: index }));
+
+        const targetMap = new Map(targetItems.map(item => [item.id, item]));
+        return updated.map(item => targetMap.get(item.id) ?? item);
+      });
     }
   };
 
@@ -499,222 +885,262 @@ export function useLibrary() {
     const trimmed = targetCategory.replace(/\s+/g, " ").trim();
     if (!trimmed) return;
 
-    let updatedItems: PersonalPrompt[] = [];
-    let sourceCategory = trimmed;
-
-    setPersonalLibrary(prev => {
-      const item = prev.find(p => p.id === id);
-      if (!item) return prev;
-      sourceCategory = item.personal_category ?? "General";
-
-      const without = prev.filter(p => p.id !== id);
-      const sourceItems = without
-        .filter(p => p.personal_category === sourceCategory)
-        .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
-      const targetItems = without
-        .filter(p => p.personal_category === trimmed)
-        .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
-
-      const insertAt = Math.max(0, Math.min(targetIndex ?? targetItems.length, targetItems.length));
-      const moved = { ...item, personal_category: trimmed, updated_at: Date.now() };
-      const nextTarget = [...targetItems.slice(0, insertAt), moved, ...targetItems.slice(insertAt)];
-      const reindexedTarget = nextTarget.map((p, index) => ({ ...p, sort_index: index }));
-      const reindexedSource = sourceItems.map((p, index) => ({ ...p, sort_index: index }));
-
-      const reindexedMap = new Map(
-        [...reindexedTarget, ...reindexedSource].map(p => [p.id, p])
-      );
-      updatedItems = without.map(item => reindexedMap.get(item.id) ?? item);
-      updatedItems.push(reindexedMap.get(id) as PersonalPrompt);
-      return updatedItems;
-    });
-
     setPersonalCategories(prev => {
       if (prev.includes(trimmed)) return prev;
       return [...prev, trimmed];
     });
 
     if (user) {
-      const updates = updatedItems
-        .filter(item => item.personal_category === trimmed || item.personal_category === sourceCategory)
-        .map(item => ({
-          id: item.id,
-          user_id: user.id,
-          personal_category: item.personal_category,
-          sort_index: item.sort_index ?? 0,
-        }));
+      // Determine insert position
+      const { count: catCount } = await supabase
+        .from('personal_library')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('personal_category', trimmed)
+        .neq('id', id);
 
-      if (updates.length > 0) {
-        // Batch updates in groups of 10 to avoid overwhelming the API
-        const BATCH_SIZE = 10;
-        for (let i = 0; i < updates.length; i += BATCH_SIZE) {
-          const batch = updates.slice(i, i + BATCH_SIZE);
-          await Promise.all(
-            batch.map(({ id, personal_category, sort_index }) =>
-              supabase.from('personal_library').update({ personal_category, sort_index }).eq('id', id).eq('user_id', user.id)
-            )
-          );
+      const insertAt = targetIndex !== undefined
+        ? Math.max(0, Math.min(targetIndex, catCount ?? 0))
+        : (catCount ?? 0);
+
+      // Shift items at or after insertAt
+      const { data: existingItems } = await supabase
+        .from('personal_library')
+        .select('id, sort_index')
+        .eq('user_id', user.id)
+        .eq('personal_category', trimmed)
+        .neq('id', id)
+        .order('sort_index', { ascending: true });
+
+      if (existingItems) {
+        const needShift = existingItems.filter(row => (row.sort_index ?? 0) >= insertAt);
+        if (needShift.length > 0) {
+          const BATCH_SIZE = 10;
+          for (let i = 0; i < needShift.length; i += BATCH_SIZE) {
+            const batch = needShift.slice(i, i + BATCH_SIZE);
+            await Promise.all(
+              batch.map(row =>
+                supabase.from('personal_library').update({ sort_index: (row.sort_index ?? 0) + 1 }).eq('id', row.id).eq('user_id', user.id)
+              )
+            );
+          }
         }
       }
+
+      await supabase
+        .from('personal_library')
+        .update({ personal_category: trimmed, sort_index: insertAt })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => {
+        const item = prev.find(p => p.id === id);
+        if (!item) return prev;
+        const sourceCategory = item.personal_category ?? 'כללי';
+
+        const without = prev.filter(p => p.id !== id);
+        const sourceItems = without
+          .filter(p => p.personal_category === sourceCategory)
+          .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+        const targetItems = without
+          .filter(p => p.personal_category === trimmed)
+          .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
+
+        const insertAt = Math.max(0, Math.min(targetIndex ?? targetItems.length, targetItems.length));
+        const moved = { ...item, personal_category: trimmed, updated_at: Date.now() };
+        const nextTarget = [...targetItems.slice(0, insertAt), moved, ...targetItems.slice(insertAt)];
+        const reindexedTarget = nextTarget.map((p, index) => ({ ...p, sort_index: index }));
+        const reindexedSource = sourceItems.map((p, index) => ({ ...p, sort_index: index }));
+
+        const reindexedMap = new Map(
+          [...reindexedTarget, ...reindexedSource].map(p => [p.id, p])
+        );
+        return without.map(i => reindexedMap.get(i.id) ?? i).concat(reindexedMap.get(id) as PersonalPrompt);
+      });
     }
   };
 
   const deletePrompts = async (ids: string[]) => {
-      if (ids.length === 0) return;
-      setPersonalLibrary(prev => prev.filter(p => !ids.includes(p.id)));
-      if (user) {
-        const { error } = await supabase
-            .from("personal_library")
-            .delete()
-            .in("id", ids)
-            .eq("user_id", user.id);
-        if (error) {
-          logger.error("[useLibrary] deletePrompts error:", error);
-        }
+    if (ids.length === 0) return;
+    if (user) {
+      const { error } = await supabase
+        .from("personal_library")
+        .delete()
+        .in("id", ids)
+        .eq("user_id", user.id);
+      if (error) {
+        logger.error("[useLibrary] deletePrompts error:", error);
       }
+      await refreshCurrentPage();
+    } else {
+      setAllLocalItems(prev => prev.filter(p => !ids.includes(p.id)));
+    }
   };
 
   const movePrompts = async (ids: string[], category: string) => {
-      const trimmed = category.replace(/\s+/g, " ").trim();
-      if (!trimmed) return;
+    const trimmed = category.replace(/\s+/g, " ").trim();
+    if (!trimmed) return;
 
-      try {
-        // 1. Calculate next sort indices for the target category
-        // We append them to the end of the existing category
-        const targetItems = personalLibrary
+    setPersonalCategories(prev => {
+      if (prev.includes(trimmed)) return prev;
+      return [...prev, trimmed];
+    });
+
+    try {
+      if (user) {
+        const { count: catCount } = await supabase
+          .from('personal_library')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('personal_category', trimmed)
+          .not('id', 'in', `(${ids.join(',')})`);
+
+        let nextIdx = catCount ?? 0;
+
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+          const batch = ids.slice(i, i + BATCH_SIZE);
+          const results = await Promise.all(
+            batch.map((id, batchOffset) =>
+              supabase
+                .from('personal_library')
+                .update({
+                  personal_category: trimmed,
+                  sort_index: nextIdx + batchOffset,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .eq('user_id', user.id)
+            )
+          );
+          const error = results.find(r => r.error)?.error;
+          if (error) throw error;
+          nextIdx += batch.length;
+        }
+
+        await refreshCurrentPage();
+      } else {
+        setAllLocalItems(prev => {
+          const targetItems = prev
             .filter(p => p.personal_category === trimmed && !ids.includes(p.id))
             .sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
-        
-        let nextIdx = targetItems.length;
-        
-        const updates = personalLibrary.map(p => {
+
+          let nextIdx = targetItems.length;
+
+          return prev.map(p => {
             if (ids.includes(p.id)) {
-                const updated = { ...p, personal_category: trimmed, sort_index: nextIdx, updated_at: Date.now() };
-                nextIdx++;
-                return updated;
+              const updated = { ...p, personal_category: trimmed, sort_index: nextIdx, updated_at: Date.now() };
+              nextIdx++;
+              return updated;
             }
             return p;
+          });
         });
-
-        // 2. Local State Update
-        setPersonalLibrary(updates);
-        
-        // 3. Category Sync
-        setPersonalCategories(prev => {
-            if (prev.includes(trimmed)) return prev;
-            return [...prev, trimmed];
-        });
-
-        // 4. DB Sync
-        if (user) {
-            const dbUpdates = updates
-                .filter(p => ids.includes(p.id))
-                .map(p => ({
-                    id: p.id,
-                    user_id: user.id,
-                    personal_category: p.personal_category,
-                    sort_index: p.sort_index,
-                    updated_at: new Date(p.updated_at).toISOString()
-                }));
-            
-            // Batch updates in groups of 10 to avoid overwhelming the API
-            const BATCH_SIZE = 10;
-            for (let i = 0; i < dbUpdates.length; i += BATCH_SIZE) {
-              const batch = dbUpdates.slice(i, i + BATCH_SIZE);
-              const results = await Promise.all(
-                batch.map(({ id, personal_category, sort_index, updated_at }) =>
-                  supabase.from('personal_library').update({ personal_category, sort_index, updated_at }).eq('id', id).eq('user_id', user.id)
-                )
-              );
-              const error = results.find(r => r.error)?.error;
-              if (error) throw error;
-            }
-        }
-      } catch (err) {
-        logger.error("[useLibrary] movePrompts error:", err);
-        throw err;
       }
+    } catch (err) {
+      logger.error("[useLibrary] movePrompts error:", err);
+      throw err;
+    }
   };
 
   const addPrompts = async (prompts: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>[]) => {
-      if (prompts.length === 0) return;
-      
-      const newItems: PersonalPrompt[] = prompts.map((p, i) => ({
-          ...p,
-          id: crypto.randomUUID(),
-          use_count: 0,
-          created_at: Date.now() + i, // slight offset
-          updated_at: Date.now() + i,
-          sort_index: 0, // We'll fix indices shortly
+    if (prompts.length === 0) return;
+
+    if (user) {
+      // Compute sort indices per category
+      const categoriesInBatch = Array.from(new Set(prompts.map(p => p.personal_category ?? 'כללי')));
+      const catCountMap: Record<string, number> = {};
+      await Promise.all(
+        categoriesInBatch.map(async (cat) => {
+          const { count } = await supabase
+            .from('personal_library')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('personal_category', cat);
+          catCountMap[cat] = count ?? 0;
+        })
+      );
+
+      const runningIdx: Record<string, number> = { ...catCountMap };
+      const insertData = prompts.map(p => {
+        const cat = p.personal_category ?? 'כללי';
+        const sortIndex = runningIdx[cat] ?? 0;
+        runningIdx[cat] = sortIndex + 1;
+        return {
+          user_id: user.id,
+          title: p.title,
+          prompt: p.prompt,
+          prompt_style: p.prompt_style ?? null,
+          category: p.category,
+          personal_category: cat,
+          use_case: p.use_case,
+          source: p.source,
+          sort_index: sortIndex,
           capability_mode: p.capability_mode ?? CapabilityMode.STANDARD,
           tags: p.tags || []
-      }));
-
-      // Calculate indices per category for the batch
-      const categoriesInBatch = Array.from(new Set(newItems.map(item => item.personal_category)));
-      
-      categoriesInBatch.forEach(cat => {
-          const currentMax = personalLibrary
-              .filter(p => p.personal_category === cat)
-              .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1);
-          
-          let runningIdx = currentMax + 1;
-          newItems.forEach(item => {
-              if (item.personal_category === cat) {
-                  item.sort_index = runningIdx++;
-              }
-          });
+        };
       });
 
-      setPersonalLibrary(prev => [...newItems, ...prev]);
-
-      if (user) {
-          const insertData = newItems.map(item => ({
-              user_id: user.id,
-              title: item.title,
-              prompt: item.prompt,
-              prompt_style: item.prompt_style ?? null,
-              category: item.category,
-              personal_category: item.personal_category,
-              use_case: item.use_case,
-              source: item.source,
-              sort_index: item.sort_index,
-              capability_mode: item.capability_mode,
-              tags: item.tags
-          }));
-
-          const { data, error } = await supabase.from('personal_library').insert(insertData).select();
-          if (!error && data) {
-              // Sync IDs from DB - match by index position (insert order matches return order)
-              const tempIds = newItems.map(item => item.id);
-              setPersonalLibrary(prev => prev.map(p => {
-                  const batchIndex = tempIds.indexOf(p.id);
-                  if (batchIndex !== -1 && batchIndex < data.length) {
-                    return { ...p, id: data[batchIndex].id };
-                  }
-                  return p;
-              }));
-          }
+      const { error } = await supabase.from('personal_library').insert(insertData);
+      if (error) {
+        logger.error('[useLibrary] addPrompts error:', error);
+        return;
       }
+
+      await refreshCurrentPage();
+    } else {
+      const newItems: PersonalPrompt[] = prompts.map((p, i) => ({
+        ...p,
+        id: crypto.randomUUID(),
+        use_count: 0,
+        created_at: Date.now() + i,
+        updated_at: Date.now() + i,
+        sort_index: 0,
+        capability_mode: p.capability_mode ?? CapabilityMode.STANDARD,
+        tags: p.tags || []
+      }));
+
+      const categoriesInBatch = Array.from(new Set(newItems.map(item => item.personal_category)));
+
+      setAllLocalItems(prev => {
+        const updated = [...prev];
+        categoriesInBatch.forEach(cat => {
+          const currentMax = updated
+            .filter(p => p.personal_category === cat)
+            .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1);
+
+          let runningIdx = currentMax + 1;
+          newItems.forEach(item => {
+            if (item.personal_category === cat) {
+              item.sort_index = runningIdx++;
+            }
+          });
+        });
+        return [...newItems, ...updated];
+      });
+    }
   };
 
   const updateTags = async (id: string, tags: string[]) => {
-      setPersonalLibrary(prev => prev.map(p =>
-         p.id === id ? { ...p, tags } : p
-      ));
-      if (user) {
-        const { error } = await supabase
-            .from("personal_library")
-            .update({ tags })
-            .eq("id", id)
-            .eq("user_id", user.id);
-        if (error) {
-          logger.error("[useLibrary] updateTags error:", error);
-        }
+    if (user) {
+      const { error } = await supabase
+        .from("personal_library")
+        .update({ tags })
+        .eq("id", id)
+        .eq("user_id", user.id);
+      if (error) {
+        logger.error("[useLibrary] updateTags error:", error);
       }
+      // Optimistic update to visible page
+      setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, tags } : p));
+    } else {
+      setAllLocalItems(prev => prev.map(p => p.id === id ? { ...p, tags } : p));
+    }
   };
 
-  const updateProfile = async (updates: { 
+  const updateProfile = async (updates: {
     onboarding_completed?: boolean;
     plan_tier?: 'free' | 'pro';
     credits_balance?: number;
@@ -727,28 +1153,28 @@ export function useLibrary() {
       .eq('id', user.id);
 
     if (error) {
-       logger.error('[useLibrary] Error updating profile:', error);
-       throw error;
+      logger.error('[useLibrary] Error updating profile:', error);
+      throw error;
     }
   };
 
   const completeOnboarding = async () => {
     if (!user) return;
-    
+
     try {
-        const response = await fetch(getApiPath('/api/user/onboarding/complete'), {
-            method: 'POST',
-        });
-        
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error || "Failed to complete onboarding");
-        }
-        
-        return true;
+      const response = await fetch(getApiPath('/api/user/onboarding/complete'), {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to complete onboarding");
+      }
+
+      return true;
     } catch (error) {
-        logger.error('[useLibrary] completeOnboarding error:', error);
-        throw error;
+      logger.error('[useLibrary] completeOnboarding error:', error);
+      throw error;
     }
   };
 
@@ -756,6 +1182,25 @@ export function useLibrary() {
     personalLibrary,
     personalCategories,
     isLoaded,
+    // Pagination
+    page,
+    pageSize,
+    totalCount,
+    folderCounts,
+    isPageLoading,
+    // Filters
+    activeFolder,
+    sortBy,
+    searchQuery,
+    capabilityFilter,
+    // Navigation
+    setPage,
+    setActiveFolder,
+    setSortBy,
+    setSearchQuery,
+    setCapabilityFilter,
+    refreshCurrentPage,
+    // Mutations
     addPrompt,
     removePrompt,
     updateCategory,
@@ -773,6 +1218,6 @@ export function useLibrary() {
     addPrompts,
     updateTags,
     updateProfile,
-    completeOnboarding
+    completeOnboarding,
   };
 }

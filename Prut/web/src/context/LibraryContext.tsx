@@ -17,15 +17,15 @@ interface LibraryContextType {
   // State
   viewMode: "home" | "library" | "personal";
   setViewMode: (mode: "home" | "library" | "personal") => void;
-  
+
   libraryView: "all" | "favorites";
   setLibraryView: (view: "all" | "favorites") => void;
-  
+
   libraryQuery: string;
   setLibraryQuery: (q: string) => void;
   filteredLibrary: LibraryPrompt[];
   libraryPrompts: LibraryPrompt[];
-  
+
   personalQuery: string;
   setPersonalQuery: (q: string) => void;
 
@@ -36,22 +36,22 @@ interface LibraryContextType {
 
   personalView: "all" | "favorites";
   setPersonalView: (view: "all" | "favorites") => void;
-  
+
   filteredPersonalLibrary: PersonalPrompt[];
-  libraryFavorites: LibraryPrompt[]; // Added
-  
+  libraryFavorites: LibraryPrompt[];
+
   // Data
   personalLibrary: PersonalPrompt[];
   personalCategories: string[];
-  
+
   // Favorites
   favoriteLibraryIds: Set<string>;
   favoritePersonalIds: Set<string>;
   handleToggleFavorite: (type: "library" | "personal", itemId: string) => Promise<void>;
-  
+
   // Popularity
   popularityMap: Record<string, number>;
-  
+
   // Actions
   addPrompt: (prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">, category?: string) => Promise<void>;
   removePrompt: (id: string) => Promise<void>;
@@ -60,19 +60,19 @@ interface LibraryContextType {
   incrementUseCount: (id: string) => Promise<void>;
   togglePin: (id: string) => Promise<void>;
   ratePrompt: (id: string, success: boolean) => Promise<void>;
-  
+
   // Batch Actions
   addPrompts: (prompts: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">[]) => Promise<void>;
   deletePrompts: (ids: string[]) => Promise<void>;
   movePrompts: (ids: string[], category: string) => Promise<void>;
   updateTags: (id: string, tags: string[]) => Promise<void>;
-  updateProfile: (updates: { 
+  updateProfile: (updates: {
     onboarding_completed?: boolean;
     plan_tier?: 'free' | 'pro';
     credits_balance?: number;
   }) => Promise<void>;
   completeOnboarding: () => Promise<boolean | undefined>;
-  
+
   // Categories
   newPersonalCategory: string;
   setNewPersonalCategory: (cat: string) => void;
@@ -84,7 +84,7 @@ interface LibraryContextType {
   startRenameCategory: (category: string) => void;
   cancelRenameCategory: () => void;
   saveRenameCategory: () => Promise<void>;
-  
+
   // Editing
   editingPersonalId: string | null;
   editingTitle: string;
@@ -103,7 +103,7 @@ interface LibraryContextType {
   openStyleEditor: (prompt: PersonalPrompt) => void;
   saveStylePrompt: (id: string) => Promise<void>;
   closeStyleEditor: () => void;
-  
+
   // Drag & Drop
   draggingPersonalId: string | null;
   draggingPersonalCategory: string | null;
@@ -119,7 +119,7 @@ interface LibraryContextType {
   setSelectedCapabilityFilter: (mode: CapabilityMode | null) => void;
   favoritesCapabilityFilter: CapabilityMode | null;
   setFavoritesCapabilityFilter: (mode: CapabilityMode | null) => void;
-  
+
   // Counts
   libraryCapabilityCounts: Record<CapabilityMode, number>;
   personalCapabilityCounts: Record<CapabilityMode, number>;
@@ -127,6 +127,20 @@ interface LibraryContextType {
   // Loading state
   isPersonalLoaded: boolean;
   isLibraryFetching: boolean;
+
+  // Pagination (NEW)
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  folderCounts: Record<string, number>;
+  isPageLoading: boolean;
+  activeFolder: string | null;
+  searchQuery: string;
+  sortBy: string;
+  setPage: (page: number) => void;
+  setActiveFolder: (folder: string | null) => void;
+  setSearchQuery: (query: string) => void;
+  setSortBy: (sort: string) => void;
 }
 
 const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
@@ -134,8 +148,8 @@ const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
 const PERSONAL_DEFAULT_CATEGORY = "כללי";
 
 // Initial fallback data from JSON
-const fallbackLibraryPrompts = (Array.isArray(promptsData) 
-  ? promptsData 
+const fallbackLibraryPrompts = (Array.isArray(promptsData)
+  ? promptsData
   : (promptsData as { prompts?: LibraryPrompt[] }).prompts || []) as unknown as LibraryPrompt[];
 
 export function LibraryProvider({ children, user, showLoginRequired }: { children: ReactNode, user: User | null, showLoginRequired: (feature: string) => void }) {
@@ -147,13 +161,13 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   const [personalSort, setPersonalSort] = useState<"recent" | "title" | "usage" | "custom" | "last_used" | "performance">("recent");
   const [librarySort, setLibrarySort] = useState<"popularity" | "title" | "newest" | "rating">("popularity");
   const [personalView, setPersonalView] = useState<"all" | "favorites">("all");
-  
+
   // Category management UI state
   const [newPersonalCategory, setNewPersonalCategory] = useState("");
   const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
   const [renameCategoryInput, setRenameCategoryInput] = useState("");
 
-  // Capability Filter State (added)
+  // Capability Filter State
   const [selectedCapabilityFilter, setSelectedCapabilityFilter] = useState<CapabilityMode | null>(null);
   const [favoritesCapabilityFilter, setFavoritesCapabilityFilter] = useState<CapabilityMode | null>(null);
 
@@ -191,6 +205,21 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     personalLibrary,
     personalCategories,
     isLoaded: isPersonalLoaded,
+    // Pagination
+    page,
+    pageSize,
+    totalCount,
+    folderCounts,
+    isPageLoading,
+    activeFolder,
+    sortBy,
+    searchQuery,
+    // Navigation
+    setPage,
+    setActiveFolder,
+    setSortBy,
+    setSearchQuery,
+    // Mutations
     addPrompt,
     removePrompt,
     incrementUseCount,
@@ -202,10 +231,10 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     movePrompt,
     renameCategory,
     addCategory: addLibCategory,
-    deletePrompts,      // New
-    movePrompts,        // New
-    addPrompts,         // New
-    updateTags,          // New
+    deletePrompts,
+    movePrompts,
+    addPrompts,
+    updateTags,
     updateProfile,
     completeOnboarding
   } = useLibrary();
@@ -235,23 +264,20 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   // --- Derived State (Filtering) ---
   const filteredLibrary = useMemo(() => {
     let result = libraryPrompts;
-    
-    // Filter by View Mode (Favorites)
+
     if (libraryView === "favorites") {
         result = result.filter(p => favoriteLibraryIds.has(p.id));
     }
-    
-    // Filter by capability
+
     if (selectedCapabilityFilter) {
-      result = result.filter(filtered => 
+      result = result.filter(filtered =>
         (filtered.capability_mode ?? CapabilityMode.STANDARD) === selectedCapabilityFilter
       );
     }
-    
-    // Filter by query
+
     const query = libraryQuery.trim().toLowerCase();
     if (query) {
-      result = result.filter(prompt => 
+      result = result.filter(prompt =>
         [prompt.title, prompt.use_case, prompt.category, prompt.prompt]
           .join(" ").toLowerCase().includes(query)
       );
@@ -261,9 +287,9 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   const libraryFavorites = useMemo(() => {
     let result = libraryPrompts.filter((p: LibraryPrompt) => favoriteLibraryIds.has(p.id));
-    
+
     if (favoritesCapabilityFilter) {
-      result = result.filter(p => 
+      result = result.filter(p =>
         (p.capability_mode ?? CapabilityMode.STANDARD) === favoritesCapabilityFilter
       );
     }
@@ -272,9 +298,9 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   // Compute Capability Counts for Library
   const libraryCapabilityCounts = useMemo(() => {
-    const counts: Record<string, number> = {}; // using string to allow easy indexing
+    const counts: Record<string, number> = {};
     Object.values(CapabilityMode).forEach(mode => counts[mode] = 0);
-    
+
     libraryPrompts.forEach((p: LibraryPrompt) => {
       const mode = p.capability_mode ?? CapabilityMode.STANDARD;
       counts[mode] = (counts[mode] || 0) + 1;
@@ -282,111 +308,48 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     return counts as Record<CapabilityMode, number>;
   }, [libraryPrompts]);
 
-  // ... (getUpdatedAt, getSortIndex helpers)
-
+  // Personal library items are now pre-filtered/sorted/paginated by useLibrary.
+  // filteredPersonalLibrary is kept for backward compatibility — it's the current page items
+  // with any client-side favorites filtering applied on top.
   const filteredPersonalLibrary = useMemo(() => {
-    const query = personalQuery.trim().toLowerCase();
     let result = [...personalLibrary];
-    
-    // Filter by view type first
+
+    // Apply favorites filter client-side if viewing favorites
     if (personalView === "favorites") {
         result = result.filter(p => favoritePersonalIds.has(p.id));
-        // Apply capability filter for favorites view if needed (sharing single filter vs distinct?)
-        // Let's use favoritesCapabilityFilter for consistency with Library favorites?
-        // Actually typically Personal View handles its own state. 
-        // Let's reuse selectedCapabilityFilter for Personal View MAIN list, 
-        // and favoritesCapabilityFilter for FAVORITES list?
-        // Or simpler: selectedCapabilityFilter applies to CURRENT active view.
-        if (selectedCapabilityFilter) {
-             result = result.filter(p => 
-                (p.capability_mode ?? CapabilityMode.STANDARD) === selectedCapabilityFilter
-             );
-        }
-    } else {
-        // Main Personal List
-        if (selectedCapabilityFilter) {
-             result = result.filter(p => 
-                (p.capability_mode ?? CapabilityMode.STANDARD) === selectedCapabilityFilter
-             );
-        }
     }
-    
+
+    // Client-side text filter for legacy personalQuery (if used directly instead of searchQuery)
+    const query = personalQuery.trim().toLowerCase();
     if (query) {
       result = result.filter(p => {
-        const q = query;
         return (
-          p.title?.toLowerCase().includes(q) ||
-          p.prompt?.toLowerCase().includes(q) ||
-          p.use_case?.toLowerCase().includes(q) ||
-          p.personal_category?.toLowerCase().includes(q) ||
-          (p.tags || []).some(tag => tag.toLowerCase().includes(q))
+          p.title?.toLowerCase().includes(query) ||
+          p.prompt?.toLowerCase().includes(query) ||
+          p.use_case?.toLowerCase().includes(query) ||
+          p.personal_category?.toLowerCase().includes(query) ||
+          (p.tags || []).some(tag => tag.toLowerCase().includes(query))
         );
       });
     }
 
-    // Apply sorting
-    switch (personalSort) {
-      case "title":
-        result.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-        break;
-      case "usage":
-        result.sort((a, b) => (b.use_count || 0) - (a.use_count || 0));
-        break;
-      case "custom":
-        result.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
-        break;
-      case "last_used":
-        result.sort((a, b) => {
-          const aTime = a.last_used_at ? new Date(a.last_used_at).getTime() : 0;
-          const bTime = b.last_used_at ? new Date(b.last_used_at).getTime() : 0;
-          return bTime - aTime;
-        });
-        break;
-      case "performance":
-        result.sort((a, b) => {
-          const aScore = (a.success_count ?? 0) - (a.fail_count ?? 0);
-          const bScore = (b.success_count ?? 0) - (b.fail_count ?? 0);
-          return bScore - aScore;
-        });
-        break;
-      case "recent":
-      default:
-        result.sort((a, b) => {
-          const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-          const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-          return bTime - aTime;
-        });
-        break;
-    }
-
-    // Pin to top: pinned items float to top while maintaining their relative sort order
-    result.sort((a, b) => {
-      const aPinned = a.is_pinned ? 1 : 0;
-      const bPinned = b.is_pinned ? 1 : 0;
-      return bPinned - aPinned;
-    });
-
     return result;
-  }, [personalLibrary, personalQuery, personalView, favoritePersonalIds, selectedCapabilityFilter, personalSort]);
+  }, [personalLibrary, personalQuery, personalView, favoritePersonalIds]);
 
   // Compute Capability Counts for Personal
   const personalCapabilityCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     Object.values(CapabilityMode).forEach(mode => counts[mode] = 0);
-    
-    // We should count based on the current VIEW (All vs Favorites)?
-    // Usually counts reflect the "available to filter" set.
-    // Let's count from the base set of the current view (minus textual query).
-    
-    const baseSet = personalView === "favorites" 
+
+    const baseSet = personalView === "favorites"
         ? personalLibrary.filter(p => favoritePersonalIds.has(p.id))
         : personalLibrary;
-        
+
     baseSet.forEach((p: PersonalPrompt) => {
       const mode = p.capability_mode ?? CapabilityMode.STANDARD;
       counts[mode] = (counts[mode] || 0) + 1;
     });
-    
+
     return counts as Record<CapabilityMode, number>;
   }, [personalLibrary, personalView, favoritePersonalIds]);
 
@@ -487,11 +450,10 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
   };
 
   // --- Styling State ---
-  // We need to implement promptStyles loading/saving here as well, similar to page.tsx
   const [promptStyles, setPromptStyles] = useState<Record<string, string>>({});
   const [editingStylePromptId, setEditingStylePromptId] = useState<string | null>(null);
   const [styleDraft, setStyleDraft] = useState("");
-  
+
   const STYLE_STORAGE_KEY = "peroot_prompt_styles_v1";
 
   useEffect(() => {
@@ -522,7 +484,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
   const openStyleEditor = (prompt: PersonalPrompt) => {
     setEditingStylePromptId(prompt.id);
-    setStyleDraft(promptStyles[prompt.id] || prompt.prompt); // Fallback to raw text if no style
+    setStyleDraft(promptStyles[prompt.id] || prompt.prompt);
   };
 
   const closeStyleEditor = () => {
@@ -538,9 +500,7 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
             localStorage.setItem(key, JSON.stringify(next));
             return next;
         });
-        
-        // Also update backend if user is logged in
-        // We need to find the prompt to get its text
+
         const prompt = personalLibrary.find(p => p.id === id);
         if (prompt) {
              await updatePromptContent(id, prompt.prompt, styleDraft);
@@ -598,7 +558,12 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
 
     // Loading state
     isPersonalLoaded,
-    isLibraryFetching
+    isLibraryFetching,
+
+    // Pagination (NEW)
+    page, pageSize, totalCount, folderCounts, isPageLoading,
+    activeFolder, searchQuery, sortBy,
+    setPage, setActiveFolder, setSearchQuery, setSortBy,
   }), [
     viewMode, libraryView, libraryQuery, filteredLibrary, libraryPrompts,
     personalQuery, personalSort, librarySort, personalView,
@@ -617,7 +582,11 @@ export function LibraryProvider({ children, user, showLoginRequired }: { childre
     dragAndDrop,
     selectedCapabilityFilter, favoritesCapabilityFilter,
     libraryCapabilityCounts, personalCapabilityCounts,
-    isPersonalLoaded, isLibraryFetching
+    isPersonalLoaded, isLibraryFetching,
+    // Pagination deps
+    page, pageSize, totalCount, folderCounts, isPageLoading,
+    activeFolder, searchQuery, sortBy,
+    setPage, setActiveFolder, setSearchQuery, setSortBy,
   ]);
 
   return (

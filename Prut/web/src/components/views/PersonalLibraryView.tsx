@@ -4,16 +4,19 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import {
     BookOpen, Star, ArrowRight, Plus, Copy, Pencil, Check, X,
-    Search, Trash2, GripVertical, LayoutGrid, LayoutList,
-    CheckSquare, Square, Tag, Download, FolderInput, CheckCircle2, Sparkles,
-    Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2,
-    Upload, Pin, ThumbsUp, ThumbsDown, History
+    Search, Trash2, LayoutList, CheckSquare, Square, Tag, Download,
+    FolderInput, Sparkles, Upload, Pin, ThumbsUp, ThumbsDown, History,
+    ChevronDown, ChevronRight, ChevronLeft, Folder, FolderOpen,
+    MoreHorizontal, Link2, Menu
+} from "lucide-react";
+import {
+    Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
 import { toast } from "sonner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
@@ -31,12 +34,16 @@ interface PersonalLibraryViewProps {
   historyLength: number;
 }
 
+const PAGE_SIZE = 15;
+
 export function PersonalLibraryView({
     onUsePrompt,
     onCopyText,
     handleImportHistory,
     historyLength
 }: PersonalLibraryViewProps) {
+  const ctx = useLibraryContext();
+
   const {
     filteredPersonalLibrary,
     personalView,
@@ -58,15 +65,11 @@ export function PersonalLibraryView({
     duplicatePrompt,
     togglePin,
     ratePrompt,
-
-    // Batch & Edit
     deletePrompts,
     movePrompts,
     updateTags,
     addPrompts,
     personalLibrary,
-
-    // Editing
     editingPersonalId,
     editingTitle,
     setEditingTitle,
@@ -75,16 +78,12 @@ export function PersonalLibraryView({
     startEditingPersonalPrompt,
     saveEditingPersonalPrompt,
     cancelEditingPersonalPrompt,
-
-    // Styling
     editingStylePromptId,
     styleDraft,
     setStyleDraft,
     openStyleEditor,
     saveStylePrompt,
     closeStyleEditor,
-
-    // Drag & Drop
     handlePersonalDragStart,
     handlePersonalDragOver,
     handlePersonalDragEnd,
@@ -92,8 +91,6 @@ export function PersonalLibraryView({
     handlePersonalDropToEnd,
     draggingPersonalId,
     dragOverPersonalId,
-
-    // Categories
     renamingCategory,
     renameCategoryInput,
     setRenameCategoryInput,
@@ -103,32 +100,28 @@ export function PersonalLibraryView({
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
     personalCapabilityCounts,
-
-    // Loading state
-    isPersonalLoaded
-  } = useLibraryContext();
+    isPersonalLoaded,
+    // Pagination
+    page: ctxPage,
+    totalCount: ctxTotalCount,
+    pageSize: ctxPageSize,
+    folderCounts: ctxFolderCounts,
+    isPageLoading: ctxIsPageLoading,
+    setPage: ctxSetPage,
+    setActiveFolder: ctxSetActiveFolder,
+    setSearchQuery: ctxSetSearchQuery,
+    sortBy: ctxSortBy,
+    setSortBy: ctxSetSortBy,
+    activeFolder: ctxActiveFolder,
+  } = ctx;
 
   const { chains, addChain, updateChain, deleteChain, incrementChainUseCount, duplicateChain, exportChain, importChain } = useChains();
   const { presets, addPreset, deletePreset } = usePresets();
 
-  const extractVariablesFromPrompt = (text: string): string[] => {
-    const matches = text.match(/\{([^}]+)\}/g);
-    if (!matches) return [];
-    return [...new Set(matches.map(m => m.slice(1, -1)))];
-  };
-
-  const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  // -- Local State --
+  // ─── Local State ───────────────────────────────────────────────────────────
   const [styleEditorExpanded, setStyleEditorExpanded] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<"grid" | "list">("grid");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  // Import file input ref
-  const importFileRef = useRef<HTMLInputElement | null>(null);
-
-  // Dialogs State
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [tagsInput, setTagsInput] = useState("");
@@ -137,48 +130,148 @@ export function PersonalLibraryView({
   const [newMoveCategoryInput, setNewMoveCategoryInput] = useState("");
   const [versionHistoryPrompt, setVersionHistoryPrompt] = useState<PersonalPrompt | null>(null);
 
-  const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
-    try {
-        await addPrompt({
-            title: prompt.title,
-            prompt: prompt.prompt,
-            category: prompt.category,
-            personal_category: PERSONAL_DEFAULT_CATEGORY,
-            use_case: prompt.use_case,
-            source: "library",
-            reference: prompt.id,
-            prompt_style: undefined,
-            tags: []
-        });
-        toast.success("נשמר לספריה האישית");
-    } catch (e) {
-        logger.error(e);
-        toast.error("שגיאה בשמירה");
-    }
+  // Sidebar + mobile drawer
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeLocalFolder, setActiveLocalFolder] = useState<string>("all");
+
+  // Chains section collapse
+  const [chainsExpanded, setChainsExpanded] = useState(false);
+
+  // Expanded card ids
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Dropdown for per-card more menu
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Context menu for folders
+  const [folderContextMenu, setFolderContextMenu] = useState<{ folder: string; x: number; y: number } | null>(null);
+
+  // New folder input
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+
+  // Local pagination when context pagination not available
+  const [localPage, setLocalPage] = useState(1);
+
+  // Debounce search
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [localSearch, setLocalSearch] = useState(personalQuery || "");
+
+  // Import file ref
+  const importFileRef = useRef<HTMLInputElement | null>(null);
+  const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // ─── Derived Data ─────────────────────────────────────────────────────────
+
+  // Determine effective active folder
+  const effectiveFolder = ctxActiveFolder !== undefined ? ctxActiveFolder : activeLocalFolder;
+
+  // Display items filtered by active folder (local filtering when context doesn't handle it)
+  const allDisplayItems = filteredPersonalLibrary;
+
+  const folderFilteredItems = (() => {
+    if (effectiveFolder === "all") return allDisplayItems;
+    if (effectiveFolder === "favorites") return allDisplayItems.filter(p => favoritePersonalIds.has(p.id));
+    if (effectiveFolder === "pinned") return allDisplayItems.filter(p => p.is_pinned);
+    return allDisplayItems.filter(p => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === effectiveFolder);
+  })();
+
+  // Pagination
+  const usedPage = ctxPage ?? localPage;
+  const usedPageSize = ctxPageSize;
+  const usedTotalCount = ctxTotalCount ?? folderFilteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(usedTotalCount / usedPageSize));
+
+  // Local paginated slice (when context doesn't paginate)
+  const paginatedItems = ctxPage !== undefined
+    ? folderFilteredItems // context already paginates
+    : folderFilteredItems.slice((localPage - 1) * usedPageSize, localPage * usedPageSize);
+
+  const displayItems = paginatedItems;
+
+  // Folder counts derived locally as fallback
+  const localFolderCounts: Record<string, number> = {
+    all: allDisplayItems.length,
+    favorites: allDisplayItems.filter(p => favoritePersonalIds.has(p.id)).length,
+    pinned: allDisplayItems.filter(p => p.is_pinned).length,
+  };
+  const allPersonalCategories = Array.from(new Set([
+    PERSONAL_DEFAULT_CATEGORY,
+    ...personalCategories,
+    ...allDisplayItems.map(p => p.personal_category).filter(Boolean) as string[]
+  ]));
+  allPersonalCategories.forEach(cat => {
+    localFolderCounts[cat] = allDisplayItems.filter(p => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === cat).length;
+  });
+
+  const folderCounts = ctxFolderCounts ?? localFolderCounts;
+  const isLoading = !isPersonalLoaded || ctxIsPageLoading;
+
+  // ─── Effects ──────────────────────────────────────────────────────────────
+
+  useEffect(() => { setSelectedIds(new Set()); setSelectionMode(false); }, [effectiveFolder]);
+  useEffect(() => { setLocalPage(1); }, [effectiveFolder, personalQuery, selectedCapabilityFilter]);
+  useEffect(() => {
+    const handleClick = () => { setOpenMenuId(null); setFolderContextMenu(null); };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  const extractVariablesFromPrompt = (text: string): string[] => {
+    const matches = text.match(/\{([^}]+)\}/g);
+    if (!matches) return [];
+    return [...new Set(matches.map(m => m.slice(1, -1)))];
   };
 
-  // Styling Helpers
+  const getStyledPromptMarkup = (prompt: PersonalPrompt) => {
+    return prompt.prompt_style || prompt.prompt;
+  };
+
+  const setFolder = useCallback((folder: string) => {
+    if (ctxSetActiveFolder) ctxSetActiveFolder(folder === "all" ? null : folder);
+    setActiveLocalFolder(folder);
+    // Map folder to personalView
+    if (folder === "favorites") setPersonalView("favorites");
+    else setPersonalView("all");
+    setSidebarOpen(false);
+  }, [ctxSetActiveFolder, setPersonalView]);
+
+  const handleSearchChange = (val: string) => {
+    setLocalSearch(val);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      if (ctxSetSearchQuery) ctxSetSearchQuery(val);
+      else setPersonalQuery(val);
+    }, 300);
+  };
+
+  const handleSortChange = (val: string) => {
+    if (ctxSetSortBy) ctxSetSortBy(val);
+    else setPersonalSort(val as "recent" | "title" | "usage" | "custom" | "last_used" | "performance");
+  };
+
+  const handlePageChange = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    if (ctxSetPage) ctxSetPage(p);
+    else setLocalPage(p);
+  };
+
+  // ─── Style Editor Helpers ─────────────────────────────────────────────────
+
   const applyStyleToken = (prefix: string, value: string) => {
     const textarea = styleTextareaRef.current;
     if (!textarea) return;
-
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
-
-    if (start === end) return; // No selection
-
+    if (start === end) return;
     const selected = text.slice(start, end);
     const before = text.slice(0, start);
     const after = text.slice(end);
-
-    // Wrap selection
     const token = `<${prefix}:${value}>${selected}</${prefix}>`;
-    const nextText = before + token + after;
-
-    setStyleDraft(nextText);
-
-    // Restore selection (approximate)
+    setStyleDraft(before + token + after);
     requestAnimationFrame(() => {
       if (textarea) {
         textarea.selectionStart = start + token.length;
@@ -188,9 +281,7 @@ export function PersonalLibraryView({
     });
   };
 
-  const clearStyleTokens = () => {
-      setStyleDraft(stripStyleTokens(styleDraft));
-  };
+  const clearStyleTokens = () => setStyleDraft(stripStyleTokens(styleDraft));
 
   const insertTextAtCursor = (text: string) => {
     const textarea = styleTextareaRef.current;
@@ -210,25 +301,6 @@ export function PersonalLibraryView({
     });
   };
 
-  const wrapSelectionWith = (before: string, after: string) => {
-    const textarea = styleTextareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    if (start === end) return;
-    const selected = styleDraft.slice(start, end);
-    const nextText = styleDraft.slice(0, start) + before + selected + after + styleDraft.slice(end);
-    setStyleDraft(nextText);
-    requestAnimationFrame(() => {
-      if (textarea) {
-        textarea.selectionStart = start;
-        textarea.selectionEnd = start + before.length + selected.length + after.length;
-        textarea.focus();
-      }
-    });
-  };
-
-  // Quick-insert templates for common prompt patterns
   const quickInserts = [
     { label: "שם", icon: AtSign, text: "{{name}}" },
     { label: "חברה", icon: Hash, text: "{{company}}" },
@@ -238,11 +310,8 @@ export function PersonalLibraryView({
     { label: "טון", icon: Wand2, text: "{{tone}}" },
   ];
 
-  const getStyledPromptMarkup = (prompt: PersonalPrompt) => {
-    return prompt.prompt_style || prompt.prompt;
-  };
+  // ─── Batch Logic ──────────────────────────────────────────────────────────
 
-  // -- Batch Logic --
   const toggleSelection = (id: string) => {
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id);
@@ -250,144 +319,89 @@ export function PersonalLibraryView({
     setSelectedIds(next);
   };
 
-  const selectAllCategory = (category: string) => {
-     const idsInCategory = (grouped[category] || []).map(p => p.id);
-     const next = new Set(selectedIds);
-     const allSelected = idsInCategory.every(id => next.has(id));
-
-     if (allSelected) {
-         idsInCategory.forEach(id => next.delete(id));
-     } else {
-         idsInCategory.forEach(id => next.add(id));
-     }
-     setSelectedIds(next);
-  };
-
   const selectAllVisible = () => {
     const next = new Set(selectedIds);
     const visibleIds = displayItems.map(p => p.id);
     const allVisibleSelected = visibleIds.every(id => next.has(id));
-
-    if (allVisibleSelected) {
-        visibleIds.forEach(id => next.delete(id));
-    } else {
-        visibleIds.forEach(id => next.add(id));
-    }
+    if (allVisibleSelected) visibleIds.forEach(id => next.delete(id));
+    else visibleIds.forEach(id => next.add(id));
     setSelectedIds(next);
   };
 
-  const clearSelection = () => {
-      setSelectedIds(new Set());
-      setSelectionMode(false);
-  };
-
-  // Clear selection when switching views
-  useEffect(() => { clearSelection(); }, [personalView]);
+  const clearSelection = () => { setSelectedIds(new Set()); setSelectionMode(false); };
 
   const handleBatchDelete = async () => {
-      if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
-      try {
-          await deletePrompts(Array.from(selectedIds));
-          toast.success("נמחקו בהצלחה");
-          clearSelection();
-      } catch {
-          toast.error("שגיאה במחיקה");
-      }
+    if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
+    try {
+      await deletePrompts(Array.from(selectedIds));
+      toast.success("נמחקו בהצלחה");
+      clearSelection();
+    } catch { toast.error("שגיאה במחיקה"); }
   };
 
   const handleBatchMove = async () => {
-      const category = isCreatingNewMoveCategory ? newMoveCategoryInput.trim() : targetMoveCategory;
-      if (!category) return;
-      try {
-          await movePrompts(Array.from(selectedIds), category);
-          toast.success("הועברו בהצלחה");
-          setShowMoveDialog(false);
-          setIsCreatingNewMoveCategory(false);
-          setNewMoveCategoryInput("");
-          clearSelection();
-      } catch {
-          toast.error("שגיאה בהעברה");
-      }
+    const category = isCreatingNewMoveCategory ? newMoveCategoryInput.trim() : targetMoveCategory;
+    if (!category) return;
+    try {
+      await movePrompts(Array.from(selectedIds), category);
+      toast.success("הועברו בהצלחה");
+      setShowMoveDialog(false);
+      setIsCreatingNewMoveCategory(false);
+      setNewMoveCategoryInput("");
+      clearSelection();
+    } catch { toast.error("שגיאה בהעברה"); }
   };
 
   const handleBatchTag = async () => {
-      const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
-      if (tags.length === 0) {
-          toast.error("יש להזין לפחות תגית אחת");
-          return;
-      }
-      try {
-          // We Add tags to existing ones
-          const promises = Array.from(selectedIds).map(async (id) => {
-              const item = filteredPersonalLibrary.find(p => p.id === id);
-              if (!item) return;
-              // Union of existing tags and new tags
-              const newTags = Array.from(new Set([...(item.tags || []), ...tags]));
-              await updateTags(id, newTags);
-          });
-
-          await Promise.all(promises);
-          toast.success("תגיות עודכנו");
-          setShowTagDialog(false);
-          setTagsInput("");
-          clearSelection();
-      } catch {
-          toast.error("שגיאה בעדכון תגיות");
-      }
+    const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
+    if (tags.length === 0) { toast.error("יש להזין לפחות תגית אחת"); return; }
+    try {
+      const promises = Array.from(selectedIds).map(async (id) => {
+        const item = filteredPersonalLibrary.find(p => p.id === id);
+        if (!item) return;
+        const newTags = Array.from(new Set([...(item.tags || []), ...tags]));
+        await updateTags(id, newTags);
+      });
+      await Promise.all(promises);
+      toast.success("תגיות עודכנו");
+      setShowTagDialog(false);
+      setTagsInput("");
+      clearSelection();
+    } catch { toast.error("שגיאה בעדכון תגיות"); }
   };
 
   const handleBatchExport = () => {
-      const items = filteredPersonalLibrary.filter(p => selectedIds.has(p.id));
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `peroot_export_${Date.now()}.json`);
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-      toast.success("יצוא הושלם");
+    const items = filteredPersonalLibrary.filter(p => selectedIds.has(p.id));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+    const a = document.createElement('a');
+    a.setAttribute("href", dataStr);
+    a.setAttribute("download", `peroot_export_${Date.now()}.json`);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast.success("יצוא הושלם");
   };
 
-  // -- Import Handler (1.7) --
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Reset the input so the same file can be re-imported
     e.target.value = "";
-
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed)) {
-        toast.error("קובץ לא תקין - נדרש מערך JSON");
-        return;
-      }
-      // Validate structure
-      const valid = parsed.filter(
-        (item: Record<string, unknown>) =>
-          typeof item.title === "string" && typeof item.prompt === "string"
+      if (!Array.isArray(parsed)) { toast.error("קובץ לא תקין - נדרש מערך JSON"); return; }
+      const valid = parsed.filter((item: Record<string, unknown>) =>
+        typeof item.title === "string" && typeof item.prompt === "string"
       );
-      if (valid.length === 0) {
-        toast.error("לא נמצאו פרומפטים תקינים בקובץ");
-        return;
-      }
-
-      // Skip duplicates based on prompt text
+      if (valid.length === 0) { toast.error("לא נמצאו פרומפטים תקינים בקובץ"); return; }
       const existingTexts = new Set(personalLibrary.map(p => p.prompt.trim()));
       const toImport = valid.filter((item: Record<string, unknown>) => !existingTexts.has((item.prompt as string).trim()));
       const skipped = valid.length - toImport.length;
-
-      if (toImport.length === 0) {
-        toast.info(`כל ${valid.length} הפרומפטים כבר קיימים בספרייה`);
-        return;
-      }
-
+      if (toImport.length === 0) { toast.info(`כל ${valid.length} הפרומפטים כבר קיימים בספרייה`); return; }
       const confirmMsg = skipped > 0
         ? `ייבוא ${toImport.length} פרומפטים (${skipped} כפולים דולגו). להמשיך?`
         : `ייבוא ${toImport.length} פרומפטים. להמשיך?`;
-
       if (!confirm(confirmMsg)) return;
-
       const promptsToAdd = toImport.map((item: Record<string, unknown>) => ({
         title: item.title as string,
         prompt: item.prompt as string,
@@ -399,1025 +413,1106 @@ export function PersonalLibraryView({
         capability_mode: item.capability_mode as PersonalPrompt["capability_mode"],
         prompt_style: item.prompt_style as string | undefined,
       }));
-
       await addPrompts(promptsToAdd);
       toast.success(`יובאו ${toImport.length} פרומפטים בהצלחה`);
-    } catch {
-      toast.error("שגיאה בקריאת הקובץ - ודא שזהו קובץ JSON תקין");
+    } catch { toast.error("שגיאה בקריאת הקובץ - ודא שזהו קובץ JSON תקין"); }
+  };
+
+  const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
+    try {
+      await addPrompt({
+        title: prompt.title,
+        prompt: prompt.prompt,
+        category: prompt.category,
+        personal_category: PERSONAL_DEFAULT_CATEGORY,
+        use_case: prompt.use_case,
+        source: "library",
+        reference: prompt.id,
+        prompt_style: undefined,
+        tags: []
+      });
+      toast.success("נשמר לספריה האישית");
+    } catch (e) {
+      logger.error(e);
+      toast.error("שגיאה בשמירה");
     }
   };
 
-  // -- Grouping Logic --
-  // We use filteredPersonalLibrary from context, which respects active capability filter?
-  // Yes, filteredPersonalLibrary is already filtered by capability and search query.
-
-  const displayItems = filteredPersonalLibrary;
-
-  // Re-derive categories present in display items
-  // Include categories from actual items so saved prompts with non-custom categories still appear
-  const itemCategories = displayItems.map(p => p.personal_category).filter(Boolean) as string[];
-  const categorySet = new Set([PERSONAL_DEFAULT_CATEGORY, ...personalCategories, ...itemCategories]);
-
-  const orderedCategories = Array.from(categorySet).filter((cat) =>
-    displayItems.some((prompt) => prompt.personal_category === cat || (!prompt.personal_category && cat === PERSONAL_DEFAULT_CATEGORY))
-  );
-
-  const grouped: Record<string, PersonalPrompt[]> = {};
-  if (displayItems && Array.isArray(displayItems)) {
-    for (const prompt of displayItems) {
-      const key = prompt.personal_category || PERSONAL_DEFAULT_CATEGORY;
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(prompt);
-    }
-  }
-
-  const totalCount = displayItems.length;
-
-  // -- Renderers --
-
-  const renderPromptTags = (tags?: string[]) => {
-      if (!tags?.length) return null;
-      return (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-              {tags.map(tag => (
-                  <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-slate-300 border border-white/5">
-                      <Tag className="w-3 h-3 me-1 opacity-50" />
-                      {tag}
-                  </span>
-              ))}
-          </div>
-      );
+  const handleAddNewFolder = async () => {
+    if (!newFolderName.trim()) return;
+    setNewPersonalCategory(newFolderName.trim());
+    await addPersonalCategory();
+    setNewFolderName("");
+    setShowNewFolderInput(false);
   };
 
-  const renderCard = (prompt: PersonalPrompt) => {
-      const isEditing = editingPersonalId === prompt.id;
-      const isDragging = draggingPersonalId === prompt.id;
-      const isDragOver = dragOverPersonalId === prompt.id && draggingPersonalId !== prompt.id;
-      const isFavorite = favoritePersonalIds.has(prompt.id);
-      const isStyling = editingStylePromptId === prompt.id;
-      const styledMarkup = getStyledPromptMarkup(prompt);
-      const isSelected = selectedIds.has(prompt.id);
+  // ─── Folder right-click context menu ─────────────────────────────────────
 
-      return (
-        <GlowingEdgeCard
-          key={prompt.id}
-          draggable={!isEditing && layoutMode === "grid"}
-          onDragStart={(event) => handlePersonalDragStart(event, prompt)}
-          onDragEnd={handlePersonalDragEnd}
-          onDragOver={(event) => handlePersonalDragOver(event, prompt)}
-          onDrop={(event) => handlePersonalDrop(event, prompt)}
+  const handleFolderContextMenu = (e: React.MouseEvent, folder: string) => {
+    if (folder === "all" || folder === "favorites" || folder === "pinned") return;
+    e.preventDefault();
+    setFolderContextMenu({ folder, x: e.clientX, y: e.clientY });
+  };
+
+  const handleFolderRename = (folder: string) => {
+    startRenameCategory(folder);
+    setFolderContextMenu(null);
+  };
+
+  // ─── Pagination helpers ───────────────────────────────────────────────────
+
+  const getPaginationPages = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (usedPage > 3) pages.push("...");
+      for (let i = Math.max(2, usedPage - 1); i <= Math.min(totalPages - 1, usedPage + 1); i++) pages.push(i);
+      if (usedPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  // ─── Renderers ────────────────────────────────────────────────────────────
+
+  const renderCompactCard = (prompt: PersonalPrompt) => {
+    const isExpanded = expandedIds.has(prompt.id);
+    const isEditing = editingPersonalId === prompt.id;
+    const isDragging = draggingPersonalId === prompt.id;
+    const isDragOver = dragOverPersonalId === prompt.id && draggingPersonalId !== prompt.id;
+    const isFavorite = favoritePersonalIds.has(prompt.id);
+    const isStyling = editingStylePromptId === prompt.id;
+    const styledMarkup = getStyledPromptMarkup(prompt);
+    const isSelected = selectedIds.has(prompt.id);
+    const isMenuOpen = openMenuId === prompt.id;
+    const hasVariables = extractVariablesFromPrompt(prompt.prompt).length > 0;
+
+    const toggleExpand = () => {
+      if (selectionMode) { toggleSelection(prompt.id); return; }
+      setExpandedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(prompt.id)) next.delete(prompt.id);
+        else next.add(prompt.id);
+        return next;
+      });
+    };
+
+    return (
+      <div
+        key={prompt.id}
+        draggable={!isEditing}
+        onDragStart={(event) => handlePersonalDragStart(event, prompt)}
+        onDragEnd={handlePersonalDragEnd}
+        onDragOver={(event) => handlePersonalDragOver(event, prompt)}
+        onDrop={(event) => handlePersonalDrop(event, prompt)}
+        className={cn(
+          "group rounded-xl border transition-all duration-200",
+          "border-white/8 bg-white/[0.025] hover:bg-white/[0.04]",
+          isDragging && "opacity-50 scale-[0.98]",
+          isDragOver && "border-amber-500/40 bg-amber-500/5",
+          isSelected && "border-blue-500/40 bg-blue-500/[0.06]",
+          isExpanded && "border-white/15 bg-white/[0.04]"
+        )}
+      >
+        {/* Collapsed Row */}
+        <div
           className={cn(
-            "rounded-[28px] group relative",
-            !isEditing && "cursor-grab",
-            isDragging && "opacity-60",
-            isDragOver && "ring-2 ring-white/30",
-            (isSelected || selectionMode) && "ring-2 ring-blue-500/50 bg-blue-500/5"
+            "flex items-center gap-2 px-3 cursor-pointer select-none",
+            isExpanded ? "py-3 border-b border-white/8" : "py-2.5"
           )}
-          contentClassName="p-4 md:p-7 lg:p-8 hover:bg-white/5 transition-colors flex flex-col gap-3 md:gap-5 min-h-0"
+          onClick={toggleExpand}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpand(); } }}
+          aria-expanded={isExpanded}
         >
-          {/* Selection Checkbox Overlay */}
-          <div className={cn(
-               "absolute top-3 left-3 md:top-6 md:left-6 z-10 transition-opacity duration-200",
-               (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-           )}>
-               <button
-                 onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}
-                 role="button"
-                 tabIndex={0}
-                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelection(prompt.id); } }}
-               >
-                   {isSelected
-                     ? <CheckSquare className="w-6 h-6 text-blue-400 fill-blue-500/20" />
-                     : <Square className="w-6 h-6 text-slate-500 hover:text-slate-300" />}
-               </button>
-           </div>
+          {/* Checkbox */}
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }}
+            className={cn(
+              "shrink-0 transition-opacity",
+              (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-60"
+            )}
+            aria-label="בחר"
+          >
+            {isSelected
+              ? <CheckSquare className="w-4 h-4 text-blue-400" />
+              : <Square className="w-4 h-4 text-slate-500" />}
+          </button>
 
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <GripVertical className={cn("w-4 h-4 mt-1 text-slate-500 hidden md:block", !isEditing ? "opacity-100" : "opacity-30")} />
-              <div>
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <input
-                      dir="rtl"
-                      value={editingTitle}
-                      onChange={(e) => setEditingTitle(e.target.value)}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-base text-slate-200 focus:outline-none focus:border-white/30"
-                      placeholder="כותרת לפרומפט"
-                    />
-                    <textarea
-                      dir="rtl"
-                      value={editingUseCase}
-                      onChange={(e) => setEditingUseCase(e.target.value)}
-                      className="w-full h-20 bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-300 focus:outline-none focus:border-white/30 resize-none"
-                      placeholder="תיאור קצר לשימוש בפרומפט"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <CapabilityBadge mode={prompt.capability_mode} />
-                        {personalView === "favorites" && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                            ספרייה אישית
-                          </span>
-                        )}
-                        {prompt.is_pinned && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            <Pin className="w-3 h-3" />
-                            מוצמד
-                          </span>
-                        )}
-                    </div>
-                    <h4 className="text-base md:text-2xl text-slate-100 font-semibold leading-tight" dir="rtl" title={prompt.title}>{prompt.title}</h4>
-                    <p className="text-sm text-slate-400 mt-2" dir="rtl" title={prompt.use_case}>{prompt.use_case}</p>
-                    {renderPromptTags(prompt.tags)}
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-1 md:gap-2 ps-2 md:ps-8"> {/* ps to avoid overlap with checkbox */}
-              <button
-                type="button"
-                onClick={() => togglePin(prompt.id)}
-                aria-label={prompt.is_pinned ? "בטל הצמדה" : "הצמד למעלה"}
-                className={cn(
-                  "p-2.5 rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  prompt.is_pinned
-                    ? "border-amber-400/40 bg-amber-400/10 text-amber-400"
-                    : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
-                )}
-              >
-                <Pin className={cn("w-4 h-4", prompt.is_pinned && "fill-amber-400")} />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggleFavorite("personal", prompt.id)}
-                aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
-                aria-pressed={isFavorite}
-                className={cn(
-                  "p-2.5 rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  isFavorite
-                    ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-300"
-                    : "border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
-                )}
-              >
-                <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
-              </button>
-              {isEditing ? (
-                <>
-                  <button onClick={saveEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-300 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="שמור">
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button onClick={cancelEditingPersonalPrompt} className="p-2 rounded-full border border-white/10 text-slate-500 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="ביטול">
-                    <X className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => startEditingPersonalPrompt(prompt)}
-                  className="p-2 rounded-full border border-white/10 text-slate-500 hover:text-slate-200 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                  aria-label="עריכה"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+          {/* Pin indicator */}
+          {prompt.is_pinned && (
+            <Pin className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+          )}
+
+          {/* Capability badge */}
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+            <CapabilityBadge mode={prompt.capability_mode} className="scale-90 origin-center" />
           </div>
 
+          {/* Title */}
+          <span className="flex-1 min-w-0 text-sm text-slate-200 font-medium truncate" dir="rtl">
+            {prompt.title}
+          </span>
+
+          {/* Meta: use count + category */}
+          <span className="hidden md:flex items-center gap-2 text-xs text-slate-500 shrink-0">
+            {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
+            <span className="px-1.5 py-0.5 rounded bg-white/5 text-slate-400">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+          </span>
+
+          {/* Quick actions (collapsed) */}
           <div
-            className="text-sm text-slate-300 leading-relaxed max-h-40 overflow-hidden"
-            dir="rtl"
-            dangerouslySetInnerHTML={{ __html: toStyledHtml(styledMarkup) }}
-          />
-
-          {/* Variable Filler */}
-          {!isStyling && extractVariablesFromPrompt(prompt.prompt).length > 0 && (
-            <VariableFiller
-              promptText={prompt.prompt}
-              onApply={(filledText) => onUsePrompt({ ...prompt, prompt: filledText })}
-              presets={presets}
-              onSavePreset={addPreset}
-              onDeletePreset={deletePreset}
-            />
-          )}
-
-          {isStyling && (
-             <>
-             {/* Backdrop - rendered outside editor for proper click handling */}
-             {styleEditorExpanded && (
-               <div className="fixed inset-0 bg-black/70 z-40" onClick={() => setStyleEditorExpanded(false)} />
-             )}
-             <div
-               className={cn(
-                 "mt-4 rounded-xl border border-amber-500/20 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
-                 styleEditorExpanded ? "fixed inset-4 z-50 overflow-auto p-6" : "p-4"
-               )}
-               onKeyDown={(e) => { if (e.key === 'Escape' && styleEditorExpanded) setStyleEditorExpanded(false); }}
-             >
-
-               {/* Header */}
-               <div className="flex items-center justify-between mb-4">
-                 <div className="flex items-center gap-2">
-                   <Wand2 className="w-4 h-4 text-amber-400" />
-                   <span className="text-sm font-semibold text-white">עורך עיצוב</span>
-                 </div>
-                 <div className="flex items-center gap-1">
-                   <button
-                     onClick={() => setStyleEditorExpanded(!styleEditorExpanded)}
-                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                     title={styleEditorExpanded ? "מזער" : "הגדל"}
-                   >
-                     {styleEditorExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                   </button>
-                   <button
-                     onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }}
-                     className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                   >
-                     <X className="w-3.5 h-3.5" />
-                   </button>
-                 </div>
-               </div>
-
-               {/* Toolbar */}
-               <div className="space-y-3 mb-4">
-                 {/* Text formatting */}
-                 <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
-                   {Object.keys(STYLE_TEXT_COLORS).map((color) => (
-                     <button
-                       key={`text-${color}`}
-                       onClick={() => applyStyleToken("c", color)}
-                       className="w-8 h-8 rounded-lg border border-white/10 hover:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                       title={color}
-                     >
-                       <span className={cn("font-bold text-sm", STYLE_TEXT_COLORS[color])}>A</span>
-                     </button>
-                   ))}
-                 </div>
-
-                 {/* Highlights */}
-                 <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">היילייט</span>
-                   {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
-                     <button
-                       key={`hl-${color}`}
-                       onClick={() => applyStyleToken("hl", color)}
-                       className={cn(
-                         "h-8 px-2.5 rounded-lg border border-white/10 hover:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                         STYLE_HIGHLIGHT_COLORS[color]
-                       )}
-                     >
-                       HL
-                     </button>
-                   ))}
-                   <div className="w-px h-6 bg-white/10 mx-1" />
-                   <button
-                     onClick={clearStyleTokens}
-                     className="h-8 px-2.5 rounded-lg border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                     title="נקה עיצוב"
-                   >
-                     <Eraser className="w-3.5 h-3.5" />
-                     <span className="text-xs">נקה</span>
-                   </button>
-                 </div>
-
-                 {/* Quick insert variables */}
-                 <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">משתנים</span>
-                   {quickInserts.map((qi) => {
-                     const Icon = qi.icon;
-                     return (
-                       <button
-                         key={qi.text}
-                         onClick={() => insertTextAtCursor(qi.text)}
-                         className="h-8 px-2.5 rounded-lg border border-dashed border-amber-500/30 text-amber-400/70 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                       >
-                         <Icon className="w-3 h-3" />
-                         {qi.label}
-                       </button>
-                     );
-                   })}
-                 </div>
-               </div>
-
-               {/* Tip */}
-               <div className="text-[10px] text-slate-500 mb-2 flex items-center gap-1">
-                 <Type className="w-3 h-3" />
-                 <span>סמנ/י טקסט ולחצ/י על צבע או היילייט כדי לעצב</span>
-               </div>
-
-               {/* Textarea */}
-               <textarea
-                 ref={styleTextareaRef}
-                 dir="rtl"
-                 value={styleDraft}
-                 onChange={(e) => setStyleDraft(e.target.value)}
-                 className={cn(
-                   "w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-slate-200 leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors",
-                   styleEditorExpanded ? "h-[50vh] resize-y" : "h-36 resize-y"
-                 )}
-                 placeholder="הטקסט של הפרומפט..."
-               />
-
-               {/* Footer actions */}
-               <div className="mt-4 flex items-center justify-between">
-                 <div className="text-[10px] text-slate-600">
-                   {styleDraft.length} תווים
-                 </div>
-                 <div className="flex items-center gap-2">
-                   <button
-                     onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }}
-                     className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                   >
-                     סגור
-                   </button>
-                   <button
-                     onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }}
-                     className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                   >
-                     שמור עיצוב
-                   </button>
-                 </div>
-               </div>
-             </div>
-          </>
-          )}
-
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              {prompt.use_count > 0 ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  <span className="text-emerald-400 font-medium">שומש {prompt.use_count} פעמים</span>
-                </div>
-              ) : (
-                <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium">חדש</span>
-              )}
-              {/* Performance Score */}
-              {((prompt.success_count ?? 0) + (prompt.fail_count ?? 0)) > 0 && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5">
-                  <span className="text-emerald-400">{prompt.success_count ?? 0}</span>
-                  <span className="text-slate-600">/</span>
-                  <span className="text-red-400">{prompt.fail_count ?? 0}</span>
+            className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); onCopyText(prompt.prompt); }}
+              title="העתק"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onUsePrompt(prompt); }}
+              title="השתמש"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : prompt.id); }}
+                title="עוד"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </button>
+              {isMenuOpen && (
+                <div
+                  className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <Pencil className="w-3.5 h-3.5" /> ערוך
+                  </button>
+                  <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <Wand2 className="w-3.5 h-3.5" /> עיצוב
+                  </button>
+                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <Plus className="w-3.5 h-3.5" /> שכפל
+                  </button>
+                  <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <History className="w-3.5 h-3.5" /> גרסאות
+                  </button>
+                  <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
+                  </button>
+                  <button onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <Star className={cn("w-3.5 h-3.5", isFavorite && "fill-yellow-300 text-yellow-300")} /> {isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                  </button>
+                  <div className="h-px bg-white/5 my-1" />
+                  <button onClick={() => { toggleSelection(prompt.id); setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                    <Square className="w-3.5 h-3.5" /> בחר
+                  </button>
+                  <div className="h-px bg-white/5 my-1" />
+                  <button onClick={() => { handleBatchDelete(); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10">
+                    <Trash2 className="w-3.5 h-3.5" /> מחק
+                  </button>
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-1">
-              {/* Quick Rating Buttons */}
-              <button
-                onClick={() => ratePrompt(prompt.id, true)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-                title="הצלחה"
-              >
-                <ThumbsUp className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => ratePrompt(prompt.id, false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                title="כישלון"
-              >
-                <ThumbsDown className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-slate-500 px-2 py-0.5 rounded-full bg-white/5 ms-2">{prompt.personal_category}</span>
-            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 pt-1">
-            <button
-              onClick={() => onUsePrompt(prompt)}
-              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-            >
-              <Plus className="w-3 h-3" />
-              השתמש<span className="hidden md:inline"> בפרומפט</span>
-            </button>
-            <button
-              onClick={() => onCopyText(prompt.prompt)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-            >
-              <Copy className="w-3 h-3" />
-              העתק
-            </button>
-            <button
-              onClick={() => openStyleEditor(prompt)}
-              className="flex items-center gap-1.5 p-2 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              title="עיצוב"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">עיצוב</span>
-            </button>
-            <button
-              onClick={async () => {
-                await duplicatePrompt(prompt);
-                toast.success("פרומפט שוכפל!");
-              }}
-              className="flex items-center gap-1.5 p-2 md:px-4 md:py-2 rounded-lg border border-dashed border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              title="שכפל"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">שכפל</span>
-            </button>
-            <button
-              onClick={() => setVersionHistoryPrompt(prompt)}
-              className="flex items-center gap-1.5 p-2 md:px-4 md:py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              title="היסטוריית גרסאות"
-            >
-              <History className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">גרסאות</span>
-            </button>
-          </div>
-        </GlowingEdgeCard>
-      );
-  };
+          {/* Expand chevron */}
+          <ChevronDown className={cn(
+            "w-4 h-4 text-slate-500 shrink-0 transition-transform duration-200",
+            isExpanded && "rotate-180"
+          )} />
+        </div>
 
-  const renderListItem = (prompt: PersonalPrompt) => {
-      const isSelected = selectedIds.has(prompt.id);
-      const isFavorite = favoritePersonalIds.has(prompt.id);
+        {/* Expanded content */}
+        {isExpanded && (
+          <div className="px-4 py-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
 
-      return (
-          <div key={prompt.id} className={cn(
-              "group flex flex-col md:flex-row md:items-center gap-2 md:gap-4 p-3 md:p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors",
-              isSelected && "bg-blue-500/10 border-blue-500/20"
-          )}>
-              {/* Top Row: Checkbox + Content */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {/* Checkbox */}
-                  <button
-                    onClick={() => toggleSelection(prompt.id)}
-                    className="shrink-0 text-slate-500 hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
-                  >
-                     {isSelected
-                        ? <CheckSquare className="w-5 h-5 text-blue-400" />
-                        : <Square className="w-5 h-5 opacity-50 group-hover:opacity-100" />}
-                  </button>
-
-                  {/* Capability Icon */}
-                  <div className="shrink-0 hidden md:block">
-                      <CapabilityBadge mode={prompt.capability_mode} className="scale-75 origin-left" />
-                  </div>
-
-                  {/* Main Content */}
-                  <div className="flex-1 min-w-0 text-end">
-                      <div className="flex items-center gap-2 mb-0.5 justify-end">
-                          {prompt.is_pinned && <Pin className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
-                          <h4 className="text-sm md:text-base text-slate-200 font-medium truncate" title={prompt.title}>{prompt.title}</h4>
-                      </div>
-                      <p className="text-xs text-slate-500 truncate" dir="rtl" title={prompt.use_case}>{prompt.use_case}</p>
-                  </div>
-              </div>
-
-              {/* Bottom Row: Stats + Actions */}
-              <div className="flex items-center justify-between md:justify-end gap-2 ps-8 md:ps-0">
-                  {/* Stats - visible on mobile too */}
-                  <div className="flex items-center gap-2 text-xs text-slate-500 md:w-28 shrink-0">
-                      <span className="text-slate-400 truncate">{prompt.personal_category}</span>
-                      <span className="hidden md:inline">·</span>
-                      <span className="hidden md:inline">x{prompt.use_count}</span>
-                      {((prompt.success_count ?? 0) + (prompt.fail_count ?? 0)) > 0 && (
-                        <span className="hidden md:inline">
-                          <span className="text-emerald-400">{prompt.success_count ?? 0}</span>/<span className="text-red-400">{prompt.fail_count ?? 0}</span>
-                        </span>
-                      )}
-                  </div>
-
-                  {/* Actions - compact on mobile */}
-                  <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => onUsePrompt(prompt)} title="השתמש" className="p-2 hover:bg-white/10 rounded-full text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Plus className="w-4 h-4"/></button>
-                      <button onClick={() => onCopyText(prompt.prompt)} title="העתק" className="p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Copy className="w-4 h-4"/></button>
-                      <button onClick={() => startEditingPersonalPrompt(prompt)} title="ערוך" className="hidden md:block p-2 hover:bg-white/10 rounded-full text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Pencil className="w-4 h-4"/></button>
-                      <button onClick={() => handleToggleFavorite("personal", prompt.id)} className="p-2 hover:bg-white/10 rounded-full focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
-                          <Star className={cn("w-4 h-4", isFavorite ? "text-yellow-300 fill-yellow-300" : "text-slate-500")} />
-                      </button>
-                  </div>
-              </div>
-          </div>
-      )
-  };
-
-  return (
-      <div className="flex flex-col gap-7 animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-24">
-
-
-        <div className="glass-card p-4 md:p-7 lg:p-9 rounded-2xl border-white/10 bg-black/40">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <h2 className="text-xl md:text-4xl lg:text-5xl font-serif text-white">ספריה אישית</h2>
-                <p className="text-sm md:text-base text-slate-400 mt-2">
-                  {totalCount} פרומפטים {personalView === "favorites" ? "מועדפים" : "אישיים"} · ארגון לפי קטגוריות
-                </p>
-              </div>
-
-              {/* New Prompt Button */}
-              <button
-                onClick={() => setViewMode("home")}
-                className="group flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              >
-                <div className="relative w-5 h-5">
-                  <Sparkles className="absolute inset-0 w-5 h-5 text-yellow-600" />
-                  <Plus className="absolute inset-0 w-5 h-5 text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
-                </div>
-                <span className="text-sm font-semibold text-black hidden lg:inline">
-                  פרומפט חדש
-                </span>
-              </button>
-            </div>
-
-            {/* Top Toolbar */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 mx-2">
-                  <button
-                    onClick={() => setLayoutMode("grid")}
-                    className={cn("p-2.5 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", layoutMode === "grid" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
-                    title="תצוגת כרטיסים"
-                  >
-                      <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
-                  <button
-                    onClick={() => setLayoutMode("list")}
-                    className={cn("p-2.5 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", layoutMode === "list" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300")}
-                    title="תצוגת רשימה"
-                  >
-                      <LayoutList className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
-              </div>
-
-              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 ms-2">
-                  <button
-                    onClick={() => setSelectionMode(!selectionMode)}
-                    className={cn("px-3 py-2 rounded-md transition-all text-xs font-bold flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", selectionMode ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40" : "text-slate-500 hover:text-slate-300")}
-                    title="מצב בחירה מרובה"
-                  >
-                      <CheckSquare className="w-4 h-4" />
-                      <span className="hidden md:inline">ניהול פריטים</span>
-                  </button>
-                  {selectionMode && (
-                      <button
-                         onClick={selectAllVisible}
-                         className="px-3 py-2 rounded-md text-xs font-bold text-slate-300 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                      >
-                          בחר הכל ({totalCount})
-                      </button>
-                  )}
-              </div>
-
-              <button
-                onClick={() => { setPersonalView("all"); setViewMode("library"); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="hidden md:inline">ספריה מלאה</span>
-              </button>
-              <button
-                onClick={() => setPersonalView(personalView === "favorites" ? "all" : "favorites")}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  personalView === "favorites"
-                    ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-200"
-                    : "border-white/10 text-slate-300 hover:bg-white/10"
-                )}
-              >
-                <Star className="w-4 h-4" />
-                <span className="hidden md:inline">מועדפים</span> ({favoritePersonalIds.size})
-              </button>
-              <button
-                onClick={() => setViewMode("home")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              >
-                <ArrowRight className="w-4 h-4" />
-                חזרה
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-6 mb-4">
-             <CapabilityFilter
-               value={selectedCapabilityFilter}
-               onChange={setSelectedCapabilityFilter}
-               counts={personalCapabilityCounts}
-             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative md:col-span-2">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                dir="rtl"
-                value={personalQuery}
-                onChange={(e) => setPersonalQuery(e.target.value)}
-                placeholder={personalView === "favorites" ? "חיפוש במועדפים..." : "חיפוש בפרומפטים..."}
-                className="w-full bg-black/30 border border-white/10 rounded-lg py-3.5 md:py-3 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="text-xs text-slate-500">מיון</label>
-              <select
-                value={personalSort}
-                onChange={(e) => setPersonalSort(e.target.value as "recent" | "title" | "usage" | "custom" | "last_used" | "performance")}
-                className="flex-1 bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
-              >
-                <option value="recent">עודכן לאחרונה</option>
-                <option value="title">אלפביתי</option>
-                <option value="usage">בשימוש גבוה</option>
-                <option value="custom">סדר ידני</option>
-                <option value="last_used">שימוש אחרון</option>
-                <option value="performance">ביצועים</option>
-              </select>
-            </div>
-          </div>
-
-          {/* New Category Input */}
-          {personalView === "all" && (
-            <div className="mt-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div className="flex items-center gap-2">
+            {/* Edit Mode */}
+            {isEditing ? (
+              <div className="space-y-3">
                 <input
                   dir="rtl"
-                  value={newPersonalCategory}
-                  onChange={(e) => setNewPersonalCategory(e.target.value)}
-                  placeholder="קטגוריה חדשה..."
-                  className="w-full md:w-64 bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/30"
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addPersonalCategory(); } }}
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
+                  placeholder="כותרת לפרומפט"
                 />
-                <button
-                  onClick={addPersonalCategory}
-                  className="px-4 py-2 rounded-lg bg-white text-black text-sm hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                >
-                  צור קטגוריה
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleImportHistory}
-                  disabled={historyLength === 0}
-                  className={cn("px-4 py-2 rounded-lg text-sm border border-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", historyLength === 0 ? "text-slate-600 cursor-not-allowed" : "text-slate-300 hover:bg-white/10")}
-                >
-                  ייבא מהיסטוריה
-                </button>
-                <button
-                  onClick={() => importFileRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-white/10 text-slate-300 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                >
-                  <Upload className="w-4 h-4" />
-                  ייבוא
-                </button>
-                <input
-                  ref={importFileRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportFile}
-                  className="hidden"
+                <textarea
+                  dir="rtl"
+                  value={editingUseCase}
+                  onChange={(e) => setEditingUseCase(e.target.value)}
+                  className="w-full h-16 bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-300 focus:outline-none focus:border-white/30 resize-none"
+                  placeholder="תיאור קצר"
                 />
+                <div className="flex items-center gap-2">
+                  <button onClick={saveEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-xs rounded-lg font-medium hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <Check className="w-3.5 h-3.5" /> שמור
+                  </button>
+                  <button onClick={cancelEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 border border-white/10 text-slate-400 text-xs rounded-lg hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <X className="w-3.5 h-3.5" /> ביטול
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <>
+                {/* Prompt text */}
+                <div
+                  className="text-sm text-slate-300 leading-relaxed rounded-lg bg-black/20 p-3 border border-white/5"
+                  dir="rtl"
+                  dangerouslySetInnerHTML={{ __html: toStyledHtml(styledMarkup) }}
+                />
 
-          {/* Chains Section */}
-          {personalView === "all" && (
-            <div className="mt-8">
-              <ChainsSection
-                chains={chains}
-                personalPrompts={personalLibrary}
-                onAddChain={addChain}
-                onUpdateChain={updateChain}
-                onDeleteChain={deleteChain}
-                onIncrementUseCount={incrementChainUseCount}
-                onDuplicateChain={duplicateChain}
-                onExportChain={exportChain}
-                onImportChain={importChain}
-                onUseStep={(text) =>
-                  onUsePrompt({
-                    id: '',
-                    title: '',
-                    prompt: text,
-                    category: '',
-                    personal_category: null,
-                    use_case: '',
-                    created_at: 0,
-                    updated_at: 0,
-                    use_count: 0,
-                    source: 'manual',
-                  })
-                }
-              />
-            </div>
-          )}
+                {/* Tags */}
+                {prompt.tags && prompt.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {prompt.tags.map(tag => (
+                      <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-white/8 text-slate-300 border border-white/8">
+                        <Tag className="w-2.5 h-2.5 me-1 opacity-50" />
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-          {/* Main Content Area */}
-          <div className="mt-8 space-y-10">
-              {personalView === "favorites" ? (
-                  // Favorites View
-                  <div className="space-y-4">
-                      {libraryFavorites.length > 0 && (
-                          <div className="mb-8">
-                              <h3 className="text-2xl text-slate-200 mb-4 font-serif">מועדפים מהספריה הציבורית</h3>
-                              <div className={cn("grid gap-4", layoutMode === "grid" ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1")}>
-                                  {libraryFavorites.map(p => (
-                                      // Minimal card for library favorites (read-only mostly)
-                                      <GlowingEdgeCard key={p.id} className="rounded-2xl" contentClassName="p-4 md:p-6 flex flex-col gap-4">
-                                          <div className="flex justify-between">
-                                              <div>
-                                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-2">
-                                                    ספרייה ציבורית
-                                                  </span>
-                                                  <h4 className="text-white font-semibold">{p.title}</h4>
-                                              </div>
-                                              <button
-                                                onClick={() => handleToggleFavorite("library", p.id)}
-                                                className="focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
-                                              >
-                                                <Star className="w-4 h-4 text-yellow-300 fill-yellow-300"/>
-                                              </button>
-                                          </div>
-                                          <p className="text-slate-400 text-sm">{p.use_case}</p>
-                                          <div className="flex gap-2 mt-auto">
-                                              <button onClick={() => onUsePrompt(p)} className="flex-1 bg-white text-black py-2 rounded text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">השתמש</button>
-                                              <button onClick={() => addPersonalPromptFromLibrary(p)} className="flex-1 border border-white/10 text-slate-300 py-2 rounded text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור עותק</button>
-                                          </div>
-                                      </GlowingEdgeCard>
-                                  ))}
-                              </div>
-                          </div>
+                {/* Use count + ratings */}
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-slate-500">
+                    {prompt.use_count > 0
+                      ? <span className="text-emerald-400/80">שומש {prompt.use_count} פעמים</span>
+                      : <span className="text-blue-400/80">חדש</span>
+                    }
+                    {((prompt.success_count ?? 0) + (prompt.fail_count ?? 0)) > 0 && (
+                      <span className="flex items-center gap-1">
+                        <ThumbsUp className="w-3 h-3 text-emerald-400" />{prompt.success_count ?? 0}
+                        <ThumbsDown className="w-3 h-3 text-red-400 ms-1" />{prompt.fail_count ?? 0}
+                      </span>
+                    )}
+                    <span className="hidden md:inline text-slate-500">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => ratePrompt(prompt.id, true)} className="p-1 rounded text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="הצלחה">
+                      <ThumbsUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => ratePrompt(prompt.id, false)} className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="כישלון">
+                      <ThumbsDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Variable Filler */}
+                {!isStyling && hasVariables && (
+                  <VariableFiller
+                    promptText={prompt.prompt}
+                    onApply={(filledText) => onUsePrompt({ ...prompt, prompt: filledText })}
+                    presets={presets}
+                    onSavePreset={addPreset}
+                    onDeletePreset={deletePreset}
+                  />
+                )}
+
+                {/* Style Editor */}
+                {isStyling && (
+                  <>
+                    {styleEditorExpanded && (
+                      <div className="fixed inset-0 bg-black/70 z-40" onClick={() => setStyleEditorExpanded(false)} />
+                    )}
+                    <div
+                      className={cn(
+                        "rounded-xl border border-amber-500/20 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
+                        styleEditorExpanded ? "fixed inset-4 z-50 overflow-auto p-6" : "p-4"
                       )}
-
-                      <h3 className="text-2xl text-slate-200 mb-4 font-serif">מועדפים אישיים</h3>
-                      {/* 5.1 Skeleton - glass-card style with content placeholders */}
-                      {!isPersonalLoaded && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
-                          {[0, 1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="glass-card p-4 rounded-2xl animate-pulse">
-                              <div className="h-4 bg-white/10 rounded w-3/4 mb-3" />
-                              <div className="h-3 bg-white/10 rounded w-1/2 mb-4" />
-                              <div className="h-3 bg-white/10 rounded w-full mb-2" />
-                              <div className="h-3 bg-white/10 rounded w-5/6" />
-                            </div>
+                      onKeyDown={(e) => { if (e.key === 'Escape' && styleEditorExpanded) setStyleEditorExpanded(false); }}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Wand2 className="w-4 h-4 text-amber-400" />
+                          <span className="text-sm font-semibold text-white">עורך עיצוב</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => setStyleEditorExpanded(!styleEditorExpanded)} className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={styleEditorExpanded ? "מזער" : "הגדל"}>
+                            {styleEditorExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                          </button>
+                          <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
+                          {Object.keys(STYLE_TEXT_COLORS).map((color) => (
+                            <button key={`text-${color}`} onClick={() => applyStyleToken("c", color)} className="w-7 h-7 rounded-lg border border-white/10 hover:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={color}>
+                              <span className={cn("font-bold text-sm", STYLE_TEXT_COLORS[color])}>A</span>
+                            </button>
                           ))}
                         </div>
-                      )}
-                      {isPersonalLoaded && filteredPersonalLibrary.length > 0 ? (
-                           <div className={cn("grid gap-4", layoutMode === "grid" ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1")}>
-                               {filteredPersonalLibrary.map(layoutMode === "grid" ? renderCard : renderListItem)}
-                           </div>
-                      ) : isPersonalLoaded ? (
-                          /* 5.3 Empty state - favorites */
-                          <div className="flex flex-col items-center gap-4 text-center py-16 glass-card rounded-2xl px-8 animate-in fade-in duration-500" dir="rtl">
-                            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                              <Star className="w-8 h-8 text-amber-500/50" />
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-lg font-semibold text-slate-300">עוד לא סימנת מועדפים</p>
-                              <p className="text-sm text-slate-500">לחץ על הכוכב כדי לשמור</p>
-                            </div>
-                          </div>
-                      ) : null}
-                  </div>
-              ) : (
-                  // By Category View
-                  <>
-                    {/* 5.1 Skeleton - shown while personal library is loading */}
-                    {!isPersonalLoaded && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-                        {[0, 1, 2, 3, 4, 5].map((i) => (
-                          <div key={i} className="glass-card p-4 rounded-2xl animate-pulse">
-                            <div className="h-4 bg-white/10 rounded w-3/4 mb-3" />
-                            <div className="h-3 bg-white/10 rounded w-1/2 mb-4" />
-                            <div className="h-3 bg-white/10 rounded w-full mb-2" />
-                            <div className="h-3 bg-white/10 rounded w-5/6 mb-4" />
-                            <div className="flex gap-2">
-                              <div className="h-8 bg-white/10 rounded-lg flex-1" />
-                              <div className="h-8 bg-white/10 rounded-lg w-20" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 5.3 Empty state - loaded but no items */}
-                    {isPersonalLoaded && totalCount === 0 && (
-                      <div className="flex flex-col items-center gap-4 text-center py-16 glass-card rounded-2xl px-8 animate-in fade-in duration-500" dir="rtl">
-                        <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                          <BookOpen className="w-10 h-10 text-amber-500/50" />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">היילייט</span>
+                          {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
+                            <button key={`hl-${color}`} onClick={() => applyStyleToken("hl", color)} className={cn("h-7 px-2 rounded-lg border border-white/10 hover:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", STYLE_HIGHLIGHT_COLORS[color])}>
+                              HL
+                            </button>
+                          ))}
+                          <div className="w-px h-5 bg-white/10 mx-1" />
+                          <button onClick={clearStyleTokens} className="h-7 px-2 rounded-lg border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                            <Eraser className="w-3 h-3" /><span className="text-xs">נקה</span>
+                          </button>
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-xl font-semibold text-slate-200">הספרייה האישית שלך ריקה</p>
-                          <p className="text-sm text-slate-500 max-w-xs mx-auto">שדרג פרומפט ושמור אותו כאן כדי לבנות את האוסף שלך</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">משתנים</span>
+                          {quickInserts.map((qi) => {
+                            const Icon = qi.icon;
+                            return (
+                              <button key={qi.text} onClick={() => insertTextAtCursor(qi.text)} className="h-7 px-2 rounded-lg border border-dashed border-amber-500/30 text-amber-400/70 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                                <Icon className="w-3 h-3" />{qi.label}
+                              </button>
+                            );
+                          })}
                         </div>
-                        <button
-                          onClick={() => setViewMode("home")}
-                          className="mt-1 px-6 py-2.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                        >
-                          שדרג פרומפט עכשיו
-                        </button>
                       </div>
-                    )}
-
-                    {displayItems.length === 0 && personalQuery.trim() && (
-                      <div className="text-center py-12">
-                        <Search className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-400 text-sm">לא נמצאו תוצאות עבור &quot;{personalQuery}&quot;</p>
-                        <button
-                          onClick={() => setPersonalQuery("")}
-                          className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
-                        >
-                          נקה חיפוש
-                        </button>
+                      <div className="text-[10px] text-slate-500 mb-2 flex items-center gap-1">
+                        <Type className="w-3 h-3" />
+                        <span>סמנ/י טקסט ולחצ/י על צבע או היילייט כדי לעצב</span>
                       </div>
-                    )}
-
-                    {displayItems.length === 0 && !personalQuery.trim() && selectedCapabilityFilter && (
-                      <div className="text-center py-12">
-                        <p className="text-slate-400 text-sm">אין פרומפטים במצב זה</p>
-                        <button
-                          onClick={() => setSelectedCapabilityFilter(null)}
-                          className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
-                        >
-                          הצג הכל
-                        </button>
+                      <textarea
+                        ref={styleTextareaRef}
+                        dir="rtl"
+                        value={styleDraft}
+                        onChange={(e) => setStyleDraft(e.target.value)}
+                        className={cn("w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-slate-200 leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors", styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y")}
+                        placeholder="הטקסט של הפרומפט..."
+                      />
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-600">{styleDraft.length} תווים</span>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg border border-white/10 text-slate-400 hover:bg-white/5 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                            סגור
+                          </button>
+                          <button onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                            שמור עיצוב
+                          </button>
+                        </div>
                       </div>
-                    )}
-
-                    {orderedCategories.map((category) => {
-                         const items = grouped[category] ?? [];
-                         if (items.length === 0) return null;
-
-                         return (
-                          <div
-                            key={category}
-                            id={`personal-category-${category}`}
-                            className="space-y-4 scroll-mt-24 rounded-3xl border border-white/10 bg-gradient-to-l from-white/[0.06] via-white/[0.03] to-transparent px-3 py-4 md:px-5 md:py-7 lg:px-7"
-                            onDragOver={(event) => event.preventDefault()}
-                            onDrop={(event) => handlePersonalDropToEnd(event, category)}
-                          >
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-white/10 pb-4">
-                               <div className="flex items-center gap-4 flex-1">
-                                 {/* Category Selection / Rename */}
-                                 <div className="flex items-center gap-3">
-                                     <button
-                                        onClick={() => selectAllCategory(category)}
-                                        className="text-slate-500 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
-                                        title="בחר הכל בקטגוריה"
-                                     >
-                                         <CheckCircle2 className="w-5 h-5"/>
-                                     </button>
-
-                                     {renamingCategory === category ? (
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                              dir="rtl" value={renameCategoryInput} onChange={(e) => setRenameCategoryInput(e.target.value)}
-                                              className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xl text-white outline-none"
-                                              onKeyDown={(e) => { if(e.key === 'Enter') saveRenameCategory(); if(e.key === 'Escape') cancelRenameCategory(); }}
-                                              autoFocus
-                                            />
-                                            <button onClick={saveRenameCategory} aria-label="שמור שם קטגוריה" className="focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"><Check className="w-4 h-4 text-green-400"/></button>
-                                            <button onClick={cancelRenameCategory} aria-label="ביטול שינוי שם" className="focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"><X className="w-4 h-4 text-red-400"/></button>
-                                        </div>
-                                     ) : (
-                                         <div className="flex items-baseline gap-3 group/cat">
-                                            <h3 className="text-xl md:text-3xl lg:text-4xl font-serif font-semibold text-slate-100 tracking-wide">{category}</h3>
-                                            {category !== PERSONAL_DEFAULT_CATEGORY && (
-                                                <button onClick={() => startRenameCategory(category)} className="opacity-0 group-hover/cat:opacity-100 text-slate-500 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"><Pencil className="w-3 h-3"/></button>
-                                            )}
-                                            <span className="text-sm text-slate-400">{items.length}</span>
-                                         </div>
-                                     )}
-                                 </div>
-                               </div>
-                            </div>
-
-                            <div className={cn("grid gap-6", layoutMode === "grid" ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1")}>
-                                {items.map(layoutMode === "grid" ? renderCard : renderListItem)}
-                            </div>
-                          </div>
-                         );
-                    })}
+                    </div>
                   </>
-              )}
+                )}
+
+                {/* Full action buttons row */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/5">
+                  <button onClick={() => onUsePrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <Plus className="w-3 h-3" /> השתמש
+                  </button>
+                  <button onClick={() => onCopyText(prompt.prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <Copy className="w-3 h-3" /> העתק
+                  </button>
+                  <button onClick={() => openStyleEditor(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <Wand2 className="w-3 h-3" /> עיצוב
+                  </button>
+                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <Plus className="w-3 h-3" /> שכפל
+                  </button>
+                  <button onClick={() => setVersionHistoryPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <History className="w-3 h-3" /> גרסאות
+                  </button>
+                  <button onClick={() => startEditingPersonalPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                    <Pencil className="w-3 h-3" /> ערוך
+                  </button>
+                  <button onClick={() => handleToggleFavorite("personal", prompt.id)} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-white/10 text-slate-300 hover:bg-white/10")}>
+                    <Star className={cn("w-3 h-3", isFavorite && "fill-yellow-300")} /> מועדף
+                  </button>
+                  <button onClick={() => { const next = new Set(expandedIds); next.delete(prompt.id); setExpandedIds(next); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/10 text-red-400 text-xs hover:bg-red-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none ms-auto">
+                    <Trash2 className="w-3 h-3" /> מחק
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Folder Sidebar ────────────────────────────────────────────────────────
+
+  const renderSidebar = (isMobile = false) => {
+    const virtualFolders = [
+      { key: "all", label: "כל הפרומפטים", icon: BookOpen },
+      { key: "favorites", label: "מועדפים", icon: Star },
+      { key: "pinned", label: "מוצמדים", icon: Pin },
+    ];
+
+    const realFolders = Array.from(new Set([
+      PERSONAL_DEFAULT_CATEGORY,
+      ...personalCategories,
+      ...allDisplayItems.map(p => p.personal_category).filter(Boolean) as string[]
+    ]));
+
+    return (
+      <div
+        className={cn(
+          "flex flex-col h-full overflow-y-auto",
+          isMobile ? "p-4 bg-[#0A0A0F] min-h-screen" : "p-3"
+        )}
+        dir="rtl"
+      >
+        {isMobile && (
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-semibold text-slate-200">תיקיות</span>
+            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Virtual folders */}
+        <div className="space-y-0.5 mb-2">
+          {virtualFolders.map(({ key, label, icon: Icon }) => {
+            const count = folderCounts[key] ?? 0;
+            const isActive = effectiveFolder === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setFolder(key)}
+                className={cn(
+                  "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  isActive
+                    ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-amber-400" : "text-slate-500")} />
+                  <span className="truncate">{label}</span>
+                </div>
+                {count > 0 && (
+                  <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-400/70" : "text-slate-600")}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="h-px bg-white/8 my-2" />
+
+        {/* Capability Filter */}
+        <div className="mb-3 px-1">
+          <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-2">מצב יכולת</span>
+          <div className="scale-90 origin-top-right">
+            <CapabilityFilter
+              value={selectedCapabilityFilter}
+              onChange={setSelectedCapabilityFilter}
+              counts={personalCapabilityCounts}
+            />
           </div>
         </div>
 
-        {/* Floating Batch Actions Toolbar */}
-        {selectedIds.size > 0 && (
-            <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
-                <div className="ps-4 pe-3 text-sm font-medium text-white border-e border-white/10">
-                    {selectedIds.size} נבחרו
-                </div>
-                <button onClick={handleBatchExport} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title="יצוא" aria-label="ייצוא">
-                    <Download className="w-5 h-5" />
-                </button>
-                <button onClick={() => setShowMoveDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title="העברה" aria-label="העברה">
-                    <FolderInput className="w-5 h-5" />
-                </button>
-                <button onClick={() => setShowTagDialog(true)} className="p-2.5 hover:bg-white/10 rounded-lg text-slate-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title="תגיות" aria-label="תגיות">
-                    <Tag className="w-5 h-5" />
-                </button>
-                <div className="w-px h-6 bg-white/10 mx-1" />
-                <button onClick={handleBatchDelete} className="p-2.5 hover:bg-red-500/20 rounded-lg text-red-400 focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none" title="מחיקה" aria-label="מחיקה">
-                    <Trash2 className="w-5 h-5" />
-                </button>
-                <button onClick={clearSelection} className="ms-2 p-1 hover:bg-white/10 rounded-full text-slate-500 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="סגור">
-                    <X className="w-4 h-4" />
-                </button>
-            </div>
-        )}
+        <div className="h-px bg-white/8 my-2" />
 
-        {/* Move Dialog Overlay */}
-        {showMoveDialog && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4">
-                    <h3 className="text-xl text-white font-serif mb-4 text-center">העברת {selectedIds.size} פריטים</h3>
-                    <div className="space-y-2 mb-6 max-h-[80vh] overflow-y-auto">
-                        <button
-                            onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
-                            className={cn(
-                                "w-full text-start px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                                isCreatingNewMoveCategory ? "bg-blue-600/20 border-blue-500 text-blue-200" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
-                            )}
-                        >
-                            <span>+ קטגוריה חדשה</span>
-                            <Plus className="w-4 h-4" />
-                        </button>
+        {/* Real folders */}
+        <div className="space-y-0.5 flex-1">
+          <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-3">תיקיות</span>
+          {realFolders.map((folder) => {
+            const count = folderCounts[folder] ?? 0;
+            const isActive = effectiveFolder === folder;
+            const isRenaming = renamingCategory === folder;
 
-                        {isCreatingNewMoveCategory && (
-                            <div className="p-1 animate-in slide-in-from-top-2 duration-300">
-                                <input
-                                    dir="rtl"
-                                    value={newMoveCategoryInput}
-                                    onChange={e => setNewMoveCategoryInput(e.target.value)}
-                                    placeholder="שם הקטגוריה..."
-                                    className="w-full bg-black/40 border border-blue-500/50 rounded-lg p-3 text-white focus:outline-none"
-                                    autoFocus
-                                />
-                            </div>
-                        )}
-
-                        <div className="h-px bg-white/5 my-2" />
-
-                        {Array.from(new Set([...personalCategories, PERSONAL_DEFAULT_CATEGORY])).map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => { setTargetMoveCategory(cat); setIsCreatingNewMoveCategory(false); }}
-                                className={cn(
-                                    "w-full text-start px-4 py-3 rounded-xl border transition-all text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                                    targetMoveCategory === cat && !isCreatingNewMoveCategory ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
-                                )}
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleBatchMove}
-                            disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())}
-                            className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                        >
-                            אישור
-                        </button>
-                        <button
-                            onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }}
-                            className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                        >
-                            ביטול
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* Tag Dialog Overlay */}
-        {showTagDialog && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4">
-                    <h3 className="text-xl text-white font-serif mb-4 text-center">הוספת תגיות</h3>
-                    <p className="text-slate-400 text-sm mb-4 text-center">הזן תגיות מופרדות בפסיקים</p>
+            return (
+              <div key={folder} onContextMenu={(e) => handleFolderContextMenu(e, folder)}>
+                {isRenaming ? (
+                  <div className="flex items-center gap-1 px-2 py-1">
                     <input
-                        value={tagsInput}
-                        onChange={e => setTagsInput(e.target.value)}
-                        placeholder="למשל: שיווק, דואל, חשוב"
-                        className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white mb-6 focus:border-white/30 outline-none"
+                      dir="rtl"
+                      value={renameCategoryInput}
+                      onChange={(e) => setRenameCategoryInput(e.target.value)}
+                      className="flex-1 bg-black/40 border border-white/20 rounded px-2 py-1 text-xs text-white outline-none focus:border-amber-500/50"
+                      onKeyDown={(e) => { if (e.key === 'Enter') saveRenameCategory(); if (e.key === 'Escape') cancelRenameCategory(); }}
+                      autoFocus
                     />
-                    <div className="flex gap-2">
-                        <button onClick={handleBatchTag} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור תגיות</button>
-                        <button onClick={() => setShowTagDialog(false)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
+                    <button onClick={saveRenameCategory} aria-label="שמור" className="p-1 text-green-400 hover:bg-green-500/10 rounded focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Check className="w-3 h-3" /></button>
+                    <button onClick={cancelRenameCategory} aria-label="ביטול" className="p-1 text-red-400 hover:bg-red-500/10 rounded focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><X className="w-3 h-3" /></button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setFolder(folder)}
+                    className={cn(
+                      "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                      isActive
+                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                        : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isActive
+                        ? <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        : <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      }
+                      <span className="truncate text-sm">{folder}</span>
                     </div>
-                </div>
-            </div>
-        )}
+                    {count > 0 && (
+                      <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-400/70" : "text-slate-600")}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
 
-        {/* Version History Modal */}
-        {versionHistoryPrompt && (
-          <VersionHistoryModal
-            promptId={versionHistoryPrompt.id}
-            promptTitle={versionHistoryPrompt.title}
-            onClose={() => setVersionHistoryPrompt(null)}
-            onRestore={(content, title) => {
-              const updates: Partial<PersonalPrompt> = { prompt: content };
-              if (title) updates.title = title;
-              updatePrompt(versionHistoryPrompt.id, updates);
-            }}
-          />
-        )}
+        {/* New folder */}
+        <div className="mt-2 px-1">
+          {showNewFolderInput ? (
+            <div className="flex items-center gap-1">
+              <input
+                dir="rtl"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="שם תיקייה..."
+                className="flex-1 bg-black/40 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 outline-none focus:border-amber-500/40"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddNewFolder();
+                  if (e.key === 'Escape') { setShowNewFolderInput(false); setNewFolderName(""); }
+                }}
+                autoFocus
+              />
+              <button onClick={handleAddNewFolder} className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <Check className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(""); }} className="p-1.5 rounded-lg text-slate-500 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowNewFolderInput(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors border border-dashed border-white/8 hover:border-white/15 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              <Plus className="w-3 h-3" />
+              תיקייה חדשה
+            </button>
+          )}
+        </div>
       </div>
+    );
+  };
+
+  // ─── Skeleton ─────────────────────────────────────────────────────────────
+
+  const renderSkeleton = () => (
+    <div className="space-y-2">
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <div key={i} className="h-12 rounded-xl border border-white/5 bg-white/[0.02] animate-pulse flex items-center gap-3 px-4">
+          <div className="w-4 h-4 rounded bg-white/8 shrink-0" />
+          <div className="h-3 bg-white/8 rounded flex-1 max-w-xs" />
+          <div className="h-2 bg-white/5 rounded w-16 ms-auto" />
+        </div>
+      ))}
+    </div>
+  );
+
+  // ─── Pagination ────────────────────────────────────────────────────────────
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    const pages = getPaginationPages();
+    const startItem = (usedPage - 1) * usedPageSize + 1;
+    const endItem = Math.min(usedPage * usedPageSize, usedTotalCount);
+
+    return (
+      <div className="mt-6 flex flex-col items-center gap-3" dir="rtl">
+        <p className="text-xs text-slate-500">
+          מציג {startItem}–{endItem} מתוך {usedTotalCount}
+        </p>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handlePageChange(usedPage - 1)}
+            disabled={usedPage <= 1}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
+            <ChevronRight className="w-3.5 h-3.5" /> הקודם
+          </button>
+
+          <div className="flex items-center gap-0.5">
+            {pages.map((p, idx) =>
+              p === "..." ? (
+                <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-xs text-slate-600">...</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => handlePageChange(p as number)}
+                  className={cn(
+                    "w-8 h-8 rounded-lg text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                    usedPage === p
+                      ? "bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold"
+                      : "text-slate-400 hover:bg-white/10 border border-transparent hover:border-white/10"
+                  )}
+                >
+                  {p}
+                </button>
+              )
+            )}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(usedPage + 1)}
+            disabled={usedPage >= totalPages}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
+            הבא <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Main Render ──────────────────────────────────────────────────────────
+
+  const activeFolderLabel = (() => {
+    if (effectiveFolder === "all") return "כל הפרומפטים";
+    if (effectiveFolder === "favorites") return "מועדפים";
+    if (effectiveFolder === "pinned") return "מוצמדים";
+    return effectiveFolder;
+  })();
+
+  const currentSort = ctxSortBy ?? personalSort;
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative" dir="rtl">
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile slide-out drawer */}
+      <div className={cn(
+        "fixed top-0 right-0 h-full w-72 z-50 bg-[#0A0A0F] border-l border-white/10 shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto",
+        sidebarOpen ? "translate-x-0" : "translate-x-full"
+      )}>
+        {renderSidebar(true)}
+      </div>
+
+      {/* Folder context menu */}
+      {folderContextMenu && (
+        <div
+          className="fixed z-[70] bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[160px] animate-in fade-in duration-150"
+          style={{ top: folderContextMenu.y, left: folderContextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={() => handleFolderRename(folderContextMenu.folder)} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+            <Pencil className="w-3.5 h-3.5" /> שנה שם
+          </button>
+          <div className="h-px bg-white/5 my-1" />
+          <button
+            onClick={() => {
+              if (!confirm(`למחוק את התיקייה "${folderContextMenu.folder}"?`)) return;
+              setFolderContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> מחק תיקייה
+          </button>
+        </div>
+      )}
+
+      {/* ── Top Bar ── */}
+      <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-white/10 bg-black/40 mb-4">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            {/* Mobile sidebar toggle */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              aria-label="פתח תפריט"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <div>
+              <h2 className="text-xl md:text-3xl font-serif text-white">ספריה אישית</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {usedTotalCount} פרומפטים · {activeFolderLabel}
+              </p>
+            </div>
+          </div>
+
+          {/* New prompt button */}
+          <button
+            onClick={() => setViewMode("home")}
+            className="group flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none shrink-0"
+          >
+            <div className="relative w-4 h-4 md:w-5 md:h-5">
+              <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
+              <Plus className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
+          </button>
+        </div>
+
+        {/* Search + Sort + Actions row */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <input
+              dir="rtl"
+              value={localSearch}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="חיפוש..."
+              className="w-full bg-black/30 border border-white/10 rounded-lg py-2 pe-9 ps-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+            />
+          </div>
+
+          {/* Sort */}
+          <select
+            value={currentSort}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
+          >
+            <option value="recent">עודכן לאחרונה</option>
+            <option value="title">אלפביתי</option>
+            <option value="usage">בשימוש גבוה</option>
+            <option value="custom">סדר ידני</option>
+            <option value="last_used">שימוש אחרון</option>
+            <option value="performance">ביצועים</option>
+          </select>
+
+          {/* Batch mode */}
+          <button
+            onClick={() => setSelectionMode(!selectionMode)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+              selectionMode
+                ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/30"
+                : "border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/5"
+            )}
+            title="ניהול פריטים"
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">ניהול פריטים</span>
+          </button>
+
+          {/* Import */}
+          <button
+            onClick={() => importFileRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:text-slate-200 hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            title="ייבוא"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">ייבוא</span>
+          </button>
+          <input ref={importFileRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+
+          {/* Import from history */}
+          <button
+            onClick={handleImportHistory}
+            disabled={historyLength === 0}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+              historyLength === 0 ? "border-white/5 text-slate-600 cursor-not-allowed" : "border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/5"
+            )}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">מהיסטוריה</span>
+          </button>
+
+          {/* Select all (batch mode) */}
+          {selectionMode && (
+            <button
+              onClick={selectAllVisible}
+              className="px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white border border-white/10 hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              בחר הכל ({displayItems.length})
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Main layout: sidebar + content ── */}
+      <div className="flex gap-4 items-start">
+
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/30 backdrop-blur-sm">
+          {renderSidebar(false)}
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 space-y-4">
+
+          {/* Chains section (collapsible) */}
+          <div className="rounded-xl border border-white/8 bg-white/[0.02] overflow-hidden">
+            <button
+              onClick={() => setChainsExpanded(!chainsExpanded)}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              <div className="flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-medium text-slate-300">שרשראות</span>
+                <span className="text-xs text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
+                  {chains.length}
+                </span>
+              </div>
+              <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", chainsExpanded && "rotate-180")} />
+            </button>
+            {chainsExpanded && (
+              <div className="px-3 pb-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <ChainsSection
+                  chains={chains}
+                  personalPrompts={personalLibrary}
+                  onAddChain={addChain}
+                  onUpdateChain={updateChain}
+                  onDeleteChain={deleteChain}
+                  onIncrementUseCount={incrementChainUseCount}
+                  onDuplicateChain={duplicateChain}
+                  onExportChain={exportChain}
+                  onImportChain={importChain}
+                  onUseStep={(text) =>
+                    onUsePrompt({
+                      id: '',
+                      title: '',
+                      prompt: text,
+                      category: '',
+                      personal_category: null,
+                      use_case: '',
+                      created_at: 0,
+                      updated_at: 0,
+                      use_count: 0,
+                      source: 'manual',
+                    })
+                  }
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Library favorites (when in favorites folder) */}
+          {effectiveFolder === "favorites" && libraryFavorites.length > 0 && (
+            <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-400" />
+                מועדפים מהספריה הציבורית
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {libraryFavorites.map(p => (
+                  <GlowingEdgeCard key={p.id} className="rounded-xl" contentClassName="p-3 flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-1">
+                          ספרייה ציבורית
+                        </span>
+                        <h4 className="text-sm text-white font-medium truncate">{p.title}</h4>
+                      </div>
+                      <button onClick={() => handleToggleFavorite("library", p.id)} className="shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded">
+                        <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400 line-clamp-2" dir="rtl">{p.use_case}</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => onUsePrompt(p)} className="flex-1 bg-white text-black py-1.5 rounded text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">השתמש</button>
+                      <button onClick={() => addPersonalPromptFromLibrary(p)} className="flex-1 border border-white/10 text-slate-300 py-1.5 rounded text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור עותק</button>
+                    </div>
+                  </GlowingEdgeCard>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Prompt list */}
+          <div className="space-y-1.5">
+
+            {/* Loading skeleton */}
+            {isLoading && renderSkeleton()}
+
+            {/* Empty states */}
+            {!isLoading && displayItems.length === 0 && (localSearch.trim() || personalQuery.trim()) && (
+              <div className="text-center py-12 rounded-xl border border-white/8 bg-white/[0.02]" dir="rtl">
+                <Search className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-400 text-sm">לא נמצאו תוצאות עבור &quot;{localSearch || personalQuery}&quot;</p>
+                <button
+                  onClick={() => { handleSearchChange(""); setPersonalQuery(""); }}
+                  className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  נקה חיפוש
+                </button>
+              </div>
+            )}
+
+            {!isLoading && displayItems.length === 0 && !localSearch.trim() && !personalQuery.trim() && selectedCapabilityFilter && (
+              <div className="text-center py-10 rounded-xl border border-white/8 bg-white/[0.02]" dir="rtl">
+                <p className="text-slate-400 text-sm">אין פרומפטים במצב זה</p>
+                <button onClick={() => setSelectedCapabilityFilter(null)} className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors">
+                  הצג הכל
+                </button>
+              </div>
+            )}
+
+            {!isLoading && displayItems.length === 0 && !localSearch.trim() && !personalQuery.trim() && !selectedCapabilityFilter && (
+              <div className="flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-white/8 bg-white/[0.02] px-8 animate-in fade-in duration-500" dir="rtl">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <BookOpen className="w-8 h-8 text-amber-500/50" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-lg font-semibold text-slate-300">
+                    {effectiveFolder === "favorites" ? "עוד לא סימנת מועדפים" :
+                     effectiveFolder === "pinned" ? "אין פרומפטים מוצמדים" :
+                     "הספרייה האישית שלך ריקה"}
+                  </p>
+                  <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                    {effectiveFolder === "all"
+                      ? "שדרג פרומפט ושמור אותו כאן כדי לבנות את האוסף שלך"
+                      : "לחץ על הכוכב כדי לשמור מועדפים"}
+                  </p>
+                </div>
+                {effectiveFolder === "all" && (
+                  <button
+                    onClick={() => setViewMode("home")}
+                    className="px-6 py-2.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  >
+                    שדרג פרומפט עכשיו
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Cards */}
+            {!isLoading && displayItems.length > 0 && (
+              <div
+                className="space-y-1.5"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handlePersonalDropToEnd(e, effectiveFolder === "all" ? PERSONAL_DEFAULT_CATEGORY : (effectiveFolder ?? PERSONAL_DEFAULT_CATEGORY))}
+              >
+                {displayItems.map(renderCompactCard)}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {!isLoading && renderPagination()}
+
+        </main>
+      </div>
+
+      {/* ── Floating Batch Actions Bar ── */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
+          <div className="ps-3 pe-2 text-sm font-medium text-white border-e border-white/10">
+            {selectedIds.size} נבחרו
+          </div>
+          <button onClick={handleBatchDelete} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-400 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none">
+            <Trash2 className="w-4 h-4" /> <span className="hidden md:inline">מחק</span>
+          </button>
+          <button onClick={() => setShowMoveDialog(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+            <FolderInput className="w-4 h-4" /> <span className="hidden md:inline">העבר ל...</span>
+          </button>
+          <button onClick={() => setShowTagDialog(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+            <Tag className="w-4 h-4" /> <span className="hidden md:inline">תגיות</span>
+          </button>
+          <button onClick={handleBatchExport} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+            <Download className="w-4 h-4" /> <span className="hidden md:inline">ייצוא</span>
+          </button>
+          <div className="w-px h-5 bg-white/10 mx-1" />
+          <button onClick={clearSelection} className="p-1.5 hover:bg-white/10 rounded-full text-slate-500 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="סגור">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Move Dialog ── */}
+      {showMoveDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4" dir="rtl">
+            <h3 className="text-xl text-white font-serif mb-4 text-center">העברת {selectedIds.size} פריטים</h3>
+            <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
+              <button
+                onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
+                className={cn("w-full text-start px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  isCreatingNewMoveCategory ? "bg-blue-600/20 border-blue-500 text-blue-200" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                )}
+              >
+                <span>+ קטגוריה חדשה</span>
+                <Plus className="w-4 h-4" />
+              </button>
+              {isCreatingNewMoveCategory && (
+                <div className="p-1 animate-in slide-in-from-top-2 duration-300">
+                  <input
+                    dir="rtl"
+                    value={newMoveCategoryInput}
+                    onChange={e => setNewMoveCategoryInput(e.target.value)}
+                    placeholder="שם הקטגוריה..."
+                    className="w-full bg-black/40 border border-blue-500/50 rounded-lg p-3 text-white focus:outline-none"
+                    autoFocus
+                  />
+                </div>
+              )}
+              <div className="h-px bg-white/5 my-2" />
+              {Array.from(new Set([...personalCategories, PERSONAL_DEFAULT_CATEGORY])).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => { setTargetMoveCategory(cat); setIsCreatingNewMoveCategory(false); }}
+                  className={cn("w-full text-start px-4 py-3 rounded-xl border transition-all text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                    targetMoveCategory === cat && !isCreatingNewMoveCategory ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handleBatchMove} disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">אישור</button>
+              <button onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tag Dialog ── */}
+      {showTagDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4" dir="rtl">
+            <h3 className="text-xl text-white font-serif mb-4 text-center">הוספת תגיות</h3>
+            <p className="text-slate-400 text-sm mb-4 text-center">הזן תגיות מופרדות בפסיקים</p>
+            <input
+              value={tagsInput}
+              onChange={e => setTagsInput(e.target.value)}
+              placeholder="למשל: שיווק, דואל, חשוב"
+              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white mb-6 focus:border-white/30 outline-none"
+            />
+            <div className="flex gap-2">
+              <button onClick={handleBatchTag} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור תגיות</button>
+              <button onClick={() => setShowTagDialog(false)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Version History Modal ── */}
+      {versionHistoryPrompt && (
+        <VersionHistoryModal
+          promptId={versionHistoryPrompt.id}
+          promptTitle={versionHistoryPrompt.title}
+          onClose={() => setVersionHistoryPrompt(null)}
+          onRestore={(content, title) => {
+            const updates: Partial<PersonalPrompt> = { prompt: content };
+            if (title) updates.title = title;
+            updatePrompt(versionHistoryPrompt.id, updates);
+          }}
+        />
+      )}
+    </div>
   );
 }
