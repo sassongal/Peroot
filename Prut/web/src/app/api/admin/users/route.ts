@@ -26,7 +26,10 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (searchTerm.trim()) {
-      const escaped = searchTerm.replace(/[,.*()\\]/g, (ch) => `\\${ch}`);
+      const escaped = searchTerm.replace(/[,.*()\\%_']/g, (ch) => {
+        if (ch === "'") return "''";
+        return `\\${ch}`;
+      });
       profilesQuery = profilesQuery.or(
         `email.ilike.%${escaped}%,full_name.ilike.%${escaped}%,id.eq.${escaped}`
       );
@@ -39,10 +42,11 @@ export async function GET(req: NextRequest) {
       { data: subscriptions, error: subError },
     ] = await Promise.all([
       profilesQuery,
-      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("user_roles").select("user_id, role").limit(1000),
       supabase
         .from("subscriptions")
-        .select("user_id, plan_name, status, customer_name"),
+        .select("user_id, plan_name, status, customer_name")
+        .limit(1000),
     ]);
 
     if (profileError) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 /**
  * GET /api/personal-library
@@ -20,6 +21,11 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimit(user.id, 'personalLibrary');
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
     }
 
     // Use service role to bypass RLS for Bearer token requests

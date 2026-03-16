@@ -4,18 +4,7 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 
-export async function DELETE(request: Request) {
-  // CSRF origin check - only allow requests from the app's own domain
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const allowedOrigin = siteUrl.startsWith("http") ? new URL(siteUrl).origin : siteUrl;
-  const rawOrigin = request.headers.get("origin") ?? request.headers.get("referer") ?? "";
-  const requestOrigin = rawOrigin.startsWith("http") ? new URL(rawOrigin).origin : "";
-
-  if (!requestOrigin || requestOrigin !== allowedOrigin) {
-    logger.warn("[delete-account] CSRF origin mismatch:", { requestOrigin, allowedOrigin });
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
+export async function DELETE(_request: Request) {
   const supabase = await createClient();
   const {
     data: { user },

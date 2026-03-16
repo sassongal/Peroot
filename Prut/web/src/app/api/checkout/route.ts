@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from "@/lib/ratelimit";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const CheckoutSchema = z.object({
   variantId: z.string().min(1).transform(v => v.trim()),
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
 
     if (!lsResponse.ok) {
       const errorText = await lsResponse.text();
-      console.error(`[Checkout] LemonSqueezy API error ${lsResponse.status}:`, errorText);
+      logger.error(`[Checkout] LemonSqueezy API error ${lsResponse.status}:`, errorText);
       return NextResponse.json({ error: 'Payment provider error' }, { status: 502 });
     }
 
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: checkoutUrl });
   } catch (error) {
-    console.error('[Checkout] Error:', error);
+    logger.error('[Checkout] Error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { ReactNode, Children, isValidElement, cloneElement, ReactElement } from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 export const PLACEHOLDER_REGEX = /{[^}]+}/g;
 
@@ -127,12 +128,15 @@ export const toStyledHtml = (value: string) => {
     .replace(/\[\[\/c\]\]/g, "</span>")
     .replace(/\[\[\/hl\]\]/g, "</span>");
 
-  return withTokens
+  const raw = withTokens
     .replace(PLACEHOLDER_REGEX, (match) => `<span class="text-amber-300 font-semibold">${match}</span>`)
     .replace(/\n/g, "<br />");
-};
 
-import DOMPurify from "isomorphic-dompurify";
+  return DOMPurify.sanitize(raw, {
+    ALLOWED_TAGS: ['span', 'br'],
+    ALLOWED_ATTR: ['class'],
+  });
+};
 
 // Styled prompt rendering for the ResultSection with yellow headers and blue variables
 export const renderStyledPrompt = (value: string): string => {

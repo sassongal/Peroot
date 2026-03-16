@@ -153,8 +153,9 @@ export function CategoryManager() {
                                         />
                                      </div>
                                      <div className="flex gap-2 pt-2">
-                                        <button 
+                                        <button
                                             onClick={handleSave}
+                                            aria-label="שמור"
                                             className="flex-1 py-3 rounded-xl bg-amber-600 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-amber-900/20"
                                         >
                                             <Save className="w-4 h-4 mx-auto" />
@@ -198,7 +199,7 @@ export function CategoryManager() {
                                 className="w-full px-4 py-3 bg-black border border-white/5 rounded-xl text-xs font-bold"
                             />
                              <div className="flex gap-2 pt-2">
-                                <button onClick={handleSave} className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest"><Save className="w-4 h-4 mx-auto" /></button>
+                                <button onClick={handleSave} aria-label="שמור" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest"><Save className="w-4 h-4 mx-auto" /></button>
                                 <button onClick={() => setEditingId(null)} className="p-3 rounded-xl bg-zinc-800 text-zinc-500"><X className="w-4 h-4" /></button>
                              </div>
                          </div>

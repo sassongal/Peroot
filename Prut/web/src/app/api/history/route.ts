@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 const HistoryBodySchema = z.object({
   prompt: z.string().min(1).max(10000),
@@ -33,6 +34,11 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimit(user.id, 'history');
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
     }
 
     const body = await req.json();

@@ -147,7 +147,8 @@ export async function middleware(request: NextRequest) {
   // 🛠️ MAINTENANCE MODE ENFORCEMENT
   // We check this first to block all non-admin traffic if maintenance is active
   const isMaintenance = await getCachedMaintenanceMode();
-  const isAdmin = user?.app_metadata?.role === 'admin';
+  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  const isAdmin = user?.app_metadata?.role === 'admin' || (user?.email && adminEmails.includes(user.email.toLowerCase()));
 
   if (isMaintenance && !isAdmin) {
     // During maintenance, only allow /maintenance page

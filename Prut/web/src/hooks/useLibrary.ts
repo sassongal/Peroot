@@ -298,10 +298,11 @@ export function useLibrary() {
 
     setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, personal_category: category, sort_index: nextSortIndex, updated_at: Date.now() } : p));
     if (user) {
-      await supabase.from('personal_library').update({ 
+      const { error } = await supabase.from('personal_library').update({
         personal_category: category,
-        sort_index: nextSortIndex 
+        sort_index: nextSortIndex
       }).eq('id', id).eq('user_id', user.id);
+      if (error) logger.error('[useLibrary] updateCategory error:', error);
     }
   };
 
@@ -326,7 +327,8 @@ export function useLibrary() {
     const newPinned = !item.is_pinned;
     setPersonalLibrary(prev => prev.map(p => p.id === id ? { ...p, is_pinned: newPinned, updated_at: Date.now() } : p));
     if (user) {
-      await supabase.from('personal_library').update({ is_pinned: newPinned }).eq('id', id).eq('user_id', user.id);
+      const { error } = await supabase.from('personal_library').update({ is_pinned: newPinned }).eq('id', id).eq('user_id', user.id);
+      if (error) logger.error('[useLibrary] togglePin error:', error);
     }
   };
 
@@ -339,7 +341,8 @@ export function useLibrary() {
       p.id === id ? { ...p, [field]: (p[field as keyof PersonalPrompt] as number ?? 0) + 1 } : p
     ));
     if (user) {
-      await supabase.from('personal_library').update({ [field]: currentVal + 1 }).eq('id', id).eq('user_id', user.id);
+      const { error } = await supabase.from('personal_library').update({ [field]: currentVal + 1 }).eq('id', id).eq('user_id', user.id);
+      if (error) logger.error('[useLibrary] ratePrompt error:', error);
     }
   };
 
@@ -415,12 +418,17 @@ export function useLibrary() {
     });
 
     if (user) {
-        // Update sort indices in Supabase
-        await Promise.all(
-          orderedIds.map((id, index) =>
-            supabase.from('personal_library').update({ sort_index: index }).eq('id', id).eq('user_id', user.id)
-          )
-        );
+        // Batch updates in groups of 10 to avoid overwhelming the API
+        const BATCH_SIZE = 10;
+        const updates = orderedIds.map((id, index) => ({ id, sort_index: index }));
+        for (let i = 0; i < updates.length; i += BATCH_SIZE) {
+          const batch = updates.slice(i, i + BATCH_SIZE);
+          await Promise.all(
+            batch.map(u =>
+              supabase.from('personal_library').update({ sort_index: u.sort_index }).eq('id', u.id).eq('user_id', user.id)
+            )
+          );
+        }
     }
   };
 
@@ -473,11 +481,16 @@ export function useLibrary() {
         }));
 
       if (targetUpdates.length > 0) {
-        await Promise.all(
-          targetUpdates.map(({ id, sort_index }) =>
-            supabase.from('personal_library').update({ sort_index }).eq('id', id).eq('user_id', user.id)
-          )
-        );
+        // Batch updates in groups of 10 to avoid overwhelming the API
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < targetUpdates.length; i += BATCH_SIZE) {
+          const batch = targetUpdates.slice(i, i + BATCH_SIZE);
+          await Promise.all(
+            batch.map(({ id, sort_index }) =>
+              supabase.from('personal_library').update({ sort_index }).eq('id', id).eq('user_id', user.id)
+            )
+          );
+        }
       }
     }
   };
@@ -532,11 +545,16 @@ export function useLibrary() {
         }));
 
       if (updates.length > 0) {
-        await Promise.all(
-          updates.map(({ id, personal_category, sort_index }) =>
-            supabase.from('personal_library').update({ personal_category, sort_index }).eq('id', id).eq('user_id', user.id)
-          )
-        );
+        // Batch updates in groups of 10 to avoid overwhelming the API
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < updates.length; i += BATCH_SIZE) {
+          const batch = updates.slice(i, i + BATCH_SIZE);
+          await Promise.all(
+            batch.map(({ id, personal_category, sort_index }) =>
+              supabase.from('personal_library').update({ personal_category, sort_index }).eq('id', id).eq('user_id', user.id)
+            )
+          );
+        }
       }
     }
   };
@@ -599,13 +617,18 @@ export function useLibrary() {
                     updated_at: new Date(p.updated_at).toISOString()
                 }));
             
-            const results = await Promise.all(
-              dbUpdates.map(({ id, personal_category, sort_index, updated_at }) =>
-                supabase.from('personal_library').update({ personal_category, sort_index, updated_at }).eq('id', id).eq('user_id', user.id)
-              )
-            );
-            const error = results.find(r => r.error)?.error;
-            if (error) throw error;
+            // Batch updates in groups of 10 to avoid overwhelming the API
+            const BATCH_SIZE = 10;
+            for (let i = 0; i < dbUpdates.length; i += BATCH_SIZE) {
+              const batch = dbUpdates.slice(i, i + BATCH_SIZE);
+              const results = await Promise.all(
+                batch.map(({ id, personal_category, sort_index, updated_at }) =>
+                  supabase.from('personal_library').update({ personal_category, sort_index, updated_at }).eq('id', id).eq('user_id', user.id)
+                )
+              );
+              const error = results.find(r => r.error)?.error;
+              if (error) throw error;
+            }
         }
       } catch (err) {
         logger.error("[useLibrary] movePrompts error:", err);

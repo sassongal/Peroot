@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 /**
  * GET /api/subscription
@@ -22,11 +23,16 @@ export async function GET() {
       });
     }
 
+    const rateLimit = await checkRateLimit(user.id, 'subscription');
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+    }
+
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('status, plan_name, renews_at, ends_at, trial_ends_at, lemonsqueezy_subscription_id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!subscription) {
       return NextResponse.json({

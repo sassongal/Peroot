@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 /**
  * GET /api/me
@@ -24,6 +25,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    const rateLimit = await checkRateLimit(user.id, 'me');
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+    }
+
     // When using Bearer token, RLS won't have auth.uid() set,
     // so use service role client to query profiles
     const queryClient = bearerToken
@@ -38,7 +44,7 @@ export async function GET(req: NextRequest) {
         .from("profiles")
         .select("plan_tier, credits_balance, display_name")
         .eq("id", user.id)
-        .single(),
+        .maybeSingle(),
       queryClient
         .from("user_roles")
         .select("role")

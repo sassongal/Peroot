@@ -48,9 +48,34 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(50, '1 h'),
     prefix: '@peroot/ratelimit:folders',
   }),
+  history: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
+    prefix: '@peroot/ratelimit:history',
+  }),
+  favorites: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(100, '1 m'),
+    prefix: '@peroot/ratelimit:favorites',
+  }),
+  personalLibrary: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(100, '1 m'),
+    prefix: '@peroot/ratelimit:personal-library',
+  }),
+  subscription: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
+    prefix: '@peroot/ratelimit:subscription',
+  }),
+  me: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
+    prefix: '@peroot/ratelimit:me',
+  }),
 };
 
-export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders';
+export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me';
 
 export interface RateLimitResult {
   success: boolean;
@@ -101,7 +126,7 @@ export async function checkRateLimit(identifier: string, tier: RateLimitTier = '
       reset: result.reset,
     };
   } catch (error) {
-    console.warn('[RateLimit] Redis unavailable, allowing request', { identifier, tier });
+    logger.warn('[RateLimit] Redis unavailable, allowing request', { identifier, tier });
     logger.error('[RateLimit] Redis unavailable, using in-memory fallback:', error);
     return checkMemoryFallback(identifier);
   }

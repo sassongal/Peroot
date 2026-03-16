@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
@@ -45,9 +45,14 @@ export function useSiteSettings() {
   const [settings, setSettings] = useState<SiteSettings>(settingsCache || defaultSettings);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
+  const subscribedRef = useRef(false);
 
   useEffect(() => {
     loadSettings();
+
+    // Guard against duplicate subscriptions (e.g. StrictMode double-invoke)
+    if (subscribedRef.current) return;
+    subscribedRef.current = true;
 
     // Subscribe to real-time changes
     const subscription = supabase
@@ -83,7 +88,7 @@ export function useSiteSettings() {
       const { data, error } = await supabase
         .from('site_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
       if (data) {
         logger.info('[Settings] Loaded from DB:', data);

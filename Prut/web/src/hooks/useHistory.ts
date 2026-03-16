@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 export interface HistoryItem {
   id: string; // UUID
@@ -109,14 +110,16 @@ export function useHistory() {
       return [newItem, ...prev];
     });
 
-    // Sync to DB
-    await supabase.from('history').insert({
+    // Sync to DB (fire-and-forget — errors logged but do not block the UI)
+    supabase.from('history').insert({
       user_id: currentUser.id,
       prompt: item.original,
       enhanced_prompt: item.enhanced,
       category: item.category,
       tone: item.tone,
       title: item.title || null,
+    }).then(({ error }) => {
+      if (error) logger.error('[useHistory] addToHistory insert failed:', error);
     });
   }, [supabase]);
 

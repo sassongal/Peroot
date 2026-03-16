@@ -4,6 +4,7 @@ import { ArrowRight, Wand2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { SharePageClient } from "./client";
+import { logger } from "@/lib/logger";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from('shared_prompts')
     .select('prompt, category')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   const title = data
     ? `פרומפט משותף - ${data.category}`
@@ -56,7 +57,7 @@ export default async function SharedPromptPage({ params }: Props) {
     .from('shared_prompts')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error || !prompt) {
     notFound();
@@ -64,7 +65,7 @@ export default async function SharedPromptPage({ params }: Props) {
 
   // Increment views (fire and forget) via atomic RPC
   void Promise.resolve(supabase.rpc('increment_shared_prompt_views', { prompt_id: id }))
-    .catch((err: unknown) => console.error('Failed to increment views:', err));
+    .catch((err: unknown) => logger.error('Failed to increment views:', err));
 
   // Look up sharer's referral code so the CTA link acts as a referral
   let referralCode: string | null = null;
