@@ -56,9 +56,13 @@ Structure the output as a professional intelligence brief:
 ## 6. הנחיות זהב ומגבלות
 - "בצע הפרכה לוגית — נסה לסתור כל מסקנה לפני שאתה מאשר אותה"
 - "הצלב מידע ממקורות עצמאיים — אל תסתמך על מקור יחיד"
-- "הפרד עובדות ממו מדעות — סמן בבירור מה מבוסס ומה השערה"
+- "הפרד עובדות מדעות — סמן בבירור מה מבוסס ומה השערה"
 - "דרג את רמת הוודאות: ◉ מאומת (3+ מקורות), ◎ סביר (1-2 מקורות), ○ השערה"
 - "כתוב לקורא עסקי/מקצועי — לא אקדמי מדי, לא שטחי מדי"
+- "זהה הטיות פוטנציאליות בכל מקור — מסחריות, אידיאולוגיות, מתודולוגיות — וציין אותן"
+- "עבור כל ממצא מפתח: ציין מה עלול להפריך אותו (falsifiability)"
+- "הוסף ציר זמן (timeline) לממצאים שתלויים בזמן — מתי המידע עדכני לאחרונה?"
+- "בצע ניתוח SWOT או מיפוי בעלי עניין (stakeholder mapping) כשרלוונטי למחקר עסקי/אסטרטגי"
 
 Tone: {{tone}}.`,
           user_prompt_template: `Build an elite deep research prompt in Hebrew for the following topic. Apply the full research architecture: define sub-questions, methodology, source requirements, and structured output format.
@@ -79,6 +83,7 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
   generateRefinement(input: EngineInput): EngineOutput {
       if (!input.previousResult) throw new Error("Previous result required for refinement");
 
+      const iteration = input.iteration || 1;
       const instruction = (input.refinementInstruction || "חזק את מתודולוגיית המחקר, דרישות המקורות, ואיכות הראיות.").trim().slice(0, 2000);
 
       let answersBlock = "";
@@ -111,9 +116,13 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
    - ניתוח הטיות: הוסף הנחיה מפורשת לזיהוי והצהרה על הטיות פוטנציאליות במקורות
    - רמות וודאות: ודא שסכמת הדירוג (◉ מאומת / ◎ סביר / ○ השערה) מוטמעת
    - הפרכה לוגית: חזק את ההנחיה לניסיון לסתור כל מסקנה לפני אישורה
+   - ציר זמן: ודא שיש דרישה לציון עדכניות המידע ותאריכי מקורות
+   - זיהוי פערים: ודא שסעיף "פערי מידע" כולל הצעות קונקרטיות למקורות נוספים
+   - ניתוח מגמות: ודא שכולל כיוון מגמה (עולה/יורד/יציב) עם ראיות
 4. הפלט חייב להיות בעברית בלבד.
 5. אל תוסיף הסברים — רק את פרומפט המחקר המשודרג.
 6. כל גרסה חדשה חייבת לייצר מחקר עמוק ואמין יותר — לא שיפור קוסמטי.
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. המחקר כבר ברמה גבוהה — התמקד בחיזוק מתודולוגי כירורגי ודיוק ראיות בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני — חפש את הפערים המתודולוגיים שנותרו, לא את מה שכבר חזק.' : ''}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 

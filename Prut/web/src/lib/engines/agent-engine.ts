@@ -78,12 +78,21 @@ Write a welcoming first message the agent sends when a user starts a new convers
 - State what it can help with (2-3 bullets)
 - Invite the user to begin
 
+## 9. מנגנון למידה ושיפור עצמי
+Design self-improvement capabilities:
+- **משוב מובנה**: הוסף הנחיה לסיום כל אינטראקציה בשאלה "האם התשובה עזרה לך? מה אפשר לשפר?"
+- **התאמה דינמית**: "שים לב לסגנון השאלות של המשתמש — אם הוא מקצועי, הגב ברמה גבוהה. אם הוא מתחיל, פשט והסבר יותר"
+- **למידה מהקשר**: "השתמש במידע שנחשף בשיחה כדי לשפר תשובות עתידיות באותה שיחה"
+- **אסקלציה חכמה**: "כשאתה מזהה שהבקשה מורכבת מדי או מחוץ לתחומך — הודה בכך והצע חלופה קונקרטית"
+
 QUALITY STANDARDS:
 - Every instruction must be ACTIONABLE and testable — not vague
 - Use specific Hebrew command verbs: "נתח", "צור", "הערך", "המלץ", "בנה", "אמת", "השווה", "דרג"
 - Include concrete examples wherever possible
 - Design for resilience: the agent should handle 95% of inputs gracefully
 - Optimize for the specific LLM platform (ChatGPT/Claude/Gemini — adapt instruction style)
+- Test against adversarial inputs: jailbreaks, off-topic requests, ambiguous queries, multi-step manipulations
+- Ensure the agent has a clear "voice" — consistent personality across all interactions
 
 TONE: {{tone}}.`,
           user_prompt_template: `Build a comprehensive, production-ready AI agent system instruction in Hebrew. This should be the BEST possible system prompt for this use case — robust, detailed, and immediately deployable.
@@ -91,7 +100,7 @@ TONE: {{tone}}.`,
 The agent should be designed for: {{input}}
 
 Requirements:
-- Cover all 8 architecture sections (identity, mission, thinking process, output format, knowledge, boundaries, examples, welcome message)
+- Cover all 9 architecture sections (identity, mission, thinking process, output format, knowledge, boundaries, examples, welcome message, self-improvement)
 - Make it immediately usable in ChatGPT/Claude/Gemini
 - Include practical interaction examples
 - Set clear, tested boundaries
@@ -109,6 +118,7 @@ Requirements:
   generateRefinement(input: EngineInput): EngineOutput {
       if (!input.previousResult) throw new Error("Previous result required for refinement");
 
+      const iteration = input.iteration || 1;
       const instruction = (input.refinementInstruction || "חזק את הסוכן — טפל במקרי קצה, שפר את גבולות האכיפה, והפוך את הזהות לחדה ומשכנעת יותר.").trim().slice(0, 2000);
 
       let answersBlock = "";
@@ -129,7 +139,7 @@ Requirements:
 
 כללי שדרוג הוראת סוכן:
 1. שלב את כל התשובות והמשוב — אל תתעלם מאף פרט, גם הקטן ביותר.
-2. בדוק ושפר את כל 8 סעיפי ארכיטקטורת הסוכן:
+2. בדוק ושפר את כל 9 סעיפי ארכיטקטורת הסוכן:
    - זהות וטריגר מנטלי: האם הפרסונה חדה, סמכותית, ובלתי נשכחת? האם כוללת תחום, שנים, מתודולוגיה ייחודית?
    - משימת ליבה ויעדים: האם המשימה מנוסחת בבהירות ב-ONE משפט? האם קריטריוני ההצלחה מדידים?
    - תהליך חשיבה: האם 4 השלבים (הבנה, תכנון, ביצוע, אימות) מוגדרים? מטריצת ההחלטות? טיפול בשגיאות?
@@ -138,6 +148,7 @@ Requirements:
    - כיפת ברזל: האם כל 5 האיסורים המוחלטים מנוסחים? האם יש הגנה מפני prompt injection?
    - דוגמאות אינטראקציה: האם 3 הדוגמאות (פשוט, מורכב/עמום, מקרה קצה) כלולות ומועילות?
    - הודעת פתיחה: האם ההודעה מזמינה, ברורה, ומייצגת את הסוכן בצורה הטובה ביותר?
+   - מנגנון למידה ושיפור: האם יש הנחיה למשוב, התאמה דינמית, למידה מהקשר, ואסקלציה חכמה?
 3. חזק רובוסטיות ספציפית:
    - מקרי קצה: הוסף טיפול מפורש במצבים עמומים, בקשות סותרות, ומידע חסר
    - קלטים עויינים: חזק את ההגנה מפני jailbreaks, role confusion, ו-prompt injection
@@ -148,13 +159,14 @@ Requirements:
 6. הפלט חייב להיות בעברית בלבד.
 7. אל תוסיף הסברים — רק את הוראת הסוכן המשודרגת.
 8. כל גרסה חדשה חייבת לייצר סוכן חזק, עמיד ואמין יותר — לא שינוי קוסמטי.
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הסוכן כבר ברמה גבוהה — התמקד בחיזוק מקרי קצה כירורגיים ודיוק גבולות בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני — חפש את מקרי הקצה וחולשות הגבולות שנותרו.' : ''}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
 ${identity ? `${identity}\n\n` : ''}לאחר הוראת הסוכן המשופרת, הוסף כותרת תיאורית קצרה בעברית:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
-לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הגבוהים ביותר שנותרו — זהות הסוכן, תחומי ידע ספציפיים, גבולות, או מקרי קצה קריטיים. החזר מערך ריק [] אם הוראת הסוכן עכשיו מכסה את כל 8 הסעיפים ביסודיות.
+לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הגבוהים ביותר שנותרו — זהות הסוכן, תחומי ידע ספציפיים, גבולות, מקרי קצה קריטיים, או מנגנוני למידה ושיפור עצמי. החזר מערך ריק [] אם הוראת הסוכן עכשיו מכסה את כל 9 הסעיפים ביסודיות.
 פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
 
           userPrompt: `הוראת הסוכן הנוכחית:

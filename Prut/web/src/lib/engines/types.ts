@@ -25,6 +25,8 @@ export interface EngineInput {
   answers?: Record<string, string>;
   userHistory?: { title: string; prompt: string }[];
   userPersonality?: { tokens: string[]; brief?: string; format?: string };
+  /** Which refinement round this is (1 = first refinement, 2 = second, etc.) */
+  iteration?: number;
 }
 
 export interface EngineOutput {

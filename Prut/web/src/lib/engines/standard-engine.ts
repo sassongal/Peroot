@@ -8,7 +8,7 @@ export class StandardEngine extends BaseEngine {
       super(config ?? {
           mode: CapabilityMode.STANDARD,
           name: "Standard Engine",
-          system_prompt_template: `You are a world-class Prompt Architect — the best in the Israeli market. Your mission: transform any raw user input into the most effective, structured, high-performance prompt possible, optimized for modern LLMs (GPT-4o, Claude 3.5/4, Gemini 2.x).
+          system_prompt_template: `You are a world-class Prompt Architect — the best in the Israeli market. Your mission: transform any raw user input into the most effective, structured, high-performance prompt possible, optimized for modern LLMs (GPT-4o, Claude 4/4.5, Gemini 2.5, DeepSeek V3).
 
 CRITICAL RULES:
 1. Output ONLY the final prompt. No meta-commentary, no "Here is your prompt", no explanations.
@@ -72,6 +72,9 @@ ADVANCED OPTIMIZATION TECHNIQUES — apply where relevant:
 5. **Negative Constraints**: Always include at least 2-3 explicit "don'ts" to prevent common LLM mistakes
 6. **Grounding**: Add "בסס את התשובה על עובדות ונתונים. אם אינך בטוח — ציין זאת במפורש"
 7. **Output Trigger**: End with a clear first-action: "התחל ב..." or "הפלט הראשון שלך צריך להיות..."
+8. **Persona Depth**: Add industry-specific credentials, methodology name, and signature approach — make the persona feel like a real expert, not a template
+9. **Context Scaffolding**: For multi-step tasks — wrap each step with its own mini-context (input, expected output, success criteria)
+10. **Anti-Hallucination**: For factual/data tasks — add "אם אין לך מידע מוסמך — ציין זאת במפורש. אל תמציא עובדות, מספרים או מקורות"
 
 Tone: {{tone}}. Category: {{category}}.
 
@@ -93,6 +96,7 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
   generateRefinement(input: EngineInput): EngineOutput {
       if (!input.previousResult) throw new Error("Previous result required for refinement");
 
+      const iteration = input.iteration || 1;
       const instruction = (input.refinementInstruction || "שפר את הפרומפט והפוך אותו למקצועי, ספציפי וניתן לפעולה יותר.").trim().slice(0, 2000);
 
       let answersBlock = "";
@@ -120,7 +124,7 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
    - קהל יעד: האם הקהל מוגדר במדויק (דמוגרפיה, תפקיד, רמת בקיאות, כאבים)?
    - פורמט פלט: האם המבנה, האורך, וסוג הפלט מצוינים במדויק?
    - הנחיות ומגבלות: האם ישנן לפחות 2-3 מגבלות שליליות מפורשות?
-3. החל את 7 טכניקות האופטימיזציה המתקדמות היכן שרלוונטי:
+3. החל את 10 טכניקות האופטימיזציה המתקדמות היכן שרלוונטי:
    - Chain-of-Thought למשימות אנליטיות
    - Self-Verification להבטחת איכות הפלט
    - Multi-Perspective לבחינת גישות שונות
@@ -128,10 +132,14 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
    - Negative Constraints למניעת טעויות נפוצות
    - Grounding לעיגון בעובדות
    - Output Trigger לפתיחה ברורה
+   - Persona Depth לעומק הזהות המקצועית
+   - Context Scaffolding לבנייה שיטתית של הקשר
+   - Anti-Hallucination למניעת המצאת עובדות
 4. בדוק ספציפיות, מדידות, וניתנות לפעולה — החלף כל הוראה מעורפלת בהוראה מדויקת ומדידה.
 5. הפלט חייב להיות בעברית בלבד.
 6. אל תוסיף הסברים — רק את הפרומפט המשודרג.
 7. כל גרסה חדשה חייבת להיות שיפור משמעותי — לא שינוי קוסמטי.
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה — התמקד בשיפורים כירורגיים ודיוק קיצוני בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני — חפש את הפערים שנותרו, לא את מה שכבר טוב.' : ''}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 

@@ -1,0 +1,214 @@
+# Peroot - Hebrew AI Prompt Engineering Tool (Full Documentation)
+
+> Peroot is an AI-powered prompt generator built specifically for Hebrew. It transforms raw ideas into structured, professional-grade prompts optimized for ChatGPT, Claude, Gemini, DeepSeek, and other LLMs. It also generates platform-specific prompts for image and video generation tools. This is the comprehensive documentation for AI models and developers.
+
+## Key URLs
+- [Homepage](https://peroot.space/): Main app - prompt enhancement tool
+- [Pricing](https://peroot.space/pricing): Free, Guest, and Pro plan details
+- [Blog](https://peroot.space/blog): Guides and tutorials on prompt engineering
+- [Examples](https://peroot.space/examples): Sample prompts and use cases
+- [Prompt Writing Guide](https://peroot.space/guide): Professional Hebrew prompt engineering guide
+- [Prompt Library Index](https://peroot.space/prompts): Browse 480+ prompts by category
+- [Privacy Policy](https://peroot.space/privacy)
+- [Terms of Service](https://peroot.space/terms)
+- [Contact](https://peroot.space/contact)
+- [Summary LLM Documentation](https://peroot.space/llms.txt)
+
+---
+
+## 5 Capability Modes (Detailed)
+
+### 1. Standard Text Mode
+Generates structured prompts for conversational LLMs. The output follows the "Great Prompt" format which includes: context setting, clear goal definition, constraints and boundaries, output format specification, and tone guidance. Optimized for ChatGPT, Claude, Gemini, DeepSeek, and other text-based models.
+
+### 2. Deep Research Mode
+Creates comprehensive research-oriented prompts with multi-source methodology. Designed for users who need thorough analysis, literature reviews, market research, or academic exploration. Includes instructions for source validation, cross-referencing, and structured findings presentation.
+
+### 3. Image Generation Mode
+Produces platform-specific visual prompts tailored to the syntax, parameters, and strengths of each image generation platform. Outputs include aspect ratios, style parameters, negative prompts, and platform-native formatting. After generation, users receive direct links to open their prompt in the target platform.
+
+### 4. Video Generation Mode
+Creates video-specific prompts optimized for each video generation platform's capabilities. Includes motion descriptions, camera movements, scene transitions, duration, and style guidance specific to each platform's feature set.
+
+### 5. Agent Builder Mode
+Generates system prompts and configuration for autonomous AI agents. Includes role definition, behavioral constraints, tool-use instructions, fallback handling, and conversation flow design. Useful for building chatbots, customer service agents, and automated workflows.
+
+---
+
+## Supported Image Generation Platforms
+
+| Platform | Specialty |
+|----------|-----------|
+| **Midjourney** | Artistic, stylized imagery with strong aesthetic control. Supports aspect ratios, style parameters (--s), chaos (--c), and version selection. |
+| **DALL-E 3** | Integrated with ChatGPT. Strong at text rendering in images, photorealistic scenes, and following complex instructions. |
+| **Flux** | Open-source, fast inference. Good balance of quality and speed. Supports various model sizes for different use cases. |
+| **Stable Diffusion** | Highly customizable with LoRA support, ControlNet, and extensive community models. Best for technical users who want fine-grained control. |
+| **Google Imagen** | Google's image generation model. Strong photorealism and text understanding. Available through Google Cloud and Gemini. |
+| **Gemini Image** | Integrated within Google's Gemini ecosystem. Multimodal understanding allows image generation informed by conversational context. |
+
+## Supported Video Generation Platforms
+
+| Platform | Specialty |
+|----------|-----------|
+| **Runway Gen-4** | Industry-leading video generation with precise motion control, camera movements, and multi-clip workflows. Supports image-to-video and text-to-video. |
+| **Kling 2.0** | Excels at realistic human motion and complex scenes. Supports long-form generation up to 2 minutes. Strong at maintaining temporal consistency. |
+| **Sora** | OpenAI's video model. Strong at understanding physics, complex scenes, and generating cinematic sequences with natural motion. |
+| **Google Veo 3** | Google's video generation model. High-fidelity output with strong understanding of real-world physics and cinematography. |
+| **Higgsfield** | Specializes in personalized video generation. Strong at character consistency and social media-optimized short-form content. |
+| **Minimax Hailuo** | Fast generation with good quality-to-speed ratio. Supports various styles from realistic to animated. Strong community adoption. |
+
+---
+
+## Prompt Scoring System
+
+### Text Prompt Scoring (9 Dimensions)
+Each text prompt is evaluated on a 1-10 scale across:
+1. **Clarity** - How clear and unambiguous the prompt is
+2. **Specificity** - Level of detail and precision
+3. **Context** - Background information provided
+4. **Goal Definition** - How well the desired outcome is defined
+5. **Constraints** - Boundaries and limitations specified
+6. **Format** - Output structure and formatting guidance
+7. **Tone** - Communication style and register
+8. **Examples** - Use of examples to guide output
+9. **Completeness** - Overall prompt coverage
+
+### Visual Prompt Scoring (8 Dimensions)
+Image and video prompts are scored on:
+1. **Subject Description** - Main subject clarity
+2. **Style/Aesthetic** - Visual style specification
+3. **Composition** - Framing and layout guidance
+4. **Lighting** - Light conditions and mood
+5. **Color Palette** - Color guidance and harmony
+6. **Technical Parameters** - Platform-specific settings
+7. **Mood/Atmosphere** - Emotional tone of the visual
+8. **Detail Level** - Granularity of the description
+
+---
+
+## 29 Supported Categories
+
+1. Marketing (שיווק) - Digital marketing, campaigns, branding
+2. Sales (מכירות) - Sales processes, proposals, negotiations
+3. Customer Support (תמיכה) - Customer service, problem solving
+4. Product (מוצר) - Product management, feature planning, UX
+5. Operations (תפעול) - Process optimization, project management
+6. HR (משאבי אנוש) - Recruitment, training, organizational culture
+7. Development (פיתוח) - Code writing, debugging, architecture, DevOps
+8. Education (חינוך) - Teaching, students, exams, curricula
+9. Legal (משפטי) - Contracts, legal advice, regulation
+10. Creative (קריאייטיב) - Creative writing, stories, poetry, scripts
+11. Social Media (סושיאל) - Posts, stories, reels, viral content
+12. SEO (קידום אתרים) - Organic promotion, keywords, SEO content
+13. Finance (פיננסים) - Financial analysis, budgets, investments
+14. Healthcare (בריאות) - Health, medicine, healthy lifestyle
+15. E-commerce (אי-קומרס) - Online stores, product descriptions
+16. Real Estate (נדל"ן) - Property sales, apartment marketing
+17. Strategy (אסטרטגיה) - Strategic planning, market analysis
+18. Design (עיצוב) - Graphic design, UI/UX, visual branding
+19. Data (דאטה) - Data analysis, SQL, visualization, BI
+20. Automation (אוטומציה) - Process automation, scripts, integrations
+21. Community (קהילה) - Community management, events, engagement
+22. Nonprofit (מלכ"ר) - Fundraising, social marketing, third sector
+23. Images (תמונות) - Image generation prompts for Midjourney, DALL-E, etc.
+24. General (כללי) - General-purpose everyday prompts
+25. Cooking (בישול) - Recipes, meal planning, culinary tips
+26. Travel (טיולים) - Trip planning, routes, travel experiences
+27. Sports & Fitness (ספורט וכושר) - Training programs, nutrition
+28. Personal Development (פיתוח אישי) - Motivation, productivity, growth
+29. Greetings (ברכות) - Holiday greetings, birthdays, weddings
+30. Music (מוזיקה) - Song creation, lyrics, and melodies
+
+---
+
+## Technical Architecture
+
+- **Frontend**: Next.js 15 (App Router) + React 19 + TypeScript
+- **Styling**: Tailwind CSS with custom design system
+- **Backend**: Next.js API Routes + Supabase (PostgreSQL + Auth + Edge Functions)
+- **Hosting**: Vercel (with ISR and Edge Runtime)
+- **AI Engines**: OpenAI GPT-4o, Anthropic Claude, Google Gemini, DeepSeek, Groq
+- **Analytics**: PostHog, Google Analytics, Microsoft Clarity, Vercel Analytics
+- **PWA**: Service worker with offline support
+- **I18n**: Hebrew (primary) and English, with RTL-native layout
+
+---
+
+## API Access for Developers
+
+### Endpoint
+`POST https://peroot.space/api/enhance`
+
+Developers can integrate Peroot's prompt enhancement capabilities into their own tools and workflows via the REST API.
+
+---
+
+## Chrome Extension
+
+- **Version**: v2
+- **Capabilities**: Inline prompt enhancement on any webpage, quick access to prompt library, one-click enhancement of selected text
+- **Availability**: Chrome Web Store
+
+---
+
+## Referral Program
+
+- Users can refer friends and earn automatic rewards
+- Referral tracking is built into the platform
+- Both referrer and referred user receive bonus credits
+
+---
+
+## Pricing Comparison
+
+| Feature | Guest | Free | Pro |
+|---------|-------|------|-----|
+| Daily prompts | 1 | 2 | ~5/day (150/month) |
+| Signup required | No | Yes | Yes |
+| Public prompt library | Yes | Yes | Yes |
+| All AI engines | Limited | Limited | All |
+| Iterative refinement | No | No | Yes |
+| Personal library | No | No | Yes |
+| Chrome extension | No | Yes | Yes |
+| Image/Video prompts | Yes | Yes | Yes |
+| Agent builder | No | No | Yes |
+| Price | Free | Free | NIS 3.99/month |
+| Free trial | N/A | N/A | 4 days |
+
+---
+
+## Blog Articles
+
+- [How to Write a Good Prompt - Complete Guide](https://peroot.space/blog/how-to-write-good-prompt) - Comprehensive guide to writing effective AI prompts in Hebrew
+- [Few-Shot Prompting Guide](https://peroot.space/blog/few-shot-prompting-guide) - Teaching AI through examples
+- [AI Email Marketing Prompts - 5 Ready Templates](https://peroot.space/blog/ai-email-marketing-prompts) - Marketing email templates using AI
+- [Debugging with AI - Developer Guide](https://peroot.space/blog/debugging-with-ai-guide) - Using AI for code debugging
+- [AI Business Proposals - Practical Guide](https://peroot.space/blog/ai-business-proposals) - Creating business proposals with AI
+- [Freelancer Portfolio with AI](https://peroot.space/blog/freelancer-portfolio-with-ai) - Building a professional portfolio using AI
+- [Social Media Prompts - Complete Guide](https://peroot.space/blog/social-media-prompts-guide) - Prompts for social media content creation
+- [AI for Teachers - Tests and Assignments](https://peroot.space/blog/ai-tests-assignments-teachers) - Educational AI tools for teachers
+- [Midjourney Advanced Tips](https://peroot.space/blog/midjourney-advanced-tips) - Advanced techniques for Midjourney
+- [AI Beginners Complete Guide](https://peroot.space/blog/ai-beginners-complete-guide) - Starting from scratch with AI
+- [5 AI Myths Debunked](https://peroot.space/blog/5-ai-myths-debunked) - Common misconceptions about AI
+- [Peroot vs Manual Prompts - Comparison](https://peroot.space/blog/peroot-vs-manual-prompts) - Why use Peroot over manual prompt writing
+- [System Prompts - AI Agents Guide](https://peroot.space/blog/system-prompts-ai-agents-guide) - Building system prompts for AI agents
+- [SEO with AI Content - Complete Guide](https://peroot.space/blog/seo-with-ai-content-guide) - Using AI for SEO content
+- [AI Code Review - Developer Guide](https://peroot.space/blog/ai-code-review-guide) - Code review workflows with AI
+- [AI Customer Service Chatbots](https://peroot.space/blog/ai-customer-service-chatbots) - Building customer service bots
+- [Brand Storytelling with AI - Practical Guide](https://peroot.space/blog/brand-storytelling-with-ai) - Crafting brand narratives with AI
+- [Role-Play Prompting Technique](https://peroot.space/blog/role-play-prompting-technique) - Using role-play to improve AI responses
+- [Perplexity vs ChatGPT - Research Comparison](https://peroot.space/blog/perplexity-vs-chatgpt-research) - Comparing research capabilities
+- [Peroot Review 2026](https://peroot.space/blog/peroot-review-2026) - Comprehensive review of the Israeli prompt tool
+
+---
+
+## Company Information
+
+- **Company**: JoyaTech
+- **Creator**: Gal Sasson
+- **Email**: gal@joya-tech.net
+- **Website**: https://peroot.space
+- **Facebook**: https://www.facebook.com/profile.php?id=61579689932777
+- **Location**: Israel
+- **Language**: Hebrew (primary), English (secondary)
+- **Target Audience**: Hebrew-speaking professionals, marketers, educators, developers, freelancers, content creators
