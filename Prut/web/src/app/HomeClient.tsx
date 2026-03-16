@@ -785,9 +785,9 @@ function PageContent({ user }: { user: User | null }) {
       <div role="dialog" aria-modal="true" aria-label="History and library sidebar" className={cn(
         "fixed top-0 right-0 z-[41] h-full bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full",
-        // Mobile: always full width. Desktop: compact or expanded
+        // Mobile: always full width. Tablet+: compact or expanded
         "w-full",
-        sidebarExpanded ? "lg:w-[480px]" : "lg:w-72"
+        sidebarExpanded ? "md:w-[560px]" : "md:w-[340px]"
       )}>
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/5">
@@ -795,7 +795,7 @@ function PageContent({ user }: { user: User | null }) {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="hidden lg:flex p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="hidden md:flex p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
               title={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
               aria-label={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
             >
