@@ -5,6 +5,7 @@ import { StandardEngine } from "./standard-engine";
 import { ResearchEngine } from "./research-engine";
 import { ImageEngine } from "./image-engine";
 import { AgentEngine } from "./agent-engine";
+import { VideoEngine } from "./video-engine";
 import { createClient } from "../supabase/server";
 
 // Cache for engine configs to reduce DB hits
@@ -65,6 +66,8 @@ function createEngineInstance(mode: CapabilityMode, config?: EngineConfig): Prom
       return new ImageEngine(config);
     case CapabilityMode.AGENT_BUILDER:
       return new AgentEngine(config);
+    case CapabilityMode.VIDEO_GENERATION:
+      return new VideoEngine(config);
     case CapabilityMode.STANDARD:
     default:
       return new StandardEngine(config);

@@ -2,14 +2,21 @@
 
 import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
-import { MessageSquare, Globe, Palette, Bot, LucideIcon } from "lucide-react";
+import { MessageSquare, Globe, Palette, Bot, Video, Lock, LucideIcon } from "lucide-react";
+import { toast } from "sonner";
 
 const ICONS: Record<IconName, LucideIcon> = {
   MessageSquare,
   Globe,
   Palette,
   Bot,
+  Video,
 };
+
+/** Modes shown in the UI but not yet available */
+const COMING_SOON_MODES = new Set<CapabilityMode>([
+  CapabilityMode.VIDEO_GENERATION,
+]);
 
 const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
   sky: {
@@ -27,6 +34,10 @@ const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
   amber: {
     selected: "border-amber-500/50 bg-amber-500/10 text-amber-300",
     default: "hover:border-amber-500/30 hover:bg-amber-500/5",
+  },
+  rose: {
+    selected: "border-rose-500/50 bg-rose-500/10 text-rose-300",
+    default: "hover:border-rose-500/30 hover:bg-rose-500/5",
   },
 };
 
@@ -55,31 +66,46 @@ export function CapabilitySelector({
         const Icon = ICONS[config.icon];
         const isSelected = value === mode;
         const colorClasses = COLOR_CLASSES[config.color];
+        const isComingSoon = COMING_SOON_MODES.has(mode);
         return (
           <button
             key={mode}
             type="button"
-            disabled={disabled}
-            onClick={() => onChange(mode)}
+            disabled={disabled || isComingSoon}
+            onClick={() => {
+              if (isComingSoon) {
+                toast("מנוע הסרטונים בדרך! נעדכן אותך כשיהיה מוכן", { icon: "🎬" });
+                return;
+              }
+              onChange(mode);
+            }}
             className={cn(
               "flex items-center gap-2 rounded-xl border transition-all duration-200 relative",
               "hover:scale-[1.02] active:scale-[0.98] snap-start shrink-0",
               compact ? "px-3 py-2" : "px-4 py-3",
-              isSelected
-                ? colorClasses.selected
-                : cn(
-                    "border-white/10 bg-white/[0.02] text-slate-400",
-                    colorClasses.default
-                  ),
-              disabled && "opacity-50 cursor-not-allowed"
+              isComingSoon
+                ? "border-white/5 bg-white/[0.01] text-slate-600 cursor-not-allowed opacity-60"
+                : isSelected
+                  ? colorClasses.selected
+                  : cn(
+                      "border-white/10 bg-white/[0.02] text-slate-400",
+                      colorClasses.default
+                    ),
+              disabled && !isComingSoon && "opacity-50 cursor-not-allowed"
             )}
-            aria-pressed={isSelected}
-            title={config.descriptionHe}
+            aria-pressed={isComingSoon ? false : isSelected}
+            title={isComingSoon ? "בקרוב" : config.descriptionHe}
           >
             <Icon className={cn("shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
             <span className={cn("font-medium", compact ? "text-sm" : "text-base")}>
               {config.labelHe}
             </span>
+            {isComingSoon && (
+              <span className="flex items-center gap-1 text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">
+                <Lock className="w-3 h-3" />
+                בקרוב
+              </span>
+            )}
           </button>
         );
       })}

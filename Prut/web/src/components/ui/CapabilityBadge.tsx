@@ -2,13 +2,14 @@
 
 import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
-import { MessageSquare, Globe, Palette, Bot, LucideIcon } from "lucide-react";
+import { MessageSquare, Globe, Palette, Bot, Video, LucideIcon } from "lucide-react";
 
 const ICONS: Record<IconName, LucideIcon> = {
   MessageSquare,
   Globe,
   Palette,
   Bot,
+  Video,
 };
 
 const COLOR_CLASSES: Record<string, string> = {
@@ -16,6 +17,7 @@ const COLOR_CLASSES: Record<string, string> = {
   emerald: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
   purple: "bg-purple-500/10 text-purple-300 border-purple-500/20",
   amber: "bg-amber-500/10 text-amber-300 border-amber-500/20",
+  rose: "bg-rose-500/10 text-rose-300 border-rose-500/20",
 };
 
 interface CapabilityBadgeProps {

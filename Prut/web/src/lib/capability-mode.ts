@@ -14,13 +14,15 @@ export enum CapabilityMode {
   IMAGE_GENERATION = 'IMAGE_GENERATION',
   /** Meta-prompting for custom GPTs or AI Agents */
   AGENT_BUILDER = 'AGENT_BUILDER',
+  /** AI video prompt generation */
+  VIDEO_GENERATION = 'VIDEO_GENERATION',
 }
 
 /** Icon names from lucide-react */
-export type IconName = 'MessageSquare' | 'Globe' | 'Palette' | 'Bot';
+export type IconName = 'MessageSquare' | 'Globe' | 'Palette' | 'Bot' | 'Video';
 
 /** Tailwind color names for theming */
-export type ColorName = 'sky' | 'emerald' | 'purple' | 'amber';
+export type ColorName = 'sky' | 'emerald' | 'purple' | 'amber' | 'rose';
 
 export interface CapabilityConfig {
   mode: CapabilityMode;
@@ -74,6 +76,17 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     description: 'Configure custom GPTs and AI agents',
     descriptionHe: 'הגדרת GPT מותאמים וסוכני AI',
     requiredFields: ['system_instructions'],
+  },
+  [CapabilityMode.VIDEO_GENERATION]: {
+    mode: CapabilityMode.VIDEO_GENERATION,
+    label: 'Video Generation',
+    labelHe: 'יצירת סרטון',
+    icon: 'Video',
+    color: 'rose',
+    description: 'Generate prompts for AI video platforms',
+    descriptionHe: 'יצירת פרומפטים לסרטוני AI',
+    requiredFields: ['camera_movement', 'duration'],
+    optionalFields: ['style', 'mood'],
   },
 };
 

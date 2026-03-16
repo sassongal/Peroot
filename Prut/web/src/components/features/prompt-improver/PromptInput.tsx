@@ -7,6 +7,8 @@ import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
+import { ImagePlatformSelector } from "./ImagePlatformSelector";
+import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
@@ -28,6 +30,10 @@ interface PromptInputProps {
   variableValues: Record<string, string>;
   setVariableValues: (values: Record<string, string>) => void;
   onApplyVariables: () => void;
+  imagePlatform: ImagePlatform;
+  setImagePlatform: (platform: ImagePlatform) => void;
+  imageOutputFormat: ImageOutputFormat;
+  setImageOutputFormat: (format: ImageOutputFormat) => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -68,6 +74,12 @@ const EXAMPLES_BY_MODE: Record<string, string[]> = {
     "מנהל קהילה שעונה על שאלות ומנהל דיונים",
     "עוזר כתיבה שמשפר טקסטים שיווקיים ועסקיים",
   ],
+  [CapabilityMode.VIDEO_GENERATION]: [
+    "סרטון דרון מעל חוף ים בשקיעה עם גלים שובריים",
+    "אנימציה של חתול שמזנק לתפוס פרפר בגינה",
+    "סצנה קולנועית של רחוב בטוקיו בלילה עם גשם",
+    "סרטון מוצר - בקבוק בושם מסתובב על רקע שחור",
+  ],
 };
 
 const PLACEHOLDERS_BY_MODE: Record<string, string> = {
@@ -75,6 +87,7 @@ const PLACEHOLDERS_BY_MODE: Record<string, string> = {
   [CapabilityMode.DEEP_RESEARCH]: "מה תרצה לחקור? תאר את הנושא, היקף המחקר, והשאלות המרכזיות...",
   [CapabilityMode.IMAGE_GENERATION]: "תאר את התמונה שתרצה ליצור - נושא, סגנון, צבעים, תאורה...",
   [CapabilityMode.AGENT_BUILDER]: "תאר את הסוכן שתרצה לבנות - מה התפקיד שלו, מי קהל היעד, ומה הוא צריך לדעת לעשות...",
+  [CapabilityMode.VIDEO_GENERATION]: "תאר את הסצנה שברצונך ליצור...",
 };
 
 export function PromptInput({
@@ -92,6 +105,10 @@ export function PromptInput({
   variableValues,
   setVariableValues,
   onApplyVariables,
+  imagePlatform,
+  setImagePlatform,
+  imageOutputFormat,
+  setImageOutputFormat,
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -159,6 +176,19 @@ export function PromptInput({
           compact
         />
       </div>
+
+      {/* Image Platform Selector — only visible in IMAGE_GENERATION mode */}
+      {selectedCapability === CapabilityMode.IMAGE_GENERATION && (
+        <div className="w-full max-w-4xl mx-auto">
+          <ImagePlatformSelector
+            selectedPlatform={imagePlatform}
+            onPlatformChange={setImagePlatform}
+            outputFormat={imageOutputFormat}
+            onOutputFormatChange={setImageOutputFormat}
+            disabled={isLoading}
+          />
+        </div>
+      )}
 
       <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-4 items-stretch">
         {variables.length > 0 && (

@@ -20,7 +20,7 @@ export interface PromptState {
   selectedCapability: CapabilityMode;
   questions: Question[];
   detectedCategory: string;
-  questionAnswers: Record<number, string>;
+  questionAnswers: Record<string, string>;
   variableValues: Record<string, string>;
   copied: boolean;
   iterationCount: number;
@@ -159,7 +159,7 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
         ...state,
         questionAnswers: {
           ...state.questionAnswers,
-          [action.payload.id]: action.payload.answer,
+          [String(action.payload.id)]: action.payload.answer,
         },
       };
 

@@ -2,13 +2,14 @@
 
 import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
-import { LayoutGrid, MessageSquare, Globe, Palette, Bot, LucideIcon } from "lucide-react";
+import { LayoutGrid, MessageSquare, Globe, Palette, Bot, Video, LucideIcon } from "lucide-react";
 
 const ICONS: Record<IconName, LucideIcon> = {
   MessageSquare,
   Globe,
   Palette,
   Bot,
+  Video,
 };
 
 const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
@@ -27,6 +28,10 @@ const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
   amber: {
     selected: "bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_10px_-2px_rgba(245,158,11,0.3)]",
     default: "hover:bg-amber-500/10 hover:text-amber-200 hover:border-amber-500/20",
+  },
+  rose: {
+    selected: "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_10px_-2px_rgba(244,63,94,0.3)]",
+    default: "hover:bg-rose-500/10 hover:text-rose-200 hover:border-rose-500/20",
   },
 };
 

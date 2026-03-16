@@ -14,6 +14,7 @@ const HistoryPanel = dynamic(
 );
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
+import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import dynamic from "next/dynamic";
@@ -113,6 +114,9 @@ function PageContent({ user }: { user: User | null }) {
   const { state: ps, dispatch } = usePromptWorkflow();
   const { isPro } = useSubscription();
   const { canUsePrompt, requiredAction, incrementUsage } = usePromptLimits();
+
+  const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
+  const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -431,6 +435,12 @@ function PageContent({ user }: { user: User | null }) {
       tone: ps.selectedTone,
       category: ps.selectedCategory,
       capability_mode: ps.selectedCapability,
+      ...(ps.selectedCapability === CapabilityMode.IMAGE_GENERATION && {
+        mode_params: {
+          image_platform: imagePlatform,
+          output_format: imageOutputFormat,
+        },
+      }),
     });
 
     const result = processStreamResult("Enhance");
@@ -468,7 +478,6 @@ function PageContent({ user }: { user: User | null }) {
     const currentCompletion = ps.completion;
 
     dispatch({ type: 'START_STREAM' });
-    dispatch({ type: 'SET_QUESTIONS', payload: [] });
     dispatch({ type: 'CLEAR_ANSWERS' });
     streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
@@ -482,10 +491,10 @@ function PageContent({ user }: { user: User | null }) {
       instruction.trim() ? `הוראה נוספת: ${instruction}` : "",
     ].filter(Boolean).join("\n\n");
 
-    // Convert numeric keys to string keys for API
-    const stringAnswers: Record<string, string> = {};
+    // Filter out empty answers for the API
+    const filteredAnswers: Record<string, string> = {};
     for (const [k, v] of Object.entries(ps.questionAnswers)) {
-      if (v.trim()) stringAnswers[String(k)] = v;
+      if (v.trim()) filteredAnswers[k] = v;
     }
 
     await startStream(getApiPath("/api/enhance"), {
@@ -493,9 +502,15 @@ function PageContent({ user }: { user: User | null }) {
       tone: ps.selectedTone,
       category: ps.selectedCategory,
       capability_mode: ps.selectedCapability,
+      ...(ps.selectedCapability === CapabilityMode.IMAGE_GENERATION && {
+        mode_params: {
+          image_platform: imagePlatform,
+          output_format: imageOutputFormat,
+        },
+      }),
       previousResult: currentCompletion,
       refinementInstruction: combinedInstruction,
-      answers: stringAnswers,
+      answers: filteredAnswers,
     });
 
     const refineResult = processStreamResult("Refine");
@@ -928,6 +943,10 @@ function PageContent({ user }: { user: User | null }) {
                   variableValues={ps.variableValues}
                   setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
                   onApplyVariables={applyVariablesToPrompt}
+                  imagePlatform={imagePlatform}
+                  setImagePlatform={setImagePlatform}
+                  imageOutputFormat={imageOutputFormat}
+                  setImageOutputFormat={setImageOutputFormat}
                />
 
                {/* Recently Used Prompts Strip */}

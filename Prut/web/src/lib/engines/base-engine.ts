@@ -301,14 +301,20 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
 
   generateRefinement(input: EngineInput): EngineOutput {
         if (!input.previousResult) throw new Error("Previous result required for refinement");
-        const instruction = input.refinementInstruction || "שפר את התוצאה והפוך אותה למקצועית יותר.";
+        const instruction = (input.refinementInstruction || "שפר את התוצאה והפוך אותה למקצועית יותר.").trim().slice(0, 2000);
 
         // Build answers context from individual Q&A pairs
+        // The refinementInstruction already contains question-answer pairs from the client,
+        // but we also include the raw answers as additional context
         let answersBlock = "";
         if (input.answers && Object.keys(input.answers).length > 0) {
             const pairs = Object.entries(input.answers)
                 .filter(([, v]) => v.trim())
-                .map(([, answer]) => `- ${answer}`)
+                .map(([key, answer]) => {
+                    // If the answer already contains the question context (from refinementInstruction), use as-is
+                    // Otherwise include the key for traceability
+                    return `- [${key}] ${answer}`;
+                })
                 .join("\n");
             if (pairs) {
                 answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;

@@ -4,19 +4,19 @@ import { Wand2, ChevronDown, ChevronUp, Plus, Check } from "lucide-react";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useI18n } from "@/context/I18nContext";
 
 interface SmartRefinementProps {
   questions: Question[];
-  answers: Record<number, string>;
+  answers: Record<string, string>;
   onAnswerChange: (id: number, value: string) => void;
   onRefine: (customInstruction?: string) => void;
   isLoading: boolean;
 }
 
 export function SmartRefinement({
-  questions,
+  questions = [],
   answers,
   onAnswerChange,
   onRefine,
@@ -25,6 +25,9 @@ export function SmartRefinement({
   const t = useI18n();
   const [openIds, setOpenIds] = useState<number[]>([]);
   const [customInstruction, setCustomInstruction] = useState("");
+  const prevQuestionsRef = useRef<number>(0);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
 
   const toggleOpen = (id: number) => {
     setOpenIds((prev) =>
@@ -32,9 +35,10 @@ export function SmartRefinement({
     );
   };
 
-  // Open the first question by default when questions change
+  // Open the first question by default only when NEW questions arrive
   useEffect(() => {
-    if (questions.length > 0) {
+    if (questions?.length > 0 && questions.length !== prevQuestionsRef.current) {
+        prevQuestionsRef.current = questions.length;
         setOpenIds([questions[0].id]);
     }
   }, [questions]);
@@ -52,8 +56,9 @@ export function SmartRefinement({
     // If this answer is non-empty and was previously empty, auto-open next unanswered
     if (value.trim()) {
       const currentIndex = questions.findIndex(q => q.id === id);
+      const currentAnswers = answersRef.current;
       const nextUnanswered = questions.find(
-        (q, i) => i > currentIndex && !answers[q.id]?.trim()
+        (q, i) => i > currentIndex && !currentAnswers[q.id]?.trim()
       );
       if (nextUnanswered) {
         // Small delay so user sees the checkmark first
@@ -65,12 +70,12 @@ export function SmartRefinement({
         }, 300);
       }
     }
-  }, [onAnswerChange, questions, answers]);
+  }, [onAnswerChange, questions]);
 
   const hasAnyInput = Object.values(answers).some(a => a.trim()) || customInstruction.trim();
 
   // When questions array is empty and component is rendered, the prompt was deemed comprehensive
-  if (questions.length === 0) {
+  if (!questions?.length) {
     return (
       <div className="glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
         <div className="p-6">
