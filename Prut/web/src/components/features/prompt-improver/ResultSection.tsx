@@ -10,6 +10,7 @@ import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
 import { ReferralShareCTA } from "@/components/features/referral/ReferralShareCTA";
 import { CapabilityMode } from "@/lib/capability-mode";
+import { getVariablePlaceholder } from "@/lib/variable-utils";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -464,7 +465,7 @@ export function ResultSection({
                       dir="rtl"
                       value={variableValues[ph] || ""}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
-                      placeholder={t.result_section.variable_placeholder.replace('{ph}', ph)}
+                      placeholder={getVariablePlaceholder(ph)}
                       className="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-slate-600"
                     />
                  </div>
