@@ -262,6 +262,8 @@ export async function POST(req: Request) {
         system: engineOutput.systemPrompt,
         prompt: engineOutput.userPrompt,
         temperature: 0.7,
+        task: 'enhance',
+        userTier: tier === 'guest' ? 'guest' : tier,
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;
 

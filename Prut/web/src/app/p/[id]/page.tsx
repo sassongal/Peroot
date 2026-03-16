@@ -66,6 +66,17 @@ export default async function SharedPromptPage({ params }: Props) {
   void Promise.resolve(supabase.rpc('increment_shared_prompt_views', { prompt_id: id }))
     .catch((err: unknown) => console.error('Failed to increment views:', err));
 
+  // Look up sharer's referral code so the CTA link acts as a referral
+  let referralCode: string | null = null;
+  if (prompt.user_id) {
+    const { data: refData } = await supabase
+      .from('referral_codes')
+      .select('code')
+      .eq('user_id', prompt.user_id)
+      .maybeSingle();
+    referralCode = refData?.code ?? null;
+  }
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
 
   return (
@@ -132,7 +143,7 @@ export default async function SharedPromptPage({ params }: Props) {
         <div className="text-center mt-12">
           <p className="text-sm text-slate-500 mb-4">רוצים ליצור פרומפטים כאלה?</p>
           <Link
-            href="/"
+            href={referralCode ? `/?ref=${referralCode}` : "/"}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
           >
             <Wand2 className="w-4 h-4" />

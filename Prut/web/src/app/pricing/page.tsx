@@ -1,13 +1,83 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Check, Sparkles, Zap, ArrowRight, Crown, Shield, Chrome, Gift } from "lucide-react";
+import { Check, X, Sparkles, Zap, ArrowRight, Crown, Shield, Chrome, Gift, Brain, RefreshCw, Library, Headphones, Bot } from "lucide-react";
 import Link from "next/link";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import { PLANS } from "@/lib/lemonsqueezy";
 import { createClient } from "@/lib/supabase/client";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
+import { ProBadge } from "@/components/ui/ProBadge";
+
+const COMPARISON_FEATURES = [
+  {
+    name: "קרדיטים",
+    free: "2 ביום",
+    pro: "150 בחודש",
+    icon: Sparkles,
+  },
+  {
+    name: "מודלים בסיסיים (Gemini Flash)",
+    free: true,
+    pro: true,
+    icon: Bot,
+  },
+  {
+    name: "מודלים פרימיום (Gemini Pro, DeepSeek)",
+    free: false,
+    pro: true,
+    icon: Crown,
+  },
+  {
+    name: "שיפור איטרטיבי מתקדם",
+    free: false,
+    pro: true,
+    icon: RefreshCw,
+  },
+  {
+    name: "ספריית 480+ פרומפטים",
+    free: true,
+    pro: true,
+    icon: Library,
+  },
+  {
+    name: "ספריה אישית ללא הגבלה",
+    free: false,
+    pro: true,
+    icon: Library,
+  },
+  {
+    name: "למידת סגנון אישי (RAG)",
+    free: false,
+    pro: true,
+    icon: Brain,
+  },
+  {
+    name: "תוסף Chrome",
+    free: true,
+    pro: true,
+    icon: Chrome,
+  },
+  {
+    name: "סנכרון Chrome מלא",
+    free: false,
+    pro: true,
+    icon: Chrome,
+  },
+  {
+    name: "שיתוף פרומפטים",
+    free: true,
+    pro: true,
+    icon: Zap,
+  },
+  {
+    name: "תמיכה בעדיפות",
+    free: false,
+    pro: true,
+    icon: Headphones,
+  },
+];
 
 export default function PricingPage() {
   const { isPro, checkout, loading } = useSubscription();
@@ -63,6 +133,16 @@ export default function PricingPage() {
           </p>
         </div>
 
+        {/* Social Proof */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03]">
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span className="text-sm text-slate-300">
+              <span className="font-bold text-white">50,000+</span> פרומפטים שודרגו על ידי המשתמשים שלנו
+            </span>
+          </div>
+        </div>
+
         {/* Plans */}
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Free Plan */}
@@ -70,7 +150,7 @@ export default function PricingPage() {
             <div className="mb-8">
               <h3 className="text-xl font-bold text-white mb-2">{PLANS.free.nameHe}</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-white">₪0</span>
+                <span className="text-4xl font-black text-white">&#8362;0</span>
                 <span className="text-slate-500 text-sm">/ לתמיד</span>
               </div>
               <p className="text-slate-500 text-sm mt-2">מושלם להתחלה</p>
@@ -109,7 +189,7 @@ export default function PricingPage() {
                 <Zap className="w-5 h-5 text-amber-400" />
               </h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-white">₪{PLANS.pro.price}</span>
+                <span className="text-4xl font-black text-white">&#8362;{PLANS.pro.price}</span>
                 <span className="text-slate-500 text-sm">/ חודש</span>
               </div>
               <p className="text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
@@ -132,7 +212,7 @@ export default function PricingPage() {
 
             {isPro ? (
               <div className="w-full py-3 rounded-xl bg-amber-500/20 text-center text-sm font-medium text-amber-400 border border-amber-500/30">
-                התוכנית הנוכחית שלך ✓
+                התוכנית הנוכחית שלך
               </div>
             ) : (
               <button
@@ -143,6 +223,55 @@ export default function PricingPage() {
                 {checkoutLoading ? "מעבד..." : isLoggedIn === false ? "התחבר ושדרג לפרו" : "שדרג לפרו"}
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Feature Comparison Table */}
+        <div className="max-w-3xl mx-auto mt-20">
+          <h2 className="text-2xl font-bold text-white text-center mb-8">השוואת תכונות מפורטת</h2>
+          <div className="rounded-2xl border border-white/10 overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-3 bg-white/[0.03] border-b border-white/10">
+              <div className="p-4 text-sm font-semibold text-slate-400">תכונה</div>
+              <div className="p-4 text-sm font-semibold text-slate-300 text-center">חינם</div>
+              <div className="p-4 text-sm font-semibold text-amber-400 text-center flex items-center justify-center gap-1.5">
+                <ProBadge size="md" />
+                פרו
+              </div>
+            </div>
+            {/* Table Rows */}
+            {COMPARISON_FEATURES.map((feature, i) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={i}
+                  className={`grid grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-white/5' : ''} hover:bg-white/[0.02] transition-colors`}
+                >
+                  <div className="p-4 flex items-center gap-2.5 text-sm text-slate-300">
+                    <Icon className="w-4 h-4 text-slate-500 shrink-0" />
+                    {feature.name}
+                  </div>
+                  <div className="p-4 flex items-center justify-center">
+                    {typeof feature.free === 'string' ? (
+                      <span className="text-sm text-slate-400">{feature.free}</span>
+                    ) : feature.free ? (
+                      <Check className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <X className="w-4 h-4 text-slate-600" />
+                    )}
+                  </div>
+                  <div className="p-4 flex items-center justify-center">
+                    {typeof feature.pro === 'string' ? (
+                      <span className="text-sm font-semibold text-amber-400">{feature.pro}</span>
+                    ) : feature.pro ? (
+                      <Check className="w-4 h-4 text-amber-400" />
+                    ) : (
+                      <X className="w-4 h-4 text-slate-600" />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -176,7 +305,7 @@ export default function PricingPage() {
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-amber-400">תוכנית Pro</h4>
-              <p className="text-slate-400">150 קרדיטים בחודש שמתחדשים עם כל חיוב. מספיק לשימוש יומיומי אינטנסיבי.</p>
+              <p className="text-slate-400">150 קרדיטים בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום + למידת סגנון אישי.</p>
             </div>
           </div>
         </div>

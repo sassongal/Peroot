@@ -139,6 +139,13 @@ export async function GET(request: Request) {
           });
           if (redeemResult?.success) {
             logger.info('[Callback] Referral code redeemed:', referralCode, 'credits:', redeemResult.credits_awarded);
+            // Store the bonus amount in a short-lived cookie so the client can show a toast
+            response.cookies.set('referral_bonus', String(redeemResult.credits_awarded), {
+              path: '/',
+              maxAge: 60, // 1 minute, just long enough for the redirect
+              httpOnly: false, // needs to be readable by JS
+              sameSite: 'lax',
+            });
           } else {
             logger.info('[Callback] Referral code not redeemed:', redeemResult?.error);
           }

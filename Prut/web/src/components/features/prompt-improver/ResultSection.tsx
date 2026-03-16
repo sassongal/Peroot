@@ -8,6 +8,7 @@ import { renderStyledPrompt } from "@/lib/text-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
+import { ReferralShareCTA } from "@/components/features/referral/ReferralShareCTA";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -43,6 +44,7 @@ interface ResultSectionProps {
   originalPrompt?: string;
   onShare?: () => void;
   onReset?: () => void;
+  isAuthenticated?: boolean;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -69,6 +71,7 @@ export function ResultSection({
   originalPrompt,
   onShare,
   onReset,
+  isAuthenticated = false,
 }: ResultSectionProps) {
     const t = useI18n();
   const isMac = useMemo(() => typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform), []);
@@ -386,6 +389,11 @@ export function ResultSection({
             </div>
           </div>
         </div>
+
+        {/* Referral Share CTA - shown after successful enhancement */}
+        {!isLoading && completion && (
+          <ReferralShareCTA isAuthenticated={isAuthenticated} />
+        )}
 
         {/* Variables Panel - 5.6 RTL: stacks vertically on mobile, side-by-side on lg+ */}
         {placeholders.length > 0 && (

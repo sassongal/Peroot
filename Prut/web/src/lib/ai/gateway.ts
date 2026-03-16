@@ -18,7 +18,7 @@ export class AIGateway {
      * Includes circuit breaker (skip failing providers) and concurrency limiter
      * (queue excess requests instead of overwhelming providers).
      */
-    static async generateStream(params: GatewayParams & { task?: string }): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
+    static async generateStream(params: GatewayParams & { task?: string; userTier?: 'free' | 'pro' | 'guest' }): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
         // Acquire a concurrency slot (waits in queue if at capacity)
         await acquireSlot();
 
@@ -31,7 +31,7 @@ export class AIGateway {
         };
 
         let lastError: unknown;
-        const models = params.task ? getModelsForTask(params.task) : FALLBACK_ORDER;
+        const models = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
 
         try {
             for (const modelId of models) {

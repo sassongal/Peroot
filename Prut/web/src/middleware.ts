@@ -118,13 +118,30 @@ export async function middleware(request: NextRequest) {
 
   // Capture referral code from URL (?ref=CODE) into a cookie for redemption after signup
   const refCode = request.nextUrl.searchParams.get('ref');
-  if (refCode && !request.cookies.get('referral_code')) {
-    supabaseResponse.cookies.set('referral_code', refCode, {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      httpOnly: true,
-      sameSite: 'lax',
-    });
+  if (refCode) {
+    // Store the referral code in a cookie (only if not already set)
+    if (!request.cookies.get('referral_code')) {
+      supabaseResponse.cookies.set('referral_code', refCode, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+        sameSite: 'lax',
+      });
+    }
+    // Clean the URL by removing the ?ref param and redirect
+    const cleanUrl = request.nextUrl.clone();
+    cleanUrl.searchParams.delete('ref');
+    const redirectResponse = NextResponse.redirect(cleanUrl);
+    // Carry over the referral cookie on the redirect response too
+    if (!request.cookies.get('referral_code')) {
+      redirectResponse.cookies.set('referral_code', refCode, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true,
+        sameSite: 'lax',
+      });
+    }
+    return redirectResponse;
   }
 
   // 🛠️ MAINTENANCE MODE ENFORCEMENT

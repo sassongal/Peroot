@@ -77,6 +77,10 @@ import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/context/I18nContext";
 import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
+const ReferralBanner = dynamic(
+  () => import("@/components/features/referral/ReferralBanner").then(mod => mod.ReferralBanner),
+  { ssr: false }
+);
 
 // Constants
 
@@ -177,6 +181,7 @@ function PageContent({ user }: { user: User | null }) {
 
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Modals
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
@@ -192,6 +197,18 @@ function PageContent({ user }: { user: User | null }) {
     if (!localStorage.getItem('peroot_seen_explainer')) {
       setShowWhatIsThis(true);
       localStorage.setItem('peroot_seen_explainer', 'true');
+    }
+  }, []);
+
+  // Show celebratory toast when a referral bonus was redeemed at signup
+  useEffect(() => {
+    // Check for referral_bonus cookie (set by auth callback)
+    const match = document.cookie.match(/(?:^|;\s*)referral_bonus=(\d+)/);
+    if (match) {
+      const bonus = match[1];
+      toast.success(`קיבלת ${bonus} קרדיטים בונוס! 🎉`);
+      // Clear the cookie
+      document.cookie = 'referral_bonus=; path=/; max-age=0';
     }
   }, []);
 
@@ -235,6 +252,7 @@ function PageContent({ user }: { user: User | null }) {
         } else if (data) {
           if (!data.onboarding_completed) {
             setShowOnboarding(true);
+            setIsNewUser(true);
           }
         }
       } else {
@@ -888,6 +906,13 @@ function PageContent({ user }: { user: User | null }) {
            {!ps.completion && !ps.isLoading ? (
              /* INPUT MODE */
              <>
+               {/* Referral Banner - shown once for new users */}
+               {user && isNewUser && (
+                 <div className="w-full max-w-3xl mb-2">
+                   <ReferralBanner isNewUser={isNewUser} />
+                 </div>
+               )}
+
                <PromptInput
                   inputVal={ps.input}
                   setInputVal={setInputVal}
@@ -1056,6 +1081,7 @@ function PageContent({ user }: { user: User | null }) {
                        originalPrompt={ps.originalInput || ps.input}
                        onShare={handleShare}
                        onReset={() => dispatch({ type: 'RESET' })}
+                       isAuthenticated={!!user}
                    />
                  </ErrorBoundary>
 
