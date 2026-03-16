@@ -4,6 +4,7 @@ import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-m
 import { cn } from "@/lib/utils";
 import { MessageSquare, Globe, Palette, Bot, Video, Lock, LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const ICONS: Record<IconName, LucideIcon> = {
   MessageSquare,
@@ -46,67 +47,113 @@ interface CapabilitySelectorProps {
   compact?: boolean;
 }
 
-export function CapabilitySelector({ 
-  value, 
-  onChange, 
+export function CapabilitySelector({
+  value,
+  onChange,
   disabled,
   compact = false,
 }: CapabilitySelectorProps) {
   const modes = Object.values(CapabilityMode);
+  const isNonStandard = value !== CapabilityMode.STANDARD;
+
+  // Auto-expand when user has selected a non-standard mode so we never hide their selection.
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const showExpanded = isExpanded || isNonStandard;
+
+  const renderModeButton = (mode: CapabilityMode) => {
+    const config = CAPABILITY_CONFIGS[mode];
+    const Icon = ICONS[config.icon];
+    const isSelected = value === mode;
+    const colorClasses = COLOR_CLASSES[config.color];
+    const isComingSoon = COMING_SOON_MODES.has(mode);
+
+    return (
+      <button
+        key={mode}
+        type="button"
+        disabled={disabled || isComingSoon}
+        onClick={() => {
+          if (isComingSoon) {
+            toast("מנוע הסרטונים בדרך! נעדכן אותך כשיהיה מוכן", { icon: "🎬" });
+            return;
+          }
+          onChange(mode);
+        }}
+        className={cn(
+          "flex items-center gap-2 rounded-xl border transition-all duration-200 relative",
+          "hover:scale-[1.02] active:scale-[0.98] snap-start shrink-0",
+          compact ? "px-3 py-2" : "px-4 py-3",
+          isComingSoon
+            ? "border-white/5 bg-white/[0.01] text-slate-600 cursor-not-allowed opacity-60"
+            : isSelected
+              ? colorClasses.selected
+              : cn(
+                  "border-white/10 bg-white/[0.02] text-slate-400",
+                  colorClasses.default
+                ),
+          disabled && !isComingSoon && "opacity-50 cursor-not-allowed"
+        )}
+        aria-pressed={isComingSoon ? false : isSelected}
+        title={isComingSoon ? "בקרוב" : config.descriptionHe}
+      >
+        <Icon className={cn("shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
+        <span className={cn("font-medium", compact ? "text-sm" : "text-base")}>
+          {config.labelHe}
+        </span>
+        {isComingSoon && (
+          <span className="flex items-center gap-1 text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">
+            <Lock className="w-3 h-3" />
+            בקרוב
+          </span>
+        )}
+      </button>
+    );
+  };
 
   return (
     <div className={cn(
       "flex overflow-x-auto scrollbar-none snap-x snap-mandatory min-w-0",
       compact ? "gap-1.5" : "gap-3"
     )}>
-      {modes.map((mode) => {
-        const config = CAPABILITY_CONFIGS[mode];
-        const Icon = ICONS[config.icon];
-        const isSelected = value === mode;
-        const colorClasses = COLOR_CLASSES[config.color];
-        const isComingSoon = COMING_SOON_MODES.has(mode);
-        return (
+      {showExpanded ? (
+        <>
+          {modes.map((mode) => renderModeButton(mode))}
+          {/* Collapse button — only show when user manually expanded (non-standard selection keeps it open without a toggle) */}
+          {!isNonStandard && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className={cn(
+                "flex items-center rounded-xl border border-white/10 bg-white/[0.02] text-slate-500",
+                "hover:border-white/20 hover:text-slate-300 transition-all duration-200 shrink-0 snap-start",
+                compact ? "px-2.5 py-2 text-sm" : "px-3 py-3 text-base"
+              )}
+              title="סגור"
+              aria-label="סגור מצבים נוספים"
+            >
+              −
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          {renderModeButton(CapabilityMode.STANDARD)}
           <button
-            key={mode}
             type="button"
-            disabled={disabled || isComingSoon}
-            onClick={() => {
-              if (isComingSoon) {
-                toast("מנוע הסרטונים בדרך! נעדכן אותך כשיהיה מוכן", { icon: "🎬" });
-                return;
-              }
-              onChange(mode);
-            }}
+            onClick={() => setIsExpanded(true)}
             className={cn(
-              "flex items-center gap-2 rounded-xl border transition-all duration-200 relative",
-              "hover:scale-[1.02] active:scale-[0.98] snap-start shrink-0",
-              compact ? "px-3 py-2" : "px-4 py-3",
-              isComingSoon
-                ? "border-white/5 bg-white/[0.01] text-slate-600 cursor-not-allowed opacity-60"
-                : isSelected
-                  ? colorClasses.selected
-                  : cn(
-                      "border-white/10 bg-white/[0.02] text-slate-400",
-                      colorClasses.default
-                    ),
-              disabled && !isComingSoon && "opacity-50 cursor-not-allowed"
+              "flex items-center rounded-xl border border-white/10 bg-white/[0.02] text-slate-400",
+              "hover:border-white/20 hover:text-slate-200 transition-all duration-200 shrink-0 snap-start font-medium",
+              compact ? "px-3 py-2 text-sm" : "px-4 py-3 text-base"
             )}
-            aria-pressed={isComingSoon ? false : isSelected}
-            title={isComingSoon ? "בקרוב" : config.descriptionHe}
+            title="הצג מצבים נוספים"
+            aria-label="הצג מצבים נוספים"
           >
-            <Icon className={cn("shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
-            <span className={cn("font-medium", compact ? "text-sm" : "text-base")}>
-              {config.labelHe}
-            </span>
-            {isComingSoon && (
-              <span className="flex items-center gap-1 text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">
-                <Lock className="w-3 h-3" />
-                בקרוב
-              </span>
-            )}
+            עוד מצבים +
           </button>
-        );
-      })}
+        </>
+      )}
     </div>
   );
 }

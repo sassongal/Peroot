@@ -61,6 +61,8 @@ export async function GET(req: NextRequest) {
       display_name: profile?.display_name || user.user_metadata?.full_name || null,
       plan_tier: isAdmin ? "admin" : (profile?.plan_tier || "free"),
       credits_balance: profile?.credits_balance ?? 0,
+    }, {
+      headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" },
     });
   } catch (error) {
     logger.error("[me] Error:", error);

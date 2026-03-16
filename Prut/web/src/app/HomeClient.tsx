@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import NextImage from "next/image";
 import { getAssetPath } from "@/lib/asset-path";
 import { getApiPath } from "@/lib/api-path";
@@ -69,6 +70,8 @@ const StreamingProgress = dynamic(
   { ssr: false }
 );
 import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock, ArrowRight } from "lucide-react";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { TopNavBar } from "@/components/layout/TopNavBar";
 const UpgradeNudge = dynamic(
   () => import("@/components/features/prompt-improver/UpgradeNudge"),
   { ssr: false }
@@ -296,13 +299,17 @@ function PageContent({ user }: { user: User | null }) {
     setIsLoginRequiredModalOpen(true);
   };
 
+  // Debounce scoring — avoids running 20 regex tests on every keystroke/streaming chunk
+  const debouncedInput = useDebouncedValue(ps.input, 300);
+  const debouncedCompletion = useDebouncedValue(ps.completion, 200);
+
   const inputScore = useMemo(
-    () => BaseEngine.scorePrompt(ps.input, ps.selectedCapability),
-    [ps.input, ps.selectedCapability]
+    () => BaseEngine.scorePrompt(debouncedInput, ps.selectedCapability),
+    [debouncedInput, ps.selectedCapability]
   );
   const completionScore = useMemo(
-    () => BaseEngine.scorePrompt(ps.completion, ps.selectedCapability),
-    [ps.completion, ps.selectedCapability]
+    () => BaseEngine.scorePrompt(debouncedCompletion, ps.selectedCapability),
+    [debouncedCompletion, ps.selectedCapability]
   );
 
   const scoreTone =
@@ -314,8 +321,9 @@ function PageContent({ user }: { user: User | null }) {
           ? { text: "text-red-400", bar: "bg-red-500" }
           : { text: "text-slate-500", bar: "bg-slate-600" };
 
-  const placeholders = useMemo(() => extractPlaceholders(ps.completion), [ps.completion]);
-  const inputVariables = useMemo(() => extractPlaceholders(ps.input), [ps.input]);
+  // Debounce placeholder extraction — avoids regex on every streaming chunk
+  const placeholders = useMemo(() => extractPlaceholders(debouncedCompletion), [debouncedCompletion]);
+  const inputVariables = useMemo(() => extractPlaceholders(debouncedInput), [debouncedInput]);
 
   const applyVariablesToPrompt = () => {
     if (inputVariables.length === 0) return;
@@ -413,7 +421,7 @@ function PageContent({ user }: { user: User | null }) {
     toast.success(`"${randomPrompt.title}" נטען!`);
   };
 
-  const handleEnhance = async () => {
+  const handleEnhance = useCallback(async () => {
     if (!ps.input.trim() || ps.isLoading || enhanceCooldownRef.current) return;
 
     enhanceCooldownRef.current = true;
@@ -483,9 +491,10 @@ function PageContent({ user }: { user: User | null }) {
 
       toast.success(t.prompt_generator.success_toast);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, addToHistory, incrementUsage, t]);
 
-  const handleRefine = async (instruction: string) => {
+  const handleRefine = useCallback(async (instruction: string) => {
     if (ps.isLoading) return;
     const hasAnswers = Object.values(ps.questionAnswers).some(a => a.trim());
     if ((!instruction.trim() && !hasAnswers) || !ps.completion) return;
@@ -536,9 +545,10 @@ function PageContent({ user }: { user: User | null }) {
       dispatch({ type: 'INCREMENT_ITERATION' });
       toast.success("הפרומפט עודכן!");
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ps.isLoading, ps.completion, ps.questions, ps.questionAnswers, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, ps.input, ps.generationContext, completionScore.score, dispatch, startStream]);
 
-  const handleCopyText = async (text: string, withWatermark?: boolean) => {
+  const handleCopyText = useCallback(async (text: string, withWatermark?: boolean) => {
     // Pro users copy clean by default; free/guest always get watermark.
     // Callers can override via the withWatermark argument (e.g. toggle checkbox).
     const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
@@ -549,10 +559,14 @@ function PageContent({ user }: { user: User | null }) {
     recordUsageSignal("copy", text);
     trackPromptCopy('result');
     toast.success("הועתק ללוח");
-  };
+  }, [isPro, dispatch]);
 
   // Keep ref in sync for keyboard shortcut handler
   handleCopyTextRef.current = handleCopyText;
+
+  // Use ref for completion to avoid re-attaching listener on every streaming chunk
+  const completionRef = useRef(ps.completion);
+  completionRef.current = ps.completion;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -561,15 +575,15 @@ function PageContent({ user }: { user: User | null }) {
 
       // Escape — clear result (when not typing)
       if (e.key === 'Escape' && !isTyping) {
-        if (ps.completion) {
+        if (completionRef.current) {
           dispatch({ type: 'SET_COMPLETION', payload: '' });
         }
       }
       // Cmd+Shift+C — copy result
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
-        if (ps.completion) {
+        if (completionRef.current) {
           e.preventDefault();
-          handleCopyTextRef.current?.(ps.completion);
+          handleCopyTextRef.current?.(completionRef.current);
         }
       }
       // Cmd+K — focus prompt input
@@ -596,9 +610,9 @@ function PageContent({ user }: { user: User | null }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [ps.completion, dispatch, setViewMode, setSidebarOpen]);
+  }, [dispatch, setViewMode, setSidebarOpen]);
 
-  const handleShare = async () => {
+  const handleShare = useCallback(async () => {
     if (!user) {
       showLoginRequired("שיתוף פרומפטים");
       return;
@@ -625,12 +639,12 @@ function PageContent({ user }: { user: User | null }) {
     } catch {
       toast.error("שגיאה בשיתוף");
     }
-  };
+  }, [user, ps.completion, ps.input, ps.selectedCategory, ps.selectedCapability]);
 
   // Track where user came from so they can go back
   const [previousView, setPreviousView] = useState<string | null>(null);
 
-  const handleUsePrompt = (prompt: LibraryPrompt | PersonalPrompt) => {
+  const handleUsePrompt = useCallback((prompt: LibraryPrompt | PersonalPrompt) => {
     setPreviousView(viewMode); // Remember where user was
     dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
     // Reset any previous completion so prompt feels fresh
@@ -638,27 +652,27 @@ function PageContent({ user }: { user: User | null }) {
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
     setViewMode("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, [viewMode, dispatch, setViewMode]);
 
-  const handleBackToLibrary = () => {
+  const handleBackToLibrary = useCallback(() => {
     if (previousView === "personal" || previousView === "library") {
       setViewMode(previousView);
     } else {
       setViewMode("personal");
     }
     setPreviousView(null);
-  };
+  }, [previousView, setViewMode]);
 
-  const handleRestore = (item: HistoryItem) => {
+  const handleRestore = useCallback((item: HistoryItem) => {
     dispatch({ type: 'SET_INPUT', payload: item.original });
     dispatch({ type: 'SET_TONE', payload: item.tone });
     dispatch({ type: 'SET_CATEGORY', payload: item.category });
     dispatch({ type: 'SET_COMPLETION', payload: item.enhanced });
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
     toast.success("הפרומפט שוחזר");
-  };
+  }, [dispatch]);
 
-  const addPersonalPromptFromHistory = (item: HistoryItem) => {
+  const addPersonalPromptFromHistory = useCallback((item: HistoryItem) => {
     if (!user) {
       showLoginRequired("שמירת פרומפטים");
       return;
@@ -674,9 +688,9 @@ function PageContent({ user }: { user: User | null }) {
     });
     recordUsageSignal("save", item.enhanced);
     toast.success("נשמר לספריה האישית!");
-  };
+  }, [user, addPrompt]);
 
-  const saveCompletionToPersonal = () => {
+  const saveCompletionToPersonal = useCallback(() => {
     if (!user) {
        showLoginRequired("שמירת פרומפטים");
        return;
@@ -693,9 +707,9 @@ function PageContent({ user }: { user: User | null }) {
     });
     recordUsageSignal("save", ps.completion);
     toast.success("נשמר לספריה האישית!");
-  };
+  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
 
-  const handleImportHistory = async () => {
+  const handleImportHistory = useCallback(async () => {
      if (!user) {
        showLoginRequired("שמירת פרומפטים");
        return;
@@ -713,9 +727,9 @@ function PageContent({ user }: { user: User | null }) {
      }));
      await addPrompts(itemsToAdd);
      toast.success("כל ההיסטוריה יובאה!");
-  };
+  }, [user, history, addPrompts]);
 
-  const handleOnboardingComplete = async () => {
+  const handleOnboardingComplete = useCallback(async () => {
       try {
           await completeOnboarding();
           setShowOnboarding(false);
@@ -724,104 +738,92 @@ function PageContent({ user }: { user: User | null }) {
           logger.error('[Onboarding] Error:', e);
           toast.error("שגיאה בשמירת נתוני Onboarding");
       }
-  };
+  }, [completeOnboarding]);
 
   const prefetchPersonalLibrary = useCallback(() => {
     import("@/components/views/PersonalLibraryView");
   }, []);
 
-  const handleNavPersonal = () => {
+  const handleNavPersonal = useCallback(() => {
      setViewMode("personal");
      setPersonalView("all");
-  };
+  }, [setViewMode, setPersonalView]);
 
-  const handleNavFavorites = () => {
+  const handleNavFavorites = useCallback(() => {
     setViewMode("personal");
     setPersonalView("favorites");
-  };
+  }, [setViewMode, setPersonalView]);
 
-  const handleNavLibrary = () => {
+  const handleNavLibrary = useCallback(() => {
     setViewMode("library");
-  };
+  }, [setViewMode]);
 
   // --- Render ---
 
+  const handleTopNavNavigate = useCallback((view: "home" | "library" | "personal") => {
+    if (view === "home") setViewMode("home");
+    else if (view === "library") handleNavLibrary();
+    else if (view === "personal") handleNavPersonal();
+  }, [setViewMode, handleNavLibrary, handleNavPersonal]);
+
+  const topNavBar = (
+    <TopNavBar viewMode={viewMode} onNavigate={handleTopNavNavigate}>
+      <PromptLimitIndicator creditsBalance={creditsRemaining} />
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className={cn(
+          "flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-lg text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
+          sidebarOpen
+            ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+            : "bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10"
+        )}
+        aria-expanded={sidebarOpen}
+        aria-label="היסטוריה ותפריט"
+      >
+        <PanelRightOpen className="w-4 h-4" />
+        <span className="hidden md:inline">תפריט</span>
+      </button>
+      <UserMenu user={user} position="top" />
+    </TopNavBar>
+  );
+
   if (viewMode === "library") {
     return (
-      <ErrorBoundary name="LibraryView">
-        <LibraryView
-            onUsePrompt={handleUsePrompt}
-            onCopyText={async (t) => { await handleCopyText(t); }}
-        />
-      </ErrorBoundary>
+      <>
+        {topNavBar}
+        <ErrorBoundary name="LibraryView">
+          <LibraryView
+              onUsePrompt={handleUsePrompt}
+              onCopyText={async (t) => { await handleCopyText(t); }}
+          />
+        </ErrorBoundary>
+      </>
     );
   }
 
   if (viewMode === "personal") {
     return (
-      <ErrorBoundary name="PersonalLibraryView">
-        <PersonalLibraryView
-            onUsePrompt={handleUsePrompt}
-            onCopyText={async (t) => { await handleCopyText(t); }}
-            handleImportHistory={handleImportHistory}
-            historyLength={history.length}
-        />
-      </ErrorBoundary>
+      <>
+        {topNavBar}
+        <ErrorBoundary name="PersonalLibraryView">
+          <PersonalLibraryView
+              onUsePrompt={handleUsePrompt}
+              onCopyText={async (t) => { await handleCopyText(t); }}
+              handleImportHistory={handleImportHistory}
+              historyLength={history.length}
+          />
+        </ErrorBoundary>
+      </>
     );
   }
 
   // Home View
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full">
+    <>
+    {topNavBar}
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
-
-      {/* Fixed Elements */}
-      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50">
-         <UserMenu user={user} position="top" />
-      </div>
-
-      {/* Keyboard Shortcuts Hint */}
-      <div className="fixed bottom-6 left-4 sm:left-6 z-40 hidden md:block">
-        <div className="group relative">
-          <button
-            className="p-2 rounded-full bg-black/30 border border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10 backdrop-blur-sm transition-colors"
-            title="קיצורי מקלדת"
-            aria-label="קיצורי מקלדת"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-          </button>
-          <div className="absolute bottom-full left-0 mb-2 w-52 p-3 rounded-xl bg-[#111] border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">קיצורי מקלדת</div>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">שדרוג פרומפט</span>
-                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘↵</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">העתק תוצאה</span>
-                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘⇧C</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">מיקוד על קלט</span>
-                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘K</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">ספריה אישית</span>
-                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘L</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">תפריט צד</span>
-                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">⌘B</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">נקה תוצאה</span>
-                <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono">Esc</kbd>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="fixed bottom-6 right-4 sm:right-6 z-50">
         <ErrorBoundary name="FAQBubble">
@@ -829,25 +831,16 @@ function PageContent({ user }: { user: User | null }) {
         </ErrorBoundary>
       </div>
 
-      {/* Sidebar Toggle Button + Credits indicator */}
-      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 flex items-center gap-2 sm:gap-3">
-        <PromptLimitIndicator creditsBalance={creditsRemaining} />
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold transition-all border backdrop-blur-md cursor-pointer shadow-lg",
-            sidebarOpen
-              ? "bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-amber-500/10"
-              : "bg-black/60 border-amber-500/20 text-amber-200 hover:text-amber-100 hover:border-amber-500/40 hover:bg-black/70 shadow-amber-500/5 animate-menu-pulse"
-          )}
-          title="תפריט"
-          aria-expanded={sidebarOpen}
-          aria-label="תפריט"
-        >
-          <PanelRightOpen className="w-5 h-5" />
-          <span className="hidden md:inline">תפריט</span>
-        </button>
-      </div>
+      {/* Mobile Bottom Tab Bar */}
+      <MobileTabBar
+        activeTab={viewMode}
+        onTabChange={(tab) => {
+          if (tab === "home") setViewMode("home");
+          else if (tab === "library") handleNavLibrary();
+          else if (tab === "personal") handleNavPersonal();
+          else if (tab === "history") setSidebarOpen(true);
+        }}
+      />
 
       {/* Mobile Backdrop */}
       {sidebarOpen && (
@@ -935,7 +928,7 @@ function PageContent({ user }: { user: User | null }) {
       </div>
 
       {/* Main Content (Full Width) */}
-      <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-16 md:pt-4">
+      <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-4">
            <div className="flex justify-center">
              <div className="hero-logo-container">
                <div className="hero-logo-ring hero-logo-ring-1" />
@@ -1219,6 +1212,7 @@ function PageContent({ user }: { user: User | null }) {
           <OnboardingOverlay onComplete={handleOnboardingComplete} />
       )}
     </div>
+    </>
   );
 }
 

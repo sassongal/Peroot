@@ -72,7 +72,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ items: results });
+    return NextResponse.json({ items: results }, {
+      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=300" },
+    });
   } catch (error) {
     logger.error("[favorites] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
