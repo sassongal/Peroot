@@ -75,7 +75,9 @@ function validateCsrfOrigin(request: NextRequest): NextResponse | null {
     // Malformed URL — requestOrigin stays empty, will fail validation
   }
 
-  if (!requestOrigin || requestOrigin !== allowedOrigin) {
+  // Allow both www and non-www variants of the same origin
+  const normalizeOrigin = (o: string) => o.replace('://www.', '://')
+  if (!requestOrigin || normalizeOrigin(requestOrigin) !== normalizeOrigin(allowedOrigin)) {
     return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 })
   }
 
