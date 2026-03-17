@@ -824,7 +824,7 @@ function PageContent({ user }: { user: User | null }) {
     {topNavBar}
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
+      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
       <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50">
         <ErrorBoundary name="FAQBubble">
@@ -949,7 +949,7 @@ function PageContent({ user }: { user: User | null }) {
 
            <button
              onClick={() => setShowWhatIsThis(true)}
-             className="text-xs md:text-sm text-slate-600 md:text-slate-500 hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
+             className="text-xs md:text-sm text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
            >
              מה עושים פה?
            </button>

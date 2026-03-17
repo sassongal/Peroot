@@ -735,7 +735,29 @@ a:focus-visible,
 }
 
 :root:not(.dark) .hero-logo-image {
-  filter: brightness(0) drop-shadow(0 0 30px rgba(180, 83, 9, 0.3));
+  filter: brightness(0.15) sepia(1) saturate(3) hue-rotate(-10deg) drop-shadow(0 0 40px rgba(180, 83, 9, 0.4));
+}
+
+/* Light mode hero warm glow background */
+:root:not(.dark) .hero-logo-container::before {
+  content: '';
+  position: absolute;
+  inset: -60% -40%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(245, 158, 11, 0.12) 0%,
+    rgba(220, 38, 38, 0.06) 35%,
+    rgba(180, 83, 9, 0.03) 60%,
+    transparent 80%
+  );
+  border-radius: 50%;
+  z-index: 0;
+  animation: hero-glow-breathe 4s ease-in-out infinite;
+}
+
+@keyframes hero-glow-breathe {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
 }
 
 /* Floating animation for logo */
@@ -779,15 +801,17 @@ a:focus-visible,
 }
 
 :root:not(.dark) .hero-logo-ring-1 {
-  border-color: rgba(245, 158, 11, 0.20);
+  border-color: rgba(220, 38, 38, 0.15);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.05);
 }
 
 :root:not(.dark) .hero-logo-ring-2 {
-  border-color: rgba(251, 191, 36, 0.15);
+  border-color: rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 30px rgba(220, 38, 38, 0.03);
 }
 
 :root:not(.dark) .hero-logo-ring-3 {
-  border-color: rgba(245, 158, 11, 0.10);
+  border-color: rgba(180, 83, 9, 0.10);
 }
 
 @keyframes hero-ring-pulse {
