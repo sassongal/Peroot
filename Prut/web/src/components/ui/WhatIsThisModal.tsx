@@ -20,7 +20,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overscroll-contain overflow-y-auto">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overscroll-contain overflow-y-auto">
       <div className="w-full max-w-lg glass-card rounded-3xl border border-white/10 bg-zinc-950/95 p-6 md:p-8 relative" dir="rtl">
         <button
           onClick={onClose}

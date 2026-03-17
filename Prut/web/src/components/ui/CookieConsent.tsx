@@ -39,7 +39,7 @@ export function CookieConsent() {
   return (
     <div
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-[100] p-4 animate-in slide-in-from-bottom-4 duration-500",
+        "fixed bottom-[60px] md:bottom-0 left-0 right-0 z-[90] p-4 animate-in slide-in-from-bottom-4 duration-500",
       )}
       dir="rtl"
       role="dialog"
@@ -69,7 +69,7 @@ export function CookieConsent() {
           </button>
           <button
             onClick={handleDecline}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             aria-label="סגור"
           >
             <X className="w-4 h-4" />

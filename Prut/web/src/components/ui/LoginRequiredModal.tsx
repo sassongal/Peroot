@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { X, LogIn } from "lucide-react";
 import Link from "next/link";
 import { getAssetPath } from "@/lib/asset-path";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface LoginRequiredModalProps {
   isOpen: boolean;
@@ -21,13 +23,8 @@ export function LoginRequiredModal({
   message = "כדי להשתמש בתכונה זו, יש להתחבר לחשבון שלך.",
   feature,
 }: LoginRequiredModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      dialogRef.current?.focus();
-    }
-  }, [isOpen]);
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
+  useScrollLock(isOpen);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -42,9 +39,9 @@ export function LoginRequiredModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 overscroll-contain overflow-y-auto">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 overscroll-contain overflow-y-auto">
       <div
-        ref={dialogRef}
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         tabIndex={-1}

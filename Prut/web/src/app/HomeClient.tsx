@@ -847,14 +847,14 @@ function PageContent({ user }: { user: User | null }) {
       {sidebarOpen && (
         <div
           role="presentation"
-          className="fixed inset-0 z-[50] bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Drawer */}
       <div role="dialog" aria-modal="true" aria-label="היסטוריה" className={cn(
-        "fixed right-0 z-[51] bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
+        "fixed right-0 z-[60] bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full",
         // Mobile: full screen. Desktop: below navbar
         "top-0 h-full w-full",

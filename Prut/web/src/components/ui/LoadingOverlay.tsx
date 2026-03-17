@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { getAssetPath } from "@/lib/asset-path";
 
 interface LoadingOverlayProps {
@@ -36,9 +37,11 @@ export function LoadingOverlay({ isVisible, message = "משפר את הפרומ�
           {/* Center logo with glow pulse */}
           <div className="relative z-10 animate-logo-breathe">
             <div className="absolute inset-0 -m-2 rounded-full bg-amber-400/20 blur-md animate-glow-ring" />
-            <img
+            <Image
               src={getAssetPath("/assets/branding/logo.png")}
               alt="פרוט"
+              width={56}
+              height={56}
               className="w-14 h-14 relative"
               style={{
                 filter: "drop-shadow(0 0 12px rgba(245, 158, 11, 0.6))",

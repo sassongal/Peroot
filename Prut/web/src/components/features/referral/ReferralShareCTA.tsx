@@ -71,7 +71,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
 
   return (
     <div
-      className="fixed bottom-6 start-6 z-50 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="fixed bottom-[72px] md:bottom-6 start-6 z-50 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-500"
       dir="rtl"
     >
       <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-zinc-900/95 backdrop-blur-sm border border-amber-500/20 shadow-xl shadow-black/30">
@@ -89,7 +89,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
         </button>
         <button
           onClick={() => setVisible(false)}
-          className="p-1 rounded-md text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
+          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
           aria-label="סגור"
         >
           <X className="w-3.5 h-3.5" />

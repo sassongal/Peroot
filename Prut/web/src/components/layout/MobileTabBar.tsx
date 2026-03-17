@@ -29,7 +29,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
       dir="rtl"
       aria-label="ניווט מובייל"
       className={cn(
-        "fixed bottom-0 inset-x-0 z-[45]",
+        "fixed bottom-0 inset-x-0 z-40",
         "flex md:hidden",
         "bg-black/90 backdrop-blur-xl border-t border-white/10",
         "min-h-[56px] pb-[env(safe-area-inset-bottom)]"

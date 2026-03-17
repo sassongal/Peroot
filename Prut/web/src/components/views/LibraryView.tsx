@@ -246,7 +246,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   };
 
   return (
-      <div id="library-top" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full overflow-x-hidden">
+      <div id="library-top" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full overflow-x-hidden pb-20 md:pb-0">
 
         {/* Back Button */}
         <button
@@ -731,7 +731,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
         {/* Save Dialog Overlay */}
         {showMoveDialog && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4 max-h-[80vh] overflow-y-auto">
                     <h3 className="text-xl text-white font-serif mb-4 text-center">שמירת {selectedIds.size} פריטים</h3>
                     <p className="text-slate-400 text-sm mb-6 text-center">בחר לאיזו קטגוריה לשמור בספריה האישית שלך</p>
@@ -829,7 +829,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         {/* Lightbox Modal */}
         {lightboxImage && (
           <div
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 cursor-zoom-out"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 cursor-zoom-out"
             onClick={() => setLightboxImage(null)}
             role="dialog"
             aria-modal="true"

@@ -127,13 +127,13 @@ export function UserMenu({ user, position }: UserMenuProps) {
           <>
             {/* Backdrop to close menu */}
             <div
-              className="fixed inset-0 z-[9998]"
+              className="fixed inset-0 z-[100]"
               onClick={() => setIsOpen(false)}
             />
             {/* Dropdown menu */}
             <div
               onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
-              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[101] animate-in fade-in slide-in-from-top-2 duration-200">
                <div className="p-4 border-b border-white/10 flex flex-col gap-3 bg-white/5">
                    {/* Embedded Logo in Menu */}
                    <div className="flex justify-center pb-2 border-b border-white/5">

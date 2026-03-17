@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle, XCircle, Lightbulb, Zap, Target, Layers, RefreshCw, ChevronRight } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle, XCircle, Lightbulb, Zap, Target, Layers, RefreshCw, ChevronRight, Brain, Drama, Settings } from "lucide-react";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
@@ -78,7 +78,7 @@ const GOLDEN_RULES = [
 
 const ADVANCED_TECHNIQUES = [
   {
-    icon: "🧠",
+    icon: Brain,
     title: "Chain of Thought",
     subtitle: "שרשרת חשיבה",
     description:
@@ -92,7 +92,7 @@ const ADVANCED_TECHNIQUES = [
 שאלה: חנות מכרה 40% ממלאי הנעליים שלה. לאחר מכן קיבלה משלוח של 60 זוגות. כעת יש לה 180 זוגות. כמה זוגות היו לה מלכתחילה?"`,
   },
   {
-    icon: "🎭",
+    icon: Drama,
     title: "Role Playing",
     subtitle: "משחק תפקידים",
     description:
@@ -103,7 +103,7 @@ const ADVANCED_TECHNIQUES = [
 אני עומד לגייס את העובד הראשון שלי לתפקיד CTO. שאל אותי 5 שאלות שיגלו אם אני מוכן לכך."`,
   },
   {
-    icon: "📚",
+    icon: BookOpen,
     title: "Few-Shot Learning",
     subtitle: "למידה מדוגמאות",
     description:
@@ -117,7 +117,7 @@ const ADVANCED_TECHNIQUES = [
 כעת סווג: 'האריזה הייתה פגומה אבל המוצר עצמו תקין'"`,
   },
   {
-    icon: "⚙️",
+    icon: Settings,
     title: "System Prompts",
     subtitle: "הנחיות מערכת",
     description:
@@ -404,7 +404,9 @@ export default function GuidePage() {
             {ADVANCED_TECHNIQUES.map((tech, i) => (
               <GlassCard key={i} className="p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl" role="img" aria-label={tech.subtitle}>{tech.icon}</span>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                    <tech.icon className="w-5 h-5 text-amber-400" />
+                  </div>
                   <div>
                     <h3 className="font-serif text-white text-base">{tech.title}</h3>
                     <p className="text-xs text-slate-500">{tech.subtitle}</p>
