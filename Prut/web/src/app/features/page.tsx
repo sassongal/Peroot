@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import {
   MessageSquare,
   Globe,
@@ -409,27 +411,9 @@ export default function FeaturesPage() {
             המשיכו לגלות
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Link
-              href="/prompts"
-              className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-            >
-              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">ספריית 480+ תבניות פרומפטים</p>
-              <p className="text-xs text-slate-500 mt-1">פרומפטים מוכנים לכל תחום ופלטפורמה</p>
-            </Link>
-            <Link
-              href="/examples"
-              className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-            >
-              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">דוגמאות לפרומפטים משודרגים</p>
-              <p className="text-xs text-slate-500 mt-1">ראו לפני ואחרי — איך Peroot משפר פרומפטים</p>
-            </Link>
-            <Link
-              href="/blog"
-              className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-            >
-              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">טיפים נוספים בבלוג</p>
-              <p className="text-xs text-slate-500 mt-1">מדריכים מקצועיים לכתיבת פרומפטים ו-AI</p>
-            </Link>
+            <CrossLinkCard href="/prompts" title={`ספריית ${PROMPT_LIBRARY_COUNT} תבניות פרומפטים`} description="פרומפטים מוכנים לכל תחום ופלטפורמה" />
+            <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים משודרגים" description="ראו לפני ואחרי — איך Peroot משפר פרומפטים" />
+            <CrossLinkCard href="/blog" title="טיפים נוספים בבלוג" description="מדריכים מקצועיים לכתיבת פרומפטים ו-AI" />
           </div>
         </section>
 

@@ -7,6 +7,8 @@ import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 import { HEBREW_BLOG_SLUGS } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
+import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -180,27 +182,9 @@ export default async function BlogPostPage({ params }: Props) {
 
         {/* Related links */}
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Link
-            href="/prompts"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-4 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">תבניות פרומפטים קשורות</p>
-            <p className="text-xs text-slate-500 mt-1">480+ פרומפטים מוכנים לכל תחום</p>
-          </Link>
-          <Link
-            href="/guide"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-4 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">המדריך המלא לפרומפטים בעברית</p>
-            <p className="text-xs text-slate-500 mt-1">5 עקרונות זהב וטכניקות מתקדמות</p>
-          </Link>
-          <Link
-            href="/features"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-4 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">כל הכלים של Peroot</p>
-            <p className="text-xs text-slate-500 mt-1">תמונות, סרטונים, מחקר וסוכני AI</p>
-          </Link>
+          <CrossLinkCard href="/prompts" title="תבניות פרומפטים קשורות" description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום`} />
+          <CrossLinkCard href="/guide" title="המדריך המלא לפרומפטים בעברית" description="5 עקרונות זהב וטכניקות מתקדמות" />
+          <CrossLinkCard href="/features" title="כל הכלים של Peroot" description="תמונות, סרטונים, מחקר וסוכני AI" />
         </div>
 
         <div className="mt-8 pt-8 border-t border-white/10 text-center">

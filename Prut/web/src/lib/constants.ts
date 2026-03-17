@@ -71,6 +71,7 @@ export const getCategoryLabel = (key: string): string => {
 };
 
 export const PERSONAL_DEFAULT_CATEGORY = "כללי";
+export const PROMPT_LIBRARY_COUNT = "480+";
 
 export const QUICK_ACTIONS = [
   { label: "קצר יותר", instruction: "קצר יותר. שמור על המבנה והדגשים המרכזיים." },

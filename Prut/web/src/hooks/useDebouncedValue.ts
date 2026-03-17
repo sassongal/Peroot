@@ -1,16 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Returns a debounced version of the value that only updates
  * after the specified delay of inactivity.
  *
- * Useful for expensive computations (scoring, regex extraction)
- * that shouldn't run on every keystroke or streaming chunk.
+ * The first render returns the value immediately (no delay),
+ * so initial UI state is correct on hydration.
  */
 export function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
+  const isFirst = useRef(true);
 
   useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false;
+      setDebounced(value);
+      return;
+    }
     const timer = setTimeout(() => setDebounced(value), delayMs);
     return () => clearTimeout(timer);
   }, [value, delayMs]);

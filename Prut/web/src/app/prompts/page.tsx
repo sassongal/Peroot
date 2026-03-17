@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
-import { CATEGORY_LABELS, PROMPT_COLLECTIONS } from "@/lib/constants";
+import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/schema";
+import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
 
@@ -155,7 +156,7 @@ export default function PromptsIndexPage() {
                 {totalCategories} קטגוריות
               </span>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-500">480+ פרומפטים</span>
+              <span className="text-slate-500">{PROMPT_LIBRARY_COUNT} פרומפטים</span>
             </div>
           </header>
 
@@ -198,20 +199,8 @@ export default function PromptsIndexPage() {
 
           {/* Cross-links */}
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link
-              href="/guide"
-              className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-            >
-              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">איך לכתוב פרומפט טוב?</p>
-              <p className="text-xs text-slate-500 mt-1">המדריך המלא עם עקרונות זהב וטכניקות</p>
-            </Link>
-            <Link
-              href="/features"
-              className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-            >
-              <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">מצבי עבודה מתקדמים</p>
-              <p className="text-xs text-slate-500 mt-1">תמונות, סרטונים, מחקר מעמיק וסוכני AI</p>
-            </Link>
+            <CrossLinkCard href="/guide" title="איך לכתוב פרומפט טוב?" description="המדריך המלא עם עקרונות זהב וטכניקות" />
+            <CrossLinkCard href="/features" title="מצבי עבודה מתקדמים" description="תמונות, סרטונים, מחקר מעמיק וסוכני AI" />
           </div>
 
           {/* CTA */}

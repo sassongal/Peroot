@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
+import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -109,27 +111,9 @@ export default async function BlogPage() {
 
         {/* Cross-links */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-12">
-          <Link
-            href="/guide"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">מדריך: איך לכתוב פרומפט מושלם</p>
-            <p className="text-xs text-slate-500 mt-1">עקרונות זהב וטכניקות מתקדמות</p>
-          </Link>
-          <Link
-            href="/prompts"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">ספריית פרומפטים לפי קטגוריה</p>
-            <p className="text-xs text-slate-500 mt-1">480+ תבניות מוכנות לשימוש מיידי</p>
-          </Link>
-          <Link
-            href="/features"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">הכירו את כל הכלים שלנו</p>
-            <p className="text-xs text-slate-500 mt-1">5 מנועי AI, תמונות, סרטונים וסוכנים</p>
-          </Link>
+          <CrossLinkCard href="/guide" title="מדריך: איך לכתוב פרומפט מושלם" description="עקרונות זהב וטכניקות מתקדמות" />
+          <CrossLinkCard href="/prompts" title="ספריית פרומפטים לפי קטגוריה" description={`${PROMPT_LIBRARY_COUNT} תבניות מוכנות לשימוש מיידי`} />
+          <CrossLinkCard href="/features" title="הכירו את כל הכלים שלנו" description="5 מנועי AI, תמונות, סרטונים וסוכנים" />
         </div>
 
         {/* Newsletter Signup */}

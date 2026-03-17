@@ -69,7 +69,7 @@ const StreamingProgress = dynamic(
   () => import("@/components/ui/StreamingProgress"),
   { ssr: false }
 );
-import { BookOpen, Star, Library, PanelRightOpen, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock, ArrowRight } from "lucide-react";
+import { BookOpen, Star, Library, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock, ArrowRight } from "lucide-react";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 const UpgradeNudge = dynamic(
@@ -636,7 +636,8 @@ function PageContent({ user }: { user: User | null }) {
       const shareUrl = `${window.location.origin}/p/${id}`;
       await navigator.clipboard.writeText(shareUrl);
       toast.success("קישור שיתוף נוצר");
-    } catch {
+    } catch (error) {
+      logger.error("[share] Error:", error);
       toast.error("שגיאה בשיתוף");
     }
   }, [user, ps.completion, ps.input, ps.selectedCategory, ps.selectedCapability]);
@@ -778,10 +779,10 @@ function PageContent({ user }: { user: User | null }) {
             : "bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10"
         )}
         aria-expanded={sidebarOpen}
-        aria-label="היסטוריה ותפריט"
+        aria-label="היסטוריה"
       >
-        <PanelRightOpen className="w-4 h-4" />
-        <span className="hidden md:inline">תפריט</span>
+        <Clock className="w-4 h-4" />
+        <span className="hidden md:inline">היסטוריה</span>
       </button>
       <UserMenu user={user} position="top" />
     </TopNavBar>
@@ -846,22 +847,23 @@ function PageContent({ user }: { user: User | null }) {
       {sidebarOpen && (
         <div
           role="presentation"
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-[50] bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Drawer */}
-      <div role="dialog" aria-modal="true" aria-label="History and library sidebar" className={cn(
-        "fixed top-0 right-0 z-[41] h-full bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
+      <div role="dialog" aria-modal="true" aria-label="היסטוריה" className={cn(
+        "fixed right-0 z-[51] bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full",
-        // Mobile: always full width. Tablet+: compact or expanded
-        "w-full",
+        // Mobile: full screen. Desktop: below navbar
+        "top-0 h-full w-full",
+        "md:top-14 md:h-[calc(100vh-3.5rem)]",
         sidebarExpanded ? "md:w-[560px]" : "md:w-[340px]"
       )}>
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/5">
-          <span className="text-sm font-bold text-white">תפריט</span>
+          <span className="text-sm font-bold text-white">היסטוריה</span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
@@ -881,8 +883,8 @@ function PageContent({ user }: { user: User | null }) {
           </div>
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex flex-col gap-2 p-4">
+        {/* Navigation Buttons — mobile only (desktop has TopNavBar) */}
+        <div className="flex flex-col gap-2 p-4 md:hidden">
           <button
             onClick={() => { handleNavPersonal(); setSidebarOpen(false); }}
             onMouseEnter={prefetchPersonalLibrary}

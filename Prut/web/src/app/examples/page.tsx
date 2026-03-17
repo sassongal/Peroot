@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "דוגמאות פרומפטים - לפני ואחרי",
@@ -186,27 +188,9 @@ export default function ExamplesPage() {
 
         {/* Cross-links */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-12">
-          <Link
-            href="/guide"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">המדריך המלא לכתיבת פרומפטים</p>
-            <p className="text-xs text-slate-500 mt-1">5 עקרונות זהב וטכניקות מתקדמות</p>
-          </Link>
-          <Link
-            href="/prompts"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">עוד תבניות בספריה הציבורית</p>
-            <p className="text-xs text-slate-500 mt-1">480+ פרומפטים מוכנים ב-30+ קטגוריות</p>
-          </Link>
-          <Link
-            href="/features"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">גלו את כל מצבי העבודה</p>
-            <p className="text-xs text-slate-500 mt-1">טקסט, מחקר, תמונות, סרטונים וסוכנים</p>
-          </Link>
+          <CrossLinkCard href="/guide" title="המדריך המלא לכתיבת פרומפטים" description="5 עקרונות זהב וטכניקות מתקדמות" />
+          <CrossLinkCard href="/prompts" title="עוד תבניות בספריה הציבורית" description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים ב-30+ קטגוריות`} />
+          <CrossLinkCard href="/features" title="גלו את כל מצבי העבודה" description="טקסט, מחקר, תמונות, סרטונים וסוכנים" />
         </div>
 
         {/* CTA */}

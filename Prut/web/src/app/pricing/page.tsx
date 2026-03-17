@@ -9,6 +9,8 @@ import { PLANS } from "@/lib/lemonsqueezy";
 import { createClient } from "@/lib/supabase/client";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { ProBadge } from "@/components/ui/ProBadge";
+import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 const COMPARISON_FEATURES = [
   {
@@ -36,7 +38,7 @@ const COMPARISON_FEATURES = [
     icon: RefreshCw,
   },
   {
-    name: "ספריית 480+ פרומפטים",
+    name: `ספריית ${PROMPT_LIBRARY_COUNT} פרומפטים`,
     free: true,
     pro: true,
     icon: Library,
@@ -297,27 +299,9 @@ export default function PricingPage() {
 
         {/* Cross-links */}
         <div className="max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Link
-            href="/features"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">מה כלול? ראו כל היכולות</p>
-            <p className="text-xs text-slate-500 mt-1">5 מנועי AI, תמונות, סרטונים וסוכנים</p>
-          </Link>
-          <Link
-            href="/examples"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">דוגמאות לפרומפטים שיוצרים</p>
-            <p className="text-xs text-slate-500 mt-1">לפני ואחרי — שדרוג אמיתי</p>
-          </Link>
-          <Link
-            href="/prompts"
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
-          >
-            <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">גישה לספריית 480+ תבניות</p>
-            <p className="text-xs text-slate-500 mt-1">פרומפטים מוכנים ב-30+ קטגוריות</p>
-          </Link>
+          <CrossLinkCard href="/features" title="מה כלול? ראו כל היכולות" description="5 מנועי AI, תמונות, סרטונים וסוכנים" />
+          <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים שיוצרים" description="לפני ואחרי — שדרוג אמיתי" />
+          <CrossLinkCard href="/prompts" title={`גישה לספריית ${PROMPT_LIBRARY_COUNT} תבניות`} description="פרומפטים מוכנים ב-30+ קטגוריות" />
         </div>
 
         {/* Credit system explanation */}

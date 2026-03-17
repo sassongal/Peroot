@@ -27,7 +27,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
   return (
     <nav
       dir="rtl"
-      aria-label="ניווט ראשי"
+      aria-label="ניווט מובייל"
       className={cn(
         "fixed bottom-0 inset-x-0 z-[45]",
         "flex md:hidden",

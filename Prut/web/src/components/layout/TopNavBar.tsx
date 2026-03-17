@@ -1,28 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Library, Wand2 } from "lucide-react";
+import Image from "next/image";
+import { BookOpen, Library, Wand2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "home" | "library" | "personal";
 
+const NAV_ITEMS: { id: ViewMode; label: string; Icon: LucideIcon }[] = [
+  { id: "home", label: "שדרוג", Icon: Wand2 },
+  { id: "library", label: "ספרייה", Icon: Library },
+  { id: "personal", label: "שלי", Icon: BookOpen },
+];
+
 interface TopNavBarProps {
   viewMode: ViewMode | string;
   onNavigate: (view: ViewMode) => void;
-  children?: React.ReactNode; // Slot for right-side controls (UserMenu, credits, sidebar toggle)
+  children?: React.ReactNode;
 }
 
-/**
- * Persistent top navigation bar for the homepage.
- * Shows main navigation links that are always visible.
- * `children` renders in the right slot (for UserMenu, PromptLimitIndicator, etc.)
- */
 export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
-  const navItems: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
-    { id: "home", label: "שדרוג", icon: <Wand2 className="w-4 h-4" /> },
-    { id: "library", label: "ספרייה", icon: <Library className="w-4 h-4" /> },
-    { id: "personal", label: "שלי", icon: <BookOpen className="w-4 h-4" /> },
-  ];
 
   return (
     <nav
@@ -37,20 +34,28 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
             href="/"
             className="flex items-center gap-1.5 font-bold text-lg text-white me-2 sm:me-4 shrink-0"
             onClick={(e) => {
+              if (e.metaKey || e.ctrlKey) return;
               e.preventDefault();
               onNavigate("home");
             }}
           >
-            <span className="text-amber-400">P</span>
-            <span className="hidden sm:inline">Peroot</span>
+            <Image
+              src="/assets/branding/nav-logo.webp"
+              alt="Peroot – מחולל פרומפטים בעברית"
+              width={36}
+              height={36}
+              className="rounded-lg"
+              priority
+            />
+            <span className="hidden sm:inline text-base">Peroot</span>
           </Link>
 
-          {navItems.map((item) => {
-            const isActive = viewMode === item.id;
+          {NAV_ITEMS.map(({ id, label, Icon }) => {
+            const isActive = viewMode === id;
             return (
               <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
+                key={id}
+                onClick={() => onNavigate(id)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[36px]",
                   isActive
@@ -59,8 +64,8 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
-                {item.icon}
-                <span className="hidden sm:inline">{item.label}</span>
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{label}</span>
               </button>
             );
           })}
