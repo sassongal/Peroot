@@ -438,19 +438,9 @@ document.querySelectorAll(".library-sub-tab").forEach((tab) => {
 const librarySearch = $("library-search");
 if (librarySearch) {
   librarySearch.addEventListener("input", () => {
-    const query = librarySearch.value.trim().toLowerCase();
     const items = libraryCache[currentLibrarySource];
     if (!items) return;
-    if (!query) {
-      renderLibraryItems(items);
-      return;
-    }
-    const filtered = items.filter(
-      (item) =>
-        (item.title || "").toLowerCase().includes(query) ||
-        (item.prompt || "").toLowerCase().includes(query)
-    );
-    renderLibraryItems(filtered);
+    renderLibraryItems(items);
   });
 }
 
@@ -508,16 +498,27 @@ function renderLibraryItems(items) {
 
   loading.classList.add("hidden");
 
-  if (!items || items.length === 0) {
+  // Apply search filter if search box has text
+  const searchQuery = librarySearch ? librarySearch.value.trim().toLowerCase() : "";
+  let filtered = items;
+  if (searchQuery && items) {
+    filtered = items.filter(
+      (item) =>
+        (item.title || "").toLowerCase().includes(searchQuery) ||
+        (item.prompt || "").toLowerCase().includes(searchQuery)
+    );
+  }
+
+  if (!filtered || filtered.length === 0) {
     list.classList.add("hidden");
-    empty.querySelector(".empty-title").textContent = "הספרייה ריקה";
+    empty.querySelector(".empty-title").textContent = searchQuery ? "לא נמצאו תוצאות" : "הספרייה ריקה";
     empty.classList.remove("hidden");
     return;
   }
 
   empty.classList.add("hidden");
   list.innerHTML = "";
-  items.forEach((item) => {
+  filtered.forEach((item) => {
     list.appendChild(createPromptCard(item));
   });
   list.classList.remove("hidden");
