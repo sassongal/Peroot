@@ -45,7 +45,6 @@ export function PageHeading({
             ? "text-4xl md:text-6xl"
             : "text-4xl md:text-5xl"
         )}
-        data-text={highlight ? `${title} ${highlight}` : title}
       >
         {title}
         {highlight && (
