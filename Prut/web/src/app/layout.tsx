@@ -176,7 +176,6 @@ export default async function RootLayout({
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
           </a>
-          <div className="noise-overlay" />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
