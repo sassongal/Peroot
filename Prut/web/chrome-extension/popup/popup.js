@@ -1,11 +1,22 @@
 /**
  * Peroot Extension - Popup
- * Tabs: Enhance | Library | Favorites
+ * Tabs: Enhance | Library | Quick Prompts
  * Credits synced from website
  */
 
 const API_BASE = "https://peroot.space";
 const MAX_HISTORY = 8;
+
+const QUICK_PROMPTS = [
+  { label: "מייל מקצועי", prompt: "כתוב מייל מקצועי קצר ובהיר", icon: "\u2709\uFE0F", category: "\u05E2\u05E1\u05E7\u05D9\u05DD" },
+  { label: "פוסט לינקדאין", prompt: "כתוב פוסט מקצועי ומעורר לדיון ללינקדאין", icon: "\uD83D\uDCBC", category: "\u05E1\u05D5\u05E9\u05D0\u05DC" },
+  { label: "תיאור מוצר", prompt: "כתוב תיאור מוצר משכנע ומכירתי", icon: "\uD83D\uDED2", category: "\u05E9\u05D9\u05D5\u05D5\u05E7" },
+  { label: "סיכום פגישה", prompt: "סכם את הפגישה עם נקודות עיקריות ומשימות", icon: "\uD83D\uDCCB", category: "\u05E2\u05E1\u05E7\u05D9\u05DD" },
+  { label: "בדיקת קוד", prompt: "בצע Code Review מקצועי לקוד הבא", icon: "\uD83D\uDCBB", category: "\u05E4\u05D9\u05EA\u05D5\u05D7" },
+  { label: "תגובה ללקוח", prompt: "כתוב תגובה מקצועית ואמפתית ללקוח", icon: "\uD83D\uDCAC", category: "\u05EA\u05DE\u05D9\u05DB\u05D4" },
+  { label: "פוסט אינסטגרם", prompt: "כתוב כיתוב קצר ומעניין לפוסט אינסטגרם", icon: "\uD83D\uDCF8", category: "\u05E1\u05D5\u05E9\u05D0\u05DC" },
+  { label: "הצעת מחיר", prompt: "כתוב הצעת מחיר מקצועית ומשכנעת", icon: "\uD83D\uDCB0", category: "\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA" },
+];
 
 // ─── DOM ───
 const $ = (id) => document.getElementById(id);
@@ -39,7 +50,7 @@ let lastEnhanced = "";
 let isEnhancing = false;
 let timerInterval = null;
 let libraryLoaded = false;
-let favoritesLoaded = false;
+let quickPromptsRendered = false;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
@@ -53,6 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadHistory();
     setTimeout(() => promptInput.focus(), 80);
     fetchCredits();
+    detectSelectedText();
   } else {
     showLoginScreen(auth.reason);
   }
@@ -141,7 +153,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
     // Lazy-load data
     if (target === "library" && !libraryLoaded) loadLibrary();
-    if (target === "favorites" && !favoritesLoaded) loadFavorites();
+    if (target === "quick-prompts" && !quickPromptsRendered) renderQuickPrompts();
     if (target === "settings") loadApiKeySettings();
   });
 });
@@ -368,43 +380,75 @@ async function loadLibrary() {
   }
 }
 
-// ═══ FAVORITES ═══
-async function loadFavorites() {
-  const loading = $("favorites-loading");
-  const empty = $("favorites-empty");
-  const list = $("favorites-list");
+// ═══ QUICK PROMPTS ═══
+function renderQuickPrompts() {
+  const grid = $("quick-prompts-grid");
+  if (!grid) return;
+  quickPromptsRendered = true;
+  grid.innerHTML = "";
 
-  try {
-    const res = await authFetch("/api/favorites");
-    loading.classList.add("hidden");
+  QUICK_PROMPTS.forEach((qp) => {
+    const card = document.createElement("div");
+    card.className = "quick-prompt-card";
 
-    if (!res.ok) {
-      if (res.status === 401) {
-        showLoginScreen("token_expired");
-        return;
-      }
-      empty.querySelector(".empty-title").textContent = "שגיאה בטעינה";
-      empty.classList.remove("hidden");
-      return;
-    }
+    const icon = document.createElement("span");
+    icon.className = "quick-prompt-icon";
+    icon.textContent = qp.icon;
 
-    const { items } = await res.json();
-    favoritesLoaded = true;
+    const label = document.createElement("span");
+    label.className = "quick-prompt-label";
+    label.textContent = qp.label;
 
-    if (!items || items.length === 0) {
-      empty.classList.remove("hidden");
-      return;
-    }
+    const cat = document.createElement("span");
+    cat.className = "quick-prompt-cat";
+    cat.textContent = qp.category;
 
-    list.innerHTML = "";
-    items.forEach((item) => {
-      list.appendChild(createPromptCard(item));
+    card.appendChild(icon);
+    card.appendChild(label);
+    card.appendChild(cat);
+
+    card.addEventListener("click", () => {
+      // Fill the enhance textarea
+      promptInput.value = qp.prompt;
+      charCount.textContent = qp.prompt.length;
+      // Switch to enhance tab
+      document.querySelector('.tab[data-tab="enhance"]').click();
+      // Trigger enhance
+      setTimeout(() => doEnhance(), 100);
     });
-    list.classList.remove("hidden");
-  } catch {
-    loading.classList.add("hidden");
-    empty.classList.remove("hidden");
-  }
+
+    grid.appendChild(card);
+  });
+}
+
+// ═══ SELECTED TEXT DETECTION ═══
+function detectSelectedText() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]?.id) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => window.getSelection()?.toString()?.trim() || '',
+      }).then(results => {
+        const selectedText = results?.[0]?.result;
+        if (selectedText && selectedText.length > 3) {
+          promptInput.value = selectedText;
+          // Show indicator
+          const badge = document.createElement('div');
+          badge.className = 'selection-badge';
+          badge.textContent = '\u05D8\u05E7\u05E1\u05D8 \u05DE\u05E1\u05D5\u05DE\u05DF \u05D6\u05D5\u05D4\u05D4';
+          document.querySelector('.enhance-input-container')?.prepend(badge);
+          updateCharCount();
+        }
+      }).catch(() => {}); // Silently fail if no permission
+    }
+  });
+}
+
+function updateCharCount() {
+  const len = promptInput.value.length;
+  charCount.textContent = len;
+  charCount.classList.toggle("warning", len > 2500 && len <= 3500);
+  charCount.classList.toggle("danger", len > 3500);
 }
 
 // ═══ PROMPT CARD ═══

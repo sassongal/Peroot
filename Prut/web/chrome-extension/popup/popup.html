@@ -40,16 +40,18 @@
     <nav class="tabs">
       <button class="tab active" data-tab="enhance">שדרוג</button>
       <button class="tab" data-tab="library">ספרייה</button>
-      <button class="tab" data-tab="favorites">מועדפים</button>
+      <button class="tab" data-tab="quick-prompts">&#9889; מהיר</button>
       <button class="tab" data-tab="settings">הגדרות</button>
     </nav>
 
     <!-- Tab: Enhance -->
     <div id="tab-enhance" class="tab-content active">
       <div class="input-section">
-        <div class="textarea-wrap">
-          <textarea id="prompt-input" placeholder="הכנס טקסט לשדרוג..." rows="4" maxlength="4000"></textarea>
-          <span id="char-count" class="char-count">0</span>
+        <div class="enhance-input-container">
+          <div class="textarea-wrap">
+            <textarea id="prompt-input" placeholder="הכנס טקסט לשדרוג..." rows="4" maxlength="4000"></textarea>
+            <span id="char-count" class="char-count">0</span>
+          </div>
         </div>
         <div class="controls-row">
           <div class="select-wrap">
@@ -111,16 +113,9 @@
       <div id="library-list" class="prompt-list hidden"></div>
     </div>
 
-    <!-- Tab: Favorites -->
-    <div id="tab-favorites" class="tab-content">
-      <div id="favorites-loading" class="tab-empty">
-        <span class="spinner large"></span>
-      </div>
-      <div id="favorites-empty" class="tab-empty hidden">
-        <p class="empty-title">אין מועדפים</p>
-        <p class="empty-sub">סמן פרומפטים כמועדפים באתר כדי לראות אותם כאן</p>
-      </div>
-      <div id="favorites-list" class="prompt-list hidden"></div>
+    <!-- Tab: Quick Prompts -->
+    <div id="tab-quick-prompts" class="tab-content">
+      <div id="quick-prompts-grid" class="quick-prompts-grid"></div>
     </div>
   </div>
 
@@ -149,7 +144,7 @@
       </div>
       <div class="settings-section">
         <h3 class="settings-title">אודות</h3>
-        <p class="settings-desc">Peroot v2.0.0 · <a href="https://peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
+        <p class="settings-desc">Peroot v2.1.0 · <a href="https://peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
       </div>
     </div>
   </div>

@@ -486,6 +486,63 @@ select:focus { outline: none; border-color: rgba(251,191,36,0.3); }
   color: #71717a;
 }
 
+/* ─── Quick Prompts Grid ─── */
+.quick-prompts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 0;
+}
+.quick-prompt-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: #18181b;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.quick-prompt-card:hover {
+  border-color: rgba(251,191,36,0.25);
+  background: #1c1c1f;
+  transform: translateY(-1px);
+}
+.quick-prompt-card:active {
+  transform: translateY(0);
+}
+.quick-prompt-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.quick-prompt-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e4e4e7;
+}
+.quick-prompt-cat {
+  font-size: 9px;
+  color: #52525b;
+  padding: 1px 6px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 99px;
+}
+
+/* ─── Selection Badge ─── */
+.selection-badge {
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.3);
+  color: #fbbf24;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
