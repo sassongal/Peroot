@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeading } from "@/components/ui/PageHeading";
 import {
   ArrowRight,
   Chrome,
@@ -140,22 +141,15 @@ export default function ExtensionPage() {
         <main className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
           {/* Hero */}
           <section className="py-16 md:py-24 text-center space-y-6">
-            {/* Coming Soon badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-medium">
-              <Sparkles className="w-4 h-4" />
-              בקרוב
-            </div>
-
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">
-              תוסף Chrome של{" "}
-              <span className="text-amber-400">Peroot</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              שדרגו פרומפטים ישירות מכל אתר - בלי לעבור לאפליקציה.
-              <br className="hidden md:block" />
-              לחיצה ימנית על כל טקסט, וקבלו פרומפט מקצועי תוך שניות.
-            </p>
+            <PageHeading
+              title="תוסף Chrome של"
+              highlight="Peroot"
+              subtitle="שדרגו פרומפטים ישירות מכל אתר - בלי לעבור לאפליקציה. לחיצה ימנית על כל טקסט, וקבלו פרומפט מקצועי תוך שניות."
+              badge="בקרוב"
+              badgeIcon={<Sparkles className="w-4 h-4" />}
+              size="large"
+              align="center"
+            />
 
             {/* Hero visual */}
             <div className="relative max-w-xl mx-auto mt-6">

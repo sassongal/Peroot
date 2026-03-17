@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Rocket, Globe, Sparkles, Users, ExternalLink } from "lucide-react";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { breadcrumbSchema } from "@/lib/schema";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
@@ -47,9 +48,7 @@ export default function AboutPage() {
             חזרה לדף הבית
           </Link>
 
-          <h1 className="text-4xl md:text-5xl font-serif text-white">
-            אודות Peroot
-          </h1>
+          <PageHeading title="אודות Peroot" align="start" />
 
           <section className="space-y-4">
             <h2 className="text-2xl font-serif text-white">הסיפור</h2>

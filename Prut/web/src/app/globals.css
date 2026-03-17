@@ -1288,6 +1288,101 @@ a:focus-visible,
   animation: orbit 3.6s linear infinite;
 }
 
+/* ===== PAGE HEADING EFFECTS ===== */
+
+/* Ambient text glow — soft halo behind heading */
+.page-heading-glow {
+  position: relative;
+}
+
+.page-heading-glow::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(251, 191, 36, 0.2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+/* Gradient highlight text — amber shimmer */
+@keyframes heading-shimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.heading-highlight {
+  background: linear-gradient(
+    to left,
+    #f59e0b,
+    #fbbf24,
+    #f59e0b,
+    #fbbf24
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heading-shimmer 6s linear infinite;
+}
+
+/* Heading entrance animation */
+@keyframes heading-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.heading-enter {
+  animation: heading-enter 0.6s ease-out both;
+}
+
+.heading-enter-delay-1 {
+  animation: heading-enter 0.6s ease-out 0.1s both;
+}
+
+.heading-enter-delay-2 {
+  animation: heading-enter 0.6s ease-out 0.2s both;
+}
+
+.heading-enter-delay-3 {
+  animation: heading-enter 0.6s ease-out 0.3s both;
+}
+
+/* Floating "פ" brand mark */
+@keyframes brand-mark-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));
+    transform: translateY(0) translateZ(0);
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.5));
+    transform: translateY(-2px) translateZ(0);
+  }
+}
+
+.brand-mark-glow {
+  animation: brand-mark-glow 3s ease-in-out infinite;
+  will-change: filter, transform;
+}
+
+/* Navbar logo hover glow */
+.nav-logo-hover {
+  transition: filter 0.3s ease;
+}
+
+.nav-logo-hover:hover {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.4));
+}
+
 /* Disable all custom animations for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-morph-ring,
@@ -1312,8 +1407,18 @@ a:focus-visible,
   .animate-float,
   .animate-shimmer-diagonal,
   .animate-orbit,
-  .animate-menu-pulse {
+  .animate-menu-pulse,
+  .heading-highlight,
+  .heading-enter,
+  .heading-enter-delay-1,
+  .heading-enter-delay-2,
+  .heading-enter-delay-3,
+  .brand-mark-glow {
     animation: none !important;
     transition: none !important;
+  }
+
+  .page-heading-glow::after {
+    filter: none !important;
   }
 }

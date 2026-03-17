@@ -50,7 +50,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               alt="Peroot - מחולל פרומפטים בעברית"
               width={36}
               height={36}
-              className="rounded-lg"
+              className="rounded-lg nav-logo-hover"
               priority
             />
             <span className="hidden sm:inline text-base">Peroot</span>

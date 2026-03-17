@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -144,11 +145,12 @@ export default function ExamplesPage() {
           <span>חזרה</span>
         </Link>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif text-white mb-4">לפני ואחרי</h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            ראו איך Peroot הופך פרומפט פשוט לפרומפט מקצועי שמוציא תוצאות טובות יותר מכל מודל AI
-          </p>
+        <div className="mb-12">
+          <PageHeading
+            title="לפני ואחרי"
+            subtitle="ראו איך Peroot הופך פרומפט פשוט לפרומפט מקצועי שמוציא תוצאות טובות יותר מכל מודל AI"
+            align="center"
+          />
         </div>
 
         <div className="space-y-8">

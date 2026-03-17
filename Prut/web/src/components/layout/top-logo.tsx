@@ -1,22 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { getAssetPath } from "@/lib/asset-path";
-import Image from "next/image";
 
 export function TopLogo({ hidden }: { hidden?: boolean }) {
   if (hidden) return null;
 
   return (
     <div className="fixed top-6 right-6 z-[100] pointer-events-none px-2 md:px-6 hidden md:block">
-      <Link href="/" className="pointer-events-auto block hover:opacity-80 transition-opacity">
-        <Image
-          src={getAssetPath("/assets/branding/logo.svg")}
-          alt="לוגו פרוט"
-          width={40}
-          height={40}
-          className="h-8 md:h-10 w-auto drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)]"
-        />
+      <Link
+        href="/"
+        className="pointer-events-auto block brand-mark-glow"
+        aria-label="חזרה לדף הבית"
+      >
+        <span
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-amber-500/30 font-serif text-lg font-bold heading-highlight"
+          aria-hidden="true"
+        >
+          פ
+        </span>
       </Link>
     </div>
   );

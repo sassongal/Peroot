@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Mail, Clock, MessageSquare } from "lucide-react";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { ContactForm } from "@/components/ui/ContactForm";
 import { breadcrumbSchema } from "@/lib/schema";
 
@@ -44,7 +45,7 @@ export default function ContactPage() {
             חזרה לדף הבית
           </Link>
 
-          <h1 className="text-4xl md:text-5xl font-serif text-white mb-6">צור קשר</h1>
+          <PageHeading title="צור קשר" align="start" />
 
           <p className="text-lg text-slate-300 leading-relaxed">
             יש לכם שאלה על השימוש ב-Peroot? הצעה לשיפור? רוצים לדווח על באג?

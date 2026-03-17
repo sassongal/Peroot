@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/schema";
 import { BlogCategoryFilter } from "@/components/blog/BlogCategoryFilter";
@@ -62,11 +63,12 @@ export default async function BlogPage() {
           <span>חזרה</span>
         </Link>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif text-white mb-4">הבלוג</h1>
-          <p className="text-lg text-slate-400">
-            טיפים, מדריכים ותובנות על AI ופרומפטים - בעברית
-          </p>
+        <div className="mb-12">
+          <PageHeading
+            title="הבלוג"
+            subtitle="טיפים, מדריכים ותובנות על AI ופרומפטים - בעברית"
+            align="center"
+          />
         </div>
 
         {(posts ?? []).length === 0 ? (

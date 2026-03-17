@@ -4,6 +4,7 @@ import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PageHeading } from "@/components/ui/PageHeading";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -142,15 +143,14 @@ export default function PromptsIndexPage() {
 
           {/* Hero */}
           <header className="mb-12 md:mb-16">
-            <h1 className="text-4xl md:text-6xl font-serif text-white mb-4 leading-tight">
-              ספריית פרומפטים
-              <span className="block text-amber-400/90">בעברית</span>
-            </h1>
-            <p className="text-base md:text-lg text-slate-400 max-w-2xl leading-relaxed mb-6">
-              מאות פרומפטים מקצועיים מוכנים לשימוש ב-ChatGPT, Claude ו-Gemini.
-              בחרו קטגוריה, העתיקו פרומפט ושדרגו את התוצאות שלכם.
-            </p>
-            <div className="flex items-center gap-4 text-sm">
+            <PageHeading
+              title="ספריית פרומפטים"
+              highlight="בעברית"
+              subtitle="מאות פרומפטים מקצועיים מוכנים לשימוש ב-ChatGPT, Claude ו-Gemini. בחרו קטגוריה, העתיקו פרומפט ושדרגו את התוצאות שלכם."
+              size="large"
+              align="start"
+            />
+            <div className="flex items-center gap-4 text-sm mt-6 heading-enter-delay-3">
               <span className="flex items-center gap-1.5 text-amber-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
                 {totalCategories} קטגוריות

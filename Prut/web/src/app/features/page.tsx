@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/schema";
 import {
@@ -301,20 +302,15 @@ export default function FeaturesPage() {
 
       <main className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
         {/* Hero */}
-        <section className="py-16 md:py-24 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
-            <Sparkles className="w-4 h-4" />
-            5 מנועי AI חכמים
-          </div>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">
-            מה עושים פה?
-          </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            <span className="text-amber-400 font-semibold">פירוט</span> הוא כלי
-            AI ישראלי שמשדרג כל פרומפט שאתם כותבים לרמה מקצועית.
-            <br className="hidden md:block" />
-            טקסט, מחקר, תמונות, סרטונים וסוכני AI - הכל בעברית, הכל במקום אחד.
-          </p>
+        <section className="py-16 md:py-24">
+          <PageHeading
+            title="מה עושים פה?"
+            subtitle="פירוט הוא כלי AI ישראלי שמשדרג כל פרומפט שאתם כותבים לרמה מקצועית. טקסט, מחקר, תמונות, סרטונים וסוכני AI - הכל בעברית, הכל במקום אחד."
+            badge="5 מנועי AI חכמים"
+            badgeIcon={<Sparkles className="w-4 h-4" />}
+            size="large"
+            align="center"
+          />
         </section>
 
         {/* 5 Capability Modes */}
