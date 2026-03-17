@@ -1309,7 +1309,15 @@ a:focus-visible,
   pointer-events: none;
 }
 
-/* Gradient highlight text — amber shimmer */
+/* Title gradient — white-to-amber for all page headings */
+.heading-title-gradient {
+  background: linear-gradient(to left, #ffffff, #e2e8f0 40%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gradient highlight text — vivid amber shimmer for emphasized words */
 @keyframes heading-shimmer {
   0% { background-position: 200% center; }
   100% { background-position: -200% center; }
@@ -1319,9 +1327,9 @@ a:focus-visible,
   background: linear-gradient(
     to left,
     #f59e0b,
-    #fbbf24,
+    #fcd34d,
     #f59e0b,
-    #fbbf24
+    #fcd34d
   );
   background-size: 300% 100%;
   -webkit-background-clip: text;
@@ -1410,6 +1418,7 @@ a:focus-visible,
   .animate-orbit,
   .animate-menu-pulse,
   .heading-highlight,
+  .heading-title-gradient,
   .heading-enter,
   .heading-enter-delay-1,
   .heading-enter-delay-2,

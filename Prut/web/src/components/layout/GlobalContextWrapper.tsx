@@ -4,7 +4,6 @@ import { useHistory } from "@/hooks/useHistory";
 import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { useState } from "react";
-import { TopLogo } from "@/components/layout/top-logo";
 import { ExtensionBanner } from "@/components/ui/ExtensionBanner";
 import dynamic from "next/dynamic";
 
@@ -19,7 +18,6 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ExtensionBanner />
-      <TopLogo />
       <Toaster position="top-center" theme="dark" closeButton />
       {children}
     </>

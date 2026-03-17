@@ -262,7 +262,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-lg md:text-2xl font-serif text-white page-heading-glow heading-enter">ספריית פרומפטים</h2>
+              <h2 className="text-lg md:text-2xl font-serif heading-title-gradient page-heading-glow heading-enter">ספריית פרומפטים</h2>
               <p className="text-[11px] md:text-sm text-slate-500 mt-0.5">
                 {totalCount} {libraryView === "favorites" ? "מועדפים" : "פרומפטים"}
                 {totalPages > 1 && <span className="mx-1">|</span>}

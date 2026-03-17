@@ -40,7 +40,7 @@ export function PageHeading({
 
       <h1
         className={cn(
-          "font-serif text-white leading-tight page-heading-glow heading-enter-delay-1",
+          "font-serif leading-tight page-heading-glow heading-enter-delay-1 heading-title-gradient",
           size === "large"
             ? "text-4xl md:text-6xl"
             : "text-4xl md:text-5xl"

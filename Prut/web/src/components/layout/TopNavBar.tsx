@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { BookOpen, Library, Wand2, Sun, Moon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -45,14 +44,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               onNavigate("home");
             }}
           >
-            <Image
-              src="/assets/branding/nav-logo.webp"
-              alt="Peroot - מחולל פרומפטים בעברית"
-              width={36}
-              height={36}
-              className="rounded-lg nav-logo-hover"
-              priority
-            />
+            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 border border-amber-500/30 font-serif text-lg font-bold heading-highlight brand-mark-glow" aria-hidden="true">פ</span>
             <span className="hidden sm:inline text-base">Peroot</span>
           </Link>
 
