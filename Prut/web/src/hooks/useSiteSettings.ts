@@ -27,7 +27,7 @@ const defaultSettings: SiteSettings = {
   site_name: 'Peroot',
   site_description: 'מחולל פרומפטים מקצועי מבוסס AI',
   contact_email: 'gal@joya-tech.net',
-  support_url: 'https://peroot.space/faq',
+  support_url: 'https://www.peroot.space/faq',
   max_free_prompts: 1, // Guest gets 1 free trial
   default_credits: 2, // Registration bonus credits
   daily_free_limit: 2, // Free users get 2/day

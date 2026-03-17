@@ -3,16 +3,16 @@
 > Peroot is an AI-powered prompt generator built specifically for Hebrew. It transforms raw ideas into structured, professional-grade prompts optimized for ChatGPT, Claude, Gemini, DeepSeek, and other LLMs. It also generates platform-specific prompts for image and video generation tools. This is the comprehensive documentation for AI models and developers.
 
 ## Key URLs
-- [Homepage](https://peroot.space/): Main app - prompt enhancement tool
-- [Pricing](https://peroot.space/pricing): Free, Guest, and Pro plan details
-- [Blog](https://peroot.space/blog): Guides and tutorials on prompt engineering
-- [Examples](https://peroot.space/examples): Sample prompts and use cases
-- [Prompt Writing Guide](https://peroot.space/guide): Professional Hebrew prompt engineering guide
-- [Prompt Library Index](https://peroot.space/prompts): Browse 480+ prompts by category
-- [Privacy Policy](https://peroot.space/privacy)
-- [Terms of Service](https://peroot.space/terms)
-- [Contact](https://peroot.space/contact)
-- [Summary LLM Documentation](https://peroot.space/llms.txt)
+- [Homepage](https://www.peroot.space/): Main app - prompt enhancement tool
+- [Pricing](https://www.peroot.space/pricing): Free, Guest, and Pro plan details
+- [Blog](https://www.peroot.space/blog): Guides and tutorials on prompt engineering
+- [Examples](https://www.peroot.space/examples): Sample prompts and use cases
+- [Prompt Writing Guide](https://www.peroot.space/guide): Professional Hebrew prompt engineering guide
+- [Prompt Library Index](https://www.peroot.space/prompts): Browse 480+ prompts by category
+- [Privacy Policy](https://www.peroot.space/privacy)
+- [Terms of Service](https://www.peroot.space/terms)
+- [Contact](https://www.peroot.space/contact)
+- [Summary LLM Documentation](https://www.peroot.space/llms.txt)
 
 ---
 
@@ -137,7 +137,7 @@ Image and video prompts are scored on:
 ## API Access for Developers
 
 ### Endpoint
-`POST https://peroot.space/api/enhance`
+`POST https://www.peroot.space/api/enhance`
 
 Developers can integrate Peroot's prompt enhancement capabilities into their own tools and workflows via the REST API.
 
@@ -179,26 +179,26 @@ Developers can integrate Peroot's prompt enhancement capabilities into their own
 
 ## Blog Articles
 
-- [How to Write a Good Prompt - Complete Guide](https://peroot.space/blog/how-to-write-good-prompt) - Comprehensive guide to writing effective AI prompts in Hebrew
-- [Few-Shot Prompting Guide](https://peroot.space/blog/few-shot-prompting-guide) - Teaching AI through examples
-- [AI Email Marketing Prompts - 5 Ready Templates](https://peroot.space/blog/ai-email-marketing-prompts) - Marketing email templates using AI
-- [Debugging with AI - Developer Guide](https://peroot.space/blog/debugging-with-ai-guide) - Using AI for code debugging
-- [AI Business Proposals - Practical Guide](https://peroot.space/blog/ai-business-proposals) - Creating business proposals with AI
-- [Freelancer Portfolio with AI](https://peroot.space/blog/freelancer-portfolio-with-ai) - Building a professional portfolio using AI
-- [Social Media Prompts - Complete Guide](https://peroot.space/blog/social-media-prompts-guide) - Prompts for social media content creation
-- [AI for Teachers - Tests and Assignments](https://peroot.space/blog/ai-tests-assignments-teachers) - Educational AI tools for teachers
-- [Midjourney Advanced Tips](https://peroot.space/blog/midjourney-advanced-tips) - Advanced techniques for Midjourney
-- [AI Beginners Complete Guide](https://peroot.space/blog/ai-beginners-complete-guide) - Starting from scratch with AI
-- [5 AI Myths Debunked](https://peroot.space/blog/5-ai-myths-debunked) - Common misconceptions about AI
-- [Peroot vs Manual Prompts - Comparison](https://peroot.space/blog/peroot-vs-manual-prompts) - Why use Peroot over manual prompt writing
-- [System Prompts - AI Agents Guide](https://peroot.space/blog/system-prompts-ai-agents-guide) - Building system prompts for AI agents
-- [SEO with AI Content - Complete Guide](https://peroot.space/blog/seo-with-ai-content-guide) - Using AI for SEO content
-- [AI Code Review - Developer Guide](https://peroot.space/blog/ai-code-review-guide) - Code review workflows with AI
-- [AI Customer Service Chatbots](https://peroot.space/blog/ai-customer-service-chatbots) - Building customer service bots
-- [Brand Storytelling with AI - Practical Guide](https://peroot.space/blog/brand-storytelling-with-ai) - Crafting brand narratives with AI
-- [Role-Play Prompting Technique](https://peroot.space/blog/role-play-prompting-technique) - Using role-play to improve AI responses
-- [Perplexity vs ChatGPT - Research Comparison](https://peroot.space/blog/perplexity-vs-chatgpt-research) - Comparing research capabilities
-- [Peroot Review 2026](https://peroot.space/blog/peroot-review-2026) - Comprehensive review of the Israeli prompt tool
+- [How to Write a Good Prompt - Complete Guide](https://www.peroot.space/blog/how-to-write-good-prompt) - Comprehensive guide to writing effective AI prompts in Hebrew
+- [Few-Shot Prompting Guide](https://www.peroot.space/blog/few-shot-prompting-guide) - Teaching AI through examples
+- [AI Email Marketing Prompts - 5 Ready Templates](https://www.peroot.space/blog/ai-email-marketing-prompts) - Marketing email templates using AI
+- [Debugging with AI - Developer Guide](https://www.peroot.space/blog/debugging-with-ai-guide) - Using AI for code debugging
+- [AI Business Proposals - Practical Guide](https://www.peroot.space/blog/ai-business-proposals) - Creating business proposals with AI
+- [Freelancer Portfolio with AI](https://www.peroot.space/blog/freelancer-portfolio-with-ai) - Building a professional portfolio using AI
+- [Social Media Prompts - Complete Guide](https://www.peroot.space/blog/social-media-prompts-guide) - Prompts for social media content creation
+- [AI for Teachers - Tests and Assignments](https://www.peroot.space/blog/ai-tests-assignments-teachers) - Educational AI tools for teachers
+- [Midjourney Advanced Tips](https://www.peroot.space/blog/midjourney-advanced-tips) - Advanced techniques for Midjourney
+- [AI Beginners Complete Guide](https://www.peroot.space/blog/ai-beginners-complete-guide) - Starting from scratch with AI
+- [5 AI Myths Debunked](https://www.peroot.space/blog/5-ai-myths-debunked) - Common misconceptions about AI
+- [Peroot vs Manual Prompts - Comparison](https://www.peroot.space/blog/peroot-vs-manual-prompts) - Why use Peroot over manual prompt writing
+- [System Prompts - AI Agents Guide](https://www.peroot.space/blog/system-prompts-ai-agents-guide) - Building system prompts for AI agents
+- [SEO with AI Content - Complete Guide](https://www.peroot.space/blog/seo-with-ai-content-guide) - Using AI for SEO content
+- [AI Code Review - Developer Guide](https://www.peroot.space/blog/ai-code-review-guide) - Code review workflows with AI
+- [AI Customer Service Chatbots](https://www.peroot.space/blog/ai-customer-service-chatbots) - Building customer service bots
+- [Brand Storytelling with AI - Practical Guide](https://www.peroot.space/blog/brand-storytelling-with-ai) - Crafting brand narratives with AI
+- [Role-Play Prompting Technique](https://www.peroot.space/blog/role-play-prompting-technique) - Using role-play to improve AI responses
+- [Perplexity vs ChatGPT - Research Comparison](https://www.peroot.space/blog/perplexity-vs-chatgpt-research) - Comparing research capabilities
+- [Peroot Review 2026](https://www.peroot.space/blog/peroot-review-2026) - Comprehensive review of the Israeli prompt tool
 
 ---
 
@@ -207,7 +207,7 @@ Developers can integrate Peroot's prompt enhancement capabilities into their own
 - **Company**: JoyaTech
 - **Creator**: Gal Sasson
 - **Email**: gal@joya-tech.net
-- **Website**: https://peroot.space
+- **Website**: https://www.peroot.space
 - **Facebook**: https://www.facebook.com/profile.php?id=61579689932777
 - **Location**: Israel
 - **Language**: Hebrew (primary), English (secondary)

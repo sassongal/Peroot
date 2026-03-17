@@ -9,7 +9,7 @@ import { CATEGORY_LABELS } from "@/lib/constants";
 import { breadcrumbSchema, promptCollectionSchema } from "@/lib/schema";
 import { CopyButton } from "./CopyButton";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 interface Props {
   params: Promise<{ slug: string }>;

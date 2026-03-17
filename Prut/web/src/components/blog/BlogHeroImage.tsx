@@ -147,7 +147,7 @@ export const BlogHeroImage = memo(function BlogHeroImage({ title, category, exce
             className="w-10 h-[3px] rounded-full"
             style={dividerStyle}
           />
-          <span className="text-slate-500 text-xs sm:text-sm">peroot.space</span>
+          <span className="text-slate-500 text-xs sm:text-sm">www.peroot.space</span>
         </div>
       </div>
     </div>

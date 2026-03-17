@@ -5,7 +5,7 @@ import { checkRateLimit } from "@/lib/ratelimit";
 /**
  * GET /api/extension-token
  * Returns the current session access_token for the Chrome extension.
- * Uses cookie-based auth (same-origin fetch from content script on peroot.space).
+ * Uses cookie-based auth (same-origin fetch from content script on www.peroot.space).
  */
 export async function GET(req: NextRequest) {
   try {

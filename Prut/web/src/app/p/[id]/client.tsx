@@ -24,7 +24,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   }, []);
 
   const handleCopyPrompt = async () => {
-    await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | peroot.space");
+    await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | www.peroot.space");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -42,7 +42,7 @@ export function SharePageClient({ prompt }: { prompt: string }) {
 
   const whatsappMessage = useMemo(() => encodeURIComponent("בדוק את הפרומפט הזה: " + pageUrl), [pageUrl]);
   const twitterMessage = encodeURIComponent("בדוק את הפרומפט הזה שנוצר עם Peroot");
-  const telegramText = useMemo(() => encodeURIComponent(prompt.slice(0, 200) + (prompt.length > 200 ? '...' : '') + "\n\n- נוצר עם Peroot | peroot.space"), [prompt]);
+  const telegramText = useMemo(() => encodeURIComponent(prompt.slice(0, 200) + (prompt.length > 200 ? '...' : '') + "\n\n- נוצר עם Peroot | www.peroot.space"), [prompt]);
 
   return (
     <div className="p-4 bg-white/2 border-t border-white/5 flex flex-col gap-4">

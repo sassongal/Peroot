@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) return { title: "מאמר לא נמצא" };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
   const title = post.meta_title || post.title;
   const description = post.meta_description || post.excerpt || "";
 
@@ -102,7 +102,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   if (!post) notFound();
 
-  const blogSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+  const blogSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
   const ogImageUrl = `${blogSiteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
   const publishedDate = post.published_at

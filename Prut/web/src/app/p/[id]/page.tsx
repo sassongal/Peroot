@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : 'פרומפט משותף';
 
   const description = data?.prompt?.slice(0, 160) || 'פרומפט שנוצר עם Peroot';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space';
 
   return {
     title,
@@ -78,7 +78,7 @@ export default async function SharedPromptPage({ params }: Props) {
     referralCode = refData?.code ?? null;
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
   return (
     <>

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://peroot.space";
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space";
   let sent = 0;
   let errors = 0;
 

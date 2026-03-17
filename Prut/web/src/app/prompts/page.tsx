@@ -5,7 +5,7 @@ import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib
 import { breadcrumbSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
   title: "ספריית פרומפטים בעברית - כל הקטגוריות | Peroot",

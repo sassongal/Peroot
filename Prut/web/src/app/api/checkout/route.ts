@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Store not configured' }, { status: 500 });
     }
 
-    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space').trim();
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space').trim();
 
     const lsResponse = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
       method: 'POST',

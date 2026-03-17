@@ -23,7 +23,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://peroot.space https://*.clarity.ms",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://www.www.peroot.space https://*.clarity.ms",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://generativelanguage.googleapis.com https://api.groq.com https://api.deepseek.com https://www.google-analytics.com https://analytics.google.com https://www.clarity.ms https://*.clarity.ms https://va.vercel-scripts.com https://vitals.vercel-insights.com",
       "frame-src 'self' https://*.lemonsqueezy.com",
       "frame-ancestors 'none'",
@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: '*.googleusercontent.com' },
-      { protocol: 'https', hostname: 'peroot.space' },
+      { protocol: 'https', hostname: 'www.peroot.space' },
     ],
   },
   turbopack: {
@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
       {
         source: '/api/:path*',
         headers: [
-          { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space' },
+          { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.www.peroot.space' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],

@@ -300,14 +300,14 @@ export default function GuidePage() {
           publisher: {
             "@type": "Organization",
             name: "Peroot",
-            url: "https://peroot.space",
+            url: "https://www.peroot.space",
           },
           datePublished: "2026-01-15",
           dateModified: "2026-03-17",
           inLanguage: "he",
           mainEntityOfPage: {
             "@type": "WebPage",
-            "@id": "https://peroot.space/guide",
+            "@id": "https://www.peroot.space/guide",
           },
         }),
       }}

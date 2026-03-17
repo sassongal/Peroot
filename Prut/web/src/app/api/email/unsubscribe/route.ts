@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       <div style="text-align: center; max-width: 400px;">
         <h1 style="color: #f59e0b;">הוסרתם בהצלחה</h1>
         <p>לא תקבלו יותר מיילים מסדרת ההצטרפות של Peroot.</p>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://peroot.space'}" style="color: #f59e0b;">חזרה ל-Peroot</a>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.peroot.space'}" style="color: #f59e0b;">חזרה ל-Peroot</a>
       </div>
     </body>
     </html>`,

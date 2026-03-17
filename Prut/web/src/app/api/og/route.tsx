@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
                 borderRadius: "2px",
               }}
             />
-            <div style={{ fontSize: "14px", color: "#64748b" }}>peroot.space</div>
+            <div style={{ fontSize: "14px", color: "#64748b" }}>www.peroot.space</div>
           </div>
         </div>
       </div>

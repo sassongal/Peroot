@@ -3,16 +3,16 @@
 > Peroot is an AI-powered prompt generator built specifically for Hebrew. It transforms raw ideas into structured, professional-grade prompts optimized for ChatGPT, Claude, Gemini, DeepSeek, and other LLMs. It also generates platform-specific prompts for image and video generation tools.
 
 ## Key URLs
-- [Homepage](https://peroot.space/): Main app - prompt enhancement tool
-- [Pricing](https://peroot.space/pricing): Free, Guest, and Pro plan details
-- [Blog](https://peroot.space/blog): Guides and tutorials on prompt engineering
-- [Examples](https://peroot.space/examples): Sample prompts and use cases
-- [Prompt Writing Guide](https://peroot.space/guide): Professional Hebrew prompt engineering guide
-- [Prompt Library Index](https://peroot.space/prompts): Browse 480+ prompts by category
-- [Privacy Policy](https://peroot.space/privacy)
-- [Terms of Service](https://peroot.space/terms)
-- [Contact](https://peroot.space/contact)
-- [Full LLM Documentation](https://peroot.space/llms-full.txt)
+- [Homepage](https://www.peroot.space/): Main app - prompt enhancement tool
+- [Pricing](https://www.peroot.space/pricing): Free, Guest, and Pro plan details
+- [Blog](https://www.peroot.space/blog): Guides and tutorials on prompt engineering
+- [Examples](https://www.peroot.space/examples): Sample prompts and use cases
+- [Prompt Writing Guide](https://www.peroot.space/guide): Professional Hebrew prompt engineering guide
+- [Prompt Library Index](https://www.peroot.space/prompts): Browse 480+ prompts by category
+- [Privacy Policy](https://www.peroot.space/privacy)
+- [Terms of Service](https://www.peroot.space/terms)
+- [Contact](https://www.peroot.space/contact)
+- [Full LLM Documentation](https://www.peroot.space/llms-full.txt)
 
 ## 5 Capability Modes
 1. **Standard text** - Structured prompt generation for LLMs (ChatGPT, Claude, Gemini, DeepSeek)
@@ -59,7 +59,7 @@ Runway Gen-4, Kling 2.0, Sora, Google Veo 3, Higgsfield, Minimax Hailuo
 - Pro: 150 credits/month, all engines, iterative refinement, personal library, 4-day free trial, NIS 3.99/month
 
 ## Key Facts
-- Website: https://peroot.space
+- Website: https://www.peroot.space
 - Company: JoyaTech
 - Creator: Gal Sasson
 - Language: Hebrew (primary), with English support
@@ -71,4 +71,4 @@ Runway Gen-4, Kling 2.0, Sora, Google Veo 3, Higgsfield, Minimax Hailuo
 
 ## Contact
 - Email: gal@joya-tech.net
-- Website: https://peroot.space
+- Website: https://www.peroot.space

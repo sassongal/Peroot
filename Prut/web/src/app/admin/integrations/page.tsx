@@ -580,7 +580,7 @@ export default function IntegrationsPage() {
             setup={
               <SetupPanel>
                 <SetupStep step={1} text="היכנס ל-clarity.microsoft.com עם חשבון Microsoft" />
-                <SetupStep step={2} text="לחץ על 'New project' והגדר את הדומיין peroot.space" />
+                <SetupStep step={2} text="לחץ על 'New project' והגדר את הדומיין www.peroot.space" />
                 <SetupStep step={3} text="העתק את ה-Project ID מהגדרות הפרויקט" />
                 <SetupStep step={4} text="הוסף את ה-ID כ-NEXT_PUBLIC_CLARITY_ID ב-Vercel → Settings → Environment Variables" />
                 <SetupStep step={5} text="בצע redeploy על מנת שהשינוי ייכנס לתוקף" />
@@ -618,7 +618,7 @@ export default function IntegrationsPage() {
             features={["Search Queries", "Click-through Rates", "Index Coverage", "Core Web Vitals", "Sitemap"]}
             actions={
               <>
-                <ActionButton href="https://search.google.com/search-console?resource_id=https://peroot.space" variant="primary" icon={<Search className="w-3 h-3" />}>
+                <ActionButton href="https://search.google.com/search-console?resource_id=https://www.peroot.space" variant="primary" icon={<Search className="w-3 h-3" />}>
                   Search Console
                 </ActionButton>
                 <ActionButton href="/admin/seo-console" icon={<Activity className="w-3 h-3" />}>
@@ -642,11 +642,11 @@ export default function IntegrationsPage() {
             }
             setup={
               <SetupPanel>
-                <SetupStep step={1} text="הוסף את peroot.space ב-Search Console ובחר 'URL prefix'" />
+                <SetupStep step={1} text="הוסף את www.peroot.space ב-Search Console ובחר 'URL prefix'" />
                 <SetupStep step={2} text="העתק את קוד האימות מ-HTML tag" />
                 <SetupStep step={3} text="הוסף NEXT_PUBLIC_GOOGLE_VERIFICATION ב-Vercel env vars" />
-                <SetupStep step={4} text="הוסף GOOGLE_SEARCH_CONSOLE_SITE_URL=https://peroot.space" />
-                <SetupStep step={5} text="שלח Sitemap: https://peroot.space/sitemap.xml" />
+                <SetupStep step={4} text="הוסף GOOGLE_SEARCH_CONSOLE_SITE_URL=https://www.peroot.space" />
+                <SetupStep step={5} text="שלח Sitemap: https://www.peroot.space/sitemap.xml" />
               </SetupPanel>
             }
           />
@@ -809,7 +809,7 @@ export default function IntegrationsPage() {
             setup={
               <SetupPanel>
                 <SetupStep step={1} text="הירשם חינם ב-betterstack.com/better-uptime" />
-                <SetupStep step={2} text="הוסף monitors ל-peroot.space, /api/health, /api/enhance" />
+                <SetupStep step={2} text="הוסף monitors ל-www.peroot.space, /api/health, /api/enhance" />
                 <SetupStep step={3} text="הגדר התראות מייל/SMS" />
               </SetupPanel>
             }
@@ -833,7 +833,7 @@ export default function IntegrationsPage() {
             features={["HTTPS Enforcement", "Browser Preload List", "MITM Protection"]}
             actions={
               <>
-                <ActionButton href="https://hstspreload.org/?domain=peroot.space" variant="primary" icon={<CheckCircle2 className="w-3 h-3" />}>
+                <ActionButton href="https://hstspreload.org/?domain=www.peroot.space" variant="primary" icon={<CheckCircle2 className="w-3 h-3" />}>
                   בדוק סטטוס
                 </ActionButton>
                 <ActionButton href="https://vercel.com/sassongal/web/settings/domains" icon={<Globe className="w-3 h-3" />}>

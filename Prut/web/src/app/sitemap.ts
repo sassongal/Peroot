@@ -4,7 +4,7 @@ import { HEBREW_BLOG_SLUGS } from '@/lib/blog-slug-map';
 import { CATEGORY_SLUG_MAP } from '@/lib/category-slugs';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://peroot.space';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space';
 
   // Prompts library index + category pages
   const promptsPages: MetadataRoute.Sitemap = [

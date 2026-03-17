@@ -117,7 +117,7 @@ export async function exportPromptAsImage({ title, prompt, category, useCase }: 
   ctx.textAlign = "center";
   ctx.font = "bold 28px sans-serif";
   ctx.fillStyle = "rgba(245, 158, 11, 0.7)";
-  ctx.fillText("peroot.space", width / 2, footerY - 10);
+  ctx.fillText("www.peroot.space", width / 2, footerY - 10);
   ctx.font = "400 20px sans-serif";
   ctx.fillStyle = "#475569";
   ctx.fillText("נוצר עם Peroot - מחולל הפרומפטים המקצועי", width / 2, footerY + 20);

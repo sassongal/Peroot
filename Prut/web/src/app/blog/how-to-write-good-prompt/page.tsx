@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent("איך לכתוב פרומפט טוב - המדריך המלא")}&subtitle=${encodeURIComponent("5 עקרונות שיהפכו כל פרומפט שלכם לפרומפט מקצועי")}&category=${encodeURIComponent("מדריכים")}`;
 
 export const metadata: Metadata = {

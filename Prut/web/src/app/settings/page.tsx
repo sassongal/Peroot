@@ -738,7 +738,7 @@ export default function SettingsPage() {
                     {/* Share buttons */}
                     <div className="flex gap-2">
                       <a
-                        href={`https://wa.me/?text=${encodeURIComponent(`הצטרף ל-Peroot - מחולל פרומפטים בעברית! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://peroot.space`)}`}
+                        href={`https://wa.me/?text=${encodeURIComponent(`הצטרף ל-Peroot - מחולל פרומפטים בעברית! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://www.peroot.space`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium transition-colors border border-green-600/20"
@@ -747,7 +747,7 @@ export default function SettingsPage() {
                       </a>
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(`הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://peroot.space`);
+                          navigator.clipboard.writeText(`הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://www.peroot.space`);
                           toast.success("הועתק ללוח");
                         }}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"

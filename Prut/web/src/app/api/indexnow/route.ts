@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 /**
  * POST /api/indexnow

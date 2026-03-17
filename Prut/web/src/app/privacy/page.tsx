@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "מדיניות פרטיות - פירוט",
     description:
       "מדיניות הפרטיות של פירוט (Peroot): מידע שנאסף, שימוש במידע, אבטחת מידע, תוסף Chrome וזכויות משתמשים.",
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://peroot.space"}/privacy`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space"}/privacy`,
     siteName: "Peroot",
     locale: "he_IL",
     type: "website",
@@ -89,7 +89,7 @@ export default function PrivacyPolicy() {
           </p>
           <ul className="list-disc pr-6 space-y-2">
             <li><strong>אחסון מקומי:</strong> טוקן ההתחברות נשמר באחסון המקומי של הדפדפן (chrome.storage) בלבד ואינו נשלח לצד שלישי.</li>
-            <li><strong>הרשאות מינימליות:</strong> התוסף מבקש גישה רק לאתר peroot.space לצורך סנכרון ההתחברות. גישה לכרטיסיות אחרות מתבצעת רק כאשר המשתמש מפעיל פעולה באופן ידני (תפריט לחיצה ימנית או כפתור בתוסף).</li>
+            <li><strong>הרשאות מינימליות:</strong> התוסף מבקש גישה רק לאתר www.peroot.space לצורך סנכרון ההתחברות. גישה לכרטיסיות אחרות מתבצעת רק כאשר המשתמש מפעיל פעולה באופן ידני (תפריט לחיצה ימנית או כפתור בתוסף).</li>
             <li><strong>ללא מעקב:</strong> התוסף אינו אוסף נתוני גלישה, אינו עוקב אחר פעילות המשתמש ואינו שולח מידע לשירותי אנליטיקה.</li>
             <li><strong>טקסטים:</strong> טקסטים שנשלחים לשדרוג מועברים ישירות לשרתי Peroot בלבד ומעובדים בהתאם למדיניות זו.</li>
           </ul>

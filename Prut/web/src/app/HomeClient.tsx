@@ -552,7 +552,7 @@ function PageContent({ user }: { user: User | null }) {
     // Pro users copy clean by default; free/guest always get watermark.
     // Callers can override via the withWatermark argument (e.g. toggle checkbox).
     const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
-    const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | peroot.space` : text;
+    const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
     await navigator.clipboard.writeText(finalText);
     dispatch({ type: 'SET_COPIED', payload: true });
     setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
