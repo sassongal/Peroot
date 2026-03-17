@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
       supabase.from("personal_library").select("created_at, user_id").gte("created_at", startDate.toISOString()),
       supabase.from("personal_library").select("personal_category"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("activity_logs").select("user_id").eq("action", "Prmpt Enhance"),
+      supabase.from("prompt_usage_events").select("user_id").in("event_type", ["enhance", "refine"]),
     ]);
 
     // Prompts per day
