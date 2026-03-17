@@ -425,7 +425,7 @@ export default function IntegrationsPage() {
         setLastRefresh(new Date());
       }
     } catch {
-      // silently fail — cards show individual status
+      // silently fail - cards show individual status
     } finally {
       setLoading(false);
     }
@@ -479,7 +479,7 @@ export default function IntegrationsPage() {
             Integrations Hub
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-sm md:text-base">
-            סטטוס וגישה מהירה לכל השירותים המחוברים לפרויקט Peroot — נתונים בזמן אמת
+            סטטוס וגישה מהירה לכל השירותים המחוברים לפרויקט Peroot - נתונים בזמן אמת
           </p>
 
           {/* Quick status summary */}
@@ -518,7 +518,7 @@ export default function IntegrationsPage() {
           <IntegrationCard
             icon={<Globe className="w-5 h-5" />}
             title="Google Analytics 4"
-            description="ניתוח מבקרים, מקורות תעבורה ומעקב אירועים — נתוני 7 ימים אחרונים."
+            description="ניתוח מבקרים, מקורות תעבורה ומעקב אירועים - נתוני 7 ימים אחרונים."
             status={ga4Status}
             accent="orange"
             features={["Real-time Users", "Audience Insights", "Traffic Sources", "Event Tracking"]}
@@ -592,7 +592,7 @@ export default function IntegrationsPage() {
           <IntegrationCard
             icon={<TrendingUp className="w-5 h-5" />}
             title="Vercel Analytics & Speed Insights"
-            description="ניתוח תעבורה ומדדי ביצועים מובנה — נתונים נצפים ב-Vercel Dashboard."
+            description="ניתוח תעבורה ומדדי ביצועים מובנה - נתונים נצפים ב-Vercel Dashboard."
             status="active"
             accent="purple"
             features={["Visitors", "Page Views", "Bounce Rate", "LCP", "FID", "CLS"]}
@@ -770,7 +770,7 @@ export default function IntegrationsPage() {
           <IntegrationCard
             icon={<Mail className="w-5 h-5" />}
             title="Resend"
-            description="שליחת מיילים — קמפיינים, אימות והתראות."
+            description="שליחת מיילים - קמפיינים, אימות והתראות."
             status={data?.resend?.status === "active" ? "active" : !data ? "loading" : "needs-setup"}
             accent="blue"
             features={["Email Campaigns", "Transactional", "Templates"]}
@@ -827,7 +827,7 @@ export default function IntegrationsPage() {
           <IntegrationCard
             icon={<Shield className="w-5 h-5" />}
             title="HSTS Preload"
-            description="כותרת HSTS מוגדרת — צריך לתקן www subdomain."
+            description="כותרת HSTS מוגדרת - צריך לתקן www subdomain."
             status="needs-setup"
             accent="emerald"
             features={["HTTPS Enforcement", "Browser Preload List", "MITM Protection"]}
@@ -855,7 +855,7 @@ export default function IntegrationsPage() {
           <IntegrationCard
             icon={<Users className="w-5 h-5" />}
             title="LemonSqueezy"
-            description="תשלומים ומנויים — Pro plan management."
+            description="תשלומים ומנויים - Pro plan management."
             status={!data ? "loading" : data.services?.lemonSqueezy?.configured ? "active" : "needs-setup"}
             accent="amber"
             features={["Subscriptions", "Webhooks", "Customer Portal"]}

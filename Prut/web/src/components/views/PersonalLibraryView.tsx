@@ -1204,7 +1204,7 @@ export function PersonalLibraryView({
     return (
       <div className="mt-6 flex flex-col items-center gap-3" dir="rtl">
         <p className="text-xs text-slate-500">
-          מציג {startItem}–{endItem} מתוך {usedTotalCount}
+          מציג {startItem}-{endItem} מתוך {usedTotalCount}
         </p>
         <div className="flex items-center gap-1">
           <button

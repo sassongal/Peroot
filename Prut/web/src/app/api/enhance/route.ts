@@ -149,7 +149,7 @@ export async function POST(req: Request) {
         }
 
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
-        // Skip credit checks for guests — they are rate-limited by IP instead
+        // Skip credit checks for guests - they are rate-limited by IP instead
         if (userId) {
             const { data: creditRes, error: rpcError } = await queryClient.rpc('refresh_and_decrement_credits', {
                 target_user_id: userId,

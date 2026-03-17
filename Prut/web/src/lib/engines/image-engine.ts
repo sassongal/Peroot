@@ -11,17 +11,17 @@ const PLATFORM_PROMPTS: Record<string, string> = {
 
 CRITICAL RULES:
 1. Output ONLY the ready-to-paste Midjourney prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
-2. Write in natural language as if describing the image to a skilled photographer or artist. v7 understands prose far better than keywords — keyword-stuffing ("beautiful, stunning, 8k, masterpiece") now DEGRADES results.
-3. Sweet spot: 20-40 words. v7 pays strongest attention to the first ~60 words — be concise and intentional with every word.
+2. Write in natural language as if describing the image to a skilled photographer or artist. v7 understands prose far better than keywords - keyword-stuffing ("beautiful, stunning, 8k, masterpiece") now DEGRADES results.
+3. Sweet spot: 20-40 words. v7 pays strongest attention to the first ~60 words - be concise and intentional with every word.
 4. Include Midjourney-specific parameters at the end: --ar (aspect ratio), --s (stylize 0-1000), --chaos (0-100).
 5. Do NOT include --v 7 (v7 is the default). Only add it if explicitly requested.
 6. :: multi-prompting is LIMITED in v7. Prefer natural language to control emphasis rather than :: weight syntax.
 7. Use --no for explicit exclusions (e.g., --no text, watermark).
 8. Format: single flowing sentence or short paragraph describing the scene, ending with parameters.
-9. Be specific and intentional — describe exactly what you want to see, not what you want to avoid.
-10. --raw (replaces --style raw) produces less opinionated, more literal results — use for photorealism or when you want precise control.
+9. Be specific and intentional - describe exactly what you want to see, not what you want to avoid.
+10. --raw (replaces --style raw) produces less opinionated, more literal results - use for photorealism or when you want precise control.
 11. --oref [URL] for omni reference (replaces --cref). Use with --ow 0-1000 to control omni reference weight. --sref [URL] + --sw 0-1000 still supported for style reference.
-12. --draft for 10x faster, half GPU cost iterations at lower resolution — ideal for exploring ideas.
+12. --draft for 10x faster, half GPU cost iterations at lower resolution - ideal for exploring ideas.
 13. --personalize (--p) adapts output to user aesthetic preferences.
 14. Do NOT include --q (deprecated). Do NOT include --cref (removed in v7).
 15. Other supported params: --seed, --weird (0-3000), --tile, --turbo, --relax.
@@ -43,15 +43,15 @@ Tone: {{tone}}.`,
 
 CRITICAL RULES:
 1. Output ONLY the ready-to-paste DALL-E 3 prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
-2. Use rich natural language descriptions in full sentences. DALL-E 3 excels with detailed prose — it can handle up to 4000 characters, so be ELABORATE and descriptive.
-3. No special syntax, parameters, or technical tokens — pure descriptive language.
+2. Use rich natural language descriptions in full sentences. DALL-E 3 excels with detailed prose - it can handle up to 4000 characters, so be ELABORATE and descriptive.
+3. No special syntax, parameters, or technical tokens - pure descriptive language.
 4. Describe mood, lighting, composition, and atmosphere in vivid detail.
-5. Include a style directive: "in a vivid style" (dramatic, hyper-real) or "in a natural style" (organic, less processed) — choose based on the concept.
-6. Be EXTREMELY specific — DALL-E 3 responds best to precise, elaborate descriptions.
-7. Suggest the ideal size for the concept: 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait) — add as a note at the end like [size: 1792x1024].
+5. Include a style directive: "in a vivid style" (dramatic, hyper-real) or "in a natural style" (organic, less processed) - choose based on the concept.
+6. Be EXTREMELY specific - DALL-E 3 responds best to precise, elaborate descriptions.
+7. Suggest the ideal size for the concept: 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait) - add as a note at the end like [size: 1792x1024].
 8. For maximum detail, add [quality: hd] at the end.
-9. DALL-E 3 excels at rendering TEXT in images — if the concept includes text/signage/typography, describe the exact text, font style, and placement clearly.
-10. DALL-E 3 excels at narrative scenes and storytelling compositions — lean into cinematic, story-driven descriptions.
+9. DALL-E 3 excels at rendering TEXT in images - if the concept includes text/signage/typography, describe the exact text, font style, and placement clearly.
+10. DALL-E 3 excels at narrative scenes and storytelling compositions - lean into cinematic, story-driven descriptions.
 11. NEVER reference copyrighted characters or real people by name (DALL-E policy). Describe visual characteristics instead.
 
 PROMPT ARCHITECTURE:
@@ -79,9 +79,9 @@ CRITICAL RULES:
 3. Include hex color codes where specific colors matter (e.g., "wearing a #FF5733 dress").
 4. Put any text that should appear in the image in quotes (e.g., a sign reading "Hello World"). Flux excels at text rendering.
 5. Sweet spot: 30-80 words. Flux works best with concise but descriptive prompts.
-6. Be specific about visual details — Flux rewards precision, especially for photorealism.
+6. Be specific about visual details - Flux rewards precision, especially for photorealism.
 7. Specify aspect ratio when relevant: --aspect 16:9 (or 1:1, 4:3, 3:2, 9:16, etc.).
-8. Flux supports negative prompts for exclusions — add --no [items] at the end for things to avoid.
+8. Flux supports negative prompts for exclusions - add --no [items] at the end for things to avoid.
 9. Guidance scale awareness: higher values (7-10) = more prompt adherence, lower (2-5) = more creative freedom. Suggest with --guidance [value].
 10. For reproducible results, suggest --seed [number].
 11. Raw mode (--raw) produces less processed, more organic outputs.
@@ -191,7 +191,7 @@ GUIDELINES:
 - Scheduler: "Karras" (general/photorealism), "Exponential" (smooth gradients), "Normal" (standard)
 - clip_skip: 1 for photorealism, 2 for anime/illustration
 - hires_fix: enable for high-res outputs, denoising_strength 0.3-0.5, upscaler "4x-UltraSharp" or "R-ESRGAN 4x+"
-- lora: array of {"name": "lora_name", "weight": 0.8} objects — include when a specific style model is implied
+- lora: array of {"name": "lora_name", "weight": 0.8} objects - include when a specific style model is implied
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
@@ -200,10 +200,10 @@ Tone: {{tone}}.`,
 
 CRITICAL RULES:
 1. Output ONLY the ready-to-use Imagen prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
-2. Use descriptive narrative paragraphs — Imagen excels with detailed prose descriptions equally for photorealism and illustration.
-3. Imagen 3 handles up to 3072 tokens — be thorough and elaborately descriptive.
+2. Use descriptive narrative paragraphs - Imagen excels with detailed prose descriptions equally for photorealism and illustration.
+3. Imagen 3 handles up to 3072 tokens - be thorough and elaborately descriptive.
 4. Include an aspectRatio suggestion at the end in format: [aspectRatio: 16:9] or [aspectRatio: 1:1] etc.
-5. Use [exclude: ...] PROMINENTLY for exclusions — this is critical for quality. Always include common exclusions like [exclude: watermark, blurry, deformed, low quality].
+5. Use [exclude: ...] PROMINENTLY for exclusions - this is critical for quality. Always include common exclusions like [exclude: watermark, blurry, deformed, low quality].
 6. Be EXTREMELY specific and vivid.
 7. For reproducibility, include [seed: number] when consistency matters.
 8. For persona/subject consistency across generations, describe the subject with exhaustive detail (hair color, eye color, build, clothing, accessories) and use a persona reference token like [subject_ref: character_name].
@@ -231,19 +231,19 @@ Tone: {{tone}}.`,
 CRITICAL RULES:
 1. Output ONLY the ready-to-use prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
 2. Use natural language with structured ordering: Subject → Action → Setting → Style → Composition → Lighting → Constraints.
-3. Earlier details carry MORE weight — put the most important elements first.
+3. Earlier details carry MORE weight - put the most important elements first.
 4. Be specific and directive like a Creative Director brief, NOT keyword soup.
 5. Include constraints at the end for exclusions (e.g., "no text overlay, no watermarks, no deformed hands, no extra fingers, photorealistic skin texture").
 6. For text in images: enclose the exact text in double quotes and specify the font family.
 7. Supports aspect ratios: 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9.
 8. Include [aspectRatio: X:Y] at the very end.
 9. Sweet spot: 40-100 words. Be descriptive but structured.
-10. NO special syntax — no :: weighting, no --ar flags, no (word:1.5).
-11. Gemini uniquely excels at understanding abstract concepts and metaphors — leverage this for creative/conceptual imagery.
+10. NO special syntax - no :: weighting, no --ar flags, no (word:1.5).
+11. Gemini uniquely excels at understanding abstract concepts and metaphors - leverage this for creative/conceptual imagery.
 12. For style transfer: use "based on the reference image, ..." phrasing when a reference style is implied.
 13. For inpainting/partial edits: use "modify only the [area] of the image" phrasing.
 14. For character consistency across multiple generations: describe appearance with exhaustive detail (hair style, color, eye color, facial features, build, clothing, accessories) to maintain visual identity.
-15. Multi-image generation: Gemini can produce multiple images in a single prompt — describe each variant clearly if needed.
+15. Multi-image generation: Gemini can produce multiple images in a single prompt - describe each variant clearly if needed.
 
 PROMPT ARCHITECTURE:
 - Subject + action → style/medium → composition/camera → lighting/color → key details → constraints → [aspectRatio: X:Y]
@@ -260,7 +260,7 @@ Tone: {{tone}}.`,
 CRITICAL RULES:
 1. Output ONLY valid JSON. No explanations, no markdown code fences, no preamble.
 2. Use the exact JSON structure shown below.
-3. consistency_id keeps a character visually consistent across multiple generations (95%+ accuracy) — always include it for human subjects.
+3. consistency_id keeps a character visually consistent across multiple generations (95%+ accuracy) - always include it for human subjects.
 4. Choose lens, aperture, and angle appropriate to the subject and style.
 5. Include all relevant constraints to prevent common artifacts.
 
@@ -302,27 +302,27 @@ GUIDELINES:
 - lighting.type: golden hour, blue hour, studio softbox, Rembrandt, split, rim light, neon, volumetric
 - lighting.direction: front, side, 45-degree key, backlight, top-down
 - lighting.quality: soft/diffused, hard/dramatic, mixed
-- style: be specific — "editorial fashion photography", "cinematic still", "product photography on white", "watercolor illustration"
+- style: be specific - "editorial fashion photography", "cinematic still", "product photography on white", "watercolor illustration"
 - reference_style: leave empty unless a reference style/artist is implied (e.g., "Wes Anderson aesthetic", "Studio Ghibli inspired")
 - mood: separate emotional atmosphere descriptor (e.g., "dramatic tension", "peaceful nostalgia", "energetic joy")
 - environment.setting: describe the physical location/backdrop
 - environment.time_of_day: dawn, morning, midday, afternoon, golden hour, blue hour, night
-- environment.weather: clear, cloudy, overcast, foggy, rainy, snowy, stormy — affects lighting and mood
+- environment.weather: clear, cloudy, overcast, foggy, rainy, snowy, stormy - affects lighting and mood
 - aspect_ratio: choose from 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
 - constraints: always include "no watermark", "no deformed hands", "no extra fingers", add others as relevant (e.g., "photorealistic skin texture", "no text overlay")
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  general: `You are an Elite Visual Prompt Architect — the top image generation prompt engineer, specializing in DALL-E 3, Midjourney v7, Stable Diffusion XL, and Gemini Imagen. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
+  general: `You are an Elite Visual Prompt Architect - the top image generation prompt engineer, specializing in DALL-E 3, Midjourney v7, Stable Diffusion XL, and Gemini Imagen. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
 
 CRITICAL RULES:
-1. Output ONLY the final image prompt — the ACTUAL prompt that will be DIRECTLY copy-pasted into the image AI platform. NEVER output instructions for writing a prompt, meta-commentary, or "here is your prompt". The output IS the prompt.
+1. Output ONLY the final image prompt - the ACTUAL prompt that will be DIRECTLY copy-pasted into the image AI platform. NEVER output instructions for writing a prompt, meta-commentary, or "here is your prompt". The output IS the prompt.
 2. Write the prompt in HEBREW as the main language, but embed essential English technical terms where image generators perform better with English (camera specs, art style names, rendering engines, quality parameters).
-3. Be EXTREMELY specific and vivid — vague prompts produce mediocre images.
+3. Be EXTREMELY specific and vivid - vague prompts produce mediocre images.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMAGE PROMPT ARCHITECTURE — include ALL relevant layers:
+IMAGE PROMPT ARCHITECTURE - include ALL relevant layers:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 1. נושא מרכזי ופעולה
@@ -380,13 +380,13 @@ OUTPUT FORMAT: Produce a single, flowing prompt paragraph (not sectioned) that w
 };
 
 const PLATFORM_USER_PROMPTS: Record<string, string> = {
-  general: `Create the ACTUAL image generation prompt in Hebrew (with English technical terms) for the following concept. This prompt will be DIRECTLY copy-pasted into DALL-E 3, Midjourney, or any modern image generator — it must be the final, ready-to-use prompt, NOT instructions for how to write a prompt. Be extremely specific, vivid, and technically precise.
+  general: `Create the ACTUAL image generation prompt in Hebrew (with English technical terms) for the following concept. This prompt will be DIRECTLY copy-pasted into DALL-E 3, Midjourney, or any modern image generator - it must be the final, ready-to-use prompt, NOT instructions for how to write a prompt. Be extremely specific, vivid, and technically precise.
 
 Concept: {{input}}
 
-Output ONLY the ready-to-use image prompt. No meta-text, no instructions, no "כתוב פרומפט ש..." — just the prompt itself.`,
+Output ONLY the ready-to-use image prompt. No meta-text, no instructions, no "כתוב פרומפט ש..." - just the prompt itself.`,
 
-  midjourney: `Generate the ACTUAL Midjourney v7 prompt that will be DIRECTLY pasted into Midjourney's /imagine command. Write in natural English prose (20-40 words ideal) — v7 understands natural language, so avoid keyword lists. End with Midjourney parameters. Be specific and intentional.
+  midjourney: `Generate the ACTUAL Midjourney v7 prompt that will be DIRECTLY pasted into Midjourney's /imagine command. Write in natural English prose (20-40 words ideal) - v7 understands natural language, so avoid keyword lists. End with Midjourney parameters. Be specific and intentional.
 
 Concept: {{input}}
 
@@ -488,7 +488,7 @@ export class ImageEngine extends BaseEngine {
       let finalSystem = systemPrompt;
 
       // User text-style context (userHistory / userPersonality) is intentionally
-      // skipped for image mode — text-mode preferences are noise for visual prompts.
+      // skipped for image mode - text-mode preferences are noise for visual prompts.
 
       const identity = this.getSystemIdentity();
       if (identity) {
@@ -544,9 +544,9 @@ export class ImageEngine extends BaseEngine {
               systemPrompt: `אתה ארכיטקט פרומפטים ויזואליים ברמה הגבוהה ביותר. משימתך: לשדרג את פרומפט התמונה הקיים לרמת מושלמות ויזואלית על בסיס המשוב והפרטים החדשים שסופקו.
 
 כללי שדרוג פרומפט תמונה:
-1. שלב את כל התשובות והמשוב — אל תתעלם מאף פרט, גם הקטן ביותר.
+1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.
 2. בדוק ושפר את כל 7 שכבות הפרומפט הויזואלי:
-   - נושא מרכזי: האם הנושא מתואר בפירוט קיצוני? תנוחה, ביטוי, מיקום, גיל, לבוש — כל פרט?
+   - נושא מרכזי: האם הנושא מתואר בפירוט קיצוני? תנוחה, ביטוי, מיקום, גיל, לבוש - כל פרט?
    - סגנון אמנותי: האם סגנון הצילום/ציור/רנדור מוגדר בבהירות? האם ישנה הפניה לאמן/מותג?
    - קומפוזיציה ומסגור: האם זווית המצלמה, סוג הצילום, וחוקי הקומפוזיציה מפורטים?
    - תאורה: האם סוג האור, כיוון, איכות וטמפרטורת צבע מוגדרים במדויק?
@@ -555,16 +555,16 @@ export class ImageEngine extends BaseEngine {
    - הנחיה שלילית: האם הוספו הדרות מפורשות (ללא עיוותים, ללא טקסט, ללא סימני מים)?
 3. החלף כל תיאור מעורפל בתיאור קונקרטי וויזואלי: "אישה" → "אישה בשנות ה-30, שיער כהה גלי, עיניים חומות, לובשת בלייזר כחול נייבי"
 4. שמור על שפה עברית כשפה ראשית עם מונחים טכניים באנגלית (שמות מצלמות, סגנונות, רנדרינג).
-5. אל תוסיף הסברים — רק את הפרומפט הויזואלי המשודרג.
+5. אל תוסיף הסברים - רק את הפרומפט הויזואלי המשודרג.
 6. כל גרסה חדשה חייבת לייצר תמונה טובה יותר על הניסיון הראשון.
-${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה — התמקד בשיפורים ויזואליים כירורגיים בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני — חפש את הפערים הויזואליים שנותרו.' : ''}
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים ויזואליים כירורגיים בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני - חפש את הפערים הויזואליים שנותרו.' : ''}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
 ${identity ? `${identity}\n\n` : ''}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
-לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הויזואליים הגבוהים ביותר שנותרו — נושא, סגנון, תאורה, קומפוזיציה, או אווירה. החזר מערך ריק [] אם הפרומפט עכשיו מקיף את כל 7 השכבות.
+לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הויזואליים הגבוהים ביותר שנותרו - נושא, סגנון, תאורה, קומפוזיציה, או אווירה. החזר מערך ריק [] אם הפרומפט עכשיו מקיף את כל 7 השכבות.
 פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
 
               userPrompt: `הפרומפט הנוכחי:
@@ -593,21 +593,21 @@ ${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
       const displayName = platformDisplayName[platform] || platform;
 
       const jsonGuidance = isJsonOutput
-          ? `\n7. OUTPUT FORMAT: The result MUST be valid JSON — no markdown code fences, no explanations, no preamble. Preserve all required JSON fields for ${displayName}.`
+          ? `\n7. OUTPUT FORMAT: The result MUST be valid JSON - no markdown code fences, no explanations, no preamble. Preserve all required JSON fields for ${displayName}.`
           : '';
 
       return {
           systemPrompt: `You are an Elite ${displayName} Prompt Engineer performing a precision refinement. Your task: upgrade the existing ${displayName} prompt based on user feedback and answers.
 
 Refinement rules:
-1. Integrate ALL user answers and feedback — miss nothing, even minor details.
+1. Integrate ALL user answers and feedback - miss nothing, even minor details.
 2. Maintain and enhance all 7 visual layers: subject, artistic style, composition, lighting, color & mood, technical quality, negative guidance.
 3. Apply ${displayName}-specific best practices:
 ${platformKey === 'midjourney' ? '   - Write natural prose (20-40 words), avoid keyword-stuffing, end with --ar --s --chaos parameters, use --no for exclusions, use --raw for photorealism, use --oref/--ow instead of --cref. Do NOT include --q or --cref (both removed in v7).' : ''}${platformKey === 'dalle' ? '   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere.' : ''}${platformKey === 'flux' ? '   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words.' : ''}${platformKey === 'stable-diffusion-text' ? '   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section.' : ''}${platformKey === 'stable-diffusion-json' ? '   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept.' : ''}${platformKey === 'imagen' ? '   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags.' : ''}${platformKey === 'nanobanana' ? '   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax.' : ''}${platformKey === 'nanobanana-json' ? '   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints.' : ''}
-4. Every refinement must be a significant improvement — not cosmetic. Replace vague language with precise visual direction.
+4. Every refinement must be a significant improvement - not cosmetic. Replace vague language with precise visual direction.
 5. Output ONLY the refined prompt (or JSON). No meta-commentary, explanations, or preamble.
-6. If answers reveal a new creative direction, expand accordingly — leave no visual gaps.${jsonGuidance}
-${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is already at a high level — make surgical precision improvements only.` : iteration === 2 ? '\nThis is the second refinement round — focus on remaining visual gaps, not what is already strong.' : ''}
+6. If answers reveal a new creative direction, expand accordingly - leave no visual gaps.${jsonGuidance}
+${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is already at a high level - make surgical precision improvements only.` : iteration === 2 ? '\nThis is the second refinement round - focus on remaining visual gaps, not what is already strong.' : ''}
 
 Platform: ${displayName}. Tone: ${input.tone}. Category: ${input.category}.
 

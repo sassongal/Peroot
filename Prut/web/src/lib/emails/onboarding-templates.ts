@@ -54,7 +54,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
         </div>
         <div style="background: #eff6ff; border-radius: 12px; padding: 16px;">
           <strong>🔗 שרשראות פרומפטים</strong>
-          <p style="margin: 8px 0 0; font-size: 14px;">חברו מספר פרומפטים לזרימת עבודה אוטומטית — הפלט של אחד הופך לקלט של הבא.</p>
+          <p style="margin: 8px 0 0; font-size: 14px;">חברו מספר פרומפטים לזרימת עבודה אוטומטית - הפלט של אחד הופך לקלט של הבא.</p>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
         <li style="margin-bottom: 8px;">האם תמליצו עלינו לחבר?</li>
       </ul>
 
-      <p>פשוט תשיבו על המייל הזה — אנחנו קוראים כל תשובה.</p>
+      <p>פשוט תשיבו על המייל הזה - אנחנו קוראים כל תשובה.</p>
 
       <div style="text-align: center; margin-top: 30px;">
         <a href="mailto:contact@peroot.space?subject=פידבק על Peroot" style="background: #f59e0b; color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">שלחו פידבק</a>

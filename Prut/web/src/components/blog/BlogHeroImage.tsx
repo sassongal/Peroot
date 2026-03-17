@@ -91,12 +91,12 @@ export const BlogHeroImage = memo(function BlogHeroImage({ title, category, exce
         style={glowStyle}
       />
 
-      {/* Content overlay — RTL layout */}
+      {/* Content overlay - RTL layout */}
       <div
         className="absolute inset-0 flex flex-col items-center justify-center px-8 sm:px-16"
         dir="rtl"
       >
-        {/* Category badge — top center */}
+        {/* Category badge - top center */}
         <div
           className="flex items-center gap-2 px-5 py-2 rounded-full border text-sm sm:text-base font-bold mb-5 sm:mb-7"
           style={badgeStyle}
@@ -130,7 +130,7 @@ export const BlogHeroImage = memo(function BlogHeroImage({ title, category, exce
         dir="ltr"
         aria-hidden="true"
       >
-        {/* Branding — left */}
+        {/* Branding - left */}
         <div className="flex items-center gap-2">
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0"
@@ -141,7 +141,7 @@ export const BlogHeroImage = memo(function BlogHeroImage({ title, category, exce
           <span className="text-slate-200 font-bold text-sm tracking-wide">PEROOT</span>
         </div>
 
-        {/* Domain — right */}
+        {/* Domain - right */}
         <div className="flex items-center gap-2">
           <div
             className="w-10 h-[3px] rounded-full"

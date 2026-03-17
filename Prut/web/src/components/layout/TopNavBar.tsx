@@ -41,7 +41,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
           >
             <Image
               src="/assets/branding/nav-logo.webp"
-              alt="Peroot – מחולל פרומפטים בעברית"
+              alt="Peroot - מחולל פרומפטים בעברית"
               width={36}
               height={36}
               className="rounded-lg"

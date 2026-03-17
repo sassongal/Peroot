@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
-import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { breadcrumbSchema } from "@/lib/schema";
+import { BlogCategoryFilter } from "@/components/blog/BlogCategoryFilter";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -69,45 +69,23 @@ export default async function BlogPage() {
           </p>
         </div>
 
-        <div className="space-y-4">
-          {(posts ?? []).length === 0 && (
-            <div className="text-center py-16 px-8">
-              <p className="text-lg text-slate-400 font-medium">אין מאמרים עדיין</p>
-              <p className="text-sm text-slate-500 mt-2">מאמרים חדשים יופיעו כאן בקרוב</p>
-            </div>
-          )}
-          {(posts ?? []).map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="block glass-card rounded-xl border border-white/10 p-6 hover:bg-white/[0.03] hover:border-white/20 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
-                  {post.category}
-                </span>
-                <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                  <Calendar className="w-3 h-3" />
-                  <span>{post.published_at ? new Date(post.published_at).toLocaleDateString("he-IL") : ""}</span>
-                </div>
-                <span className="text-[10px] text-slate-600">{post.read_time}</span>
-              </div>
-              <div className="mb-4">
-                <BlogHeroImage
-                  title={post.title}
-                  category={post.category || ""}
-                  excerpt={post.excerpt || ""}
-                />
-              </div>
-              <h2 className="text-xl font-serif text-white mb-2 group-hover:text-amber-200 transition-colors">
-                {post.title}
-              </h2>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {post.excerpt}
-              </p>
-            </Link>
-          ))}
-        </div>
+        {(posts ?? []).length === 0 ? (
+          <div className="text-center py-16 px-8">
+            <p className="text-lg text-slate-400 font-medium">אין מאמרים עדיין</p>
+            <p className="text-sm text-slate-500 mt-2">מאמרים חדשים יופיעו כאן בקרוב</p>
+          </div>
+        ) : (
+          <BlogCategoryFilter
+            categories={Array.from(
+              new Set(
+                (posts ?? [])
+                  .map((p) => p.category)
+                  .filter((c): c is string => Boolean(c))
+              )
+            )}
+            posts={posts ?? []}
+          />
+        )}
 
         {/* Hidden Hebrew slug links for SEO crawlability */}
         <nav className="sr-only" aria-hidden="true">

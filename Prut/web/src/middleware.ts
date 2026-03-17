@@ -33,7 +33,7 @@ function isCsrfExempt(pathname: string, request: NextRequest): boolean {
   if (CSRF_EXEMPT_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
     return true
   }
-  // Bearer token auth — API key/token authenticated, not cookie-based
+  // Bearer token auth - API key/token authenticated, not cookie-based
   const authHeader = request.headers.get('authorization') || ''
   if (authHeader.startsWith('Bearer ')) {
     return true
@@ -72,7 +72,7 @@ function validateCsrfOrigin(request: NextRequest): NextResponse | null {
       requestOrigin = new URL(rawOrigin).origin
     }
   } catch {
-    // Malformed URL — requestOrigin stays empty, will fail validation
+    // Malformed URL - requestOrigin stays empty, will fail validation
   }
 
   // Allow both www and non-www variants of the same origin
@@ -174,7 +174,7 @@ export async function middleware(request: NextRequest) {
     // admin API route / AdminLayout (checks user_roles table), because
     // app_metadata.role may not be set on all admin users.
   } else {
-    // Guest accessing admin path — require login
+    // Guest accessing admin path - require login
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin') ||
                        request.nextUrl.pathname.startsWith('/api/admin') ||
                        request.nextUrl.pathname.startsWith('/api/prompts/sync');

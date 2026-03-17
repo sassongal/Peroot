@@ -645,9 +645,9 @@ a:focus-visible,
 
 @media (max-width: 768px) {
   .hero-logo-container {
-    max-width: 280px;
+    max-width: 200px;
     width: 100%;
-    height: 110px;
+    height: 78px;
   }
 }
 

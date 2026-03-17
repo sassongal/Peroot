@@ -197,7 +197,7 @@ export default function AnalyticsPage() {
         },
       };
     } catch {
-      return null; // GA4 is optional — don't block
+      return null; // GA4 is optional - don't block
     }
   }
 
@@ -259,7 +259,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <MetricCard label="Visitors" value={fmtNum(traffic.activeUsers)} icon={Users} color="blue" delta={trafficDeltas?.activeUsers} sub={`${fmtNum(traffic.newUsers)} חדשים`} />
               <MetricCard label="Sessions" value={fmtNum(traffic.sessions)} icon={Eye} color="emerald" delta={trafficDeltas?.sessions} />
-              <MetricCard label="Page Views" value={fmtNum(traffic.pageViews)} icon={MousePointerClick} color="purple" delta={trafficDeltas?.pageViews} sub={`${traffic.pagesPerSession?.toFixed(1) || "—"} per session`} />
+              <MetricCard label="Page Views" value={fmtNum(traffic.pageViews)} icon={MousePointerClick} color="purple" delta={trafficDeltas?.pageViews} sub={`${traffic.pagesPerSession?.toFixed(1) || "-"} per session`} />
               <MetricCard label="Engagement" value={fmtPct(traffic.engagementRate || 0)} icon={Zap} color="amber" sub={`Avg: ${fmtDur(traffic.avgSessionDuration)}`} />
             </div>
           </>
@@ -391,7 +391,7 @@ export default function AnalyticsPage() {
 
           <div className="flex flex-col md:flex-row items-stretch gap-3">
             {[
-              { label: "מבקרים", value: traffic?.activeUsers ?? "—", color: "from-blue-600/20 to-blue-600/5 border-blue-500/20" },
+              { label: "מבקרים", value: traffic?.activeUsers ?? "-", color: "from-blue-600/20 to-blue-600/5 border-blue-500/20" },
               { label: "נרשמו", value: product.summary.totalProfiles, color: "from-purple-600/20 to-purple-600/5 border-purple-500/20" },
               { label: "יצרו פרומפט", value: product.summary.activeCreators, color: "from-emerald-600/20 to-emerald-600/5 border-emerald-500/20" },
               { label: "השתמשו בשדרוג", value: product.summary.enhanceUsers, color: "from-amber-600/20 to-amber-600/5 border-amber-500/20" },

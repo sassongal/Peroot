@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { X, Sparkles, MessageSquare, Globe, Palette, Video, Bot, ArrowLeft } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface WhatIsThisModalProps {
   isOpen: boolean;
@@ -17,11 +18,61 @@ const MODES = [
 ];
 
 export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    // Prevent body scroll while open on mobile
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overscroll-contain overflow-y-auto">
-      <div className="w-full max-w-lg glass-card rounded-3xl border border-white/10 bg-zinc-950/95 p-6 md:p-8 relative" dir="rtl">
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Bottom sheet on mobile, centered modal on desktop */}
+      <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="מה עושים פה?"
+        dir="rtl"
+        className={[
+          // Base
+          "fixed z-[81]",
+          // Mobile: bottom sheet, slides up from bottom, ~70% height
+          "bottom-0 left-0 right-0 max-h-[72vh] rounded-t-3xl",
+          // Desktop: centered modal with auto-width
+          "md:bottom-auto md:left-1/2 md:right-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2",
+          "md:w-full md:max-w-lg md:rounded-3xl md:max-h-[90vh]",
+          // Shared appearance
+          "bg-zinc-950 border border-white/10 flex flex-col overflow-hidden",
+          // Entrance animation
+          "animate-in slide-in-from-bottom-8 duration-300 md:slide-in-from-bottom-0 md:zoom-in-95",
+        ].join(" ")}
+      >
+        {/* Swipe handle (mobile hint) */}
+        <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-white/20" aria-hidden="true" />
+        </div>
+
+        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 left-4 p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
@@ -30,23 +81,25 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           <X className="w-5 h-5" />
         </button>
 
-        <div className="space-y-5">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-serif font-bold text-white">מה עושים פה?</h2>
+        {/* Scrollable content */}
+        <div className="overflow-y-auto overscroll-contain px-5 pb-6 pt-2 md:p-6 space-y-4">
+          {/* Header */}
+          <div className="text-center space-y-1.5">
+            <h2 className="text-xl font-serif font-bold text-white">מה עושים פה?</h2>
             <p className="text-sm text-slate-400 leading-relaxed">
-              <span className="text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית — בעברית.
+              <span className="text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
           </div>
 
           {/* 5 Modes */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {MODES.map(({ icon: Icon, title, desc, color, bg }) => (
-              <div key={title} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
-                <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
-                  <Icon className={`w-4.5 h-4.5 ${color}`} />
+              <div key={title} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+                  <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-white">{title}</p>
+                  <p className="text-sm font-bold text-white leading-tight">{title}</p>
                   <p className="text-xs text-slate-500 truncate">{desc}</p>
                 </div>
               </div>
@@ -54,7 +107,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-2 pt-1">
+          <div className="flex flex-col gap-2 pt-0.5">
             <button
               onClick={onClose}
               className="w-full px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
@@ -73,6 +126,6 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

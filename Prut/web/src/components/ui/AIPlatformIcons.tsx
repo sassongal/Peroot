@@ -50,7 +50,7 @@ export const ClaudeIcon = memo(function ClaudeIcon({ className }: IconProps) {
 export const GeminiIcon = memo(function GeminiIcon({ className }: IconProps) {
   // The Gemini shape is a 4-pointed star defined by the path:
   // "M12 24A14.304 14.304 0 0 0 0 12 14.304 14.304 0 0 0 12 0a14.305 14.305 0 0 0 12 12 14.305 14.305 0 0 0-12 12"
-  // We split it into 4 quadrants — top (blue), right (red), bottom (yellow), left (green) —
+  // We split it into 4 quadrants - top (blue), right (red), bottom (yellow), left (green) -
   // by drawing each arm separately and clipping to its quadrant.
   return (
     <svg
@@ -73,25 +73,25 @@ export const GeminiIcon = memo(function GeminiIcon({ className }: IconProps) {
           <rect x="12" y="0" width="12" height="24" />
         </clipPath>
       </defs>
-      {/* Top arm — Google Blue */}
+      {/* Top arm - Google Blue */}
       <path
         d="M12 24A14.304 14.304 0 0 0 0 12 14.304 14.304 0 0 0 12 0a14.305 14.305 0 0 0 12 12 14.305 14.305 0 0 0-12 12"
         fill="#4285f4"
         clipPath="url(#gemini-top)"
       />
-      {/* Bottom arm — Google Yellow */}
+      {/* Bottom arm - Google Yellow */}
       <path
         d="M12 24A14.304 14.304 0 0 0 0 12 14.304 14.304 0 0 0 12 0a14.305 14.305 0 0 0 12 12 14.305 14.305 0 0 0-12 12"
         fill="#fbbc04"
         clipPath="url(#gemini-bottom)"
       />
-      {/* Left arm — Google Green */}
+      {/* Left arm - Google Green */}
       <path
         d="M12 24A14.304 14.304 0 0 0 0 12 14.304 14.304 0 0 0 12 0a14.305 14.305 0 0 0 12 12 14.305 14.305 0 0 0-12 12"
         fill="#34a853"
         clipPath="url(#gemini-left)"
       />
-      {/* Right arm — Google Red */}
+      {/* Right arm - Google Red */}
       <path
         d="M12 24A14.304 14.304 0 0 0 0 12 14.304 14.304 0 0 0 12 0a14.305 14.305 0 0 0 12 12 14.305 14.305 0 0 0-12 12"
         fill="#ea4335"

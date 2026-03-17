@@ -299,7 +299,7 @@ function PageContent({ user }: { user: User | null }) {
     setIsLoginRequiredModalOpen(true);
   };
 
-  // Debounce scoring — avoids running 20 regex tests on every keystroke/streaming chunk
+  // Debounce scoring - avoids running 20 regex tests on every keystroke/streaming chunk
   const debouncedInput = useDebouncedValue(ps.input, 300);
   const debouncedCompletion = useDebouncedValue(ps.completion, 200);
 
@@ -321,7 +321,7 @@ function PageContent({ user }: { user: User | null }) {
           ? { text: "text-red-400", bar: "bg-red-500" }
           : { text: "text-slate-500", bar: "bg-slate-600" };
 
-  // Debounce placeholder extraction — avoids regex on every streaming chunk
+  // Debounce placeholder extraction - avoids regex on every streaming chunk
   const placeholders = useMemo(() => extractPlaceholders(debouncedCompletion), [debouncedCompletion]);
   const inputVariables = useMemo(() => extractPlaceholders(debouncedInput), [debouncedInput]);
 
@@ -573,20 +573,20 @@ function PageContent({ user }: { user: User | null }) {
       const target = e.target as HTMLElement;
       const isTyping = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 
-      // Escape — clear result (when not typing)
+      // Escape - clear result (when not typing)
       if (e.key === 'Escape' && !isTyping) {
         if (completionRef.current) {
           dispatch({ type: 'SET_COMPLETION', payload: '' });
         }
       }
-      // Cmd+Shift+C — copy result
+      // Cmd+Shift+C - copy result
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
         if (completionRef.current) {
           e.preventDefault();
           handleCopyTextRef.current?.(completionRef.current);
         }
       }
-      // Cmd+K — focus prompt input
+      // Cmd+K - focus prompt input
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
@@ -595,12 +595,12 @@ function PageContent({ user }: { user: User | null }) {
           textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
-      // Cmd+L — open library
+      // Cmd+L - open library
       if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
         e.preventDefault();
         setViewMode("personal");
       }
-      // Cmd+B — toggle sidebar
+      // Cmd+B - toggle sidebar
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         if (!isTyping) {
           e.preventDefault();
@@ -883,7 +883,7 @@ function PageContent({ user }: { user: User | null }) {
           </div>
         </div>
 
-        {/* Navigation Buttons — mobile only (desktop has TopNavBar) */}
+        {/* Navigation Buttons - mobile only (desktop has TopNavBar) */}
         <div className="flex flex-col gap-2 p-4 md:hidden">
           <button
             onClick={() => { handleNavPersonal(); setSidebarOpen(false); }}
@@ -949,7 +949,7 @@ function PageContent({ user }: { user: User | null }) {
 
            <button
              onClick={() => setShowWhatIsThis(true)}
-             className="text-sm text-slate-500 hover:text-amber-400 transition-colors cursor-pointer -mt-2 min-h-[44px] flex items-center justify-center px-4"
+             className="text-xs md:text-sm text-slate-600 md:text-slate-500 hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
            >
              מה עושים פה?
            </button>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { articleSchema, breadcrumbSchema } from "@/lib/schema";
@@ -8,6 +8,7 @@ import { HEBREW_BLOG_SLUGS } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
+import { BlogTOC } from "@/components/blog/BlogTOC";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 interface Props {
@@ -84,6 +85,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+/**
+ * Inject stable `id` attributes into every H2 element in raw HTML so that
+ * BlogTOC anchor links work. The same slug logic used in BlogTOC must be
+ * mirrored here so that generated IDs match what the TOC builds.
+ */
+function injectH2Ids(html: string): string {
+  return html.replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/gi, (_match, attrs: string, inner: string) => {
+    // Skip if an id is already present
+    if (/\bid\s*=/.test(attrs)) return _match;
+
+    const text = inner.replace(/<[^>]+>/g, "").trim();
+    const id = text
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\u0590-\u05FF-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
+
+    if (!id) return _match;
+    return `<h2${attrs} id="${id}">${inner}</h2>`;
+  });
+}
+
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
@@ -109,9 +133,13 @@ export default async function BlogPostPage({ params }: Props) {
     ? new Date(post.published_at).toLocaleDateString("he-IL")
     : "";
 
+  // Enrich the HTML with id attributes on H2 headings for TOC linking
+  const enrichedContent = injectH2Ids(post.content ?? "");
+
   return (
     <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
-      <article className="max-w-3xl mx-auto">
+      {/* Outer centering wrapper */}
+      <div className="max-w-5xl mx-auto">
         <Link
           href="/blog"
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-8"
@@ -120,83 +148,101 @@ export default async function BlogPostPage({ params }: Props) {
           <span>חזרה לבלוג</span>
         </Link>
 
-        <header className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
-              {post.category}
-            </span>
-            {publishedDate && (
-              <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                <Calendar className="w-3 h-3" />
-                <span>{publishedDate}</span>
+        {/*
+          Two-column layout on xl+:
+            RTL order: article (right) | TOC (left)
+          flex-row-reverse keeps RTL visual order while TOC sticks on the left.
+        */}
+        <div className="flex flex-row-reverse items-start gap-10">
+          {/* Main article column */}
+          <article className="min-w-0 flex-1 max-w-3xl">
+            <header className="mb-12">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
+                  {post.category}
+                </span>
+                {publishedDate && (
+                  <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                    <Calendar className="w-3 h-3" />
+                    <span>{publishedDate}</span>
+                  </div>
+                )}
+                {post.read_time && (
+                  <span className="text-[10px] text-slate-600">{post.read_time}</span>
+                )}
               </div>
-            )}
-            {post.read_time && (
-              <span className="text-[10px] text-slate-600">{post.read_time}</span>
-            )}
-          </div>
-          <h1 className="text-4xl md:text-5xl font-serif text-white mb-4 leading-tight">
-            {post.title}
-          </h1>
-          {post.excerpt && (
-            <p className="text-lg text-slate-400 leading-relaxed">
-              {post.excerpt}
-            </p>
-          )}
-        </header>
+              <h1 className="text-4xl md:text-5xl font-serif text-white mb-4 leading-tight">
+                {post.title}
+              </h1>
+              {post.excerpt && (
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  {post.excerpt}
+                </p>
+              )}
+            </header>
 
-        <div className="mb-10">
-          <BlogHeroImage
-            title={post.title}
-            category={post.category || ""}
-            excerpt={post.excerpt || ""}
-          />
+            <div className="mb-10">
+              <BlogHeroImage
+                title={post.title}
+                category={post.category || ""}
+                excerpt={post.excerpt || ""}
+              />
+            </div>
+
+            <SafeHtml
+              html={enrichedContent}
+              className="prose prose-invert prose-amber max-w-none
+                prose-headings:font-serif prose-headings:text-white
+                prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+                prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
+                prose-li:text-slate-300 prose-li:leading-relaxed
+                prose-strong:text-white
+                prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
+            />
+
+            {/* Author Bio */}
+            <div className="mt-12 p-6 rounded-2xl border border-white/10 bg-white/[0.02] flex items-start gap-4" dir="rtl">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
+                <span className="text-lg font-bold text-amber-400">G</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">{post.author || "Gal Sasson"}</p>
+                <p className="text-xs text-slate-500 mt-0.5">מייסד JoyaTech ויוצר Peroot</p>
+                <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                  מפתח ויזם בתחום ה-AI עם התמחות בעיבוד שפה טבעית ופרומפט אנג&apos;ינירינג.
+                  בונה כלים שעוזרים למשתמשים לתקשר טוב יותר עם מודלי AI.
+                </p>
+              </div>
+            </div>
+
+            {/* Related links */}
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <CrossLinkCard href="/prompts" title="תבניות פרומפטים קשורות" description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום`} />
+              <CrossLinkCard href="/guide" title="המדריך המלא לפרומפטים בעברית" description="5 עקרונות זהב וטכניקות מתקדמות" />
+              <CrossLinkCard href="/features" title="כל הכלים של Peroot" description="תמונות, סרטונים, מחקר וסוכני AI" />
+            </div>
+
+            {/* Gradient CTA */}
+            <div className="mt-12 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-8 text-center space-y-4">
+              <h3 className="text-2xl font-serif text-white">רוצים לשדרג את הפרומפטים שלכם?</h3>
+              <p className="text-slate-400 max-w-lg mx-auto">
+                Peroot משדרג כל פרומפט לרמה מקצועית - בעברית, בחינם, תוך שניות.
+              </p>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold hover:scale-[1.03] transition-transform"
+              >
+                <Sparkles className="w-5 h-5" />
+                נסו עכשיו בחינם
+              </Link>
+            </div>
+          </article>
+
+          {/* Sticky TOC — only visible on xl+ screens */}
+          <BlogTOC content={enrichedContent} />
         </div>
-
-        <SafeHtml
-          html={post.content}
-          className="prose prose-invert prose-amber max-w-none
-            prose-headings:font-serif prose-headings:text-white
-            prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-            prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
-            prose-li:text-slate-300 prose-li:leading-relaxed
-            prose-strong:text-white
-            prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
-        />
-
-        {/* Author Bio */}
-        <div className="mt-12 p-6 rounded-2xl border border-white/10 bg-white/[0.02] flex items-start gap-4" dir="rtl">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
-            <span className="text-lg font-bold text-amber-400">G</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white">{post.author || "Gal Sasson"}</p>
-            <p className="text-xs text-slate-500 mt-0.5">מייסד JoyaTech ויוצר Peroot</p>
-            <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-              מפתח ויזם בתחום ה-AI עם התמחות בעיבוד שפה טבעית ופרומפט אנג&apos;ינירינג.
-              בונה כלים שעוזרים למשתמשים לתקשר טוב יותר עם מודלי AI.
-            </p>
-          </div>
-        </div>
-
-        {/* Related links */}
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <CrossLinkCard href="/prompts" title="תבניות פרומפטים קשורות" description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום`} />
-          <CrossLinkCard href="/guide" title="המדריך המלא לפרומפטים בעברית" description="5 עקרונות זהב וטכניקות מתקדמות" />
-          <CrossLinkCard href="/features" title="כל הכלים של Peroot" description="תמונות, סרטונים, מחקר וסוכני AI" />
-        </div>
-
-        <div className="mt-8 pt-8 border-t border-white/10 text-center">
-          <p className="text-slate-400 mb-4">רוצים לשדרג את הפרומפטים שלכם?</p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-black font-semibold hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all"
-          >
-            נסו את Peroot - חינם
-          </Link>
-        </div>
-      </article>
+      </div>
 
       <script
         type="application/ld+json"

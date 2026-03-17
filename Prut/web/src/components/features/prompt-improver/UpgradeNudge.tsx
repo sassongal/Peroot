@@ -7,7 +7,7 @@ interface UpgradeNudgeProps {
   type: 'warning' | 'exhausted' | 'feature-gate';
   remaining?: number;
   resetDate?: string;
-  /** Name of the gated feature — shown for type='feature-gate' */
+  /** Name of the gated feature - shown for type='feature-gate' */
   featureName?: string;
   onUpgrade: () => void;
   onDismiss: () => void;
@@ -36,7 +36,7 @@ export default function UpgradeNudge({ type, remaining, resetDate, featureName, 
           <Crown className="w-4 h-4 text-amber-400 shrink-0" />
           <span className="text-sm text-amber-300">
             תכונה זו זמינה למשתמשי Pro
-            {featureName && <span className="text-amber-400 font-semibold"> — {featureName}</span>}
+            {featureName && <span className="text-amber-400 font-semibold"> - {featureName}</span>}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 
-// GET /api/prompts/versions?promptId=xxx — list versions for a prompt
+// GET /api/prompts/versions?promptId=xxx - list versions for a prompt
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ versions: versions || [] });
 }
 
-// POST /api/prompts/versions — restore a specific version
+// POST /api/prompts/versions - restore a specific version
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

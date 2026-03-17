@@ -110,7 +110,7 @@ export function useHistory() {
       return [newItem, ...prev];
     });
 
-    // Sync to DB (fire-and-forget — errors logged but do not block the UI)
+    // Sync to DB (fire-and-forget - errors logged but do not block the UI)
     supabase.from('history').insert({
       user_id: currentUser.id,
       prompt: item.original,

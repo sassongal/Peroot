@@ -192,7 +192,7 @@ export function PromptInput({
         />
       </div>
 
-      {/* Image Platform Selector — only visible in IMAGE_GENERATION mode */}
+      {/* Image Platform Selector - only visible in IMAGE_GENERATION mode */}
       {selectedCapability === CapabilityMode.IMAGE_GENERATION && (
         <div className="w-full max-w-4xl mx-auto">
           <ImagePlatformSelector
@@ -207,7 +207,7 @@ export function PromptInput({
         </div>
       )}
 
-      {/* Video Platform Selector — only visible in VIDEO_GENERATION mode */}
+      {/* Video Platform Selector - only visible in VIDEO_GENERATION mode */}
       {selectedCapability === CapabilityMode.VIDEO_GENERATION && (
         <div className="w-full max-w-4xl mx-auto">
           <VideoPlatformSelector
@@ -314,7 +314,7 @@ export function PromptInput({
               }}
             />
 
-            {/* Voice Input Trigger + Language Picker — above prompt strength bar */}
+            {/* Voice Input Trigger + Language Picker - above prompt strength bar */}
             {isSupported && (
                <div className="flex items-center gap-1.5 px-6 pt-2 relative z-20">
                    <button
@@ -425,7 +425,7 @@ export function PromptInput({
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-white/5 pt-5 p-5 md:p-7 relative z-20 bg-black/20">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-white/5 pt-5 p-5 md:p-7 relative z-20 sticky bottom-[56px] md:static md:bottom-auto bg-zinc-950/95 md:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
                 <div className="relative group/select min-w-[140px]">

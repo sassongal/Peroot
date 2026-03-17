@@ -199,7 +199,7 @@ export function useLibrary() {
       } else if (opts.activeFolder && opts.activeFolder !== 'all') {
         query = query.eq('personal_category', opts.activeFolder);
       }
-      // "all" (null) → no category filter — returns everything
+      // "all" (null) → no category filter - returns everything
       if (opts.capabilityFilter) {
         query = query.eq('capability_mode', opts.capabilityFilter);
       }
@@ -382,7 +382,7 @@ export function useLibrary() {
           setPersonalCategories(JSON.parse(storedCats));
         }
       } else {
-        // GUEST — load from localStorage
+        // GUEST - load from localStorage
         const orderMap = readOrderMap(null);
         const storedLib = localStorage.getItem(STORAGE_KEY);
         let localItems: PersonalPrompt[] = [];
@@ -448,7 +448,7 @@ export function useLibrary() {
       const newUser = session?.user ?? null;
 
       if (newUser && !userRef.current) {
-        // Just logged in — MIGRATE GUEST DATA
+        // Just logged in - MIGRATE GUEST DATA
         const localStr = localStorage.getItem(STORAGE_KEY);
         if (localStr) {
           try {

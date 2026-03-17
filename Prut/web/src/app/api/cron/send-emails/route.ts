@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     for (const seq of sequences || []) {
       const step = ONBOARDING_STEPS[seq.current_step];
       if (!step) {
-        // All steps done — mark completed
+        // All steps done - mark completed
         await supabase
           .from("email_sequences")
           .update({ status: "completed" })

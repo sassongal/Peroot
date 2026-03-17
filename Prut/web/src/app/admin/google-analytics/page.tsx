@@ -442,7 +442,7 @@ export default function GoogleAnalyticsPage() {
               Website Analytics
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-sm md:text-base">
-              תעבורה, מעורבות ומקורות הגעה — {data.range} ימים אחרונים
+              תעבורה, מעורבות ומקורות הגעה - {data.range} ימים אחרונים
             </p>
           </div>
 

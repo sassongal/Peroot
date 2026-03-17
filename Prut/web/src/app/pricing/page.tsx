@@ -300,7 +300,7 @@ export default function PricingPage() {
         {/* Cross-links */}
         <div className="max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <CrossLinkCard href="/features" title="מה כלול? ראו כל היכולות" description="5 מנועי AI, תמונות, סרטונים וסוכנים" />
-          <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים שיוצרים" description="לפני ואחרי — שדרוג אמיתי" />
+          <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים שיוצרים" description="לפני ואחרי - שדרוג אמיתי" />
           <CrossLinkCard href="/prompts" title={`גישה לספריית ${PROMPT_LIBRARY_COUNT} תבניות`} description="פרומפטים מוכנים ב-30+ קטגוריות" />
         </div>
 

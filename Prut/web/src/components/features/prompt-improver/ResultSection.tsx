@@ -47,7 +47,7 @@ interface ResultSectionProps {
   onShare?: () => void;
   onReset?: () => void;
   isAuthenticated?: boolean;
-  /** Current capability mode — used to show platform-specific launch links */
+  /** Current capability mode - used to show platform-specific launch links */
   capabilityMode?: CapabilityMode;
   /** Selected platform for image/video modes (e.g. 'midjourney', 'runway') */
   selectedPlatform?: string;
@@ -56,7 +56,7 @@ interface ResultSectionProps {
 import { useI18n } from "@/context/I18nContext";
 import { useEffect, useMemo } from "react";
 
-/** Platform URLs for image/video generation tools — opens the platform so users can paste the prompt */
+/** Platform URLs for image/video generation tools - opens the platform so users can paste the prompt */
 const GENERATION_PLATFORM_URLS: Record<string, { name: string; url: string; color: string }> = {
   // Image platforms
   midjourney: { name: "Midjourney", url: "https://www.midjourney.com/", color: "#0A84FF" },
@@ -253,7 +253,7 @@ export function ResultSection({
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
                 <span className="hidden sm:inline text-xs text-slate-500 ms-2">פתח ב:</span>
 
-                {/* Target platform link — shown for image/video modes with a specific platform selected */}
+                {/* Target platform link - shown for image/video modes with a specific platform selected */}
                 {selectedPlatform && selectedPlatform !== 'general' && GENERATION_PLATFORM_URLS[selectedPlatform] && (() => {
                   const plat = GENERATION_PLATFORM_URLS[selectedPlatform];
                   return (

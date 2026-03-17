@@ -119,7 +119,7 @@ export function CapabilitySelector({
       {showExpanded ? (
         <>
           {modes.map((mode) => renderModeButton(mode))}
-          {/* Collapse button — only show when user manually expanded (non-standard selection keeps it open without a toggle) */}
+          {/* Collapse button - only show when user manually expanded (non-standard selection keeps it open without a toggle) */}
           {!isNonStandard && (
             <button
               type="button"

@@ -436,7 +436,7 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
      }
 
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs — what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח — ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה — בדוק שכל דרישה מתקיימת"\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own — that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format that would most improve the prompt's effectiveness. Questions should target the HIGHEST-IMPACT gaps — the details that would most change the output quality.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format that would most improve the prompt's effectiveness. Questions should target the HIGHEST-IMPACT gaps - the details that would most change the output quality.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
          userPrompt: this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
@@ -468,25 +468,25 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
 
         // Iteration-aware guidance (Upgrade 2)
         const iterationGuidance = iteration >= 3
-            ? `\nזהו סבב שדרוג #${iteration}. הפרומפט כבר עבר מספר סבבי חידוד. התמקד בשיפורים כירורגיים ודיוק קיצוני — לא בשינויים מבניים. אם הפרומפט כבר ברמה גבוהה, ייתכן שנותרו רק שיפורים מינוריים.`
+            ? `\nזהו סבב שדרוג #${iteration}. הפרומפט כבר עבר מספר סבבי חידוד. התמקד בשיפורים כירורגיים ודיוק קיצוני - לא בשינויים מבניים. אם הפרומפט כבר ברמה גבוהה, ייתכן שנותרו רק שיפורים מינוריים.`
             : iteration === 2
-                ? `\nזהו סבב שדרוג שני. הפרומפט כבר שופר פעם אחת — חפש את הפערים שנותרו, לא את מה שכבר טוב.`
+                ? `\nזהו סבב שדרוג שני. הפרומפט כבר שופר פעם אחת - חפש את הפערים שנותרו, לא את מה שכבר טוב.`
                 : '';
 
         return {
             systemPrompt: `אתה מהנדס פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מקצוענות מושלמת, על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
 
 כללים:
-1. שלב את כל התשובות והמשוב לתוך הפרומפט — אל תתעלם מאף פרט, גם הקטן ביותר.
+1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט, גם הקטן ביותר.
 2. שמור ושפר את המבנה המקצועי: תפקיד, משימה, הקשר, פורמט, מגבלות.
-3. שפר את הדיוק והספציפיות בכל מקום שאפשר — החלף הוראות מעורפלות בהוראות מדידות.
+3. שפר את הדיוק והספציפיות בכל מקום שאפשר - החלף הוראות מעורפלות בהוראות מדידות.
 4. הפלט חייב להיות בעברית בלבד.
-5. אל תוסיף הסברים — רק את הפרומפט המשודרג.
-6. כל גרסה חדשה חייבת להיות טובה משמעותית מהקודמת — לא רק שינוי קוסמטי.
-7. אם התשובות חושפות כיוון חדש — הרחב את הפרומפט בהתאם, אל תשאיר פערים.
+5. אל תוסיף הסברים - רק את הפרומפט המשודרג.
+6. כל גרסה חדשה חייבת להיות טובה משמעותית מהקודמת - לא רק שינוי קוסמטי.
+7. אם התשובות חושפות כיוון חדש - הרחב את הפרומפט בהתאם, אל תשאיר פערים.
 8. בדוק שהפרומפט כולל הגנת anti-hallucination (עיגון בעובדות) למשימות עובדתיות.
 9. ודא שהפרסונה המקצועית כוללת שנות ניסיון, מתודולוגיה ייחודית, ותחום מומחיות ספציפי.
-10. ודא שיש Output Quality Gate — הנחיה ל-LLM לבדוק את עצמו לפני שליחת התשובה.
+10. ודא שיש Output Quality Gate - הנחיה ל-LLM לבדוק את עצמו לפני שליחת התשובה.
 ${iterationGuidance}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.

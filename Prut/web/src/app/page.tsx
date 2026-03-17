@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import HomeClient from "./HomeClient";
 import { HomeSEOContent } from "@/components/seo/HomeSEOContent";
+import { RecentBlogPosts } from "@/components/home/RecentBlogPosts";
 
 export const metadata: Metadata = {
   title: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
@@ -14,6 +15,7 @@ export default function HomePage() {
     <>
       <HomeSEOContent />
       <HomeClient />
+      <RecentBlogPosts />
     </>
   );
 }

@@ -117,7 +117,7 @@ export default function ContactPage() {
                   <span className="text-slate-500 group-open:rotate-180 transition-transform">▼</span>
                 </summary>
                 <div className="px-4 pb-4 text-slate-400 text-sm leading-relaxed">
-                  ביטול מנוי הוא פשוט ומיידי — דרך דף ההגדרות באתר או במייל אלינו.
+                  ביטול מנוי הוא פשוט ומיידי - דרך דף ההגדרות באתר או במייל אלינו.
                   אין התחייבות, אין דמי ביטול. המנוי יישאר פעיל עד סוף תקופת החיוב הנוכחית.
                 </div>
               </details>

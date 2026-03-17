@@ -8,7 +8,7 @@ import { CapabilityMode } from '@/lib/capability-mode';
 
 export type StreamPhase = 'idle' | 'sending' | 'writing' | 'done' | 'interrupted';
 
-/** Context captured at generation time — used for refinement to avoid platform drift */
+/** Context captured at generation time - used for refinement to avoid platform drift */
 export interface GenerationContext {
   mode: CapabilityMode;
   modeParams?: Record<string, string>;
@@ -32,9 +32,9 @@ export interface PromptState {
   variableValues: Record<string, string>;
   copied: boolean;
   iterationCount: number;
-  /** Snapshot of generation params — used in refinement to prevent platform drift (BUG #2) */
+  /** Snapshot of generation params - used in refinement to prevent platform drift (BUG #2) */
   generationContext: GenerationContext | null;
-  /** Score of the previous completion — used to show score delta */
+  /** Score of the previous completion - used to show score delta */
   previousScore: number | null;
 }
 

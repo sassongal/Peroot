@@ -6,7 +6,7 @@ import React from "react";
 // VIDEO PLATFORMS
 // ---------------------------------------------------------------------------
 
-/** Runway — stylized "R" with a diagonal runway stripe cutting through it */
+/** Runway - stylized "R" with a diagonal runway stripe cutting through it */
 export const RunwayIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -32,7 +32,7 @@ export const RunwayIcon: React.FC<{ className?: string }> = ({ className }) => (
     <rect x="7.5" y="4.5" width="5" height="5" rx="2" fill="white" fillOpacity="0" />
     {/* R leg */}
     <path d="M10 11 L17 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    {/* Runway diagonal stripe — cuts across the icon */}
+    {/* Runway diagonal stripe - cuts across the icon */}
     <line
       x1="2"
       y1="20"
@@ -46,7 +46,7 @@ export const RunwayIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Kling — bold "K" with film-frame accents near strokes */
+/** Kling - bold "K" with film-frame accents near strokes */
 export const KlingIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -61,7 +61,7 @@ export const KlingIcon: React.FC<{ className?: string }> = ({ className }) => (
     <path d="M6.5 12 L16 3.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     {/* K lower arm */}
     <path d="M6.5 12 L16 20.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    {/* Film-frame accents — two small rectangles near the upper arm */}
+    {/* Film-frame accents - two small rectangles near the upper arm */}
     <rect x="17" y="2" width="3" height="2" rx="0.3" fill="currentColor" />
     <rect x="17" y="20" width="3" height="2" rx="0.3" fill="currentColor" />
     {/* Small tick marks on film frames */}
@@ -72,7 +72,7 @@ export const KlingIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Sora — circle with an eye-like iris inside */
+/** Sora - circle with an eye-like iris inside */
 export const SoraIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ export const SoraIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Veo — play triangle with a sparkle at top-right */
+/** Veo - play triangle with a sparkle at top-right */
 export const VeoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -113,7 +113,7 @@ export const VeoIcon: React.FC<{ className?: string }> = ({ className }) => (
   >
     {/* Play triangle */}
     <path d="M5 3.5 L20 12 L5 20.5 Z" fill="currentColor" />
-    {/* Sparkle — 4-pointed star at top-right area */}
+    {/* Sparkle - 4-pointed star at top-right area */}
     <path
       d="M19 3 L19.6 5 L21.5 5 L20 6.2 L20.6 8 L19 7 L17.4 8 L18 6.2 L16.5 5 L18.4 5 Z"
       fill="currentColor"
@@ -122,7 +122,7 @@ export const VeoIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Higgsfield — bold "H" with 3 small particle dots orbiting it */
+/** Higgsfield - bold "H" with 3 small particle dots orbiting it */
 export const HiggsFieldIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -137,14 +137,14 @@ export const HiggsFieldIcon: React.FC<{ className?: string }> = ({ className }) 
     <rect x="18.5" y="4" width="2.5" height="16" rx="0.5" fill="currentColor" />
     {/* H crossbar */}
     <rect x="3" y="10.75" width="18" height="2.5" rx="0.5" fill="currentColor" />
-    {/* Particle dots — 3 small circles orbiting (top-left, top-right, bottom-center) */}
+    {/* Particle dots - 3 small circles orbiting (top-left, top-right, bottom-center) */}
     <circle cx="1.5" cy="2" r="1.2" fill="currentColor" />
     <circle cx="22.5" cy="3" r="1" fill="currentColor" />
     <circle cx="12" cy="22.5" r="1.1" fill="currentColor" />
   </svg>
 );
 
-/** Minimax — bold "M" with a subtle wave underneath */
+/** Minimax - bold "M" with a subtle wave underneath */
 export const MinimaxIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -178,7 +178,7 @@ export const MinimaxIcon: React.FC<{ className?: string }> = ({ className }) => 
 // IMAGE PLATFORMS
 // ---------------------------------------------------------------------------
 
-/** Midjourney — sailboat silhouette, minimal and elegant */
+/** Midjourney - sailboat silhouette, minimal and elegant */
 export const MidjourneyIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -189,9 +189,9 @@ export const MidjourneyIcon: React.FC<{ className?: string }> = ({ className }) 
   >
     {/* Mast */}
     <line x1="12" y1="2" x2="12" y2="19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    {/* Main sail — large triangle */}
+    {/* Main sail - large triangle */}
     <path d="M12 3 L20 17 L12 17 Z" fill="currentColor" opacity="0.85" />
-    {/* Jib sail — smaller front triangle */}
+    {/* Jib sail - smaller front triangle */}
     <path d="M12 7 L5 16 L12 16 Z" fill="currentColor" opacity="0.5" />
     {/* Hull */}
     <path
@@ -204,7 +204,7 @@ export const MidjourneyIcon: React.FC<{ className?: string }> = ({ className }) 
   </svg>
 );
 
-/** DALL-E — square frame with an eye symbol inside */
+/** DALL-E - square frame with an eye symbol inside */
 export const DallEIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -229,7 +229,7 @@ export const DallEIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Flux — lightning bolt / flowing energy shape */
+/** Flux - lightning bolt / flowing energy shape */
 export const FluxIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -246,7 +246,7 @@ export const FluxIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Stable Diffusion — butterfly shape (two wing pairs meeting at center) */
+/** Stable Diffusion - butterfly shape (two wing pairs meeting at center) */
 export const StableDiffusionIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -282,7 +282,7 @@ export const StableDiffusionIcon: React.FC<{ className?: string }> = ({ classNam
   </svg>
 );
 
-/** Imagen — diamond/prism shape with 3 refracted light lines */
+/** Imagen - diamond/prism shape with 3 refracted light lines */
 export const ImagenIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -300,7 +300,7 @@ export const ImagenIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-/** Nano Banana / Gemini Image — four-pointed star sparkle */
+/** Nano Banana / Gemini Image - four-pointed star sparkle */
 export const NanoBananaIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -309,7 +309,7 @@ export const NanoBananaIcon: React.FC<{ className?: string }> = ({ className }) 
     className={className}
     aria-hidden="true"
   >
-    {/* Main 4-pointed sparkle — vertical and horizontal spikes */}
+    {/* Main 4-pointed sparkle - vertical and horizontal spikes */}
     <path
       d="M12 2 C12 2 13 8.5 12 12 C11 8.5 12 2 12 2 Z"
       fill="currentColor"
@@ -326,7 +326,7 @@ export const NanoBananaIcon: React.FC<{ className?: string }> = ({ className }) 
       d="M2 12 C2 12 8.5 11 12 12 C8.5 13 2 12 2 12 Z"
       fill="currentColor"
     />
-    {/* Diagonal secondary sparkle — smaller, 45-degree rotated */}
+    {/* Diagonal secondary sparkle - smaller, 45-degree rotated */}
     <path
       d="M17.5 6.5 C17.5 6.5 15 9.5 12 12 C14 8.5 17.5 6.5 17.5 6.5 Z"
       fill="currentColor"

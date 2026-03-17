@@ -96,7 +96,7 @@ const CAPABILITIES: CapabilityData[] = [
     gradient: "from-purple-500/20 to-purple-500/5",
     borderColor: "border-purple-500/20",
     description:
-      "פרומפטים מותאמים לכל פלטפורמת תמונות AI. כל מנוע מדבר שפה שונה — אנחנו יודעים לייצר את הפרומפט המושלם לכל אחד.",
+      "פרומפטים מותאמים לכל פלטפורמת תמונות AI. כל מנוע מדבר שפה שונה - אנחנו יודעים לייצר את הפרומפט המושלם לכל אחד.",
     platforms: [
       "Midjourney",
       "DALL-E 3",
@@ -120,7 +120,7 @@ const CAPABILITIES: CapabilityData[] = [
     gradient: "from-rose-500/20 to-rose-500/5",
     borderColor: "border-rose-500/20",
     description:
-      "פרומפטים מותאמים ליצירת סרטוני AI. מתנועות מצלמה ועד סגנון עריכה — המנוע שלנו יודע בדיוק מה כל פלטפורמה מצפה לקבל.",
+      "פרומפטים מותאמים ליצירת סרטוני AI. מתנועות מצלמה ועד סגנון עריכה - המנוע שלנו יודע בדיוק מה כל פלטפורמה מצפה לקבל.",
     platforms: [
       "Runway Gen-4",
       "Kling 2.0",
@@ -144,7 +144,7 @@ const CAPABILITIES: CapabilityData[] = [
     gradient: "from-amber-500/20 to-amber-500/5",
     borderColor: "border-amber-500/20",
     description:
-      "צרו הוראות מערכת מקצועיות ל-GPT מותאמים אישית וסוכני AI. הגדירו אישיות, יכולות, מגבלות ותזרימי עבודה — הכל בפרומפט אחד.",
+      "צרו הוראות מערכת מקצועיות ל-GPT מותאמים אישית וסוכני AI. הגדירו אישיות, יכולות, מגבלות ותזרימי עבודה - הכל בפרומפט אחד.",
     platforms: ["Custom GPTs", "Claude Projects", "Gemini Gems", "AI Agents"],
     features: [
       "הוראות מערכת מקצועיות",
@@ -166,13 +166,13 @@ const EXTRA_FEATURES: ExtraFeature[] = [
     icon: FolderOpen,
     title: "ספרייה אישית",
     description:
-      "שמרו, ארגנו וסווגו את הפרומפטים שלכם בתיקיות. חיפוש, מועדפים ומוצמדים — הכל במקום אחד.",
+      "שמרו, ארגנו וסווגו את הפרומפטים שלכם בתיקיות. חיפוש, מועדפים ומוצמדים - הכל במקום אחד.",
   },
   {
     icon: BookOpen,
     title: "ספריית פרומפטים ציבורית",
     description:
-      "מאות פרומפטים מוכנים לשימוש — שיווק, תוכן, HR, חינוך, קוד, ועוד.",
+      "מאות פרומפטים מוכנים לשימוש - שיווק, תוכן, HR, חינוך, קוד, ועוד.",
   },
   {
     icon: Link2,
@@ -190,13 +190,13 @@ const EXTRA_FEATURES: ExtraFeature[] = [
     icon: Sparkles,
     title: "שיפור חכם",
     description:
-      "אחרי כל שדרוג, קבלו הצעות לשיפורים נוספים מבוססי AI — עד שהפרומפט מושלם.",
+      "אחרי כל שדרוג, קבלו הצעות לשיפורים נוספים מבוססי AI - עד שהפרומפט מושלם.",
   },
   {
     icon: Zap,
     title: "משתנים דינמיים",
     description:
-      "הגדירו משתנים {כמו_זה} בפרומפטים ומלאו אותם מחדש בכל שימוש — בלי לערוך מחדש.",
+      "הגדירו משתנים {כמו_זה} בפרומפטים ומלאו אותם מחדש בכל שימוש - בלי לערוך מחדש.",
   },
 ];
 
@@ -313,7 +313,7 @@ export default function FeaturesPage() {
             <span className="text-amber-400 font-semibold">פירוט</span> הוא כלי
             AI ישראלי שמשדרג כל פרומפט שאתם כותבים לרמה מקצועית.
             <br className="hidden md:block" />
-            טקסט, מחקר, תמונות, סרטונים וסוכני AI — הכל בעברית, הכל במקום אחד.
+            טקסט, מחקר, תמונות, סרטונים וסוכני AI - הכל בעברית, הכל במקום אחד.
           </p>
         </section>
 
@@ -356,7 +356,7 @@ export default function FeaturesPage() {
               {
                 step: "2",
                 title: "בחרו מצב עבודה",
-                desc: "טקסט, מחקר, תמונה, סרטון או סוכן — בחרו מה אתם צריכים.",
+                desc: "טקסט, מחקר, תמונה, סרטון או סוכן - בחרו מה אתם צריכים.",
                 color: "text-amber-400",
                 bg: "bg-amber-500/10",
               },
@@ -425,7 +425,7 @@ export default function FeaturesPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <CrossLinkCard href="/prompts" title={`ספריית ${PROMPT_LIBRARY_COUNT} תבניות פרומפטים`} description="פרומפטים מוכנים לכל תחום ופלטפורמה" />
-            <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים משודרגים" description="ראו לפני ואחרי — איך Peroot משפר פרומפטים" />
+            <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים משודרגים" description="ראו לפני ואחרי - איך Peroot משפר פרומפטים" />
             <CrossLinkCard href="/blog" title="טיפים נוספים בבלוג" description="מדריכים מקצועיים לכתיבת פרומפטים ו-AI" />
           </div>
         </section>
@@ -436,7 +436,7 @@ export default function FeaturesPage() {
             מוכנים לשדרג את הפרומפטים שלכם?
           </h2>
           <p className="text-slate-500 text-sm max-w-md mx-auto">
-            נסו בחינם — בלי כרטיס אשראי, בלי התחייבות
+            נסו בחינם - בלי כרטיס אשראי, בלי התחייבות
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

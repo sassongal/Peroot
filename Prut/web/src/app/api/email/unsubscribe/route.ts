@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse("טוקן לא תקין", { status: 400 });
   }
   if (sequence.status === "unsubscribed") {
-    // Already unsubscribed — show success page anyway
+    // Already unsubscribed - show success page anyway
   } else {
     const { error } = await supabase
       .from("email_sequences")
