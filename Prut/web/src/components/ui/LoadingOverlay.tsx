@@ -12,8 +12,8 @@ export function LoadingOverlay({ isVisible, message = "משפר את הפרומ�
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm animate-in fade-in duration-300 overscroll-contain" aria-live="polite">
-      <div className="relative flex flex-col items-center gap-6 p-12 rounded-3xl bg-black/80 border border-white/10 shadow-2xl max-w-sm text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 dark:bg-black/30 backdrop-blur-sm animate-in fade-in duration-300 overscroll-contain" aria-live="polite">
+      <div className="relative flex flex-col items-center gap-6 p-12 rounded-3xl bg-white/90 dark:bg-black/80 border border-[var(--glass-border)] shadow-2xl max-w-sm text-center">
 
         {/* Animated loading visual */}
         <div className="relative w-28 h-28 flex items-center justify-center">
@@ -63,10 +63,10 @@ export function LoadingOverlay({ isVisible, message = "משפר את הפרומ�
         </div>
 
         <div className="relative z-10 flex flex-col gap-2">
-          <h3 className="text-xl font-serif text-white font-bold tracking-wide">
+          <h3 className="text-xl font-serif text-[var(--text-primary)] font-bold tracking-wide">
             {message}
           </h3>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[var(--text-muted)]">
             ה-AI מנתח, משפר ומדייק את הבקשה שלך...
           </p>
           {/* Animated progress dots */}

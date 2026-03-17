@@ -21,7 +21,7 @@ export default function StreamingProgress({ phase }: StreamingProgressProps) {
   const Icon = config.icon;
 
   return (
-    <div className="flex items-center justify-center gap-2.5 text-sm text-amber-400/80 py-3">
+    <div className="flex items-center justify-center gap-2.5 text-sm text-amber-600/80 dark:text-amber-400/80 py-3">
       <Icon className="w-4 h-4 animate-pulse" />
       <span className="font-medium">{config.labelHe}</span>
       <span className="inline-flex gap-0.5">

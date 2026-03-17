@@ -26,21 +26,21 @@ export function ExtensionBanner() {
 
   return (
     <div className="hidden md:flex items-center justify-center gap-3 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border-b border-amber-500/10 text-sm relative">
-      <Chrome className="w-4 h-4 text-amber-400 shrink-0" />
-      <span className="text-slate-400">
+      <Chrome className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
+      <span className="text-[var(--text-secondary)]">
         תוסף Chrome חדש -
       </span>
       <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
         בקרוב
       </span>
-      <span className="text-slate-400">
+      <span className="text-[var(--text-secondary)]">
         שדרג טקסטים ישירות מכל אתר
       </span>
       <a
         href={CHROME_STORE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors cursor-pointer"
+        className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-colors cursor-pointer"
         onClick={(e) => {
           if (CHROME_STORE_URL === "#") {
             e.preventDefault();
@@ -51,7 +51,7 @@ export function ExtensionBanner() {
       </a>
       <button
         onClick={handleDismiss}
-        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-slate-400 transition-colors"
+        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
         aria-label="סגור באנר"
       >
         <X className="w-3.5 h-3.5" />
