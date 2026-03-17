@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { pricingSchema, breadcrumbSchema } from "@/lib/schema";
+import { pricingSchema, breadcrumbSchema, faqSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
@@ -34,6 +34,21 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
             breadcrumbSchema([
               { name: "דף הבית", url: "/" },
               { name: "תוכניות ומחירים", url: "/pricing" },
+            ])
+          ),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            faqSchema([
+              { question: "כמה עולה Peroot?", answer: "Peroot מציע תוכנית חינמית עם 2 קרדיטים ביום, ותוכנית Pro ב-3.99 שקלים בחודש עם 150 קרדיטים. יש 4 ימי ניסיון חינם ל-Pro." },
+              { question: "מה ההבדל בין חינם ל-Pro?", answer: "התוכנית החינמית כוללת 2 קרדיטים ביום ומודלים בסיסיים. Pro כוללת 150 קרדיטים בחודש, מודלים פרימיום, שיפור איטרטיבי, וספריה אישית ללא הגבלה." },
+              { question: "איך מערכת הקרדיטים עובדת?", answer: "כל שדרוג פרומפט עולה קרדיט אחד. בחינם מקבלים 2 קרדיטים שמתחדשים כל יום ב-14:00. ב-Pro מקבלים 150 קרדיטים שמתחדשים בתחילת כל חודש חיוב." },
+              { question: "אפשר לבטל את המנוי?", answer: "כן, ביטול מנוי Pro הוא מיידי ללא דמי ביטול. המנוי נשאר פעיל עד סוף תקופת החיוב הנוכחית." },
+              { question: "האם יש ניסיון חינם?", answer: "כן, תוכנית Pro כוללת 4 ימי ניסיון חינם. ללא צורך בכרטיס אשראי לתוכנית החינמית." },
             ])
           ),
         }}
