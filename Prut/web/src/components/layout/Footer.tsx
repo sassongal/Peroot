@@ -25,6 +25,18 @@ export function Footer() {
 
         {/* Links */}
         <nav aria-label={isHe ? "ניווט תחתון" : "Footer navigation"} className="flex flex-wrap justify-center items-center gap-4 md:gap-6 text-sm text-slate-400">
+          <Link href="/prompts" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "ספריית פרומפטים" : "Prompt Library"}
+          </Link>
+          <Link href="/guide" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "מדריך" : "Guide"}
+          </Link>
+          <Link href="/examples" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "דוגמאות" : "Examples"}
+          </Link>
+          <Link href="/about" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "אודות" : "About"}
+          </Link>
           <Link href="/features" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "מה עושים פה?" : "Features"}
           </Link>

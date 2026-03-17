@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { breadcrumbSchema } from "@/lib/schema";
 import {
   MessageSquare,
   Globe,
@@ -263,6 +264,18 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
 
 export default function FeaturesPage() {
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(
+          breadcrumbSchema([
+            { name: "דף הבית", url: "/" },
+            { name: "תכונות", url: "/features" },
+          ])
+        ),
+      }}
+    />
     <div
       className="min-h-screen bg-black text-slate-200 selection:bg-amber-500/30"
       dir="rtl"
@@ -447,5 +460,6 @@ export default function FeaturesPage() {
         </section>
       </main>
     </div>
+    </>
   );
 }

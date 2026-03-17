@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle, XCircle, Lightbulb, Zap, Target, Layers, RefreshCw, ChevronRight, Brain, Drama, Settings } from "lucide-react";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "מדריך כתיבת פרומפטים | פירוט - Peroot",
@@ -271,6 +272,46 @@ function BadGoodComparison({ bad, good }: { bad: string; good: string }) {
 
 export default function GuidePage() {
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(
+          breadcrumbSchema([
+            { name: "דף הבית", url: "/" },
+            { name: "מדריך", url: "/guide" },
+          ])
+        ),
+      }}
+    />
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: "מדריך מלא להנדסת פרומפטים בעברית",
+          description: "למדו איך לכתוב פרומפטים מקצועיים שמפיקים תוצאות מדויקות מ-ChatGPT, Claude, Gemini ו-Midjourney",
+          author: {
+            "@type": "Person",
+            name: "Gal Sasson",
+            sameAs: ["https://www.linkedin.com/in/sassongal/", "https://github.com/sassongal"],
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "Peroot",
+            url: "https://peroot.space",
+          },
+          datePublished: "2026-01-15",
+          dateModified: "2026-03-17",
+          inLanguage: "he",
+          mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": "https://peroot.space/guide",
+          },
+        }),
+      }}
+    />
     <div className="min-h-screen bg-[#0a0a0a] text-slate-200" dir="rtl">
       <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-16">
 
@@ -516,5 +557,6 @@ export default function GuidePage() {
 
       </div>
     </div>
+    </>
   );
 }

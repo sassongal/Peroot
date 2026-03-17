@@ -7,6 +7,7 @@ import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
@@ -39,6 +40,18 @@ export default async function BlogPage() {
     .order("published_at", { ascending: false });
 
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(
+          breadcrumbSchema([
+            { name: "דף הבית", url: "/" },
+            { name: "בלוג", url: "/blog" },
+          ])
+        ),
+      }}
+    />
     <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
       <div className="max-w-3xl mx-auto">
         <Link
@@ -122,5 +135,6 @@ export default async function BlogPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

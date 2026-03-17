@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
+
 import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { validateEnv } from "@/lib/env";
 
 validateEnv();
-import { FAQSchema } from "@/components/features/faq/FAQSchema";
+
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
-import { organizationSchema } from "@/lib/schema";
+import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const frankRuhl = Frank_Ruhl_Libre({
@@ -150,9 +150,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
-  const locale = localeCookie === "en" ? "en" : "he";
+  const locale = "he";
   const dictionary = await getDictionary(locale);
 
   return (
@@ -178,10 +176,13 @@ export default async function RootLayout({
             {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
           </a>
           <div className="noise-overlay" />
-          <FAQSchema />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema()) }}
           />
           <I18nProvider dictionary={dictionary} lang={locale}>
             <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>

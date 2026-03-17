@@ -6,12 +6,21 @@ export function organizationSchema() {
     "@type": "Organization",
     name: "JoyaTech",
     url: "https://joya-tech.net",
+    description: "JoyaTech - חברת טכנולוגיה ישראלית המפתחת כלי AI חדשניים בעברית",
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/assets/branding/logo.png`,
+    },
+    sameAs: [
+      "https://www.facebook.com/profile.php?id=61579689932777",
+    ],
     founder: {
       "@type": "Person",
       name: "Gal Sasson",
       jobTitle: "Founder & Developer",
       sameAs: [
         "https://github.com/sassongal",
+        "https://www.linkedin.com/in/sassongal/",
       ],
     },
     brand: {
@@ -40,11 +49,20 @@ export function articleSchema(post: {
     "@type": "Article",
     headline: post.title,
     description: post.excerpt || "",
-    datePublished: post.published_at || undefined,
+    datePublished: post.published_at || new Date().toISOString(),
+    dateModified: post.published_at || new Date().toISOString(),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/blog/${post.slug}`,
+    },
     author: {
       "@type": "Person",
       name: post.author || "Gal Sasson",
       url: SITE_URL,
+      sameAs: [
+        "https://www.linkedin.com/in/sassongal/",
+        "https://github.com/sassongal",
+      ],
     },
     publisher: {
       "@type": "Organization",
@@ -131,13 +149,20 @@ export function pricingSchema() {
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
-          price: "3.99",
-          priceCurrency: "ILS",
-          billingIncrement: 1,
-          unitCode: "MON",
           availability: "https://schema.org/InStock",
           url: `${SITE_URL}/pricing`,
           priceValidUntil: "2027-12-31",
+          priceSpecification: {
+            "@type": "UnitPriceSpecification",
+            price: "3.99",
+            priceCurrency: "ILS",
+            unitText: "MONTH",
+            referenceQuantity: {
+              "@type": "QuantitativeValue",
+              value: 1,
+              unitCode: "MON",
+            },
+          },
         },
       },
     ],
@@ -195,5 +220,28 @@ export function promptCollectionSchema(collection: {
     inLanguage: "he",
     numberOfItems: collection.itemCount,
     provider: { "@type": "Organization", name: "Peroot" },
+  };
+}
+
+export function webSiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Peroot",
+    alternateName: "פירוט",
+    url: SITE_URL,
+    inLanguage: "he",
+    publisher: {
+      "@type": "Organization",
+      name: "JoyaTech",
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/prompts?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 }

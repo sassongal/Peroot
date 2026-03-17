@@ -320,7 +320,7 @@ export function PromptInput({
                    <button
                      onClick={toggleListening}
                      className={cn(
-                       "p-2.5 rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
+                       "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
                        isListening
                          ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
                          : "bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"

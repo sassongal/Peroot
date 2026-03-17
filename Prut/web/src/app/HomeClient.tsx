@@ -773,7 +773,7 @@ function PageContent({ user }: { user: User | null }) {
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-lg text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
+          "flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
           sidebarOpen
             ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
             : "bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10"
@@ -826,7 +826,7 @@ function PageContent({ user }: { user: User | null }) {
       {/* Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/8 via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
-      <div className="fixed bottom-6 right-4 sm:right-6 z-50">
+      <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50">
         <ErrorBoundary name="FAQBubble">
           <FAQBubble />
         </ErrorBoundary>

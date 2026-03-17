@@ -38,7 +38,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
   const panelClass =
     mode === "inline"
       ? "absolute bottom-16 right-0"
-      : "fixed bottom-24 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6";
+      : "fixed bottom-[calc(5rem+64px)] md:bottom-24 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6";
 
   const handleFeedback = () => {
      window.location.href = "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
