@@ -110,12 +110,12 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground" dir="rtl">
       <div className="max-w-5xl mx-auto px-6 py-20">
         {/* Back */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-12"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-fit mb-12"
         >
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
           <span>חזרה</span>
@@ -123,24 +123,24 @@ export default function PricingPage() {
 
         {/* Header */}
         <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
             <Sparkles className="w-3.5 h-3.5" />
             שדרג את הפרומפטים שלך
           </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-linear-to-l from-white to-zinc-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-linear-to-l from-foreground to-zinc-500 bg-clip-text text-transparent">
             בחר את התוכנית שלך
           </h1>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
             התחל בחינם, שדרג כשתרצה. כולל 4 ימי ניסיון חינם. ללא התחייבות.
           </p>
         </div>
 
         {/* Social Proof */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03]">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span className="text-sm text-slate-300">
-              <span className="font-bold text-white">50,000+</span> פרומפטים שודרגו על ידי המשתמשים שלנו
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-border bg-secondary">
+            <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-sm text-foreground">
+              <span className="font-bold text-foreground">50,000+</span> פרומפטים שודרגו על ידי המשתמשים שלנו
             </span>
           </div>
         </div>
@@ -148,20 +148,20 @@ export default function PricingPage() {
         {/* Plans */}
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Free Plan */}
-          <div className="rounded-3xl border border-white/10 bg-zinc-950 p-8 flex flex-col">
+          <div className="rounded-3xl border border-border bg-card p-8 flex flex-col">
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-white mb-2">{PLANS.free.nameHe}</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">{PLANS.free.nameHe}</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-white">&#8362;0</span>
-                <span className="text-slate-500 text-sm">/ לתמיד</span>
+                <span className="text-4xl font-black text-foreground">&#8362;0</span>
+                <span className="text-muted-foreground text-sm">/ לתמיד</span>
               </div>
-              <p className="text-slate-500 text-sm mt-2">מושלם להתחלה</p>
+              <p className="text-muted-foreground text-sm mt-2">מושלם להתחלה</p>
             </div>
 
             <ul className="space-y-3 flex-1 mb-8">
               {PLANS.free.features.map((feature, i) => (
-                <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                  <Check className="w-4 h-4 text-slate-500 shrink-0" />
+                <li key={i} className="flex items-center gap-3 text-sm text-foreground">
+                  <Check className="w-4 h-4 text-muted-foreground shrink-0" />
                   {feature}
                 </li>
               ))}
@@ -169,14 +169,14 @@ export default function PricingPage() {
 
             <Link
               href="/"
-              className="w-full py-3 rounded-xl border border-white/10 text-center text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors block"
+              className="w-full py-3 rounded-xl border border-border text-center text-sm font-medium text-foreground hover:bg-secondary transition-colors block"
             >
               התוכנית הנוכחית
             </Link>
           </div>
 
           {/* Pro Plan */}
-          <div className="rounded-3xl border-2 border-amber-500/40 bg-linear-to-b from-amber-500/5 to-zinc-950 p-8 flex flex-col relative overflow-hidden">
+          <div className="rounded-3xl border-2 border-amber-500/40 bg-linear-to-b from-amber-500/5 to-card p-8 flex flex-col relative overflow-hidden">
             {/* Popular badge */}
             <div className="absolute top-0 left-0 right-0 bg-linear-to-l from-amber-500 to-amber-600 text-black text-xs font-bold text-center py-1.5">
               <div className="flex items-center justify-center gap-1.5">
@@ -186,15 +186,15 @@ export default function PricingPage() {
             </div>
 
             <div className="mb-8 mt-4">
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
                 {PLANS.pro.nameHe}
-                <Zap className="w-5 h-5 text-amber-400" />
+                <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-white">&#8362;{PLANS.pro.price}</span>
-                <span className="text-slate-500 text-sm">/ חודש</span>
+                <span className="text-4xl font-black text-foreground">&#8362;{PLANS.pro.price}</span>
+                <span className="text-muted-foreground text-sm">/ חודש</span>
               </div>
-              <p className="text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
+              <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
               <div className="flex items-center gap-1.5 mt-2">
                 <Gift className="w-3.5 h-3.5 text-green-400" />
                 <span className="text-green-400 text-xs font-medium">4 ימי ניסיון חינם</span>
@@ -203,7 +203,7 @@ export default function PricingPage() {
 
             <ul className="space-y-3 flex-1 mb-8">
               {PLANS.pro.features.map((feature, i) => (
-                <li key={i} className="flex items-center gap-3 text-sm text-slate-200">
+                <li key={i} className="flex items-center gap-3 text-sm text-foreground">
                   <div className="w-4 h-4 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
                     <Check className="w-3 h-3 text-amber-400" />
                   </div>
@@ -230,13 +230,13 @@ export default function PricingPage() {
 
         {/* Feature Comparison Table */}
         <div className="max-w-3xl mx-auto mt-20">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">השוואת תכונות מפורטת</h2>
-          <div className="rounded-2xl border border-white/10 overflow-hidden">
+          <h2 className="text-2xl font-bold text-foreground text-center mb-8">השוואת תכונות מפורטת</h2>
+          <div className="rounded-2xl border border-border overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-3 bg-white/[0.03] border-b border-white/10">
-              <div className="p-4 text-sm font-semibold text-slate-400">תכונה</div>
-              <div className="p-4 text-sm font-semibold text-slate-300 text-center">חינם</div>
-              <div className="p-4 text-sm font-semibold text-amber-400 text-center flex items-center justify-center gap-1.5">
+            <div className="grid grid-cols-3 bg-secondary border-b border-border">
+              <div className="p-4 text-sm font-semibold text-muted-foreground">תכונה</div>
+              <div className="p-4 text-sm font-semibold text-foreground text-center">חינם</div>
+              <div className="p-4 text-sm font-semibold text-amber-600 dark:text-amber-400 text-center flex items-center justify-center gap-1.5">
                 <ProBadge size="md" />
                 פרו
               </div>
@@ -247,15 +247,15 @@ export default function PricingPage() {
               return (
                 <div
                   key={i}
-                  className={`grid grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-white/5' : ''} hover:bg-white/[0.02] transition-colors`}
+                  className={`grid grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-border' : ''} hover:bg-secondary transition-colors`}
                 >
-                  <div className="p-4 flex items-center gap-2.5 text-sm text-slate-300">
-                    <Icon className="w-4 h-4 text-slate-500 shrink-0" />
+                  <div className="p-4 flex items-center gap-2.5 text-sm text-foreground">
+                    <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                     {feature.name}
                   </div>
                   <div className="p-4 flex items-center justify-center">
                     {typeof feature.free === 'string' ? (
-                      <span className="text-sm text-slate-400">{feature.free}</span>
+                      <span className="text-sm text-muted-foreground">{feature.free}</span>
                     ) : feature.free ? (
                       <Check className="w-4 h-4 text-green-400" />
                     ) : (
@@ -264,7 +264,7 @@ export default function PricingPage() {
                   </div>
                   <div className="p-4 flex items-center justify-center">
                     {typeof feature.pro === 'string' ? (
-                      <span className="text-sm font-semibold text-amber-400">{feature.pro}</span>
+                      <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">{feature.pro}</span>
                     ) : feature.pro ? (
                       <Check className="w-4 h-4 text-amber-400" />
                     ) : (
@@ -278,7 +278,7 @@ export default function PricingPage() {
         </div>
 
         {/* Trust badges */}
-        <div className="flex flex-wrap items-center justify-center gap-8 mt-16 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-center gap-8 mt-16 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <Gift className="w-4 h-4" />
             <span>4 ימי ניסיון חינם</span>
@@ -305,16 +305,16 @@ export default function PricingPage() {
         </div>
 
         {/* Credit system explanation */}
-        <div className="max-w-2xl mx-auto mt-16 p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
-          <h2 className="text-lg font-bold text-white mb-4 text-center">איך עובדת מערכת הקרדיטים?</h2>
+        <div className="max-w-2xl mx-auto mt-16 p-6 bg-card border border-border rounded-2xl">
+          <h2 className="text-lg font-bold text-foreground mb-4 text-center">איך עובדת מערכת הקרדיטים?</h2>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
-              <h4 className="font-semibold text-slate-200">תוכנית חינם</h4>
-              <p className="text-slate-400">מקבלים 2 קרדיטים ביום שמתחדשים אוטומטית ב-14:00. כל שדרוג פרומפט = קרדיט אחד.</p>
+              <h4 className="font-semibold text-foreground">תוכנית חינם</h4>
+              <p className="text-muted-foreground">מקבלים 2 קרדיטים ביום שמתחדשים אוטומטית ב-14:00. כל שדרוג פרומפט = קרדיט אחד.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-semibold text-amber-400">תוכנית Pro</h4>
-              <p className="text-slate-400">150 קרדיטים בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום + למידת סגנון אישי.</p>
+              <h4 className="font-semibold text-amber-600 dark:text-amber-400">תוכנית Pro</h4>
+              <p className="text-muted-foreground">150 קרדיטים בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום + למידת סגנון אישי.</p>
             </div>
           </div>
         </div>

@@ -10,10 +10,10 @@ export function CrossLinkCard({ href, title, description }: CrossLinkCardProps) 
   return (
     <Link
       href={href}
-      className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-amber-500/30 transition-colors group"
+      className="rounded-xl border border-border bg-card p-5 hover:border-amber-500/30 transition-colors group"
     >
-      <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{title}</p>
-      <p className="text-xs text-slate-500 mt-1">{description}</p>
+      <p className="text-sm font-bold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{title}</p>
+      <p className="text-xs text-muted-foreground mt-1">{description}</p>
     </Link>
   );
 }

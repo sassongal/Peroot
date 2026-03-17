@@ -131,14 +131,14 @@ export default function PromptsIndexPage() {
         }}
       />
 
-      <div className="min-h-screen bg-[#0a0a0a] text-slate-200" dir="rtl">
+      <div className="min-h-screen bg-background text-foreground" dir="rtl">
         <div className="max-w-6xl mx-auto px-4 py-8 md:py-14">
 
           {/* Breadcrumbs */}
-          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 mb-8">
-            <Link href="/" className="hover:text-white transition-colors">דף הבית</Link>
+          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
+            <Link href="/" className="hover:text-foreground transition-colors">דף הבית</Link>
             <span>/</span>
-            <span className="text-slate-300">ספריית פרומפטים</span>
+            <span className="text-secondary-foreground">ספריית פרומפטים</span>
           </nav>
 
           {/* Hero */}
@@ -151,12 +151,12 @@ export default function PromptsIndexPage() {
               align="start"
             />
             <div className="flex items-center gap-4 text-sm mt-6 heading-enter-delay-3">
-              <span className="flex items-center gap-1.5 text-amber-400">
+              <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
                 {totalCategories} קטגוריות
               </span>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-500">{PROMPT_LIBRARY_COUNT} פרומפטים</span>
+              <span className="text-muted-foreground">{PROMPT_LIBRARY_COUNT} פרומפטים</span>
             </div>
           </header>
 
@@ -166,12 +166,12 @@ export default function PromptsIndexPage() {
               <section key={group.collectionId} aria-label={group.title}>
                 {/* Section header */}
                 <div
-                  className={`flex items-center gap-3 mb-5 pb-4 border-b border-white/8`}
+                  className={`flex items-center gap-3 mb-5 pb-4 border-b border-border`}
                 >
                   <span className="text-2xl" role="img" aria-hidden="true">
                     {group.icon}
                   </span>
-                  <h2 className="text-xl md:text-2xl font-serif text-white">
+                  <h2 className="text-xl md:text-2xl font-serif text-foreground">
                     {group.title}
                   </h2>
                 </div>
@@ -182,12 +182,12 @@ export default function PromptsIndexPage() {
                     <Link
                       key={slug}
                       href={`/prompts/${slug}`}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
+                      className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-secondary hover:bg-white/[0.06] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
                     >
                       <span className="text-3xl group-hover:scale-110 transition-transform duration-200">
                         {emoji}
                       </span>
-                      <span className="text-sm text-slate-400 group-hover:text-white transition-colors leading-snug">
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
                         {labelHe}
                       </span>
                     </Link>
@@ -208,10 +208,10 @@ export default function PromptsIndexPage() {
             className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-gradient-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
             aria-label="קריאה לפעולה"
           >
-            <h2 className="text-2xl md:text-3xl font-serif text-white mb-3">
+            <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-3">
               רוצים לשדרג את הפרומפטים שלכם?
             </h2>
-            <p className="text-slate-400 mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
+            <p className="text-muted-foreground mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
               Peroot משדרגת כל פרומפט אוטומטית - מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר ב-AI.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -224,7 +224,7 @@ export default function PromptsIndexPage() {
               </Link>
               <Link
                 href="/pricing"
-                className="px-8 py-3 rounded-xl border border-white/15 text-slate-300 text-sm font-medium hover:bg-white/5 transition-colors"
+                className="px-8 py-3 rounded-xl border border-border text-secondary-foreground text-sm font-medium hover:bg-secondary transition-colors"
               >
                 ראו את התוכניות
               </Link>

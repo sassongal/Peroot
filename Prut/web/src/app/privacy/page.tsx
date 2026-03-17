@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
     <main
       id="main-content"
       tabIndex={-1}
-      className="min-h-screen bg-black text-slate-300 font-sans p-6 md:p-12 lg:p-24"
+      className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 lg:p-24"
       dir="rtl"
     >
       <div className="max-w-4xl mx-auto space-y-8">
@@ -42,17 +42,17 @@ export default function PrivacyPolicy() {
           חזרה לדף הבית
         </Link>
         
-        <h1 className="text-4xl md:text-5xl font-serif text-white mb-12">מדיניות פרטיות - פירוט (Peroot)</h1>
+        <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-12">מדיניות פרטיות - פירוט (Peroot)</h1>
         
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">1. מינוח כללי</h2>
+          <h2 className="text-2xl text-foreground font-semibold">1. מינוח כללי</h2>
           <p>
             מדיניות פרטיות זו מתארת כיצד אנו אוספים, משתמשים ומגנים על המידע האישי שלך בעת השימוש באפליקציית &quot;פירוט&quot;. אנו מחויבים לשמור על פרטיות המשתמשים שלנו ולפעול בהתאם לחוקי הגנת הפרטיות בישראל.
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">2. המידע שאנו אוספים</h2>
+          <h2 className="text-2xl text-foreground font-semibold">2. המידע שאנו אוספים</h2>
           <p>
             בעת השימוש באתר, אנו עשויים לאסוף את המידע הבא:
           </p>
@@ -64,7 +64,7 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">3. השימוש במידע</h2>
+          <h2 className="text-2xl text-foreground font-semibold">3. השימוש במידע</h2>
           <p>
             אנו משתמשים במידע כדי:
           </p>
@@ -76,14 +76,14 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">4. אבטחת מידע</h2>
+          <h2 className="text-2xl text-foreground font-semibold">4. אבטחת מידע</h2>
           <p>
             המידע שלך נשמר באמצעות שירותי Supabase המאובטחים. אנו מיישמים אמצעי הגנה טכנולוגיים כדי למנוע גישה לא מורשית למידע שלך. עם זאת, אין אבטחה מוחלטת באינטרנט והשימוש באתר הוא על אחריות המשתמש.
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">5. תוסף Chrome (Peroot Extension)</h2>
+          <h2 className="text-2xl text-foreground font-semibold">5. תוסף Chrome (Peroot Extension)</h2>
           <p>
             התוסף לדפדפן Chrome מאפשר לשדרג טקסטים ישירות מכל אתר. להלן פירוט בנוגע לפרטיות בתוסף:
           </p>
@@ -96,14 +96,14 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold">6. זכויות המשתמש</h2>
+          <h2 className="text-2xl text-foreground font-semibold">6. זכויות המשתמש</h2>
           <p>
             זכותך לבקש לעיין במידע שנאסף עליך, לבקש את תיקונו או את מחיקת חשבונך לצמיתות דרך פנייה לשירות הלקוחות בכתובת המופיעה מטה.
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl text-white font-semibold flex items-center gap-2">
+          <h2 className="text-2xl text-foreground font-semibold flex items-center gap-2">
             <AccessibilityIcon className="w-5 h-5 text-purple-400" />
             7. נגישות
           </h2>
@@ -113,7 +113,7 @@ export default function PrivacyPolicy() {
           </p>
         </section>
 
-        <footer className="pt-12 border-t border-white/10 text-sm text-slate-500">
+        <footer className="pt-12 border-t border-border text-sm text-muted-foreground">
           עודכן לאחרונה: ינואר 2026 | ליצירת קשר: gal@joya-tech.net
         </footer>
       </div>

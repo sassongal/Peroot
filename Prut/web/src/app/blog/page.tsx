@@ -53,11 +53,11 @@ export default async function BlogPage() {
         ),
       }}
     />
-    <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-8"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-fit mb-8"
         >
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
           <span>חזרה</span>
@@ -73,8 +73,8 @@ export default async function BlogPage() {
 
         {(posts ?? []).length === 0 ? (
           <div className="text-center py-16 px-8">
-            <p className="text-lg text-slate-400 font-medium">אין מאמרים עדיין</p>
-            <p className="text-sm text-slate-500 mt-2">מאמרים חדשים יופיעו כאן בקרוב</p>
+            <p className="text-lg text-muted-foreground font-medium">אין מאמרים עדיין</p>
+            <p className="text-sm text-muted-foreground mt-2">מאמרים חדשים יופיעו כאן בקרוב</p>
           </div>
         ) : (
           <BlogCategoryFilter

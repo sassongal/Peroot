@@ -135,11 +135,11 @@ const EXAMPLES = [
 
 export default function ExamplesPage() {
   return (
-    <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
       <div className="max-w-4xl mx-auto">
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-8"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-fit mb-8"
         >
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
           <span>חזרה</span>
@@ -155,31 +155,31 @@ export default function ExamplesPage() {
 
         <div className="space-y-8">
           {EXAMPLES.map((example, i) => (
-            <div key={i} className="glass-card rounded-xl border border-white/10 overflow-hidden cursor-pointer">
-              <div className="p-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-400 bg-white/5 px-3 py-1 rounded-full">
+            <div key={i} className="glass-card rounded-xl border border-border overflow-hidden cursor-pointer">
+              <div className="p-4 bg-secondary border-b border-border flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1 rounded-full">
                   {example.category}
                 </span>
-                <span className="text-[10px] text-slate-500">דוגמה #{i + 1}</span>
+                <span className="text-[10px] text-muted-foreground">דוגמה #{i + 1}</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-border">
                 {/* Before */}
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-red-400/60" />
                     <span className="text-[10px] font-semibold text-red-400/60 uppercase tracking-wider">לפני</span>
                   </div>
-                  <p className="text-sm text-slate-400 leading-relaxed">{example.before}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{example.before}</p>
                 </div>
 
                 {/* After */}
-                <div className="p-6 bg-white/[0.01]">
+                <div className="p-6 bg-secondary">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-400" />
                     <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">אחרי - Peroot</span>
                   </div>
-                  <div className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap font-mono text-xs">
+                  <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-mono text-xs">
                     {example.after}
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export default function ExamplesPage() {
 
         {/* CTA */}
         <div className="text-center mt-12 mb-8">
-          <h2 className="text-2xl font-serif text-white mb-4">רוצים לנסות בעצמכם?</h2>
+          <h2 className="text-2xl font-serif text-foreground mb-4">רוצים לנסות בעצמכם?</h2>
           <Link
             href="/"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"

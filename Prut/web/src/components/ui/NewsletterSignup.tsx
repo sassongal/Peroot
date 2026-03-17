@@ -45,7 +45,7 @@ export function NewsletterSignup() {
         </div>
         <button
           onClick={() => setStatus("idle")}
-          className="w-full text-xs text-slate-400 hover:text-white transition-colors"
+          className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           נסה שוב
         </button>
@@ -54,12 +54,12 @@ export function NewsletterSignup() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-5 bg-white/5 border border-white/10 rounded-xl space-y-3">
+    <form onSubmit={handleSubmit} className="p-5 bg-secondary border border-border rounded-xl space-y-3">
       <div className="flex items-center gap-2 mb-1">
-        <Mail className="w-4 h-4 text-amber-400" />
-        <h3 className="font-semibold text-white text-sm">עדכונים ותוכן חדש</h3>
+        <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        <h3 className="font-semibold text-foreground text-sm">עדכונים ותוכן חדש</h3>
       </div>
-      <p className="text-xs text-slate-400">הירשם לקבלת מאמרים חדשים וטיפים ישירות למייל</p>
+      <p className="text-xs text-muted-foreground">הירשם לקבלת מאמרים חדשים וטיפים ישירות למייל</p>
       <div className="flex gap-2">
         <input
           type="email"
@@ -68,12 +68,12 @@ export function NewsletterSignup() {
           placeholder="your@email.com"
           dir="ltr"
           required
-          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+          className="flex-1 bg-secondary border border-border rounded-lg px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50 transition-colors"
         />
         <button
           type="submit"
           disabled={status === "loading" || !email.trim()}
-          className="shrink-0 px-4 py-2.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm font-semibold hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+          className="shrink-0 px-4 py-2.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-semibold hover:bg-amber-500/30 transition-colors disabled:opacity-50"
         >
           {status === "loading" ? (
             <Loader2 className="w-4 h-4 animate-spin" />

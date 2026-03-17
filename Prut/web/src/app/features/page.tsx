@@ -210,7 +210,7 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
       className={`group relative rounded-2xl border ${cap.borderColor} bg-gradient-to-b ${cap.gradient} p-6 md:p-8 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-black/20`}
     >
       {/* Number badge */}
-      <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs font-bold text-slate-500">
+      <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground">
         {index + 1}
       </div>
 
@@ -218,18 +218,18 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
         {/* Header */}
         <div className="flex items-start gap-4">
           <div
-            className={`w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center ${cap.color} shrink-0`}
+            className={`w-12 h-12 rounded-xl bg-secondary border border-border flex items-center justify-center ${cap.color} shrink-0`}
           >
             <Icon className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">{cap.title}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{cap.subtitle}</p>
+            <h3 className="text-xl font-bold text-foreground">{cap.title}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{cap.subtitle}</p>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-slate-400 leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           {cap.description}
         </p>
 
@@ -238,7 +238,7 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
           {cap.platforms.map((p) => (
             <span
               key={p}
-              className="text-[11px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400"
+              className="text-[11px] px-2.5 py-1 rounded-full bg-secondary border border-border text-muted-foreground"
             >
               {p}
             </span>
@@ -248,7 +248,7 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
         {/* Features */}
         <ul className="space-y-2">
           {cap.features.map((f) => (
-            <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
+            <li key={f} className="flex items-start gap-2 text-sm text-foreground">
               <CheckCircle2
                 className={`w-4 h-4 ${cap.color} shrink-0 mt-0.5`}
               />
@@ -278,21 +278,21 @@ export default function FeaturesPage() {
       }}
     />
     <div
-      className="min-h-screen bg-black text-slate-200 selection:bg-amber-500/30"
+      className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"
       dir="rtl"
     >
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
           <Link
             href="/"
-            className="text-lg font-serif font-bold text-white hover:text-amber-400 transition-colors"
+            className="text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             Peroot
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-amber-400 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           >
             חזרה לדף הבית
             <ArrowLeft className="w-4 h-4" />
@@ -316,10 +316,10 @@ export default function FeaturesPage() {
         {/* 5 Capability Modes */}
         <section className="space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
               5 מצבי עבודה
             </h2>
-            <p className="text-slate-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               כל מצב מייצר פרומפט מותאם בדיוק לסוג הפלטפורמה שאתם עובדים איתה
             </p>
           </div>
@@ -334,10 +334,10 @@ export default function FeaturesPage() {
         {/* How It Works */}
         <section className="py-20 space-y-10">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
               איך זה עובד?
             </h2>
-            <p className="text-slate-500 text-sm">3 צעדים פשוטים</p>
+            <p className="text-muted-foreground text-sm">3 צעדים פשוטים</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -366,17 +366,17 @@ export default function FeaturesPage() {
             ].map((s) => (
               <div
                 key={s.step}
-                className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center"
+                className="relative rounded-2xl border border-border bg-secondary p-6 text-center"
               >
                 <div
                   className={`w-10 h-10 rounded-full ${s.bg} ${s.color} flex items-center justify-center text-lg font-bold mx-auto mb-4`}
                 >
                   {s.step}
                 </div>
-                <h3 className="text-base font-bold text-white mb-2">
+                <h3 className="text-base font-bold text-foreground mb-2">
                   {s.title}
                 </h3>
-                <p className="text-sm text-slate-500">{s.desc}</p>
+                <p className="text-sm text-muted-foreground">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -385,10 +385,10 @@ export default function FeaturesPage() {
         {/* Extra Features */}
         <section className="space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
               ועוד הרבה יותר
             </h2>
-            <p className="text-slate-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               כל מה שצריך כדי לעבוד עם AI כמו מקצוען
             </p>
           </div>
@@ -399,13 +399,13 @@ export default function FeaturesPage() {
               return (
                 <div
                   key={f.title}
-                  className="rounded-xl border border-white/5 bg-white/[0.02] p-5 space-y-3 hover:border-white/10 transition-colors"
+                  className="rounded-xl border border-border bg-secondary p-5 space-y-3 hover:border-border transition-colors"
                 >
                   <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                    <Icon className="w-4.5 h-4.5 text-amber-400" />
+                    <Icon className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h3 className="text-sm font-bold text-white">{f.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
+                  <h3 className="text-sm font-bold text-foreground">{f.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     {f.description}
                   </p>
                 </div>
@@ -416,7 +416,7 @@ export default function FeaturesPage() {
 
         {/* Cross-links */}
         <section className="py-12 space-y-4">
-          <h2 className="text-lg font-serif font-bold text-white text-center mb-6">
+          <h2 className="text-lg font-serif font-bold text-foreground text-center mb-6">
             המשיכו לגלות
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -428,10 +428,10 @@ export default function FeaturesPage() {
 
         {/* CTA */}
         <section className="py-20 text-center space-y-6">
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-white">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
             מוכנים לשדרג את הפרומפטים שלכם?
           </h2>
-          <p className="text-slate-500 text-sm max-w-md mx-auto">
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
             נסו בחינם - בלי כרטיס אשראי, בלי התחייבות
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -444,14 +444,14 @@ export default function FeaturesPage() {
             </Link>
             <Link
               href="/guide"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl border border-white/10 text-slate-300 font-medium hover:bg-white/5 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl border border-border text-foreground font-medium hover:bg-secondary transition-colors"
             >
               <BookOpen className="w-5 h-5" />
               מדריך כתיבת פרומפטים
             </Link>
           </div>
           <p className="text-slate-600 text-xs mt-4">
-            <Link href="/pricing" className="hover:text-amber-400 transition-colors">מחירים ותוכניות</Link>
+            <Link href="/pricing" className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors">מחירים ותוכניות</Link>
           </p>
         </section>
       </main>

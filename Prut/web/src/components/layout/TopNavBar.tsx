@@ -44,7 +44,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               onNavigate("home");
             }}
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 border border-amber-500/30 font-serif text-lg font-bold heading-highlight brand-mark-glow" aria-hidden="true">פ</span>
+            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-background/60 dark:bg-black/60 border border-amber-500/30 font-serif text-lg font-bold heading-highlight brand-mark-glow" aria-hidden="true">פ</span>
             <span className="hidden sm:inline text-base">Peroot</span>
           </Link>
 

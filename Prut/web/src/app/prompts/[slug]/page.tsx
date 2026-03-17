@@ -137,16 +137,16 @@ export default async function CategoryPage({ params }: Props) {
         }}
       />
 
-      <div className="min-h-screen bg-[#0a0a0a] text-slate-200" dir="rtl">
+      <div className="min-h-screen bg-background text-foreground" dir="rtl">
         <div className="max-w-6xl mx-auto px-4 py-8 md:py-14">
 
           {/* Breadcrumbs */}
-          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 mb-8">
-            <Link href="/" className="hover:text-white transition-colors">דף הבית</Link>
+          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
+            <Link href="/" className="hover:text-foreground transition-colors">דף הבית</Link>
             <span>/</span>
-            <Link href="/prompts" className="hover:text-white transition-colors">ספריית פרומפטים</Link>
+            <Link href="/prompts" className="hover:text-foreground transition-colors">ספריית פרומפטים</Link>
             <span>/</span>
-            <span className="text-slate-300">{categoryData.labelHe}</span>
+            <span className="text-secondary-foreground">{categoryData.labelHe}</span>
           </nav>
 
           {/* Hero header */}
@@ -156,16 +156,16 @@ export default async function CategoryPage({ params }: Props) {
                 {categoryData.emoji}
               </span>
               <div>
-                <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight">
+                <h1 className="text-3xl md:text-5xl font-serif text-foreground leading-tight">
                   {categoryData.labelHe}
                 </h1>
               </div>
             </div>
-            <p className="text-base md:text-lg text-slate-400 max-w-2xl leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
               {categoryData.descriptionHe}
             </p>
             {prompts.length > 0 && (
-              <p className="text-sm text-amber-400/80 mt-3">
+              <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-3">
                 {prompts.length} פרומפטים זמינים
               </p>
             )}
@@ -178,15 +178,15 @@ export default async function CategoryPage({ params }: Props) {
                 {prompts.map((prompt) => (
                   <article
                     key={prompt.id}
-                    className="rounded-2xl border border-white/10 bg-black/40 p-5 md:p-6 flex flex-col gap-3 hover:bg-white/[0.04] transition-colors"
+                    className="rounded-2xl border border-border bg-card p-5 md:p-6 flex flex-col gap-3 hover:bg-secondary transition-colors"
                   >
                     {/* Title + use_case */}
                     <div>
-                      <h2 className="text-base md:text-lg font-semibold text-slate-100 leading-snug line-clamp-2">
+                      <h2 className="text-base md:text-lg font-semibold text-foreground leading-snug line-clamp-2">
                         {prompt.title}
                       </h2>
                       {prompt.use_case && (
-                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {prompt.use_case}
                         </p>
                       )}
@@ -198,7 +198,7 @@ export default async function CategoryPage({ params }: Props) {
                         prompt.capability_mode === 'IMAGE_GENERATION' ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20' :
                         prompt.capability_mode === 'DEEP_RESEARCH' ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20' :
                         prompt.capability_mode === 'AGENT_BUILDER' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
-                        'bg-white/5 text-slate-400 border border-white/10'
+                        'bg-secondary text-muted-foreground border border-border'
                       }`}>
                         {prompt.capability_mode === 'IMAGE_GENERATION' ? 'יצירת תמונה' :
                          prompt.capability_mode === 'DEEP_RESEARCH' ? 'מחקר מעמיק' :
@@ -209,7 +209,7 @@ export default async function CategoryPage({ params }: Props) {
 
                     {/* Preview image for image generation prompts */}
                     {prompt.preview_image_url && (
-                      <div className="rounded-xl overflow-hidden border border-white/10">
+                      <div className="rounded-xl overflow-hidden border border-border">
                         <Image
                           src={prompt.preview_image_url}
                           alt={prompt.title}
@@ -223,7 +223,7 @@ export default async function CategoryPage({ params }: Props) {
 
                     {/* Prompt preview */}
                     <div
-                      className={`text-sm md:text-base text-slate-400 leading-relaxed line-clamp-4 bg-white/[0.03] rounded-xl p-3 border border-white/5 ${
+                      className={`text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-4 bg-secondary rounded-xl p-3 border border-border ${
                         prompt.capability_mode === 'IMAGE_GENERATION' ? 'font-mono text-left dir-ltr' : ''
                       }`}
                       dir={prompt.capability_mode === 'IMAGE_GENERATION' ? 'ltr' : undefined}
@@ -237,13 +237,13 @@ export default async function CategoryPage({ params }: Props) {
                         {prompt.variables.slice(0, 4).map((v) => (
                           <span
                             key={v}
-                            className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400"
+                            className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground"
                           >
                             {v}
                           </span>
                         ))}
                         {prompt.variables.length > 4 && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-500">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground">
                             +{prompt.variables.length - 4}
                           </span>
                         )}
@@ -268,15 +268,15 @@ export default async function CategoryPage({ params }: Props) {
           ) : (
             <div className="flex flex-col items-center gap-4 py-20 text-center">
               <span className="text-5xl">{categoryData.emoji}</span>
-              <p className="text-lg font-semibold text-slate-400">
+              <p className="text-lg font-semibold text-muted-foreground">
                 עדיין אין פרומפטים בקטגוריה זו
               </p>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 הפרומפטים נוספים בקרוב. בינתיים, בדקו קטגוריות אחרות.
               </p>
               <Link
                 href="/prompts"
-                className="mt-2 px-5 py-2.5 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/5 transition-colors"
+                className="mt-2 px-5 py-2.5 rounded-lg border border-border text-secondary-foreground text-sm hover:bg-secondary transition-colors"
               >
                 לכל הקטגוריות
               </Link>
@@ -288,11 +288,11 @@ export default async function CategoryPage({ params }: Props) {
             className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-gradient-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
             aria-label="קריאה לפעולה"
           >
-            <p className="text-sm text-amber-400/70 font-medium mb-2">Peroot - מחולל פרומפטים בעברית</p>
-            <h2 className="text-2xl md:text-3xl font-serif text-white mb-3">
+            <p className="text-sm text-amber-600/70 dark:text-amber-400/70 font-medium mb-2">Peroot - מחולל פרומפטים בעברית</p>
+            <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-3">
               רוצים פרומפטים מותאמים אישית?
             </h2>
-            <p className="text-slate-400 mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
+            <p className="text-muted-foreground mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
               הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספריה אישית וגישה ל-480+ פרומפטים.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -305,7 +305,7 @@ export default async function CategoryPage({ params }: Props) {
               </Link>
               <Link
                 href="/pricing"
-                className="px-8 py-3 rounded-xl border border-white/15 text-slate-300 text-sm font-medium hover:bg-white/5 transition-colors"
+                className="px-8 py-3 rounded-xl border border-border text-secondary-foreground text-sm font-medium hover:bg-secondary transition-colors"
               >
                 ראו את התוכניות
               </Link>
@@ -314,7 +314,7 @@ export default async function CategoryPage({ params }: Props) {
 
           {/* Related categories */}
           <section className="mt-14 md:mt-16" aria-label="קטגוריות נוספות">
-            <h2 className="text-xl font-serif text-white mb-5">קטגוריות נוספות</h2>
+            <h2 className="text-xl font-serif text-foreground mb-5">קטגוריות נוספות</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {allCategorySlugs
                 .filter(([s]) => s !== slug)
@@ -323,10 +323,10 @@ export default async function CategoryPage({ params }: Props) {
                   <Link
                     key={catSlug}
                     href={`/prompts/${catSlug}`}
-                    className="flex flex-col items-center gap-2 p-3 min-h-[44px] rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-colors text-center group"
+                    className="flex flex-col items-center gap-2 p-3 min-h-[44px] rounded-xl border border-border bg-secondary hover:bg-white/[0.06] hover:border-white/20 transition-colors text-center group"
                   >
                     <span className="text-2xl">{catData.emoji}</span>
-                    <span className="text-xs text-slate-400 group-hover:text-white transition-colors leading-snug">
+                    <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
                       {CATEGORY_LABELS[catData.id] || catData.labelHe}
                     </span>
                   </Link>
@@ -338,7 +338,7 @@ export default async function CategoryPage({ params }: Props) {
           <div className="mt-10 text-center">
             <Link
               href="/prompts"
-              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowRight className="w-4 h-4" />
               לכל ספריית הפרומפטים

@@ -32,47 +32,47 @@ export function Footer() {
 
         {/* Links */}
         <nav aria-label={isHe ? "ניווט תחתון" : "Footer navigation"} className="flex flex-wrap justify-center items-center gap-4 md:gap-6 text-sm text-slate-500 dark:text-slate-400">
-          <Link href="/prompts" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/prompts" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "ספריית פרומפטים" : "Prompt Library"}
           </Link>
-          <Link href="/guide" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/guide" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "מדריך" : "Guide"}
           </Link>
-          <Link href="/examples" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/examples" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "דוגמאות" : "Examples"}
           </Link>
-          <Link href="/about" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/about" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "אודות" : "About"}
           </Link>
-          <Link href="/features" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/features" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "מה עושים פה?" : "Features"}
           </Link>
-          <Link href="/extension" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/extension" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "תוסף Chrome" : "Chrome Extension"}
           </Link>
-          <Link href="/blog" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/blog" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "בלוג" : "Blog"}
           </Link>
-          <Link href="/pricing" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link href="/pricing" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "מחירים" : "Pricing"}
           </Link>
-          <Link href="/terms" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link href="/terms" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             {isHe ? "תנאי שימוש" : "Terms of Use"}
           </Link>
-          <Link href="/privacy" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link href="/privacy" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             {isHe ? "מדיניות פרטיות" : "Privacy Policy"}
           </Link>
-          <Link href="/accessibility" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link href="/accessibility" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             {isHe ? "הצהרת נגישות" : "Accessibility"}
           </Link>
-          <Link href="/contact" className="cursor-pointer hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link href="/contact" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
             {isHe ? "צור קשר" : "Contact"}
           </Link>
           <a
             href="https://www.facebook.com/profile.php?id=61579689932777"
             target="_blank"
             rel="noopener noreferrer"
-            className="cursor-pointer hover:text-amber-400 transition-colors min-h-[44px] min-w-[44px] px-1 flex items-center justify-center"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 transition-colors min-h-[44px] min-w-[44px] px-1 flex items-center justify-center"
             aria-label="Facebook"
             title="Peroot on Facebook"
           >

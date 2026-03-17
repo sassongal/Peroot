@@ -137,12 +137,12 @@ export default async function BlogPostPage({ params }: Props) {
   const enrichedContent = injectH2Ids(post.content ?? "");
 
   return (
-    <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
       {/* Outer centering wrapper */}
       <div className="max-w-5xl mx-auto">
         <Link
           href="/blog"
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors group w-fit mb-8"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-fit mb-8"
         >
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
           <span>חזרה לבלוג</span>
@@ -158,24 +158,24 @@ export default async function BlogPostPage({ params }: Props) {
           <article className="min-w-0 flex-1 max-w-3xl">
             <header className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
                   {post.category}
                 </span>
                 {publishedDate && (
-                  <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     <span>{publishedDate}</span>
                   </div>
                 )}
                 {post.read_time && (
-                  <span className="text-[10px] text-slate-600">{post.read_time}</span>
+                  <span className="text-[10px] text-muted-foreground">{post.read_time}</span>
                 )}
               </div>
-              <h1 className="text-4xl md:text-5xl font-serif text-white mb-4 leading-tight">
+              <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-4 leading-tight">
                 {post.title}
               </h1>
               {post.excerpt && (
-                <p className="text-lg text-slate-400 leading-relaxed">
+                <p className="text-lg text-muted-foreground leading-relaxed">
                   {post.excerpt}
                 </p>
               )}
@@ -191,25 +191,25 @@ export default async function BlogPostPage({ params }: Props) {
 
             <SafeHtml
               html={enrichedContent}
-              className="prose prose-invert prose-amber max-w-none
-                prose-headings:font-serif prose-headings:text-white
+              className="prose dark:prose-invert prose-amber max-w-none
+                prose-headings:font-serif prose-headings:text-foreground
                 prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
                 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
-                prose-li:text-slate-300 prose-li:leading-relaxed
-                prose-strong:text-white
-                prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
+                prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4
+                prose-li:text-muted-foreground prose-li:leading-relaxed
+                prose-strong:text-foreground
+                prose-a:text-amber-600 dark:prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
             />
 
             {/* Author Bio */}
-            <div className="mt-12 p-6 rounded-2xl border border-white/10 bg-white/[0.02] flex items-start gap-4" dir="rtl">
+            <div className="mt-12 p-6 rounded-2xl border border-border bg-secondary flex items-start gap-4" dir="rtl">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
-                <span className="text-lg font-bold text-amber-400">G</span>
+                <span className="text-lg font-bold text-amber-600 dark:text-amber-400">G</span>
               </div>
               <div>
-                <p className="text-sm font-bold text-white">{post.author || "Gal Sasson"}</p>
-                <p className="text-xs text-slate-500 mt-0.5">מייסד JoyaTech ויוצר Peroot</p>
-                <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                <p className="text-sm font-bold text-foreground">{post.author || "Gal Sasson"}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">מייסד JoyaTech ויוצר Peroot</p>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                   מפתח ויזם בתחום ה-AI עם התמחות בעיבוד שפה טבעית ופרומפט אנג&apos;ינירינג.
                   בונה כלים שעוזרים למשתמשים לתקשר טוב יותר עם מודלי AI.
                 </p>
@@ -225,8 +225,8 @@ export default async function BlogPostPage({ params }: Props) {
 
             {/* Gradient CTA */}
             <div className="mt-12 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-8 text-center space-y-4">
-              <h3 className="text-2xl font-serif text-white">רוצים לשדרג את הפרומפטים שלכם?</h3>
-              <p className="text-slate-400 max-w-lg mx-auto">
+              <h3 className="text-2xl font-serif text-foreground">רוצים לשדרג את הפרומפטים שלכם?</h3>
+              <p className="text-muted-foreground max-w-lg mx-auto">
                 Peroot משדרג כל פרומפט לרמה מקצועית - בעברית, בחינם, תוך שניות.
               </p>
               <Link

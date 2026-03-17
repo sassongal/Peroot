@@ -51,8 +51,8 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
               className={[
                 "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-all",
                 isActive
-                  ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                  : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200 hover:border-white/20",
+                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                  : "bg-secondary text-muted-foreground border-border hover:bg-accent hover:text-foreground hover:border-border",
               ].join(" ")}
             >
               {cat}
@@ -73,10 +73,10 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
           <Link
             key={post.slug}
             href={`/blog/${post.slug}`}
-            className="block glass-card rounded-xl border border-white/10 p-6 hover:bg-white/[0.03] hover:border-white/20 transition-all group cursor-pointer"
+            className="block glass-card rounded-xl border border-border p-6 hover:bg-card hover:border-border transition-all group cursor-pointer"
           >
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full">
                 {post.category}
               </span>
               <div className="flex items-center gap-1 text-[10px] text-slate-500">
@@ -96,10 +96,10 @@ export function BlogCategoryFilter({ categories, posts }: BlogCategoryFilterProp
                 excerpt={post.excerpt ?? ""}
               />
             </div>
-            <h2 className="text-xl font-serif text-white mb-2 group-hover:text-amber-200 transition-colors">
+            <h2 className="text-xl font-serif text-foreground mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-200 transition-colors">
               {post.title}
             </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">{post.excerpt}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{post.excerpt}</p>
           </Link>
         ))}
       </div>

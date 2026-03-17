@@ -29,7 +29,7 @@ export function PageHeading({
       {badge && (
         <div
           className={cn(
-            "inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium heading-enter",
+            "inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-medium heading-enter",
             align === "center" && "mx-auto"
           )}
         >
@@ -58,7 +58,7 @@ export function PageHeading({
       {subtitle && (
         <p
           className={cn(
-            "text-lg text-slate-400 leading-relaxed heading-enter-delay-2",
+            "text-lg text-muted-foreground leading-relaxed heading-enter-delay-2",
             align === "center" && "mx-auto",
             size === "large" ? "md:text-xl max-w-2xl" : "max-w-2xl"
           )}

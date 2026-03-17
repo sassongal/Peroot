@@ -36,13 +36,13 @@ export default function AboutPage() {
         }}
       />
       <main
-        className="min-h-screen bg-black text-slate-300 font-sans p-6 md:p-12 lg:p-24"
+        className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 lg:p-24"
         dir="rtl"
       >
         <div className="max-w-3xl mx-auto space-y-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors"
+            className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors"
           >
             <ArrowRight className="w-4 h-4" />
             חזרה לדף הבית
@@ -51,7 +51,7 @@ export default function AboutPage() {
           <PageHeading title="אודות Peroot" align="start" />
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-serif text-white">הסיפור</h2>
+            <h2 className="text-2xl font-serif text-foreground">הסיפור</h2>
             <p className="text-lg leading-relaxed">
               Peroot (פירוט) נולד מתוך צורך אמיתי. כשעבדנו עם מודלי AI
               יום-יום, ראינו שוב ושוב איך פרומפטים גנריים מייצרים תוצאות
@@ -67,8 +67,8 @@ export default function AboutPage() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-serif text-white flex items-center gap-3">
-              <Rocket className="w-6 h-6 text-amber-400" />
+            <h2 className="text-2xl font-serif text-foreground flex items-center gap-3">
+              <Rocket className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               JoyaTech
             </h2>
             <p className="text-lg leading-relaxed">
@@ -77,7 +77,7 @@ export default function AboutPage() {
                 href="https://joya-tech.net"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-amber-400 hover:text-amber-300 transition-colors underline inline-flex items-center gap-1"
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors underline inline-flex items-center gap-1"
               >
                 JoyaTech
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -98,35 +98,35 @@ export default function AboutPage() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-serif text-white">למה Peroot?</h2>
+            <h2 className="text-2xl font-serif text-foreground">למה Peroot?</h2>
             <ul className="space-y-4 text-lg">
               <li className="flex gap-3">
-                <Globe className="w-5 h-5 text-amber-400 shrink-0 mt-1" />
+                <Globe className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-white">עברית מהיסוד</strong> - לא
+                  <strong className="text-foreground">עברית מהיסוד</strong> - לא
                   תרגום. המערכת נבנתה לעברית מהשורש, עם הבנה של מבנה השפה
                   והתרבות.
                 </span>
               </li>
               <li className="flex gap-3">
-                <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-1" />
+                <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-white">כל המודלים, מקום אחד</strong> -
+                  <strong className="text-foreground">כל המודלים, מקום אחד</strong> -
                   ChatGPT, Claude, Gemini, Midjourney, כלי וידאו AI - הכל תחת
                   קורת גג אחת.
                 </span>
               </li>
               <li className="flex gap-3">
-                <Users className="w-5 h-5 text-amber-400 shrink-0 mt-1" />
+                <Users className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-white">{PROMPT_LIBRARY_COUNT}+ תבניות מוכנות</strong> -
+                  <strong className="text-foreground">{PROMPT_LIBRARY_COUNT}+ תבניות מוכנות</strong> -
                   ספרייה מקצועית ב-30+ קטגוריות לכל תחום עיסוק.
                 </span>
               </li>
               <li className="flex gap-3">
-                <Rocket className="w-5 h-5 text-amber-400 shrink-0 mt-1" />
+                <Rocket className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-white">דירוג איכות בזמן אמת</strong> -
+                  <strong className="text-foreground">דירוג איכות בזמן אמת</strong> -
                   המערכת מודדת כל פרומפט ומציעה שיפורים מיידיים.
                 </span>
               </li>
@@ -134,7 +134,7 @@ export default function AboutPage() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-serif text-white">המשימה שלנו</h2>
+            <h2 className="text-2xl font-serif text-foreground">המשימה שלנו</h2>
             <p className="text-lg leading-relaxed">
               לאפשר לכל דובר עברית להפיק את המקסימום מכלי AI - בלי לדעת אנגלית,
               בלי להבין prompt engineering, ובלי לבזבז זמן על ניסוי וטעייה.
@@ -143,8 +143,8 @@ export default function AboutPage() {
             </p>
           </section>
 
-          <section className="border-t border-white/10 pt-8 mt-8">
-            <h2 className="text-2xl font-serif text-white mb-4">
+          <section className="border-t border-border pt-8 mt-8">
+            <h2 className="text-2xl font-serif text-foreground mb-4">
               רוצים ליצור קשר?
             </h2>
             <p className="text-lg mb-4">
@@ -153,13 +153,13 @@ export default function AboutPage() {
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/contact"
-                className="text-amber-400 hover:text-amber-300 transition-colors underline"
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors underline"
               >
                 צור קשר
               </Link>
               <a
                 href="mailto:gal@joya-tech.net"
-                className="text-amber-400 hover:text-amber-300 transition-colors underline"
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors underline"
               >
                 gal@joya-tech.net
               </a>
@@ -167,7 +167,7 @@ export default function AboutPage() {
                 href="https://joya-tech.net"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-amber-400 hover:text-amber-300 transition-colors underline inline-flex items-center gap-1"
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors underline inline-flex items-center gap-1"
               >
                 joya-tech.net
                 <ExternalLink className="w-3.5 h-3.5" />

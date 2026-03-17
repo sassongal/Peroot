@@ -31,7 +31,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
       className={cn(
         "fixed bottom-0 inset-x-0 z-40",
         "flex md:hidden",
-        "bg-black/90 backdrop-blur-xl border-t border-white/10",
+        "bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-border",
         "min-h-[56px] pb-[env(safe-area-inset-bottom)]"
       )}
     >
@@ -46,7 +46,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
             className={cn(
               "flex-1 flex flex-col items-center justify-center gap-0.5",
               "min-h-[44px] transition-colors duration-200 cursor-pointer",
-              isActive ? "text-amber-400" : "text-slate-500 hover:text-slate-300"
+              isActive ? "text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             )}
           >
             <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
