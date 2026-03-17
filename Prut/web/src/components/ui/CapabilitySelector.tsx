@@ -19,23 +19,23 @@ const COMING_SOON_MODES = new Set<CapabilityMode>([]);
 
 const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
   sky: {
-    selected: "border-sky-500/50 bg-sky-500/10 text-sky-300",
+    selected: "border-sky-500/50 bg-sky-500/10 text-sky-700 dark:text-sky-300",
     default: "hover:border-sky-500/30 hover:bg-sky-500/5",
   },
   emerald: {
-    selected: "border-emerald-500/50 bg-emerald-500/10 text-emerald-300",
+    selected: "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
     default: "hover:border-emerald-500/30 hover:bg-emerald-500/5",
   },
   purple: {
-    selected: "border-purple-500/50 bg-purple-500/10 text-purple-300",
+    selected: "border-purple-500/50 bg-purple-500/10 text-purple-700 dark:text-purple-300",
     default: "hover:border-purple-500/30 hover:bg-purple-500/5",
   },
   amber: {
-    selected: "border-amber-500/50 bg-amber-500/10 text-amber-300",
+    selected: "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300",
     default: "hover:border-amber-500/30 hover:bg-amber-500/5",
   },
   rose: {
-    selected: "border-rose-500/50 bg-rose-500/10 text-rose-300",
+    selected: "border-rose-500/50 bg-rose-500/10 text-rose-700 dark:text-rose-300",
     default: "hover:border-rose-500/30 hover:bg-rose-500/5",
   },
 };
@@ -85,11 +85,11 @@ export function CapabilitySelector({
           "hover:scale-[1.02] active:scale-[0.98] snap-start shrink-0",
           compact ? "px-3 py-2" : "px-4 py-3",
           isComingSoon
-            ? "border-white/5 bg-white/[0.01] text-slate-600 cursor-not-allowed opacity-60"
+            ? "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] cursor-not-allowed opacity-60"
             : isSelected
               ? colorClasses.selected
               : cn(
-                  "border-white/10 bg-white/[0.02] text-slate-400",
+                  "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)]",
                   colorClasses.default
                 ),
           disabled && !isComingSoon && "opacity-50 cursor-not-allowed"
@@ -102,7 +102,7 @@ export function CapabilitySelector({
           {config.labelHe}
         </span>
         {isComingSoon && (
-          <span className="flex items-center gap-1 text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">
+          <span className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] bg-[var(--glass-bg)] px-1.5 py-0.5 rounded-full">
             <Lock className="w-3 h-3" />
             בקרוב
           </span>
@@ -125,8 +125,8 @@ export function CapabilitySelector({
               type="button"
               onClick={() => setIsExpanded(false)}
               className={cn(
-                "flex items-center rounded-xl border border-white/10 bg-white/[0.02] text-slate-500",
-                "hover:border-white/20 hover:text-slate-300 transition-all duration-200 shrink-0 snap-start",
+                "flex items-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)]",
+                "hover:border-black/20 dark:hover:border-white/20 hover:text-[var(--text-secondary)] transition-all duration-200 shrink-0 snap-start",
                 compact ? "px-2.5 py-2 text-sm" : "px-3 py-3 text-base"
               )}
               title="סגור"
@@ -143,8 +143,8 @@ export function CapabilitySelector({
             type="button"
             onClick={() => setIsExpanded(true)}
             className={cn(
-              "flex items-center rounded-xl border border-white/10 bg-white/[0.02] text-slate-400",
-              "hover:border-white/20 hover:text-slate-200 transition-all duration-200 shrink-0 snap-start font-medium",
+              "flex items-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)]",
+              "hover:border-black/20 dark:hover:border-white/20 hover:text-[var(--text-primary)] transition-all duration-200 shrink-0 snap-start font-medium",
               compact ? "px-3 py-2 text-sm" : "px-4 py-3 text-base"
             )}
             title="הצג מצבים נוספים"

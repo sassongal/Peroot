@@ -62,20 +62,20 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           "md:bottom-auto md:left-1/2 md:right-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2",
           "md:w-full md:max-w-lg md:rounded-3xl md:max-h-[90vh]",
           // Shared appearance
-          "bg-zinc-950 border border-white/10 flex flex-col overflow-hidden",
+          "bg-white dark:bg-zinc-950 border border-[var(--glass-border)] flex flex-col overflow-hidden",
           // Entrance animation
           "animate-in slide-in-from-bottom-8 duration-300 md:slide-in-from-bottom-0 md:zoom-in-95",
         ].join(" ")}
       >
         {/* Swipe handle (mobile hint) */}
         <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-white/20" aria-hidden="true" />
+          <div className="w-10 h-1 rounded-full bg-black/10 dark:bg-white/20" aria-hidden="true" />
         </div>
 
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          className="absolute top-4 left-4 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
           aria-label="סגור"
         >
           <X className="w-5 h-5" />
@@ -85,22 +85,22 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
         <div className="overflow-y-auto overscroll-contain px-5 pb-6 pt-2 md:p-6 space-y-4">
           {/* Header */}
           <div className="text-center space-y-1.5">
-            <h2 className="text-xl font-serif font-bold text-white">מה עושים פה?</h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              <span className="text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
+            <h2 className="text-xl font-serif font-bold text-[var(--text-primary)]">מה עושים פה?</h2>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
           </div>
 
           {/* 5 Modes */}
           <div className="space-y-1.5">
             {MODES.map(({ icon: Icon, title, desc, color, bg }) => (
-              <div key={title} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+              <div key={title} className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
                 <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
                   <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-white leading-tight">{title}</p>
-                  <p className="text-xs text-slate-500 truncate">{desc}</p>
+                  <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{title}</p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">{desc}</p>
                 </div>
               </div>
             ))}
@@ -118,7 +118,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
             <Link
               href="/features"
               onClick={onClose}
-              className="w-full px-6 py-2.5 rounded-2xl border border-white/10 text-slate-400 text-sm font-medium hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-6 py-2.5 rounded-2xl border border-[var(--glass-border)] text-[var(--text-muted)] text-sm font-medium hover:bg-[var(--glass-bg)] transition-colors flex items-center justify-center gap-2"
             >
               כל היכולות שלנו
               <ArrowLeft className="w-3.5 h-3.5" />

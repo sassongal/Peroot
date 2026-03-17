@@ -53,22 +53,22 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
         aria-hidden={!isOpen}
         className={cn(
           panelClass,
-          "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
+          "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-[var(--glass-border)] bg-white/90 dark:bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
           isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none"
         )}
         dir="rtl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5 backdrop-blur-md">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md">
           <div className="flex flex-col">
             <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">מרכז עזרה</div>
-            <h3 id={headingId} className="text-xl text-white font-serif font-medium tracking-wide">
+            <h3 id={headingId} className="text-xl text-[var(--text-primary)] font-serif font-medium tracking-wide">
               שאלות נפוצות
             </h3>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2.5 rounded-full border border-white/5 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="p-2.5 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 hover:border-black/15 dark:hover:border-white/20 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="סגור"
           >
             <X className="w-4 h-4" />
@@ -81,7 +81,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
            <div className="p-6 pb-2 space-y-5">
              <div className="relative group">
                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-               <div className="relative flex items-center bg-black/50 border border-white/10 rounded-xl focus-within:border-white/20 focus-within:bg-black/80 transition-all duration-300">
+               <div className="relative flex items-center bg-black/5 dark:bg-black/50 border border-[var(--glass-border)] rounded-xl focus-within:border-black/20 dark:focus-within:border-white/20 focus-within:bg-black/10 dark:focus-within:bg-black/80 transition-all duration-300">
                   <Search className="w-4 h-4 text-slate-500 mr-3 ml-2" />
                   <input
                     type="search"
@@ -89,7 +89,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="איך אפשר לעזור לך?"
                     aria-label="חיפוש שאלות נפוצות"
-                    className="w-full bg-transparent border-none py-3 text-sm text-white placeholder:text-slate-500 focus:ring-0 focus:outline-none"
+                    className="w-full bg-transparent border-none py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-0 focus:outline-none"
                   />
                </div>
              </div>
@@ -105,8 +105,8 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                    className={cn(
                      "px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                      activeCategory === category
-                       ? "bg-white text-black border-white shadow-lg shadow-white/10 scale-105"
-                       : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"
+                       ? "bg-slate-900 dark:bg-white text-white dark:text-black border-slate-900 dark:border-white shadow-lg shadow-black/10 dark:shadow-white/10 scale-105"
+                       : "bg-[var(--glass-bg)] text-[var(--text-muted)] border-[var(--glass-border)] hover:bg-black/5 dark:hover:bg-white/10 hover:border-black/10 dark:hover:border-white/10 hover:text-[var(--text-secondary)]"
                    )}
                  >
                    {category}
@@ -124,9 +124,9 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                    key={`${item.category}-${item.question}`}
                    className={cn(
                      "rounded-2xl border transition-all duration-300 overflow-hidden",
-                     isItemOpen 
-                        ? "bg-white/[0.08] border-white/20 shadow-lg" 
-                        : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
+                     isItemOpen
+                        ? "bg-black/[0.04] dark:bg-white/[0.08] border-black/15 dark:border-white/20 shadow-lg"
+                        : "bg-[var(--glass-bg)] border-[var(--glass-border)] hover:border-black/10 dark:hover:border-white/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
                    )}
                  >
                    <button
@@ -136,14 +136,14 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                      aria-label={item.question}
                    >
                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">{item.category}</span>
-                        <span className={cn("text-sm transition-colors duration-300 font-medium leading-relaxed", isItemOpen ? "text-white" : "text-slate-300")}>
+                        <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-wider uppercase">{item.category}</span>
+                        <span className={cn("text-sm transition-colors duration-300 font-medium leading-relaxed", isItemOpen ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]")}>
                            {item.question}
                         </span>
                      </div>
                      <div className={cn(
                         "mt-1 p-1 rounded-full border transition-all duration-300",
-                        isItemOpen ? "bg-white text-black border-white rotate-180" : "border-white/10 text-slate-500"
+                        isItemOpen ? "bg-slate-900 dark:bg-white text-white dark:text-black border-slate-900 dark:border-white rotate-180" : "border-[var(--glass-border)] text-[var(--text-muted)]"
                      )}>
                         <ChevronDown className="w-3.5 h-3.5" />
                      </div>
@@ -154,7 +154,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
                       isItemOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                    )}>
                      <div className="overflow-hidden">
-                        <div className="px-5 pb-5 pt-0 text-sm text-slate-300/90 leading-relaxed border-t border-white/5 mt-2">
+                        <div className="px-5 pb-5 pt-0 text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--glass-border)] mt-2">
                            <div className="h-2"></div>
                            {item.answer}
                         </div>
@@ -166,17 +166,17 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
  
              {filtered.length === 0 && (
                <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
-                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                    <Search className="w-5 h-5 text-slate-600" />
+                 <div className="w-12 h-12 rounded-full bg-[var(--glass-bg)] flex items-center justify-center">
+                    <Search className="w-5 h-5 text-[var(--text-muted)]" />
                  </div>
-                 <p className="text-sm text-slate-500">לא נמצאו תוצאות עבור &quot;{query}&quot;</p>
+                 <p className="text-sm text-[var(--text-muted)]">לא נמצאו תוצאות עבור &quot;{query}&quot;</p>
                </div>
              )}
            </div>
         </div>
 
         {/* Footer: Help Us Improve */}
-        <div className="p-4 bg-gradient-to-t from-black/80 to-transparent border-t border-white/5 relative z-10">
+        <div className="p-4 bg-gradient-to-t from-white/80 dark:from-black/80 to-transparent border-t border-[var(--glass-border)] relative z-10">
            <button 
               onClick={handleFeedback}
               className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 p-4 text-right"
@@ -184,7 +184,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
               <div className="relative z-10 flex items-center justify-between">
                  <div>
                     <div className="text-xs font-bold text-blue-300 mb-0.5">עזרו לנו להשתפר</div>
-                    <div className="text-sm text-slate-300 group-hover:text-white transition-colors">מצאתם באג? יש לכם רעיון?</div>
+                    <div className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">מצאתם באג? יש לכם רעיון?</div>
                  </div>
                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500/30 transition-all duration-300">
                     <Send className="w-4 h-4 text-blue-300" />

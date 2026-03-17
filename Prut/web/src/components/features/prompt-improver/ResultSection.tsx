@@ -19,7 +19,7 @@ const blinkKeyframes = `
 }
 .peroot-streaming-cursor {
   display: inline;
-  color: #fbbf24;
+  color: var(--accent-text);
   animation: peroot-blink 0.8s step-start infinite;
   user-select: none;
 }
@@ -160,10 +160,10 @@ export function ResultSection({
       )}
 
       {/* Header Card */}
-      <div className="glass-card p-6 rounded-xl border-white/10 flex items-start justify-between group">
+      <div className="glass-card p-6 rounded-xl border-[var(--glass-border)] flex items-start justify-between group">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-serif text-slate-100 mb-1">{t.result_section.title}</h2>
-          <div className="flex items-center gap-3 text-xs text-slate-500">
+          <h2 className="text-2xl font-serif text-[var(--text-primary)] mb-1">{t.result_section.title}</h2>
+          <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
             <span>{t.result_section.ready}</span>
             {improvementDelta > 0 && (
               <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full font-medium">
@@ -174,7 +174,7 @@ export function ResultSection({
         </div>
         {completionScore && (
           <div className="flex flex-col items-end">
-            <div className={cn("text-xs font-semibold px-2 py-1 rounded-full bg-white/10 text-white mb-1")}>
+            <div className={cn("text-xs font-semibold px-2 py-1 rounded-full bg-[var(--glass-bg)] text-[var(--text-primary)] mb-1")}>
               {completionScore.label} · {completionScore.score}%
             </div>
           </div>
@@ -184,7 +184,7 @@ export function ResultSection({
       {/* 5.6 RTL: use flex-col lg:flex-row for variable panel stacking */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Result Area */}
-        <div className={cn("glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
+        <div className={cn("glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
 
           {/* Before / After tab strip */}
           {showTabs && (
@@ -194,8 +194,8 @@ export function ResultSection({
                 className={cn(
                   "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   activeTab === 'before'
-                    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                    : "text-slate-500 border-transparent hover:text-slate-400"
+                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                    : "text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]"
                 )}
                 aria-pressed={activeTab === 'before'}
               >
@@ -206,8 +206,8 @@ export function ResultSection({
                 className={cn(
                   "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   activeTab === 'after'
-                    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                    : "text-slate-500 border-transparent hover:text-slate-400"
+                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                    : "text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]"
                 )}
                 aria-pressed={activeTab === 'after'}
               >
@@ -221,7 +221,7 @@ export function ResultSection({
             <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
               <button
                 onClick={() => handleCopy(displayCompletion)}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 title={t.result_section.copy_tooltip}
                 aria-label="העתק פרומפט"
               >
@@ -233,14 +233,14 @@ export function ResultSection({
           {/* Content area - swaps between before/after */}
           {isBeforeTab ? (
             <div
-              className="p-8 text-lg text-slate-400 leading-relaxed font-sans max-h-[60vh] overflow-y-auto flex-1 whitespace-pre-wrap"
+              className="p-8 text-lg text-[var(--text-muted)] leading-relaxed font-sans max-h-[60vh] overflow-y-auto flex-1 whitespace-pre-wrap"
               dir="rtl"
             >
               {originalPrompt}
             </div>
           ) : (
             <div
-              className="p-8 text-lg text-slate-200 leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
+              className="p-8 text-lg text-[var(--text-primary)] leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
               dir="rtl"
               dangerouslySetInnerHTML={{ __html: styledHtml }}
             />
@@ -249,7 +249,7 @@ export function ResultSection({
           {/* AI Platform Quick-Launch Bar - hidden in "before" view */}
           {/* 5.2 Mobile: grid-cols-2 on mobile, flex on sm+ */}
           {!isBeforeTab && (
-            <div className="px-4 py-4 border-t border-white/5 bg-linear-to-r from-white/2 to-transparent">
+            <div className="px-4 py-4 border-t border-[var(--glass-border)] bg-linear-to-r from-black/[0.02] dark:from-white/2 to-transparent">
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
                 <span className="hidden sm:inline text-xs text-slate-500 ms-2">פתח ב:</span>
 
@@ -283,7 +283,7 @@ export function ResultSection({
                     window.open("https://chat.openai.com/", "_blank");
                     toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-slate-300 hover:text-[#10a37f] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-[var(--text-secondary)] hover:text-[#10a37f] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-ChatGPT"
                 >
                   <ChatGPTIcon className="w-4 h-4" />
@@ -296,7 +296,7 @@ export function ResultSection({
                     window.open("https://claude.ai/new", "_blank");
                     toast.success(`${t.toasts.copied} - Claude נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-slate-300 hover:text-[#d97706] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-[var(--text-secondary)] hover:text-[#d97706] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-Claude"
                 >
                   <ClaudeIcon className="w-4 h-4" />
@@ -309,7 +309,7 @@ export function ResultSection({
                     window.open("https://gemini.google.com/", "_blank");
                     toast.success(`${t.toasts.copied} - Gemini נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-slate-300 hover:text-[#4285f4] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-[var(--text-secondary)] hover:text-[#4285f4] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-Gemini"
                 >
                   <GeminiIcon className="w-4 h-4" />
@@ -321,7 +321,7 @@ export function ResultSection({
                     const text = encodeURIComponent(displayCompletion + "\n\n- נוצר עם Peroot | www.peroot.space");
                     window.open(`https://wa.me/?text=${text}`, "_blank");
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-slate-300 hover:text-[#25d366] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-[var(--text-secondary)] hover:text-[#25d366] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="שתף בוואטסאפ"
                 >
                   <WhatsAppIcon className="w-4 h-4" />
@@ -332,13 +332,13 @@ export function ResultSection({
             </div>
           )}
 
-          <div className="p-4 bg-white/5 border-t border-white/5 mt-auto space-y-3">
+          <div className="p-4 bg-[var(--glass-bg)] border-t border-[var(--glass-border)] mt-auto space-y-3">
             {/* Primary actions row */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={onBack}
-                  className="px-4 py-2.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  className="px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                 >
                   {t.result_section.back_to_edit}
                 </button>
@@ -346,7 +346,7 @@ export function ResultSection({
                 {onReset && (
                   <button
                     onClick={onReset}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 border border-white/10 transition-colors cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-[var(--glass-border)] transition-colors cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                     title="לאפס ולהתחיל מחדש"
                     dir="rtl"
                   >
@@ -358,7 +358,7 @@ export function ResultSection({
                 {onResetToOriginal && (iterationCount ?? 0) > 0 && (
                   <button
                     onClick={onResetToOriginal}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                     title="חזור לפרומפט המקורי שלך"
                     dir="rtl"
                   >
@@ -371,7 +371,7 @@ export function ResultSection({
                 {onShare && (
                   <button
                     onClick={onShare}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                     שתף
@@ -379,7 +379,7 @@ export function ResultSection({
                 )}
                 <button
                   onClick={onSave}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   {t.result_section.save}
@@ -387,7 +387,7 @@ export function ResultSection({
                 {onImproveAgain && (
                   <button
                     onClick={onImproveAgain}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     {t.result?.improve_again || 'שפר שוב'}
@@ -419,7 +419,7 @@ export function ResultSection({
                     onChange={(e) => setProWatermarkEnabled(e.target.checked)}
                     className="w-3.5 h-3.5 accent-amber-400 cursor-pointer"
                   />
-                  <span className="text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">
+                  <span className="text-[10px] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
                     העתק עם מיתוג Peroot
                   </span>
                 </label>
@@ -427,8 +427,8 @@ export function ResultSection({
             )}
 
             {/* Feedback row - subtle */}
-            <div className="flex items-center justify-center gap-4 pt-2 border-t border-white/5">
-              <span className="text-[10px] text-slate-600">מה דעתך על התוצאה?</span>
+            <div className="flex items-center justify-center gap-4 pt-2 border-t border-[var(--glass-border)]">
+              <span className="text-[10px] text-[var(--text-muted)]">מה דעתך על התוצאה?</span>
               <div className="flex items-center gap-1">
                 <button disabled aria-label="Like" className="p-1.5 rounded-md text-slate-500 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-60 disabled:cursor-default">
                   <ThumbsUp className="w-3.5 h-3.5" />
@@ -448,17 +448,17 @@ export function ResultSection({
 
         {/* Variables Panel - 5.6 RTL: stacks vertically on mobile, side-by-side on lg+ */}
         {placeholders.length > 0 && (
-          <div className="glass-card p-5 rounded-xl border-white/10 bg-white/2 flex flex-col gap-4 h-fit lg:w-72">
-            <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-               <div className="bg-amber-500/20 text-amber-300 p-1.5 rounded-md">
+          <div className="glass-card p-5 rounded-xl border-[var(--glass-border)] bg-[var(--glass-bg)] flex flex-col gap-4 h-fit lg:w-72">
+            <div className="flex items-center gap-2 pb-3 border-b border-[var(--glass-border)]">
+               <div className="bg-amber-500/20 text-amber-700 dark:text-amber-300 p-1.5 rounded-md">
                  <Plus className="w-4 h-4" />
                </div>
-               <span className="text-sm font-semibold text-slate-200">{t.result_section.variables_title}</span>
+               <span className="text-sm font-semibold text-[var(--text-primary)]">{t.result_section.variables_title}</span>
             </div>
             <div className="flex flex-col gap-3">
                {placeholders.map((ph, i) => (
                  <div key={i} className="space-y-1.5">
-                    <label className="text-xs text-slate-500 font-medium ms-1 block text-start" dir="rtl">
+                    <label className="text-xs text-[var(--text-muted)] font-medium ms-1 block text-start" dir="rtl">
                       {ph}
                     </label>
                     <input
@@ -466,12 +466,12 @@ export function ResultSection({
                       value={variableValues[ph] || ""}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
                       placeholder={getVariablePlaceholder(ph)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-slate-600"
+                      className="w-full bg-black/5 dark:bg-black/40 border border-[var(--glass-border)] rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-[var(--text-muted)]"
                     />
                  </div>
                ))}
             </div>
-            <div className="text-[10px] text-slate-600 text-center mt-2">
+            <div className="text-[10px] text-[var(--text-muted)] text-center mt-2">
               {t.result_section.auto_update_hint}
             </div>
           </div>

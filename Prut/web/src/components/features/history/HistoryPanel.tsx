@@ -104,9 +104,9 @@ export function HistoryPanel({
   }, [history, searchQuery, selectedCategory]);
 
   return (
-    <div className="glass-card rounded-xl p-6 border-white/10 bg-white/[0.02] flex flex-col h-full">
+    <div className="glass-card rounded-xl p-6 border-[var(--glass-border)] bg-[var(--glass-bg)] flex flex-col h-full">
       <div className="flex flex-col items-center gap-4 mb-6 pt-2">
-        <h2 className="text-2xl font-serif text-white tracking-wide">היסטוריה</h2>
+        <h2 className="text-2xl font-serif text-[var(--text-primary)] tracking-wide">היסטוריה</h2>
         <div className="w-12 h-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent rounded-full" />
       </div>
 
@@ -118,7 +118,7 @@ export function HistoryPanel({
             placeholder="חיפוש בהיסטוריה..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pe-10 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 focus:bg-white/10 transition-all shadow-inner"
+            className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-2.5 pe-10 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/40 focus:bg-black/5 dark:focus:bg-white/10 transition-all shadow-inner"
             dir="rtl"
           />
         </div>
@@ -129,7 +129,7 @@ export function HistoryPanel({
                 <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pe-9 ps-3 text-xs text-slate-300 appearance-none focus:outline-none focus:border-amber-500/40 transition-all cursor-pointer"
+                    className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-lg py-2 pe-9 ps-3 text-xs text-[var(--text-secondary)] appearance-none focus:outline-none focus:border-amber-500/40 transition-all cursor-pointer"
                     dir="rtl"
                     aria-label="סינון לפי קטגוריה"
                 >
@@ -143,7 +143,7 @@ export function HistoryPanel({
             {history.length > 0 && (
                 <button
                     onClick={onClear}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/5 text-xs text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all font-medium cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-xs text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all font-medium cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     title="נקה היסטוריה"
                 >
                     <Trash2 className="w-3 h-3" />
@@ -160,18 +160,18 @@ export function HistoryPanel({
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="glass-card rounded-xl p-4 animate-pulse border-s-2 border-s-white/10"
+                className="glass-card rounded-xl p-4 animate-pulse border-s-2 border-s-black/10 dark:border-s-white/10"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="h-4 bg-white/10 rounded-full w-16" />
-                  <div className="h-3 bg-white/10 rounded w-12" />
+                  <div className="h-4 bg-black/5 dark:bg-white/10 rounded-full w-16" />
+                  <div className="h-3 bg-black/5 dark:bg-white/10 rounded w-12" />
                 </div>
-                <div className="h-3 bg-white/10 rounded w-full mb-2" />
-                <div className="h-3 bg-white/10 rounded w-4/5 mb-3" />
+                <div className="h-3 bg-black/5 dark:bg-white/10 rounded w-full mb-2" />
+                <div className="h-3 bg-black/5 dark:bg-white/10 rounded w-4/5 mb-3" />
                 <div className="flex gap-2">
-                  <div className="h-6 bg-white/10 rounded-md w-14" />
-                  <div className="h-6 bg-white/10 rounded-md w-18" />
-                  <div className="h-6 bg-white/10 rounded-md w-16" />
+                  <div className="h-6 bg-black/5 dark:bg-white/10 rounded-md w-14" />
+                  <div className="h-6 bg-black/5 dark:bg-white/10 rounded-md w-18" />
+                  <div className="h-6 bg-black/5 dark:bg-white/10 rounded-md w-16" />
                 </div>
               </div>
             ))}
@@ -185,13 +185,13 @@ export function HistoryPanel({
               <Clock className="w-8 h-8 text-amber-500/50" />
             </div>
             <div className="space-y-1">
-              <p className="text-lg font-semibold text-slate-300">עוד לא שדרגת פרומפטים</p>
-              <p className="text-sm text-slate-500">הפרומפטים המשודרגים שלך יופיעו כאן</p>
+              <p className="text-lg font-semibold text-[var(--text-secondary)]">עוד לא שדרגת פרומפטים</p>
+              <p className="text-sm text-[var(--text-muted)]">הפרומפטים המשודרגים שלך יופיעו כאן</p>
             </div>
             {onStartNew && (
               <button
                 onClick={onStartNew}
-                className="mt-1 px-6 py-2.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                className="mt-1 px-6 py-2.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               >
                 נתחיל?
               </button>
@@ -211,17 +211,17 @@ export function HistoryPanel({
             <div
               key={item.id}
               className={cn(
-                "rounded-xl border border-white/10 bg-black/30 p-4 hover:bg-white/5 transition-all border-s-2 cursor-pointer",
+                "rounded-xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 p-4 hover:bg-black/[0.06] dark:hover:bg-white/5 transition-all border-s-2 cursor-pointer",
                 categoryColor,
-                isFirst && "border-white/20 bg-white/[0.03]"
+                isFirst && "border-black/15 dark:border-white/20 bg-black/[0.03] dark:bg-white/[0.03]"
               )}
               onClick={() => onRestore(item)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className={cn(
-                    "text-[10px] px-2 py-0.5 rounded-full border text-slate-400",
-                    isFirst ? "border-amber-500/30 text-amber-400/80" : "border-white/10"
+                    "text-[10px] px-2 py-0.5 rounded-full border text-[var(--text-muted)]",
+                    isFirst ? "border-amber-500/30 text-amber-600/80 dark:text-amber-400/80" : "border-[var(--glass-border)]"
                   )}>
                     {CATEGORY_LABELS[item.category] ?? item.category}
                   </span>
@@ -236,11 +236,11 @@ export function HistoryPanel({
                 </span>
               </div>
               {item.title && (
-                <p className="text-sm font-bold text-white mt-2" dir="rtl">
+                <p className="text-sm font-bold text-[var(--text-primary)] mt-2" dir="rtl">
                   {item.title}
                 </p>
               )}
-              <p className={cn("text-sm text-slate-200 leading-relaxed max-h-16 overflow-hidden", item.title ? "mt-1 text-xs text-slate-400" : "mt-2")} dir="rtl">
+              <p className={cn("text-sm text-[var(--text-primary)] leading-relaxed max-h-16 overflow-hidden", item.title ? "mt-1 text-xs text-[var(--text-muted)]" : "mt-2")} dir="rtl">
                 {item.original}
               </p>
               <div className="mt-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -253,14 +253,14 @@ export function HistoryPanel({
                 </button>
                 <button
                   onClick={() => onSaveToPersonal(item)}
-                  className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Plus className="w-3 h-3" />
                   שמור לאישי
                 </button>
                 <button
                   onClick={() => onCopy(item.enhanced)}
-                  className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Copy className="w-3 h-3" />
                   העתק פלט

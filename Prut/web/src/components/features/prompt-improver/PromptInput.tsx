@@ -183,7 +183,7 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-xs text-slate-400 uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
+        <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
         <CapabilitySelector
           value={selectedCapability}
           onChange={setSelectedCapability}
@@ -222,9 +222,9 @@ export function PromptInput({
 
       <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-4 items-stretch">
         {variables.length > 0 && (
-          <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-white/10 bg-white/[0.02]">
-            <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.variables}</div>
-            <p className="text-[11px] text-slate-500 mt-2">
+          <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-[var(--glass-border)] bg-[var(--glass-bg)]">
+            <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest">{t.prompt_generator.variables}</div>
+            <p className="text-[11px] text-[var(--text-muted)] mt-2">
               {t.prompt_generator.variables_hint}
             </p>
             <div className="mt-4 space-y-3">
@@ -233,7 +233,7 @@ export function PromptInput({
                 const isEmpty = !(variableValues[variable] ?? "").trim();
                 return (
                   <div key={`${variable}-${index}`} className="space-y-2">
-                    <label htmlFor={inputId} className="text-xs text-amber-300 font-semibold flex items-center gap-1">
+                    <label htmlFor={inputId} className="text-xs text-amber-600 dark:text-amber-300 font-semibold flex items-center gap-1">
                       {`{${variable}}`}
                       <span className="text-red-400" aria-hidden="true">*</span>
                     </label>
@@ -245,10 +245,10 @@ export function PromptInput({
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
                       className={cn(
-                        "w-full bg-black/30 border rounded-lg py-2.5 px-3 text-base md:text-sm text-slate-200 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none transition-colors",
+                        "w-full bg-black/5 dark:bg-black/30 border rounded-lg py-2.5 px-3 text-base md:text-sm text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none transition-colors",
                         isEmpty
                           ? "border-amber-500/50 ring-1 ring-amber-500/30 focus:border-amber-500/70"
-                          : "border-white/10 focus:border-amber-500/50"
+                          : "border-[var(--glass-border)] focus:border-amber-500/50"
                       )}
                       placeholder={getVariablePlaceholder(variable)}
                     />
@@ -278,8 +278,8 @@ export function PromptInput({
             })()}
             {inputVal.trim() && (
               <div className="mt-4 space-y-2">
-                <div className="text-xs text-slate-400 uppercase tracking-widest">{t.prompt_generator.live_view}</div>
-                <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-base md:text-lg text-slate-200 leading-relaxed min-h-[100px]">
+                <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest">{t.prompt_generator.live_view}</div>
+                <div className="rounded-xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 p-4 text-base md:text-lg text-[var(--text-primary)] leading-relaxed min-h-[100px]">
                   {highlightedContent}
                 </div>
               </div>
@@ -287,11 +287,11 @@ export function PromptInput({
           </div>
         )}
 
-        <div className="flex-1 glass-card p-1 rounded-2xl border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300">
-          <div className="bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
+        <div className="flex-1 glass-card p-1 rounded-2xl border-[var(--glass-border)] bg-gradient-to-br from-black/[0.03] dark:from-white/[0.08] to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300">
+          <div className="bg-white/60 dark:bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
              <div
               aria-hidden
-              className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-slate-200 font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
+              className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-[var(--text-primary)] font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
               dir="rtl"
              >
               {highlightedContent}
@@ -306,7 +306,7 @@ export function PromptInput({
                  setInterimResult("");
               }}
               placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
-              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-white placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
+              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   handleEnhance();
@@ -323,7 +323,7 @@ export function PromptInput({
                        "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
                        isListening
                          ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
-                         : "bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10"
+                         : "bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10"
                      )}
                      title={isListening ? "עצור הקלטה" : "הקלט קולית"}
                      aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
@@ -338,14 +338,14 @@ export function PromptInput({
                    <div className="relative">
                      <button
                        onClick={() => setShowLangPicker(prev => !prev)}
-                       className="px-2 py-1.5 rounded-full text-xs bg-black/30 text-slate-400 border border-white/10 hover:text-white hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
+                       className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
                        title="שפת הקלטה"
                        aria-label="בחר שפת הקלטה"
                      >
                        {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.short ?? 'HE'}
                      </button>
                      {showLangPicker && (
-                       <div className="absolute bottom-full end-0 mb-1.5 bg-zinc-900/95 border border-white/10 rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
+                       <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
                          {VOICE_LANGUAGES.map(lang => (
                            <button
                              key={lang.code}
@@ -353,8 +353,8 @@ export function PromptInput({
                              className={cn(
                                "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
                                voiceLang === lang.code
-                                 ? "bg-amber-500/10 text-amber-300"
-                                 : "text-slate-300 hover:bg-white/5"
+                                 ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                                 : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/5"
                              )}
                            >
                              <span className="font-mono font-bold text-[10px]">{lang.short}</span>
@@ -373,21 +373,21 @@ export function PromptInput({
             )}
 
             {inputScore && scoreTone && (
-              <div className="px-6 pb-4 pt-2 border-t border-white/5 relative z-20 bg-black/20">
-                <div className="flex items-center justify-between text-xs text-slate-500">
+              <div className="px-6 pb-4 pt-2 border-t border-[var(--glass-border)] relative z-20 bg-black/5 dark:bg-black/20">
+                <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                   <span className="font-mono tracking-widest">{t.prompt_generator.prompt_strength}</span>
                   <span className={cn("font-semibold", scoreTone.text)}>
                     {inputScore.label} · {inputScore.score}%
                   </span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden">
+                <div className="mt-2 h-2 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
                   <div
                     className={cn("h-full transition-all duration-500", scoreTone.bar)}
                     style={{ width: `${inputScore.score}%` }}
                   />
                 </div>
                 {inputScore.usageBoost > 0 && (
-                  <div className="mt-2 text-[10px] text-slate-500">
+                  <div className="mt-2 text-[10px] text-[var(--text-muted)]">
                     {t.prompt_generator.usage_boost} +{inputScore.usageBoost}
                   </div>
                 )}
@@ -396,7 +396,7 @@ export function PromptInput({
                     {inputScore.tips.map((tip, index) => (
                       <span
                         key={`${tip}-${index}`}
-                        className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-300 border border-white/10"
+                        className="text-[10px] px-2 py-1 rounded-full bg-[var(--glass-bg)] text-[var(--text-secondary)] border border-[var(--glass-border)]"
                       >
                         {tip}
                       </span>
@@ -409,14 +409,14 @@ export function PromptInput({
 
             {!inputVal.trim() && !isListening && (
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
-                <div className="text-xs text-slate-500 uppercase tracking-widest mb-3 text-start" dir="rtl">נסו לדוגמה:</div>
+                <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest mb-3 text-start" dir="rtl">נסו לדוגמה:</div>
                 <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
                   {displayedExamples.map((example, i) => (
                     <button
                       key={i}
                       onClick={() => setInputVal(example)}
                       aria-label={`השתמש בדוגמה: ${example}`}
-                      className="px-3 py-2.5 rounded-full border border-white/10 bg-white/[0.03] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                      className="px-3 py-2.5 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] text-xs text-[var(--text-muted)] hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     >
                       {example}
                     </button>
@@ -425,23 +425,23 @@ export function PromptInput({
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-white/5 pt-5 p-5 md:p-7 relative z-20 sticky bottom-[56px] md:static md:bottom-auto bg-zinc-950/95 md:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-[var(--glass-border)] pt-5 p-5 md:p-7 relative z-20 sticky bottom-[56px] md:static md:bottom-auto bg-slate-50/95 dark:bg-zinc-950/95 md:bg-black/5 md:dark:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
+                <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
                 <div className="relative group/select min-w-[140px]">
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full ps-10 pe-4 py-2 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/30 hover:bg-white/[0.05] appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
+                    className="w-full ps-10 pe-4 py-2 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:border-black/20 dark:hover:border-white/30 hover:bg-black/[0.06] dark:hover:bg-white/[0.05] appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
                     aria-label="בחר קטגוריה"
                   >
                     {CATEGORY_OPTIONS.map(cat => (
-                      <option key={cat.id} value={cat.id} className="bg-zinc-900 text-slate-200">
+                      <option key={cat.id} value={cat.id} className="bg-white dark:bg-zinc-900 text-[var(--text-primary)]">
                         {cat.label}
                       </option>
                     ))}
                   </select>
-                  <div className="absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <div className="absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -456,7 +456,7 @@ export function PromptInput({
                   "group relative rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg overflow-hidden cursor-pointer",
                   "px-8 py-4 min-w-[160px]",
                   isLoading || !inputVal.trim()
-                    ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/5"
+                    ? "bg-[var(--glass-bg)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--glass-border)]"
                     : "accent-gradient text-black hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(245,158,11,0.3)] border border-amber-400/50 active:scale-[0.97]"
                 )}
               >

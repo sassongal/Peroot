@@ -77,11 +77,11 @@ export function SmartRefinement({
   // When questions array is empty and component is rendered, the prompt was deemed comprehensive
   if (!questions?.length) {
     return (
-      <div className="glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+      <div className="glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
         <div className="p-6">
           <div className="flex items-center gap-3 justify-center py-4" dir="rtl">
             <span className="text-emerald-400 text-lg">✓</span>
-            <span className="text-sm text-slate-300 font-medium">
+            <span className="text-sm text-[var(--text-secondary)] font-medium">
               הפרומפט מקיף ומפורט - אין שאלות נוספות
             </span>
           </div>
@@ -91,12 +91,12 @@ export function SmartRefinement({
   }
 
   return (
-    <div className="glass-card rounded-xl border-white/10 bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-      <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+    <div className="glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+      <div className="p-6 border-b border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <div className="flex items-center justify-between" dir="rtl">
           <div>
-            <h3 className="text-xl font-serif text-white mb-1">{t.smart_refinement.title}</h3>
-            <p className="text-sm text-slate-400">{t.smart_refinement.subtitle}</p>
+            <h3 className="text-xl font-serif text-[var(--text-primary)] mb-1">{t.smart_refinement.title}</h3>
+            <p className="text-sm text-[var(--text-muted)]">{t.smart_refinement.subtitle}</p>
           </div>
           {/* Progress indicator */}
           {questions.length > 0 && (
@@ -109,7 +109,7 @@ export function SmartRefinement({
                       "w-2 h-2 rounded-full transition-all duration-300",
                       answers[q.id]?.trim()
                         ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]"
-                        : "bg-white/10"
+                        : "bg-black/10 dark:bg-white/10"
                     )}
                   />
                 ))}
@@ -134,8 +134,8 @@ export function SmartRefinement({
                hasAnswer && !isOpen
                  ? "bg-amber-500/[0.03] border-amber-500/20"
                  : isOpen
-                   ? "bg-white/[0.03] border-white/20"
-                   : "bg-transparent border-white/5 hover:bg-white/[0.02]"
+                   ? "bg-black/[0.03] dark:bg-white/[0.03] border-black/15 dark:border-white/20"
+                   : "bg-transparent border-[var(--glass-border)] hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
              )}>
                 <button
                    onClick={() => toggleOpen(q.id)}
@@ -147,15 +147,15 @@ export function SmartRefinement({
                      hasAnswer
                        ? "bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]"
                        : isOpen
-                         ? "bg-white text-black"
-                         : "bg-white/10 text-slate-400"
+                         ? "bg-slate-900 dark:bg-white text-white dark:text-black"
+                         : "bg-black/10 dark:bg-white/10 text-[var(--text-muted)]"
                    )}>
                      {hasAnswer ? <Check className="w-3.5 h-3.5" /> : questionNumber}
                    </span>
                    <div className="flex-1 text-right">
                      <div className={cn(
                        "text-sm font-medium transition-colors",
-                       hasAnswer && !isOpen ? "text-amber-200/80" : isOpen ? "text-white" : "text-slate-300"
+                       hasAnswer && !isOpen ? "text-amber-700/80 dark:text-amber-200/80" : isOpen ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"
                      )}>
                        {q.question}
                      </div>
@@ -165,7 +165,7 @@ export function SmartRefinement({
                        </div>
                      )}
                    </div>
-                   {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400 me-2" /> : <ChevronDown className="w-4 h-4 text-slate-600 me-2" />}
+                   {isOpen ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)] me-2" /> : <ChevronDown className="w-4 h-4 text-[var(--text-muted)] me-2" />}
                 </button>
 
                 {isOpen && (
@@ -177,7 +177,7 @@ export function SmartRefinement({
                              value={answers[q.id] || ""}
                              onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                              placeholder={t.smart_refinement.placeholder}
-                             className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-base md:text-sm text-white focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-slate-600 resize-y transition-colors"
+                             className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg p-3 text-base md:text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-[var(--text-muted)] resize-y transition-colors"
                            />
                          </div>
 
@@ -189,7 +189,7 @@ export function SmartRefinement({
                                    <button
                                      key={i}
                                      onClick={() => handleAnswerChange(q.id, example)}
-                                     className="flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-full border border-white/5 bg-white/[0.02] text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/20 transition-colors cursor-pointer"
+                                     className="flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] text-xs text-[var(--text-muted)] hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 hover:border-amber-500/20 transition-colors cursor-pointer"
                                    >
                                      <Plus className="w-3 h-3" />
                                      <span>{example}</span>
@@ -207,13 +207,13 @@ export function SmartRefinement({
 
         {/* Custom Refinement Box */}
         <div className={cn(
-          "relative rounded-xl border transition-all duration-300 bg-white/[0.02] border-white/5",
+          "relative rounded-xl border transition-all duration-300 bg-[var(--glass-bg)] border-[var(--glass-border)]",
         )}>
           <div className="p-4">
              <div className="flex items-center justify-between mb-3" dir="rtl">
                 <div className="flex items-center gap-2">
-                   <div className="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">{t.smart_refinement.recommended}</div>
-                   <div className="text-sm font-semibold text-slate-200">{t.smart_refinement.free_request}</div>
+                   <div className="bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">{t.smart_refinement.recommended}</div>
+                   <div className="text-sm font-semibold text-[var(--text-primary)]">{t.smart_refinement.free_request}</div>
                 </div>
              </div>
              <p className="text-xs text-slate-500 mb-3 text-right" dir="rtl">
@@ -224,13 +224,13 @@ export function SmartRefinement({
                value={customInstruction}
                onChange={(e) => setCustomInstruction(e.target.value)}
                placeholder={t.smart_refinement.free_request_placeholder}
-               className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-base md:text-sm text-white focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-slate-600 resize-y transition-colors"
+               className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg p-3 text-base md:text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-[var(--text-muted)] resize-y transition-colors"
              />
           </div>
         </div>
       </div>
 
-      <div className="p-4 border-t border-white/5 bg-white/[0.02]">
+      <div className="p-4 border-t border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <button
           onClick={() => onRefine(customInstruction)}
           disabled={isLoading || !hasAnyInput}

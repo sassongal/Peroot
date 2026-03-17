@@ -11,7 +11,7 @@ import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, trackFeature
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 const HistoryPanel = dynamic(
   () => import("@/components/features/history/HistoryPanel").then(mod => mod.HistoryPanel),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-64" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
 );
 import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
@@ -25,7 +25,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const ResultSection = dynamic(
   () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-64" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
 );
 const LoginRequiredModal = dynamic(
   () => import("@/components/ui/LoginRequiredModal").then(mod => mod.LoginRequiredModal),
@@ -37,11 +37,11 @@ const WhatIsThisModal = dynamic(
 );
 const FAQBubble = dynamic(
   () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-white/[0.04] w-12 h-12" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-[var(--glass-bg)] w-12 h-12" /> }
 );
 const SmartRefinement = dynamic(
   () => import("@/components/features/prompt-improver/SmartRefinement").then(mod => mod.SmartRefinement),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-32" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-32" /> }
 );
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
@@ -55,11 +55,11 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 const LibraryView = dynamic(
   () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-96" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
 );
 const PersonalLibraryView = dynamic(
   () => import("@/components/views/PersonalLibraryView").then(mod => mod.PersonalLibraryView),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-white/[0.04] h-96" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
 );
 const LoadingOverlay = dynamic(
   () => import("@/components/ui/LoadingOverlay").then(mod => mod.LoadingOverlay),
@@ -847,14 +847,14 @@ function PageContent({ user }: { user: User | null }) {
       {sidebarOpen && (
         <div
           role="presentation"
-          className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-[55] bg-black/40 dark:bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Drawer */}
       <div role="dialog" aria-modal="true" aria-label="היסטוריה" className={cn(
-        "fixed right-0 z-[60] bg-black/95 backdrop-blur-xl border-s border-white/10 flex flex-col transition-all duration-300 ease-out",
+        "fixed right-0 z-[60] bg-white/95 dark:bg-black/95 backdrop-blur-xl border-s border-black/10 dark:border-white/10 flex flex-col transition-all duration-300 ease-out",
         sidebarOpen ? "translate-x-0" : "translate-x-full",
         // Mobile: full screen. Desktop: below navbar
         "top-0 h-full w-full",
@@ -862,12 +862,12 @@ function PageContent({ user }: { user: User | null }) {
         sidebarExpanded ? "md:w-[560px]" : "md:w-[340px]"
       )}>
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/5">
-          <span className="text-sm font-bold text-white">היסטוריה</span>
+        <div className="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5">
+          <span className="text-sm font-bold text-[var(--text-primary)]">היסטוריה</span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="hidden md:flex p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="hidden md:flex p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               title={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
               aria-label={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
             >
@@ -875,7 +875,7 @@ function PageContent({ user }: { user: User | null }) {
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               aria-label="סגור תפריט"
             >
               <X className="w-4 h-4" />
@@ -889,7 +889,7 @@ function PageContent({ user }: { user: User | null }) {
             onClick={() => { handleNavPersonal(); setSidebarOpen(false); }}
             onMouseEnter={prefetchPersonalLibrary}
             onTouchStart={prefetchPersonalLibrary}
-            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-[var(--glass-border)] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 text-[var(--text-muted)] group bg-black/5 dark:bg-black/20 cursor-pointer"
           >
             <BookOpen className="w-5 h-5" />
             <span>{t.home.personal_library}</span>
@@ -898,8 +898,8 @@ function PageContent({ user }: { user: User | null }) {
           <button
             onClick={() => { handleNavFavorites(); setSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group cursor-pointer",
-              personalView === "favorites" ? "bg-amber-500/20 text-amber-300 border-amber-400/50" : "bg-black/20"
+              "w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-[var(--glass-border)] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 text-[var(--text-muted)] group cursor-pointer",
+              personalView === "favorites" ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-400/50" : "bg-black/5 dark:bg-black/20"
             )}
           >
             <Star className="w-5 h-5" />
@@ -908,7 +908,7 @@ function PageContent({ user }: { user: User | null }) {
 
           <button
             onClick={() => { handleNavLibrary(); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300 text-slate-400 group bg-black/20 cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-[var(--glass-border)] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 text-[var(--text-muted)] group bg-black/5 dark:bg-black/20 cursor-pointer"
           >
             <Library className="w-5 h-5" />
             <span>{t.home.public_library}</span>
@@ -972,7 +972,7 @@ function PageContent({ user }: { user: User | null }) {
                  <div className="w-full max-w-3xl mb-2">
                    <button
                      onClick={handleBackToLibrary}
-                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/20 transition-colors"
+                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-amber-600/80 dark:text-amber-400/80 hover:text-amber-500 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/20 transition-colors"
                      dir="rtl"
                    >
                      <ArrowRight className="w-3.5 h-3.5" />
@@ -1020,14 +1020,14 @@ function PageContent({ user }: { user: User | null }) {
                        <button
                          key={i}
                          onClick={() => { handleRestore(item); }}
-                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
+                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
                          dir="rtl"
                        >
-                         <p className="text-sm text-slate-300 font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
-                         <p className="text-xs text-slate-500 mt-1 truncate" title={item.original}>{item.original.slice(0, 60)}</p>
+                         <p className="text-sm text-[var(--text-secondary)] font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
+                         <p className="text-xs text-[var(--text-muted)] mt-1 truncate" title={item.original}>{item.original.slice(0, 60)}</p>
                          <div className="flex items-center gap-2 mt-2">
-                           <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/5">{item.category || 'כללי'}</span>
-                           <span className="text-xs text-slate-600">{item.tone || ''}</span>
+                           <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--glass-bg)] text-[var(--text-muted)] border border-[var(--glass-border)]">{item.category || 'כללי'}</span>
+                           <span className="text-xs text-[var(--text-muted)]">{item.tone || ''}</span>
                          </div>
                        </button>
                      ))}
@@ -1041,7 +1041,7 @@ function PageContent({ user }: { user: User | null }) {
                    <div className="flex items-center justify-between mb-3">
                      <div className="flex items-center gap-2">
                        <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                       <span className="text-xs font-medium text-amber-400/80">פרומפטים אחרונים מהספרייה</span>
+                       <span className="text-xs font-medium text-amber-600/80 dark:text-amber-400/80">פרומפטים אחרונים מהספרייה</span>
                      </div>
                      <button
                        onClick={() => { setViewMode("personal"); }}
@@ -1058,20 +1058,20 @@ function PageContent({ user }: { user: User | null }) {
                            handleUsePrompt(prompt);
                            incrementUseCount(prompt.id);
                          }}
-                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.06] transition-all cursor-pointer text-start group"
+                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/[0.04] dark:bg-amber-500/[0.02] hover:bg-amber-500/[0.08] dark:hover:bg-amber-500/[0.06] transition-all cursor-pointer text-start group"
                          dir="rtl"
                        >
                          <div className="flex items-center gap-2 mb-1">
                            {prompt.is_pinned && (
                              <span className="text-amber-400 text-[10px]">&#128204;</span>
                            )}
-                           <p className="text-sm text-slate-300 font-medium truncate flex-1" title={prompt.title}>{prompt.title}</p>
+                           <p className="text-sm text-[var(--text-secondary)] font-medium truncate flex-1" title={prompt.title}>{prompt.title}</p>
                          </div>
-                         <p className="text-xs text-slate-500 mt-1 truncate" title={prompt.use_case}>{prompt.use_case}</p>
+                         <p className="text-xs text-[var(--text-muted)] mt-1 truncate" title={prompt.use_case}>{prompt.use_case}</p>
                          <div className="flex items-center gap-2 mt-2">
-                           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400/70 border border-amber-500/10">{prompt.personal_category || 'כללי'}</span>
+                           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10">{prompt.personal_category || 'כללי'}</span>
                            {prompt.use_count > 0 && (
-                             <span className="text-xs text-slate-600">x{prompt.use_count}</span>
+                             <span className="text-xs text-[var(--text-muted)]">x{prompt.use_count}</span>
                            )}
                          </div>
                        </button>
@@ -1086,7 +1086,7 @@ function PageContent({ user }: { user: User | null }) {
                    {/* Surprise Me Button */}
                    <button
                      onClick={handleSurpriseMe}
-                     className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-slate-400 hover:text-white text-sm transition-all cursor-pointer group"
+                     className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm transition-all cursor-pointer group"
                    >
                      <Shuffle className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                      <span>הפתע אותי - פרומפט אקראי מהספריה</span>
@@ -1094,27 +1094,27 @@ function PageContent({ user }: { user: User | null }) {
 
                    {/* Prompt of the Day */}
                    {promptOfTheDay && (
-                     <div className="glass-card rounded-xl border-white/10 bg-gradient-to-l from-amber-500/[0.04] to-transparent overflow-hidden">
-                       <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
-                         <Lightbulb className="w-4 h-4 text-amber-400" />
-                         <span className="text-xs font-bold text-amber-400/80 uppercase tracking-wider">פרומפט היום</span>
+                     <div className="glass-card rounded-xl border-[var(--glass-border)] bg-gradient-to-l from-amber-500/[0.06] dark:from-amber-500/[0.04] to-transparent overflow-hidden">
+                       <div className="px-5 py-3 border-b border-[var(--glass-border)] flex items-center gap-2">
+                         <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                         <span className="text-xs font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider">פרומפט היום</span>
                        </div>
                        <div className="p-5 flex flex-col gap-3">
-                         <h3 className="text-base font-semibold text-slate-200" dir="rtl">{promptOfTheDay.title}</h3>
-                         <p className="text-sm text-slate-400 leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
+                         <h3 className="text-base font-semibold text-[var(--text-primary)]" dir="rtl">{promptOfTheDay.title}</h3>
+                         <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
                          <div className="flex items-center gap-2 mt-1">
                            <button
                              onClick={() => {
                                dispatch({ type: 'SET_INPUT', payload: promptOfTheDay.prompt });
                                toast.success('פרומפט היום נטען!');
                              }}
-                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-medium transition-colors cursor-pointer"
+                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer"
                            >
                              השתמש בפרומפט
                            </button>
                            <button
                              onClick={() => handleNavLibrary()}
-                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 text-xs transition-colors cursor-pointer"
+                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] text-xs transition-colors cursor-pointer"
                            >
                              עוד פרומפטים מהספריה
                            </button>
@@ -1221,7 +1221,7 @@ function PageContent({ user }: { user: User | null }) {
 export default function HomeClient() {
   const { user } = useHistory();
   return (
-    <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-black text-slate-200 selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+    <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
       <PageContent user={user} />
     </div>
   );
