@@ -11,7 +11,11 @@
     <div class="login-glow"></div>
     <div class="login-content">
       <div class="login-icon">
-        <img src="../icons/icon-128.png" alt="Peroot" width="40" height="40">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="19" fill="rgba(0,0,0,0.6)" stroke="rgba(245,158,11,0.3)" stroke-width="1"/>
+          <text x="20" y="27" text-anchor="middle" font-size="22" font-weight="700" fill="url(#amberGrad)">פ</text>
+          <defs><linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#eab308"/></linearGradient></defs>
+        </svg>
       </div>
       <h1 class="login-title">Peroot</h1>
       <p class="login-subtitle">שדרג כל פרומפט עם AI מתקדם</p>
@@ -25,23 +29,30 @@
     <!-- Header -->
     <header class="main-header">
       <div class="header-brand">
-        <img src="../icons/icon-48.png" alt="" width="20" height="20" class="header-logo">
-        <span class="header-title">Peroot</span>
+        <div class="header-logo-badge">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="13" fill="rgba(0,0,0,0.6)" stroke="rgba(245,158,11,0.3)" stroke-width="1"/>
+            <text x="14" y="19.5" text-anchor="middle" font-size="15" font-weight="700" fill="url(#hdrGrad)">פ</text>
+            <defs><linearGradient id="hdrGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#eab308"/></linearGradient></defs>
+          </svg>
+        </div>
+        <span id="header-greeting" class="header-greeting"></span>
       </div>
       <div class="header-meta">
         <span id="tier-badge" class="tier-badge hidden"></span>
         <span id="credits-badge" class="credits-badge hidden">
+          <span class="credits-icon"></span>
           <span id="credits-count">0</span> קרדיטים
         </span>
       </div>
     </header>
 
     <!-- Tabs -->
-    <nav class="tabs">
-      <button class="tab active" data-tab="enhance">שדרוג</button>
-      <button class="tab" data-tab="library">ספרייה</button>
-      <button class="tab" data-tab="quick-prompts">&#9889; מהיר</button>
-      <button class="tab" data-tab="settings">הגדרות</button>
+    <nav class="tabs" id="tabs-nav">
+      <button class="tab active" data-tab="enhance"><span class="tab-icon"></span><span class="tab-label">שדרוג</span></button>
+      <button class="tab" data-tab="library"><span class="tab-icon"></span><span class="tab-label">ספרייה</span></button>
+      <button class="tab" data-tab="snippets"><span class="tab-icon"></span><span class="tab-label">סניפט</span></button>
+      <button class="tab" data-tab="settings"><span class="tab-icon"></span><span class="tab-label">הגדרות</span></button>
     </nav>
 
     <!-- Tab: Enhance -->
@@ -80,9 +91,9 @@
         </div>
         <div id="result-text" class="result-text"></div>
         <div class="result-actions">
-          <button id="copy-btn" class="btn-sm">העתק</button>
-          <button id="insert-btn" class="btn-sm">הכנס לשדה</button>
-          <button id="reuse-btn" class="btn-sm">שדרג שוב</button>
+          <button id="copy-btn" class="btn-sm" title="העתק"><span class="btn-icon" data-icon="copy"></span><span class="sr-only">העתק</span></button>
+          <button id="insert-btn" class="btn-sm" title="הכנס לשדה"><span class="btn-icon" data-icon="insert"></span><span class="sr-only">הכנס לשדה</span></button>
+          <button id="reuse-btn" class="btn-sm" title="שדרג שוב"><span class="btn-icon" data-icon="reuse"></span><span class="sr-only">שדרג שוב</span></button>
         </div>
       </div>
 
@@ -103,8 +114,20 @@
 
     <!-- Tab: Library -->
     <div id="tab-library" class="tab-content">
+      <div class="library-search-wrap">
+        <input type="text" id="library-search" class="library-search-input" placeholder="חיפוש פרומפטים..." autocomplete="off">
+      </div>
+      <div class="library-sub-tabs">
+        <button class="library-sub-tab active" data-source="personal">שלי</button>
+        <button class="library-sub-tab" data-source="favorites">מועדפים</button>
+        <button class="library-sub-tab" data-source="public">ספרייה</button>
+      </div>
       <div id="library-loading" class="tab-empty">
-        <span class="spinner large"></span>
+        <div class="skeleton-list">
+          <div class="skeleton-card"><div class="skeleton-line w70"></div><div class="skeleton-line w40"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line w60"></div><div class="skeleton-line w50"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line w80"></div><div class="skeleton-line w30"></div></div>
+        </div>
       </div>
       <div id="library-empty" class="tab-empty hidden">
         <p class="empty-title">הספרייה ריקה</p>
@@ -113,26 +136,47 @@
       <div id="library-list" class="prompt-list hidden"></div>
     </div>
 
-    <!-- Tab: Quick Prompts -->
-    <div id="tab-quick-prompts" class="tab-content">
-      <div id="quick-prompts-grid" class="quick-prompts-grid"></div>
+    <!-- Tab: Snippets -->
+    <div id="tab-snippets" class="tab-content">
+      <div id="snippets-grid" class="snippets-grid"></div>
     </div>
-  </div>
 
     <!-- Tab: Settings -->
     <div id="tab-settings" class="tab-content">
       <div class="settings-section">
-        <h3 class="settings-title">מפתח API</h3>
-        <p class="settings-desc">השתמש במפתח API במקום התחברות. צור מפתח ב-<a href="https://peroot.space/developer" target="_blank" class="settings-link">פורטל המפתחים</a>.</p>
-        <div class="settings-input-row">
-          <input type="password" id="api-key-input" placeholder="prk_..." class="settings-input" dir="ltr" autocomplete="off" spellcheck="false">
-          <button id="api-key-toggle" class="btn-sm" title="הצג/הסתר">👁</button>
-        </div>
+        <h3 class="settings-title">טון ברירת מחדל</h3>
+        <p class="settings-desc">הטון שייבחר אוטומטית בעת שדרוג פרומפט</p>
+        <select id="default-tone-select" class="settings-select">
+          <option value="Professional">מקצועי</option>
+          <option value="Casual">יומיומי</option>
+          <option value="Creative">יצירתי</option>
+          <option value="Academic">אקדמי</option>
+          <option value="Persuasive">משכנע</option>
+          <option value="Friendly">ידידותי</option>
+        </select>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-title">שדרוג אוטומטי</h3>
+        <p class="settings-desc">שדרג אוטומטית כשמזוהה טקסט מסומן</p>
+        <label class="toggle-switch">
+          <input type="checkbox" id="auto-enhance-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-title">שפה</h3>
+        <p class="settings-desc">שפת הממשק</p>
+        <select id="language-select" class="settings-select">
+          <option value="he">עברית</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-title">ניקוי</h3>
         <div class="settings-actions">
-          <button id="save-api-key" class="btn-sm prompt-card-btn-use">שמור</button>
-          <button id="clear-api-key" class="btn-sm">נקה</button>
+          <button id="clear-history-settings" class="btn-sm">נקה היסטוריה</button>
+          <button id="clear-cache-btn" class="btn-sm">נקה מטמון וסנכרן</button>
         </div>
-        <p id="api-key-status" class="settings-status hidden"></p>
       </div>
       <div class="settings-section">
         <h3 class="settings-title">קיצורי מקשים</h3>
@@ -144,10 +188,36 @@
       </div>
       <div class="settings-section">
         <h3 class="settings-title">אודות</h3>
-        <p class="settings-desc">Peroot v2.1.0 · <a href="https://peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
+        <p class="settings-desc">Peroot v2.2.0 · <a href="https://peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
       </div>
     </div>
   </div>
+
+  <!-- Snippet Edit Modal -->
+  <div id="snippet-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="snippet-modal-title">עריכת סניפט</h3>
+        <button id="snippet-modal-close" class="btn-ghost modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">אייקון</label>
+        <input type="text" id="snippet-icon-input" class="modal-input" maxlength="4" dir="ltr" placeholder="✉️">
+        <label class="modal-label">שם</label>
+        <input type="text" id="snippet-label-input" class="modal-input" maxlength="30" placeholder="שם הסניפט">
+        <label class="modal-label">פרומפט</label>
+        <textarea id="snippet-prompt-input" class="modal-textarea" rows="4" maxlength="2000" placeholder="תוכן הפרומפט..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="snippet-save-btn" class="btn-accent btn-modal">שמור</button>
+        <button id="snippet-cancel-btn" class="btn-sm">ביטול</button>
+        <button id="snippet-delete-btn" class="btn-sm btn-danger">מחק</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="toast-container"></div>
 
   <!-- Loading -->
   <div id="loading-screen" class="screen loading-screen">

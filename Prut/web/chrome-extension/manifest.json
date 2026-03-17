@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Peroot - AI Prompt Enhancer",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Enhance any prompt instantly with AI. Right-click to upgrade selected text or use the popup launcher. Supports Hebrew and English.",
   "homepage_url": "https://peroot.space",
   "permissions": [
