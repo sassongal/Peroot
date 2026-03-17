@@ -25,7 +25,7 @@ const alef = Alef({
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
-  weight: ["400", "500", "600"],
+  weight: ["400"],
   subsets: ["latin"],
   variable: "--font-jb-mono",
   display: "swap",
@@ -141,6 +141,7 @@ import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
 import { MicrosoftClarity } from "@/components/providers/MicrosoftClarity";
 import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/ui/CookieConsent";
@@ -184,18 +185,20 @@ export default async function RootLayout({
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema()) }}
           />
-          <I18nProvider dictionary={dictionary} lang={locale}>
-            <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
-              <GlobalContextWrapper>
-                <ErrorBoundary name="AppRoot">
-                  <main id="main-content" className="flex-grow">
-                    {children}
-                  </main>
-                </ErrorBoundary>
-                <Footer />
-              </GlobalContextWrapper>
-            </Suspense>
-          </I18nProvider>
+          <ThemeProvider>
+            <I18nProvider dictionary={dictionary} lang={locale}>
+              <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+                <GlobalContextWrapper>
+                  <ErrorBoundary name="AppRoot">
+                    <main id="main-content" className="flex-grow">
+                      {children}
+                    </main>
+                  </ErrorBoundary>
+                  <Footer />
+                </GlobalContextWrapper>
+              </Suspense>
+            </I18nProvider>
+          </ThemeProvider>
           <CookieConsent />
         </PostHogProvider>
       </body>

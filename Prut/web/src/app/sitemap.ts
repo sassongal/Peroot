@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const promptsPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/prompts`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
     ...Object.keys(CATEGORY_SLUG_MAP).map((slug) => ({
-      url: `${baseUrl}/prompts/${encodeURIComponent(slug)}`,
+      url: `${baseUrl}/prompts/${slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.75,
@@ -29,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/examples`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/features`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${baseUrl}/extension`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/llms.txt`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
     { url: `${baseUrl}/llms-full.txt`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
   ];

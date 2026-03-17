@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Copy, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_SLUG_MAP, CATEGORY_ID_TO_SLUG } from "@/lib/category-slugs";
+import { CATEGORY_SLUG_MAP, CATEGORY_ID_TO_SLUG, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { breadcrumbSchema, promptCollectionSchema } from "@/lib/schema";
 import { CopyButton } from "./CopyButton";
@@ -15,7 +15,7 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Build static params from all known slug keys
+// Build static params from all known English slug keys
 export async function generateStaticParams() {
   return Object.keys(CATEGORY_SLUG_MAP).map((slug) => ({ slug }));
 }
@@ -24,7 +24,9 @@ export const revalidate = 3600; // ISR: revalidate every hour
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug: rawSlug } = await params;
-  const slug = decodeURIComponent(rawSlug);
+  const decoded = decodeURIComponent(rawSlug);
+  // Resolve Hebrew legacy slugs to their English counterpart for metadata
+  const slug = HEBREW_SLUG_TO_ENGLISH[decoded] ?? decoded;
   const categoryData = CATEGORY_SLUG_MAP[slug];
 
   if (!categoryData) {
@@ -33,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${categoryData.labelHe} - ספריית פרומפטים בעברית | Peroot`;
   const description = categoryData.descriptionHe;
-  const canonicalUrl = `/prompts/${encodeURIComponent(slug)}`;
+  const canonicalUrl = `/prompts/${slug}`;
   const ogImage = `${SITE_URL}/api/og?title=${encodeURIComponent(categoryData.labelHe)}&subtitle=${encodeURIComponent(categoryData.descriptionHe)}&category=${encodeURIComponent(categoryData.labelHe)}`;
 
   return {
@@ -75,7 +77,14 @@ interface LibraryRow {
 
 export default async function CategoryPage({ params }: Props) {
   const { slug: rawSlug } = await params;
-  const slug = decodeURIComponent(rawSlug);
+  const decoded = decodeURIComponent(rawSlug);
+
+  // Redirect old Hebrew-encoded slugs to their English equivalents (301)
+  if (HEBREW_SLUG_TO_ENGLISH[decoded]) {
+    redirect(`/prompts/${HEBREW_SLUG_TO_ENGLISH[decoded]}`);
+  }
+
+  const slug = decoded;
   const categoryData = CATEGORY_SLUG_MAP[slug];
 
   if (!categoryData) {
@@ -97,7 +106,7 @@ export default async function CategoryPage({ params }: Props) {
   // Build category map for the "all categories" section
   const allCategorySlugs = Object.entries(CATEGORY_SLUG_MAP);
 
-  const pageUrl = `${SITE_URL}/prompts/${encodeURIComponent(slug)}`;
+  const pageUrl = `${SITE_URL}/prompts/${slug}`;
 
   return (
     <>
@@ -109,7 +118,7 @@ export default async function CategoryPage({ params }: Props) {
             breadcrumbSchema([
               { name: "דף הבית", url: "/" },
               { name: "ספריית פרומפטים", url: "/prompts" },
-              { name: categoryData.labelHe, url: `/prompts/${encodeURIComponent(slug)}` },
+              { name: categoryData.labelHe, url: `/prompts/${slug}` },
             ])
           ),
         }}
@@ -313,7 +322,7 @@ export default async function CategoryPage({ params }: Props) {
                 .map(([catSlug, catData]) => (
                   <Link
                     key={catSlug}
-                    href={`/prompts/${encodeURIComponent(catSlug)}`}
+                    href={`/prompts/${catSlug}`}
                     className="flex flex-col items-center gap-2 p-3 min-h-[44px] rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-colors text-center group"
                   >
                     <span className="text-2xl">{catData.emoji}</span>

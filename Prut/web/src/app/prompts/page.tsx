@@ -181,7 +181,7 @@ export default function PromptsIndexPage() {
                   {group.items.map(({ slug, labelHe, emoji }) => (
                     <Link
                       key={slug}
-                      href={`/prompts/${encodeURIComponent(slug)}`}
+                      href={`/prompts/${slug}`}
                       className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
                     >
                       <span className="text-3xl group-hover:scale-110 transition-transform duration-200">

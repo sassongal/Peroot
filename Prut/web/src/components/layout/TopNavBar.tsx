@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Library, Wand2, type LucideIcon } from "lucide-react";
+import { BookOpen, Library, Wand2, Sun, Moon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 type ViewMode = "home" | "library" | "personal";
 
@@ -20,10 +21,15 @@ interface TopNavBarProps {
 }
 
 export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav
-      className="sticky top-0 z-50 w-full border-b border-white/5 bg-black/80 backdrop-blur-xl"
+      className="sticky top-0 z-50 w-full backdrop-blur-xl transition-colors duration-200"
+      style={{
+        background: "var(--surface-nav)",
+        borderBottom: "1px solid var(--border-nav)",
+      }}
       dir="rtl"
       aria-label="ניווט ראשי"
     >
@@ -32,7 +38,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
         <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/"
-            className="flex items-center gap-1.5 font-bold text-lg text-white me-2 sm:me-4 shrink-0"
+            className="flex items-center gap-1.5 font-bold text-lg text-slate-900 dark:text-white me-2 sm:me-4 shrink-0"
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey) return;
               e.preventDefault();
@@ -59,8 +65,8 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isActive
-                    ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent"
+                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -72,28 +78,28 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
 
           <Link
             href="/blog"
-            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             בלוג
           </Link>
 
           <Link
             href="/pricing"
-            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             מחירים
           </Link>
 
           <Link
             href="/prompts"
-            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             פרומפטים
           </Link>
 
           <Link
             href="/guide"
-            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             מדריך
           </Link>
@@ -101,6 +107,18 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
 
         {/* Left: Controls slot */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            aria-label={theme === "dark" ? "עבור למצב בהיר" : "עבור למצב כהה"}
+            title={theme === "dark" ? "מצב בהיר" : "מצב כהה"}
+          >
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
+          </button>
           {children}
         </div>
       </div>

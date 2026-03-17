@@ -3,7 +3,7 @@
 
 @plugin "tailwindcss-animate";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -96,8 +96,59 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #080808; /* Obsidian by default */
-  --foreground: #e2e8f0; /* Silver by default */
+
+  /* Light mode tokens (default) - overridden in .dark below */
+  --background: #ffffff;
+  --foreground: #0f172a;
+
+  --card: rgba(0, 0, 0, 0.04);
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #0f172a;
+  --primary-foreground: #ffffff;
+
+  --secondary: rgba(0, 0, 0, 0.05);
+  --secondary-foreground: #0f172a;
+
+  --muted: rgba(0, 0, 0, 0.05);
+  --muted-foreground: #475569;
+
+  --accent: rgba(0, 0, 0, 0.05);
+  --accent-foreground: #0f172a;
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: rgba(0, 0, 0, 0.1);
+  --input: rgba(0, 0, 0, 0.1);
+  --ring: #0f172a;
+
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Semantic surface variables for light mode */
+  --surface-nav: rgba(255, 255, 255, 0.9);
+  --surface-footer: rgba(248, 250, 252, 0.9);
+  --surface-body: #f8fafc;
+  --border-nav: rgba(0, 0, 0, 0.08);
+  --border-footer: rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --background: #080808;
+  --foreground: #e2e8f0;
 
   --card: rgba(255, 255, 255, 0.03);
   --card-foreground: #e2e8f0;
@@ -122,31 +173,19 @@
   --input: rgba(255, 255, 255, 0.1);
   --ring: #e2e8f0;
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  /* Inherit root since we are dark by default */
-  --background: #080808;
-  --foreground: #e2e8f0;
+  /* Semantic surface variables for dark mode */
+  --surface-nav: rgba(0, 0, 0, 0.8);
+  --surface-footer: rgba(0, 0, 0, 0.5);
+  --surface-body: #080808;
+  --border-nav: rgba(255, 255, 255, 0.05);
+  --border-footer: rgba(255, 255, 255, 0.05);
 }
 
 @layer base {
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-color: var(--color-obsidian);
+    background-color: var(--surface-body);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
