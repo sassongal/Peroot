@@ -33,11 +33,11 @@ export function ContactForm() {
         <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center mx-auto">
           <Check className="w-6 h-6 text-green-400" />
         </div>
-        <h3 className="text-lg font-bold text-white">ההודעה נשלחה בהצלחה!</h3>
-        <p className="text-sm text-slate-400">נחזור אליך בהקדם האפשרי.</p>
+        <h3 className="text-lg font-bold text-foreground">ההודעה נשלחה בהצלחה!</h3>
+        <p className="text-sm text-muted-foreground">נחזור אליך בהקדם האפשרי.</p>
         <button
           onClick={() => setStatus("idle")}
-          className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
+          className="text-sm text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors"
         >
           שלח הודעה נוספת
         </button>
@@ -46,7 +46,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card rounded-2xl border border-white/10 p-8 space-y-5">
+    <form onSubmit={handleSubmit} className="glass-card rounded-2xl border border-border p-8 space-y-5">
       {status === "error" && (
         <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
           <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
@@ -56,19 +56,19 @@ export function ContactForm() {
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label htmlFor="name" className="text-sm font-medium text-slate-300">שם</label>
+          <label htmlFor="name" className="text-sm font-medium text-foreground">שם</label>
           <input
             id="name"
             type="text"
             required
             value={form.name}
             onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50 transition-colors"
             placeholder="השם שלך"
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-slate-300">אימייל</label>
+          <label htmlFor="email" className="text-sm font-medium text-foreground">אימייל</label>
           <input
             id="email"
             type="email"
@@ -76,39 +76,39 @@ export function ContactForm() {
             dir="ltr"
             value={form.email}
             onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50 transition-colors"
             placeholder="your@email.com"
           />
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="subject" className="text-sm font-medium text-slate-300">נושא</label>
+        <label htmlFor="subject" className="text-sm font-medium text-foreground">נושא</label>
         <select
           id="subject"
           required
           value={form.subject}
           onChange={(e) => setForm(prev => ({ ...prev, subject: e.target.value }))}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-500/50 transition-colors appearance-none"
+          className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-amber-500/50 transition-colors appearance-none"
         >
-          <option value="" className="bg-zinc-900">בחר נושא...</option>
-          <option value="question" className="bg-zinc-900">שאלה כללית</option>
-          <option value="bug" className="bg-zinc-900">דיווח על באג</option>
-          <option value="feature" className="bg-zinc-900">הצעה לתכונה חדשה</option>
-          <option value="billing" className="bg-zinc-900">חיוב ותשלום</option>
-          <option value="other" className="bg-zinc-900">אחר</option>
+          <option value="" className="bg-background">בחר נושא...</option>
+          <option value="question" className="bg-background">שאלה כללית</option>
+          <option value="bug" className="bg-background">דיווח על באג</option>
+          <option value="feature" className="bg-background">הצעה לתכונה חדשה</option>
+          <option value="billing" className="bg-background">חיוב ותשלום</option>
+          <option value="other" className="bg-background">אחר</option>
         </select>
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="message" className="text-sm font-medium text-slate-300">הודעה</label>
+        <label htmlFor="message" className="text-sm font-medium text-foreground">הודעה</label>
         <textarea
           id="message"
           required
           rows={5}
           value={form.message}
           onChange={(e) => setForm(prev => ({ ...prev, message: e.target.value }))}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors resize-none"
+          className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50 transition-colors resize-none"
           placeholder="כתוב את ההודעה שלך כאן..."
         />
       </div>
