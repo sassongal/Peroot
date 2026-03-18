@@ -54,10 +54,10 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               priority
             />
             <Image
-              src="/images/peroot_logo_pack/logo_nav_240x253.png"
+              src="/images/peroot_logo_pack/logo_dark_navbar_2x.png"
               alt="Peroot"
               width={240}
-              height={253}
+              height={240}
               className="hidden dark:block h-7 sm:h-9 w-auto"
               priority
             />
