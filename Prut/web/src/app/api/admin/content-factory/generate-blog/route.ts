@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateBlogPost, getGenerationContext } from "@/lib/content-factory/generate";
 import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
 import { findDuplicate } from "@/lib/content-factory/dedup";
+import { checkHebrewQuality } from "@/lib/content-factory/qa";
 
 // AI generation can take 30-60s for a full blog post
 export const maxDuration = 120;
@@ -110,6 +111,12 @@ export async function POST(req: NextRequest) {
     // 6. Calculate read time
     const readTime = calculateReadTime(generated.content);
 
+    // 6b. Run Hebrew quality check
+    const qa = checkHebrewQuality(generated.content);
+    if (qa.issues.length > 0) {
+      logger.info(`[admin/content-factory/generate-blog] QA score: ${qa.score}, issues: ${qa.issues.join("; ")}`);
+    }
+
     // 7. Insert into blog_posts as draft
     const { data: blogPost, error: insertError } = await supabase
       .from("blog_posts")
@@ -130,6 +137,8 @@ export async function POST(req: NextRequest) {
           template,
           topic: topic ?? null,
           internal_links: generated.internalLinks,
+          qa_score: qa.score,
+          qa_issues: qa.issues,
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

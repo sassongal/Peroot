@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
+import { pingGoogle } from "@/lib/google-ping";
 import { z } from "zod";
 
 const BlogPostSchema = z.object({
@@ -90,6 +91,9 @@ export async function PUT(req: NextRequest) {
     }
     const { id, ...updates } = parsed.data;
 
+    // Check if status is changing to "published" — we'll ping Google after
+    const isPublishing = updates.status === "published";
+
     const { data, error: dbError } = await supabase
       .from("blog_posts")
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -101,6 +105,13 @@ export async function PUT(req: NextRequest) {
       logger.error("[admin/blog] PUT DB error:", dbError);
       return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
     }
+
+    // Ping Google when a post is published
+    if (isPublishing && data) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+      pingGoogle(`${siteUrl}/sitemap.xml`);
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     logger.error("[admin/blog] Error:", error);

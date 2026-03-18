@@ -480,7 +480,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   {/* Title + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm md:text-base text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
+                      <h3 className="text-sm md:text-base text-slate-800 dark:text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
                       <CapabilityBadge mode={prompt.capability_mode} />
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{prompt.use_case}</p>

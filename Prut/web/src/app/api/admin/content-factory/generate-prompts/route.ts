@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
 import { findDuplicate } from "@/lib/content-factory/dedup";
+import { checkHebrewQuality } from "@/lib/content-factory/qa";
 
 export const maxDuration = 120;
 
@@ -114,6 +115,9 @@ export async function POST(req: NextRequest) {
       // Generate a unique ID (table uses text IDs like "marketing_001")
       const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
+      // Run Hebrew quality check on prompt text
+      const qa = checkHebrewQuality(prompt.prompt);
+
       const { data: insertedPrompt, error: insertError } = await supabase
         .from("public_library_prompts")
         .insert({
@@ -132,6 +136,8 @@ export async function POST(req: NextRequest) {
             generation_id: logId,
             topic: topic ?? null,
             category: category ?? null,
+            qa_score: qa.score,
+            qa_issues: qa.issues,
           },
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

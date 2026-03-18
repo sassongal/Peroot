@@ -323,6 +323,37 @@ function PreviewModal({
                 <span key={tag} className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs">#{tag}</span>
               ))}
             </div>
+            {/* Hebrew QA Badge */}
+            {fullData.source_metadata?.qa_score != null && (
+              <div className={cn(
+                "rounded-xl p-3 border",
+                fullData.source_metadata.qa_score >= 80
+                  ? "bg-emerald-500/5 border-emerald-500/20"
+                  : fullData.source_metadata.qa_score >= 50
+                  ? "bg-amber-500/5 border-amber-500/20"
+                  : "bg-rose-500/5 border-rose-500/20"
+              )}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-wider",
+                    fullData.source_metadata.qa_score >= 80 ? "text-emerald-400" :
+                    fullData.source_metadata.qa_score >= 50 ? "text-amber-400" : "text-rose-400"
+                  )}>
+                    בדיקת עברית: {fullData.source_metadata.qa_score}/100
+                  </span>
+                  {fullData.source_metadata.qa_score < 80 && (
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  )}
+                </div>
+                {(fullData.source_metadata.qa_issues?.length ?? 0) > 0 && (
+                  <ul className="space-y-0.5">
+                    {fullData.source_metadata.qa_issues.map((issue: string, i: number) => (
+                      <li key={i} className="text-xs text-zinc-400">• {issue}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="border-t border-white/5 pt-4">
               <div
                 className="prose prose-invert prose-sm max-w-none text-zinc-300 leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-base [&_h2]:mt-6 [&_h2]:mb-2 [&_strong]:text-white [&_a]:text-amber-400 [&_ul]:list-disc [&_ol]:list-decimal"
@@ -381,6 +412,37 @@ function PreviewModal({
                 <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs">{fullData.capability_mode}</span>
               )}
             </div>
+            {/* Hebrew QA Badge for prompts */}
+            {fullData.source_metadata?.qa_score != null && (
+              <div className={cn(
+                "rounded-xl p-3 border",
+                fullData.source_metadata.qa_score >= 80
+                  ? "bg-emerald-500/5 border-emerald-500/20"
+                  : fullData.source_metadata.qa_score >= 50
+                  ? "bg-amber-500/5 border-amber-500/20"
+                  : "bg-rose-500/5 border-rose-500/20"
+              )}>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-wider",
+                    fullData.source_metadata.qa_score >= 80 ? "text-emerald-400" :
+                    fullData.source_metadata.qa_score >= 50 ? "text-amber-400" : "text-rose-400"
+                  )}>
+                    בדיקת עברית: {fullData.source_metadata.qa_score}/100
+                  </span>
+                  {fullData.source_metadata.qa_score < 80 && (
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  )}
+                </div>
+                {(fullData.source_metadata.qa_issues?.length ?? 0) > 0 && (
+                  <ul className="mt-1 space-y-0.5">
+                    {fullData.source_metadata.qa_issues.map((issue: string, i: number) => (
+                      <li key={i} className="text-xs text-zinc-400">• {issue}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-zinc-600 text-sm font-bold text-center py-8">
@@ -878,6 +940,19 @@ function TabCreation({
                 <span className="shrink-0 text-[9px] font-black px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 uppercase tracking-widest">
                   AI
                 </span>
+
+                {/* QA warning badge */}
+                {rawPendingData[item.id]?.source_metadata?.qa_score != null &&
+                  rawPendingData[item.id].source_metadata.qa_score < 80 && (
+                  <span className={cn(
+                    "shrink-0 text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest",
+                    rawPendingData[item.id].source_metadata.qa_score < 50
+                      ? "bg-rose-500/10 border border-rose-500/20 text-rose-400"
+                      : "bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                  )}>
+                    QA {rawPendingData[item.id].source_metadata.qa_score}
+                  </span>
+                )}
 
                 {/* Type icon */}
                 <TypeIcon type={item.type} />

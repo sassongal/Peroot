@@ -71,6 +71,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
     languages: {
       "he-IL": "/",
       "en": "/",
@@ -141,6 +144,7 @@ import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
 import { MicrosoftClarity } from "@/components/providers/MicrosoftClarity";
 import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
+import { PwaInstallBanner } from "@/components/ui/PwaInstallBanner";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Footer } from "@/components/layout/Footer";
@@ -173,6 +177,7 @@ export default async function RootLayout({
         <MicrosoftClarity />
         <VercelAnalytics />
         <ServiceWorkerRegistration />
+        <PwaInstallBanner />
         <SplashScreen />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>

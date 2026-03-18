@@ -186,6 +186,28 @@ export function faqSchema(
   };
 }
 
+export function howToSchema(params: {
+  name: string;
+  description?: string;
+  steps: { name: string; text: string }[];
+  totalTime?: string; // ISO 8601 duration, e.g. "PT15M"
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: params.name,
+    description: params.description || "",
+    ...(params.totalTime ? { totalTime: params.totalTime } : {}),
+    inLanguage: "he",
+    step: params.steps.map((step, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: step.name,
+      text: step.text,
+    })),
+  };
+}
+
 export function promptCreativeWorkSchema(prompt: {
   title: string;
   description: string;

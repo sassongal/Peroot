@@ -80,6 +80,11 @@ export function trackChainRun(chainId: string, stepCount: number) {
     trackEvent('chain_run', { chain_id: chainId, step_count: stepCount });
 }
 
+/** Track social share button click */
+export function trackShare(platform: string, url: string) {
+    trackEvent('blog_share', { platform, url });
+}
+
 /** Identify user for PostHog */
 export function identifyUser(userId: string, properties?: Record<string, unknown>) {
     if (typeof window !== 'undefined' && analytics) {

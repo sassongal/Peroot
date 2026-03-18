@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { X, LogIn } from "lucide-react";
 import Link from "next/link";
-import { getAssetPath } from "@/lib/asset-path";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
@@ -58,7 +57,8 @@ export function LoginRequiredModal({
 
         <div className="flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/10 to-yellow-500/10 flex items-center justify-center border border-[var(--glass-border)]">
-            <Image src={getAssetPath("/logo.svg")} alt="לוגו פרוט" width={40} height={40} className="w-10 h-10 brightness-110" style={{ width: 'auto', height: 'auto' }} />
+            <Image src="/images/peroot_logo_pack/logo_dark_240.png" alt="לוגו פרוט" width={40} height={40} className="block dark:hidden w-10 h-10" style={{ width: 'auto', height: 'auto' }} />
+            <Image src="/images/peroot_logo_pack/logo_dark_navbar_2x.png" alt="לוגו פרוט" width={40} height={40} className="hidden dark:block w-10 h-10" style={{ width: 'auto', height: 'auto' }} />
           </div>
 
           <div className="space-y-2">

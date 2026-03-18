@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
+import { pingGoogle } from "@/lib/google-ping";
 import { z } from "zod";
 
 const ApproveSchema = z.object({
@@ -52,6 +53,12 @@ export async function POST(req: NextRequest) {
       }
 
       logger.info(`[admin/content-factory/approve] Published ${data?.length ?? 0} blog posts by user ${user.id}`);
+
+      // Ping Google to re-crawl sitemap after publishing
+      if (data && data.length > 0) {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+        pingGoogle(`${siteUrl}/sitemap.xml`);
+      }
 
       return NextResponse.json({
         approved: data ?? [],

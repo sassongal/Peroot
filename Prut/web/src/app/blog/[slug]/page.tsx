@@ -3,12 +3,14 @@ import Link from "next/link";
 import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { articleSchema, breadcrumbSchema } from "@/lib/schema";
-import { HEBREW_BLOG_SLUGS } from "@/lib/blog-slug-map";
+import { articleSchema, breadcrumbSchema, faqSchema, howToSchema } from "@/lib/schema";
+import { HEBREW_BLOG_SLUGS, ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
+import { BlogShareButtons } from "@/components/blog/BlogShareButtons";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { BlogTOC } from "@/components/blog/BlogTOC";
+import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 interface Props {
@@ -60,12 +62,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Dynamic OG image with title + category styling
   const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.excerpt || "")}&category=${encodeURIComponent(post.category || "")}`;
 
+  // Build hreflang alternates if Hebrew slug mapping exists
+  const hebrewSlug = ENGLISH_TO_HEBREW_SLUG[post.slug];
+  const languages: Record<string, string> = {
+    "he-IL": `/blog/${post.slug}`,
+    "x-default": `/blog/${post.slug}`,
+  };
+  if (hebrewSlug) {
+    languages["he"] = `/blog/${encodeURIComponent(hebrewSlug)}`;
+  }
+
   return {
     title,
     description,
     alternates: {
       canonical: `/blog/${post.slug}`,
-      languages: { "he-IL": `/blog/${post.slug}` },
+      languages,
     },
     openGraph: {
       title: `${title} | Peroot`,
@@ -106,6 +118,44 @@ function injectH2Ids(html: string): string {
     if (!id) return _match;
     return `<h2${attrs} id="${id}">${inner}</h2>`;
   });
+}
+
+/**
+ * Extract Q&A pairs from blog content for FAQ schema.
+ * Looks for H2/H3 that end with "?" followed by paragraph content.
+ */
+function extractFaqPairs(html: string): { question: string; answer: string }[] {
+  const pairs: { question: string; answer: string }[] = [];
+  const regex = /<h[23][^>]*>([\s\S]*?)<\/h[23]>\s*([\s\S]*?)(?=<h[23]|$)/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    const heading = match[1].replace(/<[^>]+>/g, "").trim();
+    if (!heading.includes("?")) continue;
+    const answerHtml = match[2];
+    const answer = answerHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (answer.length > 20) {
+      pairs.push({ question: heading, answer: answer.slice(0, 500) });
+    }
+  }
+  return pairs;
+}
+
+/**
+ * Extract step-by-step instructions from blog content for HowTo schema.
+ * Uses H2 headings as step names and following paragraph as step text.
+ */
+function extractHowToSteps(html: string): { name: string; text: string }[] {
+  const steps: { name: string; text: string }[] = [];
+  const regex = /<h2[^>]*>([\s\S]*?)<\/h2>\s*([\s\S]*?)(?=<h2|$)/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    const name = match[1].replace(/<[^>]+>/g, "").trim();
+    const text = match[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (name && text.length > 10) {
+      steps.push({ name, text: text.slice(0, 300) });
+    }
+  }
+  return steps;
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -189,6 +239,11 @@ export default async function BlogPostPage({ params }: Props) {
               />
             </div>
 
+            {/* Share buttons — above content */}
+            <div className="mb-6">
+              <BlogShareButtons url={`${blogSiteUrl}/blog/${post.slug}`} title={post.title} />
+            </div>
+
             <SafeHtml
               html={enrichedContent}
               className="prose dark:prose-invert prose-amber max-w-none
@@ -200,6 +255,17 @@ export default async function BlogPostPage({ params }: Props) {
                 prose-strong:text-foreground
                 prose-a:text-amber-600 dark:prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
             />
+
+            {/* Share buttons — below content */}
+            <div className="mt-8 mb-4">
+              <BlogShareButtons url={`${blogSiteUrl}/blog/${post.slug}`} title={post.title} />
+            </div>
+
+            {/* Newsletter signup */}
+            <div className="mt-8 p-6 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
+              <p className="text-lg font-serif text-foreground mb-3">נהנית מהתוכן? הצטרף לניוזלטר שלנו</p>
+              <NewsletterSignup />
+            </div>
 
             {/* Author Bio */}
             <div className="mt-12 p-6 rounded-2xl border border-border bg-secondary flex items-start gap-4" dir="rtl">
@@ -271,6 +337,28 @@ export default async function BlogPostPage({ params }: Props) {
           ),
         }}
       />
+      {/* FAQ schema for Q&A category posts */}
+      {post.category === "שאלות ותשובות" && (() => {
+        const pairs = extractFaqPairs(post.content ?? "");
+        return pairs.length > 0 ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(pairs)) }}
+          />
+        ) : null;
+      })()}
+      {/* HowTo schema for guide category posts */}
+      {post.category === "מדריכים" && (() => {
+        const steps = extractHowToSteps(post.content ?? "");
+        return steps.length > 0 ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(howToSchema({ name: post.title, steps })),
+            }}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }
