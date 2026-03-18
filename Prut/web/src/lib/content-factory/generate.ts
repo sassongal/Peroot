@@ -76,13 +76,48 @@ export interface GeneratedPrompt {
  * get a clear error rather than a silent empty result.
  */
 function parseJsonResponse<T>(raw: string): T {
-  const cleaned = raw
+  let cleaned = raw
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/i, '')
     .replace(/```\s*$/i, '')
     .trim();
 
-  return JSON.parse(cleaned) as T;
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch (firstError) {
+    // Gemini often puts unescaped newlines/tabs inside JSON string values
+    // (especially in HTML content fields). Fix them before retrying.
+    logger.warn('[ContentFactory] First JSON parse failed, attempting repair...');
+
+    // Fix unescaped control characters inside JSON string values
+    // Replace literal newlines/tabs/carriage returns that aren't already escaped
+    cleaned = cleaned
+      .replace(/(?<=:"[^"]*)\n/g, '\\n')
+      .replace(/(?<=:"[^"]*)\r/g, '\\r')
+      .replace(/(?<=:"[^"]*)\t/g, '\\t');
+
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      // Last resort: try to extract JSON object from the response
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          // Aggressive cleanup: replace all control characters in string values
+          const aggressive = jsonMatch[0].replace(/[\x00-\x1F\x7F]/g, (ch) => {
+            if (ch === '\n') return '\\n';
+            if (ch === '\r') return '\\r';
+            if (ch === '\t') return '\\t';
+            return '';
+          });
+          return JSON.parse(aggressive) as T;
+        } catch {
+          // Give up
+        }
+      }
+      throw firstError;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -229,7 +264,7 @@ export async function generatePromptBatch(params: PromptGenerationParams): Promi
       "variables": ["משתנה1", "משתנה2"],
       "output_format": "תיאור הפלט הצפוי",
       "quality_checks": ["בדיקה1", "בדיקה2"],
-      "category_id": "uuid-של-הקטגוריה",
+      "category_id": "the-id-from-the-list-below",
       "capability_mode": "STANDARD"
     }
   ]

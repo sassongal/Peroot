@@ -99,17 +99,29 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
+      // Validate category_id exists, fallback to "general"
+      const validCategoryIds = context.existingCategories.map((c: any) => c.id);
+      const safeCategoryId = validCategoryIds.includes(prompt.category_id)
+        ? prompt.category_id
+        : "general";
+
+      // Validate capability_mode
+      const validModes = ["STANDARD", "DEEP_RESEARCH", "IMAGE_GENERATION", "AGENT_BUILDER", "VIDEO_GENERATION"];
+      const safeMode = validModes.includes(prompt.capability_mode)
+        ? prompt.capability_mode
+        : "STANDARD";
+
       const { data: insertedPrompt, error: insertError } = await supabase
         .from("public_library_prompts")
         .insert({
           title: prompt.title,
           prompt: prompt.prompt,
-          use_case: prompt.use_case,
-          variables: prompt.variables,
-          output_format: prompt.output_format,
-          quality_checks: prompt.quality_checks,
-          category_id: prompt.category_id,
-          capability_mode: prompt.capability_mode,
+          use_case: prompt.use_case || "",
+          variables: Array.isArray(prompt.variables) ? prompt.variables : [],
+          output_format: prompt.output_format || "",
+          quality_checks: Array.isArray(prompt.quality_checks) ? prompt.quality_checks : [],
+          category_id: safeCategoryId,
+          capability_mode: safeMode,
           is_active: false,
           source_metadata: {
             generated_by: "content-factory",
