@@ -40,20 +40,18 @@ export async function GET() {
         .select("*", { count: "exact", head: true })
         .eq("status", "published"),
 
-      // Pending blog drafts from content-factory
+      // Pending blog drafts (all drafts — filter content-factory in JS)
       supabase
         .from("blog_posts")
-        .select("id, title, excerpt, category, created_at, source_metadata")
+        .select("id, title, slug, excerpt, category, content, meta_title, meta_description, tags, read_time, created_at, source_metadata")
         .eq("status", "draft")
-        .filter("source_metadata->>generated_by", "eq", "content-factory")
         .order("created_at", { ascending: false }),
 
-      // Pending prompt drafts from content-factory
+      // Pending prompt drafts (all inactive — filter content-factory in JS)
       supabase
         .from("public_library_prompts")
-        .select("id, title, use_case, category_id, created_at, source_metadata")
+        .select("id, title, prompt, use_case, variables, output_format, quality_checks, category_id, capability_mode, created_at, source_metadata")
         .eq("is_active", false)
-        .filter("source_metadata->>generated_by", "eq", "content-factory")
         .order("created_at", { ascending: false }),
 
       // Content-factory items created this week (generation log is the source of truth)
@@ -93,18 +91,25 @@ export async function GET() {
       logger.error("[admin/content-factory] GET history error:", historyResult.error);
     }
 
+    // Filter content-factory items in JS (JSONB filter unreliable in Supabase JS)
+    const pendingBlogs = (pendingBlogsResult.data ?? []).filter(
+      (b: any) => b.source_metadata?.generated_by === "content-factory"
+    );
+    const pendingPrompts = (pendingPromptsResult.data ?? []).filter(
+      (p: any) => p.source_metadata?.generated_by === "content-factory"
+    );
+
     const stats = {
       totalPrompts: promptCountResult.count ?? 0,
       totalBlogPosts: blogCountResult.count ?? 0,
-      pendingCount:
-        (pendingBlogsResult.data?.length ?? 0) + (pendingPromptsResult.data?.length ?? 0),
+      pendingCount: pendingBlogs.length + pendingPrompts.length,
       createdThisWeek: createdThisWeekResult.count ?? 0,
     };
 
     return NextResponse.json({
       stats,
-      pendingBlogs: pendingBlogsResult.data ?? [],
-      pendingPrompts: pendingPromptsResult.data ?? [],
+      pendingBlogs,
+      pendingPrompts,
       history: historyResult.data ?? [],
       categories: categoriesResult.data ?? [],
     });

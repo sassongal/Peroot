@@ -256,43 +256,12 @@ function TypeIcon({ type }: { type: "blog" | "prompt" }) {
 function PreviewModal({
   item,
   onClose,
+  fullData,
 }: {
   item: PendingItem;
   onClose: () => void;
+  fullData?: any;
 }) {
-  const [fullData, setFullData] = useState<any>(null);
-  const [loadingPreview, setLoadingPreview] = useState(true);
-
-  useEffect(() => {
-    const fetchFull = async () => {
-      setLoadingPreview(true);
-      try {
-        if (item.type === "blog") {
-          const res = await fetch(getApiPath("/api/admin/blog"));
-          const posts = await res.json();
-          const post = Array.isArray(posts) ? posts.find((p: any) => p.id === item.id) : null;
-          setFullData(post);
-        } else {
-          const res = await fetch(getApiPath("/api/library/prompts"));
-          const result = await res.json();
-          const prompts = Array.isArray(result) ? result : result.prompts ?? [];
-          let prompt = prompts.find((p: any) => p.id === item.id);
-          if (!prompt) {
-            // Inactive prompts may not be in public API, try direct fetch
-            const res2 = await fetch(getApiPath(`/api/admin/content-factory`));
-            const data2 = await res2.json();
-            prompt = (data2.pendingPrompts ?? []).find((p: any) => p.id === item.id);
-          }
-          setFullData(prompt);
-        }
-      } catch {
-        setFullData(null);
-      } finally {
-        setLoadingPreview(false);
-      }
-    };
-    fetchFull();
-  }, [item.id, item.type]);
 
   return (
     <div
@@ -323,12 +292,7 @@ function PreviewModal({
           </button>
         </div>
 
-        {loadingPreview ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-            <span className="text-zinc-500 text-sm mr-3">טוען תצוגה מקדימה...</span>
-          </div>
-        ) : item.type === "blog" && fullData ? (
+        {item.type === "blog" && fullData ? (
           <div className="space-y-4">
             {fullData.meta_title && (
               <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
@@ -433,10 +397,12 @@ function PreviewModal({
 function TabCreation({
   stats,
   pending,
+  rawPendingData,
   onRefresh,
 }: {
   stats: ContentFactoryStats | null;
   pending: PendingItem[];
+  rawPendingData: Record<string, any>;
   onRefresh: () => void;
 }) {
   const [blogTopic, setBlogTopic] = useState("");
@@ -990,7 +956,7 @@ function TabCreation({
       </div>
 
       {previewItem && (
-        <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />
+        <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} fullData={rawPendingData[previewItem.id]} />
       )}
     </div>
   );
@@ -1865,6 +1831,7 @@ export default function ContentFactoryPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("creation");
   const [stats, setStats] = useState<ContentFactoryStats | null>(null);
   const [pending, setPending] = useState<PendingItem[]>([]);
+  const [rawPendingData, setRawPendingData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -1876,8 +1843,16 @@ export default function ContentFactoryPage() {
         pendingBlogs: any[];
         pendingPrompts: any[];
         history: any[];
+        categories: any[];
       } = await res.json();
       setStats(data.stats ?? null);
+
+      // Store raw data keyed by ID for preview modal
+      const rawMap: Record<string, any> = {};
+      for (const b of data.pendingBlogs ?? []) rawMap[b.id] = { ...b, _type: "blog" };
+      for (const p of data.pendingPrompts ?? []) rawMap[p.id] = { ...p, _type: "prompt" };
+      setRawPendingData(rawMap);
+
       // Combine pending blogs and prompts into a unified list
       const combinedPending: PendingItem[] = [
         ...(data.pendingBlogs ?? []).map((b: any) => ({
@@ -1985,6 +1960,7 @@ export default function ContentFactoryPage() {
                 <TabCreation
                   stats={stats}
                   pending={pending}
+                  rawPendingData={rawPendingData}
                   onRefresh={loadData}
                 />
               )}
