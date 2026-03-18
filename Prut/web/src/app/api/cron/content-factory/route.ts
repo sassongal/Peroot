@@ -188,17 +188,25 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
+        // Generate unique ID + validate category
+        const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        const validCategoryIds = context.existingCategories.map((c: any) => c.id);
+        const safeCategoryId = validCategoryIds.includes(promptData.category_id) ? promptData.category_id : "general";
+        const validModes = ["STANDARD", "DEEP_RESEARCH", "IMAGE_GENERATION", "AGENT_BUILDER", "VIDEO_GENERATION"];
+        const safeMode = validModes.includes(promptData.capability_mode) ? promptData.capability_mode : "STANDARD";
+
         const { data: insertedPrompt, error: promptInsertError } = await supabase
           .from("public_library_prompts")
           .insert({
+            id: promptId,
             title: promptData.title,
             prompt: promptData.prompt,
-            use_case: promptData.use_case,
-            variables: promptData.variables,
-            output_format: promptData.output_format,
-            quality_checks: promptData.quality_checks,
-            category_id: promptData.category_id,
-            capability_mode: promptData.capability_mode,
+            use_case: promptData.use_case || "",
+            variables: Array.isArray(promptData.variables) ? promptData.variables : [],
+            output_format: promptData.output_format || "",
+            quality_checks: Array.isArray(promptData.quality_checks) ? promptData.quality_checks : [],
+            category_id: safeCategoryId,
+            capability_mode: safeMode,
             is_active: false,
             source_metadata: {
               generated_by: "content-factory",

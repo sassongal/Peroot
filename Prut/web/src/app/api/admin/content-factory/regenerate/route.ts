@@ -279,9 +279,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Insert new prompt
+    const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const { data: newPrompt, error: insertError } = await supabase
       .from("public_library_prompts")
       .insert({
+        id: promptId,
         title: newPromptData.title,
         prompt: newPromptData.prompt,
         use_case: newPromptData.use_case,

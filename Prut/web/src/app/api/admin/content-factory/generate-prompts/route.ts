@@ -111,9 +111,13 @@ export async function POST(req: NextRequest) {
         ? prompt.capability_mode
         : "STANDARD";
 
+      // Generate a unique ID (table uses text IDs like "marketing_001")
+      const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
       const { data: insertedPrompt, error: insertError } = await supabase
         .from("public_library_prompts")
         .insert({
+          id: promptId,
           title: prompt.title,
           prompt: prompt.prompt,
           use_case: prompt.use_case || "",
