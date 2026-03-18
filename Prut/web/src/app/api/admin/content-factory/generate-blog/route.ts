@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
       .from("content_generation_log")
       .insert({
         type: "blog",
+        trigger: "manual",
         status: "generating",
-        params: { topic: topic ?? null, template },
-        triggered_by: user.id,
-        created_at: new Date().toISOString(),
+        topic: topic ?? null,
+        template,
       })
       .select("id")
       .single();
@@ -157,8 +157,8 @@ export async function POST(req: NextRequest) {
         .from("content_generation_log")
         .update({
           status: "completed",
-          result_id: blogPost.id,
-          result_title: generated.title,
+          result_ids: [blogPost.id],
+          result_count: 1,
           completed_at: new Date().toISOString(),
         })
         .eq("id", logId);

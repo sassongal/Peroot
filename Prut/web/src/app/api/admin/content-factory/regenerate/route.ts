@@ -77,10 +77,10 @@ export async function POST(req: NextRequest) {
         .from("content_generation_log")
         .insert({
           type: "blog",
+          trigger: "manual",
           status: "generating",
-          params: { topic: originalTopic ?? null, template: originalTemplate ?? "guide", regenerated_from: id },
-          triggered_by: user.id,
-          created_at: new Date().toISOString(),
+          topic: originalTopic ?? null,
+          template: originalTemplate ?? "guide",
         })
         .select("id")
         .single();
@@ -172,8 +172,8 @@ export async function POST(req: NextRequest) {
           .from("content_generation_log")
           .update({
             status: "completed",
-            result_id: newBlog.id,
-            result_title: generated.title,
+            result_ids: [newBlog.id],
+            result_count: 1,
             completed_at: new Date().toISOString(),
           })
           .eq("id", logId);
@@ -218,11 +218,10 @@ export async function POST(req: NextRequest) {
     const { data: logEntry } = await supabase
       .from("content_generation_log")
       .insert({
-        type: "prompts",
+        type: "prompt",
+        trigger: "manual",
         status: "generating",
-        params: { topic: originalTopic ?? null, category: originalCategory ?? null, count: 1, regenerated_from: id },
-        triggered_by: user.id,
-        created_at: new Date().toISOString(),
+        topic: originalTopic ?? null,
       })
       .select("id")
       .single();
@@ -323,8 +322,8 @@ export async function POST(req: NextRequest) {
         .from("content_generation_log")
         .update({
           status: "completed",
-          result_id: newPrompt.id,
-          result_title: newPromptData.title,
+          result_ids: [newPrompt.id],
+          result_count: 1,
           completed_at: new Date().toISOString(),
         })
         .eq("id", logId);

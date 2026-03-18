@@ -58,10 +58,8 @@ export async function GET(request: NextRequest) {
         .from("content_generation_log")
         .insert({
           type: "blog",
+          trigger: "cron",
           status: "generating",
-          params: { source: "cron", run_id: runId },
-          triggered_by: "cron",
-          created_at: new Date().toISOString(),
         })
         .select("id")
         .single();
@@ -136,8 +134,8 @@ export async function GET(request: NextRequest) {
               .from("content_generation_log")
               .update({
                 status: "completed",
-                result_id: blogPost.id,
-                result_title: generatedBlog.title,
+                result_ids: [blogPost.id],
+                result_count: 1,
                 completed_at: new Date().toISOString(),
               })
               .eq("id", blogLogId);
@@ -166,11 +164,9 @@ export async function GET(request: NextRequest) {
       const { data: promptLog } = await supabase
         .from("content_generation_log")
         .insert({
-          type: "prompts",
+          type: "prompt",
+          trigger: "cron",
           status: "generating",
-          params: { count: 5, source: "cron", run_id: runId },
-          triggered_by: "cron",
-          created_at: new Date().toISOString(),
         })
         .select("id")
         .single();
@@ -232,8 +228,7 @@ export async function GET(request: NextRequest) {
           .update({
             status: "completed",
             result_count: insertedTitles.length,
-            result_titles: insertedTitles,
-            token_usage: usage,
+            cost_tokens: usage?.totalTokens ?? 0,
             completed_at: new Date().toISOString(),
           })
           .eq("id", promptLogId);

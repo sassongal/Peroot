@@ -41,11 +41,10 @@ export async function POST(req: NextRequest) {
     const { data: logEntry, error: logInsertError } = await supabase
       .from("content_generation_log")
       .insert({
-        type: "prompts",
+        type: "prompt",
+        trigger: "manual",
         status: "generating",
-        params: { topic: topic ?? null, category: category ?? null, count: 5 },
-        triggered_by: user.id,
-        created_at: new Date().toISOString(),
+        topic: topic ?? null,
       })
       .select("id")
       .single();
@@ -138,8 +137,8 @@ export async function POST(req: NextRequest) {
         .update({
           status: "completed",
           result_count: inserted.length,
-          result_titles: inserted.map((p) => p.title),
-          token_usage: usage,
+          result_ids: inserted.map((p: any) => p.id),
+          cost_tokens: usage?.totalTokens ?? 0,
           completed_at: new Date().toISOString(),
         })
         .eq("id", logId);
