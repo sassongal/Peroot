@@ -7,7 +7,7 @@ import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/con
 import { findDuplicate } from "@/lib/content-factory/dedup";
 
 const GenerateBlogSchema = z.object({
-  topic: z.string().min(1).max(500).optional(),
+  topic: z.string().max(500).optional().transform(v => v?.trim() || undefined),
   template: z.enum(["guide", "listicle", "comparison", "faq"]).optional(),
 });
 

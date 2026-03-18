@@ -6,8 +6,8 @@ import { generatePromptBatch, getGenerationContext } from "@/lib/content-factory
 import { findDuplicate } from "@/lib/content-factory/dedup";
 
 const GeneratePromptsSchema = z.object({
-  topic: z.string().min(1).max(500).optional(),
-  category: z.string().min(1).max(200).optional(),
+  topic: z.string().max(500).optional().transform(v => v?.trim() || undefined),
+  category: z.string().max(200).optional().transform(v => v?.trim() || undefined),
 });
 
 /**
