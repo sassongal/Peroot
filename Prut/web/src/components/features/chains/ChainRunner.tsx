@@ -42,21 +42,21 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-[#0f0f0f] border border-white/10 rounded-2xl p-6 mx-4"
+        className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-[#0f0f0f] border border-[var(--glass-border)] rounded-2xl p-6 mx-4"
         dir="rtl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white">{chain.title}</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{chain.title}</h3>
             {chain.description && (
-              <p className="text-xs text-slate-500 mt-1">{chain.description}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">{chain.description}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 transition-colors"
+            className="p-2 rounded-full hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -74,7 +74,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                     ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
                     : completedSteps.has(i)
                     ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
-                    : "bg-white/5 border-white/10 text-slate-500"
+                    : "bg-[var(--glass-bg)] border-[var(--glass-border)] text-[var(--text-muted)]"
                 )}
               >
                 {completedSteps.has(i) ? <Check className="w-3.5 h-3.5" /> : i + 1}
@@ -92,9 +92,9 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
               שלב {currentStep + 1} מתוך {chain.steps.length}
             </span>
-            <span className="text-sm font-medium text-white">{step.title}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">{step.title}</span>
           </div>
-          <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
             {step.prompt_text}
           </p>
         </div>
@@ -103,18 +103,18 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         {currentStep > 0 && stepOutputs[currentStep - 1] && (
           <div className="mt-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
             <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">פלט שלב קודם</div>
-            <p className="text-xs text-slate-400 line-clamp-3">{stepOutputs[currentStep - 1]}</p>
+            <p className="text-xs text-[var(--text-muted)] line-clamp-3">{stepOutputs[currentStep - 1]}</p>
           </div>
         )}
 
         {completedSteps.has(currentStep) && (
           <div className="mt-3">
-            <label className="text-[10px] text-slate-500 uppercase tracking-wider">הדבק את הפלט של שלב זה (אופציונלי):</label>
+            <label className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">הדבק את הפלט של שלב זה (אופציונלי):</label>
             <textarea
               value={stepOutputs[currentStep] || ""}
               onChange={e => setStepOutputs(prev => ({ ...prev, [currentStep]: e.target.value }))}
               placeholder="הדבק כאן את התוצאה..."
-              className="w-full mt-1 h-20 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
+              className="w-full mt-1 h-20 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg px-3 py-2 text-xs text-[var(--text-secondary)] placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
             />
           </div>
         )}
@@ -133,7 +133,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
           </button>
           <button
             onClick={() => handleCopy(step.prompt_text)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--glass-border)] text-[var(--text-secondary)] text-sm hover:bg-[var(--glass-bg)] transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             העתק

@@ -66,16 +66,16 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
       <div
-        className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
+        className="bg-[#111] border border-[var(--glass-border)] rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--glass-border)]">
           <div>
-            <h3 className="text-lg font-bold text-white">היסטוריית גרסאות</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{promptTitle}</p>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">היסטוריית גרסאות</h3>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">{promptTitle}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -101,7 +101,7 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
                       "w-full text-start p-3 rounded-xl border transition-all cursor-pointer",
                       selectedVersion?.id === version.id
                         ? "bg-amber-500/10 border-amber-500/30"
-                        : "bg-white/[0.02] border-white/5 hover:bg-white/[0.05]"
+                        : "bg-[var(--glass-bg)] border-[var(--glass-border)] hover:bg-[var(--glass-bg)]"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -110,7 +110,7 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
                           v{version.version_number}
                         </span>
                         {version.title && (
-                          <span className="text-sm text-slate-300 truncate max-w-[200px]">{version.title}</span>
+                          <span className="text-sm text-[var(--text-secondary)] truncate max-w-[200px]">{version.title}</span>
                         )}
                       </div>
                       <span className="text-[10px] text-slate-500">
@@ -123,15 +123,15 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
 
                   {/* Expanded version content */}
                   {selectedVersion?.id === version.id && (
-                    <div className="mt-2 p-3 rounded-xl bg-black/30 border border-white/5 animate-in slide-in-from-top-2 duration-200">
-                      <pre className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto" dir="rtl">
+                    <div className="mt-2 p-3 rounded-xl bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] animate-in slide-in-from-top-2 duration-200">
+                      <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto" dir="rtl">
                         {version.content}
                       </pre>
                       <div className="flex justify-end mt-3">
                         <button
                           onClick={() => handleRestore(version)}
                           disabled={restoring}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-50 cursor-pointer"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           {restoring ? "משחזר..." : "שחזר גרסה זו"}

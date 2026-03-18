@@ -67,18 +67,18 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
             <div className="relative">
               <button
                 onClick={() => setShowPresets(!showPresets)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
               >
                 <span>טען פריסט</span>
                 <ChevronDown className={cn("w-3 h-3 transition-transform", showPresets && "rotate-180")} />
               </button>
               {showPresets && (
-                <div className="absolute top-full mt-1 left-0 right-0 min-w-[180px] bg-[#111] border border-white/10 rounded-lg shadow-xl z-10 overflow-hidden">
+                <div className="absolute top-full mt-1 left-0 right-0 min-w-[180px] bg-[#111] border border-[var(--glass-border)] rounded-lg shadow-xl z-10 overflow-hidden">
                   {presets.map(preset => (
-                    <div key={preset.id} className="flex items-center justify-between px-3 py-2 hover:bg-white/5 group">
+                    <div key={preset.id} className="flex items-center justify-between px-3 py-2 hover:bg-[var(--glass-bg)] group">
                       <button
                         onClick={() => loadPreset(preset)}
-                        className="text-xs text-slate-300 hover:text-white flex-1 text-start truncate"
+                        className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex-1 text-start truncate"
                       >
                         {preset.name}
                       </button>
@@ -101,14 +101,14 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
       <div className="space-y-2 mb-4">
         {variables.map(v => (
           <div key={v} className="flex items-center gap-3">
-            <label className="text-xs text-slate-400 w-28 shrink-0 truncate" title={v}>
+            <label className="text-xs text-[var(--text-muted)] w-28 shrink-0 truncate" title={v}>
               {`{${v}}`}
             </label>
             <input
               value={values[v] || ""}
               onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
               placeholder={getVariablePlaceholder(v)}
-              className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
+              className="flex-1 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
             />
           </div>
         ))}
@@ -119,7 +119,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
         <button
           onClick={handleApply}
           disabled={Object.values(values).every(v => !v)}
-          className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           החל משתנים
         </button>
@@ -130,7 +130,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
               value={presetName}
               onChange={(e) => setPresetName(e.target.value)}
               placeholder="שם הפריסט"
-              className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
+              className="flex-1 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
               onKeyDown={(e) => { if (e.key === 'Enter') handleSavePreset(); }}
             />
             <button
@@ -143,7 +143,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
         ) : (
           <button
             onClick={() => setShowSavePreset(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-500 text-xs hover:text-slate-300 hover:bg-white/5 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] transition-colors"
           >
             <Save className="w-3 h-3" />
             שמור כפריסט

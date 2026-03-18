@@ -36,6 +36,10 @@ Peroot (פירות) is a Hebrew-first AI prompt enhancement platform that transf
 - **Voice Input** - Record prompts via microphone
 - **Subscription System** - Free tier with credit limits, paid plans via LemonSqueezy
 - **Admin Dashboard** - Analytics, moderation, cost tracking, A/B experiments, SEO console, blog management
+- **Light/Dark Mode** - Full theme support with CSS custom properties, dark: prefixes, and semantic tokens
+- **Animated Splash Screen** - Video-based brand intro on first session visit with skip option
+- **PWA Support** - Installable app with favicon pack, apple-icon, manifest.json, service worker
+- **Chrome Extension** - Browser extension for prompt enhancement from any website
 - **Internationalization** - Hebrew-first with i18n dictionary support
 - **Maintenance Mode** - Redis-backed toggle with admin bypass
 
@@ -215,7 +219,10 @@ src/
 │   ├── page.tsx                  # Home page
 │   ├── HomeClient.tsx            # Client-side home component
 │   ├── layout.tsx                # Root layout with providers
-│   ├── globals.css               # Global styles
+│   ├── globals.css               # Global styles + light/dark theme tokens
+│   ├── favicon.ico               # Browser tab icon
+│   ├── icon.png                  # App icon (32x32)
+│   ├── apple-icon.png            # iOS home screen icon (180x180)
 │   ├── robots.ts                 # Dynamic robots.txt generation
 │   ├── sitemap.ts                # Dynamic sitemap generation
 │   ├── admin/                    # Admin dashboard (17 pages)
@@ -244,8 +251,8 @@ src/
 │   └── examples/                 # Example prompts
 │
 ├── components/
-│   ├── ui/                       # Base UI components (Button, Card, Textarea, etc.)
-│   ├── layout/                   # Header, Footer, GlobalContextWrapper
+│   ├── ui/                       # Base UI components (Button, Card, SplashScreen, etc.)
+│   ├── layout/                   # TopNavBar, Footer, MobileTabBar, UserMenu
 │   ├── providers/                # GoogleAnalytics, PostHog, ServiceWorker
 │   ├── features/                 # Feature-specific components
 │   │   ├── prompt-improver/      # Core prompt enhancement UI
@@ -324,6 +331,32 @@ src/
 │
 └── middleware.ts                  # Auth + maintenance mode enforcement
 ```
+
+---
+
+## Branding & Theming
+
+### Logo Assets
+
+All logo files are in `public/images/peroot_logo_pack/`:
+
+| File | Usage | Size |
+|------|-------|------|
+| `logo_nav_240x253.png` | Navbar/footer in **dark mode** (solid orange) | 32KB |
+| `logo_dark_240.png` | Navbar/footer in **light mode** (dark with orange border) | 17KB |
+| `peroot-splash.mp4` | Animated splash screen (1080×1920, 6s) | 606KB |
+| `peroot_og_image_v3.jpg` | OpenGraph image for social shares | 117KB |
+| `favicons/` | Favicon pack: .ico, 16–512px PNGs, apple-touch | Multiple |
+
+### Theme System
+
+CSS custom property system in `globals.css` with `ThemeProvider` context:
+
+- **`:root`** — Light mode tokens (default)
+- **`.dark`** — Dark mode overrides
+- Brand color: **`#E17100`**
+
+Key tokens: `--text-primary`, `--text-secondary`, `--text-muted`, `--glass-bg`, `--glass-border`, `--surface-nav`, `--surface-footer`, `--accent-text`
 
 ---
 
