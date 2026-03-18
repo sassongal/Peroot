@@ -260,14 +260,49 @@ function PreviewModal({
   item: PendingItem;
   onClose: () => void;
 }) {
+  const [fullData, setFullData] = useState<any>(null);
+  const [loadingPreview, setLoadingPreview] = useState(true);
+
+  useEffect(() => {
+    const fetchFull = async () => {
+      setLoadingPreview(true);
+      try {
+        if (item.type === "blog") {
+          const res = await fetch(getApiPath("/api/admin/blog"));
+          const posts = await res.json();
+          const post = Array.isArray(posts) ? posts.find((p: any) => p.id === item.id) : null;
+          setFullData(post);
+        } else {
+          const res = await fetch(getApiPath("/api/library/prompts"));
+          const result = await res.json();
+          const prompts = Array.isArray(result) ? result : result.prompts ?? [];
+          let prompt = prompts.find((p: any) => p.id === item.id);
+          if (!prompt) {
+            // Inactive prompts may not be in public API, try direct fetch
+            const res2 = await fetch(getApiPath(`/api/admin/content-factory`));
+            const data2 = await res2.json();
+            prompt = (data2.pendingPrompts ?? []).find((p: any) => p.id === item.id);
+          }
+          setFullData(prompt);
+        }
+      } catch {
+        setFullData(null);
+      } finally {
+        setLoadingPreview(false);
+      }
+    };
+    fetchFull();
+  }, [item.id, item.type]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-zinc-950 border border-white/10 rounded-3xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+        className="bg-zinc-950 border border-white/10 rounded-3xl p-8 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        dir="rtl"
       >
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -276,6 +311,7 @@ function PreviewModal({
               <h3 className="text-lg font-black text-white">{item.title}</h3>
               <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">
                 {item.type === "blog" ? "פוסט בלוג" : "פרומפט"} · {formatDate(item.created_at)}
+                {item.category && ` · ${item.category}`}
               </p>
             </div>
           </div>
@@ -286,9 +322,101 @@ function PreviewModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-        {item.content ? (
-          <div className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap font-medium">
-            {item.content}
+
+        {loadingPreview ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+            <span className="text-zinc-500 text-sm mr-3">טוען תצוגה מקדימה...</span>
+          </div>
+        ) : item.type === "blog" && fullData ? (
+          <div className="space-y-4">
+            {fullData.meta_title && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">SEO Title</p>
+                <p className="text-sm text-amber-400">{fullData.meta_title}</p>
+              </div>
+            )}
+            {fullData.meta_description && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">SEO Description</p>
+                <p className="text-sm text-zinc-300">{fullData.meta_description}</p>
+              </div>
+            )}
+            {fullData.excerpt && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">תקציר</p>
+                <p className="text-sm text-zinc-300">{fullData.excerpt}</p>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {fullData.category && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold">{fullData.category}</span>
+              )}
+              {fullData.read_time && (
+                <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs">{fullData.read_time}</span>
+              )}
+              {(fullData.tags ?? []).map((tag: string) => (
+                <span key={tag} className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs">#{tag}</span>
+              ))}
+            </div>
+            <div className="border-t border-white/5 pt-4">
+              <div
+                className="prose prose-invert prose-sm max-w-none text-zinc-300 leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-base [&_h2]:mt-6 [&_h2]:mb-2 [&_strong]:text-white [&_a]:text-amber-400 [&_ul]:list-disc [&_ol]:list-decimal"
+                dangerouslySetInnerHTML={{ __html: fullData.content || "" }}
+              />
+            </div>
+          </div>
+        ) : item.type === "prompt" && fullData ? (
+          <div className="space-y-4">
+            {fullData.use_case && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">שימוש</p>
+                <p className="text-sm text-zinc-300">{fullData.use_case}</p>
+              </div>
+            )}
+            <div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5">
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-2">הפרומפט</p>
+              <div className="text-sm text-zinc-200 whitespace-pre-wrap leading-relaxed font-mono bg-black/30 rounded-lg p-4 border border-white/5 max-h-[40vh] overflow-y-auto">
+                {fullData.prompt || "—"}
+              </div>
+            </div>
+            {(fullData.variables?.length ?? 0) > 0 && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-2">משתנים</p>
+                <div className="flex flex-wrap gap-2">
+                  {fullData.variables.map((v: string) => (
+                    <span key={v} className="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-mono">{`{{${v}}}`}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {fullData.output_format && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">פורמט פלט</p>
+                <p className="text-sm text-zinc-300">{fullData.output_format}</p>
+              </div>
+            )}
+            {(fullData.quality_checks?.length ?? 0) > 0 && (
+              <div className="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-2">בדיקות איכות</p>
+                <ul className="space-y-1">
+                  {fullData.quality_checks.map((qc: string, i: number) => (
+                    <li key={i} className="text-sm text-zinc-300 flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">✓</span>
+                      <span>{qc}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {fullData.category_id && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold">{fullData.category_id}</span>
+              )}
+              {fullData.capability_mode && (
+                <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs">{fullData.capability_mode}</span>
+              )}
+            </div>
           </div>
         ) : (
           <p className="text-zinc-600 text-sm font-bold text-center py-8">
