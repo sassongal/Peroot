@@ -33,6 +33,7 @@ import {
   Shield,
   GitBranch,
   Plug,
+  Factory,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -73,6 +74,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "התראות", href: "/admin/notifications", icon: Bell },
     { name: "ביקורת מנהלים", href: "/admin/audit", icon: Shield },
     // ── Content & Outreach ──
+    { name: "מפעל תוכן", href: "/admin/content-factory", icon: Factory },
     { name: "מודרציה", href: "/admin/moderation", icon: GitBranch },
     { name: "קמפיינים", href: "/admin/email-campaigns", icon: Mail },
     { name: "SEO", href: "/admin/seo-console", icon: Search },
