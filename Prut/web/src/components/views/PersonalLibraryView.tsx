@@ -546,12 +546,12 @@ export function PersonalLibraryView({
           >
             {isSelected
               ? <CheckSquare className="w-4 h-4 text-blue-400" />
-              : <Square className="w-4 h-4 text-slate-500" />}
+              : <Square className="w-4 h-4 text-[var(--text-muted)]" />}
           </button>
 
           {/* Pin indicator */}
           {prompt.is_pinned && (
-            <Pin className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+            <Pin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 fill-amber-400 shrink-0" />
           )}
 
           {/* Capability badge */}
@@ -560,14 +560,14 @@ export function PersonalLibraryView({
           </div>
 
           {/* Title */}
-          <span className="flex-1 min-w-0 text-sm text-slate-200 font-medium truncate" dir="rtl">
+          <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] font-medium truncate" dir="rtl">
             {prompt.title}
           </span>
 
           {/* Meta: use count + category */}
-          <span className="hidden md:flex items-center gap-2 text-xs text-slate-500 shrink-0">
+          <span className="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)] shrink-0">
             {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
-            <span className="px-1.5 py-0.5 rounded bg-white/5 text-slate-400">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+            <span className="px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
           </span>
 
           {/* Quick actions (collapsed) */}
@@ -578,14 +578,14 @@ export function PersonalLibraryView({
             <button
               onClick={(e) => { e.stopPropagation(); onCopyText(prompt.prompt); }}
               title="העתק"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Copy className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onUsePrompt(prompt); }}
               title="השתמש"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -593,13 +593,13 @@ export function PersonalLibraryView({
               <button
                 onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : prompt.id); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
                 title="עוד"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               >
                 <MoreHorizontal className="w-3.5 h-3.5" />
               </button>
               {isMenuOpen && (
                 <div
-                  className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-150"
+                  className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-[var(--glass-border)] rounded-xl shadow-2xl py-1 min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-150"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {showMoveSubMenu ? (
@@ -607,11 +607,11 @@ export function PersonalLibraryView({
                       {/* Sub-menu header / back button */}
                       <button
                         onClick={() => { setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:bg-white/10 hover:text-white"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-muted)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
                       >
                         <ChevronRight className="w-3.5 h-3.5" /> העבר לתיקייה
                       </button>
-                      <div className="h-px bg-white/5 my-1" />
+                      <div className="h-px bg-[var(--glass-bg)] my-1" />
                       {/* Folder list */}
                       {allPersonalCategories.map((cat) => {
                         const isCurrent = (prompt.personal_category || PERSONAL_DEFAULT_CATEGORY) === cat;
@@ -628,8 +628,8 @@ export function PersonalLibraryView({
                               setShowMoveSubMenu(false);
                             }}
                             className={cn(
-                              "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/10",
-                              isCurrent ? "text-amber-400 cursor-default" : "text-slate-300 hover:text-white"
+                              "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-black/5 dark:bg-white/10",
+                              isCurrent ? "text-amber-600 dark:text-amber-400 cursor-default" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             )}
                           >
                             <Folder className="w-3.5 h-3.5 shrink-0" />
@@ -638,7 +638,7 @@ export function PersonalLibraryView({
                           </button>
                         );
                       })}
-                      <div className="h-px bg-white/5 my-1" />
+                      <div className="h-px bg-[var(--glass-bg)] my-1" />
                       {/* New folder inline creation */}
                       {showNewMoveInlineInput ? (
                         <div className="px-3 py-2 flex flex-col gap-1.5">
@@ -670,7 +670,7 @@ export function PersonalLibraryView({
                               }
                             }}
                             placeholder="שם תיקייה חדשה"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-white/30"
+                            className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-lg px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-black/15 dark:border-white/30"
                           />
                           <div className="flex gap-1">
                             <button
@@ -690,13 +690,13 @@ export function PersonalLibraryView({
                                 setShowNewMoveInlineInput(false);
                                 setNewMoveInlineName("");
                               }}
-                              className="flex-1 flex items-center justify-center gap-1 py-1 bg-white/10 rounded text-xs text-white hover:bg-white/20"
+                              className="flex-1 flex items-center justify-center gap-1 py-1 bg-black/5 dark:bg-white/10 rounded text-xs text-[var(--text-primary)] hover:bg-white/20"
                             >
                               <Check className="w-3 h-3" /> צור
                             </button>
                             <button
                               onClick={() => { setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
-                              className="flex-1 flex items-center justify-center gap-1 py-1 border border-white/10 rounded text-xs text-slate-400 hover:bg-white/10"
+                              className="flex-1 flex items-center justify-center gap-1 py-1 border border-[var(--glass-border)] rounded text-xs text-[var(--text-muted)] hover:bg-black/5 dark:bg-white/10"
                             >
                               <X className="w-3 h-3" /> ביטול
                             </button>
@@ -705,7 +705,7 @@ export function PersonalLibraryView({
                       ) : (
                         <button
                           onClick={() => setShowNewMoveInlineInput(true)}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
                         >
                           <Plus className="w-3.5 h-3.5" /> תיקייה חדשה
                         </button>
@@ -714,48 +714,48 @@ export function PersonalLibraryView({
                   ) : (
                     <>
                       {/* Group 1: Actions */}
-                      <button onClick={() => { onUsePrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { onUsePrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <ArrowRight className="w-3.5 h-3.5" /> השתמש
                       </button>
-                      <button onClick={() => { onCopyText(prompt.prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { onCopyText(prompt.prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Copy className="w-3.5 h-3.5" /> העתק
                       </button>
-                      <button onClick={() => { onCopyText(prompt.prompt); toast.success("קישור הועתק!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { onCopyText(prompt.prompt); toast.success("קישור הועתק!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Link2 className="w-3.5 h-3.5" /> שתף
                       </button>
-                      <div className="h-px bg-white/5 my-1" />
+                      <div className="h-px bg-[var(--glass-bg)] my-1" />
                       {/* Group 2: Edit */}
-                      <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Pencil className="w-3.5 h-3.5" /> ערוך
                       </button>
-                      <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Wand2 className="w-3.5 h-3.5" /> עיצוב
                       </button>
-                      <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Plus className="w-3.5 h-3.5" /> שכפל
                       </button>
-                      <div className="h-px bg-white/5 my-1" />
+                      <div className="h-px bg-[var(--glass-bg)] my-1" />
                       {/* Group 3: Organize */}
                       <button
                         onClick={() => { setShowMoveSubMenu(true); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
                       >
                         <FolderInput className="w-3.5 h-3.5" />
                         <span className="flex-1 text-right">העבר לתיקייה</span>
-                        <ChevronLeft className="w-3 h-3 text-slate-500" />
+                        <ChevronLeft className="w-3 h-3 text-[var(--text-muted)]" />
                       </button>
-                      <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
                       </button>
-                      <button onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Star className={cn("w-3.5 h-3.5", isFavorite && "fill-yellow-300 text-yellow-300")} /> {isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
                       </button>
-                      <button onClick={() => { toggleSelection(prompt.id); setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { toggleSelection(prompt.id); setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <Square className="w-3.5 h-3.5" /> בחר
                       </button>
-                      <div className="h-px bg-white/5 my-1" />
+                      <div className="h-px bg-[var(--glass-bg)] my-1" />
                       {/* Group 4: Info */}
-                      <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+                      <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                         <History className="w-3.5 h-3.5" /> גרסאות
                       </button>
                       <button
@@ -770,11 +770,11 @@ export function PersonalLibraryView({
                           toast.success("יצוא הושלם");
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
                       >
                         <Download className="w-3.5 h-3.5" /> ייצוא
                       </button>
-                      <div className="h-px bg-white/5 my-1" />
+                      <div className="h-px bg-[var(--glass-bg)] my-1" />
                       {/* Group 5: Danger */}
                       <button
                         onClick={async () => {
@@ -798,7 +798,7 @@ export function PersonalLibraryView({
 
           {/* Expand chevron */}
           <ChevronDown className={cn(
-            "w-4 h-4 text-slate-500 shrink-0 transition-transform duration-200",
+            "w-4 h-4 text-[var(--text-muted)] shrink-0 transition-transform duration-200",
             isExpanded && "rotate-180"
           )} />
         </div>
@@ -814,21 +814,21 @@ export function PersonalLibraryView({
                   dir="rtl"
                   value={editingTitle}
                   onChange={(e) => setEditingTitle(e.target.value)}
-                  className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
+                  className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30"
                   placeholder="כותרת לפרומפט"
                 />
                 <textarea
                   dir="rtl"
                   value={editingUseCase}
                   onChange={(e) => setEditingUseCase(e.target.value)}
-                  className="w-full h-16 bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-300 focus:outline-none focus:border-white/30 resize-none"
+                  className="w-full h-16 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-secondary)] focus:outline-none focus:border-black/15 dark:border-white/30 resize-none"
                   placeholder="תיאור קצר"
                 />
                 <div className="flex items-center gap-2">
                   <button onClick={saveEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-xs rounded-lg font-medium hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <Check className="w-3.5 h-3.5" /> שמור
                   </button>
-                  <button onClick={cancelEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 border border-white/10 text-slate-400 text-xs rounded-lg hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                  <button onClick={cancelEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--glass-border)] text-[var(--text-muted)] text-xs rounded-lg hover:bg-[var(--glass-bg)] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <X className="w-3.5 h-3.5" /> ביטול
                   </button>
                 </div>
@@ -837,7 +837,7 @@ export function PersonalLibraryView({
               <>
                 {/* Prompt text */}
                 <div
-                  className="text-sm text-slate-300 leading-relaxed rounded-lg bg-black/20 p-3 border border-white/5"
+                  className="text-sm text-[var(--text-secondary)] leading-relaxed rounded-lg bg-black/5 dark:bg-black/20 p-3 border border-[var(--glass-border)]"
                   dir="rtl"
                   dangerouslySetInnerHTML={{ __html: toStyledHtml(styledMarkup) }}
                 />
@@ -846,7 +846,7 @@ export function PersonalLibraryView({
                 {prompt.tags && prompt.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {prompt.tags.map(tag => (
-                      <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-white/8 text-slate-300 border border-white/8">
+                      <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-white/8 text-[var(--text-secondary)] border border-white/8">
                         <Tag className="w-2.5 h-2.5 me-1 opacity-50" />
                         {tag}
                       </span>
@@ -856,7 +856,7 @@ export function PersonalLibraryView({
 
                 {/* Use count + ratings */}
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-slate-500">
+                  <div className="flex items-center gap-2 text-[var(--text-muted)]">
                     {prompt.use_count > 0
                       ? <span className="text-emerald-400/80">שומש {prompt.use_count} פעמים</span>
                       : <span className="text-blue-400/80">חדש</span>
@@ -867,13 +867,13 @@ export function PersonalLibraryView({
                         <ThumbsDown className="w-3 h-3 text-red-400 ms-1" />{prompt.fail_count ?? 0}
                       </span>
                     )}
-                    <span className="hidden md:inline text-slate-500">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+                    <span className="hidden md:inline text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => ratePrompt(prompt.id, true)} className="p-1 rounded text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="הצלחה">
+                    <button onClick={() => ratePrompt(prompt.id, true)} className="p-1 rounded text-[var(--text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="הצלחה">
                       <ThumbsUp className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => ratePrompt(prompt.id, false)} className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="כישלון">
+                    <button onClick={() => ratePrompt(prompt.id, false)} className="p-1 rounded text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="כישלון">
                       <ThumbsDown className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -905,52 +905,52 @@ export function PersonalLibraryView({
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                          <Wand2 className="w-4 h-4 text-amber-400" />
-                          <span className="text-sm font-semibold text-white">עורך עיצוב</span>
+                          <Wand2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <span className="text-sm font-semibold text-[var(--text-primary)]">עורך עיצוב</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button onClick={() => setStyleEditorExpanded(!styleEditorExpanded)} className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={styleEditorExpanded ? "מזער" : "הגדל"}>
+                          <button onClick={() => setStyleEditorExpanded(!styleEditorExpanded)} className="p-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={styleEditorExpanded ? "מזער" : "הגדל"}>
                             {styleEditorExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                           </button>
-                          <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                          <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="p-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
                       <div className="space-y-3 mb-4">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
+                          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
                           {Object.keys(STYLE_TEXT_COLORS).map((color) => (
-                            <button key={`text-${color}`} onClick={() => applyStyleToken("c", color)} className="w-7 h-7 rounded-lg border border-white/10 hover:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={color}>
+                            <button key={`text-${color}`} onClick={() => applyStyleToken("c", color)} className="w-7 h-7 rounded-lg border border-[var(--glass-border)] hover:border-black/15 dark:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={color}>
                               <span className={cn("font-bold text-sm", STYLE_TEXT_COLORS[color])}>A</span>
                             </button>
                           ))}
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">היילייט</span>
+                          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider me-2 shrink-0">היילייט</span>
                           {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
-                            <button key={`hl-${color}`} onClick={() => applyStyleToken("hl", color)} className={cn("h-7 px-2 rounded-lg border border-white/10 hover:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", STYLE_HIGHLIGHT_COLORS[color])}>
+                            <button key={`hl-${color}`} onClick={() => applyStyleToken("hl", color)} className={cn("h-7 px-2 rounded-lg border border-[var(--glass-border)] hover:border-black/15 dark:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", STYLE_HIGHLIGHT_COLORS[color])}>
                               HL
                             </button>
                           ))}
-                          <div className="w-px h-5 bg-white/10 mx-1" />
-                          <button onClick={clearStyleTokens} className="h-7 px-2 rounded-lg border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                          <div className="w-px h-5 bg-black/5 dark:bg-white/10 mx-1" />
+                          <button onClick={clearStyleTokens} className="h-7 px-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                             <Eraser className="w-3 h-3" /><span className="text-xs">נקה</span>
                           </button>
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider me-2 shrink-0">משתנים</span>
+                          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider me-2 shrink-0">משתנים</span>
                           {quickInserts.map((qi) => {
                             const Icon = qi.icon;
                             return (
-                              <button key={qi.text} onClick={() => insertTextAtCursor(qi.text)} className="h-7 px-2 rounded-lg border border-dashed border-amber-500/30 text-amber-400/70 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                              <button key={qi.text} onClick={() => insertTextAtCursor(qi.text)} className="h-7 px-2 rounded-lg border border-dashed border-amber-500/30 text-amber-600/70 dark:text-amber-400/70 hover:text-amber-700 dark:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center gap-1 text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                                 <Icon className="w-3 h-3" />{qi.label}
                               </button>
                             );
                           })}
                         </div>
                       </div>
-                      <div className="text-[10px] text-slate-500 mb-2 flex items-center gap-1">
+                      <div className="text-[10px] text-[var(--text-muted)] mb-2 flex items-center gap-1">
                         <Type className="w-3 h-3" />
                         <span>סמנ/י טקסט ולחצ/י על צבע או היילייט כדי לעצב</span>
                       </div>
@@ -959,16 +959,16 @@ export function PersonalLibraryView({
                         dir="rtl"
                         value={styleDraft}
                         onChange={(e) => setStyleDraft(e.target.value)}
-                        className={cn("w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-slate-200 leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors", styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y")}
+                        className={cn("w-full bg-black/40 border border-[var(--glass-border)] rounded-xl p-4 text-sm text-[var(--text-primary)] leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors", styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y")}
                         placeholder="הטקסט של הפרומפט..."
                       />
                       <div className="mt-3 flex items-center justify-between">
                         <span className="text-[10px] text-slate-600">{styleDraft.length} תווים</span>
                         <div className="flex items-center gap-2">
-                          <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg border border-white/10 text-slate-400 hover:bg-white/5 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                          <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:bg-[var(--glass-bg)] text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                             סגור
                           </button>
-                          <button onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                          <button onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                             שמור עיצוב
                           </button>
                         </div>
@@ -978,26 +978,26 @@ export function PersonalLibraryView({
                 )}
 
                 {/* Full action buttons row */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/5">
+                <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[var(--glass-border)]">
                   <button onClick={() => onUsePrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <Plus className="w-3 h-3" /> השתמש
                   </button>
-                  <button onClick={() => onCopyText(prompt.prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                  <button onClick={() => onCopyText(prompt.prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <Copy className="w-3 h-3" /> העתק
                   </button>
-                  <button onClick={() => openStyleEditor(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                  <button onClick={() => openStyleEditor(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <Wand2 className="w-3 h-3" /> עיצוב
                   </button>
-                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                  <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <Plus className="w-3 h-3" /> שכפל
                   </button>
-                  <button onClick={() => setVersionHistoryPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                  <button onClick={() => setVersionHistoryPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <History className="w-3 h-3" /> גרסאות
                   </button>
-                  <button onClick={() => startEditingPersonalPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                  <button onClick={() => startEditingPersonalPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                     <Pencil className="w-3 h-3" /> ערוך
                   </button>
-                  <button onClick={() => handleToggleFavorite("personal", prompt.id)} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-white/10 text-slate-300 hover:bg-white/10")}>
+                  <button onClick={() => handleToggleFavorite("personal", prompt.id)} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10")}>
                     <Star className={cn("w-3 h-3", isFavorite && "fill-yellow-300")} /> מועדף
                   </button>
                   <button onClick={() => { const next = new Set(expandedIds); next.delete(prompt.id); setExpandedIds(next); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/10 text-red-400 text-xs hover:bg-red-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none ms-auto">
@@ -1037,8 +1037,8 @@ export function PersonalLibraryView({
       >
         {isMobile && (
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-slate-200">תיקיות</span>
-            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+            <span className="text-sm font-semibold text-[var(--text-primary)]">תיקיות</span>
+            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -1056,16 +1056,16 @@ export function PersonalLibraryView({
                 className={cn(
                   "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isActive
-                    ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
+                    : "text-[var(--text-muted)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] border border-transparent"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-amber-400" : "text-slate-500")} />
+                  <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-amber-600 dark:text-amber-400" : "text-[var(--text-muted)]")} />
                   <span className="truncate">{label}</span>
                 </div>
                 {count > 0 && (
-                  <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-400/70" : "text-slate-600")}>
+                  <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600")}>
                     {count}
                   </span>
                 )}
@@ -1106,7 +1106,7 @@ export function PersonalLibraryView({
                       dir="rtl"
                       value={renameCategoryInput}
                       onChange={(e) => setRenameCategoryInput(e.target.value)}
-                      className="flex-1 bg-black/40 border border-white/20 rounded px-2 py-1 text-xs text-white outline-none focus:border-amber-500/50"
+                      className="flex-1 bg-black/40 border border-[var(--glass-border)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none focus:border-amber-500/50"
                       onKeyDown={(e) => { if (e.key === 'Enter') saveRenameCategory(); if (e.key === 'Escape') cancelRenameCategory(); }}
                       autoFocus
                     />
@@ -1119,19 +1119,19 @@ export function PersonalLibraryView({
                     className={cn(
                       "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                       isActive
-                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                        : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
+                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
+                        : "text-[var(--text-muted)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] border border-transparent"
                     )}
                   >
                     <div className="flex items-center gap-2">
                       {isActive
-                        ? <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        : <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        ? <FolderOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                        : <Folder className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
                       }
                       <span className="truncate text-sm">{folder}</span>
                     </div>
                     {count > 0 && (
-                      <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-400/70" : "text-slate-600")}>
+                      <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600")}>
                         {count}
                       </span>
                     )}
@@ -1151,24 +1151,24 @@ export function PersonalLibraryView({
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 placeholder="שם תיקייה..."
-                className="flex-1 bg-black/40 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 outline-none focus:border-amber-500/40"
+                className="flex-1 bg-black/40 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-slate-600 outline-none focus:border-amber-500/40"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleAddNewFolder();
                   if (e.key === 'Escape') { setShowNewFolderInput(false); setNewFolderName(""); }
                 }}
                 autoFocus
               />
-              <button onClick={handleAddNewFolder} className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+              <button onClick={handleAddNewFolder} className="p-1.5 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                 <Check className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(""); }} className="p-1.5 rounded-lg text-slate-500 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+              <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(""); }} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-[var(--glass-bg)] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <button
               onClick={() => setShowNewFolderInput(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors border border-dashed border-white/8 hover:border-white/15 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] transition-colors border border-dashed border-white/8 hover:border-white/15 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <Plus className="w-3 h-3" />
               תיקייה חדשה
@@ -1184,10 +1184,10 @@ export function PersonalLibraryView({
   const renderSkeleton = () => (
     <div className="space-y-2">
       {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-        <div key={i} className="h-12 rounded-xl border border-white/5 bg-white/[0.02] animate-pulse flex items-center gap-3 px-4">
+        <div key={i} className="h-12 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] animate-pulse flex items-center gap-3 px-4">
           <div className="w-4 h-4 rounded bg-white/8 shrink-0" />
           <div className="h-3 bg-white/8 rounded flex-1 max-w-xs" />
-          <div className="h-2 bg-white/5 rounded w-16 ms-auto" />
+          <div className="h-2 bg-[var(--glass-bg)] rounded w-16 ms-auto" />
         </div>
       ))}
     </div>
@@ -1203,14 +1203,14 @@ export function PersonalLibraryView({
 
     return (
       <div className="mt-6 flex flex-col items-center gap-3" dir="rtl">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--text-muted)]">
           מציג {startItem}-{endItem} מתוך {usedTotalCount}
         </p>
         <div className="flex items-center gap-1">
           <button
             onClick={() => handlePageChange(usedPage - 1)}
             disabled={usedPage <= 1}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <ChevronRight className="w-3.5 h-3.5" /> הקודם
           </button>
@@ -1226,8 +1226,8 @@ export function PersonalLibraryView({
                   className={cn(
                     "w-8 h-8 rounded-lg text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                     usedPage === p
-                      ? "bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold"
-                      : "text-slate-400 hover:bg-white/10 border border-transparent hover:border-white/10"
+                      ? "bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold"
+                      : "text-[var(--text-muted)] hover:bg-black/5 dark:bg-white/10 border border-transparent hover:border-[var(--glass-border)]"
                   )}
                 >
                   {p}
@@ -1239,7 +1239,7 @@ export function PersonalLibraryView({
           <button
             onClick={() => handlePageChange(usedPage + 1)}
             disabled={usedPage >= totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             הבא <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -1272,7 +1272,7 @@ export function PersonalLibraryView({
 
       {/* Mobile slide-out drawer */}
       <div className={cn(
-        "fixed top-0 right-0 h-full w-72 z-50 bg-[#0A0A0F] border-l border-white/10 shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto",
+        "fixed top-0 right-0 h-full w-72 z-50 bg-[#0A0A0F] border-l border-[var(--glass-border)] shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto",
         sidebarOpen ? "translate-x-0" : "translate-x-full"
       )}>
         {renderSidebar(true)}
@@ -1281,14 +1281,14 @@ export function PersonalLibraryView({
       {/* Folder context menu */}
       {folderContextMenu && (
         <div
-          className="fixed z-[80] bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[160px] animate-in fade-in duration-150"
+          className="fixed z-[80] bg-[#111] border border-[var(--glass-border)] rounded-xl shadow-2xl py-1 min-w-[160px] animate-in fade-in duration-150"
           style={{ top: folderContextMenu.y, left: folderContextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={() => handleFolderRename(folderContextMenu.folder)} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/10 hover:text-white">
+          <button onClick={() => handleFolderRename(folderContextMenu.folder)} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
             <Pencil className="w-3.5 h-3.5" /> שנה שם
           </button>
-          <div className="h-px bg-white/5 my-1" />
+          <div className="h-px bg-[var(--glass-bg)] my-1" />
           <button
             onClick={async () => {
               const folder = folderContextMenu.folder;
@@ -1309,20 +1309,20 @@ export function PersonalLibraryView({
       )}
 
       {/* ── Top Bar ── */}
-      <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-white/10 bg-black/40 mb-4">
+      <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-[var(--glass-border)] bg-black/40 mb-4">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             {/* Mobile sidebar toggle */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="md:hidden p-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
               aria-label="פתח תפריט"
             >
               <Menu className="w-4 h-4" />
             </button>
             <div>
-              <h2 className="text-xl md:text-3xl font-serif text-white">ספריה אישית</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <h2 className="text-xl md:text-3xl font-serif text-[var(--text-primary)]">ספריה אישית</h2>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 {usedTotalCount} פרומפטים · {activeFolderLabel}
               </p>
             </div>
@@ -1331,7 +1331,7 @@ export function PersonalLibraryView({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setViewMode("library")}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 hover:text-white transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden lg:inline">ספרייה מלאה</span>
@@ -1354,13 +1354,13 @@ export function PersonalLibraryView({
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
           <div className="relative flex-1 min-w-[180px]">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
             <input
               dir="rtl"
               value={localSearch}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="חיפוש..."
-              className="w-full bg-black/30 border border-white/10 rounded-lg py-2 pe-9 ps-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20"
+              className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 pe-9 ps-3 text-sm text-[var(--text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-[var(--glass-border)]"
             />
           </div>
 
@@ -1368,7 +1368,7 @@ export function PersonalLibraryView({
           <select
             value={currentSort}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-white/30"
+            className="bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30"
           >
             <option value="recent">עודכן לאחרונה</option>
             <option value="title">אלפביתי</option>
@@ -1384,8 +1384,8 @@ export function PersonalLibraryView({
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
               selectionMode
-                ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                ? "bg-blue-600 border-blue-500 text-[var(--text-primary)] shadow-lg shadow-blue-900/30"
+                : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
             )}
             title="ניהול פריטים"
           >
@@ -1396,7 +1396,7 @@ export function PersonalLibraryView({
           {/* Import */}
           <button
             onClick={() => importFileRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:text-slate-200 hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             title="ייבוא"
           >
             <Upload className="w-3.5 h-3.5" />
@@ -1410,7 +1410,7 @@ export function PersonalLibraryView({
             disabled={historyLength === 0}
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-              historyLength === 0 ? "border-white/5 text-slate-600 cursor-not-allowed" : "border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              historyLength === 0 ? "border-[var(--glass-border)] text-slate-600 cursor-not-allowed" : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
             )}
           >
             <History className="w-3.5 h-3.5" />
@@ -1421,7 +1421,7 @@ export function PersonalLibraryView({
           {selectionMode && (
             <button
               onClick={selectAllVisible}
-              className="px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white border border-white/10 hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="px-3 py-2 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               בחר הכל ({displayItems.length})
             </button>
@@ -1433,7 +1433,7 @@ export function PersonalLibraryView({
       <div className="flex gap-4 items-start">
 
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/30 backdrop-blur-sm">
+        <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/5 dark:bg-black/30 backdrop-blur-sm">
           {renderSidebar(false)}
         </aside>
 
@@ -1441,19 +1441,19 @@ export function PersonalLibraryView({
         <main className="flex-1 min-w-0 space-y-4">
 
           {/* Chains section (collapsible) */}
-          <div className="rounded-xl border border-white/8 bg-white/[0.02] overflow-hidden">
+          <div className="rounded-xl border border-white/8 bg-[var(--glass-bg)] overflow-hidden">
             <button
               onClick={() => setChainsExpanded(!chainsExpanded)}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <div className="flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-purple-400" />
-                <span className="text-sm font-medium text-slate-300">שרשראות</span>
-                <span className="text-xs text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
+                <span className="text-sm font-medium text-[var(--text-secondary)]">שרשראות</span>
+                <span className="text-xs text-[var(--text-muted)] bg-[var(--glass-bg)] px-2 py-0.5 rounded-full">
                   {chains.length}
                 </span>
               </div>
-              <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", chainsExpanded && "rotate-180")} />
+              <ChevronDown className={cn("w-4 h-4 text-[var(--text-muted)] transition-transform duration-200", chainsExpanded && "rotate-180")} />
             </button>
             {chainsExpanded && (
               <div className="px-3 pb-3 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -1488,8 +1488,8 @@ export function PersonalLibraryView({
 
           {/* Library favorites (when in favorites folder) */}
           {effectiveFolder === "favorites" && libraryFavorites.length > 0 && (
-            <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <div className="rounded-xl border border-white/8 bg-[var(--glass-bg)] p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-blue-400" />
                 מועדפים מהספריה הציבורית
               </h3>
@@ -1501,16 +1501,16 @@ export function PersonalLibraryView({
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-1">
                           ספרייה ציבורית
                         </span>
-                        <h4 className="text-sm text-white font-medium truncate">{p.title}</h4>
+                        <h4 className="text-sm text-[var(--text-primary)] font-medium truncate">{p.title}</h4>
                       </div>
                       <button onClick={() => handleToggleFavorite("library", p.id)} className="shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded">
                         <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
                       </button>
                     </div>
-                    <p className="text-xs text-slate-400 line-clamp-2" dir="rtl">{p.use_case}</p>
+                    <p className="text-xs text-[var(--text-muted)] line-clamp-2" dir="rtl">{p.use_case}</p>
                     <div className="flex gap-2">
                       <button onClick={() => onUsePrompt(p)} className="flex-1 bg-white text-black py-1.5 rounded text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">השתמש</button>
-                      <button onClick={() => addPersonalPromptFromLibrary(p)} className="flex-1 border border-white/10 text-slate-300 py-1.5 rounded text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור עותק</button>
+                      <button onClick={() => addPersonalPromptFromLibrary(p)} className="flex-1 border border-[var(--glass-border)] text-[var(--text-secondary)] py-1.5 rounded text-xs focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור עותק</button>
                     </div>
                   </GlowingEdgeCard>
                 ))}
@@ -1526,12 +1526,12 @@ export function PersonalLibraryView({
 
             {/* Empty states */}
             {!isLoading && displayItems.length === 0 && (localSearch.trim() || personalQuery.trim()) && (
-              <div className="text-center py-12 rounded-xl border border-white/8 bg-white/[0.02]" dir="rtl">
+              <div className="text-center py-12 rounded-xl border border-white/8 bg-[var(--glass-bg)]" dir="rtl">
                 <Search className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">לא נמצאו תוצאות עבור &quot;{localSearch || personalQuery}&quot;</p>
+                <p className="text-[var(--text-muted)] text-sm">לא נמצאו תוצאות עבור &quot;{localSearch || personalQuery}&quot;</p>
                 <button
                   onClick={() => { handleSearchChange(""); setPersonalQuery(""); }}
-                  className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                  className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:text-amber-300 transition-colors"
                 >
                   נקה חיפוש
                 </button>
@@ -1539,26 +1539,26 @@ export function PersonalLibraryView({
             )}
 
             {!isLoading && displayItems.length === 0 && !localSearch.trim() && !personalQuery.trim() && selectedCapabilityFilter && (
-              <div className="text-center py-10 rounded-xl border border-white/8 bg-white/[0.02]" dir="rtl">
-                <p className="text-slate-400 text-sm">אין פרומפטים במצב זה</p>
-                <button onClick={() => setSelectedCapabilityFilter(null)} className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors">
+              <div className="text-center py-10 rounded-xl border border-white/8 bg-[var(--glass-bg)]" dir="rtl">
+                <p className="text-[var(--text-muted)] text-sm">אין פרומפטים במצב זה</p>
+                <button onClick={() => setSelectedCapabilityFilter(null)} className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:text-amber-300 transition-colors">
                   הצג הכל
                 </button>
               </div>
             )}
 
             {!isLoading && displayItems.length === 0 && !localSearch.trim() && !personalQuery.trim() && !selectedCapabilityFilter && (
-              <div className="flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-white/8 bg-white/[0.02] px-8 animate-in fade-in duration-500" dir="rtl">
+              <div className="flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-white/8 bg-[var(--glass-bg)] px-8 animate-in fade-in duration-500" dir="rtl">
                 <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                   <BookOpen className="w-8 h-8 text-amber-500/50" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-lg font-semibold text-slate-300">
+                  <p className="text-lg font-semibold text-[var(--text-secondary)]">
                     {effectiveFolder === "favorites" ? "עוד לא סימנת מועדפים" :
                      effectiveFolder === "pinned" ? "אין פרומפטים מוצמדים" :
                      "הספרייה האישית שלך ריקה"}
                   </p>
-                  <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                  <p className="text-sm text-[var(--text-muted)] max-w-xs mx-auto">
                     {effectiveFolder === "all"
                       ? "שדרג פרומפט ושמור אותו כאן כדי לבנות את האוסף שלך"
                       : "לחץ על הכוכב כדי לשמור מועדפים"}
@@ -1567,7 +1567,7 @@ export function PersonalLibraryView({
                 {effectiveFolder === "all" && (
                   <button
                     onClick={() => setViewMode("home")}
-                    className="px-6 py-2.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                    className="px-6 py-2.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-xl hover:bg-amber-500/30 transition-colors text-sm font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   >
                     שדרג פרומפט עכשיו
                   </button>
@@ -1595,24 +1595,24 @@ export function PersonalLibraryView({
 
       {/* ── Floating Batch Actions Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-white/10 bg-[#0A0A0A]/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
-          <div className="ps-3 pe-2 text-sm font-medium text-white border-e border-white/10">
+        <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-2 rounded-2xl border border-[var(--glass-border)] bg-[#0A0A0A]/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] md:w-auto">
+          <div className="ps-3 pe-2 text-sm font-medium text-[var(--text-primary)] border-e border-[var(--glass-border)]">
             {selectedIds.size} נבחרו
           </div>
           <button onClick={handleBatchDelete} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-400 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none">
             <Trash2 className="w-4 h-4" /> <span className="hidden md:inline">מחק</span>
           </button>
-          <button onClick={() => setShowMoveDialog(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+          <button onClick={() => setShowMoveDialog(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
             <FolderInput className="w-4 h-4" /> <span className="hidden md:inline">העבר ל...</span>
           </button>
-          <button onClick={() => setShowTagDialog(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+          <button onClick={() => setShowTagDialog(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
             <Tag className="w-4 h-4" /> <span className="hidden md:inline">תגיות</span>
           </button>
-          <button onClick={handleBatchExport} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+          <button onClick={handleBatchExport} className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
             <Download className="w-4 h-4" /> <span className="hidden md:inline">ייצוא</span>
           </button>
-          <div className="w-px h-5 bg-white/10 mx-1" />
-          <button onClick={clearSelection} className="p-1.5 hover:bg-white/10 rounded-full text-slate-500 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="סגור">
+          <div className="w-px h-5 bg-black/5 dark:bg-white/10 mx-1" />
+          <button onClick={clearSelection} className="p-1.5 hover:bg-black/5 dark:bg-white/10 rounded-full text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" aria-label="סגור">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -1621,13 +1621,13 @@ export function PersonalLibraryView({
       {/* ── Move Dialog ── */}
       {showMoveDialog && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4" dir="rtl">
-            <h3 className="text-xl text-white font-serif mb-4 text-center">העברת {selectedIds.size} פריטים</h3>
+          <div className="bg-[#111] border border-[var(--glass-border)] rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4" dir="rtl">
+            <h3 className="text-xl text-[var(--text-primary)] font-serif mb-4 text-center">העברת {selectedIds.size} פריטים</h3>
             <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
               <button
                 onClick={() => { setIsCreatingNewMoveCategory(true); setTargetMoveCategory(""); }}
                 className={cn("w-full text-start px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  isCreatingNewMoveCategory ? "bg-blue-600/20 border-blue-500 text-blue-200" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                  isCreatingNewMoveCategory ? "bg-blue-600/20 border-blue-500 text-blue-200" : "bg-[var(--glass-bg)] border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10"
                 )}
               >
                 <span>+ קטגוריה חדשה</span>
@@ -1640,18 +1640,18 @@ export function PersonalLibraryView({
                     value={newMoveCategoryInput}
                     onChange={e => setNewMoveCategoryInput(e.target.value)}
                     placeholder="שם הקטגוריה..."
-                    className="w-full bg-black/40 border border-blue-500/50 rounded-lg p-3 text-white focus:outline-none"
+                    className="w-full bg-black/40 border border-blue-500/50 rounded-lg p-3 text-[var(--text-primary)] focus:outline-none"
                     autoFocus
                   />
                 </div>
               )}
-              <div className="h-px bg-white/5 my-2" />
+              <div className="h-px bg-[var(--glass-bg)] my-2" />
               {Array.from(new Set([...personalCategories, PERSONAL_DEFAULT_CATEGORY])).map(cat => (
                 <button
                   key={cat}
                   onClick={() => { setTargetMoveCategory(cat); setIsCreatingNewMoveCategory(false); }}
                   className={cn("w-full text-start px-4 py-3 rounded-xl border transition-all text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                    targetMoveCategory === cat && !isCreatingNewMoveCategory ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                    targetMoveCategory === cat && !isCreatingNewMoveCategory ? "bg-white text-black border-white" : "bg-[var(--glass-bg)] border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10"
                   )}
                 >
                   {cat}
@@ -1660,7 +1660,7 @@ export function PersonalLibraryView({
             </div>
             <div className="flex gap-2">
               <button onClick={handleBatchMove} disabled={(!targetMoveCategory && !newMoveCategoryInput.trim())} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">אישור</button>
-              <button onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
+              <button onClick={() => { setShowMoveDialog(false); setIsCreatingNewMoveCategory(false); }} className="flex-1 bg-[var(--glass-bg)] text-[var(--text-secondary)] py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
             </div>
           </div>
         </div>
@@ -1669,18 +1669,18 @@ export function PersonalLibraryView({
       {/* ── Tag Dialog ── */}
       {showTagDialog && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4" dir="rtl">
-            <h3 className="text-xl text-white font-serif mb-4 text-center">הוספת תגיות</h3>
-            <p className="text-slate-400 text-sm mb-4 text-center">הזן תגיות מופרדות בפסיקים</p>
+          <div className="bg-[#111] border border-[var(--glass-border)] rounded-2xl p-6 w-full max-w-sm shadow-2xl mx-4" dir="rtl">
+            <h3 className="text-xl text-[var(--text-primary)] font-serif mb-4 text-center">הוספת תגיות</h3>
+            <p className="text-[var(--text-muted)] text-sm mb-4 text-center">הזן תגיות מופרדות בפסיקים</p>
             <input
               value={tagsInput}
               onChange={e => setTagsInput(e.target.value)}
               placeholder="למשל: שיווק, דואל, חשוב"
-              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white mb-6 focus:border-white/30 outline-none"
+              className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg p-3 text-[var(--text-primary)] mb-6 focus:border-black/15 dark:border-white/30 outline-none"
             />
             <div className="flex gap-2">
               <button onClick={handleBatchTag} className="flex-1 bg-white text-black py-2.5 rounded-lg font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">שמור תגיות</button>
-              <button onClick={() => setShowTagDialog(false)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
+              <button onClick={() => setShowTagDialog(false)} className="flex-1 bg-[var(--glass-bg)] text-[var(--text-secondary)] py-2.5 rounded-lg focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">ביטול</button>
             </div>
           </div>
         </div>
