@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useI18n } from "@/context/I18nContext";
 
@@ -22,7 +23,23 @@ export function Footer() {
 
         {/* Brand & Copyright */}
         <div className="flex flex-col items-center md:items-start gap-2">
-          <span className="text-lg font-serif font-bold text-slate-900 dark:text-white tracking-wide">Peroot</span>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_240.png"
+              alt=""
+              width={240}
+              height={240}
+              className="block dark:hidden h-6 w-auto"
+            />
+            <Image
+              src="/images/peroot_logo_pack/logo_nav_240x253.png"
+              alt=""
+              width={240}
+              height={253}
+              className="hidden dark:block h-6 w-auto"
+            />
+            <span className="font-black tracking-wider text-[#E17100]">Peroot</span>
+          </Link>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {isHe
               ? `© ${currentYear} כל הזכויות שמורות ל-JoyaTech.`

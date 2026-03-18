@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { BookOpen, Library, Wand2, Sun, Moon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -37,15 +38,29 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
         <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/"
-            className="flex items-center gap-1.5 font-bold text-lg text-slate-900 dark:text-white me-2 sm:me-4 shrink-0"
+            className="flex items-center me-2 sm:me-4 shrink-0"
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey) return;
               e.preventDefault();
               onNavigate("home");
             }}
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-background/60 dark:bg-black/60 border border-amber-500/30 font-serif text-lg font-bold heading-highlight brand-mark-glow" aria-hidden="true">פ</span>
-            <span className="hidden sm:inline text-base">Peroot</span>
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_240.png"
+              alt="Peroot"
+              width={240}
+              height={240}
+              className="block dark:hidden h-9 w-auto"
+              priority
+            />
+            <Image
+              src="/images/peroot_logo_pack/logo_nav_240x253.png"
+              alt="Peroot"
+              width={240}
+              height={253}
+              className="hidden dark:block h-9 w-auto"
+              priority
+            />
           </Link>
 
           {NAV_ITEMS.map(({ id, label, Icon }) => {
