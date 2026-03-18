@@ -145,6 +145,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { SplashScreen } from "@/components/ui/SplashScreen";
 
 export default async function RootLayout({
   children,
@@ -172,6 +173,7 @@ export default async function RootLayout({
         <MicrosoftClarity />
         <VercelAnalytics />
         <ServiceWorkerRegistration />
+        <SplashScreen />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
