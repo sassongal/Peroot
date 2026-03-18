@@ -7,10 +7,12 @@ import { FAQ_ITEMS } from "@/lib/faq-data";
 
 type FAQBubbleProps = {
   mode?: "fixed" | "inline";
+  defaultOpen?: boolean;
+  onClose?: () => void;
 };
 
-export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQBubbleProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("הכל");
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -37,7 +39,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
 
   const panelClass =
     mode === "inline"
-      ? "absolute bottom-16 right-0"
+      ? "relative w-full"
       : "fixed bottom-[calc(5rem+64px)] md:bottom-24 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6";
 
   const handleFeedback = () => {
@@ -50,11 +52,13 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
         id={panelId}
         role="region"
         aria-labelledby={headingId}
-        aria-hidden={!isOpen}
+        aria-hidden={mode === "inline" ? false : !isOpen}
         className={cn(
           panelClass,
-          "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-[var(--glass-border)] bg-white/90 dark:bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
-          isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none"
+          mode === "inline"
+            ? "w-full max-h-[75vh] flex flex-col overflow-hidden"
+            : "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-[var(--glass-border)] bg-white/90 dark:bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
+          mode !== "inline" && (isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none")
         )}
         dir="rtl"
       >
@@ -67,7 +71,7 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
             </h3>
           </div>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={() => { setIsOpen(false); onClose?.(); }}
             className="p-2.5 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 hover:border-black/15 dark:hover:border-white/20 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="סגור"
           >
@@ -195,26 +199,29 @@ export function FAQBubble({ mode = "fixed" }: FAQBubbleProps) {
 
       </div>
 
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={cn(
-          "relative group rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-all duration-500",
-          mode === "inline" ? "w-12 h-12" : "w-16 h-16",
-          isOpen ? "bg-white rotate-90 scale-90" : "bg-gradient-to-br from-white to-slate-200 hover:scale-110 hover:-translate-y-1"
-        )}
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        aria-label={isOpen ? "סגור" : "פתח"}
-      >
-        {isOpen ? (
-            <X className="w-6 h-6 text-black" />
-        ) : (
-            <>
-                <div className="absolute inset-0 rounded-full bg-white blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300"></div>
-                <MessageCircle className="w-7 h-7 text-black relative z-10" fill="currentColor" />
-            </>
-        )}
-      </button>
+      {/* Floating trigger button — hidden in inline/mobile mode */}
+      {mode !== "inline" && (
+        <button
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={cn(
+            "relative group rounded-full flex items-center justify-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-all duration-500",
+            "w-16 h-16",
+            isOpen ? "bg-white rotate-90 scale-90" : "bg-gradient-to-br from-white to-slate-200 hover:scale-110 hover:-translate-y-1"
+          )}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          aria-label={isOpen ? "סגור" : "פתח"}
+        >
+          {isOpen ? (
+              <X className="w-6 h-6 text-black" />
+          ) : (
+              <>
+                  <div className="absolute inset-0 rounded-full bg-white blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300"></div>
+                  <MessageCircle className="w-7 h-7 text-black relative z-10" fill="currentColor" />
+              </>
+          )}
+        </button>
+      )}
     </div>
   );
 }

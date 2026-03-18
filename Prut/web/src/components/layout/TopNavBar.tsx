@@ -35,10 +35,10 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
     >
       <div className="flex items-center justify-between h-14 px-4 sm:px-6 max-w-[1920px] mx-auto">
         {/* Right: Logo + Nav links */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2 overflow-hidden">
           <Link
             href="/"
-            className="flex items-center me-2 sm:me-4 shrink-0"
+            className="flex items-center me-1 sm:me-4 shrink-0"
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey) return;
               e.preventDefault();
@@ -50,7 +50,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               alt="Peroot"
               width={240}
               height={240}
-              className="block dark:hidden h-9 w-auto"
+              className="block dark:hidden h-7 sm:h-9 w-auto"
               priority
             />
             <Image
@@ -58,7 +58,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               alt="Peroot"
               width={240}
               height={253}
-              className="hidden dark:block h-9 w-auto"
+              className="hidden dark:block h-7 sm:h-9 w-auto"
               priority
             />
           </Link>
@@ -70,7 +70,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
                 key={id}
                 onClick={() => onNavigate(id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  "flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[36px] sm:min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isActive
                     ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent"

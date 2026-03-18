@@ -1,9 +1,9 @@
 "use client";
 
-import { Home, Library, BookOpen, Clock } from "lucide-react";
+import { Home, Library, BookOpen, Clock, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TabName = "home" | "library" | "personal" | "history";
+type TabName = "home" | "library" | "personal" | "history" | "faq";
 
 interface Tab {
   name: TabName;
@@ -16,6 +16,7 @@ const TABS: Tab[] = [
   { name: "library",  label: "ספרייה",   icon: Library },
   { name: "personal", label: "שלי",      icon: BookOpen },
   { name: "history",  label: "היסטוריה", icon: Clock },
+  { name: "faq",      label: "עזרה",     icon: HelpCircle },
 ];
 
 interface MobileTabBarProps {

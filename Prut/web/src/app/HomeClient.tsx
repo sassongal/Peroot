@@ -186,6 +186,7 @@ function PageContent({ user }: { user: User | null }) {
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [mobileFaqOpen, setMobileFaqOpen] = useState(false);
 
   // Restore sidebar state from localStorage after hydration
   useEffect(() => {
@@ -826,7 +827,8 @@ function PageContent({ user }: { user: User | null }) {
       {/* Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
-      <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50">
+      {/* FAQ: floating bubble on desktop only */}
+      <div className="hidden md:block fixed bottom-6 right-6 z-50">
         <ErrorBoundary name="FAQBubble">
           <FAQBubble />
         </ErrorBoundary>
@@ -840,6 +842,7 @@ function PageContent({ user }: { user: User | null }) {
           else if (tab === "library") handleNavLibrary();
           else if (tab === "personal") handleNavPersonal();
           else if (tab === "history") setSidebarOpen(true);
+          else if (tab === "faq") setMobileFaqOpen(true);
         }}
       />
 
@@ -928,6 +931,27 @@ function PageContent({ user }: { user: User | null }) {
           />
         </div>
       </div>
+
+      {/* Mobile FAQ Panel */}
+      {mobileFaqOpen && (
+        <>
+          <div
+            role="presentation"
+            className="fixed inset-0 z-[55] bg-black/40 dark:bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
+            onClick={() => setMobileFaqOpen(false)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-[60] md:hidden max-h-[85vh] flex flex-col rounded-t-3xl bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-[var(--glass-border)] animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-black/10 dark:bg-white/20" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ErrorBoundary name="FAQBubble-mobile">
+                <FAQBubble mode="inline" defaultOpen onClose={() => setMobileFaqOpen(false)} />
+              </ErrorBoundary>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Main Content (Full Width) */}
       <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-4">

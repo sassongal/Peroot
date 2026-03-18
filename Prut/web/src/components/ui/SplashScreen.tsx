@@ -5,6 +5,9 @@ import { useState, useEffect, useRef } from "react";
 export function SplashScreen() {
   const [visible, setVisible] = useState(() => {
     if (typeof window === "undefined") return false;
+    // Only show on mobile devices
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return false;
     return !sessionStorage.getItem("peroot_splash_shown");
   });
   const [fadeOut, setFadeOut] = useState(false);
