@@ -38,7 +38,7 @@ export function Footer() {
               height={160}
               className="hidden dark:block h-6 w-auto"
             />
-            <span className="font-black tracking-wider text-[#E17100] dark:text-[#C8E8EE]">Peroot</span>
+            <span className="font-black tracking-wider text-[#1B2141] dark:text-[#C8E8EE]">Peroot</span>
           </Link>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {isHe
