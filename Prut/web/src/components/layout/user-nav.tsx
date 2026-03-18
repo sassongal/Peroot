@@ -67,23 +67,51 @@ export function UserMenu({ user, position }: UserMenuProps) {
   // TOP POSITION: For guests (login button) OR logged-in users (avatar + menu)
   if (position === "top") {
     if (!user) {
-      // Guest - show Guest Mode indicator and login button
+      // Guest - Desktop: full button, Mobile: icon with popover
       return (
-        <div className="flex items-center gap-3 animate-in fade-in duration-700">
+        <div className="relative flex items-center gap-3 animate-in fade-in duration-700">
           <div className="flex flex-col items-end hidden md:flex">
              <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                 <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">{t.auth.guest_mode}</span>
              </div>
           </div>
+          {/* Desktop: full login button */}
           <Link
               href="/login"
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 rounded-full text-sm font-semibold text-amber-900 dark:text-white transition-all group shadow-2xl cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 rounded-full text-sm font-semibold text-amber-900 dark:text-white transition-all group shadow-2xl cursor-pointer"
               suppressHydrationWarning
           >
               <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-400" />
               <span>{t.auth.login_signup}</span>
           </Link>
+          {/* Mobile: icon button with popover */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label={t.auth.login_signup}
+            aria-haspopup="menu"
+            aria-expanded={isOpen}
+            className="flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 transition-all active:scale-95 cursor-pointer"
+          >
+            <UserIcon className="w-5 h-5 text-amber-500" />
+          </button>
+          {isOpen && !user && (
+            <>
+              <div className="fixed inset-0 z-[100]" onClick={() => setIsOpen(false)} />
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl shadow-2xl overflow-hidden z-[101] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-2 space-y-1">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 rounded-xl transition-colors text-right"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    <span>{t.auth.login_signup}</span>
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       );
     }
