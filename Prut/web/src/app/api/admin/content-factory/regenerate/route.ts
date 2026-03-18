@@ -3,6 +3,8 @@ import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
+
+export const maxDuration = 120;
 import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
 import { findDuplicate } from "@/lib/content-factory/dedup";
 

@@ -6,6 +6,9 @@ import { generateBlogPost, getGenerationContext } from "@/lib/content-factory/ge
 import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
 import { findDuplicate } from "@/lib/content-factory/dedup";
 
+// AI generation can take 30-60s for a full blog post
+export const maxDuration = 120;
+
 const GenerateBlogSchema = z.object({
   topic: z.string().max(500).optional().transform(v => v?.trim() || undefined),
   template: z.enum(["guide", "listicle", "comparison", "faq"]).optional(),

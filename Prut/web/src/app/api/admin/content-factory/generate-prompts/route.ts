@@ -5,6 +5,8 @@ import { z } from "zod";
 import { generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
 import { findDuplicate } from "@/lib/content-factory/dedup";
 
+export const maxDuration = 120;
+
 const GeneratePromptsSchema = z.object({
   topic: z.string().max(500).optional().transform(v => v?.trim() || undefined),
   category: z.string().max(200).optional().transform(v => v?.trim() || undefined),
