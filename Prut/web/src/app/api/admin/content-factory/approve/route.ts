@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 const ApproveSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1, "At least one id is required"),
+  ids: z.array(z.string().min(1)).min(1, "At least one id is required"),
   type: z.enum(["blog", "prompt"]),
 });
 

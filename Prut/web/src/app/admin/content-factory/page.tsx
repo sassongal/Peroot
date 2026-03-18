@@ -1745,10 +1745,29 @@ export default function ContentFactoryPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: {
         stats: ContentFactoryStats;
-        pending: PendingItem[];
+        pendingBlogs: any[];
+        pendingPrompts: any[];
+        history: any[];
       } = await res.json();
       setStats(data.stats ?? null);
-      setPending(data.pending ?? []);
+      // Combine pending blogs and prompts into a unified list
+      const combinedPending: PendingItem[] = [
+        ...(data.pendingBlogs ?? []).map((b: any) => ({
+          id: b.id,
+          type: "blog" as const,
+          title: b.title,
+          category: b.category ?? "",
+          created_at: b.created_at,
+        })),
+        ...(data.pendingPrompts ?? []).map((p: any) => ({
+          id: p.id,
+          type: "prompt" as const,
+          title: p.title,
+          category: p.category_id ?? "",
+          created_at: p.created_at,
+        })),
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setPending(combinedPending);
     } catch {
       toast.error("שגיאה בטעינת נתוני Content Factory");
     } finally {

@@ -26,6 +26,7 @@ export async function GET() {
       pendingPromptsResult,
       createdThisWeekResult,
       historyResult,
+      categoriesResult,
     ] = await Promise.all([
       // Total active prompts in library
       supabase
@@ -55,12 +56,11 @@ export async function GET() {
         .filter("source_metadata->>generated_by", "eq", "content-factory")
         .order("created_at", { ascending: false }),
 
-      // Content-factory items created this week
+      // Content-factory items created this week (generation log is the source of truth)
       supabase
-        .from("blog_posts")
+        .from("content_generation_log")
         .select("*", { count: "exact", head: true })
-        .eq("status", "draft")
-        .filter("source_metadata->>generated_by", "eq", "content-factory")
+        .eq("status", "completed")
         .gte("created_at", oneWeekAgo),
 
       // Last 20 generation log entries
@@ -69,6 +69,12 @@ export async function GET() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(20),
+
+      // Library categories (for dropdowns)
+      supabase
+        .from("library_categories")
+        .select("id, name_he")
+        .order("sort_order"),
     ]);
 
     if (promptCountResult.error) {
@@ -100,6 +106,7 @@ export async function GET() {
       pendingBlogs: pendingBlogsResult.data ?? [],
       pendingPrompts: pendingPromptsResult.data ?? [],
       history: historyResult.data ?? [],
+      categories: categoriesResult.data ?? [],
     });
   } catch (err) {
     logger.error("[admin/content-factory] GET error:", err);
