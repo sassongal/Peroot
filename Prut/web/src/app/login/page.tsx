@@ -16,30 +16,25 @@ export default function LoginPage() {
     >
       {/* Layered background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Primary warm glow — top center */}
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/[0.06] blur-[160px] rounded-full" />
-        {/* Secondary accent — bottom right */}
         <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-orange-600/[0.04] blur-[120px] rounded-full" />
-        {/* Subtle cool balance — left */}
         <div className="absolute top-[40%] left-[-10%] w-[300px] h-[300px] bg-slate-500/[0.03] blur-[100px] rounded-full" />
-        {/* Noise texture */}
         <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "url('/noise.svg')" }} />
-        {/* Top fade vignette */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[380px]">
-        {/* Logo with ambient glow */}
-        <div className="flex justify-center mb-8 relative">
+      <div className="relative z-10 w-full max-w-[420px]">
+        {/* Hero image */}
+        <div className="flex justify-center mb-6 relative">
           <div className="absolute inset-0 flex justify-center items-center">
-            <div className="w-24 h-24 bg-amber-500/[0.12] blur-[40px] rounded-full" />
+            <div className="w-48 h-32 bg-amber-500/[0.1] blur-[60px] rounded-full" />
           </div>
           <Image
-            src="/images/peroot_logo_pack/logo_1200.png"
-            alt="לוגו פרוט"
-            width={72}
-            height={72}
-            className="h-[72px] w-auto relative drop-shadow-[0_0_20px_rgba(217,119,6,0.15)]"
+            src="/images/peroot_logo_pack/peroot_og_image_v3.webp"
+            alt="Peroot — מחולל פרומפטים מקצועיים בעברית"
+            width={360}
+            height={189}
+            className="relative rounded-xl w-full max-w-[360px] h-auto drop-shadow-[0_4px_30px_rgba(217,119,6,0.12)]"
             priority
           />
         </div>
