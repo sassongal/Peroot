@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, ReactNode } from "react";
+import React, { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import type { User } from "@supabase/supabase-js";
 
@@ -29,13 +29,13 @@ interface FavoritesProviderProps {
 export function FavoritesProvider({ children, user, showLoginRequired }: FavoritesProviderProps) {
   const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite: toggleFavoriteBase } = useFavorites();
 
-  const handleToggleFavorite = async (itemType: "library" | "personal", itemId: string) => {
+  const handleToggleFavorite = useCallback(async (itemType: "library" | "personal", itemId: string) => {
     if (!user) {
       showLoginRequired("הוספה למועדפים");
       return;
     }
     await toggleFavoriteBase(itemType, itemId);
-  };
+  }, [user, showLoginRequired, toggleFavoriteBase]);
 
   const value = useMemo<FavoritesContextType>(() => ({
     favoriteLibraryIds,

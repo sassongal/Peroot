@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from "react";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -177,32 +177,34 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
   }, [data.personalLibrary, personalQuery]);
 
   // --- Category Rename ---
-  const startRenameCategory = (category: string) => {
+  const startRenameCategory = useCallback((category: string) => {
     setRenamingCategory(category);
     setRenameCategoryInput(category);
-  };
+  }, []);
 
-  const cancelRenameCategory = () => {
+  const cancelRenameCategory = useCallback(() => {
     setRenamingCategory(null);
     setRenameCategoryInput("");
-  };
+  }, []);
 
-  const saveRenameCategory = async () => {
+  const saveRenameCategory = useCallback(async () => {
     if (!renamingCategory || !renameCategoryInput.trim()) return;
     if (renameCategoryInput.trim() === renamingCategory) {
-      cancelRenameCategory();
+      setRenamingCategory(null);
+      setRenameCategoryInput("");
       return;
     }
     await data.saveRenameCategory(renamingCategory, renameCategoryInput.trim());
-    cancelRenameCategory();
-  };
+    setRenamingCategory(null);
+    setRenameCategoryInput("");
+  }, [renamingCategory, renameCategoryInput, data]);
 
   // Wrapped add category using newPersonalCategory state
-  const addPersonalCategoryWrapped = async () => {
+  const addPersonalCategoryWrapped = useCallback(async () => {
     if (!newPersonalCategory.trim()) return;
     await data.addPersonalCategory(newPersonalCategory.trim());
     setNewPersonalCategory("");
-  };
+  }, [newPersonalCategory, data]);
 
   // --- Drag & Drop ---
   const dragAndDrop = useDragAndDrop({
@@ -220,19 +222,19 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
   const [editingTitle, setEditingTitle] = useState("");
   const [editingUseCase, setEditingUseCase] = useState("");
 
-  const startEditingPersonalPrompt = (prompt: PersonalPrompt) => {
+  const startEditingPersonalPrompt = useCallback((prompt: PersonalPrompt) => {
     setEditingPersonalId(prompt.id);
     setEditingTitle(prompt.title);
     setEditingUseCase(prompt.use_case);
-  };
+  }, []);
 
-  const cancelEditingPersonalPrompt = () => {
+  const cancelEditingPersonalPrompt = useCallback(() => {
     setEditingPersonalId(null);
     setEditingTitle("");
     setEditingUseCase("");
-  };
+  }, []);
 
-  const saveEditingPersonalPrompt = async () => {
+  const saveEditingPersonalPrompt = useCallback(async () => {
     if (!editingPersonalId) return;
     try {
       await data.updatePrompt(editingPersonalId, {
@@ -240,12 +242,14 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
         use_case: editingUseCase
       });
       toast.success("הפרומפט עודכן");
-      cancelEditingPersonalPrompt();
+      setEditingPersonalId(null);
+      setEditingTitle("");
+      setEditingUseCase("");
     } catch (e) {
       console.error("Failed to update prompt:", e);
       toast.error("שגיאה בעדכון הפרומפט");
     }
-  };
+  }, [editingPersonalId, editingTitle, editingUseCase, data]);
 
   // --- Styling State ---
   const [promptStyles, setPromptStyles] = useState<Record<string, string>>({});
@@ -280,17 +284,17 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     }
   }, [data.personalLibrary]);
 
-  const openStyleEditor = (prompt: PersonalPrompt) => {
+  const openStyleEditor = useCallback((prompt: PersonalPrompt) => {
     setEditingStylePromptId(prompt.id);
     setStyleDraft(promptStyles[prompt.id] || prompt.prompt);
-  };
+  }, [promptStyles]);
 
-  const closeStyleEditor = () => {
+  const closeStyleEditor = useCallback(() => {
     setEditingStylePromptId(null);
     setStyleDraft("");
-  };
+  }, []);
 
-  const saveStylePrompt = async (id: string) => {
+  const saveStylePrompt = useCallback(async (id: string) => {
     try {
       setPromptStyles(prev => {
         const next = { ...prev, [id]: styleDraft };
@@ -305,12 +309,13 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
       }
 
       toast.success("עיצוב נשמר");
-      closeStyleEditor();
+      setEditingStylePromptId(null);
+      setStyleDraft("");
     } catch (e) {
       console.error("Failed to save style:", e);
       toast.error("שגיאה בשמירת עיצוב");
     }
-  };
+  }, [styleDraft, user, data]);
 
   // --- Value ---
   const value = useMemo<LibraryUIContextType>(() => ({

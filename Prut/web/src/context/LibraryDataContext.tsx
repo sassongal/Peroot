@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from "react";
 import { useLibrary } from "@/hooks/useLibrary";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -189,7 +189,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
   }, [personalLibrary]);
 
   // --- Duplicate ---
-  const duplicatePrompt = async (prompt: PersonalPrompt) => {
+  const duplicatePrompt = useCallback(async (prompt: PersonalPrompt) => {
     await addPrompt({
       title: `${prompt.title} (עותק)`,
       prompt: prompt.prompt,
@@ -201,10 +201,10 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       tags: prompt.tags || [],
       capability_mode: prompt.capability_mode,
     });
-  };
+  }, [addPrompt]);
 
   // --- Category Actions (wrapped with auth + toast) ---
-  const addPersonalCategory = async (name?: string) => {
+  const addPersonalCategory = useCallback(async (name?: string) => {
     const trimmed = (name ?? "").trim();
     if (!trimmed) return;
     try {
@@ -218,9 +218,9 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       console.error("Failed to create category:", e);
       toast.error("שגיאה ביצירת קטגוריה");
     }
-  };
+  }, [user, showLoginRequired, addLibCategory]);
 
-  const deletePersonalCategory = async (categoryName: string, mode: 'move' | 'delete' = 'move') => {
+  const deletePersonalCategory = useCallback(async (categoryName: string, mode: 'move' | 'delete' = 'move') => {
     try {
       if (!user) {
         showLoginRequired("מחיקת קטגוריה");
@@ -232,9 +232,9 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       console.error("Failed to delete category:", e);
       toast.error("שגיאה במחיקת קטגוריה");
     }
-  };
+  }, [user, showLoginRequired, deleteCategory]);
 
-  const saveRenameCategoryWrapped = async (oldName: string, newName: string) => {
+  const saveRenameCategoryWrapped = useCallback(async (oldName: string, newName: string) => {
     const trimmed = newName.trim();
     if (!oldName || !trimmed) return;
     if (trimmed === oldName) return;
@@ -245,7 +245,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       console.error("Failed to rename category:", e);
       toast.error("שגיאה בעדכון הקטגוריה");
     }
-  };
+  }, [renameCategory]);
 
   // --- Value ---
   const value = useMemo<LibraryDataContextType>(() => ({
