@@ -140,12 +140,11 @@ export const metadata: Metadata = {
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
-import dynamic from "next/dynamic";
-const GoogleAnalytics = dynamic(() => import("@/components/providers/GoogleAnalytics").then(m => ({ default: m.GoogleAnalytics })), { ssr: false });
-const MicrosoftClarity = dynamic(() => import("@/components/providers/MicrosoftClarity").then(m => ({ default: m.MicrosoftClarity })), { ssr: false });
-const VercelAnalytics = dynamic(() => import("@/components/providers/VercelAnalytics").then(m => ({ default: m.VercelAnalytics })), { ssr: false });
-const ServiceWorkerRegistration = dynamic(() => import("@/components/providers/ServiceWorkerRegistration").then(m => ({ default: m.ServiceWorkerRegistration })), { ssr: false });
-const PwaInstallBanner = dynamic(() => import("@/components/ui/PwaInstallBanner").then(m => ({ default: m.PwaInstallBanner })), { ssr: false });
+import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
+import { MicrosoftClarity } from "@/components/providers/MicrosoftClarity";
+import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
+import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
+import { PwaInstallBanner } from "@/components/ui/PwaInstallBanner";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Footer } from "@/components/layout/Footer";
