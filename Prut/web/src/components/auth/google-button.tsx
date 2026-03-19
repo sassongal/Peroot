@@ -29,13 +29,13 @@ export function GoogleButton() {
     <button
       onClick={handleLogin}
       disabled={isPending}
-      className="w-full flex items-center justify-center gap-2 bg-white text-black font-medium min-h-11 py-2.5 px-4 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer group border border-transparent hover:border-slate-300"
+      className="w-full flex items-center justify-center gap-2.5 bg-white text-neutral-800 font-semibold py-2.5 px-4 rounded-xl text-sm hover:bg-neutral-50 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]"
     >
       {isPending ? (
-        <Loader2 className="w-5 h-5 animate-spin text-slate-600" />
+        <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />
       ) : (
         <>
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
+          <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -53,7 +53,7 @@ export function GoogleButton() {
               fill="#EA4335"
             />
           </svg>
-          <span className="text-sm">המשך עם Google</span>
+          <span>המשך עם Google</span>
         </>
       )}
     </button>

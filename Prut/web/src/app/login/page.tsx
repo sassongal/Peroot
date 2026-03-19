@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { AuthForm } from "@/components/auth/auth-form";
-import { getAssetPath } from "@/lib/asset-path";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,23 +12,47 @@ export default function LoginPage() {
     <main
       id="main-content"
       tabIndex={-1}
-      className="min-h-screen bg-black text-silver font-sans relative overflow-hidden flex items-center justify-center p-4"
+      className="min-h-screen bg-[#050505] font-sans relative overflow-hidden flex items-center justify-center px-4 py-12"
     >
-      {/* Background Gradients */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/10 blur-[150px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-yellow-900/10 blur-[150px] rounded-full"></div>
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url(${getAssetPath('/noise.svg')})` }}></div>
+      {/* Layered background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Primary warm glow — top center */}
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/[0.06] blur-[160px] rounded-full" />
+        {/* Secondary accent — bottom right */}
+        <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-orange-600/[0.04] blur-[120px] rounded-full" />
+        {/* Subtle cool balance — left */}
+        <div className="absolute top-[40%] left-[-10%] w-[300px] h-[300px] bg-slate-500/[0.03] blur-[100px] rounded-full" />
+        {/* Noise texture */}
+        <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "url('/noise.svg')" }} />
+        {/* Top fade vignette */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-500">
-        <div className="glass-card p-8 rounded-2xl border-white/10 bg-black/40 shadow-2xl shadow-black/50">
-           <div className="flex justify-center mb-8">
-             <Image src={getAssetPath("/assets/branding/logo.svg")} alt="לוגו פרוט" width={160} height={48} className="h-12 w-auto brightness-110 contrast-110" priority />
-           </div>
-
-           <AuthForm />
+      <div className="relative z-10 w-full max-w-[380px]">
+        {/* Logo with ambient glow */}
+        <div className="flex justify-center mb-8 relative">
+          <div className="absolute inset-0 flex justify-center items-center">
+            <div className="w-24 h-24 bg-amber-500/[0.12] blur-[40px] rounded-full" />
+          </div>
+          <Image
+            src="/images/peroot_logo_pack/logo_1200.png"
+            alt="לוגו פרוט"
+            width={72}
+            height={72}
+            className="h-[72px] w-auto relative drop-shadow-[0_0_20px_rgba(217,119,6,0.15)]"
+            priority
+          />
         </div>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.05] to-white/[0.02] backdrop-blur-2xl p-7 shadow-[0_16px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] animate-in fade-in slide-in-from-bottom-3 duration-700">
+          <AuthForm />
+        </div>
+
+        {/* Footer trust line */}
+        <p className="text-center text-[11px] text-white/15 mt-6 tracking-wide">
+          המידע שלך מאובטח ומוגן
+        </p>
       </div>
     </main>
   );

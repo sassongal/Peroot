@@ -2,12 +2,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, ArrowRight, Mail, Lock, User as UserIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Lock, User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { GoogleButton } from "./google-button";
 
 type Mode = "login" | "signup" | "reset";
+
+const INPUT_CLASS =
+  "w-full bg-white/[0.04] border border-white/[0.08] rounded-xl py-2.5 pe-10 ps-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-amber-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-amber-500/15 transition-all duration-200";
+
+const ICON_CLASS =
+  "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-amber-400/70 transition-colors duration-200";
 
 export function AuthForm() {
   const [mode, setMode] = useState<Mode>("login");
@@ -82,64 +88,39 @@ export function AuthForm() {
     });
   };
 
-  // --- Email verification sent screen ---
-  if (showEmailSent) {
+  // --- Success states (email sent / reset sent) ---
+  if (showEmailSent || showResetSent) {
     return (
-      <div className="w-full max-w-sm mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center animate-bounce">
-            <Mail className="w-10 h-10 text-amber-400" />
+      <div className="space-y-5 animate-in fade-in zoom-in-95 duration-500 text-center" dir="rtl">
+        <div className="flex justify-center">
+          <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+            <Mail className="w-7 h-7 text-amber-400" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">בדוק את האימייל שלך</h2>
-        <p className="text-[var(--text-secondary)]">
-          שלחנו קישור אימות לכתובת:
-          <br />
-          <span className="font-semibold text-amber-300">{email}</span>
-        </p>
-        <p className="text-sm text-[var(--text-muted)]">
-          יש ללחוץ על הקישור באימייל כדי להפעיל את החשבון ולהתחיל להשתמש בפירוט.
-        </p>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-white">בדוק את האימייל שלך</h2>
+          <p className="text-sm text-white/50 leading-relaxed">
+            {showEmailSent
+              ? "שלחנו קישור אימות לכתובת:"
+              : "קישור לאיפוס סיסמה נשלח לאימייל שלך"}
+            <br />
+            <span className="font-semibold text-amber-400/80">{email}</span>
+          </p>
+          <p className="text-xs text-white/30 leading-relaxed">
+            {showEmailSent
+              ? "יש ללחוץ על הקישור באימייל כדי להפעיל את החשבון."
+              : "יש ללחוץ על הקישור באימייל כדי לאפס את הסיסמה."}
+          </p>
+        </div>
         <button
           onClick={() => {
             setShowEmailSent(false);
+            setShowResetSent(false);
             setMode("login");
             setEmail("");
             setPassword("");
           }}
-          className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors underline decoration-[var(--glass-border)] cursor-pointer"
-        >
-          חזרה להתחברות
-        </button>
-      </div>
-    );
-  }
-
-  // --- Password reset link sent screen ---
-  if (showResetSent) {
-    return (
-      <div className="w-full max-w-sm mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500 text-center" dir="rtl">
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center animate-bounce">
-            <Mail className="w-10 h-10 text-amber-400" />
-          </div>
-        </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">בדוק את האימייל שלך</h2>
-        <p className="text-[var(--text-secondary)]">
-          קישור לאיפוס סיסמה נשלח לאימייל שלך
-          <br />
-          <span className="font-semibold text-amber-300">{email}</span>
-        </p>
-        <p className="text-sm text-[var(--text-muted)]">
-          יש ללחוץ על הקישור באימייל כדי לאפס את הסיסמה.
-        </p>
-        <button
-          onClick={() => {
-            setShowResetSent(false);
-            setMode("login");
-            setEmail("");
-          }}
-          className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors underline decoration-[var(--glass-border)] cursor-pointer"
+          className="text-xs text-white/30 hover:text-white/60 transition-colors cursor-pointer font-medium"
         >
           חזרה להתחברות
         </button>
@@ -150,18 +131,18 @@ export function AuthForm() {
   // --- Reset password form ---
   if (isReset) {
     return (
-      <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-        <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">איפוס סיסמה</h1>
-          <p className="text-sm text-[var(--text-muted)] font-medium">
-            הזן/י את כתובת האימייל שלך ונשלח קישור לאיפוס הסיסמה
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400" dir="rtl">
+        <div className="text-center space-y-1.5">
+          <h1 className="text-xl font-bold text-white">איפוס סיסמה</h1>
+          <p className="text-[13px] text-white/35 leading-relaxed">
+            הזן/י את כתובת האימייל ונשלח קישור לאיפוס
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative group">
             <label htmlFor="reset-email" className="sr-only">כתובת אימייל</label>
-            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
+            <Mail className={ICON_CLASS} />
             <input
               id="reset-email"
               dir="rtl"
@@ -169,22 +150,20 @@ export function AuthForm() {
               placeholder="כתובת אימייל"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
+              className={INPUT_CLASS}
+              autoFocus
             />
           </div>
 
           <button
             type="submit"
             disabled={isPending}
-            className="w-full accent-gradient text-black font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20 active:scale-[0.97] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] cursor-pointer"
+            className="w-full bg-gradient-to-l from-amber-500 to-amber-600 text-black font-bold py-2.5 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(217,119,6,0.2)] active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(217,119,6,0.3)] cursor-pointer"
           >
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <>
-                <span>שלח קישור לאיפוס</span>
-                <ArrowRight className="w-4 h-4 rtl-flip" />
-              </>
+              <span>שלח קישור לאיפוס</span>
             )}
           </button>
         </form>
@@ -196,7 +175,7 @@ export function AuthForm() {
               setMode("login");
               setEmail("");
             }}
-            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors decoration-[var(--glass-border)] font-medium cursor-pointer"
+            className="text-xs text-white/30 hover:text-white/50 transition-colors font-medium cursor-pointer"
           >
             חזרה להתחברות
           </button>
@@ -207,35 +186,37 @@ export function AuthForm() {
 
   // --- Login / Signup form ---
   return (
-    <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="text-center space-y-3">
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
+      <div className="text-center space-y-1.5">
+        <h1 className="text-xl font-bold text-white tracking-tight">
           {isLogin ? "ברוכים השבים" : "הצטרפות לפירוט"}
         </h1>
-        <p className="text-sm text-[var(--text-muted)] font-medium">
+        <p className="text-[13px] text-white/35 leading-relaxed">
           {isLogin
             ? "התחבר כדי לגשת לספריה ולהיסטוריה האישית שלך"
             : "צור חשבון כדי לשמור ולנהל את הפרומפטים שלך"}
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         <GoogleButton />
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-[var(--glass-border)]" />
+            <span className="w-full border-t border-white/[0.06]" />
           </div>
-          <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-            <span className="bg-[var(--surface-body)] px-3 text-[var(--text-muted)]">או עם אימייל</span>
+          <div className="relative flex justify-center">
+            <span className="bg-[#0a0a0a] px-3 text-[10px] text-white/20 uppercase tracking-[0.15em]">
+              או עם אימייל
+            </span>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {!isLogin && (
             <div className="relative group animate-in fade-in zoom-in-95 duration-300">
               <label htmlFor="full-name" className="sr-only">שם מלא</label>
-              <UserIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
+              <UserIcon className={ICON_CLASS} />
               <input
                 id="full-name"
                 dir="rtl"
@@ -243,13 +224,13 @@ export function AuthForm() {
                 placeholder="שם מלא"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
+                className={INPUT_CLASS}
               />
             </div>
           )}
           <div className="relative group">
             <label htmlFor="email" className="sr-only">כתובת אימייל</label>
-            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
+            <Mail className={ICON_CLASS} />
             <input
               id="email"
               dir="rtl"
@@ -257,12 +238,12 @@ export function AuthForm() {
               placeholder="כתובת אימייל"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
+              className={INPUT_CLASS}
             />
           </div>
           <div className="relative group">
             <label htmlFor="password" className="sr-only">סיסמה</label>
-            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
+            <Lock className={ICON_CLASS} />
             <input
               id="password"
               dir="rtl"
@@ -270,7 +251,7 @@ export function AuthForm() {
               placeholder="סיסמה"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
+              className={INPUT_CLASS}
             />
           </div>
 
@@ -282,7 +263,7 @@ export function AuthForm() {
                   setMode("reset");
                   setPassword("");
                 }}
-                className="text-xs text-slate-500 hover:text-amber-400 transition-colors cursor-pointer"
+                className="text-[11px] text-white/25 hover:text-amber-400/70 transition-colors cursor-pointer"
               >
                 שכחת סיסמה?
               </button>
@@ -292,14 +273,14 @@ export function AuthForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full accent-gradient text-black font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20 active:scale-[0.97] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] cursor-pointer"
+            className="w-full bg-gradient-to-l from-amber-500 to-amber-600 text-black font-bold py-2.5 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(217,119,6,0.2)] active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(217,119,6,0.3)] cursor-pointer !mt-4"
           >
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <span>{isLogin ? "כניסה למערכת" : "הרשמה וחשבון חדש"}</span>
-                <ArrowRight className="w-4 h-4 rtl-flip" />
+                <span>{isLogin ? "כניסה למערכת" : "יצירת חשבון"}</span>
+                <ArrowLeft className="w-4 h-4" />
               </>
             )}
           </button>
@@ -309,12 +290,22 @@ export function AuthForm() {
           <button
             type="button"
             onClick={() => setMode(isLogin ? "signup" : "login")}
-            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors decoration-[var(--glass-border)] font-medium cursor-pointer"
+            className="text-xs text-white/30 hover:text-white/50 transition-colors font-medium cursor-pointer"
           >
             {isLogin ? (
-              <>אין לך חשבון? <span className="text-amber-400 font-bold ms-1">הירשם עכשיו</span></>
+              <>
+                אין לך חשבון?{" "}
+                <span className="text-amber-400/70 hover:text-amber-400 font-semibold">
+                  הירשם עכשיו
+                </span>
+              </>
             ) : (
-              <>כבר רשום? <span className="text-amber-400 font-bold ms-1">התחבר כאן</span></>
+              <>
+                כבר רשום?{" "}
+                <span className="text-amber-400/70 hover:text-amber-400 font-semibold">
+                  התחבר כאן
+                </span>
+              </>
             )}
           </button>
         </div>
