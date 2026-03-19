@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
 /**
@@ -52,15 +52,12 @@ export async function POST(request: Request) {
   }
 
   // Use admin client (service role) for webhook processing
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseServiceKey) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     logger.error('[LemonSqueezy Webhook] Missing SUPABASE_SERVICE_ROLE_KEY');
     return new NextResponse('Server configuration error', { status: 500 });
   }
 
-  const supabase = createAdminClient(supabaseUrl, supabaseServiceKey);
+  const supabase = createServiceClient();
 
   try {
     // Handle subscription events

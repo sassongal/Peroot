@@ -38,7 +38,7 @@ export function LanguageSwitcher() {
       disabled={isPending}
       aria-label={ariaLabel}
       title={ariaLabel}
-      className="min-w-[44px] min-h-[44px] px-2 py-1 rounded-md text-sm font-medium text-slate-400 hover:text-amber-400 hover:bg-white/5 transition-colors cursor-pointer select-none disabled:opacity-50 flex items-center justify-center"
+      className="min-w-[44px] min-h-[44px] px-2 py-1 rounded-md text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white/5 transition-colors cursor-pointer select-none disabled:opacity-50 flex items-center justify-center"
     >
       {isPending ? "..." : label}
     </button>

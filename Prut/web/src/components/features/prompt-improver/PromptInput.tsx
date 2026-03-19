@@ -306,6 +306,7 @@ export function PromptInput({
                  setInterimResult("");
               }}
               placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
+              aria-label="כתוב את הפרומפט שלך"
               className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {

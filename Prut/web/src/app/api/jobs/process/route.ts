@@ -2,14 +2,7 @@ import { NextResponse } from "next/server";
 import { JobType, JobPayload } from "@/lib/jobs/queue";
 import { logger } from "@/lib/logger";
 
-// Helper to get service client for elevated privileges during processing
-async function getServiceClient() {
-  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createServiceClient } from "@/lib/supabase/service";
 
 export async function GET(req: Request) {
   // 1. Secure this endpoint with CRON_SECRET
@@ -20,7 +13,7 @@ export async function GET(req: Request) {
   }
 
   // Use service client to fetch/update jobs bypassing RLS
-  const supabase = await getServiceClient();
+  const supabase = createServiceClient();
 
   try {
     // 2. Fetch Next Job (Atomic)

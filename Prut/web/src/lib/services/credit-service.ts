@@ -1,0 +1,178 @@
+/**
+ * CreditService — centralised credit management for Peroot.
+ *
+ * Handles:
+ *  - Atomic check-and-decrement via `refresh_and_decrement_credits` RPC
+ *  - Legacy fallback path (daily reset + `check_and_decrement_credits`)
+ *  - Credit refunds via `refund_credit` RPC using a service-role client
+ */
+
+import { SupabaseClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
+import { logger } from "@/lib/logger";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface CreditCheckResult {
+  allowed: boolean;
+  remaining: number;
+  error?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Atomically refresh (if needed) and decrement credits for a user.
+ *
+ * Attempts the modern `refresh_and_decrement_credits` RPC first.
+ * If that function does not exist in the database yet, falls back to the
+ * legacy two-step path: manual daily-reset + `check_and_decrement_credits`.
+ *
+ * @param userId   The user whose credits to consume.
+ * @param tier     The user's plan tier — used by the RPC for limit look-up.
+ * @param queryClient  A Supabase client that can read profile / settings rows
+ *                     (may be the user-scoped client or a service-role client).
+ * @param amount   Number of credits to spend (defaults to 1).
+ */
+export async function checkAndDecrementCredits(
+  userId: string,
+  tier: string,
+  queryClient: SupabaseClient,
+  amount = 1,
+): Promise<CreditCheckResult> {
+  // --- Primary path: atomic RPC -------------------------------------------
+  const { data: creditRes, error: rpcError } = await queryClient.rpc(
+    "refresh_and_decrement_credits",
+    {
+      target_user_id: userId,
+      amount_to_spend: amount,
+      user_tier: tier,
+    },
+  );
+
+  if (!rpcError && creditRes?.success) {
+    return {
+      allowed: true,
+      remaining: creditRes.current_balance ?? 0,
+    };
+  }
+
+  // --- Legacy fallback: function doesn't exist yet -------------------------
+  const isNotFound =
+    rpcError?.message?.includes("function") &&
+    rpcError?.message?.includes("does not exist");
+
+  if (isNotFound) {
+    return legacyCheckAndDecrement(userId, tier, queryClient, amount);
+  }
+
+  // --- Genuine error or insufficient credits ------------------------------
+  return {
+    allowed: false,
+    remaining: creditRes?.current_balance ?? 0,
+    error: creditRes?.error || "Insufficient credits or profile not found",
+  };
+}
+
+/**
+ * Refund credits to a user.  Always uses a service-role client so that the
+ * refund succeeds regardless of how the original request was authenticated.
+ *
+ * @param userId  The user to refund.
+ * @param amount  Number of credits to restore (defaults to 1).
+ */
+export async function refundCredit(
+  userId: string,
+  amount = 1,
+): Promise<void> {
+  try {
+    const client = createServiceClient();
+    await client.rpc("refund_credit", {
+      target_user_id: userId,
+      amount,
+    });
+  } catch (e) {
+    logger.error("[CreditService] refund failed:", e);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy fallback (daily reset + non-atomic decrement)
+// ---------------------------------------------------------------------------
+
+async function legacyCheckAndDecrement(
+  userId: string,
+  tier: string,
+  queryClient: SupabaseClient,
+  amount: number,
+): Promise<CreditCheckResult> {
+  // Daily credit reset for free-tier users
+  if (tier === "free") {
+    const { data: siteSettings } = await queryClient
+      .from("site_settings")
+      .select("daily_free_limit")
+      .single();
+
+    const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+
+    const { data: refreshData } = await queryClient
+      .from("profiles")
+      .select("credits_refreshed_at, credits_balance")
+      .eq("id", userId)
+      .single();
+
+    const lastRefresh = refreshData?.credits_refreshed_at
+      ? new Date(refreshData.credits_refreshed_at)
+      : null;
+    const currentBalance = refreshData?.credits_balance ?? 0;
+
+    // Israel-timezone daily reset at 14:00 local
+    const nowIsrael = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }),
+    );
+    const resetToday = new Date(nowIsrael);
+    resetToday.setHours(14, 0, 0, 0);
+    const resetPoint =
+      nowIsrael >= resetToday
+        ? resetToday
+        : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
+
+    if (!lastRefresh || lastRefresh < resetPoint) {
+      const newBalance = Math.max(currentBalance, dailyLimit);
+      await queryClient
+        .from("profiles")
+        .update({
+          credits_balance: newBalance,
+          credits_refreshed_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+    }
+  }
+
+  // Non-atomic decrement
+  const { data: fallbackRes, error: fallbackErr } = await queryClient.rpc(
+    "check_and_decrement_credits",
+    {
+      target_user_id: userId,
+      amount_to_spend: amount,
+    },
+  );
+
+  if (fallbackErr || !fallbackRes || !fallbackRes.success) {
+    return {
+      allowed: false,
+      remaining: fallbackRes?.current_balance ?? 0,
+      error:
+        fallbackRes?.error || "Insufficient credits or profile not found",
+    };
+  }
+
+  return {
+    allowed: true,
+    remaining: fallbackRes.current_balance ?? 0,
+  };
+}

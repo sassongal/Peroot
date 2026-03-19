@@ -120,7 +120,8 @@ export async function middleware(request: NextRequest) {
 
   // Capture referral code from URL (?ref=CODE) into a cookie for redemption after signup
   const refCode = request.nextUrl.searchParams.get('ref');
-  if (refCode) {
+  const isValidRefCode = refCode && refCode.length <= 30 && /^[a-zA-Z0-9_-]+$/.test(refCode);
+  if (isValidRefCode) {
     // Store the referral code in a cookie (only if not already set)
     if (!request.cookies.get('referral_code')) {
       supabaseResponse.cookies.set('referral_code', refCode, {

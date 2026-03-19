@@ -139,6 +139,7 @@ export function SmartRefinement({
              )}>
                 <button
                    onClick={() => toggleOpen(q.id)}
+                   aria-expanded={isOpen}
                    className="w-full flex items-start text-right gap-4 p-4 cursor-pointer"
                    dir="rtl"
                 >
@@ -177,6 +178,7 @@ export function SmartRefinement({
                              value={answers[q.id] || ""}
                              onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                              placeholder={t.smart_refinement.placeholder}
+                             aria-label={`תשובה לשאלה: ${q.question}`}
                              className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg p-3 text-base md:text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-[var(--text-muted)] resize-y transition-colors"
                            />
                          </div>
@@ -224,6 +226,7 @@ export function SmartRefinement({
                value={customInstruction}
                onChange={(e) => setCustomInstruction(e.target.value)}
                placeholder={t.smart_refinement.free_request_placeholder}
+               aria-label="הוראה חופשית לשיפור הפרומפט"
                className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg p-3 text-base md:text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/30 min-h-[80px] placeholder:text-[var(--text-muted)] resize-y transition-colors"
              />
           </div>

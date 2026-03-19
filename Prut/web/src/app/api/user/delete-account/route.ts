@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
@@ -37,9 +37,7 @@ export async function DELETE(_request: Request) {
     }
 
     // Delete auth user using admin client
-    const adminSupabase = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    const adminSupabase = createServiceClient(
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
     const { error: deleteError } = await adminSupabase.auth.admin.deleteUser(

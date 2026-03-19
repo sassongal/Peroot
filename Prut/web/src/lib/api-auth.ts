@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { createHash } from "crypto";
 import { logger } from "@/lib/logger";
 
@@ -22,10 +22,7 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidation> 
     return { valid: false, error: "Invalid key format" };
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceClient();
 
   const keyHash = hashKey(apiKey);
 

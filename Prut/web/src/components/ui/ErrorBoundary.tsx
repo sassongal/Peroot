@@ -35,12 +35,12 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertCircle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-white">משהו השתבש בתצוגה</h3>
-            <p className="text-sm text-zinc-500">נתקלנו בשגיאה בטעינת הרכיב הזה.</p>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">משהו השתבש בתצוגה</h3>
+            <p className="text-sm text-[var(--text-muted)]">נתקלנו בשגיאה בטעינת הרכיב הזה.</p>
           </div>
           <button
             onClick={() => this.setState({ hasError: false })}
-            className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-xl text-xs font-bold mx-auto hover:bg-zinc-200 transition-colors"
+            className="flex items-center gap-2 px-6 py-2 bg-[var(--text-primary)] text-[var(--surface-body)] rounded-xl text-xs font-bold mx-auto hover:opacity-80 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             נסה שוב

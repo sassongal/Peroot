@@ -5,6 +5,7 @@ import { AlertTriangle, Check, Copy, ExternalLink, Plus, RotateCcw, Share2, Thum
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
+import { SafeHtml } from "@/components/ui/SafeHtml";
 import { PromptScore } from "@/lib/engines/base-engine";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
@@ -239,10 +240,10 @@ export function ResultSection({
               {originalPrompt}
             </div>
           ) : (
-            <div
+            <SafeHtml
+              html={styledHtml}
               className="p-8 text-lg text-[var(--text-primary)] leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
               dir="rtl"
-              dangerouslySetInnerHTML={{ __html: styledHtml }}
             />
           )}
 

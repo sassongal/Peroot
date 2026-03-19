@@ -18,7 +18,7 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ExtensionBanner />
-      <Toaster position="top-center" theme="dark" closeButton />
+      <Toaster position="top-center" theme="system" closeButton />
       {children}
     </>
   );

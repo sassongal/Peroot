@@ -118,6 +118,7 @@ export function HistoryPanel({
             placeholder="חיפוש בהיסטוריה..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="חיפוש בהיסטוריה"
             className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-2.5 pe-10 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/40 focus:bg-black/5 dark:focus:bg-white/10 transition-all shadow-inner"
             dir="rtl"
           />

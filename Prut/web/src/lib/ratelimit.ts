@@ -89,12 +89,17 @@ export interface RateLimitResult {
 const memoryFallback = new Map<string, { count: number; resetAt: number }>();
 const MEMORY_LIMIT = 10;
 const MEMORY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_MEMORY_ENTRIES = 10000;
 
 function checkMemoryFallback(identifier: string): RateLimitResult {
   const now = Date.now();
   const entry = memoryFallback.get(identifier);
 
   if (!entry || now >= entry.resetAt) {
+    // Prevent unbounded memory growth under sustained varied-IP traffic
+    if (memoryFallback.size >= MAX_MEMORY_ENTRIES) {
+      memoryFallback.clear();
+    }
     memoryFallback.set(identifier, { count: 1, resetAt: now + MEMORY_WINDOW_MS });
     return { success: true, limit: MEMORY_LIMIT, remaining: MEMORY_LIMIT - 1, reset: now + MEMORY_WINDOW_MS };
   }

@@ -117,6 +117,9 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-white/60 dark:bg-black/80 backdrop-blur-xl animate-in fade-in duration-500 overscroll-contain overflow-y-auto" onKeyDown={(e) => { if (e.key === "Escape") handleSkip(); }}>
             <div
                 ref={trapRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="מסך הכרות"
                 className="w-full max-w-lg glass-card rounded-[40px] border-[var(--glass-border)] bg-white/95 dark:bg-zinc-950/90 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-700"
                 dir="rtl"
             >

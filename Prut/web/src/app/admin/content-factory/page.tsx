@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
+import { SafeHtml } from "@/components/ui/SafeHtml";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
@@ -355,9 +356,9 @@ function PreviewModal({
               </div>
             )}
             <div className="border-t border-white/5 pt-4">
-              <div
+              <SafeHtml
+                html={fullData.content || ""}
                 className="prose prose-invert prose-sm max-w-none text-zinc-300 leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-base [&_h2]:mt-6 [&_h2]:mb-2 [&_strong]:text-white [&_a]:text-amber-400 [&_ul]:list-disc [&_ol]:list-decimal"
-                dangerouslySetInnerHTML={{ __html: fullData.content || "" }}
               />
             </div>
           </div>

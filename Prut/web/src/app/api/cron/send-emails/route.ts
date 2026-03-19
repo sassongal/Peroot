@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { ONBOARDING_STEPS } from "@/lib/emails/onboarding-templates";
 import { logger } from "@/lib/logger";
@@ -19,10 +19,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceClient();
 
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space";
   let sent = 0;

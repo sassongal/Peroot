@@ -13,6 +13,7 @@ import {
     Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SafeHtml } from "@/components/ui/SafeHtml";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
 import { toast } from "sonner";
@@ -836,10 +837,10 @@ export function PersonalLibraryView({
             ) : (
               <>
                 {/* Prompt text */}
-                <div
+                <SafeHtml
+                  html={toStyledHtml(styledMarkup)}
                   className="text-sm text-[var(--text-secondary)] leading-relaxed rounded-lg bg-black/5 dark:bg-black/20 p-3 border border-[var(--glass-border)]"
                   dir="rtl"
-                  dangerouslySetInnerHTML={{ __html: toStyledHtml(styledMarkup) }}
                 />
 
                 {/* Tags */}

@@ -3,22 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import NextImage from "next/image";
-import { getAssetPath } from "@/lib/asset-path";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
-import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, trackFeatureUse, identifyUser } from "@/lib/analytics";
+import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
-const HistoryPanel = dynamic(
-  () => import("@/components/features/history/HistoryPanel").then(mod => mod.HistoryPanel),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
-);
 import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
-import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -69,7 +63,7 @@ const StreamingProgress = dynamic(
   () => import("@/components/ui/StreamingProgress"),
   { ssr: false }
 );
-import { BookOpen, Star, Library, X, Maximize2, Minimize2, Shuffle, Lightbulb, Clock, ArrowRight } from "lucide-react";
+import { Clock } from "lucide-react";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 const UpgradeNudge = dynamic(
@@ -82,10 +76,11 @@ import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/context/I18nContext";
 import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
-const ReferralBanner = dynamic(
-  () => import("@/components/features/referral/ReferralBanner").then(mod => mod.ReferralBanner),
-  { ssr: false }
-);
+
+// Extracted components
+import { SidebarDrawer } from "@/components/features/home/SidebarDrawer";
+import { MobileFaqPanel } from "@/components/features/home/MobileFaqPanel";
+import { InputSection } from "@/components/features/home/InputSection";
 
 // Constants
 
@@ -156,8 +151,6 @@ function PageContent({ user }: { user: User | null }) {
     onChunk: useCallback((chunk: string) => {
       const acc = streamAccRef.current;
       if (!acc.foundDelimiter) {
-        // Append chunk first, then check for delimiter in accumulated text
-        // This handles cases where the delimiter is split across chunks
         acc.promptText += chunk;
         const delimIdx = acc.promptText.indexOf("[GENIUS_QUESTIONS]");
         if (delimIdx !== -1) {
@@ -183,16 +176,9 @@ function PageContent({ user }: { user: User | null }) {
     }, [dispatch]),
   });
 
-  // Sidebar state
+  // Sidebar & mobile FAQ state
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileFaqOpen, setMobileFaqOpen] = useState(false);
-
-  // Restore sidebar state from localStorage after hydration
-  useEffect(() => {
-    const stored = localStorage.getItem('peroot_sidebar_expanded');
-    if (stored === 'true') setSidebarExpanded(true);
-  }, []);
 
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -217,17 +203,14 @@ function PageContent({ user }: { user: User | null }) {
 
   // Show celebratory toast when a referral bonus was redeemed at signup
   useEffect(() => {
-    // Check for referral_bonus cookie (set by auth callback)
     const match = document.cookie.match(/(?:^|;\s*)referral_bonus=(\d+)/);
     if (match) {
       const bonus = match[1];
       toast.success(`קיבלת ${bonus} קרדיטים בונוס! 🎉`);
-      // Clear the cookie
       document.cookie = 'referral_bonus=; path=/; max-age=0';
     }
   }, []);
 
-  // Fetch credits for logged-in free users
   // Identify user in PostHog when logged in
   useEffect(() => {
     if (user) {
@@ -235,6 +218,7 @@ function PageContent({ user }: { user: User | null }) {
     }
   }, [user]);
 
+  // Fetch credits for logged-in users
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -247,10 +231,6 @@ function PageContent({ user }: { user: User | null }) {
         if (data) setCreditsRemaining(data.credits_balance);
       });
   }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem('peroot_sidebar_expanded', sidebarExpanded.toString());
-  }, [sidebarExpanded]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -300,7 +280,7 @@ function PageContent({ user }: { user: User | null }) {
     setIsLoginRequiredModalOpen(true);
   };
 
-  // Debounce scoring - avoids running 20 regex tests on every keystroke/streaming chunk
+  // Debounce scoring
   const debouncedInput = useDebouncedValue(ps.input, 300);
   const debouncedCompletion = useDebouncedValue(ps.completion, 200);
 
@@ -322,7 +302,7 @@ function PageContent({ user }: { user: User | null }) {
           ? { text: "text-red-400", bar: "bg-red-500" }
           : { text: "text-slate-500", bar: "bg-slate-600" };
 
-  // Debounce placeholder extraction - avoids regex on every streaming chunk
+  // Debounce placeholder extraction
   const placeholders = useMemo(() => extractPlaceholders(debouncedCompletion), [debouncedCompletion]);
   const inputVariables = useMemo(() => extractPlaceholders(debouncedInput), [debouncedInput]);
 
@@ -356,43 +336,34 @@ function PageContent({ user }: { user: User | null }) {
   const processStreamResult = (label: string) => {
     const acc = streamAccRef.current;
     if (acc.foundDelimiter) {
-      // Delimiter was found - parse whatever came after it (may be empty array)
       try {
         let jsonStr = acc.questionsPart.trim();
-        // Handle common AI formatting issues (markdown code blocks)
         if (jsonStr.startsWith("```json")) jsonStr = jsonStr.replace(/^```json\s*/, "").replace(/```\s*$/, "");
         if (jsonStr.startsWith("```")) jsonStr = jsonStr.replace(/^```\s*/, "").replace(/```\s*$/, "");
-        // Empty string after delimiter means no questions
         const parsed = jsonStr ? JSON.parse(jsonStr) : [];
         const questions = Array.isArray(parsed) ? parsed : parsed.questions || [];
         dispatch({ type: 'SET_QUESTIONS', payload: questions });
       } catch (e) {
         logger.warn(`[${label}] Questions parse failed, attempting recovery`, e);
-        // Try to extract JSON array from malformed response
         const arrayMatch = acc.questionsPart.match(/\[[\s\S]*\]/);
         if (arrayMatch) {
           try {
             dispatch({ type: 'SET_QUESTIONS', payload: JSON.parse(arrayMatch[0]) });
-          } catch { /* truly unrecoverable - dispatch empty so UI shows completion state */
+          } catch {
             dispatch({ type: 'SET_QUESTIONS', payload: [] });
           }
         } else {
-          // No array found at all - treat as explicitly empty
           dispatch({ type: 'SET_QUESTIONS', payload: [] });
         }
       }
     } else {
-      // No [GENIUS_QUESTIONS] delimiter in the response - clear questions
-      // so SmartRefinement shows the "comprehensive prompt" message
       dispatch({ type: 'SET_QUESTIONS', payload: [] });
     }
 
-    // Extract AI-generated title if present
     const titleMatch = acc.promptText.match(/\[PROMPT_TITLE\](.*?)\[\/PROMPT_TITLE\]/);
     const generatedTitle = titleMatch ? titleMatch[1].trim() : null;
     acc.promptText = acc.promptText.replace(/\[PROMPT_TITLE\].*?\[\/PROMPT_TITLE\]\n?/, '').trim();
 
-    // Update displayed completion without the title tag
     dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
 
     const extracted = extractPlaceholders(acc.promptText);
@@ -404,14 +375,6 @@ function PageContent({ user }: { user: User | null }) {
   };
 
   const enhanceCooldownRef = useRef(false);
-
-  // Prompt of the Day - deterministic daily pick
-  const promptOfTheDay = useMemo(() => {
-    if (!libraryPrompts || libraryPrompts.length === 0) return null;
-    const today = new Date();
-    const dayIndex = (today.getFullYear() * 366 + today.getMonth() * 31 + today.getDate()) % libraryPrompts.length;
-    return libraryPrompts[dayIndex];
-  }, [libraryPrompts]);
 
   // Surprise Me - random prompt
   const handleSurpriseMe = () => {
@@ -428,7 +391,6 @@ function PageContent({ user }: { user: User | null }) {
     enhanceCooldownRef.current = true;
     setTimeout(() => { enhanceCooldownRef.current = false; }, 500);
 
-    // Check prompt limits (guest free trial or credit balance)
     if (!canUsePrompt) {
       if (requiredAction === 'login') {
         showLoginRequired("יצירת פרומפט", "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!");
@@ -438,7 +400,6 @@ function PageContent({ user }: { user: User | null }) {
       return;
     }
 
-    // Build mode_params for this generation
     const currentModeParams: Record<string, string> | undefined =
       ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
         ? { image_platform: imagePlatform, output_format: imageOutputFormat, ...(imageAspectRatio && { aspect_ratio: imageAspectRatio }) }
@@ -448,7 +409,6 @@ function PageContent({ user }: { user: User | null }) {
 
     dispatch({ type: 'START_STREAM' });
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
-    // Store generation context for refinement (BUG #2 fix)
     dispatch({ type: 'SET_GENERATION_CONTEXT', payload: {
       mode: ps.selectedCapability,
       modeParams: currentModeParams,
@@ -482,7 +442,6 @@ function PageContent({ user }: { user: User | null }) {
         title: result.title || ps.input.slice(0, 40) + (ps.input.length > 40 ? "..." : ""),
       });
 
-      // Track usage: decrement credits display for logged-in users, increment guest counter
       if (user && creditsRemaining !== null) {
         setCreditsRemaining(prev => prev !== null ? Math.max(0, prev - 1) : null);
       }
@@ -500,16 +459,12 @@ function PageContent({ user }: { user: User | null }) {
     const hasAnswers = Object.values(ps.questionAnswers).some(a => a.trim());
     if ((!instruction.trim() && !hasAnswers) || !ps.completion) return;
 
-    // Capture before START_STREAM resets completion to ""
     const currentCompletion = ps.completion;
 
-    // Upgrade 3: Store current score before refinement for delta display
     dispatch({ type: 'SET_PREVIOUS_SCORE', payload: completionScore.score });
-
     dispatch({ type: 'START_STREAM' });
     streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
 
-    // Build combined instruction from answers + custom instruction
     const answerParts = ps.questions
       .filter(q => ps.questionAnswers[String(q.id)]?.trim())
       .map(q => `שאלה: ${q.question}\nתשובה: ${ps.questionAnswers[String(q.id)]}`);
@@ -519,13 +474,11 @@ function PageContent({ user }: { user: User | null }) {
       instruction.trim() ? `הוראה נוספת: ${instruction}` : "",
     ].filter(Boolean).join("\n\n");
 
-    // Filter out empty answers for the API
     const filteredAnswers: Record<string, string> = {};
     for (const [k, v] of Object.entries(ps.questionAnswers)) {
       if (v.trim()) filteredAnswers[k] = v;
     }
 
-    // BUG #2 fix: Use stored generation context instead of current UI state
     const ctx = ps.generationContext;
 
     await startStream(getApiPath("/api/enhance"), {
@@ -537,7 +490,7 @@ function PageContent({ user }: { user: User | null }) {
       previousResult: currentCompletion,
       refinementInstruction: combinedInstruction,
       answers: filteredAnswers,
-      iteration: ps.iterationCount + 1, // Upgrade 2: iteration-aware refinement
+      iteration: ps.iterationCount + 1,
     });
 
     const refineResult = processStreamResult("Refine");
@@ -550,8 +503,6 @@ function PageContent({ user }: { user: User | null }) {
   }, [ps.isLoading, ps.completion, ps.questions, ps.questionAnswers, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, ps.input, ps.generationContext, completionScore.score, dispatch, startStream]);
 
   const handleCopyText = useCallback(async (text: string, withWatermark?: boolean) => {
-    // Pro users copy clean by default; free/guest always get watermark.
-    // Callers can override via the withWatermark argument (e.g. toggle checkbox).
     const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
     const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
     await navigator.clipboard.writeText(finalText);
@@ -574,20 +525,17 @@ function PageContent({ user }: { user: User | null }) {
       const target = e.target as HTMLElement;
       const isTyping = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 
-      // Escape - clear result (when not typing)
       if (e.key === 'Escape' && !isTyping) {
         if (completionRef.current) {
           dispatch({ type: 'SET_COMPLETION', payload: '' });
         }
       }
-      // Cmd+Shift+C - copy result
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
         if (completionRef.current) {
           e.preventDefault();
           handleCopyTextRef.current?.(completionRef.current);
         }
       }
-      // Cmd+K - focus prompt input
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
@@ -596,12 +544,10 @@ function PageContent({ user }: { user: User | null }) {
           textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
-      // Cmd+L - open library
       if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
         e.preventDefault();
         setViewMode("personal");
       }
-      // Cmd+B - toggle sidebar
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         if (!isTyping) {
           e.preventDefault();
@@ -647,9 +593,8 @@ function PageContent({ user }: { user: User | null }) {
   const [previousView, setPreviousView] = useState<string | null>(null);
 
   const handleUsePrompt = useCallback((prompt: LibraryPrompt | PersonalPrompt) => {
-    setPreviousView(viewMode); // Remember where user was
+    setPreviousView(viewMode);
     dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
-    // Reset any previous completion so prompt feels fresh
     dispatch({ type: 'SET_COMPLETION', payload: '' });
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
     setViewMode("home");
@@ -716,7 +661,6 @@ function PageContent({ user }: { user: User | null }) {
        showLoginRequired("שמירת פרומפטים");
        return;
      }
-     // Use batch insert with dedup instead of concurrent individual adds
      const itemsToAdd = history.map(item => ({
        title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
        prompt: item.enhanced,
@@ -846,112 +790,29 @@ function PageContent({ user }: { user: User | null }) {
         }}
       />
 
-      {/* Mobile Backdrop */}
-      {sidebarOpen && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-[55] bg-black/40 dark:bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Sidebar Drawer (extracted component) */}
+      <SidebarDrawer
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        history={history}
+        isLoaded={isLoaded}
+        onRestore={handleRestore}
+        onClear={clearHistory}
+        onSaveToPersonal={addPersonalPromptFromHistory}
+        onCopy={handleCopyText}
+        onStartNew={() => setViewMode("home")}
+        onNavPersonal={handleNavPersonal}
+        onNavFavorites={handleNavFavorites}
+        onNavLibrary={handleNavLibrary}
+        personalView={personalView}
+        prefetchPersonalLibrary={prefetchPersonalLibrary}
+      />
 
-      {/* Sidebar Drawer */}
-      <div role="dialog" aria-modal="true" aria-label="היסטוריה" className={cn(
-        "fixed right-0 z-[60] bg-white/95 dark:bg-black/95 backdrop-blur-xl border-s border-black/10 dark:border-white/10 flex flex-col transition-all duration-300 ease-out",
-        sidebarOpen ? "translate-x-0" : "translate-x-full",
-        // Mobile: full screen. Desktop: below navbar
-        "top-0 h-full w-full",
-        "md:top-14 md:h-[calc(100vh-3.5rem)]",
-        sidebarExpanded ? "md:w-[560px]" : "md:w-[340px]"
-      )}>
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5">
-          <span className="text-sm font-bold text-[var(--text-primary)]">היסטוריה</span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="hidden md:flex p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-              title={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
-              aria-label={sidebarExpanded ? "כווץ תפריט" : "הרחב תפריט"}
-            >
-              {sidebarExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-              aria-label="סגור תפריט"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Navigation Buttons - mobile only (desktop has TopNavBar) */}
-        <div className="flex flex-col gap-2 p-4 md:hidden">
-          <button
-            onClick={() => { handleNavPersonal(); setSidebarOpen(false); }}
-            onMouseEnter={prefetchPersonalLibrary}
-            onTouchStart={prefetchPersonalLibrary}
-            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-[var(--glass-border)] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 text-[var(--text-muted)] group bg-black/5 dark:bg-black/20 cursor-pointer"
-          >
-            <BookOpen className="w-5 h-5" />
-            <span>{t.home.personal_library}</span>
-          </button>
-
-          <button
-            onClick={() => { handleNavFavorites(); setSidebarOpen(false); }}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-[var(--glass-border)] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 text-[var(--text-muted)] group cursor-pointer",
-              personalView === "favorites" ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-400/50" : "bg-black/5 dark:bg-black/20"
-            )}
-          >
-            <Star className="w-5 h-5" />
-            <span>{t.home.favorites}</span>
-          </button>
-
-          <button
-            onClick={() => { handleNavLibrary(); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-bold transition-all border border-[var(--glass-border)] hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 text-[var(--text-muted)] group bg-black/5 dark:bg-black/20 cursor-pointer"
-          >
-            <Library className="w-5 h-5" />
-            <span>{t.home.public_library}</span>
-          </button>
-        </div>
-
-        {/* History Panel - takes remaining space */}
-        <div className="flex-1 min-h-0 px-4 pb-4">
-          <HistoryPanel
-            history={history}
-            isLoaded={isLoaded}
-            onRestore={(item) => { handleRestore(item); setSidebarOpen(false); }}
-            onClear={clearHistory}
-            onSaveToPersonal={addPersonalPromptFromHistory}
-            onCopy={handleCopyText}
-            onStartNew={() => { setViewMode("home"); setSidebarOpen(false); }}
-          />
-        </div>
-      </div>
-
-      {/* Mobile FAQ Panel */}
-      {mobileFaqOpen && (
-        <>
-          <div
-            role="presentation"
-            className="fixed inset-0 z-[55] bg-black/40 dark:bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
-            onClick={() => setMobileFaqOpen(false)}
-          />
-          <div className="fixed inset-x-0 bottom-0 z-[60] md:hidden max-h-[85vh] flex flex-col rounded-t-3xl bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-[var(--glass-border)] animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-black/10 dark:bg-white/20" />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <ErrorBoundary name="FAQBubble-mobile">
-                <FAQBubble mode="inline" defaultOpen onClose={() => setMobileFaqOpen(false)} />
-              </ErrorBoundary>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Mobile FAQ Panel (extracted component) */}
+      <MobileFaqPanel
+        isOpen={mobileFaqOpen}
+        onClose={() => setMobileFaqOpen(false)}
+      />
 
       {/* Main Content (Full Width) */}
       <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-4">
@@ -961,11 +822,12 @@ function PageContent({ user }: { user: User | null }) {
                <div className="hero-logo-ring hero-logo-ring-2" />
                <div className="hero-logo-ring hero-logo-ring-3" />
                <NextImage
-                 src={getAssetPath("/Peroot.svg")}
+                 src="/Peroot-hero.png"
                  alt="Peroot"
                  className="hero-logo-image"
-                 width={360}
-                 height={140}
+                 width={720}
+                 height={392}
+                 sizes="360px"
                  priority
                />
              </div>
@@ -982,175 +844,53 @@ function PageContent({ user }: { user: User | null }) {
            <StreamingProgress phase={ps.streamPhase} />
 
            {!ps.completion && !ps.isLoading ? (
-             /* INPUT MODE */
-             <>
-               {/* Referral Banner - shown once for new users */}
-               {user && isNewUser && (
-                 <div className="w-full max-w-3xl mb-2">
-                   <ReferralBanner isNewUser={isNewUser} />
-                 </div>
-               )}
-
-               {/* Back to library button when user came from library */}
-               {previousView && (previousView === "personal" || previousView === "library") && (
-                 <div className="w-full max-w-3xl mb-2">
-                   <button
-                     onClick={handleBackToLibrary}
-                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-amber-600/80 dark:text-amber-400/80 hover:text-amber-500 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/20 transition-colors"
-                     dir="rtl"
-                   >
-                     <ArrowRight className="w-3.5 h-3.5" />
-                     חזרה לספרייה
-                   </button>
-                 </div>
-               )}
-
-               <PromptInput
-                  inputVal={ps.input}
-                  setInputVal={setInputVal}
-                  handleEnhance={handleEnhance}
-                  inputScore={inputScore}
-                  scoreTone={scoreTone}
-                  selectedCategory={ps.selectedCategory}
-                  setSelectedCategory={(cat: string) => dispatch({ type: 'SET_CATEGORY', payload: cat })}
-                  selectedCapability={ps.selectedCapability}
-                  setSelectedCapability={(cap: CapabilityMode) => dispatch({ type: 'SET_CAPABILITY', payload: cap })}
-                  isLoading={ps.isLoading}
-                  variables={inputVariables}
-                  variableValues={ps.variableValues}
-                  setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
-                  onApplyVariables={applyVariablesToPrompt}
-                  imagePlatform={imagePlatform}
-                  setImagePlatform={setImagePlatform}
-                  imageOutputFormat={imageOutputFormat}
-                  setImageOutputFormat={setImageOutputFormat}
-                  imageAspectRatio={imageAspectRatio}
-                  setImageAspectRatio={setImageAspectRatio}
-                  videoPlatform={videoPlatform}
-                  setVideoPlatform={setVideoPlatform}
-                  videoAspectRatio={videoAspectRatio}
-                  setVideoAspectRatio={setVideoAspectRatio}
-               />
-
-               {/* Recently Used Prompts Strip */}
-               {history.length > 0 && (
-                 <div className="mt-3">
-                   <div className="flex items-center gap-2 mb-3">
-                     <Clock className="w-3.5 h-3.5 text-slate-500" />
-                     <span className="text-xs font-medium text-slate-500">שימשת לאחרונה</span>
-                   </div>
-                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                     {history.slice(0, 5).map((item, i) => (
-                       <button
-                         key={i}
-                         onClick={() => { handleRestore(item); }}
-                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
-                         dir="rtl"
-                       >
-                         <p className="text-sm text-[var(--text-secondary)] font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
-                         <p className="text-xs text-[var(--text-muted)] mt-1 truncate" title={item.original}>{item.original.slice(0, 60)}</p>
-                         <div className="flex items-center gap-2 mt-2">
-                           <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--glass-bg)] text-[var(--text-muted)] border border-[var(--glass-border)]">{item.category || 'כללי'}</span>
-                           <span className="text-xs text-[var(--text-muted)]">{item.tone || ''}</span>
-                         </div>
-                       </button>
-                     ))}
-                   </div>
-                 </div>
-               )}
-
-               {/* Recent Personal Prompts Widget */}
-               {recentPersonalPrompts.length > 0 && (
-                 <div className="mt-3">
-                   <div className="flex items-center justify-between mb-3">
-                     <div className="flex items-center gap-2">
-                       <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                       <span className="text-xs font-medium text-amber-600/80 dark:text-amber-400/80">פרומפטים אחרונים מהספרייה</span>
-                     </div>
-                     <button
-                       onClick={() => { setViewMode("personal"); }}
-                       className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
-                     >
-                       לכל הספרייה &larr;
-                     </button>
-                   </div>
-                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                     {recentPersonalPrompts.map((prompt) => (
-                       <button
-                         key={prompt.id}
-                         onClick={() => {
-                           handleUsePrompt(prompt);
-                           incrementUseCount(prompt.id);
-                         }}
-                         className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/[0.04] dark:bg-amber-500/[0.02] hover:bg-amber-500/[0.08] dark:hover:bg-amber-500/[0.06] transition-all cursor-pointer text-start group"
-                         dir="rtl"
-                       >
-                         <div className="flex items-center gap-2 mb-1">
-                           {prompt.is_pinned && (
-                             <span className="text-amber-400 text-[10px]">&#128204;</span>
-                           )}
-                           <p className="text-sm text-[var(--text-secondary)] font-medium truncate flex-1" title={prompt.title}>{prompt.title}</p>
-                         </div>
-                         <p className="text-xs text-[var(--text-muted)] mt-1 truncate" title={prompt.use_case}>{prompt.use_case}</p>
-                         <div className="flex items-center gap-2 mt-2">
-                           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10">{prompt.personal_category || 'כללי'}</span>
-                           {prompt.use_count > 0 && (
-                             <span className="text-xs text-[var(--text-muted)]">x{prompt.use_count}</span>
-                           )}
-                         </div>
-                       </button>
-                     ))}
-                   </div>
-                 </div>
-               )}
-
-               {/* Prompt of the Day + Surprise Me */}
-               {filteredLibrary.length > 0 && (
-                 <div className="flex flex-col gap-4 mt-2">
-                   {/* Surprise Me Button */}
-                   <button
-                     onClick={handleSurpriseMe}
-                     className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm transition-all cursor-pointer group"
-                   >
-                     <Shuffle className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                     <span>הפתע אותי - פרומפט אקראי מהספריה</span>
-                   </button>
-
-                   {/* Prompt of the Day */}
-                   {promptOfTheDay && (
-                     <div className="glass-card rounded-xl border-[var(--glass-border)] bg-gradient-to-l from-amber-500/[0.06] dark:from-amber-500/[0.04] to-transparent overflow-hidden">
-                       <div className="px-5 py-3 border-b border-[var(--glass-border)] flex items-center gap-2">
-                         <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                         <span className="text-xs font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider">פרומפט היום</span>
-                       </div>
-                       <div className="p-5 flex flex-col gap-3">
-                         <h3 className="text-base font-semibold text-[var(--text-primary)]" dir="rtl">{promptOfTheDay.title}</h3>
-                         <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
-                         <div className="flex items-center gap-2 mt-1">
-                           <button
-                             onClick={() => {
-                               dispatch({ type: 'SET_INPUT', payload: promptOfTheDay.prompt });
-                               toast.success('פרומפט היום נטען!');
-                             }}
-                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer"
-                           >
-                             השתמש בפרומפט
-                           </button>
-                           <button
-                             onClick={() => handleNavLibrary()}
-                             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] text-xs transition-colors cursor-pointer"
-                           >
-                             עוד פרומפטים מהספריה
-                           </button>
-                         </div>
-                       </div>
-                     </div>
-                   )}
-                 </div>
-               )}
-             </>
+             /* INPUT MODE (extracted component) */
+             <InputSection
+               inputVal={ps.input}
+               setInputVal={setInputVal}
+               handleEnhance={handleEnhance}
+               inputScore={inputScore}
+               scoreTone={scoreTone}
+               selectedCategory={ps.selectedCategory}
+               setSelectedCategory={(cat: string) => dispatch({ type: 'SET_CATEGORY', payload: cat })}
+               selectedCapability={ps.selectedCapability}
+               setSelectedCapability={(cap: CapabilityMode) => dispatch({ type: 'SET_CAPABILITY', payload: cap })}
+               isLoading={ps.isLoading}
+               inputVariables={inputVariables}
+               variableValues={ps.variableValues}
+               setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
+               onApplyVariables={applyVariablesToPrompt}
+               imagePlatform={imagePlatform}
+               setImagePlatform={setImagePlatform}
+               imageOutputFormat={imageOutputFormat}
+               setImageOutputFormat={setImageOutputFormat}
+               imageAspectRatio={imageAspectRatio}
+               setImageAspectRatio={setImageAspectRatio}
+               videoPlatform={videoPlatform}
+               setVideoPlatform={setVideoPlatform}
+               videoAspectRatio={videoAspectRatio}
+               setVideoAspectRatio={setVideoAspectRatio}
+               history={history}
+               onRestore={handleRestore}
+               recentPersonalPrompts={recentPersonalPrompts}
+               onUsePrompt={handleUsePrompt}
+               incrementUseCount={incrementUseCount}
+               onNavToPersonalLibrary={() => setViewMode("personal")}
+               filteredLibrary={filteredLibrary}
+               libraryPrompts={libraryPrompts}
+               onSurpriseMe={handleSurpriseMe}
+               onNavLibrary={handleNavLibrary}
+               dispatch={dispatch}
+               isNewUser={isNewUser}
+               user={user}
+               previousView={previousView}
+               onBackToLibrary={handleBackToLibrary}
+             />
            ) : (
              /* RESULT MODE */
+             /* TODO: Extract ResultMode into its own component (src/components/features/home/ResultMode.tsx)
+                once the InputSection extraction is validated. The result mode section includes
+                ResultSection + SmartRefinement and the associated callbacks (handleRefine, saveCompletionToPersonal, etc.) */
              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col gap-8">
                  <ErrorBoundary name="ResultSection">
                    <ResultSection
@@ -1170,13 +910,8 @@ function PageContent({ user }: { user: User | null }) {
                          : completionScore.baseScore - inputScore.baseScore}
                        onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
                        onImproveAgain={() => {
-                         // Feed the current completion back as the new input so the next
-                         // enhance round works on the improved version, but preserve
-                         // originalInput (set on first START_STREAM) so "Back to Original" works.
                          dispatch({ type: 'SET_INPUT', payload: ps.completion });
                          dispatch({ type: 'INCREMENT_ITERATION' });
-                         // Kick off the enhance - START_STREAM will only set originalInput
-                         // if it is still empty, so it won't overwrite the first snapshot.
                          setTimeout(() => handleEnhance(), 0);
                        }}
                        onRetryStream={handleEnhance}

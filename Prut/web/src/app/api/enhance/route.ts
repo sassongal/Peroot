@@ -1,7 +1,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
 import { parseCapabilityMode } from "@/lib/capability-mode";
@@ -12,6 +12,7 @@ import { enqueueJob } from "@/lib/jobs/queue";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
 import { validateApiKey } from "@/lib/api-auth";
+import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 
 export const maxDuration = 30;
 
@@ -89,10 +90,7 @@ export async function POST(req: Request) {
     // When using Bearer token or API key, RLS won't have auth.uid() set,
     // so use service role client to bypass RLS
     const queryClient = useServiceClient
-        ? createSupabaseClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          )
+        ? createServiceClient()
         : supabase;
 
     // 1. Context Fetching - check cache for profile/tier first
@@ -151,71 +149,12 @@ export async function POST(req: Request) {
         // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
         // Skip credit checks for guests - they are rate-limited by IP instead
         if (userId) {
-            const { data: creditRes, error: rpcError } = await queryClient.rpc('refresh_and_decrement_credits', {
-                target_user_id: userId,
-                amount_to_spend: 1,
-                user_tier: tier
-            });
-
-            if (rpcError || !creditRes || !creditRes.success) {
-                // Fallback to old method if new RPC doesn't exist yet
-                if (rpcError?.message?.includes('function') && rpcError?.message?.includes('does not exist')) {
-                    // Legacy path: non-atomic refresh + decrement
-                    if (tier === 'free') {
-                        const { data: siteSettings } = await queryClient
-                            .from('site_settings')
-                            .select('daily_free_limit')
-                            .single();
-
-                        const dailyLimit = siteSettings?.daily_free_limit ?? 2;
-
-                        const { data: refreshData } = await queryClient
-                            .from('profiles')
-                            .select('credits_refreshed_at, credits_balance')
-                            .eq('id', userId)
-                            .single();
-
-                        const lastRefresh = refreshData?.credits_refreshed_at
-                            ? new Date(refreshData.credits_refreshed_at)
-                            : null;
-                        const currentBalance = refreshData?.credits_balance ?? 0;
-
-                        const nowIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-                        const resetToday = new Date(nowIsrael);
-                        resetToday.setHours(14, 0, 0, 0);
-                        const resetPoint = nowIsrael >= resetToday
-                            ? resetToday
-                            : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
-
-                        if (!lastRefresh || lastRefresh < resetPoint) {
-                            const newBalance = Math.max(currentBalance, dailyLimit);
-                            await queryClient
-                                .from('profiles')
-                                .update({
-                                    credits_balance: newBalance,
-                                    credits_refreshed_at: new Date().toISOString()
-                                })
-                                .eq('id', userId);
-                        }
-                    }
-
-                    const { data: fallbackRes, error: fallbackErr } = await queryClient.rpc('check_and_decrement_credits', {
-                        target_user_id: userId,
-                        amount_to_spend: 1
-                    });
-
-                    if (fallbackErr || !fallbackRes || !fallbackRes.success) {
-                        return NextResponse.json({
-                            error: fallbackRes?.error || "Insufficient credits or profile not found",
-                            balance: fallbackRes?.current_balance
-                        }, { status: 403 });
-                    }
-                } else {
-                    return NextResponse.json({
-                        error: creditRes?.error || "Insufficient credits or profile not found",
-                        balance: creditRes?.current_balance
-                    }, { status: 403 });
-                }
+            const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
+            if (!creditResult.allowed) {
+                return NextResponse.json({
+                    error: creditResult.error || "Insufficient credits or profile not found",
+                    balance: creditResult.remaining
+                }, { status: 403 });
             }
         }
     }
@@ -281,13 +220,9 @@ export async function POST(req: Request) {
             });
 
             // Auto-refund only for genuinely interrupted responses (not normal short completions)
-            if (completion.text.length < 100 && userId && supabase) {
-                try {
-                    await queryClient.rpc('refund_credit', { target_user_id: userId, amount: 1 });
-                    logger.warn('[Enhance] Short response, refunding credit', { userId: userId, length: completion.text.length });
-                } catch (e) {
-                    logger.error('[EnhanceAPI] Auto-refund failed:', e);
-                }
+            if (completion.text.length < 100 && userId) {
+                await refundCredit(userId);
+                logger.warn('[Enhance] Short response, refunding credit', { userId: userId, length: completion.text.length });
             }
 
             if (userId && supabase) {
@@ -333,15 +268,7 @@ export async function POST(req: Request) {
       logger.warn("[EnhanceAPI] Concurrency limit reached:", error.message);
       // Refund credit since we never called AI
       if (userId) {
-        try {
-          const refundClient = createSupabaseClient(
-              process.env.NEXT_PUBLIC_SUPABASE_URL!,
-              process.env.SUPABASE_SERVICE_ROLE_KEY!
-          );
-          await refundClient.rpc('refund_credit', { target_user_id: userId, amount: 1 });
-        } catch (e: unknown) {
-          logger.error('[EnhanceAPI] Credit refund failed:', e);
-        }
+        await refundCredit(userId);
       }
       return NextResponse.json(
         { error: "השרת עמוס כרגע. נסה שוב בעוד כמה שניות." },
@@ -350,17 +277,9 @@ export async function POST(req: Request) {
     }
 
     logger.error("[EnhanceAPI] Error:", error);
-    // Best-effort credit refund on failure (use service role to ensure it works for Bearer token)
+    // Best-effort credit refund on failure
     if (userId) {
-      try {
-        const refundClient = createSupabaseClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-        await refundClient.rpc('refund_credit', { target_user_id: userId, amount: 1 });
-      } catch (e: unknown) {
-        logger.error('[EnhanceAPI] Credit refund failed:', e);
-      }
+      await refundCredit(userId);
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

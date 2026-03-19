@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/ratelimit";
@@ -50,10 +50,7 @@ export async function POST(req: NextRequest) {
 
     // Only use service role client for Bearer token auth (extension) - cookie auth uses RLS
     const serviceClient = bearerToken
-      ? createSupabaseClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+      ? createServiceClient()
       : supabase;
 
     // Try with source column first, fall back without it

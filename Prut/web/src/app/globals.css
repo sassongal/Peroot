@@ -23,6 +23,7 @@
   --color-accent-dark: #D97706;
   --color-accent-glow: rgba(245, 158, 11, 0.15);
   --color-accent-border: rgba(245, 158, 11, 0.3);
+  --color-accent-text: var(--accent-text);
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -257,6 +258,10 @@ a:focus-visible,
 }
 
 .accent-text {
+  color: var(--accent-text);
+}
+
+.dark .accent-text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-yellow-300;
 }
 
@@ -1013,7 +1018,7 @@ a:focus-visible,
 
 .article-table-comparison thead th {
   background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
+  color: var(--accent-text);
   font-weight: 800;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -1070,7 +1075,7 @@ a:focus-visible,
   border-inline-start: 4px solid #f59e0b;
 }
 
-.article-callout-warning .article-callout-title { color: #f59e0b; }
+.article-callout-warning .article-callout-title { color: var(--accent-text); }
 
 .article-callout-example {
   background: rgba(139, 92, 246, 0.06);
@@ -1178,7 +1183,7 @@ a:focus-visible,
 .article-quote-brand cite {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #f59e0b;
+  color: var(--accent-text);
   font-style: normal;
   letter-spacing: 0.05em;
 }
@@ -1200,7 +1205,7 @@ a:focus-visible,
 }
 
 .article-highlight-box strong {
-  color: #fbbf24;
+  color: var(--accent-text);
 }
 
 /* CTA Box */
@@ -1266,7 +1271,7 @@ a:focus-visible,
 }
 
 .article-editorial-voice strong {
-  color: #fbbf24;
+  color: var(--accent-text);
 }
 
 /* Hide scrollbar while keeping scroll functionality */

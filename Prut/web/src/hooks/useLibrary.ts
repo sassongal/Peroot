@@ -8,6 +8,7 @@ import { PersonalPrompt } from '@/lib/types';
 import { CapabilityMode } from '@/lib/capability-mode';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
+import { escapePostgrestValue } from "@/lib/sanitize";
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -204,8 +205,9 @@ export function useLibrary() {
         query = query.eq('capability_mode', opts.capabilityFilter);
       }
       if (opts.searchQuery) {
+        const safeSearch = escapePostgrestValue(opts.searchQuery);
         query = query.or(
-          `title.ilike.%${opts.searchQuery}%,prompt.ilike.%${opts.searchQuery}%,use_case.ilike.%${opts.searchQuery}%`
+          `title.ilike.%${safeSearch}%,prompt.ilike.%${safeSearch}%,use_case.ilike.%${safeSearch}%`
         );
       }
 

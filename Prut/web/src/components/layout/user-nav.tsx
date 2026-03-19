@@ -89,7 +89,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
           <button
             onClick={() => setIsOpen(!isOpen)}
             aria-label={t.auth.login_signup}
-            aria-haspopup="menu"
+            aria-haspopup="true"
             aria-expanded={isOpen}
             className="flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 transition-all active:scale-95 cursor-pointer"
           >
@@ -128,7 +128,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label="תפריט משתמש"
-          aria-haspopup="menu"
+          aria-haspopup="true"
           aria-expanded={isOpen}
           className="w-11 h-11 rounded-full bg-[var(--glass-bg)] hover:bg-black/10 dark:hover:bg-white/10 border border-[var(--glass-border)] flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none cursor-pointer"
         >

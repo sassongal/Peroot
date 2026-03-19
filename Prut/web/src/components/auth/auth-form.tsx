@@ -91,13 +91,13 @@ export function AuthForm() {
             <Mail className="w-10 h-10 text-amber-400" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-white">בדוק את האימייל שלך</h2>
-        <p className="text-slate-300">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">בדוק את האימייל שלך</h2>
+        <p className="text-[var(--text-secondary)]">
           שלחנו קישור אימות לכתובת:
           <br />
           <span className="font-semibold text-amber-300">{email}</span>
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--text-muted)]">
           יש ללחוץ על הקישור באימייל כדי להפעיל את החשבון ולהתחיל להשתמש בפירוט.
         </p>
         <button
@@ -107,7 +107,7 @@ export function AuthForm() {
             setEmail("");
             setPassword("");
           }}
-          className="text-sm text-slate-400 hover:text-white transition-colors underline decoration-slate-400/30 cursor-pointer"
+          className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors underline decoration-[var(--glass-border)] cursor-pointer"
         >
           חזרה להתחברות
         </button>
@@ -124,13 +124,13 @@ export function AuthForm() {
             <Mail className="w-10 h-10 text-amber-400" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-white">בדוק את האימייל שלך</h2>
-        <p className="text-slate-300">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">בדוק את האימייל שלך</h2>
+        <p className="text-[var(--text-secondary)]">
           קישור לאיפוס סיסמה נשלח לאימייל שלך
           <br />
           <span className="font-semibold text-amber-300">{email}</span>
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--text-muted)]">
           יש ללחוץ על הקישור באימייל כדי לאפס את הסיסמה.
         </p>
         <button
@@ -139,7 +139,7 @@ export function AuthForm() {
             setMode("login");
             setEmail("");
           }}
-          className="text-sm text-slate-400 hover:text-white transition-colors underline decoration-slate-400/30 cursor-pointer"
+          className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors underline decoration-[var(--glass-border)] cursor-pointer"
         >
           חזרה להתחברות
         </button>
@@ -152,8 +152,8 @@ export function AuthForm() {
     return (
       <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold tracking-tight text-white">איפוס סיסמה</h1>
-          <p className="text-sm text-slate-400 font-medium">
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">איפוס סיסמה</h1>
+          <p className="text-sm text-[var(--text-muted)] font-medium">
             הזן/י את כתובת האימייל שלך ונשלח קישור לאיפוס הסיסמה
           </p>
         </div>
@@ -169,7 +169,7 @@ export function AuthForm() {
               placeholder="כתובת אימייל"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+              className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
             />
           </div>
 
@@ -196,7 +196,7 @@ export function AuthForm() {
               setMode("login");
               setEmail("");
             }}
-            className="text-xs text-slate-400 hover:text-white transition-colors decoration-slate-400/30 font-medium cursor-pointer"
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors decoration-[var(--glass-border)] font-medium cursor-pointer"
           >
             חזרה להתחברות
           </button>
@@ -209,10 +209,10 @@ export function AuthForm() {
   return (
     <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center space-y-3">
-        <h1 className="text-3xl font-bold tracking-tight text-white">
+        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
           {isLogin ? "ברוכים השבים" : "הצטרפות לפירוט"}
         </h1>
-        <p className="text-sm text-slate-400 font-medium">
+        <p className="text-sm text-[var(--text-muted)] font-medium">
           {isLogin
             ? "התחבר כדי לגשת לספריה ולהיסטוריה האישית שלך"
             : "צור חשבון כדי לשמור ולנהל את הפרומפטים שלך"}
@@ -224,10 +224,10 @@ export function AuthForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/5" />
+            <span className="w-full border-t border-[var(--glass-border)]" />
           </div>
           <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-            <span className="bg-[#0a0a0a] px-3 text-slate-500">או עם אימייל</span>
+            <span className="bg-[var(--surface-body)] px-3 text-[var(--text-muted)]">או עם אימייל</span>
           </div>
         </div>
 
@@ -243,7 +243,7 @@ export function AuthForm() {
                 placeholder="שם מלא"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+                className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
               />
             </div>
           )}
@@ -257,7 +257,7 @@ export function AuthForm() {
               placeholder="כתובת אימייל"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+              className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
             />
           </div>
           <div className="relative group">
@@ -270,7 +270,7 @@ export function AuthForm() {
               placeholder="סיסמה"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pe-11 ps-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/10 transition-all shadow-inner"
+              className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl py-3 pe-11 ps-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 focus:bg-[var(--glass-bg)] transition-all shadow-inner"
             />
           </div>
 
@@ -309,7 +309,7 @@ export function AuthForm() {
           <button
             type="button"
             onClick={() => setMode(isLogin ? "signup" : "login")}
-            className="text-xs text-slate-400 hover:text-white transition-colors decoration-slate-400/30 font-medium cursor-pointer"
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors decoration-[var(--glass-border)] font-medium cursor-pointer"
           >
             {isLogin ? (
               <>אין לך חשבון? <span className="text-amber-400 font-bold ms-1">הירשם עכשיו</span></>
