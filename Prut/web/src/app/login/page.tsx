@@ -26,15 +26,12 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[420px]">
         {/* Hero image */}
         <div className="flex justify-center mb-6 relative">
-          <div className="absolute inset-0 flex justify-center items-center">
-            <div className="w-48 h-32 bg-amber-500/[0.1] blur-[60px] rounded-full" />
-          </div>
           <Image
-            src="/images/peroot_logo_pack/peroot_og_image_v3.webp"
-            alt="Peroot — מחולל פרומפטים מקצועיים בעברית"
-            width={360}
-            height={189}
-            className="relative rounded-xl w-full max-w-[360px] h-auto drop-shadow-[0_4px_30px_rgba(217,119,6,0.12)]"
+            src="/Peroot-hero.webp"
+            alt="פרוט"
+            width={720}
+            height={392}
+            className="relative w-full max-w-[340px] h-auto"
             priority
           />
         </div>
