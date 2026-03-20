@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
-import { Wand2, Mic, MicOff } from "lucide-react";
+import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon } from "lucide-react";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
@@ -43,6 +43,11 @@ interface PromptInputProps {
   setVideoPlatform: (platform: VideoPlatform) => void;
   videoAspectRatio: string;
   setVideoAspectRatio: (ratio: string) => void;
+  // Context attachments
+  onAddFile?: (file: File) => void;
+  onAddUrl?: (url: string) => void;
+  onAddImage?: (file: File) => void;
+  hasAttachments?: boolean;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -124,9 +129,17 @@ export function PromptInput({
   setVideoPlatform,
   videoAspectRatio,
   setVideoAspectRatio,
+  onAddFile,
+  onAddUrl,
+  onAddImage,
+  hasAttachments,
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const [showUrlInput, setShowUrlInput] = useState(false);
+    const [urlValue, setUrlValue] = useState("");
     const [interimResult, setInterimResult] = useState("");
     const [voiceLang, setVoiceLang] = useState<VoiceLang>('he-IL');
     const [showLangPicker, setShowLangPicker] = useState(false);
@@ -315,63 +328,175 @@ export function PromptInput({
               }}
             />
 
-            {/* Voice Input Trigger + Language Picker - above prompt strength bar */}
-            {isSupported && (
-               <div className="flex items-center gap-1.5 px-6 pt-2 relative z-20">
-                   <button
-                     onClick={toggleListening}
-                     className={cn(
-                       "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
-                       isListening
-                         ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
-                         : "bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10"
-                     )}
-                     title={isListening ? "עצור הקלטה" : "הקלט קולית"}
-                     aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
-                   >
-                       {isListening ? (
-                           <MicOff className="w-5 h-5" />
-                       ) : (
-                           <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
-                       )}
-                   </button>
-                   {/* Language picker */}
-                   <div className="relative">
-                     <button
-                       onClick={() => setShowLangPicker(prev => !prev)}
-                       className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
-                       title="שפת הקלטה"
-                       aria-label="בחר שפת הקלטה"
-                     >
-                       {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.short ?? 'HE'}
-                     </button>
-                     {showLangPicker && (
-                       <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
-                         {VOICE_LANGUAGES.map(lang => (
-                           <button
-                             key={lang.code}
-                             onClick={() => { setVoiceLang(lang.code); setShowLangPicker(false); }}
-                             className={cn(
-                               "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
-                               voiceLang === lang.code
-                                 ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                                 : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/5"
+            {/* Voice + Context Icons row */}
+               <div className="flex items-center justify-between px-6 pt-2 relative z-20">
+                   {/* Right side (RTL): Voice + Language */}
+                   <div className="flex items-center gap-1.5">
+                     {isSupported && (
+                       <>
+                         <button
+                           onClick={toggleListening}
+                           className={cn(
+                             "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
+                             isListening
+                               ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
+                               : "bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10"
+                           )}
+                           title={isListening ? "עצור הקלטה" : "הקלט קולית"}
+                           aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
+                         >
+                             {isListening ? (
+                                 <MicOff className="w-5 h-5" />
+                             ) : (
+                                 <Mic className="w-5 h-5 group-hover/mic:scale-110 transition-transform" />
                              )}
+                         </button>
+                         {/* Language picker */}
+                         <div className="relative">
+                           <button
+                             onClick={() => setShowLangPicker(prev => !prev)}
+                             className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
+                             title="שפת הקלטה"
+                             aria-label="בחר שפת הקלטה"
                            >
-                             <span className="font-mono font-bold text-[10px]">{lang.short}</span>
-                             <span>{lang.label}</span>
+                             {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.short ?? 'HE'}
                            </button>
-                         ))}
-                       </div>
+                           {showLangPicker && (
+                             <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
+                               {VOICE_LANGUAGES.map(lang => (
+                                 <button
+                                   key={lang.code}
+                                   onClick={() => { setVoiceLang(lang.code); setShowLangPicker(false); }}
+                                   className={cn(
+                                     "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
+                                     voiceLang === lang.code
+                                       ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                                       : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/5"
+                                   )}
+                                 >
+                                   <span className="font-mono font-bold text-[10px]">{lang.short}</span>
+                                   <span>{lang.label}</span>
+                                 </button>
+                               ))}
+                             </div>
+                           )}
+                         </div>
+                         {isListening && (
+                             <span className="text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
+                                 מקליט...
+                             </span>
+                         )}
+                       </>
                      )}
                    </div>
-                   {isListening && (
-                       <span className="text-[10px] bg-black/80 px-2 py-1 rounded-md text-red-300 whitespace-nowrap animate-in fade-in">
-                           מקליט...
-                       </span>
-                   )}
+
+                   {/* Left side (RTL): Context attachment icons */}
+                   <div className="flex items-center gap-1">
+                     {/* File upload */}
+                     {onAddFile && (
+                       <>
+                         <input
+                           ref={fileInputRef}
+                           type="file"
+                           accept=".pdf,.docx,.txt,.csv,.xlsx"
+                           className="hidden"
+                           onChange={(e) => {
+                             const file = e.target.files?.[0];
+                             if (file) onAddFile(file);
+                             e.target.value = '';
+                           }}
+                         />
+                         <button
+                           onClick={() => fileInputRef.current?.click()}
+                           className={cn(
+                             "p-2 rounded-lg transition-colors cursor-pointer",
+                             "text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-500/10"
+                           )}
+                           title="צרף קובץ (PDF, Word, Excel, CSV, TXT)"
+                           aria-label="צרף קובץ"
+                           disabled={isLoading}
+                         >
+                           <Paperclip className="w-4 h-4" />
+                         </button>
+                       </>
+                     )}
+
+                     {/* URL input */}
+                     {onAddUrl && (
+                       <div className="relative">
+                         <button
+                           onClick={() => setShowUrlInput(prev => !prev)}
+                           className={cn(
+                             "p-2 rounded-lg transition-colors cursor-pointer",
+                             showUrlInput
+                               ? "text-amber-400 bg-amber-500/10"
+                               : "text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-500/10"
+                           )}
+                           title="צרף קישור URL"
+                           aria-label="צרף קישור"
+                           disabled={isLoading}
+                         >
+                           <Globe className="w-4 h-4" />
+                         </button>
+                         {showUrlInput && (
+                           <div className="absolute bottom-full end-0 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                             <input
+                               type="url"
+                               value={urlValue}
+                               onChange={(e) => setUrlValue(e.target.value)}
+                               onKeyDown={(e) => {
+                                 if (e.key === 'Enter' && urlValue.trim()) {
+                                   onAddUrl(urlValue.trim());
+                                   setUrlValue('');
+                                   setShowUrlInput(false);
+                                 }
+                                 if (e.key === 'Escape') setShowUrlInput(false);
+                               }}
+                               placeholder="הדביקו כתובת URL ולחצו Enter"
+                               className="w-64 px-3 py-2 rounded-xl text-xs bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] shadow-xl backdrop-blur-md focus:outline-none focus:border-amber-500/50"
+                               dir="ltr"
+                               autoFocus
+                             />
+                           </div>
+                         )}
+                       </div>
+                     )}
+
+                     {/* Image upload */}
+                     {onAddImage && (
+                       <>
+                         <input
+                           ref={imageInputRef}
+                           type="file"
+                           accept="image/*"
+                           className="hidden"
+                           onChange={(e) => {
+                             const file = e.target.files?.[0];
+                             if (file) onAddImage(file);
+                             e.target.value = '';
+                           }}
+                         />
+                         <button
+                           onClick={() => imageInputRef.current?.click()}
+                           className={cn(
+                             "p-2 rounded-lg transition-colors cursor-pointer",
+                             "text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-500/10"
+                           )}
+                           title="צרף תמונה"
+                           aria-label="צרף תמונה"
+                           disabled={isLoading}
+                         >
+                           <ImageIcon className="w-4 h-4" />
+                         </button>
+                       </>
+                     )}
+
+                     {/* Attachment indicator dot */}
+                     {hasAttachments && (
+                       <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="יש קבצים מצורפים" />
+                     )}
+                   </div>
                </div>
-            )}
 
             {inputScore && scoreTone && (
               <div className="px-6 pb-4 pt-2 border-t border-[var(--glass-border)] relative z-20 bg-black/5 dark:bg-black/20">

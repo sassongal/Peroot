@@ -5,7 +5,6 @@ import { Clock, BookOpen, Shuffle, Lightbulb, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
-import { ContextBar } from "@/components/features/context/ContextBar";
 import { ContextChips } from "@/components/features/context/ContextChips";
 import type { ContextAttachment } from "@/lib/context/types";
 import { CapabilityMode } from "@/lib/capability-mode";
@@ -189,16 +188,13 @@ export const InputSection = memo<InputSectionProps>(({
         setVideoPlatform={setVideoPlatform}
         videoAspectRatio={videoAspectRatio}
         setVideoAspectRatio={setVideoAspectRatio}
-      />
-
-      {/* Context attachments — file, URL, image */}
-      <ContextBar
         onAddFile={onAddFile}
         onAddUrl={onAddUrl}
         onAddImage={onAddImage}
-        attachments={contextAttachments}
-        disabled={isLoading}
+        hasAttachments={contextAttachments.length > 0}
       />
+
+      {/* Context attachment chips */}
       <ContextChips
         attachments={contextAttachments}
         onRemove={onRemoveAttachment}
