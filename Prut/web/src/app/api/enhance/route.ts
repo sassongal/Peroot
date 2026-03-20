@@ -30,6 +30,7 @@ const RequestSchema = z.object({
   refinementInstruction: z.string().optional(),
   answers: z.record(z.string(), z.string()).optional(),
   iteration: z.number().int().min(0).optional(),
+  target_model: z.enum(['chatgpt', 'claude', 'gemini', 'general']).default('general').optional(),
   context: z.array(z.object({
     type: z.enum(['file', 'url', 'image']),
     name: z.string(),
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers, iteration, context: contextAttachments } = RequestSchema.parse(json);
+    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers, iteration, context: contextAttachments, target_model } = RequestSchema.parse(json);
 
     // Determine if this is a refinement request
     const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
@@ -203,6 +204,7 @@ export async function POST(req: Request) {
         userPersonality,
         iteration,
         context: contextAttachments,
+        targetModel: target_model || 'general',
     };
 
     const engineOutput = isRefinement

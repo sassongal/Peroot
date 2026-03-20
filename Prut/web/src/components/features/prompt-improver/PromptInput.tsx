@@ -15,8 +15,16 @@ import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { getVariablePlaceholder } from "@/lib/variable-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
+import { TargetModel } from "@/lib/engines/types";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
+
+const TARGET_MODEL_OPTIONS: { value: TargetModel; label: string }[] = [
+  { value: 'general', label: 'כללי' },
+  { value: 'chatgpt', label: 'ChatGPT' },
+  { value: 'claude', label: 'Claude' },
+  { value: 'gemini', label: 'Gemini' },
+];
 
 interface PromptInputProps {
   inputVal: string;
@@ -48,6 +56,9 @@ interface PromptInputProps {
   onAddUrl?: (url: string) => void;
   onAddImage?: (file: File) => void;
   hasAttachments?: boolean;
+  // Target model
+  targetModel: TargetModel;
+  setTargetModel: (model: TargetModel) => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -133,6 +144,8 @@ export function PromptInput({
   onAddUrl,
   onAddImage,
   hasAttachments,
+  targetModel,
+  setTargetModel,
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -390,8 +403,24 @@ export function PromptInput({
                      )}
                    </div>
 
-                   {/* Left side (RTL): Context attachment icons */}
+                   {/* Left side (RTL): Context attachment icons + model selector */}
                    <div className="flex items-center gap-1">
+                     {/* Target model selector */}
+                     <select
+                       value={targetModel}
+                       onChange={(e) => setTargetModel(e.target.value as TargetModel)}
+                       className="px-2 py-1.5 rounded-lg text-[11px] bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer appearance-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+                       title="מודל יעד"
+                       aria-label="בחר מודל יעד לאופטימיזציה"
+                       disabled={isLoading}
+                     >
+                       {TARGET_MODEL_OPTIONS.map(opt => (
+                         <option key={opt.value} value={opt.value} className="bg-white dark:bg-zinc-900">
+                           {opt.label}
+                         </option>
+                       ))}
+                     </select>
+
                      {/* File upload */}
                      {onAddFile && (
                        <>

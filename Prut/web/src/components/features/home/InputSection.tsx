@@ -8,6 +8,7 @@ import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import { ContextChips } from "@/components/features/context/ContextChips";
 import type { ContextAttachment } from "@/lib/context/types";
 import { CapabilityMode } from "@/lib/capability-mode";
+import { TargetModel } from "@/lib/engines/types";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { HistoryItem } from "@/hooks/useHistory";
@@ -77,6 +78,10 @@ interface InputSectionProps {
   contextTotalTokens: number;
   contextIsOverLimit: boolean;
 
+  // Target model
+  targetModel: TargetModel;
+  setTargetModel: (model: TargetModel) => void;
+
   // User context
   isNewUser: boolean;
   user: unknown;
@@ -127,6 +132,8 @@ export const InputSection = memo<InputSectionProps>(({
   onRemoveAttachment,
   contextTotalTokens,
   contextIsOverLimit,
+  targetModel,
+  setTargetModel,
   isNewUser,
   user,
   previousView,
@@ -192,6 +199,8 @@ export const InputSection = memo<InputSectionProps>(({
         onAddUrl={onAddUrl}
         onAddImage={onAddImage}
         hasAttachments={contextAttachments.length > 0}
+        targetModel={targetModel}
+        setTargetModel={setTargetModel}
       />
 
       {/* Context attachment chips */}

@@ -1,6 +1,8 @@
 
 import { CapabilityMode } from "../capability-mode";
 
+export type TargetModel = 'chatgpt' | 'claude' | 'gemini' | 'general';
+
 export interface EngineConfig {
   id?: string;
   mode: CapabilityMode;
@@ -27,6 +29,8 @@ export interface EngineInput {
   userPersonality?: { tokens: string[]; brief?: string; format?: string };
   /** Which refinement round this is (1 = first refinement, 2 = second, etc.) */
   iteration?: number;
+  /** Target model for prompt optimization */
+  targetModel?: TargetModel;
   /** Context attachments (files, URLs, images) */
   context?: Array<{
     type: 'file' | 'url' | 'image';

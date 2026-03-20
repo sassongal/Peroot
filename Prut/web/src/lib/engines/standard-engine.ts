@@ -53,6 +53,8 @@ Specify the EXACT deliverable structure:
 ## הנחיות ומגבלות
 Be exhaustive:
 - Tone and voice (מקצועי / ידידותי / אקדמי / שיווקי / סמכותי)
+- Style (סגנון כתיבה: תמציתי, נרטיבי, אקדמי, שיחתי, טכני)
+- Tone nuance (טון ספציפי: חם-מקצועי, סמכותי-ידידותי, מעורר השראה)
 - What to INCLUDE (must-haves)
 - What to AVOID - use explicit negative constraints: "אל תכלול...", "הימנע מ...", "אין להשתמש ב..."
 - Quality bar and success criteria
@@ -75,6 +77,19 @@ ADVANCED OPTIMIZATION TECHNIQUES - apply where relevant:
 8. **Persona Depth**: Add industry-specific credentials, methodology name, and signature approach - make the persona feel like a real expert, not a template
 9. **Context Scaffolding**: For multi-step tasks - wrap each step with its own mini-context (input, expected output, success criteria)
 10. **Anti-Hallucination**: For factual/data tasks - add "אם אין לך מידע מוסמך - ציין זאת במפורש. אל תמציא עובדות, מספרים או מקורות"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RISEN STRUCTURAL VALIDATION - verify before output:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before finalizing, confirm the prompt satisfies the RISEN framework:
+- **R (Role)**: Is the expert persona hyper-specific with methodology and experience?
+- **I (Instructions)**: Are the instructions unambiguous and actionable?
+- **S (Steps)**: For multi-step tasks — are steps numbered with clear dependencies?
+- **E (End Goal)**: Is the desired outcome explicitly stated? ("התוצאה הסופית צריכה להיות...")
+- **N (Narrowing)**: Are there at least 2-3 constraints that prevent scope creep?
+
+If any RISEN element is weak or missing — add it. The prompt must be complete and self-contained.
 
 Tone: {{tone}}. Category: {{category}}.
 

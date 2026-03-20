@@ -1,5 +1,5 @@
 
-import { EngineConfig, EngineInput, EngineOutput, PromptEngine } from "./types";
+import { EngineConfig, EngineInput, EngineOutput, PromptEngine, TargetModel } from "./types";
 import { CapabilityMode } from "../capability-mode";
 
 // Helper for scoring logic moved from prompt-engine.ts
@@ -372,6 +372,15 @@ export abstract class BaseEngine implements PromptEngine {
       }
     }
 
+    // CO-STAR bonus: +5 for Style/Tone/Response format keywords
+    if (/סגנון|style|טון|tone|פורמט\s*(תגובה|פלט)|response\s*format/i.test(trimmed)) {
+      totalScore += 5;
+    }
+    // RISEN bonus: +5 for End Goal/Steps/Narrowing patterns
+    if (/מטרה\s*סופית|end\s*goal|צעדים|steps|מיקוד|narrowing|תוצאה\s*רצויה|desired\s*outcome/i.test(trimmed)) {
+      totalScore += 5;
+    }
+
     // Cap at 100
     const finalScore = Math.min(100, totalScore);
 
@@ -403,6 +412,38 @@ export abstract class BaseEngine implements PromptEngine {
   // No longer hardcoded. Fetched from DB and passed via EngineConfig
   protected getSystemIdentity(): string {
     return this.config.global_system_identity || "";
+  }
+
+  /**
+   * Returns model-specific optimization hints for the target LLM.
+   * These guide the prompt structure to maximize effectiveness on each model.
+   */
+  protected static getModelAdaptationHints(targetModel?: TargetModel): string | null {
+    switch (targetModel) {
+      case 'chatgpt':
+        return `[TARGET_MODEL_OPTIMIZATION — ChatGPT/GPT]
+- השתמש בפתיחת "You are..." לתפקיד המומחה
+- השתמש בפורמט Markdown מלא: כותרות ##, בולטים, **הדגשות**, קוד
+- הוסף טריגר Chain-of-Thought: "חשוב צעד אחר צעד לפני שתענה"
+- העדף רשימות ממוספרות ונקודות (bullets) לפלט מובנה
+- הוסף "Important:" לפני הנחיות קריטיות`;
+      case 'claude':
+        return `[TARGET_MODEL_OPTIMIZATION — Claude]
+- עטוף הנחיות מרכזיות בתגיות XML: <task>, <context>, <constraints>, <output_format>
+- הוסף בלוק <thinking> לניתוח פנימי לפני תשובה
+- ספק הקשר מפורט ורקע עשיר — Claude מצטיין עם context ארוך
+- השתמש ב-"חשוב:" או "קריטי:" לפני הנחיות שאסור לפספס
+- מבנה ברור עם הפרדה ויזואלית בין סקשנים`;
+      case 'gemini':
+        return `[TARGET_MODEL_OPTIMIZATION — Gemini]
+- השתמש בכותרות מובנות ברורות עם ## לכל סקשן
+- העדף רשימות ממוספרות על פני בולטים לצעדים
+- הגדר מגבלות מפורשות ובלתי-דו-משמעיות (constraints)
+- הוסף דוגמאות מספריות ולוגיות כאשר רלוונטי
+- סיים עם "Output Requirements:" שמסכם את כל דרישות הפלט`;
+      default:
+        return null;
+    }
   }
 
   generate(input: EngineInput): EngineOutput {
@@ -546,8 +587,10 @@ ${isMinimalPrompt ? `## חשוב — פרומפט מינימלי זוהה!
 - Never ask "what's in the file" — you already have the content`
          : '';
 
+     const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"\n10. CONTEXT INTEGRATION: If [ATTACHED_CONTEXT] exists — the prompt MUST reference specific data, terms, or structure from the attachments. A prompt that ignores uploaded context is a FAILURE. Extract key entities, numbers, and themes and weave them into the instructions. The enhanced prompt should include the actual data from the context embedded directly — not "see attached file" but the real content woven in.\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by contextual clarifying questions in JSON array format.\n\nIMPORTANT — CONTEXTUAL QUESTION GENERATION RULES:\n1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?\n2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.\n3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.\n4. Each question must be actionable — answering it should DIRECTLY change the output.\n5. Include 2-3 concrete example answers per question that are domain-relevant.\n6. Questions in Hebrew. Order by impact — most important first.${contextQuestionRules}\n\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}${modelHints ? `\n\n${modelHints}` : ''}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"\n10. CONTEXT INTEGRATION: If [ATTACHED_CONTEXT] exists — the prompt MUST reference specific data, terms, or structure from the attachments. A prompt that ignores uploaded context is a FAILURE. Extract key entities, numbers, and themes and weave them into the instructions. The enhanced prompt should include the actual data from the context embedded directly — not "see attached file" but the real content woven in.\n11. CO-STAR VALIDATION: Verify the prompt includes all CO-STAR elements — Context (רקע), Objective (מטרה), Style (סגנון כתיבה), Tone (טון), Audience (קהל יעד), Response format (פורמט תגובה). If Style or Tone are missing — add them explicitly. If Response format is vague — make it specific.\n12. RISEN VALIDATION: Verify the prompt includes RISEN elements — Role (תפקיד), Instructions (הנחיות מפורטות), Steps (צעדים ממוספרים), End goal (מטרה סופית/תוצאה רצויה), Narrowing (מיקוד ומגבלות). If End Goal is missing — infer and add it. If Steps are absent for multi-step tasks — decompose the task. If Narrowing is weak — add 2-3 explicit constraints.\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by contextual clarifying questions in JSON array format.\n\nIMPORTANT — CONTEXTUAL QUESTION GENERATION RULES:\n1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?\n2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.\n3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.\n4. Each question must be actionable — answering it should DIRECTLY change the output.\n5. Include 2-3 concrete example answers per question that are domain-relevant.\n6. Questions in Hebrew. Order by impact — most important first.${contextQuestionRules}\n\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
          userPrompt: hasContext
              ? `${this.buildTemplate(this.config.user_prompt_template, variables)}\n\n[חומר מצורף מהמשתמש — השתמש בו כ-context בפרומפט המשודרג]\n${this.buildContextSummaryForUserPrompt(input.context!)}`
              : this.buildTemplate(this.config.user_prompt_template, variables),
@@ -601,9 +644,11 @@ ${isMinimalPrompt ? `## חשוב — פרומפט מינימלי זוהה!
             contextBlock = `\n\n[CONTEXT מצורף — שמור על שילוב ה-context מהגרסה הקודמת]\nהמשתמש צירף חומרי מקור. ודא שהפרומפט המשודרג ממשיך להתייחס ספציפית לתוכן המצורף — נתונים, מושגים, מבנה. אם הגרסה הקודמת התעלמה מה-context — תקן זאת.\n\n${this.buildContextSummaryForUserPrompt(input.context)}\n`;
         }
 
+        const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+
         return {
             systemPrompt: `אתה מהנדס פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מקצוענות מושלמת, על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
-
+${modelHints ? `\n${modelHints}\n` : ''}
 כללים:
 1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט, גם הקטן ביותר.
 2. שמור ושפר את המבנה המקצועי: תפקיד, משימה, הקשר, פורמט, מגבלות.

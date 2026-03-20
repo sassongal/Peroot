@@ -40,6 +40,7 @@ const SmartRefinement = dynamic(
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
+import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
 const OnboardingOverlay = dynamic(
   () => import("@/components/ui/OnboardingOverlay").then(mod => mod.OnboardingOverlay),
@@ -132,6 +133,17 @@ function PageContent({ user }: { user: User | null }) {
   const [imageAspectRatio, setImageAspectRatio] = useState("");
   const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>('general');
   const [videoAspectRatio, setVideoAspectRatio] = useState("");
+  const [targetModel, setTargetModel] = useState<TargetModel>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('peroot_target_model') as TargetModel) || 'general';
+    }
+    return 'general';
+  });
+
+  const handleSetTargetModel = useCallback((model: TargetModel) => {
+    setTargetModel(model);
+    localStorage.setItem('peroot_target_model', model);
+  }, []);
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -441,6 +453,7 @@ function PageContent({ user }: { user: User | null }) {
       capability_mode: ps.selectedCapability,
       ...(currentModeParams && { mode_params: currentModeParams }),
       ...(contextPayload.length > 0 && { context: contextPayload }),
+      ...(targetModel !== 'general' && { target_model: targetModel }),
     });
 
     const result = processStreamResult("Enhance");
@@ -470,7 +483,7 @@ function PageContent({ user }: { user: User | null }) {
       discovery.onEnhanceComplete();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, addToHistory, incrementUsage, t, discovery.onEnhanceComplete]);
+  }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, targetModel, addToHistory, incrementUsage, t, discovery.onEnhanceComplete]);
 
   const handleRefine = useCallback(async (instruction: string) => {
     if (ps.isLoading) return;
@@ -511,6 +524,7 @@ function PageContent({ user }: { user: User | null }) {
       answers: filteredAnswers,
       iteration: ps.iterationCount + 1,
       ...(contextPayloadRefine.length > 0 && { context: contextPayloadRefine }),
+      ...(targetModel !== 'general' && { target_model: targetModel }),
     });
 
     const refineResult = processStreamResult("Refine");
@@ -520,7 +534,7 @@ function PageContent({ user }: { user: User | null }) {
       toast.success("הפרומפט עודכן!");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ps.isLoading, ps.completion, ps.questions, ps.questionAnswers, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, ps.input, ps.generationContext, completionScore.score, dispatch, startStream]);
+  }, [ps.isLoading, ps.completion, ps.questions, ps.questionAnswers, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, ps.input, ps.generationContext, completionScore.score, targetModel, dispatch, startStream]);
 
   const handleCopyText = useCallback(async (text: string, withWatermark?: boolean) => {
     const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
@@ -932,6 +946,8 @@ function PageContent({ user }: { user: User | null }) {
                onRemoveAttachment={context.removeAttachment}
                contextTotalTokens={context.totalTokens}
                contextIsOverLimit={context.isOverLimit}
+               targetModel={targetModel}
+               setTargetModel={handleSetTargetModel}
                isNewUser={isNewUser}
                user={user}
                previousView={previousView}
