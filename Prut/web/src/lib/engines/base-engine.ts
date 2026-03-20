@@ -501,13 +501,35 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
          contextInjected += `=== סוף תוכן מצורף ===\n\nזכור: הפרומפט שתייצר חייב להתייחס ספציפית לתוכן שלמעלה. פרומפט שמתעלם מה-context = כישלון.\n`;
      }
 
+     const hasContext = input.context && input.context.length > 0;
+
+     // Context-aware GENIUS_QUESTIONS instructions
+     const contextQuestionRules = hasContext
+         ? `\n\nCONTEXT-AWARE QUESTION RULES (attachments exist):
+- Questions should probe GAPS in the context, not repeat what's already in the files
+- Ask about the user's INTENT with the uploaded material (not about the material itself)
+- Example: if PDF has a contract → ask "מה המטרה? לנתח סעיפים? לסכם? ליצור תבנית?"
+- Example: if CSV has data → ask "מה התובנה שאתה מחפש? איזה KPIs חשובים?"
+- Never ask "what's in the file" — you already have the content`
+         : '';
+
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"
-10. CONTEXT INTEGRATION: If [ATTACHED_CONTEXT] exists — the prompt MUST reference specific data, terms, or structure from the attachments. A prompt that ignores uploaded context is a FAILURE. Extract key entities, numbers, and themes and weave them into the instructions.\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by contextual clarifying questions in JSON array format.\n\nIMPORTANT — CONTEXTUAL QUESTION GENERATION RULES:\n1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?\n2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.\n3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.\n4. Each question must be actionable — answering it should DIRECTLY change the output.\n5. Include 2-3 concrete example answers per question that are domain-relevant.\n6. Questions in Hebrew. Order by impact — most important first.\n\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
-         userPrompt: this.buildTemplate(this.config.user_prompt_template, variables),
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"\n10. CONTEXT INTEGRATION: If [ATTACHED_CONTEXT] exists — the prompt MUST reference specific data, terms, or structure from the attachments. A prompt that ignores uploaded context is a FAILURE. Extract key entities, numbers, and themes and weave them into the instructions. The enhanced prompt should include the actual data from the context embedded directly — not "see attached file" but the real content woven in.\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by contextual clarifying questions in JSON array format.\n\nIMPORTANT — CONTEXTUAL QUESTION GENERATION RULES:\n1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?\n2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.\n3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.\n4. Each question must be actionable — answering it should DIRECTLY change the output.\n5. Include 2-3 concrete example answers per question that are domain-relevant.\n6. Questions in Hebrew. Order by impact — most important first.${contextQuestionRules}\n\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
+         userPrompt: hasContext
+             ? `${this.buildTemplate(this.config.user_prompt_template, variables)}\n\n[חומר מצורף מהמשתמש — השתמש בו כ-context בפרומפט המשודרג]\n${this.buildContextSummaryForUserPrompt(input.context!)}`
+             : this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
      };
+  }
+
+  /** Build a concise context summary for the user prompt message */
+  private buildContextSummaryForUserPrompt(context: NonNullable<EngineInput['context']>): string {
+      return context.map(a => {
+          if (a.type === 'image') return `[תמונה: ${a.name}] ${(a.description || a.content).slice(0, 500)}`;
+          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${a.content.slice(0, 1000)}`;
+          return `[${a.format?.toUpperCase() || 'קובץ'}: ${a.name}] ${a.content.slice(0, 1500)}`;
+      }).join('\n\n');
   }
 
   generateRefinement(input: EngineInput): EngineOutput {
@@ -540,6 +562,12 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
                 ? `\nזהו סבב שדרוג שני. הפרומפט כבר שופר פעם אחת - חפש את הפערים שנותרו, לא את מה שכבר טוב.`
                 : '';
 
+        // Build context block for refinement
+        let contextBlock = '';
+        if (input.context && input.context.length > 0) {
+            contextBlock = `\n\n[CONTEXT מצורף — שמור על שילוב ה-context מהגרסה הקודמת]\nהמשתמש צירף חומרי מקור. ודא שהפרומפט המשודרג ממשיך להתייחס ספציפית לתוכן המצורף — נתונים, מושגים, מבנה. אם הגרסה הקודמת התעלמה מה-context — תקן זאת.\n\n${this.buildContextSummaryForUserPrompt(input.context)}\n`;
+        }
+
         return {
             systemPrompt: `אתה מהנדס פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מקצוענות מושלמת, על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
 
@@ -554,6 +582,7 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
 8. בדוק שהפרומפט כולל הגנת anti-hallucination (עיגון בעובדות) למשימות עובדתיות.
 9. ודא שהפרסונה המקצועית כוללת שנות ניסיון, מתודולוגיה ייחודית, ותחום מומחיות ספציפי.
 10. ודא שיש Output Quality Gate - הנחיה ל-LLM לבדוק את עצמו לפני שליחת התשובה.
+11. אם יש context מצורף — ודא שהפרומפט המשודרג מתייחס ספציפית לנתונים, מושגים ומבנה מהקבצים. לא "על סמך הקובץ" אלא שילוב ישיר של תוכן.
 ${iterationGuidance}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
@@ -569,6 +598,7 @@ CONTEXTUAL QUESTION RULES FOR REFINEMENT:
 4. DYNAMIC COUNT: If many gaps remain → 3-4 questions. If prompt is nearly complete → 1-2 questions. If comprehensive → empty array [].
 5. Each question must include 2-3 concrete Hebrew example answers.
 6. Order by impact — most important first.
+${input.context && input.context.length > 0 ? '7. If context is attached — ask about INTENT with the material, not about what\'s in it.' : ''}
 
 Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
             userPrompt: `הפרומפט הנוכחי:
@@ -577,7 +607,7 @@ ${input.previousResult}
 ---
 ${answersBlock}
 ${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
-
+${contextBlock}
 שלב את כל המידע החדש לתוך פרומפט מעודכן ומשודרג בעברית.`,
             outputFormat: "text",
             requiredFields: []

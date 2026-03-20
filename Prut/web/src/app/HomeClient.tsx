@@ -499,6 +499,7 @@ function PageContent({ user }: { user: User | null }) {
 
     const ctx = ps.generationContext;
 
+    const contextPayloadRefine = context.getContextPayload();
     await startStream(getApiPath("/api/enhance"), {
       prompt: ps.input,
       tone: ctx?.tone || ps.selectedTone,
@@ -509,6 +510,7 @@ function PageContent({ user }: { user: User | null }) {
       refinementInstruction: combinedInstruction,
       answers: filteredAnswers,
       iteration: ps.iterationCount + 1,
+      ...(contextPayloadRefine.length > 0 && { context: contextPayloadRefine }),
     });
 
     const refineResult = processStreamResult("Refine");
