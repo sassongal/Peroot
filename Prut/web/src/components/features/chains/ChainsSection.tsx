@@ -84,7 +84,7 @@ export function ChainsSection({
           <li>גררו שלבים כדי לשנות את הסדר</li>
           <li>לחצו <strong className="text-amber-400">הפעל</strong> כדי להריץ את השרשרת שלב אחרי שלב</li>
         </ul>
-        <p className="text-xs text-slate-500 pt-1">
+        <p className="text-xs text-[var(--text-muted)] pt-1">
           <strong>דוגמה:</strong> צרו שרשרת &quot;מחקר → סיכום → פוסט לינקדאין&quot; כדי להפוך מחקר לתוכן מוכן לפרסום.
         </p>
       </div>

@@ -83,11 +83,11 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <div className="flex items-center justify-center py-12 text-slate-500">
+            <div className="flex items-center justify-center py-12 text-[var(--text-muted)]">
               <div className="animate-pulse">טוען גרסאות...</div>
             </div>
           ) : versions.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-[var(--text-muted)]">
               <p>אין גרסאות קודמות עדיין</p>
               <p className="text-xs mt-1">גרסאות נשמרות אוטומטית בכל עריכה</p>
             </div>
@@ -113,7 +113,7 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
                           <span className="text-sm text-[var(--text-secondary)] truncate max-w-[200px]">{version.title}</span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[10px] text-[var(--text-muted)]">
                         {new Date(version.created_at).toLocaleString("he-IL", {
                           day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
                         })}
