@@ -8,6 +8,7 @@ import { PersonalPrompt } from "@/lib/types";
 import { ChainBuilder } from "./ChainBuilder";
 import { ChainRunner } from "./ChainRunner";
 import { toast } from "sonner";
+import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 
 interface ChainsSectionProps {
   chains: PromptChain[];
@@ -53,6 +54,7 @@ export function ChainsSection({
       await onUpdateChain(editingChain.id, { title, description, steps });
     } else {
       await onAddChain({ title, description, steps, is_pinned: false });
+      markFeatureUsed("peroot_used_chains");
     }
     setShowBuilder(false);
     setEditingChain(null);

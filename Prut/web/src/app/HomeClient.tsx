@@ -46,6 +46,11 @@ const OnboardingOverlay = dynamic(
   { ssr: false }
 );
 import { useLibraryContext } from "@/context/LibraryContext";
+import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
+const FeatureDiscoveryTooltip = dynamic(
+  () => import("@/components/ui/FeatureDiscoveryTooltip").then(mod => mod.FeatureDiscoveryTooltip),
+  { ssr: false }
+);
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 const LibraryView = dynamic(
   () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
@@ -114,6 +119,7 @@ function PageContent({ user }: { user: User | null }) {
   const { state: ps, dispatch } = usePromptWorkflow();
   const { isPro } = useSubscription();
   const { canUsePrompt, requiredAction, incrementUsage } = usePromptLimits();
+  const discovery = useFeatureDiscovery();
 
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
   const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
@@ -308,6 +314,7 @@ function PageContent({ user }: { user: User | null }) {
 
   const applyVariablesToPrompt = () => {
     if (inputVariables.length === 0) return;
+    markFeatureUsed("peroot_used_variables");
     let next = ps.input;
     inputVariables.forEach((variable) => {
       const value = ps.variableValues[variable]?.trim();
@@ -432,6 +439,8 @@ function PageContent({ user }: { user: User | null }) {
     if (result.text) {
       trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
       recordUsageSignal("enhance", result.text);
+      if (ps.selectedCapability === CapabilityMode.DEEP_RESEARCH) markFeatureUsed("peroot_used_research");
+      if (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION) markFeatureUsed("peroot_used_image");
       dispatch({ type: 'SET_DETECTED_CATEGORY', payload: ps.selectedCategory });
 
       addToHistory({
@@ -450,9 +459,10 @@ function PageContent({ user }: { user: User | null }) {
       }
 
       toast.success(t.prompt_generator.success_toast);
+      discovery.onEnhanceComplete();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, addToHistory, incrementUsage, t]);
+  }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, addToHistory, incrementUsage, t, discovery.onEnhanceComplete]);
 
   const handleRefine = useCallback(async (instruction: string) => {
     if (ps.isLoading) return;
@@ -582,6 +592,7 @@ function PageContent({ user }: { user: User | null }) {
       const { id } = await res.json();
       const shareUrl = `${window.location.origin}/p/${id}`;
       await navigator.clipboard.writeText(shareUrl);
+      markFeatureUsed("peroot_used_share");
       toast.success("קישור שיתוף נוצר");
     } catch (error) {
       logger.error("[share] Error:", error);
@@ -594,6 +605,7 @@ function PageContent({ user }: { user: User | null }) {
 
   const handleUsePrompt = useCallback((prompt: LibraryPrompt | PersonalPrompt) => {
     setPreviousView(viewMode);
+    markFeatureUsed("peroot_used_public_library");
     dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
     dispatch({ type: 'SET_COMPLETION', payload: '' });
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
@@ -653,6 +665,7 @@ function PageContent({ user }: { user: User | null }) {
       source: "manual"
     });
     recordUsageSignal("save", ps.completion);
+    markFeatureUsed("peroot_used_personal_library");
     toast.success("נשמר לספריה האישית!");
   }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
 
@@ -777,6 +790,24 @@ function PageContent({ user }: { user: User | null }) {
           <FAQBubble />
         </ErrorBoundary>
       </div>
+
+      {/* Feature Discovery Tooltips */}
+      <FeatureDiscoveryTooltip
+        visible={discovery.visible}
+        tip={discovery.currentTip}
+        currentIndex={discovery.currentIndex}
+        totalTips={discovery.totalTips}
+        onNext={discovery.nextTip}
+        onDismiss={discovery.dismiss}
+        onCtaClick={(action) => {
+          if (action === "library") saveCompletionToPersonal();
+          else if (action === "share") handleShare();
+          else if (action === "research") dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.DEEP_RESEARCH });
+          else if (action === "image") dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.IMAGE_GENERATION });
+          else if (action === "chains") setViewMode("personal");
+          else if (action === "public-library") handleNavLibrary();
+        }}
+      />
 
       {/* Mobile Bottom Tab Bar */}
       <MobileTabBar
