@@ -47,6 +47,7 @@ const OnboardingOverlay = dynamic(
 );
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
+import { useContextAttachments } from "@/hooks/useContextAttachments";
 const FeatureDiscoveryTooltip = dynamic(
   () => import("@/components/ui/FeatureDiscoveryTooltip").then(mod => mod.FeatureDiscoveryTooltip),
   { ssr: false }
@@ -124,6 +125,7 @@ function PageContent({ user }: { user: User | null }) {
   const { isPro } = useSubscription();
   const { canUsePrompt, requiredAction, incrementUsage } = usePromptLimits();
   const discovery = useFeatureDiscovery();
+  const context = useContextAttachments();
 
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
   const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
@@ -431,12 +433,14 @@ function PageContent({ user }: { user: User | null }) {
     const enhanceStart = Date.now();
     trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
 
+    const contextPayload = context.getContextPayload();
     await startStream(getApiPath("/api/enhance"), {
       prompt: ps.input,
       tone: ps.selectedTone,
       category: ps.selectedCategory,
       capability_mode: ps.selectedCapability,
       ...(currentModeParams && { mode_params: currentModeParams }),
+      ...(contextPayload.length > 0 && { context: contextPayload }),
     });
 
     const result = processStreamResult("Enhance");
@@ -919,6 +923,13 @@ function PageContent({ user }: { user: User | null }) {
                onSurpriseMe={handleSurpriseMe}
                onNavLibrary={handleNavLibrary}
                dispatch={dispatch}
+               contextAttachments={context.attachments}
+               onAddFile={context.addFile}
+               onAddUrl={context.addUrl}
+               onAddImage={context.addImage}
+               onRemoveAttachment={context.removeAttachment}
+               contextTotalTokens={context.totalTokens}
+               contextIsOverLimit={context.isOverLimit}
                isNewUser={isNewUser}
                user={user}
                previousView={previousView}

@@ -30,6 +30,17 @@ const RequestSchema = z.object({
   refinementInstruction: z.string().optional(),
   answers: z.record(z.string(), z.string()).optional(),
   iteration: z.number().int().min(0).optional(),
+  context: z.array(z.object({
+    type: z.enum(['file', 'url', 'image']),
+    name: z.string(),
+    content: z.string(),
+    tokenCount: z.number().optional(),
+    format: z.string().optional(),
+    filename: z.string().optional(),
+    url: z.string().optional(),
+    description: z.string().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })).optional(),
 });
 
 /**
@@ -54,7 +65,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers, iteration } = RequestSchema.parse(json);
+    const { prompt, tone, category, capability_mode, mode_params, previousResult, refinementInstruction, answers, iteration, context: contextAttachments } = RequestSchema.parse(json);
 
     // Determine if this is a refinement request
     const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
@@ -191,6 +202,7 @@ export async function POST(req: Request) {
         userHistory,
         userPersonality,
         iteration,
+        context: contextAttachments,
     };
 
     const engineOutput = isRefinement

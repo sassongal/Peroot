@@ -5,6 +5,9 @@ import { Clock, BookOpen, Shuffle, Lightbulb, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
+import { ContextBar } from "@/components/features/context/ContextBar";
+import { ContextChips } from "@/components/features/context/ContextChips";
+import type { ContextAttachment } from "@/lib/context/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
@@ -66,7 +69,16 @@ interface InputSectionProps {
   onNavLibrary: () => void;
   dispatch: (action: PromptAction) => void;
 
-  // Context
+  // Context attachments
+  contextAttachments: ContextAttachment[];
+  onAddFile: (file: File) => void;
+  onAddUrl: (url: string) => void;
+  onAddImage: (file: File) => void;
+  onRemoveAttachment: (id: string) => void;
+  contextTotalTokens: number;
+  contextIsOverLimit: boolean;
+
+  // User context
   isNewUser: boolean;
   user: unknown;
   previousView: string | null;
@@ -109,6 +121,13 @@ export const InputSection = memo<InputSectionProps>(({
   onSurpriseMe,
   onNavLibrary,
   dispatch,
+  contextAttachments,
+  onAddFile,
+  onAddUrl,
+  onAddImage,
+  onRemoveAttachment,
+  contextTotalTokens,
+  contextIsOverLimit,
   isNewUser,
   user,
   previousView,
@@ -170,6 +189,19 @@ export const InputSection = memo<InputSectionProps>(({
         setVideoPlatform={setVideoPlatform}
         videoAspectRatio={videoAspectRatio}
         setVideoAspectRatio={setVideoAspectRatio}
+      />
+
+      {/* Context attachments — file, URL, image */}
+      <ContextBar
+        onAddFile={onAddFile}
+        onAddUrl={onAddUrl}
+        onAddImage={onAddImage}
+        attachments={contextAttachments}
+        disabled={isLoading}
+      />
+      <ContextChips
+        attachments={contextAttachments}
+        onRemove={onRemoveAttachment}
       />
 
       {/* Recently Used Prompts Strip */}
