@@ -436,20 +436,74 @@ Analyze their tone, phrasing, and structure to ensure the result feels natural t
      }
 
      if (input.context && input.context.length > 0) {
-         contextInjected += `\n\n[ATTACHED_CONTEXT]\nהמשתמש צירף קבצים, קישורים או תמונות כ-context לפרומפט. עליך:\n1. לקרוא את ה-context בעיון ולהפנים את התוכן\n2. לשלב את ה-context בפרומפט המשודרג — להתייחס ספציפית לתוכן, מספרים, נושאים, סעיפים\n3. אם ה-context מכיל מידע שמשלים או סותר את הפרומפט — לציין ולשלב\n4. אם סוג הקובץ מרמז על context (PDF = מסמך רשמי, תמונה = visual reference) — להתאים\n5. לעולם לא להציג את טקסט הקובץ כפי שהוא — רק לשלב אותו בפרומפט המשודרג\n\n`;
+         // Build a rich summary of what was attached
+         const fileCount = input.context.filter(a => a.type === 'file').length;
+         const urlCount = input.context.filter(a => a.type === 'url').length;
+         const imageCount = input.context.filter(a => a.type === 'image').length;
+         const attachmentSummary = [
+             fileCount > 0 ? `${fileCount} קבצים` : '',
+             urlCount > 0 ? `${urlCount} קישורים` : '',
+             imageCount > 0 ? `${imageCount} תמונות` : '',
+         ].filter(Boolean).join(', ');
+
+         contextInjected += `\n\n[ATTACHED_CONTEXT — ${attachmentSummary}]
+זהו הפיצ'ר החזק ביותר של פירוט. המשתמש צירף חומר מקור אמיתי. הפרומפט שתייצר חייב להיות חזק פי 10 מפרומפט ללא context — כי עכשיו יש לך מידע אמיתי לעבוד איתו.
+
+## הוראות הזרקת Context — רמת מומחה:
+
+### שלב 1: ניתוח עומק של ה-Context
+- קרא את כל החומר המצורף בעיון מלא
+- זהה: מהי המטרה של המשתמש? מה הוא רוצה לעשות עם החומר הזה?
+- מפה את המבנה: כותרות, פרקים, נושאי משנה, נתונים מספריים, מושגי מפתח
+- זהה את הטון, רמת הפורמליות, והקהל של המסמך המקורי
+
+### שלב 2: שילוב אינטליגנטי בפרומפט
+- אל תגיד "על סמך הקובץ המצורף" — שלב את התוכן ישירות
+- השתמש בנתונים ספציפיים מהקובץ: מספרים, שמות, תאריכים, ציטוטים, מושגים
+- אם הקובץ מכיל מבנה (פרקים, סעיפים, טבלאות) — שלב את המבנה בפרומפט
+- אם זה מסמך חוזי/רשמי — התאם את הטון לפורמלי
+- אם זה חומר לימודי — הפנה לנושאים, מושגים ועמודים ספציפיים
+- אם זו תמונה — התייחס לפרטים ויזואליים ספציפיים (צבעים, אובייקטים, טקסט בתמונה)
+- אם זה URL — השתמש בתוכן העמוד כ-context אך ציין את המקור
+
+### שלב 3: העשרה מבוססת סוג קובץ
+- **PDF/DOCX (מסמך):** חלץ מושגי מפתח, צור הנחיות שמתייחסות לסעיפים ספציפיים, הוסף "בהתבסס על [מושג X] מהמסמך"
+- **CSV/XLSX (נתונים):** זהה עמודות, טרנדים, טווחי ערכים. שלב הנחיות כמו "נתח את העמודה [X] ומצא דפוסים"
+- **URL (דף אינטרנט):** השתמש בתוכן כמקור סמכותי, ציין כותרת ונושא
+- **תמונה:** התייחס לאלמנטים ויזואליים ספציפיים, סגנון, צבעים, טקסט
+
+### שלב 4: מה לא לעשות
+- ❌ לא להעתיק את הטקסט כמות שהוא לפרומפט
+- ❌ לא לכתוב "ראה קובץ מצורף" — ה-LLM לא יראה אותו
+- ❌ לא להתעלם מה-context ולייצר פרומפט גנרי
+- ❌ לא לסכם את הקובץ — להשתמש בו כ-context לבניית פרומפט חזק
+
+### שלב 5: מבנה הפרומפט המשודרג
+הפרומפט המשודרג חייב לכלול:
+1. **תפקיד מומחה** שרלוונטי לתוכן הקובץ
+2. **משימה ספציפית** שמתייחסת לתוכן (לא גנרית)
+3. **הקשר מהקובץ** — מושגים, נתונים, מבנה שנשאבו מה-context
+4. **פורמט פלט** מותאם לסוג המשימה
+5. **בדיקות איכות** שמוודאות שהתוצאה נאמנה ל-context
+
+=== תוכן הקבצים המצורפים ===
+
+`;
          for (const attachment of input.context) {
              if (attachment.type === 'image') {
-                 contextInjected += `--- תמונה: ${attachment.name} ---\nתיאור: ${attachment.description || attachment.content}\n\n`;
+                 contextInjected += `━━━ 🖼️ תמונה: "${attachment.name}" ━━━\nתיאור ויזואלי:\n${attachment.description || attachment.content}\n\n`;
              } else if (attachment.type === 'url') {
-                 contextInjected += `--- URL: ${attachment.url || attachment.name} ---\n${attachment.content}\n\n`;
+                 contextInjected += `━━━ 🌐 URL: ${attachment.url || attachment.name} ━━━\nתוכן הדף:\n${attachment.content}\n\n`;
              } else {
-                 contextInjected += `--- קובץ: ${attachment.name} (${attachment.format || 'text'}) ---\n${attachment.content}\n\n`;
+                 contextInjected += `━━━ 📄 קובץ: "${attachment.name}" (${attachment.format || 'text'}) ━━━\nתוכן:\n${attachment.content}\n\n`;
              }
          }
+         contextInjected += `=== סוף תוכן מצורף ===\n\nזכור: הפרומפט שתייצר חייב להתייחס ספציפית לתוכן שלמעלה. פרומפט שמתעלם מה-context = כישלון.\n`;
      }
 
      return {
-         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by contextual clarifying questions in JSON array format.\n\nIMPORTANT — CONTEXTUAL QUESTION GENERATION RULES:\n1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?\n2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.\n3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.\n4. Each question must be actionable — answering it should DIRECTLY change the output.\n5. Include 2-3 concrete example answers per question that are domain-relevant.\n6. Questions in Hebrew. Order by impact — most important first.\n\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
+         systemPrompt: `${contextInjected}\n\n${this.getSystemIdentity()}\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt specify Role, Task, Context, Format, and Constraints? Fill ANY missing sections.\n2. SPECIFICITY: Replace every vague instruction with a concrete, measurable one. "כתוב טוב" → "כתוב בטון מקצועי-ידידותי, 300-500 מילים, עם 3 נקודות מפתח"\n3. STRUCTURE: Ensure clean markdown with headers, bullets, delimiters. The prompt must be scannable.\n4. ACTIONABILITY: Would an LLM produce excellent output on the FIRST try? If not, add more guidance.\n5. ANTI-PATTERNS: Remove generic filler ("be creative", "write well"). Every word must earn its place.\n6. EDGE CASES: Add handling for ambiguous inputs - what should the LLM do if info is missing?\n7. ANTI-HALLUCINATION: For factual tasks, add grounding: "בסס על עובדות. אם אינך בטוח - ציין זאת."\n8. PERSONA DEPTH: Expert persona must include methodology name, years of experience, and signature approach.\n9. OUTPUT GATE: Add self-verification: "לפני שליחה - בדוק שכל דרישה מתקיימת"
+10. CONTEXT INTEGRATION: If [ATTACHED_CONTEXT] exists — the prompt MUST reference specific data, terms, or structure from the attachments. A prompt that ignores uploaded context is a FAILURE. Extract key entities, numbers, and themes and weave them into the instructions.\n\nFill ALL gaps by inferring from the user's intent, category, and tone. The output must be dramatically better than what the user could write on their own - that's the entire value of Peroot.\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title for this prompt using this exact format:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by contextual clarifying questions in JSON array format.\n\nIMPORTANT — CONTEXTUAL QUESTION GENERATION RULES:\n1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?\n2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.\n3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.\n4. Each question must be actionable — answering it should DIRECTLY change the output.\n5. Include 2-3 concrete example answers per question that are domain-relevant.\n6. Questions in Hebrew. Order by impact — most important first.\n\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf the prompt is already comprehensive, return [GENIUS_QUESTIONS][]`,
          userPrompt: this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
