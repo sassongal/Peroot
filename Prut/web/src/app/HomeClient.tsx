@@ -69,6 +69,10 @@ const StreamingProgress = dynamic(
   { ssr: false }
 );
 import { Clock } from "lucide-react";
+const DidYouKnowBanner = dynamic(
+  () => import("@/components/ui/DidYouKnowBanner").then(mod => mod.DidYouKnowBanner),
+  { ssr: false }
+);
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 const UpgradeNudge = dynamic(
@@ -870,6 +874,9 @@ function PageContent({ user }: { user: User | null }) {
            >
              מה עושים פה?
            </button>
+
+           {/* Did You Know banner — shows one rotating fact per session */}
+           {!ps.completion && !ps.isLoading && <DidYouKnowBanner />}
 
            <LoadingOverlay isVisible={ps.isLoading} />
            <StreamingProgress phase={ps.streamPhase} />
