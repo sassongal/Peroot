@@ -67,6 +67,9 @@ export function Footer() {
           <Link href="/extension" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "תוסף Chrome" : "Chrome Extension"}
           </Link>
+          <Link href="/teachers" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "למורים" : "For Teachers"}
+          </Link>
           <Link href="/blog" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "בלוג" : "Blog"}
           </Link>

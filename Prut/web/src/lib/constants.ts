@@ -29,6 +29,7 @@ export const CATEGORY_OPTIONS = [
   { id: "PersonalDev", label: "פיתוח אישי" },
   { id: "Greetings", label: "ברכות ואיחולים" },
   { id: "Music", label: "מוזיקה" },
+  { id: "Teachers", label: "מורים" },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -63,6 +64,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   PersonalDev: "פיתוח אישי",
   Greetings: "ברכות ואיחולים",
   Music: "מוזיקה",
+  Teachers: "מורים",
 };
 
 /** Case-insensitive category label lookup */
@@ -71,7 +73,7 @@ export const getCategoryLabel = (key: string): string => {
 };
 
 export const PERSONAL_DEFAULT_CATEGORY = "כללי";
-export const PROMPT_LIBRARY_COUNT = "480+";
+export const PROMPT_LIBRARY_COUNT = "540+";
 
 export const QUICK_ACTIONS = [
   { label: "קצר יותר", instruction: "קצר יותר. שמור על המבנה והדגשים המרכזיים." },

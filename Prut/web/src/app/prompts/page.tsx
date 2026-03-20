@@ -5,6 +5,7 @@ import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib
 import { breadcrumbSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
+import { PromptSearch } from "@/components/features/library/PromptSearch";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -159,6 +160,9 @@ export default function PromptsIndexPage() {
               <span className="text-muted-foreground">{PROMPT_LIBRARY_COUNT} פרומפטים</span>
             </div>
           </header>
+
+          {/* Search */}
+          <PromptSearch />
 
           {/* Category groups */}
           <div className="space-y-12 md:space-y-16">

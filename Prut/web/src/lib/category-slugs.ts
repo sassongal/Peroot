@@ -30,6 +30,7 @@ export const CATEGORY_SLUG_MAP: Record<string, { id: string; labelHe: string; de
   "personal-dev":   { id: "PersonalDev",    labelHe: "פרומפטים לפיתוח אישי",         descriptionHe: "פרומפטים למוטיבציה, פרודוקטיביות וצמיחה אישית",               emoji: "🌱" },
   "greetings":      { id: "Greetings",      labelHe: "פרומפטים לברכות ואיחולים",     descriptionHe: "פרומפטים לברכות חג, יום הולדת, חתונה ואירועים",               emoji: "🎉" },
   "music":          { id: "Music",          labelHe: "פרומפטים למוזיקה",             descriptionHe: "פרומפטים ליצירת שירים, מילים ולחנים",                         emoji: "🎵" },
+  "teachers":       { id: "Teachers",      labelHe: "פרומפטים למורים",             descriptionHe: "פרומפטים למורים — מבחנים, שיעורים, דפי עבודה, משוב והערכה",  emoji: "🎓" },
 };
 
 // Reverse lookup: category ID -> English slug
@@ -69,4 +70,5 @@ export const HEBREW_SLUG_TO_ENGLISH: Record<string, string> = {
   "פיתוח-אישי":     "personal-dev",
   "ברכות":          "greetings",
   "מוזיקה":         "music",
+  "מורים":           "teachers",
 };
