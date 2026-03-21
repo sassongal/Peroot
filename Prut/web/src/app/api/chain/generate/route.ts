@@ -108,7 +108,9 @@ export async function POST(req: Request) {
       tier = (profile?.plan_tier as "free" | "pro") || "free";
     }
 
-    const rateLimitTier = isGuest ? "guest" : tier;
+    // Use separate chain rate limit buckets (don't compete with enhance)
+    const chainTierMap = { guest: "chainGuest", free: "chainFree", pro: "chainPro" } as const;
+    const rateLimitTier = chainTierMap[isGuest ? "guest" : tier];
     const limitResult = await checkRateLimit(identifier, rateLimitTier);
     if (!limitResult.success) {
       return NextResponse.json(

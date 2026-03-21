@@ -73,9 +73,25 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(60, '1 m'),
     prefix: '@peroot/ratelimit:me',
   }),
+  // Chain generation — separate bucket from enhance
+  chainGuest: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, '1 h'),
+    prefix: '@peroot/ratelimit:chain-guest',
+  }),
+  chainFree: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '24 h'),
+    prefix: '@peroot/ratelimit:chain-free',
+  }),
+  chainPro: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(50, '1 h'),
+    prefix: '@peroot/ratelimit:chain-pro',
+  }),
 };
 
-export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me';
+export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro';
 
 export interface RateLimitResult {
   success: boolean;
