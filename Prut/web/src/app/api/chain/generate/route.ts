@@ -4,8 +4,11 @@ import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
+import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 import { logger } from "@/lib/logger";
 import type { GeneratedChain, GeneratedChainStep } from "@/lib/chain-types";
+
+const CHAIN_CREDIT_COST = 2;
 
 export const maxDuration = 30;
 
@@ -86,37 +89,44 @@ function normalizeSteps(rawSteps: unknown[]): GeneratedChainStep[] {
 }
 
 export async function POST(req: Request) {
+  let userId: string | undefined;
+
   try {
     const json = await req.json();
     const { goal, max_steps, user_context } = RequestSchema.parse(json);
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
+    userId = user?.id;
     const isGuest = !userId;
 
-    // Rate limiting
-    const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-    const identifier = userId || clientIp;
-    if (!identifier) {
-      return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
-    }
-
     let tier: "free" | "pro" | "guest" = "guest";
-    if (userId) {
+
+    if (isGuest) {
+      // Guests: rate limit only (no credits system)
+      const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+      if (!clientIp) {
+        return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
+      }
+      const limitResult = await checkRateLimit(clientIp, "chainGuest");
+      if (!limitResult.success) {
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later.", reset_at: limitResult.reset },
+          { status: 429, headers: { "Retry-After": limitResult.reset.toString() } }
+        );
+      }
+    } else {
+      // Authenticated users: deduct 2 credits
       const { data: profile } = await supabase.from("profiles").select("plan_tier").eq("id", userId).maybeSingle();
       tier = (profile?.plan_tier as "free" | "pro") || "free";
-    }
 
-    // Use separate chain rate limit buckets (don't compete with enhance)
-    const chainTierMap = { guest: "chainGuest", free: "chainFree", pro: "chainPro" } as const;
-    const rateLimitTier = chainTierMap[isGuest ? "guest" : tier];
-    const limitResult = await checkRateLimit(identifier, rateLimitTier);
-    if (!limitResult.success) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later.", reset_at: limitResult.reset },
-        { status: 429, headers: { "Retry-After": limitResult.reset.toString() } }
-      );
+      const creditResult = await checkAndDecrementCredits(userId!, tier, supabase, CHAIN_CREDIT_COST);
+      if (!creditResult.allowed) {
+        return NextResponse.json(
+          { error: `אין מספיק קרדיטים. בניית שרשרת עולה ${CHAIN_CREDIT_COST} קרדיטים.`, remaining: creditResult.remaining },
+          { status: 403 }
+        );
+      }
     }
 
     // Build concise user prompt (minimize tokens)
@@ -137,24 +147,27 @@ export async function POST(req: Request) {
 
     logger.info(`[chain/generate] Model: ${modelId}, response length: ${fullText.length}`);
 
-    // Parse JSON
+    // Parse JSON — refund credits on failure
     const cleaned = extractJSON(fullText);
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(cleaned);
     } catch {
       logger.error("[chain/generate] JSON parse failed:", cleaned.slice(0, 300));
+      if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
       return NextResponse.json({ error: "AI returned invalid format. Please try again." }, { status: 500 });
     }
 
-    // Validate structure
+    // Validate structure — refund on incomplete
     if (typeof parsed.title !== "string" || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
       logger.error("[chain/generate] Incomplete chain:", JSON.stringify(parsed).slice(0, 300));
+      if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
       return NextResponse.json({ error: "Generated chain is incomplete. Please try again." }, { status: 500 });
     }
 
     const steps = normalizeSteps(parsed.steps);
     if (steps.length < 2) {
+      if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
       return NextResponse.json({ error: "Chain must have at least 2 valid steps." }, { status: 500 });
     }
 
@@ -169,8 +182,11 @@ export async function POST(req: Request) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Validation error — no credits were charged yet
       return NextResponse.json({ error: "Invalid request", details: error.issues }, { status: 400 });
     }
+    // AI or concurrency error after credits were charged — refund
+    if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
     if (error instanceof ConcurrencyError) {
       return NextResponse.json({ error: "Server is busy. Please try again in a moment." }, { status: 503 });
     }
