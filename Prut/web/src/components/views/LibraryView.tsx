@@ -13,6 +13,9 @@ import { exportPromptAsImage } from "@/lib/export-prompt-image";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useHistory } from "@/hooks/useHistory";
 import { logger } from "@/lib/logger";
+import { PromptCard } from "@/components/features/library/PromptCard";
+import { SearchAutosuggest } from "@/components/features/library/SearchAutosuggest";
+import { ActiveFilterChips } from "@/components/features/library/ActiveFilterChips";
 
 const COLLECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   TrendingUp,
@@ -344,16 +347,13 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
 
           {/* Search + Sort */}
           <div className="flex gap-2 mt-3">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-              <input
-                dir="rtl"
-                value={libraryQuery}
-                onChange={(e) => setLibraryQuery(e.target.value)}
-                placeholder="חיפוש פרומפטים..."
-                className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2.5 pe-10 ps-3 text-base md:text-sm text-[var(--text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-[var(--glass-border)]"
-              />
-            </div>
+            <SearchAutosuggest
+              value={libraryQuery}
+              onChange={setLibraryQuery}
+              prompts={filteredLibrary}
+              placeholder="חיפוש פרומפטים..."
+              className="flex-1 min-w-0"
+            />
             <select
               value={librarySort}
               onChange={(e) => setLibrarySort(e.target.value as "popularity" | "title" | "newest" | "rating")}
@@ -366,6 +366,20 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               <option value="rating">דירוג</option>
             </select>
           </div>
+
+          {/* Active filter chips */}
+          <ActiveFilterChips
+            searchQuery={libraryQuery}
+            onClearSearch={() => setLibraryQuery("")}
+            capabilityFilter={selectedCapabilityFilter}
+            onClearCapability={() => setSelectedCapabilityFilter(null)}
+            favoritesMode={libraryView === "favorites"}
+            onClearFavorites={() => setLibraryView("all")}
+            activeCollection={activeCollection}
+            activeCollectionLabel={PROMPT_COLLECTIONS.find(c => c.id === activeCollection)?.title}
+            onClearCollection={() => setActiveCollection(null)}
+            className="mt-2"
+          />
 
           {/* Category quick-jump chips */}
           {uniqueCategories.length > 0 && (
@@ -426,192 +440,35 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           {pagePrompts.map((prompt, localIdx) => {
             const absoluteIdx = globalStart + localIdx;
             const isBlurred = isGuest && absoluteIdx >= GUEST_FREE_LIMIT;
-            const isExpanded = expandedIds.has(prompt.id);
-            const isFavorite = favoriteLibraryIds.has(prompt.id);
-            const popularityCount = popularityMap[prompt.id] ?? 0;
             const categoryLabel = CATEGORY_LABELS[prompt.category] ?? CATEGORY_LABELS[prompt.category?.charAt(0).toUpperCase() + prompt.category?.slice(1)] ?? prompt.category;
 
             return (
-              <div
+              <PromptCard
                 key={prompt.id}
-                className={cn(
-                  "rounded-xl md:rounded-2xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 transition-colors relative group",
-                  !isBlurred && "hover:bg-white/[0.04]",
-                  !isBlurred && (selectedIds.has(prompt.id) || selectionMode) && "ring-2 ring-amber-500/50 bg-amber-500/5",
-                  isBlurred && "blur-sm pointer-events-none select-none"
-                )}
-                aria-hidden={isBlurred ? "true" : undefined}
-              >
-                {/* Selection Checkbox */}
-                {!isBlurred && (
-                  <div className={cn(
-                    "absolute top-3 left-3 z-10 transition-opacity duration-200",
-                    (selectedIds.has(prompt.id) || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  )}>
-                    <button onClick={(e) => { e.stopPropagation(); toggleSelection(prompt.id); }} aria-label={selectedIds.has(prompt.id) ? "בטל בחירה" : "בחר פריט"}>
-                      {selectedIds.has(prompt.id)
-                        ? <CheckSquare className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-500/20" />
-                        : <Square className="w-5 h-5 text-[var(--text-muted)] hover:text-[var(--text-secondary)]" />}
-                    </button>
-                  </div>
-                )}
-
-                {/* Compact Header - always visible */}
-                <button
-                  type="button"
-                  onClick={() => !isBlurred && toggleExpanded(prompt.id)}
-                  className="w-full text-right p-3 md:p-4 flex items-center gap-3 cursor-pointer"
-                  dir="rtl"
-                >
-                  {/* Favorite star */}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleToggleFavorite("library", prompt.id); }}
-                    className={cn(
-                      "shrink-0 p-1.5 rounded-full transition-colors",
-                      isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-[var(--text-muted)]"
-                    )}
-                    aria-pressed={isFavorite}
-                    aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
-                  >
-                    <Star className={cn("w-4 h-4", isFavorite && "fill-yellow-400")} />
-                  </button>
-
-                  {/* Title + meta */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm md:text-base text-slate-800 dark:text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
-                      <CapabilityBadge mode={prompt.capability_mode} />
-                    </div>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{prompt.use_case}</p>
-                  </div>
-
-                  {/* Right side: category + popularity + expand icon */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="hidden md:inline text-[10px] px-2 py-0.5 rounded-full border border-[var(--glass-border)] text-[var(--text-muted)]">
-                      {categoryLabel}
-                    </span>
-                    {popularityCount > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
-                        {popularityCount > 99 ? '99+' : popularityCount}
-                      </span>
-                    )}
-                    {isExpanded
-                      ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
-                      : <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
-                    }
-                  </div>
-                </button>
-
-                {/* Expanded Content */}
-                {isExpanded && !isBlurred && (
-                  <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 border-t border-[var(--glass-border)]">
-                    {/* Prompt text */}
-                    <div className="text-xs md:text-sm text-[var(--text-secondary)] leading-relaxed mt-3 whitespace-pre-wrap max-h-48 overflow-y-auto" dir="rtl">
-                      {prompt.prompt}
-                    </div>
-
-                    {/* Preview image */}
-                    {prompt.preview_image_url && (
-                      <button
-                        type="button"
-                        onClick={() => setLightboxImage({ url: prompt.preview_image_url!, title: prompt.title })}
-                        className="relative w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden border border-[var(--glass-border)] group/img cursor-zoom-in"
-                      >
-                        <img
-                          src={prompt.preview_image_url}
-                          alt={`דוגמה: ${prompt.title}`}
-                          loading="lazy"
-                          decoding="async"
-                          width={400}
-                          height={300}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
-                        />
-                      </button>
-                    )}
-
-                    {/* Variables */}
-                    {prompt.variables.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5" dir="rtl">
-                        {prompt.variables.map((variable) => (
-                          <span
-                            key={variable}
-                            className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)]"
-                          >
-                            {variable}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-1.5 pt-1 flex-wrap" dir="rtl">
-                      <button
-                        onClick={() => onUsePrompt(prompt)}
-                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg bg-white text-black text-xs md:text-sm hover:bg-slate-200 transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        השתמש
-                      </button>
-                      <button
-                        onClick={() => addPersonalPromptFromLibrary(prompt)}
-                        className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
-                        title="שמור לספריה אישית"
-                      >
-                        <BookOpen className="w-4 h-4" />
-                        <span className="hidden md:inline text-sm">שמור</span>
-                      </button>
-                      <button
-                        onClick={async () => { await onCopyText(prompt.prompt); }}
-                        className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
-                        title="העתק"
-                      >
-                        <Copy className="w-4 h-4" />
-                        <span className="hidden md:inline text-sm">העתק</span>
-                      </button>
-                      <button
-                        onClick={() => exportPromptAsImage({
-                          title: prompt.title,
-                          prompt: prompt.prompt,
-                          category: categoryLabel,
-                          useCase: prompt.use_case,
-                        })}
-                        className="shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
-                        title="ייצא כתמונה"
-                      >
-                        <ImageIcon className="w-4 h-4" />
-                      </button>
-
-                      <div className="w-px h-5 bg-black/5 dark:bg-white/10 shrink-0 mx-0.5" />
-
-                      <button
-                        onClick={() => handleRate(prompt.id, 1)}
-                        className={cn(
-                          "shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer",
-                          userRatings[prompt.id] === 1
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "text-[var(--text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10"
-                        )}
-                        title="מועיל"
-                      >
-                        <ThumbsUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleRate(prompt.id, -1)}
-                        className={cn(
-                          "shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer",
-                          userRatings[prompt.id] === -1
-                            ? "bg-red-500/20 text-red-400"
-                            : "text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10"
-                        )}
-                        title="לא מועיל"
-                      >
-                        <ThumbsDown className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                prompt={prompt}
+                isBlurred={isBlurred}
+                isFavorite={favoriteLibraryIds.has(prompt.id)}
+                isExpanded={expandedIds.has(prompt.id)}
+                popularityCount={popularityMap[prompt.id] ?? 0}
+                categoryLabel={categoryLabel}
+                selectionMode={selectionMode}
+                isSelected={selectedIds.has(prompt.id)}
+                userRating={userRatings[prompt.id]}
+                onToggleExpand={() => toggleExpanded(prompt.id)}
+                onToggleFavorite={() => handleToggleFavorite("library", prompt.id)}
+                onToggleSelection={() => toggleSelection(prompt.id)}
+                onUsePrompt={() => onUsePrompt(prompt)}
+                onSaveToPersonal={() => addPersonalPromptFromLibrary(prompt)}
+                onCopy={() => onCopyText(prompt.prompt)}
+                onExportImage={() => exportPromptAsImage({
+                  title: prompt.title,
+                  prompt: prompt.prompt,
+                  category: categoryLabel,
+                  useCase: prompt.use_case,
+                })}
+                onRate={(rating) => handleRate(prompt.id, rating)}
+                onImageClick={(url, title) => setLightboxImage({ url, title })}
+              />
             );
           })}
 

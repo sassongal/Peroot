@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, ChevronDown, Copy, Download, Upload } from "lucide-react";
+import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, ChevronDown, Copy, Download, Upload, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { PersonalPrompt } from "@/lib/types";
 import { ChainBuilder } from "./ChainBuilder";
 import { ChainRunner } from "./ChainRunner";
+import { AutoChainBuilder } from "./AutoChainBuilder";
+import { ChainPresetsGallery } from "./ChainPresetsGallery";
 import { toast } from "sonner";
 import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 
@@ -41,6 +43,7 @@ export function ChainsSection({
   onImportChain,
 }: ChainsSectionProps) {
   const [showBuilder, setShowBuilder] = useState(false);
+  const [showAutoBuilder, setShowAutoBuilder] = useState(false);
   const [editingChain, setEditingChain] = useState<PromptChain | null>(null);
   const [runningChain, setRunningChain] = useState<PromptChain | null>(null);
   const [showHelp, setShowHelp] = useState(false);
@@ -58,6 +61,14 @@ export function ChainsSection({
     }
     setShowBuilder(false);
     setEditingChain(null);
+  };
+
+  const handleAutoSave = async (title: string, description: string, steps: PromptChain["steps"]) => {
+    const id = await onAddChain({ title, description, steps, is_pinned: false });
+    markFeatureUsed("peroot_used_chains");
+    markFeatureUsed("peroot_used_auto_chain");
+    toast.success("שרשרת נשמרה בהצלחה!");
+    return id;
   };
 
   const handleEdit = (chain: PromptChain) => {
@@ -112,13 +123,29 @@ export function ChainsSection({
           בנה תהליכים מרובי שלבים - שלב אחד מוביל לבא
         </p>
         {helpContent}
-        <button
-          onClick={() => setShowBuilder(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-semibold hover:bg-amber-500/30 transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          צור שרשרת ראשונה
-        </button>
+        <div className="flex items-center gap-3 justify-center">
+          <button
+            onClick={() => setShowAutoBuilder(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-black text-sm font-semibold hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+          >
+            <Wand2 className="w-4 h-4" />
+            בנה שרשרת אוטומטית
+          </button>
+          <button
+            onClick={() => setShowBuilder(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-semibold hover:bg-amber-500/30 transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            צור ידנית
+          </button>
+        </div>
+        <ChainPresetsGallery onSaveChain={handleAutoSave} />
+        {showAutoBuilder && (
+          <AutoChainBuilder
+            onSaveChain={handleAutoSave}
+            onClose={() => setShowAutoBuilder(false)}
+          />
+        )}
       </div>
     );
   }
@@ -145,16 +172,25 @@ export function ChainsSection({
             <HelpCircle className="w-3.5 h-3.5" />
           </button>
         </div>
-        <button
-          onClick={() => {
-            setEditingChain(null);
-            setShowBuilder(true);
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs hover:bg-amber-500/20 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          שרשרת חדשה
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAutoBuilder(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-l from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 text-xs hover:from-amber-500/30 hover:to-orange-500/30 transition-all font-semibold"
+          >
+            <Wand2 className="w-3.5 h-3.5" />
+            בנייה אוטומטית
+          </button>
+          <button
+            onClick={() => {
+              setEditingChain(null);
+              setShowBuilder(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs hover:bg-amber-500/20 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            ידנית
+          </button>
+        </div>
       </div>
 
       {helpContent}
@@ -253,6 +289,9 @@ export function ChainsSection({
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-600">
                 {chain.steps.length} שלבים
+                {chain.steps.some(s => s.variables && s.variables.length > 0) &&
+                  ` · ${chain.steps.reduce((sum, s) => sum + (s.variables?.length || 0), 0)} משתנים`
+                }
                 {chain.use_count > 0 ? ` · שומש ${chain.use_count}x` : ""}
               </span>
               <button
@@ -266,6 +305,9 @@ export function ChainsSection({
           </div>
         ))}
       </div>
+
+      {/* Presets Gallery */}
+      <ChainPresetsGallery onSaveChain={handleAutoSave} />
 
       {/* Builder Modal */}
       {showBuilder && (
@@ -288,6 +330,14 @@ export function ChainsSection({
           chain={runningChain}
           onClose={() => setRunningChain(null)}
           onUseStep={onUseStep}
+        />
+      )}
+
+      {/* Auto Chain Builder Modal */}
+      {showAutoBuilder && (
+        <AutoChainBuilder
+          onSaveChain={handleAutoSave}
+          onClose={() => setShowAutoBuilder(false)}
         />
       )}
     </div>

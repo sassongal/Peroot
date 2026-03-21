@@ -77,13 +77,15 @@ export const FALLBACK_ORDER: ModelId[] = [
     'deepseek-chat'
 ];
 
-export type TaskType = 'enhance' | 'research' | 'agent' | 'image';
+export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'chain';
 
 export const TASK_ROUTING: Record<string, ModelId[]> = {
   enhance:  ['gemini-2.5-pro', 'gemini-2.5-flash', 'deepseek-chat', 'llama-3-70b'],
   research: ['gemini-2.5-pro', 'deepseek-chat', 'gemini-2.5-flash'],
   agent:    ['gemini-2.5-pro', 'gemini-2.5-flash', 'llama-3-70b'],
   image:    ['gemini-2.5-flash', 'gemini-2.0-flash-lite'],
+  // Chain generation: flash-first for cost efficiency (structured JSON output, doesn't need pro)
+  chain:    ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'llama-3-70b'],
 };
 
 export function getModelsForTask(task: string, userTier?: 'free' | 'pro' | 'guest'): ModelId[] {

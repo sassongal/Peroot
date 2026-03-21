@@ -27,6 +27,8 @@ import { ChainsSection } from "@/components/features/chains/ChainsSection";
 import { usePresets } from "@/hooks/usePresets";
 import { VariableFiller } from "@/components/features/variables/VariableFiller";
 import { VersionHistoryModal } from "@/components/features/library/VersionHistoryModal";
+import { SearchAutosuggest } from "@/components/features/library/SearchAutosuggest";
+import { ActiveFilterChips } from "@/components/features/library/ActiveFilterChips";
 
 interface PersonalLibraryViewProps {
   onUsePrompt: (prompt: PersonalPrompt | LibraryPrompt) => void;
@@ -1354,16 +1356,13 @@ export function PersonalLibraryView({
         {/* Search + Sort + Actions row */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
-          <div className="relative flex-1 min-w-[180px]">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
-            <input
-              dir="rtl"
-              value={localSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="חיפוש..."
-              className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 pe-9 ps-3 text-sm text-[var(--text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-[var(--glass-border)]"
-            />
-          </div>
+          <SearchAutosuggest
+            value={localSearch}
+            onChange={handleSearchChange}
+            prompts={filteredPersonalLibrary}
+            placeholder="חיפוש..."
+            className="flex-1 min-w-[180px]"
+          />
 
           {/* Sort */}
           <select
@@ -1428,6 +1427,17 @@ export function PersonalLibraryView({
             </button>
           )}
         </div>
+
+        {/* Active filter chips */}
+        <ActiveFilterChips
+          searchQuery={localSearch}
+          onClearSearch={() => handleSearchChange("")}
+          capabilityFilter={selectedCapabilityFilter}
+          onClearCapability={() => setSelectedCapabilityFilter(null)}
+          favoritesMode={effectiveFolder === "favorites"}
+          onClearFavorites={() => setFolder("all")}
+          className="mt-1"
+        />
       </div>
 
       {/* ── Main layout: sidebar + content ── */}

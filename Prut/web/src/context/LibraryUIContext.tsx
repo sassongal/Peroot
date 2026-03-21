@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { logger } from "@/lib/logger";
+import { hebrewFuzzyMatch } from "@/lib/hebrew-search";
 import { useLibraryData } from "./LibraryDataContext";
 import { useFavoritesContext } from "./FavoritesContext";
 
@@ -141,10 +142,10 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     }
     const query = libraryQuery.trim().toLowerCase();
     if (query) {
-      result = result.filter(prompt =>
-        [prompt.title, prompt.use_case, prompt.category, prompt.prompt]
-          .join(" ").toLowerCase().includes(query)
-      );
+      result = result.filter(prompt => {
+        const searchText = [prompt.title, prompt.use_case, prompt.category, prompt.prompt].join(" ");
+        return hebrewFuzzyMatch(searchText, query);
+      });
     }
     return result;
   }, [libraryQuery, selectedCapabilityFilter, data.libraryPrompts, libraryView, favoriteLibraryIds]);
@@ -164,13 +165,8 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     const query = personalQuery.trim().toLowerCase();
     if (query) {
       result = result.filter(p => {
-        return (
-          p.title?.toLowerCase().includes(query) ||
-          p.prompt?.toLowerCase().includes(query) ||
-          p.use_case?.toLowerCase().includes(query) ||
-          p.personal_category?.toLowerCase().includes(query) ||
-          (p.tags || []).some(tag => tag.toLowerCase().includes(query))
-        );
+        const searchText = [p.title, p.prompt, p.use_case, p.personal_category, ...(p.tags || [])].filter(Boolean).join(" ");
+        return hebrewFuzzyMatch(searchText, query);
       });
     }
     return result;

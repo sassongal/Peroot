@@ -4,12 +4,23 @@ import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { logger } from "@/lib/logger";
 
+export interface ChainStepVariable {
+  name: string;
+  label: string;
+  default?: string;
+}
+
 export interface ChainStep {
   id: string;
   prompt_id?: string;  // Reference to personal_library prompt
   prompt_text: string;  // The actual prompt text (can be custom or from library)
   title: string;
   order: number;
+  // Extended fields for auto-generated chains (stored in JSONB, backward-compatible)
+  mode?: "text" | "research" | "image" | "video" | "agent";
+  variables?: ChainStepVariable[];
+  input_from_step?: number | null;
+  output_description?: string;
 }
 
 export interface PromptChain {

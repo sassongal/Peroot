@@ -1,4 +1,4 @@
-import { streamText, StreamTextResult } from "ai";
+import { streamText, generateText, StreamTextResult } from "ai";
 import { AVAILABLE_MODELS, FALLBACK_ORDER, ModelId, getModelsForTask } from "./models";
 import { isProviderAvailable, recordSuccess, recordFailure } from "./circuit-breaker";
 import { acquireSlot, releaseSlot } from "./concurrency";
@@ -83,6 +83,61 @@ export class AIGateway {
             }
 
             // All models failed
+            safeRelease();
+            throw lastError || new Error("All AI models failed to respond.");
+        } catch (err) {
+            safeRelease();
+            throw err;
+        }
+    }
+
+    /**
+     * Non-streaming generation — more efficient for structured JSON output.
+     * No SSE overhead, lower latency for short responses.
+     */
+    static async generateFull(params: GatewayParams & { task?: string; userTier?: 'free' | 'pro' | 'guest' }): Promise<{ text: string; modelId: ModelId; usage?: unknown }> {
+        await acquireSlot();
+
+        let slotReleased = false;
+        const safeRelease = () => {
+            if (!slotReleased) { slotReleased = true; releaseSlot(); }
+        };
+
+        let lastError: unknown;
+        const models = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
+
+        try {
+            for (const modelId of models) {
+                const config = AVAILABLE_MODELS[modelId];
+                if (!isProviderAvailable(config.provider)) {
+                    logger.info(`[AIGateway] Skipping ${config.label} (circuit open)`);
+                    continue;
+                }
+                if (config.provider === 'groq' && !process.env.GROQ_API_KEY) continue;
+                if (config.provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY) continue;
+
+                try {
+                    logger.info(`[AIGateway] generateFull: ${config.label}...`);
+                    const result = await generateText({
+                        model: config.model,
+                        system: params.system,
+                        prompt: params.prompt,
+                        temperature: params.temperature ?? 0.7,
+                    });
+                    recordSuccess(config.provider);
+                    safeRelease();
+                    if (params.onFinish) {
+                        await params.onFinish({ usage: result.usage, text: result.text });
+                    }
+                    return { text: result.text, modelId, usage: result.usage };
+                } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    logger.error(`[AIGateway] generateFull failed with ${modelId}: ${errorMessage}`);
+                    recordFailure(config.provider);
+                    lastError = error;
+                    continue;
+                }
+            }
             safeRelease();
             throw lastError || new Error("All AI models failed to respond.");
         } catch (err) {

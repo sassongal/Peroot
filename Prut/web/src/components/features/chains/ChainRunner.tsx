@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { X, Play, ChevronLeft, Check, Copy, ArrowDown } from "lucide-react";
+import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { toast } from "sonner";
+
+const MODE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  text: FileText,
+  research: Search,
+  image: Image,
+  video: Video,
+  agent: Bot,
+};
 
 interface ChainRunnerProps {
   chain: PromptChain;
@@ -35,6 +43,27 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
       toast.error("שגיאה בהעתקה");
     }
   };
+
+  // Build the prompt with variable substitution and previous output injection
+  const getResolvedPrompt = (stepIndex: number): string => {
+    const s = chain.steps[stepIndex];
+    let prompt = s.prompt_text;
+
+    // Inject previous step output if this step has input_from_step
+    if (s.input_from_step && s.input_from_step > 0) {
+      const sourceIdx = s.input_from_step - 1;
+      const sourceOutput = stepOutputs[sourceIdx];
+      if (sourceOutput) {
+        prompt = `${prompt}\n\n---\nפלט שלב ${s.input_from_step}:\n${sourceOutput}`;
+      }
+    }
+
+    return prompt;
+  };
+
+  const resolvedPrompt = getResolvedPrompt(currentStep);
+  const ModeIcon = step.mode ? MODE_ICONS[step.mode] || FileText : FileText;
+  const allCompleted = completedSteps.size === chain.steps.length;
 
   return (
     <div
@@ -76,6 +105,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                     ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
                     : "bg-[var(--glass-bg)] border-[var(--glass-border)] text-[var(--text-muted)]"
                 )}
+                title={s.title}
               >
                 {completedSteps.has(i) ? <Check className="w-3.5 h-3.5" /> : i + 1}
               </button>
@@ -92,14 +122,34 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
               שלב {currentStep + 1} מתוך {chain.steps.length}
             </span>
+            <ModeIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             <span className="text-sm font-medium text-[var(--text-primary)]">{step.title}</span>
           </div>
+
+          {/* Output description */}
+          {step.output_description && (
+            <p className="text-[11px] text-slate-500 mb-2">
+              פלט צפוי: {step.output_description}
+            </p>
+          )}
+
+          {/* Variables (step 1 typically) */}
+          {step.variables && step.variables.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {step.variables.map((v, vi) => (
+                <span key={vi} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                  {v.label || v.name}{v.default ? `: ${v.default}` : ""}
+                </span>
+              ))}
+            </div>
+          )}
+
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
-            {step.prompt_text}
+            {resolvedPrompt}
           </p>
         </div>
 
-        {/* Step Output */}
+        {/* Step Output from previous */}
         {currentStep > 0 && stepOutputs[currentStep - 1] && (
           <div className="mt-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
             <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">פלט שלב קודם</div>
@@ -109,7 +159,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
 
         {completedSteps.has(currentStep) && (
           <div className="mt-3">
-            <label className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">הדבק את הפלט של שלב זה (אופציונלי):</label>
+            <label className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">הדבק את הפלט של שלב זה (אופציונלי — יוזרק לשלב הבא):</label>
             <textarea
               value={stepOutputs[currentStep] || ""}
               onChange={e => setStepOutputs(prev => ({ ...prev, [currentStep]: e.target.value }))}
@@ -119,11 +169,36 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
           </div>
         )}
 
+        {/* All completed summary */}
+        {allCompleted && (
+          <div className="mt-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-medium text-emerald-400">השרשרת הושלמה!</span>
+            </div>
+            {Object.keys(stepOutputs).length > 0 && (
+              <button
+                onClick={() => {
+                  const allOutputs = chain.steps
+                    .map((s, i) => stepOutputs[i] ? `## ${s.title}\n${stepOutputs[i]}` : null)
+                    .filter(Boolean)
+                    .join("\n\n---\n\n");
+                  handleCopy(allOutputs);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs hover:bg-emerald-500/20 transition-colors mt-2"
+              >
+                <Copy className="w-3 h-3" />
+                העתק את כל הפלטים
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3 mt-5">
           <button
             onClick={() => {
-              onUseStep(step.prompt_text);
+              onUseStep(resolvedPrompt);
               onClose();
             }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black text-sm font-medium hover:bg-slate-200 transition-colors"
@@ -132,28 +207,30 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             השתמש בפרומפט
           </button>
           <button
-            onClick={() => handleCopy(step.prompt_text)}
+            onClick={() => handleCopy(resolvedPrompt)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--glass-border)] text-[var(--text-secondary)] text-sm hover:bg-[var(--glass-bg)] transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             העתק
           </button>
-          <button
-            onClick={markCompleteAndNext}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-500/20 text-emerald-400 text-sm hover:bg-emerald-500/10 transition-colors me-auto"
-          >
-            {currentStep < chain.steps.length - 1 ? (
-              <>
-                <ChevronLeft className="w-3.5 h-3.5" />
-                סיים ועבור לשלב הבא
-              </>
-            ) : (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                סיים שרשרת
-              </>
-            )}
-          </button>
+          {!allCompleted && (
+            <button
+              onClick={markCompleteAndNext}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-500/20 text-emerald-400 text-sm hover:bg-emerald-500/10 transition-colors me-auto"
+            >
+              {currentStep < chain.steps.length - 1 ? (
+                <>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  סיים ועבור לשלב הבא
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  סיים שרשרת
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
