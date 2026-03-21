@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
@@ -103,18 +102,10 @@ export async function POST(req: Request) {
     let tier: "free" | "pro" | "guest" = "guest";
 
     if (isGuest) {
-      // Guests: rate limit only (no credits system)
-      const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-      if (!clientIp) {
-        return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
-      }
-      const limitResult = await checkRateLimit(clientIp, "chainGuest");
-      if (!limitResult.success) {
-        return NextResponse.json(
-          { error: "Too many requests. Please try again later.", reset_at: limitResult.reset },
-          { status: 429, headers: { "Retry-After": limitResult.reset.toString() } }
-        );
-      }
+      return NextResponse.json(
+        { error: "יש להתחבר כדי לבנות שרשרת פרומפטים." },
+        { status: 401 }
+      );
     } else {
       // Authenticated users: deduct 2 credits
       const { data: profile } = await supabase.from("profiles").select("plan_tier").eq("id", userId).maybeSingle();
