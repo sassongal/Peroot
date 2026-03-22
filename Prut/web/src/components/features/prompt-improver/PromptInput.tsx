@@ -431,7 +431,10 @@ export function PromptInput({
                            className="hidden"
                            onChange={(e) => {
                              const file = e.target.files?.[0];
-                             if (file) onAddFile(file);
+                             if (file) {
+                               onAddFile(file);
+                               toast.success(`"${file.name}" נוסף — מחלץ תוכן...`);
+                             }
                              e.target.value = '';
                            }}
                          />
@@ -478,6 +481,7 @@ export function PromptInput({
                                    onAddUrl(urlValue.trim());
                                    setUrlValue('');
                                    setShowUrlInput(false);
+                                   toast.success("הקישור נוסף — מחלץ תוכן...");
                                  }
                                  if (e.key === 'Escape') setShowUrlInput(false);
                                }}
@@ -501,7 +505,10 @@ export function PromptInput({
                            className="hidden"
                            onChange={(e) => {
                              const file = e.target.files?.[0];
-                             if (file) onAddImage(file);
+                             if (file) {
+                               onAddImage(file);
+                               toast.success(`"${file.name}" נוספה — מעבד תמונה...`);
+                             }
                              e.target.value = '';
                            }}
                          />
