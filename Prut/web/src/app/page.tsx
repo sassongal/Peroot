@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import HomeClient from "./HomeClient";
 import { HomeSEOContent } from "@/components/seo/HomeSEOContent";
 import { RecentBlogPosts } from "@/components/home/RecentBlogPosts";
-import { HeroSection } from "@/components/home/HeroSection";
 
 export const revalidate = 60;
 
@@ -17,7 +16,6 @@ export default function HomePage() {
   return (
     <>
       <HomeSEOContent />
-      <HeroSection />
       <HomeClient />
       <RecentBlogPosts />
     </>

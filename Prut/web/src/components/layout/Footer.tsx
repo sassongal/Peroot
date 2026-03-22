@@ -27,16 +27,16 @@ export function Footer() {
             <Image
               src="/images/peroot_logo_pack/logo_dark_240.png"
               alt=""
-              width={240}
-              height={240}
-              className="block dark:hidden h-6 w-auto"
+              width={24}
+              height={24}
+              className="block dark:hidden h-6 w-6"
             />
             <Image
               src="/images/peroot_logo_pack/logo_dark_footer_2x.png"
               alt=""
-              width={160}
-              height={160}
-              className="hidden dark:block h-6 w-auto"
+              width={24}
+              height={24}
+              className="hidden dark:block h-6 w-6"
             />
             <span className="font-black tracking-wider text-[#1B2141] dark:text-[#C8E8EE]">Peroot</span>
           </Link>
