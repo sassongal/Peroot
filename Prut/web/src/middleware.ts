@@ -5,7 +5,7 @@ import { isMaintenanceMode } from '@/lib/maintenance'
 
 // In-memory maintenance mode cache (avoids Redis call on every request)
 let maintenanceCache: { value: boolean; expires: number } | null = null;
-const MAINTENANCE_CACHE_TTL = 10_000; // 10 seconds
+const MAINTENANCE_CACHE_TTL = 60_000; // 60 seconds
 
 async function getCachedMaintenanceMode(): Promise<boolean> {
   const now = Date.now();
@@ -119,32 +119,16 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Capture referral code from URL (?ref=CODE) into a cookie for redemption after signup
+  // Uses rewrite (not redirect) to avoid an extra round-trip that hurts LCP/TTFB
   const refCode = request.nextUrl.searchParams.get('ref');
   const isValidRefCode = refCode && refCode.length <= 30 && /^[a-zA-Z0-9_-]+$/.test(refCode);
-  if (isValidRefCode) {
-    // Store the referral code in a cookie (only if not already set)
-    if (!request.cookies.get('referral_code')) {
-      supabaseResponse.cookies.set('referral_code', refCode, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        httpOnly: true,
-        sameSite: 'lax',
-      });
-    }
-    // Clean the URL by removing the ?ref param and redirect
-    const cleanUrl = request.nextUrl.clone();
-    cleanUrl.searchParams.delete('ref');
-    const redirectResponse = NextResponse.redirect(cleanUrl);
-    // Carry over the referral cookie on the redirect response too
-    if (!request.cookies.get('referral_code')) {
-      redirectResponse.cookies.set('referral_code', refCode, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 30,
-        httpOnly: true,
-        sameSite: 'lax',
-      });
-    }
-    return redirectResponse;
+  if (isValidRefCode && !request.cookies.get('referral_code')) {
+    supabaseResponse.cookies.set('referral_code', refCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      httpOnly: true,
+      sameSite: 'lax',
+    });
   }
 
   // 🛠️ MAINTENANCE MODE ENFORCEMENT

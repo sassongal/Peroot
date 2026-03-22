@@ -14,21 +14,21 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 const frankRuhl = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
   variable: "--font-frank",
-  display: "optional",
+  display: "swap",
 });
 
 const alef = Alef({
   weight: ["400", "700"],
   subsets: ["hebrew", "latin"],
   variable: "--font-alef",
-  display: "optional",
+  display: "swap",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400"],
   subsets: ["latin"],
   variable: "--font-jb-mono",
-  display: "optional",
+  display: "swap",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.peroot.space";
@@ -140,16 +140,12 @@ export const metadata: Metadata = {
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/context/I18nContext";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
-import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
-import { MicrosoftClarity } from "@/components/providers/MicrosoftClarity";
 import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
-import { PwaInstallBanner } from "@/components/ui/PwaInstallBanner";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Footer } from "@/components/layout/Footer";
-import { CookieConsent } from "@/components/ui/CookieConsent";
-import { SplashScreen } from "@/components/ui/SplashScreen";
+import { DeferredWidgets, DeferredCookieConsent } from "@/components/layout/DeferredWidgets";
 
 export default async function RootLayout({
   children,
@@ -162,6 +158,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
       <head>
+        <link rel="preload" href="/Peroot-hero.png" as="image" fetchPriority="high" />
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}` }} />
         {/* PWA Splash Screens */}
         <link rel="apple-touch-startup-image" href="/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
@@ -172,12 +169,9 @@ export default async function RootLayout({
         className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
         suppressHydrationWarning
       >
-        <GoogleAnalytics />
-        <MicrosoftClarity />
+        <DeferredWidgets />
         <VercelAnalytics />
         <ServiceWorkerRegistration />
-        <PwaInstallBanner />
-        <SplashScreen />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
@@ -204,7 +198,7 @@ export default async function RootLayout({
               </Suspense>
             </I18nProvider>
           </ThemeProvider>
-          <CookieConsent />
+          <DeferredCookieConsent />
         </PostHogProvider>
       </body>
     </html>

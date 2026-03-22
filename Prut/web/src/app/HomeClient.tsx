@@ -181,10 +181,12 @@ function PageContent({ user }: { user: User | null }) {
           acc.foundDelimiter = true;
           acc.questionsPart = acc.promptText.slice(delimIdx + "[GENIUS_QUESTIONS]".length);
           acc.promptText = acc.promptText.slice(0, delimIdx);
-          dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
-        } else {
-          dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
         }
+        // Strip <thinking> blocks and incomplete opening tags from display
+        const displayText = acc.promptText
+          .replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '')
+          .replace(/<thinking>[\s\S]*$/gi, '');
+        dispatch({ type: 'SET_COMPLETION', payload: displayText });
       } else {
         acc.questionsPart += chunk;
       }
@@ -384,6 +386,9 @@ function PageContent({ user }: { user: User | null }) {
     } else {
       dispatch({ type: 'SET_QUESTIONS', payload: [] });
     }
+
+    // Strip AI thinking/reasoning tags and their content
+    acc.promptText = acc.promptText.replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '').trim();
 
     const titleMatch = acc.promptText.match(/\[PROMPT_TITLE\](.*?)\[\/PROMPT_TITLE\]/);
     const generatedTitle = titleMatch ? titleMatch[1].trim() : null;
@@ -1046,8 +1051,13 @@ function PageContent({ user }: { user: User | null }) {
 
 export default function HomeClient() {
   const { user } = useHistory();
+
+  useEffect(() => {
+    document.getElementById('home-shell')?.remove();
+  }, []);
+
   return (
-    <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+    <div className="relative z-[1] min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
       <PageContent user={user} />
     </div>
   );
