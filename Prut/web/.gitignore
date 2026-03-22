@@ -45,3 +45,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# chrome extension (separate project)
+chrome-extension-v2.1/
+
+# tooling / AI config
+.claude/
+.planning/
+.superpowers/
