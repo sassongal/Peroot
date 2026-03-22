@@ -28,14 +28,9 @@ function isStateChangingMethod(method: string): boolean {
   return !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
 }
 
-function isCsrfExempt(pathname: string, request: NextRequest): boolean {
-  // Exempt routes
+function isCsrfExempt(pathname: string, _request: NextRequest): boolean {
+  // Exempt routes (webhooks use HMAC, cron uses CRON_SECRET, health is public)
   if (CSRF_EXEMPT_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
-    return true
-  }
-  // Bearer token auth - API key/token authenticated, not cookie-based
-  const authHeader = request.headers.get('authorization') || ''
-  if (authHeader.startsWith('Bearer ')) {
     return true
   }
   return false

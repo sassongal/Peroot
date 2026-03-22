@@ -78,6 +78,7 @@ export function useSiteSettings() {
       });
 
     return () => {
+      subscribedRef.current = false;
       subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

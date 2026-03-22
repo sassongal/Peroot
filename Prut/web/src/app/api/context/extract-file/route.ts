@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { extractTextFromFile, MAX_FILE_SIZE_MB, SUPPORTED_FILE_TYPES } from '@/lib/context/extract-file';
 import { estimateTokens } from '@/lib/context/token-counter';
 import { logger } from '@/lib/logger';
@@ -7,6 +8,13 @@ export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 

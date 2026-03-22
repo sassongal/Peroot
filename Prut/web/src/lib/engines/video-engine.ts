@@ -1,5 +1,5 @@
 
-import { BaseEngine } from "./base-engine";
+import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import { VideoPlatform } from "../video-platforms";
@@ -321,11 +321,11 @@ export class VideoEngine extends BaseEngine {
     const platformOverride = PLATFORM_OVERRIDES[platform] || PLATFORM_OVERRIDES.general;
 
     const variables: Record<string, string> = {
-      input: input.prompt,
-      tone: input.tone,
-      category: input.category,
+      input: escapeTemplateVars(input.prompt),
+      tone: escapeTemplateVars(input.tone),
+      category: escapeTemplateVars(input.category),
       platform_override: platformOverride,
-      ...(input.modeParams as Record<string, string> || {}),
+      ...sanitizeModeParams(input.modeParams),
     };
 
     if (input.modeParams?.aspect_ratio) {

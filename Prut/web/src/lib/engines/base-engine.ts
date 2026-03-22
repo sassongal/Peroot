@@ -2,6 +2,40 @@
 import { EngineConfig, EngineInput, EngineOutput, PromptEngine, TargetModel } from "./types";
 import { CapabilityMode } from "../capability-mode";
 
+/**
+ * Escape template variable patterns in user-supplied values to prevent
+ * injection: if a user's prompt contains "{{tone}}", it would otherwise
+ * be replaced by the template engine on a subsequent iteration.
+ */
+export function escapeTemplateVars(value: string): string {
+  return value.replace(/\{\{/g, '{ {').replace(/\}\}/g, '} }');
+}
+
+/** Allowed modeParams keys that may be spread into template variables. */
+const ALLOWED_MODE_PARAMS = new Set([
+  'video_platform',
+  'image_platform',
+  'aspect_ratio',
+  'output_format',
+]);
+
+/**
+ * Sanitize modeParams: only allow whitelisted keys and escape their values
+ * to prevent template injection.
+ */
+export function sanitizeModeParams(
+  params: Record<string, string> | undefined
+): Record<string, string> {
+  if (!params) return {};
+  const sanitized: Record<string, string> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (ALLOWED_MODE_PARAMS.has(key) && typeof value === 'string') {
+      sanitized[key] = escapeTemplateVars(value);
+    }
+  }
+  return sanitized;
+}
+
 // Helper for scoring logic moved from prompt-engine.ts
 export const CATEGORY_LIST = [
   "General",
@@ -448,10 +482,10 @@ export abstract class BaseEngine implements PromptEngine {
 
   generate(input: EngineInput): EngineOutput {
      const variables: Record<string, string> = {
-         input: input.prompt,
-         tone: input.tone,
-         category: input.category,
-         ...(input.modeParams as Record<string, string> || {})
+         input: escapeTemplateVars(input.prompt),
+         tone: escapeTemplateVars(input.tone),
+         category: escapeTemplateVars(input.category),
+         ...sanitizeModeParams(input.modeParams)
      };
 
      const systemPrompt = this.buildTemplate(this.config.system_prompt_template, variables);

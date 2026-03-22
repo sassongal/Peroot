@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import type {
   ContextAttachment,
   ContextPayload,
@@ -40,6 +40,8 @@ function countByType(
 
 export function useContextAttachments() {
   const [attachments, setAttachments] = useState<ContextAttachment[]>([]);
+  const attachmentsRef = useRef(attachments);
+  attachmentsRef.current = attachments;
 
   const totalTokens = useMemo(
     () =>
@@ -66,7 +68,7 @@ export function useContextAttachments() {
   const addFile = useCallback(
     async (file: File) => {
       // Validate count
-      if (countByType(attachments, "file") >= MAX_FILES) {
+      if (countByType(attachmentsRef.current, "file") >= MAX_FILES) {
         throw new Error("ניתן לצרף עד 3 קבצים");
       }
       // Validate size
@@ -115,13 +117,13 @@ export function useContextAttachments() {
         });
       }
     },
-    [attachments, updateAttachment]
+    [updateAttachment]
   );
 
   const addUrl = useCallback(
     async (url: string) => {
       // Validate count
-      if (countByType(attachments, "url") >= MAX_URLS) {
+      if (countByType(attachmentsRef.current, "url") >= MAX_URLS) {
         throw new Error("ניתן לצרף עד 3 כתובות URL");
       }
       // Validate URL format
@@ -166,13 +168,13 @@ export function useContextAttachments() {
         });
       }
     },
-    [attachments, updateAttachment]
+    [updateAttachment]
   );
 
   const addImage = useCallback(
     async (file: File) => {
       // Validate count
-      if (countByType(attachments, "image") >= MAX_IMAGES) {
+      if (countByType(attachmentsRef.current, "image") >= MAX_IMAGES) {
         throw new Error("ניתן לצרף עד 3 תמונות");
       }
       // Validate size
@@ -221,7 +223,7 @@ export function useContextAttachments() {
         });
       }
     },
-    [attachments, updateAttachment]
+    [updateAttachment]
   );
 
   const removeAttachment = useCallback((id: string) => {

@@ -43,6 +43,8 @@ export function useChains() {
   const [user, setUser] = useState<User | null>(null);
   const supabase = useMemo(() => createClient(), []);
   const userRef = useRef<User | null>(null);
+  const chainsRef = useRef(chains);
+  chainsRef.current = chains;
 
   useEffect(() => {
     let mounted = true;
@@ -156,7 +158,7 @@ export function useChains() {
     const now = new Date().toISOString();
     setChains(prev => prev.map(c => c.id === id ? { ...c, use_count: c.use_count + 1, last_used_at: now } : c));
     if (user) {
-      const chain = chains.find(c => c.id === id);
+      const chain = chainsRef.current.find(c => c.id === id);
       await supabase.from('prompt_chains').update({
         use_count: (chain?.use_count ?? 0) + 1,
         last_used_at: now
@@ -182,7 +184,7 @@ export function useChains() {
       return { ...c, steps: newSteps.map((s, i) => ({ ...s, order: i })), updated_at: new Date().toISOString() };
     }));
     if (user) {
-      const chain = chains.find(c => c.id === chainId);
+      const chain = chainsRef.current.find(c => c.id === chainId);
       if (chain) {
         const newSteps = [...chain.steps];
         const [moved] = newSteps.splice(fromIndex, 1);

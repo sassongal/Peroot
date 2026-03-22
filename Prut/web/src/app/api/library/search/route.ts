@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { escapePostgrestValue } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
 
 const MAX_LIMIT = 50;
@@ -27,7 +28,11 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient();
-    const pattern = `%${query}%`;
+    const sanitized = escapePostgrestValue(query);
+    if (!sanitized) {
+      return NextResponse.json([]);
+    }
+    const pattern = `%${sanitized}%`;
 
     const { data, error } = await supabase
       .from('public_library_prompts')

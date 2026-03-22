@@ -128,6 +128,9 @@ function PageContent({ user }: { user: User | null }) {
   const discovery = useFeatureDiscovery();
   const context = useContextAttachments();
 
+  const variableValuesRef = useRef(ps.variableValues);
+  variableValuesRef.current = ps.variableValues;
+
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
   const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
   const [imageAspectRatio, setImageAspectRatio] = useState("");
@@ -397,7 +400,7 @@ function PageContent({ user }: { user: User | null }) {
     dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
 
     const extracted = extractPlaceholders(acc.promptText);
-    const newVars = { ...ps.variableValues };
+    const newVars = { ...variableValuesRef.current };
     extracted.forEach(ph => { if (!(ph in newVars)) newVars[ph] = ""; });
     dispatch({ type: 'SET_VARIABLE_VALUES', payload: newVars });
 

@@ -233,10 +233,12 @@ export async function POST(req: Request) {
                 endpoint: 'enhance',
             });
 
-            // Auto-refund only for genuinely interrupted responses (not normal short completions)
-            if (completion.text.length < 100 && userId) {
+            // Only refund on genuinely failed generations (empty output or error finish reason).
+            // Length-based refund removed: short valid responses are legitimate and should not trigger refunds.
+            const finishReason = (completion as { finishReason?: string }).finishReason;
+            if (userId && (completion.text.length === 0 || finishReason === 'error')) {
                 await refundCredit(userId);
-                logger.warn('[Enhance] Short response, refunding credit', { userId: userId, length: completion.text.length });
+                logger.warn('[Enhance] Failed generation, refunding credit', { userId, length: completion.text.length, finishReason });
             }
 
             if (userId && supabase) {

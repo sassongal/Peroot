@@ -44,16 +44,32 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidation> 
     return { valid: false, error: "API key has expired" };
   }
 
-  // Update usage stats (fire and forget)
+  // Update usage stats atomically (fire and forget).
+  // NOTE: The Supabase JS client does not support atomic increment natively.
+  // We use an RPC call to `increment_api_key_usage` for a race-safe update.
+  // If the RPC does not exist, fall back to a non-atomic update with an
+  // optimistic lock on the expected usage_count to detect conflicts.
   supabase
-    .from("developer_api_keys")
-    .update({
-      usage_count: data.usage_count + 1,
-      last_used_at: new Date().toISOString(),
-    })
-    .eq("id", data.id)
-    .then(({ error: updateErr }) => {
-      if (updateErr) logger.error("[ApiAuth] Failed to update usage:", updateErr);
+    .rpc("increment_api_key_usage", { key_id: data.id })
+    .then(({ error: rpcErr }) => {
+      if (rpcErr) {
+        // RPC not available — fall back to optimistic-lock update.
+        // The `.eq("usage_count", data.usage_count)` filter ensures we only
+        // update if no concurrent request incremented the counter first.
+        // On conflict the update silently becomes a no-op (telemetry loss
+        // is acceptable for usage counters).
+        supabase
+          .from("developer_api_keys")
+          .update({
+            usage_count: data.usage_count + 1,
+            last_used_at: new Date().toISOString(),
+          })
+          .eq("id", data.id)
+          .eq("usage_count", data.usage_count)
+          .then(({ error: updateErr }) => {
+            if (updateErr) logger.error("[ApiAuth] Failed to update usage:", updateErr);
+          });
+      }
     });
 
   return { valid: true, userId: data.user_id, keyId: data.id };

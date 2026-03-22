@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { initAnalytics, analytics } from '@/lib/analytics';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
@@ -25,12 +25,17 @@ function PostHogPageView() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
+    const [isReady, setIsReady] = useState(false);
+
     useEffect(() => {
         const timer = setTimeout(() => {
             initAnalytics();
+            setIsReady(true);
         }, 5000);
         return () => clearTimeout(timer);
     }, []);
+
+    if (!isReady) return <>{children}</>;
 
     return (
         <PHProvider client={analytics}>
