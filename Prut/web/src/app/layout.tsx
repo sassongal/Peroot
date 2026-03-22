@@ -14,21 +14,21 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 const frankRuhl = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
   variable: "--font-frank",
-  display: "swap",
+  display: "optional",
 });
 
 const alef = Alef({
   weight: ["400", "700"],
   subsets: ["hebrew", "latin"],
   variable: "--font-alef",
-  display: "swap",
+  display: "optional",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400"],
   subsets: ["latin"],
   variable: "--font-jb-mono",
-  display: "swap",
+  display: "optional",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.peroot.space";
@@ -162,7 +162,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
       <head>
-        {/* Hero image is now served via next/image with auto WebP/AVIF optimization */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}` }} />
         {/* PWA Splash Screens */}
         <link rel="apple-touch-startup-image" href="/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
         <link rel="apple-touch-startup-image" href="/splash-iphone-pro.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />

@@ -60,6 +60,12 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/images/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
+      {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space' },

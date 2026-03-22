@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import NextImage from "next/image";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 import { User } from "@supabase/supabase-js";
@@ -23,11 +22,11 @@ const ResultSection = dynamic(
 );
 const LoginRequiredModal = dynamic(
   () => import("@/components/ui/LoginRequiredModal").then(mod => mod.LoginRequiredModal),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 const WhatIsThisModal = dynamic(
   () => import("@/components/ui/WhatIsThisModal").then(mod => mod.WhatIsThisModal),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 const FAQBubble = dynamic(
   () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
@@ -44,14 +43,14 @@ import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
 const OnboardingOverlay = dynamic(
   () => import("@/components/ui/OnboardingOverlay").then(mod => mod.OnboardingOverlay),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useContextAttachments } from "@/hooks/useContextAttachments";
 const FeatureDiscoveryTooltip = dynamic(
   () => import("@/components/ui/FeatureDiscoveryTooltip").then(mod => mod.FeatureDiscoveryTooltip),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 const LibraryView = dynamic(
@@ -64,22 +63,22 @@ const PersonalLibraryView = dynamic(
 );
 const LoadingOverlay = dynamic(
   () => import("@/components/ui/LoadingOverlay").then(mod => mod.LoadingOverlay),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 const StreamingProgress = dynamic(
   () => import("@/components/ui/StreamingProgress"),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 import { Clock } from "lucide-react";
 const DidYouKnowBanner = dynamic(
   () => import("@/components/ui/DidYouKnowBanner").then(mod => mod.DidYouKnowBanner),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 const UpgradeNudge = dynamic(
   () => import("@/components/features/prompt-improver/UpgradeNudge"),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
@@ -804,7 +803,7 @@ function PageContent({ user }: { user: User | null }) {
   return (
     <>
     {topNavBar}
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" />
 
@@ -871,23 +870,6 @@ function PageContent({ user }: { user: User | null }) {
 
       {/* Main Content (Full Width) */}
       <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-4">
-           <div className="flex justify-center">
-             <div className="hero-logo-container">
-               <div className="hero-logo-ring hero-logo-ring-1" />
-               <div className="hero-logo-ring hero-logo-ring-2" />
-               <div className="hero-logo-ring hero-logo-ring-3" />
-               <NextImage
-                 src="/Peroot-hero.png"
-                 alt="Peroot"
-                 className="hero-logo-image"
-                 width={720}
-                 height={392}
-                 sizes="360px"
-                 priority
-               />
-             </div>
-           </div>
-
            <button
              onClick={() => setShowWhatIsThis(true)}
              className="text-xs md:text-sm text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
