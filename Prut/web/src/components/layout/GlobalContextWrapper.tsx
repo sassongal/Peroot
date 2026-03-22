@@ -1,11 +1,12 @@
 "use client";
 
-import { useHistory } from "@/hooks/useHistory";
 import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExtensionBanner } from "@/components/ui/ExtensionBanner";
 import dynamic from "next/dynamic";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 const Toaster = dynamic(
   () => import("sonner").then((mod) => mod.Toaster),
@@ -25,9 +26,18 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function GlobalContextWrapper({ children }: { children: React.ReactNode }) {
-  const { user } = useHistory();
+  const [user, setUser] = useState<User | null>(null);
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [loginFeature, setLoginFeature] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const showLoginRequired = (feature: string) => {
       setLoginFeature(feature);

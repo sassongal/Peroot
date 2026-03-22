@@ -5,7 +5,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import NextImage from "next/image";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
-import { User } from "@supabase/supabase-js";
+
 import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
@@ -105,9 +105,9 @@ const getPromptKey = (text: string) => {
   return `${Math.abs(hash)}:${normalized.length}`;
 };
 
-function PageContent({ user }: { user: User | null }) {
+function PageContent() {
   const t = useI18n();
-  const { history, addToHistory, clearHistory, isLoaded } = useHistory();
+  const { user, history, addToHistory, clearHistory, isLoaded } = useHistory();
   const {
     viewMode,
     setViewMode,
@@ -814,7 +814,7 @@ function PageContent({ user }: { user: User | null }) {
     {topNavBar}
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" />
+      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" style={{ contain: 'layout style' }} />
 
       {/* FAQ: floating bubble on desktop only */}
       <div className="hidden md:block fixed bottom-6 right-6 z-50">
@@ -904,7 +904,7 @@ function PageContent({ user }: { user: User | null }) {
            </button>
 
            {/* Did You Know banner — shows one rotating fact per session */}
-           {!ps.completion && !ps.isLoading && <DidYouKnowBanner />}
+           {!ps.completion && !ps.isLoading && <div className="min-h-[48px]"><DidYouKnowBanner /></div>}
 
            <LoadingOverlay isVisible={ps.isLoading} />
            <StreamingProgress phase={ps.streamPhase} />
@@ -1053,11 +1053,15 @@ function PageContent({ user }: { user: User | null }) {
 }
 
 export default function HomeClient() {
-  const { user } = useHistory();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    wrapperRef.current?.classList.add('hydrated');
+  }, []);
 
   return (
-    <div className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
-      <PageContent user={user} />
+    <div ref={wrapperRef} className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+      <PageContent />
     </div>
   );
 }

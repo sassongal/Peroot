@@ -94,6 +94,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
   const [isLibraryFetching, setIsLibraryFetching] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPublicData = async () => {
       try {
         const [pRes, cRes] = await Promise.all([
@@ -101,6 +102,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
           fetch(getApiPath("/api/library/categories"))
         ]);
 
+        if (cancelled) return;
         if (pRes.ok) {
           const pData = await pRes.json();
           if (pData.length > 0) setLibraryPrompts(pData);
@@ -111,10 +113,24 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       } catch (e) {
         logger.warn("Library synchronization paused:", e);
       } finally {
-        setIsLibraryFetching(false);
+        if (!cancelled) setIsLibraryFetching(false);
       }
     };
-    fetchPublicData();
+
+    // Defer library fetch so it doesn't block initial render / LCP
+    const schedule = typeof requestIdleCallback === "function"
+      ? requestIdleCallback
+      : (cb: () => void) => setTimeout(cb, 100);
+    const id = schedule(() => { fetchPublicData(); });
+
+    return () => {
+      cancelled = true;
+      if (typeof cancelIdleCallback === "function" && typeof requestIdleCallback === "function") {
+        cancelIdleCallback(id as number);
+      } else {
+        clearTimeout(id as ReturnType<typeof setTimeout>);
+      }
+    };
   }, []);
 
   // --- Popularity ---
@@ -135,8 +151,21 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
         logger.warn("Failed to load popularity map", error);
       }
     };
-    loadPopularity();
-    return () => { isMounted = false; };
+
+    // Defer popularity fetch to avoid blocking initial render
+    const schedule = typeof requestIdleCallback === "function"
+      ? requestIdleCallback
+      : (cb: () => void) => setTimeout(cb, 150);
+    const id = schedule(() => { loadPopularity(); });
+
+    return () => {
+      isMounted = false;
+      if (typeof cancelIdleCallback === "function" && typeof requestIdleCallback === "function") {
+        cancelIdleCallback(id as number);
+      } else {
+        clearTimeout(id as ReturnType<typeof setTimeout>);
+      }
+    };
   }, []);
 
   // --- useLibrary hook ---
