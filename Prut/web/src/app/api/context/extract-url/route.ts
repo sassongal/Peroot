@@ -82,8 +82,10 @@ export async function POST(request: NextRequest) {
 
     // SSRF protection: resolve DNS and check for private IPs
     try {
-      const addresses = await dns.resolve4(hostname).catch(() => [] as string[]);
-      const addresses6 = await dns.resolve6(hostname).catch(() => [] as string[]);
+      const [addresses, addresses6] = await Promise.all([
+        dns.resolve4(hostname).catch(() => [] as string[]),
+        dns.resolve6(hostname).catch(() => [] as string[]),
+      ]);
       const allAddresses = [...addresses, ...addresses6];
 
       if (allAddresses.length === 0) {
@@ -108,7 +110,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     logger.error('[Context Extract URL]', err);
-    const message = err instanceof Error ? err.message : 'שגיאה בקריאת ה-URL';
+    const message = 'שגיאה בקריאת ה-URL';
     return NextResponse.json(
       { error: message },
       { status: 500 }

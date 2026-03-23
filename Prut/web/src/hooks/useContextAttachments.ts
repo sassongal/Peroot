@@ -108,7 +108,7 @@ export function useContextAttachments() {
         updateAttachment(id, {
           status: "ready",
           extractedText: data.text,
-          tokenCount: data.tokenCount,
+          tokenCount: data.tokens ?? data.tokenCount,
         });
       } catch (err) {
         updateAttachment(id, {
@@ -159,7 +159,7 @@ export function useContextAttachments() {
         updateAttachment(id, {
           status: "ready",
           extractedText: data.text,
-          tokenCount: data.tokenCount,
+          tokenCount: data.tokens ?? data.tokenCount,
         });
       } catch (err) {
         updateAttachment(id, {
@@ -213,8 +213,8 @@ export function useContextAttachments() {
         const data = await res.json();
         updateAttachment(id, {
           status: "ready",
-          extractedText: data.text,
-          tokenCount: data.tokenCount,
+          extractedText: data.description ?? data.text,
+          tokenCount: data.tokens ?? data.tokenCount,
         });
       } catch (err) {
         updateAttachment(id, {

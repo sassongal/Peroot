@@ -28,9 +28,15 @@ function isStateChangingMethod(method: string): boolean {
   return !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
 }
 
-function isCsrfExempt(pathname: string, _request: NextRequest): boolean {
+function isCsrfExempt(pathname: string, request: NextRequest): boolean {
   // Exempt routes (webhooks use HMAC, cron uses CRON_SECRET, health is public)
   if (CSRF_EXEMPT_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
+    return true
+  }
+  // API-key-authenticated requests (Chrome extension, developer keys)
+  // Only exempt verified prk_ prefixed tokens, not arbitrary Bearer values
+  const authHeader = request.headers.get('authorization') || ''
+  if (authHeader.startsWith('Bearer prk_')) {
     return true
   }
   return false
