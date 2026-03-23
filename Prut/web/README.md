@@ -30,7 +30,7 @@ Peroot (פירות) is a Hebrew-first AI prompt enhancement platform that transf
 - **GENIUS_ANALYSIS Quality Gate** - Internal AI self-check ensuring completeness, specificity, structure, actionability, anti-patterns, and edge cases
 - **Smart Refinement Loop** - Clarifying questions (GENIUS_QUESTIONS) that iteratively improve prompt quality
 - **Personal Library** - Save, organize, tag, and pin prompts with folders and custom categories
-- **Public Library** - 480+ curated prompts across 30 categories with variable templates
+- **Public Library** - 540+ curated prompts across 30 categories with variable templates (including 68 Hebrew teacher prompts)
 - **User Personality Profiling** - Adapts output style based on user history and style tokens
 - **Gamification** - Achievements, leaderboards, and community profiles
 - **Voice Input** - Record prompts via microphone
@@ -42,6 +42,15 @@ Peroot (פירות) is a Hebrew-first AI prompt enhancement platform that transf
 - **Chrome Extension** - Browser extension for prompt enhancement from any website
 - **Internationalization** - Hebrew-first with i18n dictionary support
 - **Maintenance Mode** - Redis-backed toggle with admin bypass
+- **Context Attachments** - File (PDF/DOCX/TXT/CSV/XLSX), URL, and image attachments with AI-powered content extraction
+- **Document Intelligence** - Auto-detect file type and intent, adapts prompts to uploaded content
+- **CO-STAR/RISEN Validation** - Framework validation + target model adaptation (ChatGPT/Claude/Gemini)
+- **Auto Chain Builder** - AI-generated 3-6 step prompt chains from a goal with preset templates
+- **Smart Search** - Hebrew fuzzy search with prefix stripping, auto-suggest, filter chips
+- **Speed Test** - Built-in Google PageSpeed Insights testing at `/speed-test`
+- **Feature Discovery** - Context-aware tooltips introducing unused features after every 3rd enhance
+- **SSRF Protection** - DNS-based IP blocklist on URL extraction endpoints
+- **Template Injection Prevention** - User input escaped before engine template processing
 
 ---
 
@@ -457,6 +466,11 @@ Per-serverless-instance throttling:
 | GET | `/api/me` | Yes | Current user profile |
 | POST | `/api/contact` | No | Contact form submission |
 | GET | `/api/og` | No | Dynamic OG image generation |
+| POST | `/api/chain/generate` | Yes | Auto chain builder (AI-generated prompt chains) |
+| POST | `/api/context/extract-file` | Yes | Extract text from PDF/DOCX/TXT/CSV/XLSX |
+| POST | `/api/context/extract-url` | Yes | Extract text from URL (SSRF-protected) |
+| POST | `/api/context/describe-image` | Yes | AI image description via Gemini |
+| GET | `/api/speed-test` | No | Google PageSpeed Insights proxy (rate-limited) |
 
 ### Library
 
@@ -673,15 +687,24 @@ The project is deployed on Vercel with the following configuration:
 
 All variables listed in the [Getting Started](#environment-variables) section must be configured in Vercel's Environment Variables settings.
 
-### Security Headers
+### Security
 
-The following security headers are automatically applied via `next.config.ts`:
+**Headers** (via `next.config.ts`):
 - `X-Frame-Options: DENY`
 - `X-Content-Type-Options: nosniff`
 - `Strict-Transport-Security` (HSTS with preload)
 - `Content-Security-Policy` (restricts scripts, styles, connections to known domains)
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy` (camera disabled, microphone self-only)
+
+**Application Security**:
+- CSRF origin validation on all state-changing API requests (exempts webhooks, cron, and `prk_*` API keys)
+- SSRF protection on URL extraction with DNS-based private IP blocklist
+- Template injection prevention — user input escaped before engine template processing
+- `modeParams` whitelisted and sanitized across all engines
+- Gemini API key passed via header (not URL query string)
+- PostgREST filter injection protection on library search
+- Rate limiting on enhance, chain, checkout, and context endpoints
 
 ### Database Migrations
 
