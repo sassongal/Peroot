@@ -710,9 +710,19 @@ function PageContent() {
   const handleUsePrompt = useCallback((prompt: LibraryPrompt | PersonalPrompt) => {
     setPreviousView(viewMode);
     markFeatureUsed("peroot_used_public_library");
-    dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
-    dispatch({ type: 'SET_COMPLETION', payload: '' });
-    dispatch({ type: 'SET_QUESTIONS', payload: [] });
+
+    // Templates: load directly into completion (skip re-enhance, show variable inputs)
+    if ('is_template' in prompt && prompt.is_template) {
+      dispatch({ type: 'SET_INPUT', payload: prompt.title || '' });
+      dispatch({ type: 'SET_COMPLETION', payload: prompt.prompt });
+      dispatch({ type: 'SET_QUESTIONS', payload: [] });
+      toast.success("תבנית נטענה — מלאו את המשתנים");
+    } else {
+      dispatch({ type: 'SET_INPUT', payload: prompt.prompt });
+      dispatch({ type: 'SET_COMPLETION', payload: '' });
+      dispatch({ type: 'SET_QUESTIONS', payload: [] });
+    }
+
     setViewMode("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [viewMode, dispatch, setViewMode]);
@@ -771,6 +781,37 @@ function PageContent() {
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
     toast.success("נשמר לספריה האישית!");
+  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
+
+  const saveAsTemplate = useCallback(() => {
+    if (!user) {
+       showLoginRequired("שמירת תבניות");
+       return;
+    }
+    if (!ps.completion.trim()) return;
+
+    // Extract {variable} placeholders from the enhanced prompt
+    const varMatches = ps.completion.match(/\{([a-z_]+)\}/gi) || [];
+    const variables = [...new Set(varMatches.map(v => v.replace(/[{}]/g, '')))];
+
+    if (variables.length === 0) {
+      toast.error("הפרומפט לא מכיל משתנים {variable} — הוסיפו משתנים כדי ליצור תבנית");
+      return;
+    }
+
+    addPrompt({
+      title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
+      prompt: ps.completion,
+      category: ps.detectedCategory || ps.selectedCategory,
+      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
+      capability_mode: ps.selectedCapability,
+      use_case: "תבנית לשימוש חוזר",
+      source: "manual",
+      is_template: true,
+      template_variables: variables,
+    });
+    recordUsageSignal("save", ps.completion);
+    toast.success(`תבנית נשמרה עם ${variables.length} משתנים!`);
   }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
 
   const handleImportHistory = useCallback(async () => {
@@ -1049,6 +1090,7 @@ function PageContent() {
                        onCopy={handleCopyText}
                        completionScore={completionScore}
                        onSave={saveCompletionToPersonal}
+                       onSaveAsTemplate={saveAsTemplate}
                        onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
                        placeholders={placeholders}
                        variableValues={ps.variableValues}

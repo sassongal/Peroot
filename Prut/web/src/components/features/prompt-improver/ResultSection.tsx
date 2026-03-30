@@ -37,6 +37,7 @@ interface ResultSectionProps {
   onCopy: (text: string, withWatermark?: boolean) => void;
   onBack: () => void;
   onSave: () => void;
+  onSaveAsTemplate?: () => void;
   placeholders?: string[];
   variableValues?: Record<string, string>;
   preFilledKeys?: string[];
@@ -87,6 +88,7 @@ export function ResultSection({
   onCopy,
   onBack,
   onSave,
+  onSaveAsTemplate,
   placeholders = [],
   variableValues = {},
   preFilledKeys = [],
@@ -387,6 +389,16 @@ export function ResultSection({
                   <Plus className="w-3.5 h-3.5" />
                   {t.result_section.save}
                 </button>
+                {onSaveAsTemplate && placeholders.length > 0 && (
+                  <button
+                    onClick={onSaveAsTemplate}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs hover:bg-purple-500/10 transition-colors cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:outline-none"
+                    title="שמור כתבנית לשימוש חוזר"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    שמור כתבנית
+                  </button>
+                )}
                 {onImproveAgain && (
                   <button
                     onClick={onImproveAgain}

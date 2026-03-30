@@ -562,9 +562,14 @@ export function PersonalLibraryView({
             <CapabilityBadge mode={prompt.capability_mode} className="scale-90 origin-center" />
           </div>
 
-          {/* Title */}
-          <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] font-medium truncate" dir="rtl">
+          {/* Title + Template badge */}
+          <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] font-medium truncate flex items-center gap-2" dir="rtl">
             {prompt.title}
+            {prompt.is_template && (
+              <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-wider">
+                תבנית
+              </span>
+            )}
           </span>
 
           {/* Meta: use count + category */}

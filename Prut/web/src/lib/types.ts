@@ -49,6 +49,9 @@ export type PersonalPrompt = {
   is_pinned?: boolean;
   success_count?: number;
   fail_count?: number;
+  is_template?: boolean;
+  template_description?: string;
+  template_variables?: string[];
 };
 
 export type LibraryPrompt = {
