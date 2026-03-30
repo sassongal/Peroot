@@ -272,43 +272,31 @@ function PageContent() {
     }
   }, [user]);
 
-  // Fetch credits for logged-in users
+  // Fetch credits + onboarding status in a single query
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setShowOnboarding(false);
+      return;
+    }
     const supabase = createClient();
     supabase
       .from('profiles')
-      .select('credits_balance')
+      .select('credits_balance, onboarding_completed')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
-        if (data) setCreditsRemaining(data.credits_balance);
-      });
-  }, [user]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    const fetchUserProfile = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .maybeSingle();
-
+      .then(({ data, error }) => {
         if (error) {
           logger.error("Error fetching profile:", error);
-        } else if (data) {
+          return;
+        }
+        if (data) {
+          setCreditsRemaining(data.credits_balance);
           if (!data.onboarding_completed) {
             setShowOnboarding(true);
             setIsNewUser(true);
           }
         }
-      } else {
-        setShowOnboarding(false);
-      }
-    };
-    fetchUserProfile();
+      });
   }, [user]);
 
   // Keyboard shortcuts - ref initialized below after handleCopyText is defined
@@ -390,6 +378,11 @@ function PageContent() {
 
   const processStreamResult = (label: string) => {
     const acc = streamAccRef.current;
+
+    // Guard: skip saving partial/interrupted results
+    if (acc.promptText.length < 20) {
+      return { text: '', title: null };
+    }
     if (acc.foundDelimiter) {
       try {
         let jsonStr = acc.questionsPart.trim();

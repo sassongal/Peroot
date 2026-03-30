@@ -518,10 +518,14 @@ export function PromptInput({
                                onChange={(e) => setUrlValue(e.target.value)}
                                onKeyDown={(e) => {
                                  if (e.key === 'Enter' && urlValue.trim()) {
-                                   onAddUrl(urlValue.trim());
-                                   setUrlValue('');
-                                   setShowUrlInput(false);
-                                   toast.success("הקישור נוסף — מחלץ תוכן...");
+                                   try {
+                                     onAddUrl(urlValue.trim());
+                                     setUrlValue('');
+                                     setShowUrlInput(false);
+                                     toast.success("הקישור נוסף — מחלץ תוכן...");
+                                   } catch (err) {
+                                     toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קישור");
+                                   }
                                  }
                                  if (e.key === 'Escape') setShowUrlInput(false);
                                }}
