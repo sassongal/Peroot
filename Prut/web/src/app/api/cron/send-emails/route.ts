@@ -68,6 +68,9 @@ export async function GET(request: NextRequest) {
           to: email,
           subject: step.subject,
           html: step.html(name, unsubscribeUrl),
+          userId: seq.user_id,
+          emailType: step.id,
+          metadata: { sequence_id: seq.id, step: seq.current_step },
         });
 
         await supabase

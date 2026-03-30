@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { validateAdminSession } from '@/lib/admin/admin-security';
+import { EmailService } from '@/lib/emails/service';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/ratelimit';
 // DOMPurify loaded dynamically in POST handler to avoid jsdom import crash on GET
@@ -160,27 +161,28 @@ export async function POST(req: NextRequest) {
 
     // ── Resolve recipient emails ──────────────────────────────────────────
     let emails: string[] = [];
+    const emailToUserId = new Map<string, string>();
 
     if (seg === 'all') {
       const { data } = await supabase
         .from('profiles')
-        .select('email')
+        .select('id, email')
         .not('email', 'is', null);
-      emails = (data ?? []).map((p) => p.email).filter(Boolean) as string[];
+      for (const p of data ?? []) { if (p.email) { emails.push(p.email); emailToUserId.set(p.email, p.id); } }
     } else if (seg === 'pro') {
       const { data } = await supabase
         .from('profiles')
-        .select('email')
+        .select('id, email')
         .eq('plan_tier', 'pro')
         .not('email', 'is', null);
-      emails = (data ?? []).map((p) => p.email).filter(Boolean) as string[];
+      for (const p of data ?? []) { if (p.email) { emails.push(p.email); emailToUserId.set(p.email, p.id); } }
     } else if (seg === 'free') {
       const { data } = await supabase
         .from('profiles')
-        .select('email')
+        .select('id, email')
         .or('plan_tier.eq.free,plan_tier.is.null')
         .not('email', 'is', null);
-      emails = (data ?? []).map((p) => p.email).filter(Boolean) as string[];
+      for (const p of data ?? []) { if (p.email) { emails.push(p.email); emailToUserId.set(p.email, p.id); } }
     } else if (seg === 'inactive') {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -207,6 +209,9 @@ export async function POST(req: NextRequest) {
           .filter((id) => !activeSet.has(id))
           .map((id) => profileMap.get(id)!)
           .filter(Boolean);
+        for (const [id, email] of profileMap) {
+          if (!activeSet.has(id) && email) emailToUserId.set(email, id);
+        }
       }
     }
 
@@ -269,8 +274,9 @@ export async function POST(req: NextRequest) {
       const batch = emails.slice(i, i + BATCH_SIZE);
       await Promise.all(
         batch.map(async (to) => {
+          const recipientUserId = emailToUserId.get(to);
           try {
-            const { error: sendError } = await resend.emails.send({
+            const { data: sendData, error: sendError } = await resend.emails.send({
               from: fromEmail,
               to,
               subject: subject.trim(),
@@ -278,12 +284,40 @@ export async function POST(req: NextRequest) {
             });
             if (sendError) {
               failures.push({ email: to, error: sendError.message });
+              await EmailService.logEmail({
+                userId: recipientUserId,
+                emailTo: to,
+                source: 'resend',
+                emailType: 'campaign',
+                subject: subject.trim(),
+                status: 'failed',
+                metadata: { segment: seg, error: sendError.message },
+              });
             } else {
               sentCount++;
+              await EmailService.logEmail({
+                userId: recipientUserId,
+                emailTo: to,
+                source: 'resend',
+                emailType: 'campaign',
+                subject: subject.trim(),
+                status: 'sent',
+                resendId: sendData?.id,
+                metadata: { segment: seg },
+              });
             }
           } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             failures.push({ email: to, error: msg });
+            await EmailService.logEmail({
+              userId: recipientUserId,
+              emailTo: to,
+              source: 'resend',
+              emailType: 'campaign',
+              subject: subject.trim(),
+              status: 'failed',
+              metadata: { segment: seg, error: msg },
+            });
           }
         })
       );

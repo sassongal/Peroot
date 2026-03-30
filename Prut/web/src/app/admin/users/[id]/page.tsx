@@ -1263,6 +1263,16 @@ function Divider() {
 
 // ── Emails Tab ──────────────────────────────────────────────────────────────
 
+interface EmailLogItem {
+  id: string;
+  source: string;
+  type: string;
+  subject: string | null;
+  status: string;
+  sentAt: string;
+  metadata: Record<string, unknown> | null;
+}
+
 interface EmailData {
   email: string | null;
   userCreatedAt: string | null;
@@ -1281,15 +1291,35 @@ interface EmailData {
     lastSentAt: string | null;
     unsubscribed: boolean;
   };
-  campaigns: Array<{
-    id: string;
-    subject: string;
-    segment: string;
-    sentCount: number;
-    failedCount: number;
-    sentAt: string;
-  }>;
+  emails: EmailLogItem[];
+  summary: {
+    totalSent: number;
+    totalFailed: number;
+    sources: string[];
+  };
 }
+
+const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
+  resend: { label: 'Resend', color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' },
+  lemonsqueezy: { label: 'LemonSqueezy', color: 'bg-amber-500/10 border-amber-500/20 text-amber-400' },
+  system: { label: 'System', color: 'bg-zinc-800 border-white/10 text-zinc-400' },
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  welcome: 'ברוכים הבאים',
+  campaign: 'קמפיין',
+  onboarding_day1: 'אונבורדינג יום 1',
+  onboarding_day3: 'אונבורדינג יום 3',
+  onboarding_day7: 'אונבורדינג יום 7',
+  onboarding_day14: 'אונבורדינג יום 14',
+  subscription_created: 'אישור מנוי',
+  subscription_payment_success: 'קבלה',
+  subscription_cancelled: 'ביטול מנוי',
+  subscription_expired: 'מנוי פג תוקף',
+  subscription_resumed: 'חידוש מנוי',
+  subscription_payment_failed: 'תשלום נכשל',
+  transactional: 'הודעה',
+};
 
 function EmailsTab({ userId }: { userId: string }) {
   const [data, setData] = useState<EmailData | null>(null);
@@ -1324,10 +1354,25 @@ function EmailsTab({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl bg-zinc-950 border border-white/5 text-center">
+          <div className="text-2xl font-black text-white">{data.summary.totalSent}</div>
+          <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">נשלחו</div>
+        </div>
+        <div className="p-4 rounded-2xl bg-zinc-950 border border-white/5 text-center">
+          <div className="text-2xl font-black text-red-400">{data.summary.totalFailed}</div>
+          <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">נכשלו</div>
+        </div>
+        <div className="p-4 rounded-2xl bg-zinc-950 border border-white/5 text-center">
+          <div className="text-2xl font-black text-blue-400">{data.summary.sources.length}</div>
+          <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">מקורות</div>
+        </div>
+      </div>
+
       {/* Onboarding Sequence */}
       <Panel title="רצף אונבורדינג" icon={Mail} color="blue">
         <div className="space-y-4">
-          {/* Status */}
           <div className="flex items-center gap-3 mb-4">
             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">סטטוס:</span>
             <span className={cn(
@@ -1343,7 +1388,6 @@ function EmailsTab({ userId }: { userId: string }) {
             </span>
           </div>
 
-          {/* Steps Timeline */}
           <div className="space-y-3">
             {data.onboarding.steps.map((step) => {
               const StepIcon = step.sent ? CheckCircle : step.current ? Circle : XCircle;
@@ -1366,9 +1410,7 @@ function EmailsTab({ userId }: { userId: string }) {
                   <div className="flex-1">
                     <span className="text-sm font-bold text-zinc-300">{step.name}</span>
                   </div>
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                    {step.delay}
-                  </span>
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{step.delay}</span>
                   <span className={cn(
                     "text-[9px] font-black uppercase tracking-widest",
                     step.sent ? "text-emerald-500" : step.current ? "text-blue-400" : "text-zinc-700"
@@ -1388,31 +1430,52 @@ function EmailsTab({ userId }: { userId: string }) {
         </div>
       </Panel>
 
-      {/* Campaign Emails */}
-      <Panel title="קמפיינים שנשלחו" icon={Mail} color="purple">
-        {data.campaigns.length === 0 ? (
+      {/* Complete Email History */}
+      <Panel title="היסטוריית מיילים מלאה" icon={Mail} color="purple">
+        {data.emails.length === 0 ? (
           <p className="text-zinc-700 text-sm font-bold uppercase tracking-widest text-center py-8">
-            לא נשלחו קמפיינים
+            לא נשלחו מיילים
           </p>
         ) : (
           <div className="space-y-2">
-            {data.campaigns.map((campaign) => (
-              <div
-                key={campaign.id}
-                className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-white/[0.02] transition-all"
-              >
-                <Mail className="w-4 h-4 text-purple-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-zinc-300 truncate">{campaign.subject}</p>
-                  <p className="text-[9px] text-zinc-600 font-bold">
-                    סגמנט: {campaign.segment} | נשלח ל-{campaign.sentCount} | נכשל: {campaign.failedCount}
-                  </p>
+            {data.emails.map((email) => {
+              const sourceInfo = SOURCE_LABELS[email.source] || SOURCE_LABELS.system;
+              const typeLabel = TYPE_LABELS[email.type] || email.type;
+              const isFailed = email.status === 'failed';
+              return (
+                <div
+                  key={email.id}
+                  className={cn(
+                    "flex items-center gap-4 px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-white/[0.02] transition-all",
+                    isFailed && "opacity-60 border-red-500/10"
+                  )}
+                >
+                  <Mail className={cn("w-4 h-4 shrink-0", isFailed ? "text-red-400" : "text-zinc-400")} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-zinc-300 truncate">
+                      {email.subject || typeLabel}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border", sourceInfo.color)}>
+                        {sourceInfo.label}
+                      </span>
+                      <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-wider">
+                        {typeLabel}
+                      </span>
+                      {isFailed && (
+                        <span className="px-2 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase">
+                          נכשל
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-bold text-zinc-700 shrink-0">
+                    {new Date(email.sentAt).toLocaleDateString('he-IL')}{' '}
+                    {new Date(email.sentAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold text-zinc-700 shrink-0">
-                  {new Date(campaign.sentAt).toLocaleDateString('he-IL')}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Panel>

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createServiceClient } from "@/lib/supabase/service";
+import { EmailService } from '@/lib/emails/service';
 import { logger } from "@/lib/logger";
 
 /**
@@ -166,6 +167,31 @@ export async function POST(request: Request) {
       });
     } catch {
       // webhook_events table is optional - ignore errors
+    }
+
+    // Log LemonSqueezy-sent emails (LS sends receipts/confirmations automatically)
+    const lsEmailEvents: Record<string, string> = {
+      subscription_created: 'Subscription Confirmation',
+      subscription_payment_success: 'Payment Receipt',
+      subscription_cancelled: 'Cancellation Confirmation',
+      subscription_expired: 'Subscription Expired',
+      subscription_resumed: 'Subscription Resumed',
+      subscription_payment_failed: 'Payment Failed Notice',
+    };
+    const eventAttrs = event.data?.attributes as Record<string, unknown> | undefined;
+    if (eventName in lsEmailEvents && eventAttrs?.user_email) {
+      await EmailService.logEmail({
+        userId: userId || undefined,
+        emailTo: eventAttrs.user_email as string,
+        source: 'lemonsqueezy',
+        emailType: eventName,
+        subject: lsEmailEvents[eventName],
+        status: 'sent',
+        metadata: {
+          subscription_id: eventAttrs.subscription_id,
+          plan: (eventAttrs.product_name || eventAttrs.variant_name) as string,
+        },
+      });
     }
 
     return new NextResponse('OK', { status: 200 });

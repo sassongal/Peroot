@@ -5,9 +5,10 @@ import { logger } from '@/lib/logger';
 /**
  * GET /api/admin/users/[id]/emails
  *
- * Returns email history for a user:
- * - Onboarding sequence status and steps
- * - Campaign emails sent to this user (from activity_logs)
+ * Returns complete email history for a user from all sources:
+ * - email_logs table (centralized: Resend + LemonSqueezy)
+ * - email_sequences (onboarding progress)
+ * - Fallback: webhook_events for historical LemonSqueezy emails
  */
 export async function GET(
   _req: NextRequest,
@@ -24,28 +25,36 @@ export async function GET(
 
     const { id } = await params;
 
-    // Fetch onboarding sequence for this user
     const [
       { data: sequence },
       { data: profile },
-      { data: campaignLogs },
+      { data: emailLogs },
+      { data: webhookEvents },
     ] = await Promise.all([
+      // Onboarding sequence
       supabase
         .from('email_sequences')
         .select('*')
         .eq('user_id', id)
         .eq('sequence_type', 'onboarding')
         .maybeSingle(),
+      // User profile
       supabase
         .from('profiles')
-        .select('email, created_at')
+        .select('email, plan_tier, created_at')
         .eq('id', id)
         .maybeSingle(),
-      // Find campaign emails that included this user's segment
+      // Centralized email logs for this user
       supabase
-        .from('activity_logs')
-        .select('id, action, details, created_at')
-        .eq('action', 'email_campaign')
+        .from('email_logs')
+        .select('*')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      // LemonSqueezy webhook events (for historical data before email_logs existed)
+      supabase
+        .from('webhook_events')
+        .select('event_name, body, created_at')
         .order('created_at', { ascending: false })
         .limit(50),
     ]);
@@ -74,26 +83,77 @@ export async function GET(
       unsubscribed: sequenceStatus === 'unsubscribed',
     };
 
-    // Filter campaign logs to determine which campaigns this user likely received
-    // We check the segment and whether the user matches it
-    const userTier = profile?.email ? 'unknown' : 'free'; // We'd need plan_tier for accurate matching
-    const campaigns = (campaignLogs ?? []).map((log) => {
-      const details = log.details as Record<string, unknown> | null;
-      return {
-        id: log.id,
-        subject: (details?.subject as string) || 'Unknown',
-        segment: (details?.segment as string) || 'all',
-        sentCount: (details?.sent_count as number) || 0,
-        failedCount: (details?.failed_count as number) || 0,
-        sentAt: log.created_at,
+    // Build complete email history from email_logs
+    const allEmails = (emailLogs ?? []).map((log) => ({
+      id: log.id,
+      source: log.source,
+      type: log.email_type,
+      subject: log.subject,
+      status: log.status,
+      sentAt: log.created_at,
+      metadata: log.metadata,
+    }));
+
+    // Supplement with LemonSqueezy webhook events for this user
+    // (for historical emails before email_logs was created)
+    const userEmail = profile?.email;
+    if (userEmail && webhookEvents) {
+      const lsEventNames: Record<string, string> = {
+        subscription_created: 'Subscription Confirmation',
+        subscription_payment_success: 'Payment Receipt',
+        subscription_cancelled: 'Cancellation Confirmation',
+        subscription_expired: 'Subscription Expired',
+        subscription_resumed: 'Subscription Resumed',
+        subscription_payment_failed: 'Payment Failed Notice',
       };
-    });
+
+      // Check existing email_logs IDs to avoid duplicates
+      const existingIds = new Set(allEmails.map(e => e.id));
+
+      for (const event of webhookEvents) {
+        if (!(event.event_name in lsEventNames)) continue;
+        const body = event.body as Record<string, unknown> | null;
+        const data = body?.data as Record<string, unknown> | null;
+        const attrs = data?.attributes as Record<string, unknown> | null;
+        const eventEmail = attrs?.user_email as string;
+
+        if (eventEmail?.toLowerCase() !== userEmail.toLowerCase()) continue;
+
+        const eventId = `ls-${event.event_name}-${event.created_at}`;
+        if (existingIds.has(eventId)) continue;
+
+        allEmails.push({
+          id: eventId,
+          source: 'lemonsqueezy',
+          type: event.event_name,
+          subject: lsEventNames[event.event_name],
+          status: 'sent',
+          sentAt: event.created_at,
+          metadata: {
+            plan: (attrs?.product_name as string) || (attrs?.variant_name as string) || null,
+          },
+        });
+      }
+
+      // Sort by date descending
+      allEmails.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+    }
+
+    // Summary stats
+    const totalSent = allEmails.filter(e => e.status === 'sent').length;
+    const totalFailed = allEmails.filter(e => e.status === 'failed').length;
+    const sources = [...new Set(allEmails.map(e => e.source))];
 
     return NextResponse.json({
-      email: profile?.email ?? null,
+      email: userEmail ?? null,
       userCreatedAt: profile?.created_at ?? null,
       onboarding,
-      campaigns,
+      emails: allEmails,
+      summary: {
+        totalSent,
+        totalFailed,
+        sources,
+      },
     });
   } catch (err) {
     logger.error('[Admin User Emails] Error:', err);
