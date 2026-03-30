@@ -156,6 +156,18 @@ export function PromptInput({
     const [interimResult, setInterimResult] = useState("");
     const [voiceLang, setVoiceLang] = useState<VoiceLang>('he-IL');
     const [showLangPicker, setShowLangPicker] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    // Close language picker on click outside
+    useEffect(() => {
+      if (!showLangPicker) return;
+      const handler = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest('[data-lang-picker]')) setShowLangPicker(false);
+      };
+      document.addEventListener('click', handler);
+      return () => document.removeEventListener('click', handler);
+    }, [showLangPicker]);
 
     // Performance optimization: Memoize heavy text processing
     // This prevents re-calculation when other props (like loading state) change
@@ -313,7 +325,31 @@ export function PromptInput({
           </div>
         )}
 
-        <div className="flex-1 glass-card p-1 rounded-2xl border-[var(--glass-border)] bg-gradient-to-br from-black/[0.03] dark:from-white/[0.08] to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300">
+        <div
+          className={cn(
+            "flex-1 glass-card p-1 rounded-2xl border-[var(--glass-border)] bg-gradient-to-br from-black/[0.03] dark:from-white/[0.08] to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300",
+            isDragOver && "border-blue-500/50 bg-blue-500/5 ring-2 ring-blue-500/20"
+          )}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+            const files = Array.from(e.dataTransfer.files);
+            for (const file of files) {
+              try {
+                if (file.type.startsWith('image/')) {
+                  onAddImage?.(file);
+                  toast.success(`"${file.name}" נוספה`);
+                } else {
+                  onAddFile?.(file);
+                  toast.success(`"${file.name}" נוסף`);
+                }
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ");
+              }
+            }
+          }}>
           <div className="bg-white/60 dark:bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
              <div
               aria-hidden
@@ -365,7 +401,7 @@ export function PromptInput({
                              )}
                          </button>
                          {/* Language picker */}
-                         <div className="relative">
+                         <div className="relative" data-lang-picker>
                            <button
                              onClick={() => setShowLangPicker(prev => !prev)}
                              className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
@@ -432,8 +468,12 @@ export function PromptInput({
                            onChange={(e) => {
                              const file = e.target.files?.[0];
                              if (file) {
-                               onAddFile(file);
-                               toast.success(`"${file.name}" נוסף — מחלץ תוכן...`);
+                               try {
+                                 onAddFile(file);
+                                 toast.success(`"${file.name}" נוסף — מחלץ תוכן...`);
+                               } catch (err) {
+                                 toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ");
+                               }
                              }
                              e.target.value = '';
                            }}
@@ -506,8 +546,12 @@ export function PromptInput({
                            onChange={(e) => {
                              const file = e.target.files?.[0];
                              if (file) {
-                               onAddImage(file);
-                               toast.success(`"${file.name}" נוספה — מעבד תמונה...`);
+                               try {
+                                 onAddImage(file);
+                                 toast.success(`"${file.name}" נוספה — מעבד תמונה...`);
+                               } catch (err) {
+                                 toast.error(err instanceof Error ? err.message : "שגיאה בהוספת תמונה");
+                               }
                              }
                              e.target.value = '';
                            }}

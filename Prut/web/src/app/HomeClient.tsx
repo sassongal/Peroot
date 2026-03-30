@@ -483,6 +483,11 @@ function PageContent() {
       return;
     }
 
+    if (context.isOverLimit) {
+      toast.error("יש יותר מדי context — הסירו קובץ לפני שדרוג");
+      return;
+    }
+
     const currentModeParams: Record<string, string> | undefined =
       ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
         ? { image_platform: imagePlatform, output_format: imageOutputFormat, ...(imageAspectRatio && { aspect_ratio: imageAspectRatio }) }
@@ -539,6 +544,11 @@ function PageContent() {
 
       toast.success(t.prompt_generator.success_toast);
       discovery.onEnhanceComplete();
+
+      // Clear attachments after successful enhance to prevent stale context on next prompt
+      if (context.attachments.length > 0) {
+        context.clearAll();
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, targetModel, addToHistory, incrementUsage, t, discovery.onEnhanceComplete]);
@@ -619,7 +629,9 @@ function PageContent() {
 
       if (e.key === 'Escape' && !isTyping) {
         if (completionRef.current) {
-          dispatch({ type: 'SET_COMPLETION', payload: '' });
+          if (confirm("למחוק את התוצאה?")) {
+            dispatch({ type: 'SET_COMPLETION', payload: '' });
+          }
         }
       }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {

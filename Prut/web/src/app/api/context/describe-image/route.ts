@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { estimateTokens } from '@/lib/context/token-counter';
+import { checkRateLimit } from '@/lib/ratelimit';
 import { logger } from '@/lib/logger';
 
 export const maxDuration = 30;
@@ -15,6 +16,15 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Rate limiting — this route calls Gemini API (costs money)
+    const limitResult = await checkRateLimit(user.id, 'free');
+    if (!limitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.', reset_at: limitResult.reset },
+        { status: 429, headers: { 'Retry-After': String(limitResult.reset) } }
+      );
     }
 
     const formData = await request.formData();

@@ -242,6 +242,10 @@ export function useContextAttachments() {
         name: a.name,
         content: a.extractedText!,
         tokenCount: a.tokenCount ?? 0,
+        format: a.format || undefined,
+        filename: a.filename || a.name,
+        url: a.url || (a.type === 'url' ? a.name : undefined),
+        description: a.type === 'image' ? (a.extractedText || undefined) : undefined,
       }));
   }, [attachments]);
 
