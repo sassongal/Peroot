@@ -131,6 +131,31 @@ function PageContent() {
   const variableValuesRef = useRef(ps.variableValues);
   variableValuesRef.current = ps.variableValues;
 
+  // Batched debounced auto-save for variable memory
+  const pendingVarsRef = useRef<Record<string, string>>({});
+  const saveVarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveVariable = useCallback((key: string, value: string) => {
+    if (!user || !value.trim()) return;
+    pendingVarsRef.current[key] = value.trim();
+    if (saveVarTimeoutRef.current) clearTimeout(saveVarTimeoutRef.current);
+    saveVarTimeoutRef.current = setTimeout(() => {
+      const batch = { ...pendingVarsRef.current };
+      pendingVarsRef.current = {};
+      fetch(getApiPath("/api/user-variables"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variables: batch }),
+      }).catch(() => {}); // fire-and-forget
+    }, 1500);
+  }, [user]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (saveVarTimeoutRef.current) clearTimeout(saveVarTimeoutRef.current);
+    };
+  }, []);
+
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
   const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
   const [imageAspectRatio, setImageAspectRatio] = useState("");
@@ -403,6 +428,31 @@ function PageContent() {
     const newVars = { ...variableValuesRef.current };
     extracted.forEach(ph => { if (!(ph in newVars)) newVars[ph] = ""; });
     dispatch({ type: 'SET_VARIABLE_VALUES', payload: newVars });
+
+    // Fetch saved variable values for auto-fill (authenticated users only)
+    if (extracted.length > 0 && user) {
+      const emptyKeys = extracted.filter(ph => !newVars[ph]);
+      if (emptyKeys.length > 0) {
+        fetch(getApiPath(`/api/user-variables?keys=${emptyKeys.join(",")}`))
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (!data?.variables) return;
+            const merged = { ...variableValuesRef.current };
+            const filled: string[] = [];
+            for (const [key, value] of Object.entries(data.variables as Record<string, string>)) {
+              if (key in merged && !merged[key] && value) {
+                merged[key] = value;
+                filled.push(key);
+              }
+            }
+            if (filled.length > 0) {
+              dispatch({ type: 'SET_VARIABLE_VALUES', payload: merged });
+              dispatch({ type: 'SET_PREFILLED_KEYS', payload: filled });
+            }
+          })
+          .catch(() => {}); // non-critical
+      }
+    }
 
     return { text: acc.promptText, title: generatedTitle };
   };
@@ -983,7 +1033,11 @@ function PageContent() {
                        improvementDelta={ps.previousScore !== null && ps.iterationCount > 0
                          ? completionScore.baseScore - ps.previousScore
                          : completionScore.baseScore - inputScore.baseScore}
-                       onVariableChange={(key, val) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } })}
+                       preFilledKeys={ps.preFilledKeys}
+                       onVariableChange={(key, val) => {
+                         dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } });
+                         saveVariable(key, val);
+                       }}
                        onImproveAgain={() => {
                          dispatch({ type: 'SET_INPUT', payload: ps.completion });
                          dispatch({ type: 'INCREMENT_ITERATION' });

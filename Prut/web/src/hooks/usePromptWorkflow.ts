@@ -30,6 +30,8 @@ export interface PromptState {
   detectedCategory: string;
   questionAnswers: Record<string, string>;
   variableValues: Record<string, string>;
+  /** Variable keys that were pre-filled from saved user memory */
+  preFilledKeys: string[];
   copied: boolean;
   iterationCount: number;
   /** Snapshot of generation params - used in refinement to prevent platform drift (BUG #2) */
@@ -54,6 +56,7 @@ export type PromptAction =
   | { type: 'SET_DETECTED_CATEGORY'; payload: string }
   | { type: 'SET_QUESTION_ANSWER'; payload: { id: number; answer: string } }
   | { type: 'SET_VARIABLE_VALUES'; payload: Record<string, string> }
+  | { type: 'SET_PREFILLED_KEYS'; payload: string[] }
   | { type: 'SET_COMPLETION'; payload: string }
   | { type: 'SET_COPIED'; payload: boolean }
   | { type: 'INCREMENT_ITERATION' }
@@ -77,6 +80,7 @@ const initialState: PromptState = {
   detectedCategory: '',
   questionAnswers: {},
   variableValues: {},
+  preFilledKeys: [],
   copied: false,
   iterationCount: 0,
   generationContext: null,
@@ -194,6 +198,9 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
 
     case 'SET_VARIABLE_VALUES':
       return { ...state, variableValues: action.payload };
+
+    case 'SET_PREFILLED_KEYS':
+      return { ...state, preFilledKeys: action.payload };
 
     case 'SET_COPIED':
       return { ...state, copied: action.payload };

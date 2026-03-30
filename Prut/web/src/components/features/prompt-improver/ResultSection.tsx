@@ -39,6 +39,7 @@ interface ResultSectionProps {
   onSave: () => void;
   placeholders?: string[];
   variableValues?: Record<string, string>;
+  preFilledKeys?: string[];
   onVariableChange?: (key: string, value: string) => void;
   onImproveAgain?: () => void;
   onRetryStream?: () => void;
@@ -88,6 +89,7 @@ export function ResultSection({
   onSave,
   placeholders = [],
   variableValues = {},
+  preFilledKeys = [],
   onVariableChange,
   onImproveAgain,
   onRetryStream,
@@ -457,20 +459,33 @@ export function ResultSection({
                <span className="text-sm font-semibold text-[var(--text-primary)]">{t.result_section.variables_title}</span>
             </div>
             <div className="flex flex-col gap-3">
-               {placeholders.map((ph, i) => (
+               {placeholders.map((ph, i) => {
+                 const isPreFilled = preFilledKeys.includes(ph) && !!variableValues[ph];
+                 return (
                  <div key={i} className="space-y-1.5">
-                    <label className="text-xs text-[var(--text-muted)] font-medium ms-1 block text-start" dir="rtl">
-                      {ph}
+                    <label className="text-xs text-[var(--text-muted)] font-medium ms-1 flex items-center justify-between" dir="rtl">
+                      <span>{ph}</span>
+                      {isPreFilled && (
+                        <span className="text-[10px] text-amber-500 dark:text-amber-400 font-normal">
+                          from your last prompt
+                        </span>
+                      )}
                     </label>
                     <input
                       dir="rtl"
                       value={variableValues[ph] || ""}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
                       placeholder={getVariablePlaceholder(ph)}
-                      className="w-full bg-black/5 dark:bg-black/40 border border-[var(--glass-border)] rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-[var(--text-muted)]"
+                      className={cn(
+                        "w-full border rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-[var(--text-muted)]",
+                        isPreFilled
+                          ? "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-500/20"
+                          : "bg-black/5 dark:bg-black/40 border-[var(--glass-border)]"
+                      )}
                     />
                  </div>
-               ))}
+                 );
+               })}
             </div>
             <div className="text-[10px] text-[var(--text-muted)] text-center mt-2">
               {t.result_section.auto_update_hint}
