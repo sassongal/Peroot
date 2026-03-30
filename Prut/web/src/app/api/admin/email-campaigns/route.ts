@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 import { validateAdminSession } from '@/lib/admin/admin-security';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/ratelimit';
-import DOMPurify from 'isomorphic-dompurify';
+// DOMPurify loaded dynamically in POST handler to avoid jsdom import crash on GET
 
 type Segment = 'all' | 'pro' | 'free' | 'inactive';
 
@@ -240,6 +240,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Sanitize HTML content ─────────────────────────────────────────────
+    const DOMPurify = (await import('isomorphic-dompurify')).default;
     const sanitizedHtml = DOMPurify.sanitize(htmlContent as string, {
       ALLOWED_TAGS: [
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
