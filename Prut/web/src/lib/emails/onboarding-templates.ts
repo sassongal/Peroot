@@ -4,7 +4,7 @@ interface OnboardingStep {
   id: string;
   delayHours: number;
   subject: string;
-  html: (name: string, unsubscribeUrl: string) => string;
+  html: (name: string, unsubscribeUrl: string, referralCode?: string) => string;
 }
 
 function emailWrapper(content: string, unsubscribeUrl: string): string {
@@ -67,13 +67,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'onboarding_day7',
     delayHours: 168,
     subject: 'הזמינו חברים וקבלו קרדיטים בחינם',
-    html: (name, unsubscribeUrl) => emailWrapper(`
-      <h2 style="color: #f59e0b; font-size: 22px;">רוצים עוד קרדיטים? 🎁</h2>
+    html: (name, unsubscribeUrl, referralCode) => emailWrapper(`
+      <h2 style="color: #f59e0b; font-size: 22px;">רוצים עוד קרדיטים?</h2>
       <p>היי ${name}, ידעתם שאפשר לקבל קרדיטים בחינם?</p>
 
       <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
-        <p style="font-size: 18px; font-weight: bold; margin: 0 0 8px 0;">הזמינו חבר → שניכם מקבלים 5 קרדיטים</p>
-        <p style="font-size: 14px; margin: 0;">היכנסו להגדרות → הפניות כדי לקבל את קוד ההפניה שלכם</p>
+        <p style="font-size: 18px; font-weight: bold; margin: 0 0 8px 0;">הזמינו חבר ← שניכם מקבלים 5 קרדיטים</p>
+        ${referralCode ? `<p style="font-size: 14px; margin: 8px 0 0; direction: ltr;"><strong>קוד ההפניה שלכם:</strong> <code style="background: #fff; padding: 4px 12px; border-radius: 6px; font-size: 16px; letter-spacing: 2px;">${referralCode}</code></p>
+        <p style="font-size: 12px; color: #92400e; margin-top: 8px;">שתפו את הקוד עם חברים — כל מי שנרשם איתו מקבל בונוס!</p>` : `<p style="font-size: 14px; margin: 0;">היכנסו להגדרות ← הפניות כדי לקבל את קוד ההפניה שלכם</p>`}
       </div>
 
       <div style="text-align: center; margin-top: 30px;">

@@ -59,6 +59,8 @@ interface PromptInputProps {
   // Target model
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
+  // Credits
+  creditsRemaining?: number | null;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -146,6 +148,7 @@ export function PromptInput({
   hasAttachments,
   targetModel,
   setTargetModel,
+  creditsRemaining,
 }: PromptInputProps) {
     const t = useI18n();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -688,6 +691,18 @@ export function PromptInput({
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
                 )}
               </button>
+              {creditsRemaining != null && creditsRemaining >= 0 && (
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-1 rounded-lg border",
+                  creditsRemaining > 2
+                    ? "text-[var(--text-muted)] border-[var(--glass-border)] bg-[var(--glass-bg)]"
+                    : creditsRemaining > 0
+                      ? "text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/5"
+                      : "text-red-400 border-red-500/20 bg-red-500/5"
+                )}>
+                  {creditsRemaining} credits
+                </span>
+              )}
             </div>
           </div>
         </div>

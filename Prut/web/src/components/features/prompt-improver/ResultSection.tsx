@@ -243,6 +243,14 @@ export function ResultSection({
             >
               {originalPrompt}
             </div>
+          ) : isLoading && !completion ? (
+            <div className="p-8 space-y-4 animate-pulse" dir="rtl">
+              <div className="h-4 bg-[var(--glass-border)] rounded w-3/4" />
+              <div className="h-4 bg-[var(--glass-border)] rounded w-full" />
+              <div className="h-4 bg-[var(--glass-border)] rounded w-5/6" />
+              <div className="h-4 bg-[var(--glass-border)] rounded w-2/3" />
+              <div className="h-4 bg-[var(--glass-border)] rounded w-4/5" />
+            </div>
           ) : (
             <SafeHtml
               html={styledHtml}

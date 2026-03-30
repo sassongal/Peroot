@@ -63,11 +63,22 @@ export async function GET(request: NextRequest) {
       const name = userData?.user?.user_metadata?.full_name || userData?.user?.user_metadata?.name || "";
       const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?token=${seq.id}`;
 
+      // Fetch referral code for day 7 email
+      let referralCode: string | undefined;
+      if (step.id === 'onboarding_day7') {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('referral_code')
+          .eq('id', seq.user_id)
+          .maybeSingle();
+        referralCode = (profile?.referral_code as string) || undefined;
+      }
+
       try {
         await EmailService.send({
           to: email,
           subject: step.subject,
-          html: step.html(name, unsubscribeUrl),
+          html: step.html(name, unsubscribeUrl, referralCode),
           userId: seq.user_id,
           emailType: step.id,
           metadata: { sequence_id: seq.id, step: seq.current_step },

@@ -502,6 +502,12 @@ function PageContent() {
     trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
 
     const contextPayload = context.getContextPayload();
+
+    // Auto-detect input language (Hebrew vs English)
+    const hebrewChars = (ps.input.match(/[\u0590-\u05FF]/g) || []).length;
+    const totalChars = ps.input.replace(/\s/g, '').length;
+    const detectedLang = totalChars > 0 && hebrewChars / totalChars < 0.3 ? 'en' : 'he';
+
     await startStream(getApiPath("/api/enhance"), {
       prompt: ps.input,
       tone: ps.selectedTone,
@@ -510,6 +516,7 @@ function PageContent() {
       ...(currentModeParams && { mode_params: currentModeParams }),
       ...(contextPayload.length > 0 && { context: contextPayload }),
       ...(targetModel !== 'general' && { target_model: targetModel }),
+      ...(detectedLang === 'en' && { mode_params: { ...currentModeParams, input_language: 'en' } }),
     });
 
     const result = processStreamResult("Enhance");
@@ -529,7 +536,11 @@ function PageContent() {
       });
 
       if (user && creditsRemaining !== null) {
-        setCreditsRemaining(prev => prev !== null ? Math.max(0, prev - 1) : null);
+        const newCredits = Math.max(0, creditsRemaining - 1);
+        setCreditsRemaining(newCredits);
+        if (newCredits === 0) {
+          toast("הקרדיטים נגמרו — הם מתחדשים כל יום בשעה 14:00", { duration: 8000 });
+        }
       }
       if (!user) {
         incrementUsage();
@@ -625,8 +636,10 @@ function PageContent() {
     toast.success("הועתק ללוח");
   }, [isPro, dispatch]);
 
-  // Keep ref in sync for keyboard shortcut handler
+  // Keep refs in sync for keyboard shortcut handler
   handleCopyTextRef.current = handleCopyText;
+  const handleEnhanceRef = useRef<(() => void) | null>(null);
+  handleEnhanceRef.current = handleEnhance;
 
   // Use ref for completion to avoid re-attaching listener on every streaming chunk
   const completionRef = useRef(ps.completion);
@@ -643,6 +656,11 @@ function PageContent() {
             dispatch({ type: 'SET_COMPLETION', payload: '' });
           }
         }
+      }
+      // Cmd+Enter or Ctrl+Enter to enhance
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleEnhanceRef.current?.();
       }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
         if (completionRef.current) {
@@ -1069,6 +1087,7 @@ function PageContent() {
                contextIsOverLimit={context.isOverLimit}
                targetModel={targetModel}
                setTargetModel={handleSetTargetModel}
+               creditsRemaining={creditsRemaining}
                isNewUser={isNewUser}
                user={user}
                previousView={previousView}

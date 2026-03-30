@@ -75,7 +75,7 @@ const initialState: PromptState = {
   error: null,
   selectedCategory: 'General',
   selectedTone: 'Professional',
-  selectedCapability: CapabilityMode.STANDARD,
+  selectedCapability: (typeof window !== 'undefined' ? localStorage.getItem('peroot_last_mode') as CapabilityMode : null) || CapabilityMode.STANDARD,
   questions: [],
   detectedCategory: '',
   questionAnswers: {},
@@ -162,6 +162,9 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
       return { ...state, selectedTone: action.payload };
 
     case 'SET_CAPABILITY':
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem('peroot_last_mode', action.payload); } catch {}
+      }
       return { ...state, selectedCapability: action.payload };
 
     case 'SET_QUESTIONS':

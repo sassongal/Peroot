@@ -82,6 +82,9 @@ interface InputSectionProps {
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
 
+  // Credits
+  creditsRemaining?: number | null;
+
   // User context
   isNewUser: boolean;
   user: unknown;
@@ -134,6 +137,7 @@ export const InputSection = memo<InputSectionProps>(({
   contextIsOverLimit,
   targetModel,
   setTargetModel,
+  creditsRemaining,
   isNewUser,
   user,
   previousView,
@@ -201,6 +205,7 @@ export const InputSection = memo<InputSectionProps>(({
         hasAttachments={contextAttachments.length > 0}
         targetModel={targetModel}
         setTargetModel={setTargetModel}
+        creditsRemaining={creditsRemaining}
       />
 
       {/* Context attachment chips */}
