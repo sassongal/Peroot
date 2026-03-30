@@ -255,20 +255,21 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Sanitize HTML content ─────────────────────────────────────────────
-    const DOMPurify = (await import('isomorphic-dompurify')).default;
-    const sanitizedHtml = DOMPurify.sanitize(htmlContent as string, {
-      ALLOWED_TAGS: [
+    const sanitize = (await import('sanitize-html')).default;
+    const sanitizedHtml = sanitize(htmlContent as string, {
+      allowedTags: [
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
         'strong', 'b', 'em', 'i', 'u', 'a', 'img',
         'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
         'table', 'thead', 'tbody', 'tr', 'th', 'td',
         'div', 'span', 'header', 'footer', 'section',
       ],
-      ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'style', 'class',
-        'width', 'height', 'target', 'rel',
-        'align', 'valign', 'bgcolor', 'border', 'cellpadding', 'cellspacing',
-      ],
+      allowedAttributes: {
+        a: ['href', 'target', 'rel', 'title'],
+        img: ['src', 'alt', 'title', 'width', 'height'],
+        '*': ['style', 'class', 'align', 'valign', 'bgcolor', 'border'],
+        table: ['cellpadding', 'cellspacing', 'border', 'width'],
+      },
     });
 
     // ── Send via Resend ───────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { ReactNode, Children, isValidElement, cloneElement, ReactElement } from "react";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 export const PLACEHOLDER_REGEX = /{[^}]+}/g;
 
@@ -132,9 +132,9 @@ export const toStyledHtml = (value: string) => {
     .replace(PLACEHOLDER_REGEX, (match) => `<span class="text-amber-300 font-semibold">${match}</span>`)
     .replace(/\n/g, "<br />");
 
-  return DOMPurify.sanitize(raw, {
-    ALLOWED_TAGS: ['span', 'br'],
-    ALLOWED_ATTR: ['class'],
+  return sanitizeHtml(raw, {
+    allowedTags: ['span', 'br'],
+    allowedAttributes: { span: ['class'] },
   });
 };
 
@@ -167,10 +167,10 @@ export const renderStyledPrompt = (value: string): string => {
     .replace(/\n\n/g, '</p><p class="mt-4">')
     .replace(/\n/g, '<br />');
 
-  // Step 3: Final DOMPurify sanitization as safety net
-  return DOMPurify.sanitize(`<p>${html}</p>`, {
-    ALLOWED_TAGS: ['p', 'span', 'br'],
-    ALLOWED_ATTR: ['class'],
+  // Step 3: Final sanitization as safety net
+  return sanitizeHtml(`<p>${html}</p>`, {
+    allowedTags: ['p', 'span', 'br'],
+    allowedAttributes: { span: ['class'], p: ['class'] },
   });
 };
 
