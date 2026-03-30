@@ -65,10 +65,10 @@ export async function GET() {
         .from('profiles')
         .select('*', { count: 'exact', head: true }),
 
-      // Plan tier breakdown from profiles
+      // Plan tier breakdown from profiles (include id, email for pro user matching)
       supabase
         .from('profiles')
-        .select('plan_tier'),
+        .select('id, plan_tier, email, full_name, created_at'),
 
       // Recent subscription events from activity_logs
       supabase
@@ -157,6 +157,7 @@ export async function GET() {
       ends_at: s.ends_at,
       created_at: s.created_at,
       updated_at: s.updated_at,
+      is_manual: false as boolean,
     }));
 
     // ── Also find pro users from profiles who might not have subscription records ──
@@ -164,6 +165,25 @@ export async function GET() {
       (p) => (p.plan_tier ?? 'free').toLowerCase() !== 'free'
     );
     const subUserIds = new Set(allSubs.map((s) => s.user_id));
+
+    // Add pro users without subscription records to the subscriber list
+    for (const p of proProfiles) {
+      if (!subUserIds.has(p.id)) {
+        subscribers.push({
+          id: `manual-${p.id}`,
+          user_id: p.id,
+          status: 'active',
+          plan_name: (p.plan_tier as string) || 'pro',
+          customer_email: (p.email as string) || '',
+          customer_name: (p.full_name as string) || '',
+          renews_at: null,
+          ends_at: null,
+          created_at: p.created_at as string,
+          updated_at: p.created_at as string,
+          is_manual: true,
+        });
+      }
+    }
 
     // Recalculate activeSubs to also count profiles with pro tier but no subscription record
     const effectiveActiveSubs = Math.max(activeSubs, proProfiles.length);

@@ -26,6 +26,10 @@ import {
   Tag,
   Sparkles,
   BarChart2,
+  Mail,
+  CheckCircle,
+  Circle,
+  XCircle,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
 
@@ -99,7 +103,7 @@ interface UserDetail {
   lastActive: string;
 }
 
-type Tab = "overview" | "activity" | "prompts" | "history";
+type Tab = "overview" | "activity" | "prompts" | "history" | "emails";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -491,12 +495,13 @@ export default function UserDetailPage() {
 
             {/* Tab Switcher */}
             <div className="flex p-1.5 bg-zinc-950/50 border border-white/5 rounded-[28px] gap-1">
-              {(["overview", "activity", "prompts", "history"] as Tab[]).map((tab) => {
+              {(["overview", "activity", "prompts", "history", "emails"] as Tab[]).map((tab) => {
                 const labels: Record<Tab, string> = {
                   overview: "Overview",
                   activity: "Activity",
                   prompts: "Prompts",
                   history: "History",
+                  emails: "Emails",
                 };
                 return (
                   <button
@@ -995,6 +1000,11 @@ export default function UserDetailPage() {
                 )}
               </div>
             )}
+
+            {/* ── Emails Tab ── */}
+            {activeTab === "emails" && (
+              <EmailsTab userId={userId} />
+            )}
           </div>
 
           {/* ── Admin Actions Sidebar ── */}
@@ -1249,4 +1259,163 @@ function InfoRow({
 
 function Divider() {
   return <div className="h-px bg-white/5" />;
+}
+
+// ── Emails Tab ──────────────────────────────────────────────────────────────
+
+interface EmailData {
+  email: string | null;
+  userCreatedAt: string | null;
+  onboarding: {
+    status: string;
+    currentStep: number;
+    steps: Array<{
+      step: number;
+      name: string;
+      delay: string;
+      key: string;
+      sent: boolean;
+      current: boolean;
+    }>;
+    startedAt: string | null;
+    lastSentAt: string | null;
+    unsubscribed: boolean;
+  };
+  campaigns: Array<{
+    id: string;
+    subject: string;
+    segment: string;
+    sentCount: number;
+    failedCount: number;
+    sentAt: string;
+  }>;
+}
+
+function EmailsTab({ userId }: { userId: string }) {
+  const [data, setData] = useState<EmailData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await fetch(getApiPath(`/api/admin/users/${userId}/emails`));
+        if (!res.ok) throw new Error("Failed");
+        const json: EmailData = await res.json();
+        setData(json);
+      } catch {
+        toast.error("Failed to load email data");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <RefreshCw className="w-8 h-8 animate-spin text-blue-500/20" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <div className="space-y-6">
+      {/* Onboarding Sequence */}
+      <Panel title="רצף אונבורדינג" icon={Mail} color="blue">
+        <div className="space-y-4">
+          {/* Status */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">סטטוס:</span>
+            <span className={cn(
+              "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
+              data.onboarding.status === 'active' && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+              data.onboarding.status === 'completed' && "bg-blue-500/10 border-blue-500/20 text-blue-400",
+              data.onboarding.status === 'unsubscribed' && "bg-red-500/10 border-red-500/20 text-red-400",
+              data.onboarding.status === 'not_started' && "bg-zinc-800 border-white/10 text-zinc-500",
+            )}>
+              {data.onboarding.status === 'active' ? 'פעיל' :
+               data.onboarding.status === 'completed' ? 'הושלם' :
+               data.onboarding.status === 'unsubscribed' ? 'בוטל' : 'לא התחיל'}
+            </span>
+          </div>
+
+          {/* Steps Timeline */}
+          <div className="space-y-3">
+            {data.onboarding.steps.map((step) => {
+              const StepIcon = step.sent ? CheckCircle : step.current ? Circle : XCircle;
+              return (
+                <div
+                  key={step.step}
+                  className={cn(
+                    "flex items-center gap-4 px-5 py-3 rounded-2xl border transition-all",
+                    step.sent && "bg-emerald-500/5 border-emerald-500/10",
+                    step.current && "bg-blue-500/5 border-blue-500/10",
+                    !step.sent && !step.current && "bg-zinc-900/50 border-white/5 opacity-40"
+                  )}
+                >
+                  <StepIcon className={cn(
+                    "w-4 h-4 shrink-0",
+                    step.sent && "text-emerald-400",
+                    step.current && "text-blue-400 animate-pulse",
+                    !step.sent && !step.current && "text-zinc-700"
+                  )} />
+                  <div className="flex-1">
+                    <span className="text-sm font-bold text-zinc-300">{step.name}</span>
+                  </div>
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                    {step.delay}
+                  </span>
+                  <span className={cn(
+                    "text-[9px] font-black uppercase tracking-widest",
+                    step.sent ? "text-emerald-500" : step.current ? "text-blue-400" : "text-zinc-700"
+                  )}>
+                    {step.sent ? "נשלח" : step.current ? "ממתין" : "טרם"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {data.onboarding.lastSentAt && (
+            <p className="text-[9px] text-zinc-600 font-bold">
+              שליחה אחרונה: {new Date(data.onboarding.lastSentAt).toLocaleString('he-IL')}
+            </p>
+          )}
+        </div>
+      </Panel>
+
+      {/* Campaign Emails */}
+      <Panel title="קמפיינים שנשלחו" icon={Mail} color="purple">
+        {data.campaigns.length === 0 ? (
+          <p className="text-zinc-700 text-sm font-bold uppercase tracking-widest text-center py-8">
+            לא נשלחו קמפיינים
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {data.campaigns.map((campaign) => (
+              <div
+                key={campaign.id}
+                className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-white/[0.02] transition-all"
+              >
+                <Mail className="w-4 h-4 text-purple-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-zinc-300 truncate">{campaign.subject}</p>
+                  <p className="text-[9px] text-zinc-600 font-bold">
+                    סגמנט: {campaign.segment} | נשלח ל-{campaign.sentCount} | נכשל: {campaign.failedCount}
+                  </p>
+                </div>
+                <span className="text-[9px] font-bold text-zinc-700 shrink-0">
+                  {new Date(campaign.sentAt).toLocaleDateString('he-IL')}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
+    </div>
+  );
 }

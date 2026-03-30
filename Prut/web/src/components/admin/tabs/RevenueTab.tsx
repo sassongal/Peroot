@@ -64,6 +64,7 @@ interface Subscriber {
   ends_at: string | null;
   created_at: string;
   updated_at: string;
+  is_manual?: boolean;
 }
 
 interface RevenueData {
@@ -77,8 +78,8 @@ interface RevenueData {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtUSD(n: number) {
-  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function fmtILS(n: number) {
+  return `₪${n.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtPct(n: number) {
@@ -387,7 +388,7 @@ export default function RevenueTab() {
             <KpiCard
               label="MRR"
               sublabel="Monthly Recurring Revenue"
-              value={data ? fmtUSD(data.kpi.mrr) : "-"}
+              value={data ? fmtILS(data.kpi.mrr) : "-"}
               icon={DollarSign}
               color="emerald"
               loading={loading}
@@ -433,7 +434,7 @@ export default function RevenueTab() {
             <SecondaryCard
               label="ARPU"
               sublabel="Average Revenue Per User"
-              value={data ? fmtUSD(data.kpi.arpu) : "-"}
+              value={data ? fmtILS(data.kpi.arpu) : "-"}
               icon={BarChart3}
               loading={loading}
             />
@@ -622,8 +623,11 @@ export default function RevenueTab() {
                             <div className="text-[10px] text-zinc-600 truncate">{sub.customer_email}</div>
                           )}
                         </div>
-                        <span className="w-20 text-center text-[9px] font-black uppercase tracking-widest text-zinc-400">
+                        <span className="w-20 text-center text-[9px] font-black uppercase tracking-widest text-zinc-400 flex flex-col items-center gap-0.5">
                           {sub.plan_name || 'pro'}
+                          {sub.is_manual && (
+                            <span className="text-[7px] text-amber-500/60">ידני</span>
+                          )}
                         </span>
                         <span className={cn(
                           "w-24 text-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
