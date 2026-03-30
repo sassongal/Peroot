@@ -123,14 +123,76 @@ export async function POST(request: Request) {
       }
 
       // Sync plan_tier in profiles table (used by rate limiter / enhance API)
+      // LemonSqueezy sends various statuses — 'paid' appears on payment_success events
       if (userId) {
-        const isActivePro = ['active', 'on_trial'].includes(attributes.status);
+        const ACTIVE_STATUSES = ['active', 'on_trial', 'paid'];
+        const isActivePro = ACTIVE_STATUSES.includes(attributes.status);
+
+        // Fetch current profile to detect pro→free transitions
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('plan_tier, tags')
+          .eq('id', userId)
+          .single();
+
+        const wasPro = currentProfile?.plan_tier === 'pro';
+        const newTier = isActivePro ? 'pro' : 'free';
+
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ plan_tier: isActivePro ? 'pro' : 'free' })
+          .update({ plan_tier: newTier })
           .eq('id', userId);
         if (profileError) {
           logger.error('[LemonSqueezy Webhook] Profile plan_tier update error:', profileError);
+        }
+
+        // --- CHURN: Pro → Free transition ---
+        if (wasPro && !isActivePro) {
+          // Fetch daily_free_limit from site_settings
+          const { data: siteSettings } = await supabase
+            .from('site_settings')
+            .select('daily_free_limit')
+            .single();
+          const dailyFreeLimit = siteSettings?.daily_free_limit ?? 2;
+
+          // Revoke pro credits → reset to free daily limit
+          const { error: revokeError } = await supabase
+            .from('profiles')
+            .update({
+              credits_balance: dailyFreeLimit,
+              credits_refreshed_at: new Date().toISOString(),
+              churned_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+          if (revokeError) {
+            logger.error('[LemonSqueezy Webhook] Credit revocation error:', revokeError);
+          }
+
+          // Add "churn" tag (idempotent — only if not already present)
+          const existingTags: string[] = currentProfile?.tags ?? [];
+          if (!existingTags.includes('churn')) {
+            await supabase
+              .from('profiles')
+              .update({ tags: [...existingTags, 'churn'] })
+              .eq('id', userId);
+          }
+
+          logger.info(`[LemonSqueezy Webhook] CHURN: User ${userId} reverted to free, credits reset to ${dailyFreeLimit}`);
+        }
+
+        // --- RESUBSCRIBE: Remove churn tag if user comes back ---
+        if (isActivePro && !wasPro) {
+          const existingTags: string[] = currentProfile?.tags ?? [];
+          if (existingTags.includes('churn')) {
+            await supabase
+              .from('profiles')
+              .update({
+                tags: existingTags.filter((t: string) => t !== 'churn'),
+                churned_at: null,
+              })
+              .eq('id', userId);
+            logger.info(`[LemonSqueezy Webhook] RESUBSCRIBE: User ${userId} returned to pro, churn tag removed`);
+          }
         }
 
         // Grant monthly credits on subscription creation or renewal payment

@@ -71,6 +71,8 @@ interface UserDetail {
     is_banned?: boolean;
     created_at: string;
     updated_at: string;
+    tags?: string[];
+    churned_at?: string;
   };
   role: { role: string } | null;
   subscription: {
@@ -413,6 +415,19 @@ export default function UserDetailPage() {
                   Banned
                 </span>
               )}
+              {profile.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className={cn(
+                    "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
+                    tag === "churn"
+                      ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
+                      : "bg-zinc-500/10 border-zinc-500/20 text-zinc-400"
+                  )}
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
             <h1 className="text-3xl font-black text-white tracking-tight leading-none">
               {displayName}

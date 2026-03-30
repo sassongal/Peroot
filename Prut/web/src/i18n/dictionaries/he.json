@@ -140,7 +140,8 @@
             "all": "הכל",
             "admin": "מנהלים",
             "active": "פעילים",
-            "banned": "חסומים"
+            "banned": "חסומים",
+            "churn": "נטשו"
         },
         "stats": {
             "total": "Total Identity",

@@ -33,6 +33,7 @@ interface User {
   // enriched
   plan_tier?: string;
   customer_name?: string | null;
+  tags?: string[];
 }
 
 export default function UsersPage() {
@@ -40,7 +41,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "admin" | "active" | "banned">("all");
+  const [filter, setFilter] = useState<"all" | "admin" | "active" | "banned" | "churn">("all");
   const [isSyncing, setIsSyncing] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -150,6 +151,7 @@ export default function UsersPage() {
         new Date(user.last_sign_in_at) >
           new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       );
+    if (filter === "churn") return user.tags?.includes("churn");
     return true;
   });
 
@@ -269,7 +271,7 @@ export default function UsersPage() {
           </div>
 
           <div className="flex p-2 gap-2">
-            {(["all", "admin", "active", "banned"] as const).map((f) => (
+            {(["all", "admin", "active", "banned", "churn"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -409,14 +411,21 @@ export default function UsersPage() {
 
                       {/* Tier */}
                       <td className="px-10 py-7">
-                        <span
-                          className={cn(
-                            "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                            tierColor(user.plan_tier)
+                        <div className="flex flex-wrap gap-1.5">
+                          <span
+                            className={cn(
+                              "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                              tierColor(user.plan_tier)
+                            )}
+                          >
+                            {user.plan_tier?.toUpperCase() || "FREE"}
+                          </span>
+                          {user.tags?.includes("churn") && (
+                            <span className="px-2 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[9px] font-black uppercase tracking-widest">
+                              Churn
+                            </span>
                           )}
-                        >
-                          {user.plan_tier?.toUpperCase() || "FREE"}
-                        </span>
+                        </div>
                       </td>
 
                       {/* Access / Role */}

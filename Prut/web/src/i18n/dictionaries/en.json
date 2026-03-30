@@ -140,7 +140,8 @@
             "all": "All",
             "admin": "Admins",
             "active": "Active",
-            "banned": "Banned"
+            "banned": "Banned",
+            "churn": "Churned"
         },
         "stats": {
             "total": "Total Identity",
