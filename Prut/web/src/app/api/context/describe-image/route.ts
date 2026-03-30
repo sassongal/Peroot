@@ -74,7 +74,22 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           contents: [{
             parts: [
-              { text: 'תאר את התמונה הזו בפירוט בעברית. כלול: מה רואים בתמונה, צבעים, טקסט (אם יש), הקשר משוער, ופרטים רלוונטיים. תיאור של 3-5 משפטים.' },
+              { text: `Analyze this image with maximum detail extraction. Your output will be used as context for an AI prompt engineer.
+
+EXTRACT ALL of the following that apply:
+- **Colors**: If colors are visible, extract EXACT hex codes (e.g., #B9453C). List every distinct color.
+- **Text/Typography**: Transcribe ALL visible text exactly as written. Note fonts, sizes, styles.
+- **Data/Numbers**: Extract all numbers, measurements, statistics, dates.
+- **Layout/Structure**: Describe composition, grid, hierarchy, spacing.
+- **Objects/Elements**: Identify all visual elements precisely.
+- **Style/Mood**: Describe the aesthetic, design style, mood.
+- **Brand elements**: Logos, icons, patterns, watermarks.
+- **Technical details**: Resolution clues, format, aspect ratio.
+
+Be SPECIFIC and PRECISE. Instead of "warm colors" say "muted red #B9453C and warm beige #E6DBCF".
+Instead of "some text" say "Title reads 'Welcome Home' in serif font, ~24px".
+
+Output in Hebrew. Be comprehensive — 5-10 sentences.` },
               { inline_data: { mime_type: file.type, data: base64 } },
             ],
           }],

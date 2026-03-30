@@ -85,6 +85,9 @@ export function useContextAttachments() {
         id,
         type: "file",
         name: file.name,
+        filename: file.name,
+        format: file.name.split('.').pop()?.toLowerCase(),
+        size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
       };
 
@@ -191,6 +194,9 @@ export function useContextAttachments() {
         id,
         type: "image",
         name: file.name,
+        filename: file.name,
+        format: file.name.split('.').pop()?.toLowerCase(),
+        size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
       };
 

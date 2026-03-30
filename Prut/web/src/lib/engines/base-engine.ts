@@ -659,7 +659,7 @@ ${isMinimalPrompt ? `## חשוב — פרומפט מינימלי זוהה!
   /** Build a concise context summary for the user prompt message */
   private buildContextSummaryForUserPrompt(context: NonNullable<EngineInput['context']>): string {
       return context.map(a => {
-          if (a.type === 'image') return `[תמונה: ${a.name}] ${(a.description || a.content).slice(0, 500)}`;
+          if (a.type === 'image') return `[תמונה: ${a.name}]\n${(a.description || a.content).slice(0, 1500)}`;
           if (a.type === 'url') return `[URL: ${a.url || a.name}] ${a.content.slice(0, 1000)}`;
           return `[${a.format?.toUpperCase() || 'קובץ'}: ${a.name}] ${a.content.slice(0, 1500)}`;
       }).join('\n\n');
