@@ -43,6 +43,11 @@ export async function GET(
 
     const { id } = await params;
 
+    // Validate UUID format
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      return NextResponse.json({ error: 'Invalid user ID format' }, { status: 400 });
+    }
+
     const [
       { data: profile },
       { data: role },
@@ -170,6 +175,10 @@ export async function POST(
     }
 
     const { id } = await params;
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      return NextResponse.json({ error: 'Invalid user ID format' }, { status: 400 });
+    }
 
     const { data: body, error: parseError } = await parseAdminInput(req, adminActionSchema);
     if (parseError) return parseError;

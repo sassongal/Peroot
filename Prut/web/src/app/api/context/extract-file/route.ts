@@ -16,8 +16,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Rate limiting
-    const limitResult = await checkRateLimit(user.id, 'free');
+    // Rate limiting — use actual tier
+    const { data: fileProfile } = await supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
+    const fileTier: 'pro' | 'free' = fileProfile?.plan_tier === 'pro' ? 'pro' : 'free';
+    const limitResult = await checkRateLimit(user.id, fileTier);
     if (!limitResult.success) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.', reset_at: limitResult.reset },

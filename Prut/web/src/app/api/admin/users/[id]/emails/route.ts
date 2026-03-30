@@ -29,7 +29,6 @@ export async function GET(
       { data: sequence },
       { data: profile },
       { data: emailLogs },
-      { data: webhookEvents },
     ] = await Promise.all([
       // Onboarding sequence
       supabase
@@ -51,9 +50,6 @@ export async function GET(
         .eq('user_id', id)
         .order('created_at', { ascending: false })
         .limit(100),
-      // LemonSqueezy webhook events — fetched separately after we know userEmail
-      // to avoid loading all users' PII into memory
-      Promise.resolve({ data: null as null }),
     ]);
 
     // Build onboarding timeline

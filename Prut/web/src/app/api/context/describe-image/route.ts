@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limiting — this route calls Gemini API (costs money)
-    const limitResult = await checkRateLimit(user.id, 'free');
+    const { data: imgProfile } = await supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
+    const imgTier: 'pro' | 'free' = imgProfile?.plan_tier === 'pro' ? 'pro' : 'free';
+    const limitResult = await checkRateLimit(user.id, imgTier);
     if (!limitResult.success) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.', reset_at: limitResult.reset },

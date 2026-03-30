@@ -24,14 +24,11 @@ export const GET = withAdmin(async (req: NextRequest, supabase) => {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  // Filter by entity_type
-  if (filter !== 'all') {
-    query = query.eq('entity_type', filter);
-  }
-
-  // Admin-only filter
+  // adminOnly takes precedence over filter (mutually exclusive)
   if (adminOnly) {
     query = query.eq('entity_type', 'admin_action');
+  } else if (filter !== 'all') {
+    query = query.eq('entity_type', filter);
   }
 
   const { data, count, error } = await query;
@@ -41,7 +38,7 @@ export const GET = withAdmin(async (req: NextRequest, supabase) => {
     return NextResponse.json({ error: 'Failed to load activity logs' }, { status: 500 });
   }
 
-  // Client-side search filtering (email + action) since PostgREST can't search across joins easily
+  // Client-side search filtering (email + action)
   let filtered = data ?? [];
   if (searchTerm.trim()) {
     const term = searchTerm.toLowerCase();
@@ -54,7 +51,7 @@ export const GET = withAdmin(async (req: NextRequest, supabase) => {
 
   return NextResponse.json({
     logs: filtered,
-    total: count ?? 0,
+    total: searchTerm.trim() ? filtered.length : (count ?? 0),
     limit,
     offset,
   });

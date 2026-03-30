@@ -25,25 +25,26 @@ export async function GET(request: NextRequest) {
   let errors = 0;
 
   try {
-    // Get all users with their last activity date
+    // Get all users with email (limited to prevent timeout)
     const { data: profiles, error: profileError } = await supabase
       .from("profiles")
       .select("id, email, full_name, created_at")
-      .not("email", "is", null);
+      .not("email", "is", null)
+      .limit(5000);
 
     if (profileError || !profiles) {
       logger.error("[Reengagement] Failed to fetch profiles:", profileError);
       return NextResponse.json({ error: "Failed to fetch profiles" }, { status: 500 });
     }
 
-    // Get unsubscribed users to skip them
+    // Get unsubscribed users
     const { data: unsubscribed } = await supabase
       .from("email_sequences")
       .select("user_id")
       .eq("status", "unsubscribed");
     const unsubIds = new Set((unsubscribed ?? []).map((u) => u.user_id));
 
-    // Get already-sent re-engagement emails to avoid duplicates
+    // Get already-sent re-engagement emails
     const { data: alreadySent } = await supabase
       .from("email_logs")
       .select("user_id, email_type")
@@ -52,28 +53,49 @@ export async function GET(request: NextRequest) {
       (alreadySent ?? []).map((e) => `${e.user_id}:${e.email_type}`)
     );
 
-    // For each user, check their last activity
+    // Get email_sequences for unsubscribe tokens (keyed by user_id)
+    const { data: sequences } = await supabase
+      .from("email_sequences")
+      .select("id, user_id")
+      .eq("sequence_type", "onboarding");
+    const sequenceByUser = new Map(
+      (sequences ?? []).map((s) => [s.user_id, s.id])
+    );
+
+    // BATCH: Get last activity for all users in one query instead of N+1
+    // Fetch recent activity grouped by user (last 35 days covers all templates)
+    const thirtyFiveDaysAgo = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentActivity } = await supabase
+      .from("activity_logs")
+      .select("user_id, created_at")
+      .gte("created_at", thirtyFiveDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(50000);
+
+    // Build map: user_id → last activity date
+    const lastActivityMap = new Map<string, Date>();
+    for (const row of recentActivity ?? []) {
+      if (!lastActivityMap.has(row.user_id)) {
+        lastActivityMap.set(row.user_id, new Date(row.created_at));
+      }
+    }
+
+    // Process each user
     for (const profile of profiles) {
       if (unsubIds.has(profile.id)) continue;
 
-      // Get last activity date
-      const { data: lastActivity } = await supabase
-        .from("activity_logs")
-        .select("created_at")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      const lastActiveDate = lastActivity?.[0]?.created_at
-        ? new Date(lastActivity[0].created_at)
-        : new Date(profile.created_at);
-
+      const lastActiveDate = lastActivityMap.get(profile.id) ?? new Date(profile.created_at);
       const daysSinceActive = Math.floor(
         (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      // Find the appropriate template for this inactivity level
-      // Pick the highest-tier template they qualify for but haven't received
+      // Skip recently active users (< 7 days)
+      if (daysSinceActive < 7) {
+        skipped++;
+        continue;
+      }
+
+      // Find the highest-tier template they qualify for but haven't received
       const eligibleTemplate = REENGAGEMENT_TEMPLATES
         .filter((t) => daysSinceActive >= t.inactiveDays)
         .filter((t) => !sentKeys.has(`${profile.id}:${t.id}`))
@@ -85,7 +107,11 @@ export async function GET(request: NextRequest) {
       }
 
       const name = profile.full_name || profile.email?.split("@")[0] || "";
-      const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?token=${profile.id}`;
+
+      // Use email_sequences.id as unsubscribe token (matches the unsubscribe endpoint)
+      // Fallback to profile.id if no sequence exists (endpoint will handle gracefully)
+      const unsubToken = sequenceByUser.get(profile.id) || profile.id;
+      const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?token=${unsubToken}`;
 
       try {
         await EmailService.send({
@@ -100,10 +126,9 @@ export async function GET(request: NextRequest) {
           },
         });
         sent++;
-        logger.info(`[Reengagement] Sent ${eligibleTemplate.id} to ${profile.email?.slice(0, 3)}***`);
       } catch (err) {
         errors++;
-        logger.error(`[Reengagement] Failed to send to ${profile.email?.slice(0, 3)}***:`, err);
+        logger.error(`[Reengagement] Failed to send ${eligibleTemplate.id}:`, err);
       }
     }
 

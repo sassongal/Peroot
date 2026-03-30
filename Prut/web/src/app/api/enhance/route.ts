@@ -18,7 +18,7 @@ export const maxDuration = 30;
 
 // Simple in-memory cache for user profile/tier (survives within same serverless instance)
 const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: number }>();
-const PROFILE_CACHE_TTL = 300_000; // 5 minutes
+const PROFILE_CACHE_TTL = 60_000; // 1 minute (reduced from 5min to limit stale auth data)
 
 const RequestSchema = z.object({
   prompt: z.string().min(1).max(10000),

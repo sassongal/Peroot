@@ -58,16 +58,21 @@ export async function GET() {
       ]);
 
     // Count inactive by finding users with no recent activity
+    // Batch .in() calls to avoid URL length limits with large user bases
     const allProfileIds = (inactiveUsersResult.data ?? []).map((p) => p.id);
     let inactiveCount = 0;
     if (allProfileIds.length > 0) {
-      const { data: recentActiveIds } = await supabase
-        .from('activity_logs')
-        .select('user_id')
-        .gte('created_at', thirtyDaysAgo)
-        .in('user_id', allProfileIds);
-
-      const activeSet = new Set((recentActiveIds ?? []).map((r) => r.user_id));
+      const BATCH_SIZE = 500;
+      const activeSet = new Set<string>();
+      for (let i = 0; i < allProfileIds.length; i += BATCH_SIZE) {
+        const batch = allProfileIds.slice(i, i + BATCH_SIZE);
+        const { data: recentActiveIds } = await supabase
+          .from('activity_logs')
+          .select('user_id')
+          .gte('created_at', thirtyDaysAgo)
+          .in('user_id', batch);
+        for (const r of recentActiveIds ?? []) activeSet.add(r.user_id);
+      }
       inactiveCount = allProfileIds.filter((id) => !activeSet.has(id)).length;
     }
 
@@ -198,13 +203,18 @@ export async function POST(req: NextRequest) {
       const allIds = [...profileMap.keys()];
 
       if (allIds.length > 0) {
-        const { data: recentActivity } = await supabase
-          .from('activity_logs')
-          .select('user_id')
-          .gte('created_at', thirtyDaysAgo)
-          .in('user_id', allIds);
-
-        const activeSet = new Set((recentActivity ?? []).map((r) => r.user_id));
+        // Batch .in() to avoid URL length limits
+        const activeSet = new Set<string>();
+        const IN_BATCH = 500;
+        for (let i = 0; i < allIds.length; i += IN_BATCH) {
+          const batch = allIds.slice(i, i + IN_BATCH);
+          const { data: recentActivity } = await supabase
+            .from('activity_logs')
+            .select('user_id')
+            .gte('created_at', thirtyDaysAgo)
+            .in('user_id', batch);
+          for (const r of recentActivity ?? []) activeSet.add(r.user_id);
+        }
         emails = allIds
           .filter((id) => !activeSet.has(id))
           .map((id) => profileMap.get(id)!)
