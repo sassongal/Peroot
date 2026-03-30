@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getApiPath } from "@/lib/api-path";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface EngineConfig {
   id: string;
@@ -86,11 +87,13 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
 
       toast.success("Logic Core Synchronized");
 
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       await supabase.from('activity_logs').insert({
+        user_id: currentUser?.id,
         action: `עדכון ליבת מנוע: ${config.mode}`,
         entity_type: 'engine',
         entity_id: config.id,
-        details: { mode: config.mode }
+        details: { mode: config.mode, updated_by: currentUser?.email }
       });
 
     } catch {
@@ -135,10 +138,12 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
   };
 
   if (loading) return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-black">
+      <AdminLayout>
+      <div className="flex flex-col items-center justify-center gap-6 py-40">
           <Cpu className="w-12 h-12 text-blue-500 animate-spin" />
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700">Accessing Logic Core...</span>
       </div>
+      </AdminLayout>
   );
   if (!config) return null;
 
@@ -146,7 +151,8 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
   const userVars = extractVars(config.user_prompt_template);
 
   return (
-    <div className="min-h-screen space-y-10 animate-in fade-in duration-1000 pb-20 select-none pb-40" dir="rtl">
+    <AdminLayout>
+    <div className="space-y-10 animate-in fade-in duration-1000 pb-20 select-none pb-40" dir="rtl">
       
       {/* Nexus Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 bg-zinc-950/50 p-8 rounded-[40px] border border-white/5">
@@ -313,6 +319,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
 
       </div>
     </div>
+    </AdminLayout>
   );
 }
 

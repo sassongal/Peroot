@@ -24,6 +24,8 @@ import {
   Layers,
   Clock,
   Tag,
+  Sparkles,
+  BarChart2,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
 
@@ -39,8 +41,21 @@ interface ActivityLog {
 interface PromptItem {
   id: string;
   title: string;
+  prompt?: string;
   created_at: string;
   use_count?: number;
+}
+
+interface HistoryItem {
+  id: string;
+  prompt: string;
+  enhanced_prompt: string;
+  tone: string;
+  category: string;
+  capability_mode: string;
+  title: string | null;
+  source: string;
+  created_at: string;
 }
 
 interface UserDetail {
@@ -66,7 +81,7 @@ interface UserDetail {
     contribution_score: number;
     total_copies: number;
   } | null;
-  personality: {
+  stylePersonality: {
     style_tokens: string[];
     personality_brief: string;
     preferred_format: string;
@@ -75,9 +90,16 @@ interface UserDetail {
   promptCount: number;
   totalApiCost: number;
   recentActivity: ActivityLog[];
+  historyCount: number;
+  recentHistory: HistoryItem[];
+  sourceBreakdown: Record<string, number>;
+  topCategories: [string, number][];
+  topTones: [string, number][];
+  topModes: [string, number][];
+  lastActive: string;
 }
 
-type Tab = "overview" | "activity" | "prompts";
+type Tab = "overview" | "activity" | "prompts" | "history";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -115,6 +137,12 @@ function initials(email: string) {
   return email ? email[0].toUpperCase() : "U";
 }
 
+function sourceColor(source: string) {
+  if (source === "extension")
+    return "bg-purple-500/10 border-purple-500/20 text-purple-400";
+  return "bg-blue-500/10 border-blue-500/20 text-blue-400";
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function UserDetailPage() {
@@ -130,6 +158,15 @@ export default function UserDetailPage() {
   const [prompts, setPrompts] = useState<PromptItem[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
   const [promptsLoaded, setPromptsLoaded] = useState(false);
+  const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
+
+  // History tab state
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set());
 
   // Activity load-more
   const [activityVisible, setActivityVisible] = useState(10);
@@ -148,6 +185,13 @@ export default function UserDetailPage() {
       const json: UserDetail = await res.json();
       setDetail(json);
       setTierValue(json.profile.plan_tier ?? "free");
+      // Seed history from recentHistory in the main response
+      if (json.recentHistory?.length) {
+        setHistory(json.recentHistory);
+        setHistoryOffset(json.recentHistory.length);
+        setHistoryTotal(json.historyCount ?? json.recentHistory.length);
+        setHistoryLoaded(true);
+      }
     } catch (err) {
       logger.error(err);
       toast.error("Failed to load user details");
@@ -156,23 +200,18 @@ export default function UserDetailPage() {
     }
   }, [userId]);
 
-  // Fetch prompts (lazy)
+  // Fetch prompts (lazy) via admin API
   const fetchPrompts = useCallback(async () => {
     if (promptsLoaded) return;
     setLoadingPrompts(true);
     try {
-      // We use a direct supabase call would be ideal but to stay consistent
-      // with admin API pattern we fetch from the supabase client here
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("personal_library")
-        .select("id, title, created_at, use_count")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      setPrompts(data ?? []);
+      const res = await fetch(
+        getApiPath(`/api/admin/users/${userId}/prompts?tab=prompts&limit=50`)
+      );
+      if (!res.ok) throw new Error("Failed to fetch prompts");
+      const json: { tab: string; items: PromptItem[]; total: number } =
+        await res.json();
+      setPrompts(json.items ?? []);
       setPromptsLoaded(true);
     } catch (err) {
       logger.error(err);
@@ -181,6 +220,34 @@ export default function UserDetailPage() {
       setLoadingPrompts(false);
     }
   }, [userId, promptsLoaded]);
+
+  // Load more history
+  const loadMoreHistory = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(
+        getApiPath(
+          `/api/admin/users/${userId}/prompts?tab=history&limit=20&offset=${historyOffset}`
+        )
+      );
+      if (!res.ok) throw new Error("Failed to fetch history");
+      const json: {
+        tab: string;
+        items: HistoryItem[];
+        total: number;
+        limit: number;
+        offset: number;
+      } = await res.json();
+      setHistory((prev) => [...prev, ...(json.items ?? [])]);
+      setHistoryOffset((prev) => prev + (json.items?.length ?? 0));
+      setHistoryTotal(json.total ?? 0);
+    } catch (err) {
+      logger.error(err);
+      toast.error("Failed to load more history");
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [userId, historyOffset]);
 
   useEffect(() => {
     fetchDetail();
@@ -213,6 +280,22 @@ export default function UserDetailPage() {
     } finally {
       setActionLoading(null);
     }
+  }
+
+  function toggleExpandedSet(
+    set: Set<string>,
+    setter: React.Dispatch<React.SetStateAction<Set<string>>>,
+    id: string
+  ) {
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────
@@ -249,11 +332,36 @@ export default function UserDetailPage() {
     );
   }
 
-  const { profile, role, subscription, stats, personality, achievementCount, promptCount, totalApiCost, recentActivity } = detail;
+  const {
+    profile,
+    role,
+    subscription,
+    stats,
+    stylePersonality,
+    achievementCount,
+    promptCount,
+    totalApiCost,
+    recentActivity,
+    historyCount,
+    sourceBreakdown,
+    topCategories,
+    topTones,
+    topModes,
+    lastActive,
+  } = detail;
   const isBanned = profile.is_banned ?? false;
   const isAdmin = role?.role === "admin";
   const email = profile.email ?? subscription?.customer_email ?? "unknown";
   const displayName = subscription?.customer_name ?? email;
+
+  const hasInsights =
+    topCategories?.length > 0 ||
+    Object.keys(sourceBreakdown ?? {}).length > 0;
+
+  const sourceTotal = Object.values(sourceBreakdown ?? {}).reduce(
+    (a, b) => a + b,
+    0
+  );
 
   return (
     <AdminLayout>
@@ -336,7 +444,7 @@ export default function UserDetailPage() {
         </div>
 
         {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <QuickStat
             label="Prompts"
             value={promptCount}
@@ -361,6 +469,18 @@ export default function UserDetailPage() {
             icon={Trophy}
             color="purple"
           />
+          <QuickStat
+            label="Generations"
+            value={historyCount ?? 0}
+            icon={Sparkles}
+            color="blue"
+          />
+          <QuickStat
+            label="Last Active"
+            value={lastActive ? timeAgo(lastActive) : "—"}
+            icon={Activity}
+            color="emerald"
+          />
         </div>
 
         {/* Main content + Sidebar */}
@@ -371,20 +491,28 @@ export default function UserDetailPage() {
 
             {/* Tab Switcher */}
             <div className="flex p-1.5 bg-zinc-950/50 border border-white/5 rounded-[28px] gap-1">
-              {(["overview", "activity", "prompts"] as Tab[]).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    "flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-                    activeTab === tab
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                      : "text-zinc-600 hover:text-zinc-300"
-                  )}
-                >
-                  {tab === "overview" ? "Overview" : tab === "activity" ? "Activity" : "Prompts"}
-                </button>
-              ))}
+              {(["overview", "activity", "prompts", "history"] as Tab[]).map((tab) => {
+                const labels: Record<Tab, string> = {
+                  overview: "Overview",
+                  activity: "Activity",
+                  prompts: "Prompts",
+                  history: "History",
+                };
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                      activeTab === tab
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                        : "text-zinc-600 hover:text-zinc-300"
+                    )}
+                  >
+                    {labels[tab]}
+                  </button>
+                );
+              })}
             </div>
 
             {/* ── Overview Tab ── */}
@@ -411,11 +539,11 @@ export default function UserDetailPage() {
 
                 {/* Style Personality */}
                 <Panel title="Style Personality" icon={Tag} color="blue">
-                  {personality ? (
+                  {stylePersonality ? (
                     <div className="space-y-4">
-                      {personality.style_tokens.length > 0 && (
+                      {stylePersonality.style_tokens.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {personality.style_tokens.map((token, i) => (
+                          {stylePersonality.style_tokens.map((token, i) => (
                             <span
                               key={i}
                               className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-wider"
@@ -425,13 +553,13 @@ export default function UserDetailPage() {
                           ))}
                         </div>
                       )}
-                      {personality.personality_brief && (
+                      {stylePersonality.personality_brief && (
                         <p className="text-zinc-400 text-sm font-medium leading-relaxed">
-                          {personality.personality_brief}
+                          {stylePersonality.personality_brief}
                         </p>
                       )}
-                      {personality.preferred_format && (
-                        <InfoRow label="Preferred Format" value={personality.preferred_format} />
+                      {stylePersonality.preferred_format && (
+                        <InfoRow label="Preferred Format" value={stylePersonality.preferred_format} />
                       )}
                     </div>
                   ) : (
@@ -448,6 +576,130 @@ export default function UserDetailPage() {
                       <InfoRow label="Rank" value={stats.rank_title || "-"} />
                       <InfoRow label="Contribution Score" value={stats.contribution_score ?? 0} />
                       <InfoRow label="Total Copies" value={stats.total_copies ?? 0} />
+                    </div>
+                  </Panel>
+                )}
+
+                {/* Usage Insights */}
+                {hasInsights && (
+                  <Panel title="Usage Insights" icon={BarChart2} color="blue">
+                    <div className="space-y-6">
+
+                      {/* Source Breakdown */}
+                      {sourceTotal > 0 && (
+                        <div className="space-y-3">
+                          <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                            Source Breakdown
+                          </span>
+                          <div className="space-y-2">
+                            {Object.entries(sourceBreakdown).map(([src, count]) => {
+                              const pct = sourceTotal > 0
+                                ? Math.round((count / sourceTotal) * 100)
+                                : 0;
+                              return (
+                                <div key={src} className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span
+                                      className={cn(
+                                        "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                                        sourceColor(src)
+                                      )}
+                                    >
+                                      {src}
+                                    </span>
+                                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                                      {count} ({pct}%)
+                                    </span>
+                                  </div>
+                                  <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-full rounded-full transition-all",
+                                        src === "extension"
+                                          ? "bg-purple-500/60"
+                                          : "bg-blue-500/60"
+                                      )}
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Top Categories */}
+                      {topCategories?.length > 0 && (
+                        <div className="space-y-3">
+                          <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                            Top Categories
+                          </span>
+                          <div className="space-y-1.5">
+                            {topCategories.slice(0, 5).map(([cat, count]) => (
+                              <div
+                                key={cat}
+                                className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-white/[0.02] border border-white/5"
+                              >
+                                <span className="text-xs font-bold text-zinc-400 truncate">
+                                  {cat}
+                                </span>
+                                <span className="text-[9px] font-black text-zinc-600 bg-white/5 px-2 py-0.5 rounded-lg uppercase tracking-wider shrink-0 ml-3">
+                                  {count}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Top Tones */}
+                      {topTones?.length > 0 && (
+                        <div className="space-y-3">
+                          <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                            Top Tones
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {topTones.slice(0, 6).map(([tone, count]) => (
+                              <div
+                                key={tone}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5"
+                              >
+                                <span className="text-[10px] font-bold text-zinc-400">
+                                  {tone}
+                                </span>
+                                <span className="text-[9px] font-black text-zinc-600">
+                                  {count}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Top Modes */}
+                      {topModes?.length > 0 && (
+                        <div className="space-y-3">
+                          <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                            Top Modes
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {topModes.slice(0, 6).map(([mode, count]) => (
+                              <div
+                                key={mode}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5"
+                              >
+                                <span className="text-[10px] font-bold text-zinc-400">
+                                  {mode}
+                                </span>
+                                <span className="text-[9px] font-black text-zinc-600">
+                                  {count}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </Panel>
                 )}
@@ -513,30 +765,233 @@ export default function UserDetailPage() {
                   </p>
                 ) : (
                   <div className="divide-y divide-white/5">
-                    {prompts.map((p) => (
-                      <div
-                        key={p.id}
-                        className="px-8 py-5 flex items-center gap-5 hover:bg-white/[0.02] transition-all"
-                      >
-                        <div className="p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
-                          <BookOpen className="w-3.5 h-3.5 text-zinc-600" />
+                    {prompts.map((p) => {
+                      const isExpanded = expandedPrompts.has(p.id);
+                      const hasPromptText = !!p.prompt;
+                      return (
+                        <div
+                          key={p.id}
+                          className="px-8 py-5 hover:bg-white/[0.02] transition-all"
+                        >
+                          <div className="flex items-center gap-5">
+                            <div className="p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
+                              <BookOpen className="w-3.5 h-3.5 text-zinc-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-zinc-300 truncate">
+                                {p.title || "Untitled Prompt"}
+                              </p>
+                              {hasPromptText && !isExpanded && (
+                                <p className="text-[11px] text-zinc-600 mt-1 truncate">
+                                  {p.prompt!.slice(0, 100)}
+                                  {p.prompt!.length > 100 ? "…" : ""}
+                                </p>
+                              )}
+                              <p className="text-[9px] text-zinc-700 font-bold uppercase mt-1">
+                                {fmtDate(p.created_at)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              {p.use_count !== undefined && (
+                                <span className="text-[9px] font-black text-zinc-600 bg-white/5 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                  {p.use_count}x used
+                                </span>
+                              )}
+                              {hasPromptText && (
+                                <button
+                                  onClick={() =>
+                                    toggleExpandedSet(
+                                      expandedPrompts,
+                                      setExpandedPrompts,
+                                      p.id
+                                    )
+                                  }
+                                  className="p-1.5 rounded-lg text-zinc-700 hover:text-zinc-400 transition-colors"
+                                >
+                                  <ChevronDown
+                                    className={cn(
+                                      "w-3.5 h-3.5 transition-transform",
+                                      isExpanded && "rotate-180"
+                                    )}
+                                  />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Expanded prompt text */}
+                          {isExpanded && hasPromptText && (
+                            <div className="mt-4 ml-10 p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                              <p className="text-[11px] font-black text-zinc-600 uppercase tracking-widest mb-2">
+                                Prompt Text
+                              </p>
+                              <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap">
+                                {p.prompt}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-zinc-300 truncate">
-                            {p.title || "Untitled Prompt"}
-                          </p>
-                          <p className="text-[9px] text-zinc-700 font-bold uppercase">
-                            {fmtDate(p.created_at)}
-                          </p>
-                        </div>
-                        {p.use_count !== undefined && (
-                          <span className="text-[9px] font-black text-zinc-600 bg-white/5 px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0">
-                            {p.use_count}x used
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* ── History Tab ── */}
+            {activeTab === "history" && (
+              <div className="space-y-4">
+                {history.length === 0 ? (
+                  <div className="rounded-[40px] border border-white/5 bg-zinc-950/80">
+                    <p className="text-center text-zinc-800 font-black uppercase tracking-widest text-[9px] py-20">
+                      No generation history
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {history.map((item) => {
+                      const isExpanded = expandedHistory.has(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="rounded-[32px] border border-white/5 bg-zinc-950/80 overflow-hidden"
+                        >
+                          {/* Header row */}
+                          <button
+                            onClick={() =>
+                              toggleExpandedSet(
+                                expandedHistory,
+                                setExpandedHistory,
+                                item.id
+                              )
+                            }
+                            className="w-full px-7 py-5 flex items-start gap-4 hover:bg-white/[0.02] transition-all text-right"
+                          >
+                            <div className="p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0 mt-0.5">
+                              <Sparkles className="w-3.5 h-3.5 text-zinc-600" />
+                            </div>
+
+                            <div className="flex-1 min-w-0 space-y-2">
+                              {/* Badges row */}
+                              <div className="flex flex-wrap gap-1.5 items-center">
+                                {item.tone && (
+                                  <span className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/5 text-zinc-500 text-[9px] font-black uppercase tracking-wider">
+                                    {item.tone}
+                                  </span>
+                                )}
+                                {item.category && (
+                                  <span className="px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-black uppercase tracking-wider">
+                                    {item.category}
+                                  </span>
+                                )}
+                                {item.capability_mode && (
+                                  <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-wider">
+                                    {item.capability_mode}
+                                  </span>
+                                )}
+                                <span
+                                  className={cn(
+                                    "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border",
+                                    sourceColor(item.source)
+                                  )}
+                                >
+                                  {item.source}
+                                </span>
+                              </div>
+
+                              {/* Original prompt preview */}
+                              <p className="text-sm font-bold text-zinc-300 text-right leading-snug">
+                                {item.prompt.slice(0, 100)}
+                                {item.prompt.length > 100 && !isExpanded ? "…" : ""}
+                              </p>
+
+                              {/* Enhanced prompt preview */}
+                              {!isExpanded && (
+                                <p className="text-[11px] text-zinc-600 text-right leading-snug">
+                                  {item.enhanced_prompt.slice(0, 100)}
+                                  {item.enhanced_prompt.length > 100 ? "…" : ""}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest whitespace-nowrap">
+                                {timeAgo(item.created_at)}
+                              </span>
+                              <ChevronDown
+                                className={cn(
+                                  "w-3.5 h-3.5 text-zinc-700 transition-transform",
+                                  isExpanded && "rotate-180"
+                                )}
+                              />
+                            </div>
+                          </button>
+
+                          {/* Expanded body */}
+                          {isExpanded && (
+                            <div className="px-7 pb-6 space-y-4">
+                              {/* Original prompt */}
+                              <div className="rounded-2xl bg-zinc-900/60 border border-white/5 p-5 space-y-2">
+                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                                  Original Prompt
+                                </span>
+                                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                                  {item.prompt}
+                                </p>
+                              </div>
+
+                              {/* Separator */}
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1 h-px bg-white/5" />
+                                <Sparkles className="w-3 h-3 text-zinc-700" />
+                                <div className="flex-1 h-px bg-white/5" />
+                              </div>
+
+                              {/* Enhanced prompt */}
+                              <div className="rounded-2xl bg-blue-950/20 border border-blue-500/10 p-5 space-y-2">
+                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">
+                                  Enhanced Prompt
+                                </span>
+                                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                                  {item.enhanced_prompt}
+                                </p>
+                              </div>
+
+                              {/* Metadata */}
+                              <div className="flex items-center justify-between pt-1">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {item.title && (
+                                    <span className="text-[9px] font-bold text-zinc-600">
+                                      {item.title}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                                  {fmtDate(item.created_at)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Load More */}
+                {history.length < historyTotal && (
+                  <button
+                    onClick={loadMoreHistory}
+                    disabled={loadingHistory}
+                    className="w-full py-4 rounded-2xl bg-white/[0.03] border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loadingHistory ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                    Load More ({historyTotal - history.length} remaining)
+                  </button>
                 )}
               </div>
             )}

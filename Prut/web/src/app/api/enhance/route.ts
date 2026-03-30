@@ -252,7 +252,15 @@ export async function POST(req: Request) {
                         latency_ms: durationMs,
                         tokens: completion.usage,
                         prompt_length: prompt.length,
-                        result_length: completion.text.length
+                        result_length: completion.text.length,
+                        tone,
+                        category,
+                        capability_mode: capability_mode || 'STANDARD',
+                        target_model: target_model || 'general',
+                        is_refinement: isRefinement,
+                        has_context: !!(contextAttachments && contextAttachments.length > 0),
+                        context_count: contextAttachments?.length || 0,
+                        iteration: iteration || 0,
                     }
                 });
 

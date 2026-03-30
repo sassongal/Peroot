@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { ArrowRight, Save, Eye, Globe } from "lucide-react";
 import Link from "next/link";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 interface BlogPostForm {
   title: string;
@@ -159,13 +160,16 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-slate-500">טוען...</div>
-      </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-pulse text-slate-500">טוען...</div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout>
     <div dir="rtl" className="space-y-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -344,5 +348,6 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
     </div>
+    </AdminLayout>
   );
 }

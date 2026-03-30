@@ -96,6 +96,10 @@ export async function GET(req: NextRequest) {
           action: "DB Backup Genesis",
           entity_type: "database",
           user_id: user.id,
+          details: {
+            is_admin: true,
+            timestamp: new Date().toISOString(),
+          },
         });
       }
 

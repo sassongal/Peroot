@@ -11,12 +11,15 @@ import { escapePostgrestValue } from "@/lib/sanitize";
  */
 export const GET = withAdmin(async (req, supabase) => {
   const searchTerm = req.nextUrl.searchParams.get("search") || "";
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "100"), 500);
+  const offset = parseInt(req.nextUrl.searchParams.get("offset") || "0");
 
-  // Build profiles query with optional server-side search
+  // Build profiles query with optional server-side search and pagination
   let profilesQuery = supabase
     .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (searchTerm.trim()) {
     const escaped = escapePostgrestValue(searchTerm);
@@ -27,7 +30,7 @@ export const GET = withAdmin(async (req, supabase) => {
 
   // Profiles + roles + subscriptions in parallel
   const [
-    { data: profiles, error: profileError },
+    { data: profiles, count: totalCount, error: profileError },
     { data: roles, error: roleError },
     { data: subscriptions, error: subError },
   ] = await Promise.all([
@@ -68,5 +71,9 @@ export const GET = withAdmin(async (req, supabase) => {
     };
   });
 
-  return NextResponse.json(users);
+  return NextResponse.json(users, {
+    headers: {
+      'X-Total-Count': String(totalCount ?? 0),
+    },
+  });
 });

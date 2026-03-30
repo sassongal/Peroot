@@ -15,6 +15,10 @@ import {
   Clock,
   ChevronRight,
   RefreshCw,
+  Sparkles,
+  BarChart3,
+  Target,
+  Percent,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getApiPath } from "@/lib/api-path";
@@ -27,12 +31,22 @@ interface DashboardData {
   totalUsers: number;
   freeUsers: number;
   proUsers: number;
+  conversionRate: string;
   totalRevenue: number;
   apiCostsMTD: number;
   manualCostsMTD: number;
   promptsThisMonth: number;
   promptsToday: number;
-  recentSignups: Array<{ id: string; created_at: string; plan_tier: string }>;
+  totalGenerations: number;
+  generationsToday: number;
+  generationsThisMonth: number;
+  dau: number;
+  wau: number;
+  mau: number;
+  avgPromptsPerUser: string;
+  modeDistribution: Record<string, number>;
+  errorCountMTD: number;
+  recentSignups: Array<{ id: string; created_at: string; plan_tier: string; email?: string }>;
   recentActivity: Array<{
     id: string;
     user_id: string;
@@ -572,7 +586,7 @@ export default function AdminDashboardPage() {
             label="Total Users"
             value={formatNumber(data.totalUsers)}
             sub={`${data.proUsers} pro · ${data.freeUsers} free`}
-            trend="-"
+            trend={`${data.conversionRate}% conv`}
             icon={Users}
             color="blue"
             href="/admin/users"
@@ -592,22 +606,30 @@ export default function AdminDashboardPage() {
             label="API Costs MTD"
             value={formatCurrency(totalCostsMTD)}
             sub={`LLM $${data.apiCostsMTD.toFixed(2)} · Manual $${data.manualCostsMTD.toFixed(2)}`}
-            trend="-"
+            trend={data.errorCountMTD > 0 ? `${data.errorCountMTD} errors` : '-'}
             icon={CircleDollarSign}
             color="amber"
             href="/admin/activity"
             flashing={kpiFlash}
           />
           <KpiCard
-            label="Prompts This Month"
-            value={formatNumber(data.promptsThisMonth)}
-            sub={`${formatNumber(data.promptsToday)} today`}
-            trend="-"
-            icon={Zap}
+            label="Generations MTD"
+            value={formatNumber(data.generationsThisMonth)}
+            sub={`${formatNumber(data.generationsToday)} today · ${data.avgPromptsPerUser} avg/user`}
+            trend={`${formatNumber(data.totalGenerations)} total`}
+            icon={Sparkles}
             color="purple"
             href="/admin/prompts"
             flashing={kpiFlash}
           />
+        </div>
+
+        {/* ── Engagement Row ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <EngagementCard label="DAU" value={data.dau} icon={Target} />
+          <EngagementCard label="WAU" value={data.wau} icon={BarChart3} />
+          <EngagementCard label="MAU" value={data.mau} icon={Activity} />
+          <EngagementCard label="Conversion" value={`${data.conversionRate}%`} icon={Percent} />
         </div>
 
         {/* ── Charts Row ── */}
@@ -660,6 +682,41 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Mode Distribution Row ── */}
+        {Object.keys(data.modeDistribution).length > 0 && (
+          <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-amber-400">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white tracking-tight">Engine Mode Distribution</h3>
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">This month</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {Object.entries(data.modeDistribution)
+                .sort((a, b) => b[1] - a[1])
+                .map(([mode, count]) => {
+                  const total = Object.values(data.modeDistribution).reduce((s, v) => s + v, 0);
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  return (
+                    <div key={mode} className="flex items-center gap-4">
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest w-32 truncate">{mode}</span>
+                      <div className="flex-1 h-2 rounded-full bg-zinc-900 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-amber-500/60 transition-all duration-700"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-black text-zinc-500 tabular-nums w-16 text-left">{count} ({pct}%)</span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
 
         {/* ── Bottom Row ── */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -790,5 +847,33 @@ export default function AdminDashboardPage() {
 
       </div>
     </AdminLayout>
+  );
+}
+
+// ─── Engagement Card ────────────────────────────────────────────────────────
+
+function EngagementCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+}) {
+  return (
+    <div className="p-5 rounded-2xl bg-zinc-950 border border-white/5 flex items-center gap-4 hover:border-white/10 transition-all">
+      <div className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-zinc-500">
+        <Icon className="w-4 h-4" />
+      </div>
+      <div>
+        <div className="text-xl font-black text-white tabular-nums tracking-tighter">
+          {value}
+        </div>
+        <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+          {label}
+        </div>
+      </div>
+    </div>
   );
 }

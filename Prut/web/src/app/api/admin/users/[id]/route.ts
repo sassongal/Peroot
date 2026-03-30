@@ -5,6 +5,7 @@ import {
   logAdminAction,
   parseAdminInput,
 } from '@/lib/admin/admin-security';
+import { adminAdjustCredits } from '@/lib/services/credit-service';
 import { logger } from '@/lib/logger';
 
 const adminActionSchema = z.object({
@@ -50,8 +51,11 @@ export async function GET(
       { data: stylePersonality },
       { count: achievementCount },
       { count: promptCount },
+      { count: historyCount },
       { data: apiCostRows },
       { data: recentActivity },
+      { data: recentHistory },
+      { data: sourceBreakdown },
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
       supabase.from('user_roles').select('*').eq('user_id', id).maybeSingle(),
@@ -66,13 +70,27 @@ export async function GET(
         .from('personal_library')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id),
+      supabase
+        .from('history')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', id),
       supabase.from('api_usage_logs').select('estimated_cost_usd').eq('user_id', id),
       supabase
         .from('activity_logs')
         .select('id, user_id, action, created_at, details')
         .eq('user_id', id)
         .order('created_at', { ascending: false })
-        .limit(20),
+        .limit(30),
+      supabase
+        .from('history')
+        .select('id, prompt, enhanced_prompt, tone, category, capability_mode, title, source, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase
+        .from('history')
+        .select('source')
+        .eq('user_id', id),
     ]);
 
     if (!profile) {
@@ -84,6 +102,29 @@ export async function GET(
       0
     );
 
+    // Compute source breakdown (web vs extension)
+    const sources = (sourceBreakdown ?? []).reduce<Record<string, number>>((acc, row) => {
+      const src = (row.source as string) || 'web';
+      acc[src] = (acc[src] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Compute favorite categories/tones from activity
+    const categoryMap: Record<string, number> = {};
+    const toneMap: Record<string, number> = {};
+    const modeMap: Record<string, number> = {};
+    for (const log of recentActivity ?? []) {
+      const details = log.details as Record<string, unknown> | null;
+      if (details?.category) categoryMap[details.category as string] = (categoryMap[details.category as string] || 0) + 1;
+      if (details?.tone) toneMap[details.tone as string] = (toneMap[details.tone as string] || 0) + 1;
+      if (details?.mode) modeMap[details.mode as string] = (modeMap[details.mode as string] || 0) + 1;
+    }
+
+    // Find last activity timestamp
+    const lastActive = (recentActivity && recentActivity.length > 0)
+      ? recentActivity[0].created_at
+      : profile.updated_at;
+
     return NextResponse.json({
       profile,
       role,
@@ -92,8 +133,15 @@ export async function GET(
       stylePersonality,
       achievementCount: achievementCount ?? 0,
       promptCount: promptCount ?? 0,
+      historyCount: historyCount ?? 0,
       totalApiCost,
       recentActivity: recentActivity ?? [],
+      recentHistory: recentHistory ?? [],
+      sourceBreakdown: sources,
+      topCategories: Object.entries(categoryMap).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      topTones: Object.entries(toneMap).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      topModes: Object.entries(modeMap).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      lastActive,
     });
   } catch (err) {
     logger.error('[Admin User Detail GET] Error:', err);
@@ -156,28 +204,10 @@ export async function POST(
             { status: 400 }
           );
         }
-        // Atomic increment to avoid race conditions
-        const { error: updateError } = await supabase.rpc('admin_adjust_credits', {
-          target_user_id: id,
-          delta: amount,
-        });
-
-        if (updateError) {
-          // Fallback if RPC doesn't exist
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('credits_balance')
-            .eq('id', id)
-            .maybeSingle();
-          const currentCredits = profile?.credits_balance ?? 0;
-          const { error: fallbackError } = await supabase
-            .from('profiles')
-            .update({ credits_balance: currentCredits + amount })
-            .eq('id', id);
-          if (fallbackError) {
-            logger.error('[Admin User POST] grant_credits error:', fallbackError);
-            return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
-          }
+        const result = await adminAdjustCredits(id, amount);
+        if (!result.success) {
+          logger.error('[Admin User POST] grant_credits error:', result.error);
+          return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
         }
         break;
       }
@@ -190,29 +220,10 @@ export async function POST(
             { status: 400 }
           );
         }
-        // Atomic decrement to avoid race conditions
-        const { error: updateError } = await supabase.rpc('admin_adjust_credits', {
-          target_user_id: id,
-          delta: -amount,
-        });
-
-        if (updateError) {
-          // Fallback if RPC doesn't exist
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('credits_balance')
-            .eq('id', id)
-            .maybeSingle();
-          const currentCredits = profile?.credits_balance ?? 0;
-          const newCredits = Math.max(0, currentCredits - amount);
-          const { error: fallbackError } = await supabase
-            .from('profiles')
-            .update({ credits_balance: newCredits })
-            .eq('id', id);
-          if (fallbackError) {
-            logger.error('[Admin User POST] revoke_credits error:', fallbackError);
-            return NextResponse.json({ error: 'Failed to revoke credits' }, { status: 500 });
-          }
+        const result = await adminAdjustCredits(id, -amount);
+        if (!result.success) {
+          logger.error('[Admin User POST] revoke_credits error:', result.error);
+          return NextResponse.json({ error: 'Failed to revoke credits' }, { status: 500 });
         }
         break;
       }

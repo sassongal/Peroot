@@ -100,6 +100,43 @@ export async function refundCredit(
   }
 }
 
+/**
+ * Admin credit adjustment — atomic add/subtract for admin panel.
+ * Uses `admin_adjust_credits` RPC with fallback to `increment_credits`.
+ *
+ * @param userId  Target user.
+ * @param delta   Positive to grant, negative to revoke.
+ */
+export async function adminAdjustCredits(
+  userId: string,
+  delta: number,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const client = createServiceClient();
+
+    const { error: rpcError } = await client.rpc("admin_adjust_credits", {
+      target_user_id: userId,
+      delta,
+    });
+
+    if (!rpcError) return { success: true };
+
+    // Fallback RPC
+    const { error: fallbackError } = await client.rpc("increment_credits", {
+      row_id: userId,
+      amount: delta,
+    });
+
+    if (!fallbackError) return { success: true };
+
+    logger.error("[CreditService] adminAdjustCredits failed:", fallbackError);
+    return { success: false, error: "Failed to adjust credits" };
+  } catch (e) {
+    logger.error("[CreditService] adminAdjustCredits error:", e);
+    return { success: false, error: "Internal error adjusting credits" };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Legacy fallback (daily reset + non-atomic decrement)
 // ---------------------------------------------------------------------------

@@ -20,6 +20,8 @@ export async function GET() {
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const currentMonthLabel = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     const [
@@ -32,6 +34,14 @@ export async function GET() {
       { count: promptsToday },
       { data: recentSignups },
       { data: recentActivity },
+      { count: totalGenerations },
+      { count: generationsToday },
+      { count: generationsThisMonth },
+      { data: dauData },
+      { data: wauData },
+      { data: mauData },
+      { data: modeBreakdown },
+      { count: errorCount },
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('profiles').select('plan_tier'),
@@ -57,7 +67,7 @@ export async function GET() {
         .gte('created_at', todayMidnight),
       supabase
         .from('profiles')
-        .select('id, created_at, plan_tier')
+        .select('id, created_at, plan_tier, email')
         .order('created_at', { ascending: false })
         .limit(10),
       supabase
@@ -65,11 +75,40 @@ export async function GET() {
         .select('id, user_id, action, created_at, details')
         .order('created_at', { ascending: false })
         .limit(10),
+      // Total generation history count
+      supabase.from('history').select('*', { count: 'exact', head: true }),
+      // Generations today
+      supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', todayMidnight),
+      // Generations this month
+      supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
+      // DAU: distinct users with activity today
+      supabase.from('activity_logs').select('user_id').gte('created_at', todayMidnight),
+      // WAU: distinct users with activity in last 7 days
+      supabase.from('activity_logs').select('user_id').gte('created_at', sevenDaysAgo),
+      // MAU: distinct users with activity in last 30 days
+      supabase.from('activity_logs').select('user_id').gte('created_at', thirtyDaysAgo),
+      // Engine mode breakdown from recent activity
+      supabase.from('activity_logs')
+        .select('details')
+        .in('action', ['Prmpt Enhance', 'Prmpt Refine'])
+        .gte('created_at', firstOfMonth)
+        .limit(1000),
+      // Error count (failed generations)
+      supabase.from('api_usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('endpoint', 'enhance')
+        .gte('created_at', firstOfMonth)
+        .lte('estimated_cost_usd', 0),
     ]);
 
     // Aggregate free vs pro users
     const freeUsers = planCounts?.filter((p) => p.plan_tier === 'free').length ?? 0;
     const proUsers = planCounts?.filter((p) => p.plan_tier !== 'free').length ?? 0;
+
+    // Conversion rate
+    const conversionRate = (totalUsers ?? 0) > 0
+      ? ((proUsers / (totalUsers ?? 1)) * 100).toFixed(1)
+      : '0';
 
     // Sum API costs MTD
     const apiCostsMTD = apiCostsData?.reduce(
@@ -82,6 +121,24 @@ export async function GET() {
       (sum, row) => sum + (row.amount_usd ?? 0),
       0
     ) ?? 0;
+
+    // DAU / WAU / MAU (distinct user counts)
+    const dau = new Set((dauData ?? []).map(r => r.user_id)).size;
+    const wau = new Set((wauData ?? []).map(r => r.user_id)).size;
+    const mau = new Set((mauData ?? []).map(r => r.user_id)).size;
+
+    // Avg prompts per active user
+    const avgPromptsPerUser = mau > 0
+      ? ((generationsThisMonth ?? 0) / mau).toFixed(1)
+      : '0';
+
+    // Engine mode distribution
+    const modeDistribution: Record<string, number> = {};
+    for (const row of modeBreakdown ?? []) {
+      const details = row.details as Record<string, unknown> | null;
+      const mode = (details?.capability_mode || details?.mode || 'STANDARD') as string;
+      modeDistribution[mode] = (modeDistribution[mode] || 0) + 1;
+    }
 
     // Monthly trend: last 6 months, new users per month (single query instead of 6)
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
@@ -109,11 +166,21 @@ export async function GET() {
       totalUsers: totalUsers ?? 0,
       freeUsers,
       proUsers,
+      conversionRate,
       totalRevenue: totalRevenue ?? 0,
       apiCostsMTD,
       manualCostsMTD,
       promptsThisMonth: promptsThisMonth ?? 0,
       promptsToday: promptsToday ?? 0,
+      totalGenerations: totalGenerations ?? 0,
+      generationsToday: generationsToday ?? 0,
+      generationsThisMonth: generationsThisMonth ?? 0,
+      dau,
+      wau,
+      mau,
+      avgPromptsPerUser,
+      modeDistribution,
+      errorCountMTD: errorCount ?? 0,
       recentSignups: recentSignups ?? [],
       recentActivity: recentActivity ?? [],
       monthlyTrend,
