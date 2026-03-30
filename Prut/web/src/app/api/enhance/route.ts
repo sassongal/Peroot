@@ -138,6 +138,7 @@ export async function POST(req: Request) {
 
         // Store in cache
         if (userId) {
+            if (profileCache.size > 10000) profileCache.clear();
             profileCache.set(userId, { tier, isAdmin, ts: Date.now() });
         }
     }
@@ -251,7 +252,7 @@ export async function POST(req: Request) {
                     category,
                     capability_mode: capability_mode || 'STANDARD',
                     title: prompt.slice(0, 60),
-                    source: 'web',
+                    source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
                 }).then(({ error: histErr }) => {
                     if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
                 });

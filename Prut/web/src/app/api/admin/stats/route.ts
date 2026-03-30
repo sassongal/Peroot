@@ -38,9 +38,9 @@ export const GET = withAdmin(async (_req, supabase) => {
     supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', todayMidnight),
     supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase.from('activity_logs').select('user_id').gte('created_at', todayMidnight),
-    supabase.from('activity_logs').select('user_id').gte('created_at', sevenDaysAgo),
-    supabase.from('activity_logs').select('user_id').gte('created_at', thirtyDaysAgo),
+    supabase.from('activity_logs').select('user_id').gte('created_at', todayMidnight).limit(50000),
+    supabase.from('activity_logs').select('user_id').gte('created_at', sevenDaysAgo).limit(50000),
+    supabase.from('activity_logs').select('user_id').gte('created_at', thirtyDaysAgo).limit(50000),
   ]);
 
   const dau = new Set((dauData ?? []).map(r => r.user_id)).size;

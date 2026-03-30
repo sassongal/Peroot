@@ -1,5 +1,6 @@
 -- Centralized email log table
 -- Tracks every email sent to users from all sources
+-- SECURITY: Only service_role can read/write (contains PII)
 
 CREATE TABLE IF NOT EXISTS public.email_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -20,9 +21,9 @@ CREATE INDEX IF NOT EXISTS email_logs_source_idx ON public.email_logs (source);
 
 ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
 
--- Only service role / admin can access
+-- Restrict to service_role only — admin API uses service client
 CREATE POLICY "Service role full access on email_logs"
   ON public.email_logs
   FOR ALL
-  USING (true)
-  WITH CHECK (true);
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');

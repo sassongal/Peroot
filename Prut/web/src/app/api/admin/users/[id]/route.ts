@@ -74,7 +74,7 @@ export async function GET(
         .from('history')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id),
-      supabase.from('api_usage_logs').select('estimated_cost_usd').eq('user_id', id),
+      supabase.from('api_usage_logs').select('estimated_cost_usd').eq('user_id', id).limit(10000),
       supabase
         .from('activity_logs')
         .select('id, user_id, action, created_at, details')
@@ -90,7 +90,8 @@ export async function GET(
       supabase
         .from('history')
         .select('source')
-        .eq('user_id', id),
+        .eq('user_id', id)
+        .limit(5000),
     ]);
 
     if (!profile) {
@@ -178,9 +179,10 @@ export async function POST(
 
     switch (action) {
       case 'change_tier': {
-        if (typeof value !== 'string') {
+        const validTiers = ['free', 'pro', 'premium'];
+        if (typeof value !== 'string' || !validTiers.includes(value)) {
           return NextResponse.json(
-            { error: 'value must be a string tier name for change_tier' },
+            { error: `value must be one of: ${validTiers.join(', ')}` },
             { status: 400 }
           );
         }
@@ -198,9 +200,9 @@ export async function POST(
 
       case 'grant_credits': {
         const amount = Number(value);
-        if (isNaN(amount) || amount <= 0) {
+        if (isNaN(amount) || amount <= 0 || amount > 10000) {
           return NextResponse.json(
-            { error: 'value must be a positive number for grant_credits' },
+            { error: 'value must be a positive number up to 10,000' },
             { status: 400 }
           );
         }
@@ -214,9 +216,9 @@ export async function POST(
 
       case 'revoke_credits': {
         const amount = Number(value);
-        if (isNaN(amount) || amount <= 0) {
+        if (isNaN(amount) || amount <= 0 || amount > 10000) {
           return NextResponse.json(
-            { error: 'value must be a positive number for revoke_credits' },
+            { error: 'value must be a positive number up to 10,000' },
             { status: 400 }
           );
         }
@@ -284,10 +286,14 @@ export async function POST(
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
 
-    await logAdminAction(adminUser.id, `user_${action}`, {
-      target_user_id: id,
-      value: value ?? null,
-    });
+    try {
+      await logAdminAction(adminUser.id, `user_${action}`, {
+        target_user_id: id,
+        value: value ?? null,
+      });
+    } catch (logErr) {
+      logger.error('[Admin User POST] Failed to log action (action succeeded):', logErr);
+    }
 
     return NextResponse.json({ success: true, action, target_user_id: id });
   } catch (err) {

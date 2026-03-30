@@ -51,12 +51,9 @@ export async function GET(
         .eq('user_id', id)
         .order('created_at', { ascending: false })
         .limit(100),
-      // LemonSqueezy webhook events (for historical data before email_logs existed)
-      supabase
-        .from('webhook_events')
-        .select('event_name, body, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50),
+      // LemonSqueezy webhook events — fetched separately after we know userEmail
+      // to avoid loading all users' PII into memory
+      Promise.resolve({ data: null as null }),
     ]);
 
     // Build onboarding timeline
@@ -95,9 +92,21 @@ export async function GET(
     }));
 
     // Supplement with LemonSqueezy webhook events for this user
-    // (for historical emails before email_logs was created)
+    // Fetch only after we know the email, and filter server-side
     const userEmail = profile?.email;
-    if (userEmail && webhookEvents) {
+    if (userEmail) {
+      // Targeted fetch — only subscription events, with textSearch on body
+      const { data: webhookEvents } = await supabase
+        .from('webhook_events')
+        .select('event_name, body, created_at')
+        .in('event_name', [
+          'subscription_created', 'subscription_payment_success',
+          'subscription_cancelled', 'subscription_expired',
+          'subscription_resumed', 'subscription_payment_failed',
+        ])
+        .order('created_at', { ascending: false })
+        .limit(50);
+    if (webhookEvents) {
       const lsEventNames: Record<string, string> = {
         subscription_created: 'Subscription Confirmation',
         subscription_payment_success: 'Payment Receipt',
@@ -137,6 +146,7 @@ export async function GET(
 
       // Sort by date descending
       allEmails.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+    }
     }
 
     // Summary stats

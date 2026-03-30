@@ -11,8 +11,8 @@ import { escapePostgrestValue } from "@/lib/sanitize";
  */
 export const GET = withAdmin(async (req, supabase) => {
   const searchTerm = req.nextUrl.searchParams.get("search") || "";
-  const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "100"), 500);
-  const offset = parseInt(req.nextUrl.searchParams.get("offset") || "0");
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "100") || 100, 500);
+  const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get("offset") || "0") || 0);
 
   // Build profiles query with optional server-side search and pagination
   let profilesQuery = supabase

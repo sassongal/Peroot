@@ -44,7 +44,7 @@ export async function GET() {
       { count: errorCount },
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('profiles').select('plan_tier'),
+      supabase.from('profiles').select('plan_tier').limit(50000),
       supabase
         .from('subscriptions')
         .select('*', { count: 'exact', head: true })
@@ -52,7 +52,8 @@ export async function GET() {
       supabase
         .from('api_usage_logs')
         .select('estimated_cost_usd')
-        .gte('created_at', firstOfMonth),
+        .gte('created_at', firstOfMonth)
+        .limit(50000),
       supabase
         .from('manual_costs')
         .select('amount_usd')
@@ -81,12 +82,12 @@ export async function GET() {
       supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', todayMidnight),
       // Generations this month
       supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
-      // DAU: distinct users with activity today
-      supabase.from('activity_logs').select('user_id').gte('created_at', todayMidnight),
+      // DAU: distinct users with activity today (capped to prevent OOM)
+      supabase.from('activity_logs').select('user_id').gte('created_at', todayMidnight).limit(50000),
       // WAU: distinct users with activity in last 7 days
-      supabase.from('activity_logs').select('user_id').gte('created_at', sevenDaysAgo),
+      supabase.from('activity_logs').select('user_id').gte('created_at', sevenDaysAgo).limit(50000),
       // MAU: distinct users with activity in last 30 days
-      supabase.from('activity_logs').select('user_id').gte('created_at', thirtyDaysAgo),
+      supabase.from('activity_logs').select('user_id').gte('created_at', thirtyDaysAgo).limit(50000),
       // Engine mode breakdown from recent activity
       supabase.from('activity_logs')
         .select('details')

@@ -58,7 +58,8 @@ export async function GET() {
       supabase
         .from('subscriptions')
         .select('id, user_id, created_at, status, plan_name, customer_email, customer_name, renews_at, ends_at, updated_at')
-        .order('created_at', { ascending: true }),
+        .order('created_at', { ascending: true })
+        .limit(5000),
 
       // Total users for conversion rate
       supabase
@@ -199,7 +200,7 @@ export async function GET() {
         conversionRate: totalUsers > 0 ? parseFloat(((effectiveActiveSubs / totalUsers) * 100).toFixed(2)) : 0,
         arpu: totalUsers > 0 ? parseFloat((effectiveMrr / totalUsers).toFixed(2)) : 0,
         totalUsers,
-        proUsersWithoutSub: proProfiles.length - subUserIds.size,
+        proUsersWithoutSub: Math.max(0, proProfiles.length - subUserIds.size),
       },
       monthly: months,
       planBreakdown: planCounts,

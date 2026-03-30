@@ -23,8 +23,8 @@ export async function GET(
 
     const { id } = await params;
     const tab = req.nextUrl.searchParams.get('tab') || 'prompts';
-    const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50'), 200);
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
+    const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50') || 50, 200);
+    const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get('offset') || '0') || 0);
 
     if (tab === 'history') {
       // Fetch generation history — the actual prompts and AI outputs

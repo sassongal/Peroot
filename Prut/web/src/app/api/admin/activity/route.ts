@@ -12,8 +12,8 @@ export const GET = withAdmin(async (req: NextRequest, supabase) => {
   const searchTerm = req.nextUrl.searchParams.get('search') || '';
   const filter = req.nextUrl.searchParams.get('filter') || 'all';
   const adminOnly = req.nextUrl.searchParams.get('adminOnly') === 'true';
-  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '100'), 500);
-  const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '100') || 100, 500);
+  const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get('offset') || '0') || 0);
 
   let query = supabase
     .from('activity_logs')

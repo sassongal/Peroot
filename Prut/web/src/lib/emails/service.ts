@@ -2,6 +2,10 @@ import { Resend } from 'resend';
 import { createServiceClient } from '@/lib/supabase/service';
 import { logger } from "@/lib/logger";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 /**
  * Simple Email Service for Peroot
  * Usage: await EmailService.sendWelcome(user.email, user.name);
@@ -126,7 +130,7 @@ export class EmailService {
             emailType: 'welcome',
             html: `
                 <div style="max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6;">
-                    <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 20px;">היי ${name || 'שם'}</h1>
+                    <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 20px;">היי ${escapeHtml(name || 'שם')}</h1>
                     <p style="font-size: 16px;">איזה כיף שהצטרפת ל-<strong>Peroot</strong>! אנחנו כאן כדי לעזור לך להפיק את המקסימום מכלי הבינה המלאכותית שלך.</p>
 
                     <p style="font-size: 16px;">מה מחכה לך במערכת?</p>

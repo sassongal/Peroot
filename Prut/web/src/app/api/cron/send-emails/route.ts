@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
           .eq("id", seq.id);
 
         sent++;
-        logger.info(`[Cron/Emails] Sent ${step.id} to ${email}`);
+        logger.info(`[Cron/Emails] Sent ${step.id} to ${email.slice(0, 3)}***`);
       } catch (err) {
         errors++;
         logger.error(`[Cron/Emails] Failed to send ${step.id} to ${email}:`, err);
