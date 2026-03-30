@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <>
+    <div className="home-page-root">
       <HomeSEOContent />
       <HomeClient />
       <RecentBlogPosts />
-    </>
+    </div>
   );
 }

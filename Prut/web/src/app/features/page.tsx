@@ -33,6 +33,11 @@ export const metadata: Metadata = {
     locale: "he_IL",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "מה עושים פה? | כל היכולות של פירוט",
+    description: "5 מנועי AI, תמיכה ב-15+ פלטפורמות, ספרייה אישית, שרשראות פרומפטים ועוד",
+  },
 };
 
 // ─── Data ────────────────────────────────────────────────────────────────────

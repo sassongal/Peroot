@@ -740,6 +740,11 @@ a:focus-visible,
   contain: layout;
 }
 
+/* Hide server-rendered SEO hero once the client app has hydrated */
+.home-page-root:has(.hydrated) .home-seo-hero {
+  display: none;
+}
+
 .hydrated .hero-logo-image {
   animation: hero-logo-float 4s ease-in-out infinite;
 }

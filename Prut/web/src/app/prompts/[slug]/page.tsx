@@ -334,6 +334,22 @@ export default async function CategoryPage({ params }: Props) {
             </div>
           </section>
 
+          {/* Cross-links to high-value pages */}
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link href="/guide" className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right">
+              <p className="font-medium text-foreground text-sm mb-1">המדריך המלא לפרומפטים</p>
+              <p className="text-xs text-muted-foreground">5 עקרונות זהב וטכניקות מתקדמות</p>
+            </Link>
+            <Link href="/blog" className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right">
+              <p className="font-medium text-foreground text-sm mb-1">מאמרים ומדריכים</p>
+              <p className="text-xs text-muted-foreground">טיפים מקצועיים לשימוש ב-AI</p>
+            </Link>
+            <Link href="/examples" className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right">
+              <p className="font-medium text-foreground text-sm mb-1">דוגמאות לפני ואחרי</p>
+              <p className="text-xs text-muted-foreground">ראו איך Peroot משדרג פרומפטים</p>
+            </Link>
+          </div>
+
           {/* Back link */}
           <div className="mt-10 text-center">
             <Link

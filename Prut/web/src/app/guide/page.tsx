@@ -42,6 +42,11 @@ export const metadata: Metadata = {
     locale: "he_IL",
     type: "article",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "מדריך כתיבת פרומפטים מקצועיים | פירוט",
+    description: "המדריך המלא בעברית לכתיבת פרומפטים שמייצרים תוצאות מדויקות מ-AI",
+  },
 };
 
 // ─── Data ──────────────────────────────────────────────────────────────────────

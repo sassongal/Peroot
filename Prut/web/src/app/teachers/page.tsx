@@ -36,6 +36,11 @@ export const metadata: Metadata = {
     type: "website",
     url: `${SITE_URL}/teachers`,
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "פרומפטים למורים | פירוט — כלי AI לחינוך בעברית",
+    description: "68 פרומפטים מקצועיים למורים בעברית — מבחנים, תכנון שיעורים, דפי עבודה, משוב, רובריקות ועוד.",
+  },
 };
 
 // ─── Data ────────────────────────────────────────────────────────────────────

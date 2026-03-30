@@ -39,6 +39,17 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', '@radix-ui/react-slot', 'posthog-js', '@sentry/nextjs'],
   },
+  async redirects() {
+    return [
+      // Canonical domain: redirect non-www → www (301)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'peroot.space' }],
+        destination: 'https://www.peroot.space/:path*',
+        permanent: true,
+      },
+    ];
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
