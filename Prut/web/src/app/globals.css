@@ -753,27 +753,6 @@ a:focus-visible,
   filter: brightness(0.15) sepia(1) saturate(3) hue-rotate(-10deg) drop-shadow(0 0 40px rgba(180, 83, 9, 0.4));
 }
 
-/* Light mode hero warm glow background */
-:root:not(.dark) .hero-logo-container::before {
-  content: '';
-  position: absolute;
-  inset: -60% -40%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(245, 158, 11, 0.12) 0%,
-    rgba(220, 38, 38, 0.06) 35%,
-    rgba(180, 83, 9, 0.03) 60%,
-    transparent 80%
-  );
-  border-radius: 50%;
-  z-index: 0;
-  animation: hero-glow-breathe 4s ease-in-out infinite;
-}
-
-@keyframes hero-glow-breathe {
-  0%, 100% { opacity: 0.8; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
 
 /* Floating animation for logo */
 @keyframes hero-logo-float {
