@@ -46,7 +46,7 @@ export async function GET(req: Request) {
          const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
          const userId = job.j_payload.userId as string;
          if (userId) {
-             await AchievementTracker.checkUsageMilestones(userId);
+             await AchievementTracker.checkAll(userId);
          }
       }
       

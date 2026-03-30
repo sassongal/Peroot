@@ -538,6 +538,23 @@ function PageContent() {
       toast.success(t.prompt_generator.success_toast);
       discovery.onEnhanceComplete();
 
+      // Pro preview nudge: after 3rd enhance for free users (once per session)
+      if (user && creditsRemaining !== null && creditsRemaining <= 0) {
+        // Already handled by UpgradeNudge
+      } else if (user && !sessionStorage.getItem('pro_nudge_shown')) {
+        const enhanceCount = parseInt(sessionStorage.getItem('session_enhance_count') || '0') + 1;
+        sessionStorage.setItem('session_enhance_count', String(enhanceCount));
+        if (enhanceCount === 3) {
+          sessionStorage.setItem('pro_nudge_shown', '1');
+          setTimeout(() => {
+            toast("משתמשי Pro מקבלים מודלים מתקדמים לתוצאות טובות יותר", {
+              action: { label: "לשדרוג", onClick: () => window.location.href = "/pricing" },
+              duration: 6000,
+            });
+          }, 2000);
+        }
+      }
+
       // Clear attachments after successful enhance to prevent stale context on next prompt
       if (context.attachments.length > 0) {
         context.clearAll();
