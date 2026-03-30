@@ -8,6 +8,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
     include: ['**/*.test.ts', '**/*.test.tsx'],
+    exclude: ['**/node_modules/**', '**/.worktrees/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary'],

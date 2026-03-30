@@ -71,7 +71,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
 
 export const FALLBACK_ORDER: ModelId[] = [
     'gemini-2.5-flash',
-    'gemini-2.5-pro',
     'gemini-2.0-flash-lite',
     'llama-3-70b',
     'deepseek-chat'
@@ -80,17 +79,20 @@ export const FALLBACK_ORDER: ModelId[] = [
 export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'chain';
 
 export const TASK_ROUTING: Record<string, ModelId[]> = {
-  enhance:  ['gemini-2.5-pro', 'gemini-2.5-flash', 'deepseek-chat', 'llama-3-70b'],
-  research: ['gemini-2.5-pro', 'deepseek-chat', 'gemini-2.5-flash'],
-  agent:    ['gemini-2.5-pro', 'gemini-2.5-flash', 'llama-3-70b'],
+  // Flash-first for all tasks — Pro only added dynamically for pro-tier users
+  enhance:  ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'llama-3-70b'],
+  research: ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'deepseek-chat'],
+  agent:    ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'llama-3-70b'],
   image:    ['gemini-2.5-flash', 'gemini-2.0-flash-lite'],
-  // Chain generation: flash-first for cost efficiency (structured JSON output, doesn't need pro)
   chain:    ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'llama-3-70b'],
 };
 
 export function getModelsForTask(task: string, userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
   const models = TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
-  if (userTier === 'pro') return models;
+  if (userTier === 'pro') {
+    // Pro users get gemini-2.5-pro prepended as first choice (dedup in case it's already in the list)
+    return [...new Set(['gemini-2.5-pro' as ModelId, ...models])];
+  }
   // Free/guest users: filter out pro-only models, but ensure at least one model remains
   const freeModels = models.filter(id => AVAILABLE_MODELS[id].tier === 'free');
   return freeModels.length > 0 ? freeModels : [models[0]];
