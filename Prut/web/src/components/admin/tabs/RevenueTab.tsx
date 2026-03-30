@@ -53,10 +53,24 @@ interface RecentEvent {
   created_at: string;
 }
 
+interface Subscriber {
+  id: string;
+  user_id: string;
+  status: string;
+  plan_name: string;
+  customer_email: string;
+  customer_name: string;
+  renews_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface RevenueData {
-  kpi: KPI;
+  kpi: KPI & { proUsersWithoutSub?: number };
   monthly: MonthlyPoint[];
   planBreakdown: PlanBreakdown;
+  subscribers: Subscriber[];
   recentEvents: RecentEvent[];
   timestamp: string;
 }
@@ -549,6 +563,89 @@ export default function RevenueTab() {
                       );
                     })}
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Subscriber List ─────────────────────────────────────── */}
+          <div className="space-y-4 px-2">
+            <SectionTitle
+              icon={CreditCard}
+              color="emerald"
+              title="Subscribers"
+              sub="רשימת מנויים פעילים ומנויים שעזבו"
+            />
+
+            <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
+              {loading ? (
+                <div className="flex items-center justify-center py-24">
+                  <RefreshCw className="w-10 h-10 animate-spin text-blue-500/20" />
+                </div>
+              ) : (data?.subscribers ?? []).length === 0 ? (
+                <div className="py-16 text-center space-y-3">
+                  <div className="text-zinc-800 font-black uppercase tracking-widest text-[9px]">
+                    No subscribers yet
+                  </div>
+                  {(data?.kpi?.proUsersWithoutSub ?? 0) > 0 && (
+                    <div className="text-amber-500/60 font-bold text-[10px]">
+                      {data?.kpi?.proUsersWithoutSub} pro users upgraded manually (no subscription record)
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5">
+                  {/* Table header */}
+                  <div className="px-8 py-4 flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                    <span className="flex-1">Customer</span>
+                    <span className="w-20 text-center">Plan</span>
+                    <span className="w-24 text-center">Status</span>
+                    <span className="w-28 text-center">Renews</span>
+                    <span className="w-24 text-center">Since</span>
+                  </div>
+                  {(data?.subscribers ?? []).map((sub) => {
+                    const isActive = sub.status === 'active' || sub.status === 'on_trial';
+                    const isChurned = sub.status === 'cancelled' || sub.status === 'expired';
+                    return (
+                      <div
+                        key={sub.id}
+                        className={cn(
+                          "px-8 py-5 flex items-center gap-4 hover:bg-white/[0.02] transition-all",
+                          isChurned && "opacity-60"
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-zinc-200 truncate">
+                            {sub.customer_name || sub.customer_email || sub.user_id.slice(0, 16)}
+                          </div>
+                          {sub.customer_name && sub.customer_email && (
+                            <div className="text-[10px] text-zinc-600 truncate">{sub.customer_email}</div>
+                          )}
+                        </div>
+                        <span className="w-20 text-center text-[9px] font-black uppercase tracking-widest text-zinc-400">
+                          {sub.plan_name || 'pro'}
+                        </span>
+                        <span className={cn(
+                          "w-24 text-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                          isActive && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+                          isChurned && "bg-red-500/10 border-red-500/20 text-red-400",
+                          !isActive && !isChurned && "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                        )}>
+                          {sub.status}
+                        </span>
+                        <span className="w-28 text-center text-[10px] font-bold text-zinc-500">
+                          {sub.renews_at
+                            ? new Date(sub.renews_at).toLocaleDateString('he-IL')
+                            : sub.ends_at
+                              ? new Date(sub.ends_at).toLocaleDateString('he-IL')
+                              : '-'}
+                        </span>
+                        <span className="w-24 text-center text-[10px] font-bold text-zinc-600">
+                          {relativeTime(sub.created_at)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

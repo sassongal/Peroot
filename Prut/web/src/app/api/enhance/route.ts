@@ -242,6 +242,20 @@ export async function POST(req: Request) {
             }
 
             if (userId && supabase) {
+                // Save to history table so admin can see actual prompts
+                await queryClient.from('history').insert({
+                    user_id: userId,
+                    prompt,
+                    enhanced_prompt: completion.text,
+                    tone,
+                    category,
+                    capability_mode: capability_mode || 'STANDARD',
+                    title: prompt.slice(0, 60),
+                    source: 'web',
+                }).then(({ error: histErr }) => {
+                    if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
+                });
+
                 await queryClient.from('activity_logs').insert({
                     user_id: userId,
                     action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',

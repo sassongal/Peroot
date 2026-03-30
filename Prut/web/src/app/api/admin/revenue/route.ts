@@ -57,7 +57,7 @@ export async function GET() {
       // All subscriptions with created_at for monthly grouping
       supabase
         .from('subscriptions')
-        .select('created_at, status, plan_id')
+        .select('id, user_id, created_at, status, plan_name, customer_email, customer_name, renews_at, ends_at, updated_at')
         .order('created_at', { ascending: true }),
 
       // Total users for conversion rate
@@ -145,19 +145,45 @@ export async function GET() {
       created_at: e.created_at,
     }));
 
+    // ── Subscriber list (full details for admin) ───────────────────────────
+    const subscribers = allSubs.map((s) => ({
+      id: s.id,
+      user_id: s.user_id,
+      status: s.status,
+      plan_name: s.plan_name,
+      customer_email: s.customer_email,
+      customer_name: s.customer_name,
+      renews_at: s.renews_at,
+      ends_at: s.ends_at,
+      created_at: s.created_at,
+      updated_at: s.updated_at,
+    }));
+
+    // ── Also find pro users from profiles who might not have subscription records ──
+    const proProfiles = profiles.filter(
+      (p) => (p.plan_tier ?? 'free').toLowerCase() !== 'free'
+    );
+    const subUserIds = new Set(allSubs.map((s) => s.user_id));
+
+    // Recalculate activeSubs to also count profiles with pro tier but no subscription record
+    const effectiveActiveSubs = Math.max(activeSubs, proProfiles.length);
+    const effectiveMrr = effectiveActiveSubs * PRO_PRICE_ILS;
+
     return NextResponse.json({
       kpi: {
-        mrr,
-        activeSubs,
+        mrr: effectiveMrr,
+        activeSubs: effectiveActiveSubs,
         newThisMonth,
         churned,
         churnRate: parseFloat(churnRate.toFixed(2)),
-        conversionRate: parseFloat(conversionRate.toFixed(2)),
-        arpu: parseFloat(arpu.toFixed(2)),
+        conversionRate: totalUsers > 0 ? parseFloat(((effectiveActiveSubs / totalUsers) * 100).toFixed(2)) : 0,
+        arpu: totalUsers > 0 ? parseFloat((effectiveMrr / totalUsers).toFixed(2)) : 0,
         totalUsers,
+        proUsersWithoutSub: proProfiles.length - subUserIds.size,
       },
       monthly: months,
       planBreakdown: planCounts,
+      subscribers,
       recentEvents,
       timestamp: now.toISOString(),
     });
