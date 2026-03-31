@@ -32,7 +32,7 @@ export const PLANS = {
     nameHe: 'פרו',
     creditsPerMonth: 150,
     price: 3.99, // ₪/month
-    trialDays: 4,
+    trialDays: 1,
     features: [
       '150 קרדיטים בחודש',
       'גישה לכל המנועים המתקדמים',

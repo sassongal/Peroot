@@ -131,7 +131,7 @@ export default function PricingPage() {
             בחר את התוכנית שלך
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            התחל בחינם, שדרג כשתרצה. כולל 4 ימי ניסיון חינם. ללא התחייבות.
+            התחל בחינם, שדרג כשתרצה. כולל יום ניסיון במתנה. ללא התחייבות.
           </p>
         </div>
 
@@ -197,7 +197,7 @@ export default function PricingPage() {
               <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
               <div className="flex items-center gap-1.5 mt-2">
                 <Gift className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-green-400 text-xs font-medium">4 ימי ניסיון חינם</span>
+                <span className="text-green-400 text-xs font-medium">יום ניסיון במתנה</span>
               </div>
             </div>
 
@@ -281,7 +281,7 @@ export default function PricingPage() {
         <div className="flex flex-wrap items-center justify-center gap-8 mt-16 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <Gift className="w-4 h-4" />
-            <span>4 ימי ניסיון חינם</span>
+            <span>יום ניסיון במתנה</span>
           </div>
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4" />

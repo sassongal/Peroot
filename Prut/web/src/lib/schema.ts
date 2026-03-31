@@ -145,7 +145,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Pro",
-        description: "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, 4 ימי ניסיון חינם",
+        description: "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה",
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",

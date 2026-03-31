@@ -130,6 +130,19 @@ export async function GET(request: Request) {
 
       logger.info('[Callback] New user registration bonus granted:', totalCredits, 'credits');
 
+      // Log to credit ledger
+      try {
+        await supabase.rpc('log_credit_change', {
+          p_user_id: data.session.user.id,
+          p_delta: totalCredits,
+          p_balance_after: totalCredits,
+          p_reason: 'registration_bonus',
+          p_source: 'system',
+        });
+      } catch (ledgerErr) {
+        logger.error('[Callback] Failed to log credit ledger:', ledgerErr);
+      }
+
       // Auto-redeem referral code if present in cookie
       const referralCode = cookieStore.get('referral_code')?.value;
       if (referralCode) {

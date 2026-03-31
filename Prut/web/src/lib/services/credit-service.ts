@@ -22,6 +22,32 @@ export interface CreditCheckResult {
 }
 
 // ---------------------------------------------------------------------------
+// Credit Ledger (audit trail)
+// ---------------------------------------------------------------------------
+
+export async function logCreditChange(
+  userId: string,
+  delta: number,
+  balanceAfter: number,
+  reason: string,
+  source: string = 'system',
+): Promise<void> {
+  try {
+    const client = createServiceClient();
+    await client.rpc('log_credit_change', {
+      p_user_id: userId,
+      p_delta: delta,
+      p_balance_after: balanceAfter,
+      p_reason: reason,
+      p_source: source,
+    });
+  } catch (e) {
+    // Never block credit operations — ledger is best-effort
+    logger.error('[CreditService] Failed to log credit change:', e);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -55,6 +81,7 @@ export async function checkAndDecrementCredits(
   );
 
   if (!rpcError && creditRes?.success) {
+    logCreditChange(userId, -amount, creditRes.current_balance ?? 0, 'spend');
     return {
       allowed: true,
       remaining: creditRes.current_balance ?? 0,
@@ -95,6 +122,15 @@ export async function refundCredit(
       target_user_id: userId,
       amount,
     });
+    // Log refund — fetch balance after refund
+    const { data: profile } = await client
+      .from('profiles')
+      .select('credits_balance')
+      .eq('id', userId)
+      .single();
+    if (profile) {
+      logCreditChange(userId, amount, profile.credits_balance, 'refund');
+    }
   } catch (e) {
     logger.error("[CreditService] refund failed:", e);
   }
@@ -119,7 +155,17 @@ export async function adminAdjustCredits(
       delta,
     });
 
-    if (!rpcError) return { success: true };
+    if (!rpcError) {
+      const { data: profile } = await client
+        .from('profiles')
+        .select('credits_balance')
+        .eq('id', userId)
+        .single();
+      if (profile) {
+        logCreditChange(userId, delta, profile.credits_balance, delta > 0 ? 'admin_grant' : 'admin_revoke', 'admin');
+      }
+      return { success: true };
+    }
 
     // Fallback RPC
     const { error: fallbackError } = await client.rpc("increment_credits", {

@@ -605,7 +605,7 @@ export default function RevenueTab() {
                     <span className="w-24 text-center">Since</span>
                   </div>
                   {(data?.subscribers ?? []).map((sub) => {
-                    const isActive = sub.status === 'active' || sub.status === 'on_trial';
+                    const isActive = sub.status === 'active' || sub.status === 'on_trial' || sub.status === 'past_due';
                     const isChurned = sub.status === 'cancelled' || sub.status === 'expired';
                     return (
                       <div

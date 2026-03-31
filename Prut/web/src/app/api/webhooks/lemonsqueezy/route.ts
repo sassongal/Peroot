@@ -123,15 +123,18 @@ export async function POST(request: Request) {
       }
 
       // Sync plan_tier in profiles table (used by rate limiter / enhance API)
-      // LemonSqueezy sends various statuses — 'paid' appears on payment_success events
+      // 'paid' is not a standard subscription status but appears in subscription_payment_success
+      // event attributes. Including it here is defensive — it maps to active in practice.
+      // 'past_due' keeps pro access during LemonSqueezy's dunning/retry period.
+      // See: https://docs.lemonsqueezy.com/api/subscriptions
       if (userId) {
-        const ACTIVE_STATUSES = ['active', 'on_trial', 'paid'];
+        const ACTIVE_STATUSES = ['active', 'on_trial', 'past_due', 'paid'];
         const isActivePro = ACTIVE_STATUSES.includes(attributes.status);
 
         // Fetch current profile to detect pro→free transitions
         const { data: currentProfile } = await supabase
           .from('profiles')
-          .select('plan_tier, tags')
+          .select('plan_tier, tags, credits_balance')
           .eq('id', userId)
           .single();
 
@@ -168,6 +171,18 @@ export async function POST(request: Request) {
             logger.error('[LemonSqueezy Webhook] Credit revocation error:', revokeError);
           }
 
+          // Log to credit ledger
+          const previousBalance = currentProfile?.credits_balance ?? 0;
+          try {
+            await supabase.rpc('log_credit_change', {
+              p_user_id: userId,
+              p_delta: -(previousBalance - dailyFreeLimit),
+              p_balance_after: dailyFreeLimit,
+              p_reason: 'churn_revoke',
+              p_source: 'webhook',
+            });
+          } catch { /* ledger is best-effort */ }
+
           // Add "churn" tag (idempotent — only if not already present)
           const existingTags: string[] = currentProfile?.tags ?? [];
           if (!existingTags.includes('churn')) {
@@ -178,6 +193,51 @@ export async function POST(request: Request) {
           }
 
           logger.info(`[LemonSqueezy Webhook] CHURN: User ${userId} reverted to free, credits reset to ${dailyFreeLimit}`);
+
+          // Send churn email to user
+          try {
+            const { churnEmail } = await import('@/lib/emails/reengagement-templates');
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space';
+            const template = churnEmail(
+              subscriptionData.customer_name || 'משתמש/ת',
+              `${siteUrl}/settings?unsubscribe=true`
+            );
+            if (subscriptionData.customer_email) {
+              await EmailService.send({
+                to: subscriptionData.customer_email,
+                subject: template.subject,
+                html: template.html,
+                userId,
+                emailType: 'churn_notification',
+              });
+            }
+          } catch (emailErr) {
+            logger.error('[LemonSqueezy Webhook] Churn email error:', emailErr);
+          }
+
+          // Send churn alert to admin
+          try {
+            const { data: adminSettings } = await supabase
+              .from('site_settings')
+              .select('contact_email')
+              .single();
+            const adminEmail = adminSettings?.contact_email || 'gal@joya-tech.net';
+            await EmailService.send({
+              to: adminEmail,
+              subject: `[Peroot] Churn: ${subscriptionData.customer_email || userId}`,
+              html: `<div dir="rtl" style="font-family: sans-serif;">
+                <h2 style="color: #ef4444;">משתמש ביטל מנוי Pro</h2>
+                <p><strong>שם:</strong> ${subscriptionData.customer_name || 'N/A'}</p>
+                <p><strong>אימייל:</strong> ${subscriptionData.customer_email || 'N/A'}</p>
+                <p><strong>ID:</strong> ${userId}</p>
+                <p><strong>סטטוס:</strong> ${attributes.status}</p>
+                <p><strong>זמן:</strong> ${new Date().toISOString()}</p>
+              </div>`,
+              emailType: 'admin_churn_alert',
+            });
+          } catch (adminErr) {
+            logger.error('[LemonSqueezy Webhook] Admin churn alert error:', adminErr);
+          }
         }
 
         // --- RESUBSCRIBE: Remove churn tag if user comes back ---
@@ -212,6 +272,17 @@ export async function POST(request: Request) {
           if (creditsError) {
             logger.error('[LemonSqueezy Webhook] Credits update error:', creditsError);
           }
+
+          // Log to credit ledger
+          try {
+            await supabase.rpc('log_credit_change', {
+              p_user_id: userId,
+              p_delta: PRO_MONTHLY_CREDITS,
+              p_balance_after: PRO_MONTHLY_CREDITS,
+              p_reason: 'subscription_grant',
+              p_source: 'webhook',
+            });
+          } catch { /* ledger is best-effort */ }
 
           logger.info(`[LemonSqueezy Webhook] Granted ${PRO_MONTHLY_CREDITS} credits to pro user ${userId}`);
         }

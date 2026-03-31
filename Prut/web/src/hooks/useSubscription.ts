@@ -45,7 +45,7 @@ export function useSubscription() {
     fetchSubscription();
   }, []);
 
-  const isPro = subscription.status === 'active' || subscription.status === 'on_trial';
+  const isPro = subscription.status === 'active' || subscription.status === 'on_trial' || subscription.status === 'past_due';
 
   const checkout = useCallback(async (variantId?: string) => {
     const vid = (variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || '').trim();
