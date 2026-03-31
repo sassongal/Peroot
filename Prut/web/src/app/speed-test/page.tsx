@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SpeedTestClient } from "./SpeedTestClient";
 
 export const metadata: Metadata = {
-  title: "בדיקת מהירות אתר | Peroot",
+  title: "בדיקת מהירות אתר",
   description: "בדוק את מהירות האתר שלך עם Google PageSpeed Insights - ציוני ביצועים, נגישות, SEO ושיטות עבודה מומלצות.",
   alternates: { canonical: "/speed-test" },
   robots: { index: false },

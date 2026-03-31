@@ -10,7 +10,7 @@ import { PromptSearch } from "@/components/features/library/PromptSearch";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: "ספריית פרומפטים בעברית - כל הקטגוריות | Peroot",
+  title: "ספריית פרומפטים בעברית - כל הקטגוריות",
   description:
     "מאות פרומפטים מקצועיים בעברית לכל תחום: שיווק, מכירות, פיתוח, עיצוב, תוכן ועוד. בחרו קטגוריה וגלו פרומפטים מוכנים לשימוש ב-ChatGPT, Claude ו-Gemini.",
   alternates: {

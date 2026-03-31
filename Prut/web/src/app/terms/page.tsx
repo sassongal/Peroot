@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, FileText } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "תנאי שימוש | Peroot",
+  title: "תנאי שימוש",
   description:
     "תנאי השימוש של Peroot - כלי AI לשדרוג פרומפטים בעברית. מידע על קניין רוחני, אחריות, פרטיות ושימוש מותר במערכת.",
   alternates: { canonical: "/terms" },

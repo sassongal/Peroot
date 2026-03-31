@@ -1,19 +1,13 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { CATEGORY_SLUG_MAP } from '@/lib/category-slugs';
 
 /**
- * Focused sitemap for crawl-budget optimization.
+ * Comprehensive sitemap — includes all indexable content pages.
  *
- * Google has zero authority on this domain — concentrate the sitemap
- * on ~20-30 high-value pages so crawlers prioritize indexing them.
- * Low-value pages (legal, extension placeholder, Hebrew slug aliases,
- * llms.txt, feed.xml) are excluded until the core pages are indexed.
+ * Static pages + ALL prompt categories + ALL published blog posts.
+ * Hebrew slug aliases are excluded (they 308-redirect to English canonicals).
  */
-
-// Top prompt categories by search volume / content richness
-const TOP_PROMPT_CATEGORIES = [
-  'marketing', 'seo', 'creative', 'dev', 'social', 'education',
-];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space';
@@ -27,12 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/examples`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
   ];
 
-  // Prompts index + top categories only
+  // ALL prompt categories (not just top 6)
   const promptsPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/prompts`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    ...TOP_PROMPT_CATEGORIES.map((slug) => ({
+    ...Object.keys(CATEGORY_SLUG_MAP).map((slug) => ({
       url: `${baseUrl}/prompts/${slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
@@ -40,15 +35,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  // Dynamic blog posts from DB (English slugs only — no Hebrew aliases)
+  // ALL published blog posts (no limit)
   try {
     const supabase = await createClient();
     const { data: posts } = await supabase
       .from('blog_posts')
       .select('slug, updated_at')
       .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(15); // Top 15 most recent posts
+      .order('published_at', { ascending: false });
 
     const blogEntries: MetadataRoute.Sitemap = (posts ?? []).map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,

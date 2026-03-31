@@ -6,7 +6,7 @@ import { ContactForm } from "@/components/ui/ContactForm";
 import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title: "צור קשר | Peroot",
+  title: "צור קשר",
   description: "צור קשר עם צוות Peroot - שאלות טכניות, הצעות לשיפור, דיווח על באגים, או בקשות לשיתוף פעולה. זמן מענה ממוצע: עד 24 שעות.",
   alternates: { canonical: "/contact" },
   openGraph: {

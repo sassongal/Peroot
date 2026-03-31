@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { MaintenancePage } from "@/components/MaintenanceMode";
 
 export const metadata: Metadata = {
-  title: "תחזוקה | Peroot",
+  title: "תחזוקה",
   robots: { index: false, follow: false },
 };
 

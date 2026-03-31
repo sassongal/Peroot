@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Accessibility as AccessibilityIcon, Phone, Mail, User } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "הצהרת נגישות | Peroot",
+  title: "הצהרת נגישות",
   description: "הצהרת הנגישות של Peroot והתאמות שבוצעו באתר.",
 };
 

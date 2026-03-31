@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { articleSchema, breadcrumbSchema, faqSchema, howToSchema } from "@/lib/schema";
 import { HEBREW_BLOG_SLUGS, ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
@@ -163,7 +163,7 @@ export default async function BlogPostPage({ params }: Props) {
   const decodedSlug = decodeURIComponent(slug);
   const hebrewRedirect = HEBREW_BLOG_SLUGS[decodedSlug];
   if (hebrewRedirect) {
-    redirect(`/blog/${hebrewRedirect}`);
+    permanentRedirect(`/blog/${hebrewRedirect}`);
   }
 
   const supabase = await createClient();

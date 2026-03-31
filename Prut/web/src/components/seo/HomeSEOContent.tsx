@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FAQ_ITEMS } from "@/lib/faq-data";
-import { softwareAppSchema, webSiteSchema, faqSchema } from "@/lib/schema";
+import { softwareAppSchema, faqSchema } from "@/lib/schema";
 
 /**
  * Server-rendered SEO content for the homepage.
@@ -23,10 +23,7 @@ export function HomeSEOContent() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema()) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema()) }}
-      />
+      {/* webSiteSchema is already rendered in the root layout — no duplicate needed */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
