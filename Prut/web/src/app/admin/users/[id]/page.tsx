@@ -62,6 +62,15 @@ interface HistoryItem {
   created_at: string;
 }
 
+interface CreditLedgerEntry {
+  id: string;
+  delta: number;
+  balance_after: number;
+  reason: string;
+  source: string;
+  created_at: string;
+}
+
 interface UserDetail {
   profile: {
     id: string;
@@ -103,9 +112,10 @@ interface UserDetail {
   topTones: [string, number][];
   topModes: [string, number][];
   lastActive: string;
+  creditLedger: CreditLedgerEntry[];
 }
 
-type Tab = "overview" | "activity" | "prompts" | "history" | "emails";
+type Tab = "overview" | "activity" | "prompts" | "history" | "credits" | "emails";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -354,6 +364,7 @@ export default function UserDetailPage() {
     topTones,
     topModes,
     lastActive,
+    creditLedger,
   } = detail;
   const isBanned = profile.is_banned ?? false;
   const isAdmin = role?.role === "admin";
@@ -510,12 +521,13 @@ export default function UserDetailPage() {
 
             {/* Tab Switcher */}
             <div className="flex p-1.5 bg-zinc-950/50 border border-white/5 rounded-[28px] gap-1">
-              {(["overview", "activity", "prompts", "history", "emails"] as Tab[]).map((tab) => {
+              {(["overview", "activity", "prompts", "history", "credits", "emails"] as Tab[]).map((tab) => {
                 const labels: Record<Tab, string> = {
                   overview: "Overview",
                   activity: "Activity",
                   prompts: "Prompts",
                   history: "History",
+                  credits: "Credits",
                   emails: "Emails",
                 };
                 return (
@@ -1013,6 +1025,64 @@ export default function UserDetailPage() {
                     Load More ({historyTotal - history.length} remaining)
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* ── Credits Tab ── */}
+            {activeTab === "credits" && (
+              <div className="space-y-4">
+                <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 overflow-hidden">
+                  {creditLedger.length === 0 ? (
+                    <p className="text-center text-zinc-800 font-black uppercase tracking-widest text-[9px] py-20">
+                      No credit history recorded
+                    </p>
+                  ) : (
+                    <div className="divide-y divide-white/5">
+                      {creditLedger.map((entry) => {
+                        const isPositive = entry.delta > 0;
+                        const reasonLabels: Record<string, string> = {
+                          registration_bonus: "Registration Bonus",
+                          daily_reset: "Daily Reset",
+                          subscription_grant: "Pro Credits",
+                          spend: "Credit Spent",
+                          refund: "Refund",
+                          admin_grant: "Admin Grant",
+                          admin_revoke: "Admin Revoke",
+                          churn_revoke: "Churn Revoke",
+                          referral_bonus: "Referral Bonus",
+                        };
+                        return (
+                          <div key={entry.id} className="px-8 py-4 flex items-center gap-5 hover:bg-white/[0.02] transition-all">
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-black border",
+                              isPositive
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                : "bg-red-500/10 border-red-500/20 text-red-400"
+                            )}>
+                              {isPositive ? "+" : ""}{entry.delta}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-bold text-zinc-300">
+                                {reasonLabels[entry.reason] || entry.reason}
+                              </span>
+                              <div className="flex items-center gap-3 mt-0.5">
+                                <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">
+                                  Balance: {entry.balance_after}
+                                </span>
+                                <span className="text-[9px] text-zinc-700 font-mono">
+                                  {entry.source}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest whitespace-nowrap shrink-0">
+                              {timeAgo(entry.created_at)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

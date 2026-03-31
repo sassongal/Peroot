@@ -61,6 +61,7 @@ export async function GET(
       { data: recentActivity },
       { data: recentHistory },
       { data: sourceBreakdown },
+      { data: creditLedger },
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
       supabase.from('user_roles').select('*').eq('user_id', id).maybeSingle(),
@@ -97,6 +98,12 @@ export async function GET(
         .select('source')
         .eq('user_id', id)
         .limit(5000),
+      supabase
+        .from('credit_ledger')
+        .select('id, delta, balance_after, reason, source, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false })
+        .limit(100),
     ]);
 
     if (!profile) {
@@ -148,6 +155,7 @@ export async function GET(
       topTones: Object.entries(toneMap).sort((a, b) => b[1] - a[1]).slice(0, 5),
       topModes: Object.entries(modeMap).sort((a, b) => b[1] - a[1]).slice(0, 5),
       lastActive,
+      creditLedger: creditLedger ?? [],
     });
   } catch (err) {
     logger.error('[Admin User Detail GET] Error:', err);
