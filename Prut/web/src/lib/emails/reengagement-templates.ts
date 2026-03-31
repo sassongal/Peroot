@@ -1,5 +1,11 @@
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.peroot.space';
 
+function esc(str: string): string {
+  return str.replace(/[<>&"']/g, c =>
+    ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c] ?? c)
+  );
+}
+
 export interface ReengagementTemplate {
   id: string;
   inactiveDays: number;
@@ -26,7 +32,7 @@ export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
     inactiveDays: 7,
     subject: 'חסר לנו! יש פרומפטים שמחכים לך',
     html: (name, unsubscribeUrl) => emailWrapper(`
-      <h2 style="color: #3b82f6; font-size: 22px;">היי ${name}</h2>
+      <h2 style="color: #3b82f6; font-size: 22px;">היי ${esc(name)}</h2>
       <p>שמנו לב שלא ביקרת אצלנו בשבוע האחרון. המערכת שלנו המשיכה להשתפר בינתיים!</p>
 
       <div style="background: #eff6ff; border-radius: 12px; padding: 20px; margin: 20px 0;">
@@ -48,7 +54,7 @@ export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
     inactiveDays: 14,
     subject: 'הפרומפטים שלך מחכים לך + בונוס קרדיטים',
     html: (name, unsubscribeUrl) => emailWrapper(`
-      <h2 style="color: #f59e0b; font-size: 22px;">היי ${name}</h2>
+      <h2 style="color: #f59e0b; font-size: 22px;">היי ${esc(name)}</h2>
       <p>עברו שבועיים מאז ביקרת ב-Peroot. הספריה האישית שלך עדיין שומרת את כל הפרומפטים שיצרת.</p>
 
       <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0;">
@@ -68,7 +74,7 @@ export const REENGAGEMENT_TEMPLATES: ReengagementTemplate[] = [
     inactiveDays: 30,
     subject: 'נשמח לדעת מה חסר לך',
     html: (name, unsubscribeUrl) => emailWrapper(`
-      <h2 style="color: #8b5cf6; font-size: 22px;">היי ${name}</h2>
+      <h2 style="color: #8b5cf6; font-size: 22px;">היי ${esc(name)}</h2>
       <p>עבר חודש מאז שהשתמשת ב-Peroot. נשמח לדעת איך נוכל להיות שימושיים יותר בשבילך.</p>
 
       <div style="background: #f5f3ff; border-radius: 12px; padding: 20px; margin: 20px 0;">
@@ -97,7 +103,7 @@ export function churnEmail(name: string, unsubscribeUrl: string): { subject: str
   return {
     subject: 'נשמח לראות אותך שוב ב-Peroot',
     html: emailWrapper(`
-      <h2 style="color: #ef4444; font-size: 22px;">היי ${name}</h2>
+      <h2 style="color: #ef4444; font-size: 22px;">היי ${esc(name)}</h2>
       <p>קיבלנו את בקשתך לביטול מנוי ה-Pro. עצוב לנו לראות אותך עוזב/ת!</p>
       <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 20px 0;">
         <p style="font-weight: bold; margin: 0 0 8px 0;">מה שעדיין זמין לך בתוכנית החינם:</p>

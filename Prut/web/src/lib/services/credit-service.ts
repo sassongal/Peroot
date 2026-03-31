@@ -173,7 +173,17 @@ export async function adminAdjustCredits(
       amount: delta,
     });
 
-    if (!fallbackError) return { success: true };
+    if (!fallbackError) {
+      const { data: fbProfile } = await client
+        .from('profiles')
+        .select('credits_balance')
+        .eq('id', userId)
+        .single();
+      if (fbProfile) {
+        logCreditChange(userId, delta, fbProfile.credits_balance, delta > 0 ? 'admin_grant' : 'admin_revoke', 'admin');
+      }
+      return { success: true };
+    }
 
     logger.error("[CreditService] adminAdjustCredits failed:", fallbackError);
     return { success: false, error: "Failed to adjust credits" };

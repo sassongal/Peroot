@@ -152,6 +152,17 @@ export async function GET(request: Request) {
           });
           if (redeemResult?.success) {
             logger.info('[Callback] Referral code redeemed:', referralCode, 'credits:', redeemResult.credits_awarded);
+            // Log referral bonus to credit ledger
+            try {
+              const creditsAwarded = redeemResult.credits_awarded ?? 5;
+              await supabase.rpc('log_credit_change', {
+                p_user_id: data.session.user.id,
+                p_delta: creditsAwarded,
+                p_balance_after: totalCredits + creditsAwarded,
+                p_reason: 'referral_bonus',
+                p_source: 'system',
+              });
+            } catch { /* ledger is best-effort */ }
             // Store the bonus amount in a short-lived cookie so the client can show a toast
             response.cookies.set('referral_bonus', String(redeemResult.credits_awarded), {
               path: '/',

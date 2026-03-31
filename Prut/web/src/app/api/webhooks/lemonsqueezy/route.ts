@@ -171,17 +171,20 @@ export async function POST(request: Request) {
             logger.error('[LemonSqueezy Webhook] Credit revocation error:', revokeError);
           }
 
-          // Log to credit ledger
+          // Log to credit ledger (delta is always <= 0 for a revoke)
           const previousBalance = currentProfile?.credits_balance ?? 0;
-          try {
-            await supabase.rpc('log_credit_change', {
-              p_user_id: userId,
-              p_delta: -(previousBalance - dailyFreeLimit),
-              p_balance_after: dailyFreeLimit,
-              p_reason: 'churn_revoke',
-              p_source: 'webhook',
-            });
-          } catch { /* ledger is best-effort */ }
+          const revokeDelta = Math.min(0, dailyFreeLimit - previousBalance);
+          if (revokeDelta !== 0) {
+            try {
+              await supabase.rpc('log_credit_change', {
+                p_user_id: userId,
+                p_delta: revokeDelta,
+                p_balance_after: dailyFreeLimit,
+                p_reason: 'churn_revoke',
+                p_source: 'webhook',
+              });
+            } catch { /* ledger is best-effort */ }
+          }
 
           // Add "churn" tag (idempotent — only if not already present)
           const existingTags: string[] = currentProfile?.tags ?? [];
@@ -222,15 +225,17 @@ export async function POST(request: Request) {
               .select('contact_email')
               .single();
             const adminEmail = adminSettings?.contact_email || 'gal@joya-tech.net';
+            const escHtml = (s: string) => s.replace(/[<>&"']/g, c =>
+              ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
             await EmailService.send({
               to: adminEmail,
-              subject: `[Peroot] Churn: ${subscriptionData.customer_email || userId}`,
+              subject: `[Peroot] Churn: ${(subscriptionData.customer_email || userId).slice(0, 100)}`,
               html: `<div dir="rtl" style="font-family: sans-serif;">
                 <h2 style="color: #ef4444;">משתמש ביטל מנוי Pro</h2>
-                <p><strong>שם:</strong> ${subscriptionData.customer_name || 'N/A'}</p>
-                <p><strong>אימייל:</strong> ${subscriptionData.customer_email || 'N/A'}</p>
-                <p><strong>ID:</strong> ${userId}</p>
-                <p><strong>סטטוס:</strong> ${attributes.status}</p>
+                <p><strong>שם:</strong> ${escHtml(subscriptionData.customer_name || 'N/A')}</p>
+                <p><strong>אימייל:</strong> ${escHtml(subscriptionData.customer_email || 'N/A')}</p>
+                <p><strong>ID:</strong> ${escHtml(userId)}</p>
+                <p><strong>סטטוס:</strong> ${escHtml(attributes.status)}</p>
                 <p><strong>זמן:</strong> ${new Date().toISOString()}</p>
               </div>`,
               emailType: 'admin_churn_alert',
@@ -259,7 +264,7 @@ export async function POST(request: Request) {
         const PRO_MONTHLY_CREDITS = 150;
         if (
           isActivePro &&
-          (eventName === 'subscription_created' || eventName === 'subscription_payment_success')
+          (eventName === 'subscription_created' || eventName === 'subscription_payment_success' || eventName === 'subscription_resumed')
         ) {
           // Set balance to PRO_MONTHLY_CREDITS (monthly reset, not additive)
           const { error: creditsError } = await supabase

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { EmailService } from "@/lib/emails/service";
 import { logger } from "@/lib/logger";
 
 /**
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
     // Fetch daily_free_limit
     const { data: settings } = await supabase
       .from("site_settings")
-      .select("daily_free_limit")
+      .select("daily_free_limit, contact_email")
       .single();
     const dailyFreeLimit = settings?.daily_free_limit ?? 2;
 
@@ -98,16 +99,64 @@ export async function GET(req: Request) {
           ? existingTags
           : [...existingTags, "churn"];
 
+        const newBalance = Math.min(profile.credits_balance, dailyFreeLimit);
         await supabase
           .from("profiles")
           .update({
             plan_tier: "free",
-            credits_balance: Math.min(profile.credits_balance, dailyFreeLimit),
+            credits_balance: newBalance,
             credits_refreshed_at: now,
             churned_at: now,
             tags: newTags,
           })
           .eq("id", userId);
+
+        // Log to credit ledger
+        const revokeDelta = newBalance - profile.credits_balance;
+        if (revokeDelta !== 0) {
+          try {
+            await supabase.rpc("log_credit_change", {
+              p_user_id: userId,
+              p_delta: revokeDelta,
+              p_balance_after: newBalance,
+              p_reason: "churn_revoke",
+              p_source: "system",
+            });
+          } catch { /* ledger is best-effort */ }
+        }
+
+        // Send churn email + admin alert
+        try {
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("customer_email, customer_name")
+            .eq("user_id", userId)
+            .single();
+
+          if (sub?.customer_email) {
+            const { churnEmail } = await import("@/lib/emails/reengagement-templates");
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+            const template = churnEmail(sub.customer_name || "משתמש/ת", `${siteUrl}/settings?unsubscribe=true`);
+            await EmailService.send({
+              to: sub.customer_email,
+              subject: template.subject,
+              html: template.html,
+              userId,
+              emailType: "churn_notification",
+            });
+          }
+
+          // Admin alert
+          const adminEmail = settings?.contact_email || "gal@joya-tech.net";
+          await EmailService.send({
+            to: adminEmail,
+            subject: `[Peroot] Churn (cron): ${sub?.customer_email || userId}`,
+            html: `<p>Stale pro user fixed by sync-subscriptions cron. User: ${sub?.customer_email || userId}</p>`,
+            emailType: "admin_churn_alert",
+          });
+        } catch (emailErr) {
+          logger.error("[sync-subscriptions] Email error:", emailErr);
+        }
 
         fixedCount++;
         logger.info(
