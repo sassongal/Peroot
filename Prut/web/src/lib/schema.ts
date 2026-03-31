@@ -133,6 +133,7 @@ export function pricingSchema() {
         "@type": "Product",
         name: "Peroot Free",
         description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
+        image: `${SITE_URL}/assets/branding/logo.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
@@ -146,9 +147,12 @@ export function pricingSchema() {
         "@type": "Product",
         name: "Peroot Pro",
         description: "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה",
+        image: `${SITE_URL}/assets/branding/logo.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
+          price: "3.99",
+          priceCurrency: "ILS",
           availability: "https://schema.org/InStock",
           url: `${SITE_URL}/pricing`,
           priceValidUntil: "2027-12-31",
