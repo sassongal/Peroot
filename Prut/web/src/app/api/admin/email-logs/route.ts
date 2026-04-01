@@ -30,7 +30,8 @@ export const GET = withAdmin(async (req, supabase) => {
       query = query.eq("email_type", emailType);
     }
     if (search.trim()) {
-      query = query.ilike("email_to", `%${search.trim()}%`);
+      const escaped = search.trim().replace(/%/g, '\\%').replace(/_/g, '\\_');
+      query = query.ilike("email_to", `%${escaped}%`);
     }
 
     const { data: logs, count, error } = await query;
@@ -40,18 +41,21 @@ export const GET = withAdmin(async (req, supabase) => {
       return NextResponse.json({ error: "Failed to load email logs" }, { status: 500 });
     }
 
-    // Get distinct sources and types for filter dropdowns
-    const { data: sources } = await supabase
-      .from("email_logs")
-      .select("source")
-      .limit(1000);
-    const { data: types } = await supabase
-      .from("email_logs")
-      .select("email_type")
-      .limit(1000);
-
-    const uniqueSources = [...new Set((sources ?? []).map(s => s.source))].sort();
-    const uniqueTypes = [...new Set((types ?? []).map(t => t.email_type))].sort();
+    // Get distinct sources and types for filter dropdowns (only on first page to avoid redundant queries)
+    let uniqueSources: string[] = [];
+    let uniqueTypes: string[] = [];
+    if (page === 1) {
+      const { data: sources } = await supabase
+        .from("email_logs")
+        .select("source")
+        .limit(1000);
+      const { data: types } = await supabase
+        .from("email_logs")
+        .select("email_type")
+        .limit(1000);
+      uniqueSources = [...new Set((sources ?? []).map(s => s.source))].sort();
+      uniqueTypes = [...new Set((types ?? []).map(t => t.email_type))].sort();
+    }
 
     return NextResponse.json({
       logs: logs ?? [],
