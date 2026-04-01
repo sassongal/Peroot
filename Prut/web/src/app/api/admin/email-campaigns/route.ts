@@ -275,6 +275,7 @@ export async function POST(req: NextRequest) {
     // ── Send via Resend ───────────────────────────────────────────────────
     const resend = new Resend(process.env.RESEND_API_KEY);
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@example.com';
+    const replyToEmail = process.env.RESEND_REPLY_TO || 'gal@joya-tech.net';
 
     let sentCount = 0;
     const failures: { email: string; error: string }[] = [];
@@ -290,6 +291,7 @@ export async function POST(req: NextRequest) {
             const { data: sendData, error: sendError } = await resend.emails.send({
               from: fromEmail,
               to,
+              replyTo: replyToEmail,
               subject: subject.trim(),
               html: sanitizedHtml,
             });

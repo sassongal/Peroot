@@ -570,6 +570,9 @@ export function EmailCampaignsTab() {
         </div>
       </div>
 
+      {/* ── Global Email Logs ── */}
+      <GlobalEmailLogs />
+
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -637,6 +640,177 @@ export function EmailCampaignsTab() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Global Email Logs Sub-Component ──────────────────────────────────────────
+
+interface EmailLog {
+  id: string;
+  user_id: string | null;
+  email_to: string;
+  source: string;
+  email_type: string;
+  subject: string | null;
+  status: string;
+  created_at: string;
+}
+
+function GlobalEmailLogs() {
+  const [logs, setLogs] = useState<EmailLog[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [sources, setSources] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "30" });
+      if (search.trim()) params.set("search", search.trim());
+      if (sourceFilter) params.set("source", sourceFilter);
+      if (typeFilter) params.set("type", typeFilter);
+
+      const res = await fetch(getApiPath(`/api/admin/email-logs?${params}`));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setLogs(data.logs ?? []);
+      setTotal(data.total ?? 0);
+      if (data.filters) {
+        setSources(data.filters.sources ?? []);
+        setTypes(data.filters.types ?? []);
+      }
+    } catch (err) {
+      logger.error("[GlobalEmailLogs] Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, search, sourceFilter, typeFilter]);
+
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+  const statusColor = (s: string) => {
+    if (s === "sent" || s === "delivered") return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+    if (s === "failed" || s === "bounced") return "text-red-400 bg-red-500/10 border-red-500/20";
+    return "text-zinc-400 bg-zinc-500/10 border-zinc-500/20";
+  };
+
+  const fmtTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("he-IL") + " " + d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const totalPages = Math.ceil(total / 30);
+
+  return (
+    <div className="space-y-6" dir="rtl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
+            <Mail className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-white tracking-tight">לוג אימיילים</h3>
+            <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">{total} emails total</p>
+          </div>
+        </div>
+        <button
+          onClick={fetchLogs}
+          disabled={loading}
+          className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-zinc-600 hover:text-white transition-all"
+        >
+          <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          placeholder="חפש לפי אימייל..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          className="flex-1 min-w-[200px] px-4 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-white placeholder:text-zinc-700 focus:ring-1 focus:ring-purple-500/30 focus:border-purple-500/30"
+        />
+        <select
+          value={sourceFilter}
+          onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }}
+          className="px-3 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-zinc-400"
+        >
+          <option value="">כל המקורות</option>
+          {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+          className="px-3 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-zinc-400"
+        >
+          <option value="">כל הסוגים</option>
+          {types.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-[32px] border border-white/5 bg-zinc-950/80 overflow-hidden">
+        {loading && logs.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <RefreshCw className="w-8 h-8 animate-spin text-purple-500/20" />
+          </div>
+        ) : logs.length === 0 ? (
+          <p className="text-center text-zinc-800 font-black uppercase tracking-widest text-[9px] py-20">
+            No emails found
+          </p>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {logs.map((log) => (
+              <div key={log.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-all text-sm">
+                <span className={cn("px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shrink-0", statusColor(log.status))}>
+                  {log.status}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-zinc-300 truncate">{log.email_to}</span>
+                    <span className="text-[9px] text-zinc-700 font-mono shrink-0">{log.source}</span>
+                  </div>
+                  {log.subject && (
+                    <p className="text-xs text-zinc-600 truncate mt-0.5">{log.subject}</p>
+                  )}
+                </div>
+                <span className="text-[9px] text-zinc-600 font-mono shrink-0">{log.email_type}</span>
+                <span className="text-[9px] text-zinc-700 font-bold shrink-0 whitespace-nowrap">{fmtTime(log.created_at)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-zinc-500 text-xs font-bold disabled:opacity-30 hover:text-white transition-all"
+          >
+            הקודם
+          </button>
+          <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-zinc-500 text-xs font-bold disabled:opacity-30 hover:text-white transition-all"
+          >
+            הבא
+          </button>
         </div>
       )}
     </div>

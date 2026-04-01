@@ -15,6 +15,7 @@ function escapeHtml(str: string): string {
 export class EmailService {
     private static resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
     private static from = process.env.RESEND_FROM_EMAIL || 'no-reply@joya-tech.net';
+    private static defaultReplyTo = process.env.RESEND_REPLY_TO || 'gal@joya-tech.net';
 
     /**
      * Send arbitrary transactional email and log it.
@@ -26,6 +27,7 @@ export class EmailService {
         userId,
         emailType = 'transactional',
         metadata = {},
+        replyTo,
     }: {
         to: string | string[];
         subject: string;
@@ -33,6 +35,7 @@ export class EmailService {
         userId?: string;
         emailType?: string;
         metadata?: Record<string, unknown>;
+        replyTo?: string;
     }) {
         if (!this.resend) {
             logger.warn('[EmailService] Resend not configured. Skipping email.');
@@ -44,6 +47,7 @@ export class EmailService {
                 from: this.from,
                 to,
                 subject,
+                replyTo: replyTo || this.defaultReplyTo,
                 html: `<div dir="rtl" style="font-family: sans-serif;">${html}</div>`,
             });
 
