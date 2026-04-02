@@ -33,10 +33,12 @@ function isCsrfExempt(pathname: string, request: NextRequest): boolean {
   if (CSRF_EXEMPT_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
     return true
   }
-  // API-key-authenticated requests (Chrome extension, developer keys)
-  // Only exempt verified prk_ prefixed tokens, not arbitrary Bearer values
+  // Bearer-authenticated requests (Chrome extension JWT or prk_ API keys)
+  // These are already authenticated by the API handler — CSRF origin check is redundant.
+  // The extension popup/service-worker sends Origin: chrome-extension:// which would fail
+  // the origin check, but the request is legitimately authenticated via Bearer token.
   const authHeader = request.headers.get('authorization') || ''
-  if (authHeader.startsWith('Bearer prk_')) {
+  if (authHeader.startsWith('Bearer ')) {
     return true
   }
   return false
