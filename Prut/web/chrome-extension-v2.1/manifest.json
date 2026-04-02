@@ -69,7 +69,7 @@
         "https://chat.deepseek.com/*",
         "https://www.perplexity.ai/*"
       ],
-      "js": ["lib/auth.js", "content/ai-chat-injector.js"],
+      "js": ["content/ai-chat-injector.js"],
       "css": ["content/ai-chat-injector.css"],
       "run_at": "document_idle"
     }

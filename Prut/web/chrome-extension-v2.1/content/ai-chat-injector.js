@@ -26,8 +26,9 @@
           else el.value = text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
-          el.innerHTML = `<p>${text}</p>`;
-          el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+          el.focus();
+          document.execCommand('selectAll', false, null);
+          document.execCommand('insertText', false, text);
         }
       },
       messageSelector: '[data-message-author-role]',
@@ -67,8 +68,9 @@
           el.value = text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
-          el.innerHTML = `<p>${text}</p>`;
-          el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+          el.focus();
+          document.execCommand('selectAll', false, null);
+          document.execCommand('insertText', false, text);
         }
       },
       messageSelector: 'message-content',
@@ -129,6 +131,7 @@
   let sidePanelOpen = false;
   let libraryCache = null;
   let isEnhancing = false;
+  let escHandler = null;
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -236,8 +239,10 @@
       showToast('Connection error', 'error');
       updateButtonState('idle');
     } finally {
-      isEnhancing = false;
-      setTimeout(() => updateButtonState('idle'), 2000);
+      setTimeout(() => {
+        isEnhancing = false;
+        updateButtonState('idle');
+      }, 2000);
     }
   }
 
@@ -375,9 +380,10 @@
     // Load library
     await loadLibrary();
 
-    // Close on Escape
-    const escHandler = (e) => {
-      if (e.key === 'Escape') { closeSidePanel(); document.removeEventListener('keydown', escHandler); }
+    // Close on Escape (stored so closeSidePanel can clean it up)
+    if (escHandler) document.removeEventListener('keydown', escHandler);
+    escHandler = (e) => {
+      if (e.key === 'Escape') closeSidePanel();
     };
     document.addEventListener('keydown', escHandler);
   }
@@ -387,6 +393,10 @@
     if (panel) {
       panel.classList.add('peroot-side-panel-exit');
       setTimeout(() => panel.remove(), 200);
+    }
+    if (escHandler) {
+      document.removeEventListener('keydown', escHandler);
+      escHandler = null;
     }
     sidePanelOpen = false;
     sidePanel = null;
@@ -688,7 +698,11 @@
     }, 500);
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  // Observe the narrowest useful container (input area or main, not entire body)
+  const observeTarget = currentSite.inputArea?.()?.parentElement
+    || document.querySelector('main')
+    || document.body;
+  observer.observe(observeTarget, { childList: true, subtree: true });
 
   // Initial injection (retry a few times for slow-loading SPAs)
   function tryInject(attempts = 0) {
