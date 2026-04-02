@@ -9,6 +9,7 @@
   window.__peerootAIChatInjected = true;
 
   const API_BASE = "https://www.peroot.space";
+  const LOGO_URL = chrome.runtime.getURL('icons/icon-48.png');
 
   // ── Site Detection ──────────────────────────────────────────────────────────
 
@@ -258,7 +259,7 @@
       peerootBtn.classList.add('peroot-ai-success');
       peerootBtn.innerHTML = '✓';
     } else {
-      peerootBtn.innerHTML = '⚡';
+      peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
     }
   }
 
@@ -277,7 +278,7 @@
     peerootBtn.id = 'peroot-ai-btn';
     peerootBtn.className = 'peroot-ai-btn';
     peerootBtn.title = 'Peroot — Enhance prompt (Ctrl+M)';
-    peerootBtn.innerHTML = '⚡';
+    peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
     peerootBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -343,7 +344,7 @@
     sidePanel.innerHTML = `
       <div class="peroot-sp-header">
         <div class="peroot-sp-brand">
-          <span class="peroot-sp-logo">⚡</span>
+          <img src="${LOGO_URL}" alt="Peroot" class="peroot-sp-logo-img" style="width:22px;height:22px;">
           <span class="peroot-sp-title">Peroot Library</span>
         </div>
         <button class="peroot-sp-close" id="peroot-sp-close">✕</button>
