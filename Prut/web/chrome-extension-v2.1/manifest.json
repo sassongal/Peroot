@@ -1,0 +1,82 @@
+{
+  "manifest_version": 3,
+  "name": "Peroot - AI Prompt Enhancer",
+  "short_name": "Peroot",
+  "version": "3.0.0",
+  "description": "Enhance any prompt instantly with AI. Works inside ChatGPT, Claude & Gemini. Prompt library, conversation export, and more.",
+  "homepage_url": "https://peroot.space",
+  "author": "Peroot by Joyatech",
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://peroot.space/*",
+    "https://www.peroot.space/*",
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://chat.deepseek.com/*",
+    "https://www.perplexity.ai/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "Peroot - שדרוג פרומפטים"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+P",
+        "mac": "Alt+P"
+      },
+      "description": "Open Peroot popup"
+    },
+    "enhance-selection": {
+      "suggested_key": {
+        "default": "Alt+Shift+E",
+        "mac": "Alt+Shift+E"
+      },
+      "description": "Enhance selected text"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://peroot.space/*",
+        "https://www.peroot.space/*"
+      ],
+      "js": ["content/auth-sync.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://chat.deepseek.com/*",
+        "https://www.perplexity.ai/*"
+      ],
+      "js": ["lib/auth.js", "content/ai-chat-injector.js"],
+      "css": ["content/ai-chat-injector.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
