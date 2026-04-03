@@ -9,6 +9,7 @@ import { CapabilityMode } from '@/lib/capability-mode';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 import { escapePostgrestValue } from "@/lib/sanitize";
+import { findSimilarPrompts } from "@/lib/prompt-similarity";
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -172,6 +173,44 @@ export function useLibrary() {
     setIsPageLoading(true);
     try {
       const orderMap = readOrderMap(userId);
+
+      // --- Fuzzy search via pg_trgm RPC when search query is present ---
+      // Skip RPC for "favorites" folder — it requires a join with prompt_favorites
+      // that the RPC doesn't handle; fall through to standard query path instead.
+      if (opts.searchQuery && opts.activeFolder !== 'favorites') {
+        const offset = (opts.page - 1) * opts.pageSize;
+        const { data: fuzzyData, error: fuzzyError } = await supabase.rpc(
+          'search_personal_library_fuzzy',
+          {
+            p_user_id: userId,
+            p_query: opts.searchQuery,
+            p_folder: opts.activeFolder,
+            p_capability: opts.capabilityFilter,
+            p_sort: opts.sortBy,
+            p_limit: opts.pageSize,
+            p_offset: offset,
+          }
+        );
+
+        if (!fuzzyError && fuzzyData && (fuzzyData as Record<string, unknown>[]).length > 0) {
+          setPersonalLibrary(
+            (fuzzyData as Record<string, unknown>[]).map(
+              (row: Record<string, unknown>, index: number) =>
+                rowToPrompt(row, offset + index, orderMap)
+            )
+          );
+          setTotalCount(
+            (fuzzyData as Record<string, unknown>[])[0]?.total_count as number ??
+              (fuzzyData as Record<string, unknown>[]).length
+          );
+          setIsPageLoading(false);
+          return; // Early return — skip the standard query path
+        }
+        if (fuzzyError) {
+          logger.error('[useLibrary] fuzzy search error:', fuzzyError);
+        }
+        // If RPC returned 0 results or errored, fall through to standard ilike query
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query: any = supabase
@@ -589,7 +628,7 @@ export function useLibrary() {
   const addPrompt = async (
     prompt: Omit<PersonalPrompt, 'id' | 'use_count' | 'created_at' | 'updated_at'>,
     category?: string
-  ) => {
+  ): Promise<string | undefined> => {
     if (!prompt.personal_category && category) {
       prompt = { ...prompt, personal_category: category };
     }
@@ -598,17 +637,22 @@ export function useLibrary() {
     }
 
     if (user) {
-      // For logged-in users: duplicate check via a quick select
-      const { data: existing } = await supabase
+      // Fuzzy duplicate check: fetch recent prompts and compare via Jaccard similarity
+      const { data: candidates } = await supabase
         .from('personal_library')
-        .select('id')
+        .select('id, title, prompt')
         .eq('user_id', user.id)
-        .eq('prompt', prompt.prompt.trim())
-        .limit(1);
+        .limit(50)
+        .order('updated_at', { ascending: false });
 
-      if (existing && existing.length > 0) {
-        toast.warning("פרומפט דומה כבר קיים בספרייה");
-        return;
+      if (candidates) {
+        const similar = findSimilarPrompts(prompt.prompt, candidates, 0.6);
+        if (similar.length > 0) {
+          toast.warning(`פרומפט דומה כבר קיים: "${similar[0].title}"`, {
+            duration: 8000,
+          });
+          return undefined;
+        }
       }
 
       // Compute next sort index for the target category using a count query
@@ -634,28 +678,41 @@ export function useLibrary() {
         tags: prompt.tags || []
       };
 
-      const { error } = await supabase.from('personal_library').insert(insertData);
+      const { data: inserted, error } = await supabase
+        .from('personal_library')
+        .insert(insertData)
+        .select('id')
+        .single();
       if (error) {
         logger.error('[useLibrary] addPrompt error:', error);
-        return;
+        return undefined;
       }
 
       await refreshCurrentPage();
+      return inserted?.id;
     } else {
-      // GUEST path
-      const existing = allLocalItems.find(p => p.prompt.trim() === prompt.prompt.trim());
-      if (existing) {
-        toast.warning("פרומפט דומה כבר קיים בספרייה");
-        return;
+      // GUEST path — fuzzy duplicate check against local items
+      const localCandidates = allLocalItems.map(p => ({
+        id: p.id,
+        title: p.title,
+        prompt: p.prompt,
+      }));
+      const similar = findSimilarPrompts(prompt.prompt, localCandidates, 0.6);
+      if (similar.length > 0) {
+        toast.warning(`פרומפט דומה כבר קיים: "${similar[0].title}"`, {
+          duration: 8000,
+        });
+        return undefined;
       }
 
       const nextSortIndex = allLocalItems
         .filter((item) => item.personal_category === prompt.personal_category)
         .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
 
+      const newId = crypto.randomUUID();
       const newItem: PersonalPrompt = {
         ...prompt,
-        id: crypto.randomUUID(),
+        id: newId,
         use_count: 0,
         created_at: Date.now(),
         updated_at: Date.now(),
@@ -667,6 +724,7 @@ export function useLibrary() {
       } as PersonalPrompt & { savedAt: number };
 
       setAllLocalItems(prev => [newItem, ...prev]);
+      return newId;
     }
   };
 

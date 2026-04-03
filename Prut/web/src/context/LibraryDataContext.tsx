@@ -45,7 +45,7 @@ export interface LibraryDataContextType {
   personalCapabilityCounts: Record<CapabilityMode, number>;
 
   // CRUD Actions
-  addPrompt: (prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">, category?: string) => Promise<void>;
+  addPrompt: (prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">, category?: string) => Promise<string | undefined>;
   removePrompt: (id: string) => Promise<void>;
   updatePrompt: (id: string, updates: Partial<PersonalPrompt>) => Promise<void>;
   duplicatePrompt: (prompt: PersonalPrompt) => Promise<void>;
@@ -217,9 +217,93 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     return counts as Record<CapabilityMode, number>;
   }, [personalLibrary]);
 
+  // --- Auto-categorization (fire-and-forget after save to "כללי") ---
+  const suggestCategory = useCallback(async (
+    promptId: string,
+    promptText: string,
+    categories: string[]
+  ) => {
+    try {
+      const res = await fetch(getApiPath("/api/personal-library/suggest-category"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          promptText,
+          existingCategories: categories,
+        }),
+      });
+      if (!res.ok) return;
+      const data = await res.json() as {
+        suggestedCategory: string;
+        suggestedTags: string[];
+        isNewCategory: boolean;
+      };
+      const { suggestedCategory, suggestedTags } = data;
+
+      // Don't suggest if the AI came back with "כללי" again
+      if (!suggestedCategory || suggestedCategory === "כללי") return;
+
+      const toastId = `suggest-${promptId}`;
+      toast(
+        <div dir="rtl" className="flex flex-col gap-2">
+          <p className="text-sm">
+            הצעה: להעביר ל-<strong>{suggestedCategory}</strong>
+            {suggestedTags.length > 0 && ` ולתייג ${suggestedTags.join(", ")}`}?
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                toast.dismiss(toastId);
+                try {
+                  await updatePrompt(promptId, { personal_category: suggestedCategory });
+                  if (suggestedTags.length > 0) {
+                    await updateTags(promptId, suggestedTags);
+                  }
+                  toast.success("הקטגוריה עודכנה");
+                } catch {
+                  toast.error("שגיאה בעדכון");
+                }
+              }}
+              className="px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              אשר
+            </button>
+            <button
+              onClick={() => toast.dismiss(toastId)}
+              className="px-3 py-1 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        </div>,
+        { duration: 10000, id: toastId }
+      );
+    } catch (err) {
+      logger.warn("[auto-categorize] suggestion failed:", err);
+    }
+  }, [updatePrompt, updateTags]);
+
+  // Wrap addPrompt to fire auto-categorization for default-category saves
+  const addPromptWithSuggestion = useCallback(async (
+    prompt: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">,
+    category?: string
+  ): Promise<string | undefined> => {
+    const newId = await addPrompt(prompt, category);
+    if (!newId) return undefined;
+
+    // Fire auto-categorize only for authenticated users saving to "כללי"
+    const effectiveCategory = prompt.personal_category || category || "כללי";
+    if (user && effectiveCategory === "כללי") {
+      // Non-blocking — don't await
+      suggestCategory(newId, prompt.prompt, personalCategories).catch(() => {});
+    }
+
+    return newId;
+  }, [addPrompt, user, personalCategories, suggestCategory]);
+
   // --- Duplicate ---
   const duplicatePrompt = useCallback(async (prompt: PersonalPrompt) => {
-    await addPrompt({
+    await addPromptWithSuggestion({
       title: `${prompt.title} (עותק)`,
       prompt: prompt.prompt,
       category: prompt.category,
@@ -230,7 +314,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       tags: prompt.tags || [],
       capability_mode: prompt.capability_mode,
     });
-  }, [addPrompt]);
+  }, [addPromptWithSuggestion]);
 
   // --- Category Actions (wrapped with auth + toast) ---
   const addPersonalCategory = useCallback(async (name?: string) => {
@@ -289,7 +373,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     setPage, setActiveFolder, setSearchQuery, setSortBy,
     libraryCapabilityCounts,
     personalCapabilityCounts,
-    addPrompt, removePrompt, updatePrompt, duplicatePrompt,
+    addPrompt: addPromptWithSuggestion, removePrompt, updatePrompt, duplicatePrompt,
     incrementUseCount, togglePin, ratePrompt,
     addPrompts, deletePrompts, movePrompts, updateTags,
     updateProfile, completeOnboarding,
@@ -306,7 +390,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     activeFolder, searchQuery, sortBy,
     setPage, setActiveFolder, setSearchQuery, setSortBy,
     libraryCapabilityCounts, personalCapabilityCounts,
-    addPrompt, removePrompt, updatePrompt, duplicatePrompt,
+    addPromptWithSuggestion, removePrompt, updatePrompt, duplicatePrompt,
     incrementUseCount, togglePin, ratePrompt,
     addPrompts, deletePrompts, movePrompts, updateTags,
     updateProfile, completeOnboarding,
