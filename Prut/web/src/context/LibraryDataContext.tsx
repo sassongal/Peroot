@@ -302,8 +302,10 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
   }, [addPrompt, user, personalCategories, suggestCategory]);
 
   // --- Duplicate ---
+  // Use raw addPrompt (not addPromptWithSuggestion) — duplicates should keep
+  // the original's category without triggering auto-categorization.
   const duplicatePrompt = useCallback(async (prompt: PersonalPrompt) => {
-    await addPromptWithSuggestion({
+    await addPrompt({
       title: `${prompt.title} (עותק)`,
       prompt: prompt.prompt,
       category: prompt.category,
@@ -314,7 +316,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
       tags: prompt.tags || [],
       capability_mode: prompt.capability_mode,
     });
-  }, [addPromptWithSuggestion]);
+  }, [addPrompt]);
 
   // --- Category Actions (wrapped with auth + toast) ---
   const addPersonalCategory = useCallback(async (name?: string) => {

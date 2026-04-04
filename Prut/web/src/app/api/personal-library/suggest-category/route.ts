@@ -71,13 +71,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cats = Array.isArray(existingCategories) ? existingCategories : [];
+
     // Truncate very long prompts to save tokens
     const truncated = promptText.slice(0, 1500);
 
     const { text } = await generateText({
       model: google("gemini-2.0-flash"),
       system: SYSTEM_PROMPT,
-      prompt: `Prompt text:\n${truncated}\n\nExisting categories:\n${(existingCategories || []).join(", ") || "(none)"}`,
+      prompt: `Prompt text:\n${truncated}\n\nExisting categories:\n${cats.join(", ") || "(none)"}`,
       maxOutputTokens: 200,
     });
 
@@ -105,7 +107,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       suggestedCategory: parsed.category,
       suggestedTags: parsed.tags || [],
-      isNewCategory: parsed.isNew ?? !existingCategories?.includes(parsed.category),
+      isNewCategory: parsed.isNew ?? !cats.includes(parsed.category),
     });
   } catch (error) {
     logger.error("[suggest-category] Error:", error);

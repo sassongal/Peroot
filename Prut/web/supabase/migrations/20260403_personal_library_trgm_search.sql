@@ -58,8 +58,6 @@ BEGIN
       pl.title % p_query
       OR pl.prompt % p_query
       OR pl.use_case % p_query
-      OR pl.title ILIKE '%' || p_query || '%'
-      OR pl.prompt ILIKE '%' || p_query || '%'
     )
     AND (p_folder IS NULL OR p_folder = 'all' OR
          (p_folder = 'pinned' AND pl.is_pinned = true) OR
@@ -98,8 +96,6 @@ BEGIN
       pl.title % p_query
       OR pl.prompt % p_query
       OR pl.use_case % p_query
-      OR pl.title ILIKE '%' || p_query || '%'
-      OR pl.prompt ILIKE '%' || p_query || '%'
     )
     AND (p_folder IS NULL OR p_folder = 'all' OR
          (p_folder = 'pinned' AND pl.is_pinned = true) OR
