@@ -1103,8 +1103,8 @@ describe("POST /api/enhance", () => {
       );
     });
 
-    it("passes capability_mode through to engine selection", async () => {
-      setupAuthenticatedUser();
+    it("passes capability_mode through to engine selection (pro user)", async () => {
+      setupAuthenticatedUser({ tier: "pro" });
       setupMockStream();
 
       const { getEngine } = await import("@/lib/engines");
@@ -1117,6 +1117,47 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(200);
       expect(getEngine).toHaveBeenCalledWith("IMAGE_GENERATION");
+    });
+
+    it("returns 403 when free user requests a non-STANDARD capability mode", async () => {
+      setupAuthenticatedUser({ tier: "free" });
+      setupMockStream();
+
+      const req = makeRequest({
+        prompt: "test",
+        capability_mode: "DEEP_RESEARCH",
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.error).toMatch(/Pro/);
+    });
+
+    it("allows free user to use STANDARD capability mode", async () => {
+      setupAuthenticatedUser({ tier: "free" });
+      setupMockStream();
+
+      const req = makeRequest({
+        prompt: "test",
+        capability_mode: "STANDARD",
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(200);
+    });
+
+    it("allows admin to use any capability mode regardless of tier", async () => {
+      setupAuthenticatedUser({ tier: "free", isAdmin: true });
+      setupMockStream();
+
+      const req = makeRequest({
+        prompt: "test",
+        capability_mode: "IMAGE_GENERATION",
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(200);
     });
 
     it("tracks API usage via trackApiUsage in onFinish callback", async () => {

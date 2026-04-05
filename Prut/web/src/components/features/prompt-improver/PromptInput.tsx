@@ -233,6 +233,7 @@ export function PromptInput({
           onChange={setSelectedCapability}
           disabled={isLoading}
           compact
+          isPro={isPro}
         />
       </div>
 

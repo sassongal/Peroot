@@ -4,7 +4,8 @@ import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-m
 import { cn } from "@/lib/utils";
 import { MessageSquare, Globe, Palette, Bot, Video, Lock, LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const ICONS: Record<IconName, LucideIcon> = {
   MessageSquare,
@@ -45,6 +46,8 @@ interface CapabilitySelectorProps {
   onChange: (mode: CapabilityMode) => void;
   disabled?: boolean;
   compact?: boolean;
+  /** Whether user has Pro subscription. Non-Pro users see lock icons on advanced modes. */
+  isPro?: boolean;
 }
 
 export function CapabilitySelector({
@@ -52,8 +55,19 @@ export function CapabilitySelector({
   onChange,
   disabled,
   compact = false,
+  isPro = false,
 }: CapabilitySelectorProps) {
+  const router = useRouter();
   const modes = Object.values(CapabilityMode);
+
+  // Step 3: If a free user somehow has a non-STANDARD mode selected (e.g. from
+  // before the gate was introduced), gracefully reset them to STANDARD on mount.
+  useEffect(() => {
+    if (!isPro && value !== CapabilityMode.STANDARD) {
+      onChange(CapabilityMode.STANDARD);
+    }
+  }, [isPro]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally only run when isPro changes
+
   const isNonStandard = value !== CapabilityMode.STANDARD;
 
   // Auto-expand when user has selected a non-standard mode so we never hide their selection.
@@ -67,6 +81,7 @@ export function CapabilitySelector({
     const isSelected = value === mode;
     const colorClasses = COLOR_CLASSES[config.color];
     const isComingSoon = COMING_SOON_MODES.has(mode);
+    const isLocked = !isPro && mode !== CapabilityMode.STANDARD && !isComingSoon;
 
     return (
       <button
@@ -78,6 +93,11 @@ export function CapabilitySelector({
             toast("מנוע הסרטונים בדרך! נעדכן אותך כשיהיה מוכן", { icon: "🎬" });
             return;
           }
+          if (isLocked) {
+            toast("שדרג ל-Pro כדי לפתוח מצבים מתקדמים", { icon: "🔒" });
+            router.push("/pricing");
+            return;
+          }
           onChange(mode);
         }}
         className={cn(
@@ -86,16 +106,21 @@ export function CapabilitySelector({
           compact ? "px-3 py-2" : "px-4 py-3",
           isComingSoon
             ? "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] cursor-not-allowed opacity-60"
-            : isSelected
-              ? colorClasses.selected
-              : cn(
-                  "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)]",
-                  colorClasses.default
-                ),
-          disabled && !isComingSoon && "opacity-50 cursor-not-allowed"
+            : isLocked
+              ? cn(
+                  "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] opacity-70",
+                  "hover:opacity-90 hover:border-amber-500/30 cursor-pointer"
+                )
+              : isSelected
+                ? colorClasses.selected
+                : cn(
+                    "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)]",
+                    colorClasses.default
+                  ),
+          disabled && !isComingSoon && !isLocked && "opacity-50 cursor-not-allowed"
         )}
-        aria-pressed={isComingSoon ? false : isSelected}
-        title={isComingSoon ? "בקרוב" : config.descriptionHe}
+        aria-pressed={isComingSoon || isLocked ? false : isSelected}
+        title={isComingSoon ? "בקרוב" : isLocked ? "שדרג ל-Pro" : config.descriptionHe}
       >
         <Icon className={cn("shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
         <span className={cn("font-medium", compact ? "text-sm" : "text-base")}>
@@ -105,6 +130,12 @@ export function CapabilitySelector({
           <span className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] bg-[var(--glass-bg)] px-1.5 py-0.5 rounded-full">
             <Lock className="w-3 h-3" />
             בקרוב
+          </span>
+        )}
+        {isLocked && (
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+            <Lock className="w-3 h-3" />
+            Pro
           </span>
         )}
       </button>

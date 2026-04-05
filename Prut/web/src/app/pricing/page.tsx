@@ -32,6 +32,12 @@ const COMPARISON_FEATURES = [
     icon: Crown,
   },
   {
+    name: "מצבים מתקדמים",
+    free: "רגיל בלבד",
+    pro: "מחקר, תמונה, סוכן, וידאו",
+    icon: Zap,
+  },
+  {
     name: "שיפור איטרטיבי מתקדם",
     free: false,
     pro: true,
@@ -191,14 +197,15 @@ export default function PricingPage() {
                 <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-red-400/80 line-through decoration-red-500/60 decoration-2">&#8362;16</span>
+                <span className="text-2xl font-bold text-red-400/80 line-through decoration-red-500/60 decoration-2">&#8362;9.99</span>
                 <span className="text-4xl font-black text-foreground">&#8362;{PLANS.pro.price}</span>
                 <span className="text-muted-foreground text-sm">/ חודש</span>
               </div>
               <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-amber-600 dark:text-amber-400 text-xs font-bold">מבצע השקה!</span>
+                <span className="text-amber-600 dark:text-amber-400 text-xs font-bold">מחיר השקה! עולה ל-&#8362;9.99 ב-1.5</span>
               </div>
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5">&#x23F0; המחיר עולה ב-1 במאי 2026</p>
               <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
               <div className="flex items-center gap-1.5 mt-2">
                 <Gift className="w-3.5 h-3.5 text-green-400" />

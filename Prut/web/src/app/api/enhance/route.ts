@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
-import { parseCapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
@@ -144,6 +144,16 @@ export async function POST(req: Request) {
         }
     }
 
+    // 1.5 Capability Mode Gating -- advanced modes require Pro (checked before
+    // credit decrement so free users are not charged for gated requests)
+    const mode = parseCapabilityMode(capability_mode);
+    if (mode !== CapabilityMode.STANDARD && tier !== 'pro' && !isAdmin) {
+      return NextResponse.json(
+        { error: "שדרג ל-Pro כדי להשתמש במצב זה" },
+        { status: 403 }
+      );
+    }
+
     if (!isAdmin) {
         // 2. Execute Rate Limiting
         const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
@@ -174,7 +184,6 @@ export async function POST(req: Request) {
     }
 
     // 4. Engine Selection & Generation
-    const mode = parseCapabilityMode(capability_mode);
     const engine = await getEngine(mode);
 
     // 4.5 Style RAG Processing (using pre-fetched data)
