@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import NextImage from "next/image";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 
@@ -17,43 +16,25 @@ import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
-const ResultSection = dynamic(
-  () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
-);
-const LoginRequiredModal = dynamic(
-  () => import("@/components/ui/LoginRequiredModal").then(mod => mod.LoginRequiredModal),
-  { ssr: false, loading: () => null }
-);
-const WhatIsThisModal = dynamic(
-  () => import("@/components/ui/WhatIsThisModal").then(mod => mod.WhatIsThisModal),
-  { ssr: false, loading: () => null }
-);
-const FAQBubble = dynamic(
-  () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-[var(--glass-bg)] w-12 h-12" /> }
-);
-const SmartRefinement = dynamic(
-  () => import("@/components/features/prompt-improver/SmartRefinement").then(mod => mod.SmartRefinement),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-32" /> }
-);
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
-const OnboardingOverlay = dynamic(
-  () => import("@/components/ui/OnboardingOverlay").then(mod => mod.OnboardingOverlay),
-  { ssr: false, loading: () => null }
-);
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useContextAttachments } from "@/hooks/useContextAttachments";
-const FeatureDiscoveryTooltip = dynamic(
-  () => import("@/components/ui/FeatureDiscoveryTooltip").then(mod => mod.FeatureDiscoveryTooltip),
-  { ssr: false, loading: () => null }
-);
 import { usePromptLimits } from "@/hooks/usePromptLimits";
+import { Clock } from "lucide-react";
+import { TopNavBar } from "@/components/layout/TopNavBar";
+import { cn } from "@/lib/utils";
+import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
+import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useI18n } from "@/context/I18nContext";
+import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
+
+// Dynamic imports for route-level views
 const LibraryView = dynamic(
   () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
@@ -62,36 +43,13 @@ const PersonalLibraryView = dynamic(
   () => import("@/components/views/PersonalLibraryView").then(mod => mod.PersonalLibraryView),
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
 );
-const LoadingOverlay = dynamic(
-  () => import("@/components/ui/LoadingOverlay").then(mod => mod.LoadingOverlay),
-  { ssr: false, loading: () => null }
-);
-const StreamingProgress = dynamic(
-  () => import("@/components/ui/StreamingProgress"),
-  { ssr: false, loading: () => null }
-);
-import { Clock } from "lucide-react";
-const DidYouKnowBanner = dynamic(
-  () => import("@/components/ui/DidYouKnowBanner").then(mod => mod.DidYouKnowBanner),
-  { ssr: false, loading: () => null }
-);
-import { MobileTabBar } from "@/components/layout/MobileTabBar";
-import { TopNavBar } from "@/components/layout/TopNavBar";
-const UpgradeNudge = dynamic(
-  () => import("@/components/features/prompt-improver/UpgradeNudge"),
-  { ssr: false, loading: () => null }
-);
-import { cn } from "@/lib/utils";
-import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
-import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
-import { useSubscription } from "@/hooks/useSubscription";
-import { useI18n } from "@/context/I18nContext";
-import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
 
 // Extracted components
 import { SidebarDrawer } from "@/components/features/home/SidebarDrawer";
 import { MobileFaqPanel } from "@/components/features/home/MobileFaqPanel";
 import { InputSection } from "@/components/features/home/InputSection";
+import { HomeResultSection } from "@/components/features/home/HomeResultSection";
+import { HomeViewChrome } from "@/components/features/home/HomeViewChrome";
 
 // Constants
 
@@ -880,6 +838,36 @@ function PageContent() {
     setViewMode("library");
   }, [setViewMode]);
 
+  // --- Render callbacks for sub-components ---
+
+  const handleVariableChange = useCallback((key: string, val: string) => {
+    dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } });
+    saveVariable(key, val);
+  }, [dispatch, ps.variableValues, saveVariable]);
+
+  const handleImproveAgain = useCallback(() => {
+    dispatch({ type: 'SET_INPUT', payload: ps.completion });
+    dispatch({ type: 'INCREMENT_ITERATION' });
+    setTimeout(() => handleEnhance(), 0);
+  }, [dispatch, ps.completion, handleEnhance]);
+
+  const handleDiscoveryCtaClick = useCallback((action: string) => {
+    if (action === "library") saveCompletionToPersonal();
+    else if (action === "share") handleShare();
+    else if (action === "research") dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.DEEP_RESEARCH });
+    else if (action === "image") dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.IMAGE_GENERATION });
+    else if (action === "chains") setViewMode("personal");
+    else if (action === "public-library") handleNavLibrary();
+  }, [saveCompletionToPersonal, handleShare, dispatch, setViewMode, handleNavLibrary]);
+
+  const handleMobileTabChange = useCallback((tab: string) => {
+    if (tab === "home") setViewMode("home");
+    else if (tab === "library") handleNavLibrary();
+    else if (tab === "personal") handleNavPersonal();
+    else if (tab === "history") setSidebarOpen(true);
+    else if (tab === "faq") setMobileFaqOpen(true);
+  }, [setViewMode, handleNavLibrary, handleNavPersonal]);
+
   // --- Render ---
 
   const handleTopNavNavigate = useCallback((view: "home" | "library" | "personal") => {
@@ -943,248 +931,147 @@ function PageContent() {
   return (
     <>
     {topNavBar}
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
-      {/* Background Gradient */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" style={{ contain: 'layout style' }} />
+    <HomeViewChrome
+      viewMode={viewMode}
+      onTabChange={handleMobileTabChange}
+      discovery={discovery}
+      onDiscoveryCtaClick={handleDiscoveryCtaClick}
+      isLoading={ps.isLoading}
+      streamPhase={ps.streamPhase}
+      hasCompletion={!!ps.completion}
+      showWhatIsThis={showWhatIsThis}
+      onCloseWhatIsThis={() => setShowWhatIsThis(false)}
+      onOpenWhatIsThis={() => setShowWhatIsThis(true)}
+      isLoginRequiredModalOpen={isLoginRequiredModalOpen}
+      onCloseLoginRequired={() => setIsLoginRequiredModalOpen(false)}
+      loginRequiredConfig={loginRequiredConfig}
+      showUpgradeNudge={showUpgradeNudge}
+      onDismissUpgradeNudge={() => setShowUpgradeNudge(false)}
+      showOnboarding={showOnboarding}
+      user={user}
+      onOnboardingComplete={handleOnboardingComplete}
+      overlays={
+        <>
+          {/* Sidebar Drawer (extracted component) */}
+          <SidebarDrawer
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            history={history}
+            isLoaded={isLoaded}
+            onRestore={handleRestore}
+            onClear={clearHistory}
+            onSaveToPersonal={addPersonalPromptFromHistory}
+            onCopy={handleCopyText}
+            onStartNew={() => setViewMode("home")}
+            onNavPersonal={handleNavPersonal}
+            onNavFavorites={handleNavFavorites}
+            onNavLibrary={handleNavLibrary}
+            personalView={personalView}
+            prefetchPersonalLibrary={prefetchPersonalLibrary}
+          />
 
-      {/* FAQ: floating bubble on desktop only */}
-      <div className="hidden md:block fixed bottom-6 right-6 z-50">
-        <ErrorBoundary name="FAQBubble">
-          <FAQBubble />
-        </ErrorBoundary>
-      </div>
-
-      {/* Feature Discovery Tooltips */}
-      <FeatureDiscoveryTooltip
-        visible={discovery.visible}
-        tip={discovery.currentTip}
-        currentIndex={discovery.currentIndex}
-        totalTips={discovery.totalTips}
-        onNext={discovery.nextTip}
-        onDismiss={discovery.dismiss}
-        onCtaClick={(action) => {
-          if (action === "library") saveCompletionToPersonal();
-          else if (action === "share") handleShare();
-          else if (action === "research") dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.DEEP_RESEARCH });
-          else if (action === "image") dispatch({ type: 'SET_CAPABILITY', payload: CapabilityMode.IMAGE_GENERATION });
-          else if (action === "chains") setViewMode("personal");
-          else if (action === "public-library") handleNavLibrary();
-        }}
-      />
-
-      {/* Mobile Bottom Tab Bar */}
-      <MobileTabBar
-        activeTab={viewMode}
-        onTabChange={(tab) => {
-          if (tab === "home") setViewMode("home");
-          else if (tab === "library") handleNavLibrary();
-          else if (tab === "personal") handleNavPersonal();
-          else if (tab === "history") setSidebarOpen(true);
-          else if (tab === "faq") setMobileFaqOpen(true);
-        }}
-      />
-
-      {/* Sidebar Drawer (extracted component) */}
-      <SidebarDrawer
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        history={history}
-        isLoaded={isLoaded}
-        onRestore={handleRestore}
-        onClear={clearHistory}
-        onSaveToPersonal={addPersonalPromptFromHistory}
-        onCopy={handleCopyText}
-        onStartNew={() => setViewMode("home")}
-        onNavPersonal={handleNavPersonal}
-        onNavFavorites={handleNavFavorites}
-        onNavLibrary={handleNavLibrary}
-        personalView={personalView}
-        prefetchPersonalLibrary={prefetchPersonalLibrary}
-      />
-
-      {/* Mobile FAQ Panel (extracted component) */}
-      <MobileFaqPanel
-        isOpen={mobileFaqOpen}
-        onClose={() => setMobileFaqOpen(false)}
-      />
-
-      {/* Main Content (Full Width) */}
-      <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-4">
-           <div className="flex justify-center">
-             <div className="hero-logo-container">
-               <div className="hero-logo-ring hero-logo-ring-1" />
-               <div className="hero-logo-ring hero-logo-ring-2" />
-               <div className="hero-logo-ring hero-logo-ring-3" />
-               <NextImage
-                 src="/Peroot-hero.png"
-                 alt="Peroot"
-                 className="hero-logo-image"
-                 width={720}
-                 height={392}
-                 sizes="360px"
-                 priority
-               />
-             </div>
-           </div>
-
-           <button
-             onClick={() => setShowWhatIsThis(true)}
-             className="text-xs md:text-sm text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
-           >
-             מה עושים פה?
-           </button>
-
-           {/* Did You Know banner — shows one rotating fact per session */}
-           {!ps.completion && !ps.isLoading && <div className="min-h-[48px]"><DidYouKnowBanner /></div>}
-
-           <LoadingOverlay isVisible={ps.isLoading} />
-           <StreamingProgress phase={ps.streamPhase} />
-
-           {!ps.completion && !ps.isLoading ? (
-             /* INPUT MODE (extracted component) */
-             <InputSection
-               inputVal={ps.input}
-               setInputVal={setInputVal}
-               handleEnhance={handleEnhance}
-               inputScore={inputScore}
-               scoreTone={scoreTone}
-               selectedCategory={ps.selectedCategory}
-               setSelectedCategory={(cat: string) => dispatch({ type: 'SET_CATEGORY', payload: cat })}
-               selectedCapability={ps.selectedCapability}
-               setSelectedCapability={(cap: CapabilityMode) => dispatch({ type: 'SET_CAPABILITY', payload: cap })}
-               isLoading={ps.isLoading}
-               inputVariables={inputVariables}
-               variableValues={ps.variableValues}
-               setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
-               onApplyVariables={applyVariablesToPrompt}
-               imagePlatform={imagePlatform}
-               setImagePlatform={setImagePlatform}
-               imageOutputFormat={imageOutputFormat}
-               setImageOutputFormat={setImageOutputFormat}
-               imageAspectRatio={imageAspectRatio}
-               setImageAspectRatio={setImageAspectRatio}
-               videoPlatform={videoPlatform}
-               setVideoPlatform={setVideoPlatform}
-               videoAspectRatio={videoAspectRatio}
-               setVideoAspectRatio={setVideoAspectRatio}
-               history={history}
-               onRestore={handleRestore}
-               recentPersonalPrompts={recentPersonalPrompts}
-               onUsePrompt={handleUsePrompt}
-               incrementUseCount={incrementUseCount}
-               onNavToPersonalLibrary={() => setViewMode("personal")}
-               filteredLibrary={filteredLibrary}
-               libraryPrompts={libraryPrompts}
-               onSurpriseMe={handleSurpriseMe}
-               onNavLibrary={handleNavLibrary}
-               dispatch={dispatch}
-               contextAttachments={context.attachments}
-               onAddFile={context.addFile}
-               onAddUrl={context.addUrl}
-               onAddImage={context.addImage}
-               onRemoveAttachment={context.removeAttachment}
-               contextTotalTokens={context.totalTokens}
-               contextIsOverLimit={context.isOverLimit}
-               targetModel={targetModel}
-               setTargetModel={handleSetTargetModel}
-               creditsRemaining={creditsRemaining}
-               isNewUser={isNewUser}
-               user={user}
-               previousView={previousView}
-               onBackToLibrary={handleBackToLibrary}
-             />
-           ) : (
-             /* RESULT MODE */
-             /* TODO: Extract ResultMode into its own component (src/components/features/home/ResultMode.tsx)
-                once the InputSection extraction is validated. The result mode section includes
-                ResultSection + SmartRefinement and the associated callbacks (handleRefine, saveCompletionToPersonal, etc.) */
-             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col gap-8">
-                 <ErrorBoundary name="ResultSection">
-                   <ResultSection
-                       completion={ps.completion}
-                       isLoading={ps.isLoading}
-                       streamPhase={ps.streamPhase}
-                       copied={ps.copied}
-                       isPro={isPro}
-                       onCopy={handleCopyText}
-                       completionScore={completionScore}
-                       onSave={saveCompletionToPersonal}
-                       onSaveAsTemplate={saveAsTemplate}
-                       onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
-                       placeholders={placeholders}
-                       variableValues={ps.variableValues}
-                       improvementDelta={ps.previousScore !== null && ps.iterationCount > 0
-                         ? completionScore.baseScore - ps.previousScore
-                         : completionScore.baseScore - inputScore.baseScore}
-                       preFilledKeys={ps.preFilledKeys}
-                       onVariableChange={(key, val) => {
-                         dispatch({ type: 'SET_VARIABLE_VALUES', payload: { ...ps.variableValues, [key]: val } });
-                         saveVariable(key, val);
-                       }}
-                       onImproveAgain={() => {
-                         dispatch({ type: 'SET_INPUT', payload: ps.completion });
-                         dispatch({ type: 'INCREMENT_ITERATION' });
-                         setTimeout(() => handleEnhance(), 0);
-                       }}
-                       onRetryStream={handleEnhance}
-                       onResetToOriginal={() => dispatch({ type: 'RESET_TO_ORIGINAL' })}
-                       iterationCount={ps.iterationCount}
-                       originalPrompt={ps.originalInput || ps.input}
-                       onShare={handleShare}
-                       onReset={() => dispatch({ type: 'RESET' })}
-                       isAuthenticated={!!user}
-                       capabilityMode={ps.generationContext?.mode || ps.selectedCapability}
-                       selectedPlatform={
-                         ps.generationContext?.modeParams?.image_platform
-                         || ps.generationContext?.modeParams?.video_platform
-                         || (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION ? imagePlatform : undefined)
-                         || (ps.selectedCapability === CapabilityMode.VIDEO_GENERATION ? videoPlatform : undefined)
-                       }
-                   />
-                 </ErrorBoundary>
-
-                 {(ps.questions.length > 0 || ps.iterationCount > 0) && (
-                    <ErrorBoundary name="SmartRefinement">
-                      <SmartRefinement
-                         questions={ps.questions}
-                         answers={ps.questionAnswers}
-                         onAnswerChange={(id, val) => dispatch({ type: 'SET_QUESTION_ANSWER', payload: { id, answer: val } })}
-                         onRefine={(instruction) => handleRefine(instruction || "")}
-                         isLoading={ps.isLoading}
-                      />
-                    </ErrorBoundary>
-                 )}
-             </div>
-           )}
-
-        </div>
-
-      {/* Login Modal */}
-      <LoginRequiredModal
-        isOpen={isLoginRequiredModalOpen}
-        onClose={() => setIsLoginRequiredModalOpen(false)}
-        title={loginRequiredConfig.title}
-        message={loginRequiredConfig.message}
-        feature={loginRequiredConfig.feature}
-      />
-
-      {/* Upgrade Nudge Popup */}
-      {showUpgradeNudge && (
-        <UpgradeNudge
-          type="exhausted"
-          onUpgrade={() => { window.location.href = '/pricing'; }}
-          onDismiss={() => setShowUpgradeNudge(false)}
+          {/* Mobile FAQ Panel (extracted component) */}
+          <MobileFaqPanel
+            isOpen={mobileFaqOpen}
+            onClose={() => setMobileFaqOpen(false)}
+          />
+        </>
+      }
+    >
+      {!ps.completion && !ps.isLoading ? (
+        /* INPUT MODE (extracted component) */
+        <InputSection
+          inputVal={ps.input}
+          setInputVal={setInputVal}
+          handleEnhance={handleEnhance}
+          inputScore={inputScore}
+          scoreTone={scoreTone}
+          selectedCategory={ps.selectedCategory}
+          setSelectedCategory={(cat: string) => dispatch({ type: 'SET_CATEGORY', payload: cat })}
+          selectedCapability={ps.selectedCapability}
+          setSelectedCapability={(cap: CapabilityMode) => dispatch({ type: 'SET_CAPABILITY', payload: cap })}
+          isLoading={ps.isLoading}
+          inputVariables={inputVariables}
+          variableValues={ps.variableValues}
+          setVariableValues={(vals: Record<string, string>) => dispatch({ type: 'SET_VARIABLE_VALUES', payload: vals })}
+          onApplyVariables={applyVariablesToPrompt}
+          imagePlatform={imagePlatform}
+          setImagePlatform={setImagePlatform}
+          imageOutputFormat={imageOutputFormat}
+          setImageOutputFormat={setImageOutputFormat}
+          imageAspectRatio={imageAspectRatio}
+          setImageAspectRatio={setImageAspectRatio}
+          videoPlatform={videoPlatform}
+          setVideoPlatform={setVideoPlatform}
+          videoAspectRatio={videoAspectRatio}
+          setVideoAspectRatio={setVideoAspectRatio}
+          history={history}
+          onRestore={handleRestore}
+          recentPersonalPrompts={recentPersonalPrompts}
+          onUsePrompt={handleUsePrompt}
+          incrementUseCount={incrementUseCount}
+          onNavToPersonalLibrary={() => setViewMode("personal")}
+          filteredLibrary={filteredLibrary}
+          libraryPrompts={libraryPrompts}
+          onSurpriseMe={handleSurpriseMe}
+          onNavLibrary={handleNavLibrary}
+          dispatch={dispatch}
+          contextAttachments={context.attachments}
+          onAddFile={context.addFile}
+          onAddUrl={context.addUrl}
+          onAddImage={context.addImage}
+          onRemoveAttachment={context.removeAttachment}
+          contextTotalTokens={context.totalTokens}
+          contextIsOverLimit={context.isOverLimit}
+          targetModel={targetModel}
+          setTargetModel={handleSetTargetModel}
+          creditsRemaining={creditsRemaining}
+          isNewUser={isNewUser}
+          user={user}
+          previousView={previousView}
+          onBackToLibrary={handleBackToLibrary}
+        />
+      ) : (
+        /* RESULT MODE (extracted component) */
+        <HomeResultSection
+          completion={ps.completion}
+          isLoading={ps.isLoading}
+          streamPhase={ps.streamPhase}
+          copied={ps.copied}
+          isPro={isPro}
+          onCopy={handleCopyText}
+          completionScore={completionScore}
+          inputScore={inputScore}
+          onSave={saveCompletionToPersonal}
+          onSaveAsTemplate={saveAsTemplate}
+          onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
+          placeholders={placeholders}
+          variableValues={ps.variableValues}
+          previousScore={ps.previousScore}
+          iterationCount={ps.iterationCount}
+          preFilledKeys={ps.preFilledKeys}
+          onVariableChange={handleVariableChange}
+          onImproveAgain={handleImproveAgain}
+          onRetryStream={handleEnhance}
+          onResetToOriginal={() => dispatch({ type: 'RESET_TO_ORIGINAL' })}
+          originalPrompt={ps.originalInput || ps.input}
+          onShare={handleShare}
+          onReset={() => dispatch({ type: 'RESET' })}
+          isAuthenticated={!!user}
+          capabilityMode={ps.generationContext?.mode || ps.selectedCapability}
+          selectedPlatform={
+            ps.generationContext?.modeParams?.image_platform
+            || ps.generationContext?.modeParams?.video_platform
+            || (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION ? imagePlatform : undefined)
+            || (ps.selectedCapability === CapabilityMode.VIDEO_GENERATION ? videoPlatform : undefined)
+          }
+          questions={ps.questions}
+          questionAnswers={ps.questionAnswers}
+          onAnswerChange={(id, val) => dispatch({ type: 'SET_QUESTION_ANSWER', payload: { id, answer: val } })}
+          onRefine={(instruction) => handleRefine(instruction || "")}
         />
       )}
-
-      {/* What Is This Modal */}
-      <WhatIsThisModal isOpen={showWhatIsThis} onClose={() => setShowWhatIsThis(false)} />
-
-      {/* Onboarding Overlay */}
-      {showOnboarding && user && (
-          <OnboardingOverlay onComplete={handleOnboardingComplete} />
-      )}
-    </div>
+    </HomeViewChrome>
     </>
   );
 }

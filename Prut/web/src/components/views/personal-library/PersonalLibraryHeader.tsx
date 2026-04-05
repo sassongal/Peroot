@@ -1,0 +1,178 @@
+"use client";
+
+import {
+    BookOpen, Plus,
+    CheckSquare, Upload, History,
+    Sparkles, Menu
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useLibraryContext } from "@/context/LibraryContext";
+import { SearchAutosuggest } from "@/components/features/library/SearchAutosuggest";
+import { ActiveFilterChips } from "@/components/features/library/ActiveFilterChips";
+import type { PersonalLibrarySharedState, PersonalLibraryViewProps } from "./types";
+
+interface PersonalLibraryHeaderProps {
+  shared: PersonalLibrarySharedState;
+  viewProps: Pick<PersonalLibraryViewProps, "handleImportHistory" | "historyLength">;
+}
+
+export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHeaderProps) {
+  const { handleImportHistory, historyLength } = viewProps;
+  const ctx = useLibraryContext();
+  const {
+    setViewMode,
+    filteredPersonalLibrary,
+    personalQuery,
+    setPersonalQuery,
+    selectedCapabilityFilter,
+    setSelectedCapabilityFilter,
+  } = ctx;
+
+  const {
+    activeFolderLabel,
+    usedTotalCount,
+    currentSort,
+    localSearch,
+    selectionMode,
+    setSelectionMode,
+    displayItems,
+    selectAllVisible,
+    effectiveFolder,
+    setSidebarOpen,
+    importFileRef,
+    handleSearchChange,
+    handleSortChange,
+    handleImportFile,
+    setFolder,
+  } = shared;
+
+  return (
+    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-[var(--glass-border)] bg-black/40 mb-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          {/* Mobile sidebar toggle */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden p-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            aria-label="פתח תפריט"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+          <div>
+            <h2 className="text-xl md:text-3xl font-serif text-[var(--text-primary)]">ספריה אישית</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              {usedTotalCount} פרומפטים · {activeFolderLabel}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setViewMode("library")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="hidden lg:inline">ספרייה מלאה</span>
+          </button>
+          {/* New prompt button */}
+          <button
+            onClick={() => setViewMode("home")}
+            className="group flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none shrink-0"
+          >
+            <div className="relative w-4 h-4 md:w-5 md:h-5">
+              <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
+              <Plus className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Search + Sort + Actions row */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Search */}
+        <SearchAutosuggest
+          value={localSearch}
+          onChange={handleSearchChange}
+          prompts={filteredPersonalLibrary}
+          placeholder="חיפוש..."
+          className="flex-1 min-w-[180px]"
+        />
+
+        {/* Sort */}
+        <select
+          value={currentSort}
+          onChange={(e) => handleSortChange(e.target.value)}
+          className="bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30"
+        >
+          <option value="recent">עודכן לאחרונה</option>
+          <option value="title">אלפביתי</option>
+          <option value="usage">בשימוש גבוה</option>
+          <option value="custom">סדר ידני</option>
+          <option value="last_used">שימוש אחרון</option>
+          <option value="performance">ביצועים</option>
+        </select>
+
+        {/* Batch mode */}
+        <button
+          onClick={() => setSelectionMode(!selectionMode)}
+          className={cn(
+            "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+            selectionMode
+              ? "bg-blue-600 border-blue-500 text-[var(--text-primary)] shadow-lg shadow-blue-900/30"
+              : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
+          )}
+          title="ניהול פריטים"
+        >
+          <CheckSquare className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">ניהול פריטים</span>
+        </button>
+
+        {/* Import */}
+        <button
+          onClick={() => importFileRef.current?.click()}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          title="ייבוא"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">ייבוא</span>
+        </button>
+        <input ref={importFileRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+
+        {/* Import from history */}
+        <button
+          onClick={handleImportHistory}
+          disabled={historyLength === 0}
+          className={cn(
+            "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+            historyLength === 0 ? "border-[var(--glass-border)] text-slate-600 cursor-not-allowed" : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
+          )}
+        >
+          <History className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">מהיסטוריה</span>
+        </button>
+
+        {/* Select all (batch mode) */}
+        {selectionMode && (
+          <button
+            onClick={selectAllVisible}
+            className="px-3 py-2 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
+            בחר הכל ({displayItems.length})
+          </button>
+        )}
+      </div>
+
+      {/* Active filter chips */}
+      <ActiveFilterChips
+        searchQuery={localSearch}
+        onClearSearch={() => handleSearchChange("")}
+        capabilityFilter={selectedCapabilityFilter}
+        onClearCapability={() => setSelectedCapabilityFilter(null)}
+        favoritesMode={effectiveFolder === "favorites"}
+        onClearFavorites={() => setFolder("all")}
+        className="mt-1"
+      />
+    </div>
+  );
+}
