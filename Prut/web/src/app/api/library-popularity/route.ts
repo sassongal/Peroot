@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
-export const dynamic = "force-dynamic";
+
 
 const UpdateSchema = z.object({
   id: z.string().min(1),

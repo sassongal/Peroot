@@ -25,17 +25,14 @@ export async function GET(request: NextRequest) {
   let errors = 0;
 
   try {
-    // Get all users with email (limited to prevent timeout)
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, email, full_name, created_at")
-      .not("email", "is", null)
-      .limit(5000);
-
-    if (profileError || !profiles) {
-      logger.error("[Reengagement] Failed to fetch profiles:", profileError);
-      return NextResponse.json({ error: "Failed to fetch profiles" }, { status: 500 });
-    }
+    // Step 1: Find users who were active in the last 7 days (to exclude them)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentlyActiveRows } = await supabase
+      .from("activity_logs")
+      .select("user_id")
+      .gte("created_at", sevenDaysAgo)
+      .limit(50000);
+    const recentlyActiveIds = new Set((recentlyActiveRows ?? []).map((r) => r.user_id));
 
     // Get unsubscribed users
     const { data: unsubscribed } = await supabase
@@ -43,6 +40,28 @@ export async function GET(request: NextRequest) {
       .select("user_id")
       .eq("status", "unsubscribed");
     const unsubIds = new Set((unsubscribed ?? []).map((u) => u.user_id));
+
+    // Step 2: Fetch only profiles that are NOT recently active and NOT unsubscribed
+    const excludeIds = [...new Set([...recentlyActiveIds, ...unsubIds])];
+    let profileQuery = supabase
+      .from("profiles")
+      .select("id, email, full_name, created_at")
+      .not("email", "is", null);
+    // Supabase .not('id', 'in', ...) with large arrays can be slow, so filter in JS if too many
+    if (excludeIds.length < 1000) {
+      profileQuery = profileQuery.not("id", "in", `(${excludeIds.join(",")})`);
+    }
+    const { data: profiles, error: profileError } = await profileQuery.limit(500);
+
+    if (profileError || !profiles) {
+      logger.error("[Reengagement] Failed to fetch profiles:", profileError);
+      return NextResponse.json({ error: "Failed to fetch profiles" }, { status: 500 });
+    }
+
+    // Filter out excluded IDs in JS if we couldn't do it in the query
+    const filteredProfiles = excludeIds.length >= 1000
+      ? profiles.filter((p) => !recentlyActiveIds.has(p.id) && !unsubIds.has(p.id))
+      : profiles;
 
     // Get already-sent re-engagement emails
     const { data: alreadySent } = await supabase
@@ -62,15 +81,16 @@ export async function GET(request: NextRequest) {
       (sequences ?? []).map((s) => [s.user_id, s.id])
     );
 
-    // BATCH: Get last activity for all users in one query instead of N+1
-    // Fetch recent activity grouped by user (last 35 days covers all templates)
+    // Get last activity only for the candidate profiles (not all 50K rows)
+    const candidateIds = filteredProfiles.map((p) => p.id);
     const thirtyFiveDaysAgo = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString();
     const { data: recentActivity } = await supabase
       .from("activity_logs")
       .select("user_id, created_at")
+      .in("user_id", candidateIds)
       .gte("created_at", thirtyFiveDaysAgo)
       .order("created_at", { ascending: false })
-      .limit(50000);
+      .limit(5000);
 
     // Build map: user_id → last activity date
     const lastActivityMap = new Map<string, Date>();
@@ -80,10 +100,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Process each user
-    for (const profile of profiles) {
-      if (unsubIds.has(profile.id)) continue;
-
+    // Process each candidate user
+    for (const profile of filteredProfiles) {
       const lastActiveDate = lastActivityMap.get(profile.id) ?? new Date(profile.created_at);
       const daysSinceActive = Math.floor(
         (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -132,7 +150,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ sent, skipped, errors, total: profiles.length });
+    return NextResponse.json({ sent, skipped, errors, total: filteredProfiles.length, excludedActive: recentlyActiveIds.size });
   } catch (err) {
     logger.error("[Reengagement] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

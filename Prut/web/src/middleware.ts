@@ -17,6 +17,37 @@ async function getCachedMaintenanceMode(): Promise<boolean> {
   return result;
 }
 
+// Routes that require getUser() in middleware for auth/admin checks.
+// All other routes skip the Supabase round-trip entirely to save CPU.
+const AUTH_REQUIRED_PREFIXES = [
+  '/admin',
+  '/api/admin',
+  '/api/enhance',
+  '/api/subscription',
+  '/api/checkout',
+  '/api/prompts/sync',
+  '/api/me',
+  '/api/user',
+  '/api/favorites',
+  '/api/history',
+  '/api/achievements',
+  '/api/folders',
+  '/api/personal-library',
+  '/api/chain',
+  '/api/context',
+  '/api/share',
+  '/api/developer-keys',
+  '/api/prompts/versions',
+  '/api/extension-token',
+  '/api/referral',
+  '/api/prompt-usage',
+  '/settings',
+]
+
+function needsAuth(pathname: string): boolean {
+  return AUTH_REQUIRED_PREFIXES.some(prefix => pathname.startsWith(prefix))
+}
+
 // Routes exempt from CSRF origin checks (they use their own auth mechanisms)
 const CSRF_EXEMPT_PREFIXES = [
   '/api/webhooks/',  // External service webhooks (HMAC-verified)
@@ -94,6 +125,35 @@ export async function middleware(request: NextRequest) {
     return csrfResponse
   }
 
+  const { pathname } = request.nextUrl
+
+  // --- Fast path for public routes: skip Supabase getUser() entirely ---
+  // Check maintenance cache first (in-memory, ~0ms). Only proceed to auth
+  // if maintenance is active (need admin check) or route requires auth.
+  const isMaintenance = await getCachedMaintenanceMode();
+
+  if (!isMaintenance && !needsAuth(pathname)) {
+    // Public route, no maintenance — skip the expensive getUser() call.
+    // Still handle referral cookies and maintenance page redirect.
+    if (pathname === '/maintenance') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    const response = NextResponse.next({ request })
+    // Capture referral code from URL (?ref=CODE) into a cookie
+    const refCode = request.nextUrl.searchParams.get('ref');
+    const isValidRefCode = refCode && refCode.length <= 30 && /^[a-zA-Z0-9_-]+$/.test(refCode);
+    if (isValidRefCode && !request.cookies.get('referral_code')) {
+      response.cookies.set('referral_code', refCode, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+        sameSite: 'lax',
+      });
+    }
+    return response
+  }
+
+  // --- Auth path: create Supabase client and call getUser() ---
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -134,41 +194,31 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // 🛠️ MAINTENANCE MODE ENFORCEMENT
-  // We check this first to block all non-admin traffic if maintenance is active
-  const isMaintenance = await getCachedMaintenanceMode();
+  // Maintenance mode enforcement
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
   const isAdmin = user?.app_metadata?.role === 'admin' || (user?.email && adminEmails.includes(user.email.toLowerCase()));
 
   if (isMaintenance && !isAdmin) {
-    // During maintenance, only allow /maintenance page
-    if (request.nextUrl.pathname !== '/maintenance') {
-      if (request.nextUrl.pathname.startsWith('/api/')) {
+    if (pathname !== '/maintenance') {
+      if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Service Unavailable (Maintenance)' }, { status: 503 });
       }
       return NextResponse.redirect(new URL('/maintenance', request.url));
     }
-  } else if (!isMaintenance && request.nextUrl.pathname === '/maintenance') {
-      // If maintenance is OFF but user is on /maintenance page, redirect home
+  } else if (!isMaintenance && pathname === '/maintenance') {
       return NextResponse.redirect(new URL('/', request.url));
   }
 
   if (user) {
-    // Inject user identity into Sentry
     Sentry.setUser({ id: user.id, email: user.email });
-
-    // Admin path protection: only enforce authentication here.
-    // Role-based authorization is handled by validateAdminSession() in each
-    // admin API route / AdminLayout (checks user_roles table), because
-    // app_metadata.role may not be set on all admin users.
   } else {
     // Guest accessing admin path - require login
-    const isAdminPath = request.nextUrl.pathname.startsWith('/admin') ||
-                       request.nextUrl.pathname.startsWith('/api/admin') ||
-                       request.nextUrl.pathname.startsWith('/api/prompts/sync');
+    const isAdminPath = pathname.startsWith('/admin') ||
+                       pathname.startsWith('/api/admin') ||
+                       pathname.startsWith('/api/prompts/sync');
 
     if (isAdminPath) {
-        if (request.nextUrl.pathname.startsWith('/api/')) {
+        if (pathname.startsWith('/api/')) {
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
         return NextResponse.redirect(new URL('/login', request.url));

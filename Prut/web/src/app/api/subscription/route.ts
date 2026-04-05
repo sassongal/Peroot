@@ -12,6 +12,8 @@ export async function GET() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' };
+
     if (!user) {
       return NextResponse.json({
         status: 'free',
@@ -20,7 +22,7 @@ export async function GET() {
         ends_at: null,
         trial_ends_at: null,
         lemonsqueezy_subscription_id: null,
-      });
+      }, { headers: cacheHeaders });
     }
 
     const rateLimit = await checkRateLimit(user.id, 'subscription');
@@ -42,10 +44,10 @@ export async function GET() {
         ends_at: null,
         trial_ends_at: null,
         lemonsqueezy_subscription_id: null,
-      });
+      }, { headers: cacheHeaders });
     }
 
-    return NextResponse.json(subscription);
+    return NextResponse.json(subscription, { headers: cacheHeaders });
   } catch (error) {
     logger.error('[Subscription API] Error:', error);
     return NextResponse.json({ error: "Failed to fetch subscription status" }, { status: 500 });
