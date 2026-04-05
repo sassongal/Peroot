@@ -71,6 +71,7 @@ function rowToPrompt(row: Record<string, unknown>, index: number, orderMap: Reco
         : Date.now(),
     last_used_at: row.last_used_at ? new Date(row.last_used_at as string).getTime() : null,
     is_pinned: (row.is_pinned as boolean) ?? false,
+    is_template: (row.is_template as boolean) ?? false,
     success_count: (row.success_count as number) ?? 0,
     fail_count: (row.fail_count as number) ?? 0,
     sort_index: typeof orderMap[id] === "number" ? orderMap[id] : dbSortIndex ?? index,
@@ -158,6 +159,14 @@ export function useLibrary() {
       .eq('item_type', 'personal');
     counts['favorites'] = favCount ?? 0;
 
+    // "templates"
+    const { count: templateCount } = await supabase
+      .from('personal_library')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_template', true);
+    counts['templates'] = templateCount ?? 0;
+
     setFolderCounts(counts);
   }, [supabase]);
 
@@ -237,6 +246,8 @@ export function useLibrary() {
         }
       } else if (opts.activeFolder === 'pinned') {
         query = query.eq('is_pinned', true);
+      } else if (opts.activeFolder === 'templates') {
+        query = query.eq('is_template', true);
       } else if (opts.activeFolder && opts.activeFolder !== 'all') {
         query = query.eq('personal_category', opts.activeFolder);
       }
@@ -326,6 +337,8 @@ export function useLibrary() {
     // Handle virtual folders for guests
     if (opts.activeFolder === 'pinned') {
       filtered = filtered.filter(p => p.is_pinned);
+    } else if (opts.activeFolder === 'templates') {
+      filtered = filtered.filter(p => p.is_template === true);
     } else if (opts.activeFolder === 'favorites') {
       // Guest favorites handled via localStorage Set in PersonalLibraryView
       // This is a no-op here; filtering happens in the view component

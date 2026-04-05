@@ -2,7 +2,7 @@
 
 import {
     BookOpen, Star, Plus, Check, X,
-    Pin, Folder, FolderOpen
+    Pin, Folder, FolderOpen, LayoutTemplate
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -48,6 +48,7 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
     { key: "all", label: "כל הפרומפטים", icon: BookOpen },
     { key: "favorites", label: "מועדפים", icon: Star },
     { key: "pinned", label: "מוצמדים", icon: Pin },
+    { key: "templates", label: "תבניות", icon: LayoutTemplate },
   ];
 
   const realFolders = Array.from(new Set([

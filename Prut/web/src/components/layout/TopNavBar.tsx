@@ -105,6 +105,13 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
           </Link>
 
           <Link
+            href="/templates"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
+            תבניות
+          </Link>
+
+          <Link
             href="/guide"
             className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >

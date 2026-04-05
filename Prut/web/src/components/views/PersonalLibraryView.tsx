@@ -128,6 +128,7 @@ export function PersonalLibraryView({
     if (effectiveFolder === "all") return allDisplayItems;
     if (effectiveFolder === "favorites") return allDisplayItems.filter(p => favoritePersonalIds.has(p.id));
     if (effectiveFolder === "pinned") return allDisplayItems.filter(p => p.is_pinned);
+    if (effectiveFolder === "templates") return allDisplayItems.filter(p => p.is_template === true);
     return allDisplayItems.filter(p => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === effectiveFolder);
   })();
 
@@ -149,6 +150,7 @@ export function PersonalLibraryView({
     all: allDisplayItems.length,
     favorites: allDisplayItems.filter(p => favoritePersonalIds.has(p.id)).length,
     pinned: allDisplayItems.filter(p => p.is_pinned).length,
+    templates: allDisplayItems.filter(p => p.is_template === true).length,
   };
   const allPersonalCategories = Array.from(new Set([
     PERSONAL_DEFAULT_CATEGORY,
@@ -405,7 +407,7 @@ export function PersonalLibraryView({
   // ─── Folder right-click context menu ─────────────────────────────────────
 
   const handleFolderContextMenu = (e: React.MouseEvent, folder: string) => {
-    if (folder === "all" || folder === "favorites" || folder === "pinned") return;
+    if (folder === "all" || folder === "favorites" || folder === "pinned" || folder === "templates") return;
     e.preventDefault();
     setFolderContextMenu({ folder, x: e.clientX, y: e.clientY });
   };
@@ -437,6 +439,7 @@ export function PersonalLibraryView({
     if (effectiveFolder === "all") return "כל הפרומפטים";
     if (effectiveFolder === "favorites") return "מועדפים";
     if (effectiveFolder === "pinned") return "מוצמדים";
+    if (effectiveFolder === "templates") return "תבניות";
     return effectiveFolder;
   })();
 
