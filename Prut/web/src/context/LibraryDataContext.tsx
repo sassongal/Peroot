@@ -95,14 +95,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     queryKey: ['library', 'prompts'],
     queryFn: async () => {
       try {
-        const [pRes, cRes] = await Promise.all([
-          fetch(getApiPath("/api/library/prompts")),
-          fetch(getApiPath("/api/library/categories"))
-        ]);
-
-        // Consume categories response (not used directly but keeps the fetch)
-        if (cRes.ok) await cRes.json();
-
+        const pRes = await fetch(getApiPath("/api/library/prompts"));
         if (pRes.ok) {
           const pData = await pRes.json();
           if (pData.length > 0) return pData;

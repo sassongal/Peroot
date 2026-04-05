@@ -1,10 +1,16 @@
 import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN || '',
-});
+// Lazy-initialized to avoid errors when env vars are missing (dev/test)
+let redis: Redis | null = null;
+function getRedis(): Redis | null {
+  if (redis) return redis;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN;
+  if (!url || !token) return null;
+  redis = new Redis({ url, token });
+  return redis;
+}
 
 const PREFIX = '@peroot/cron-heartbeat';
 
@@ -41,10 +47,11 @@ export interface CronJobHealth {
  */
 export async function recordCronSuccess(jobName: string): Promise<void> {
   try {
+    const r = getRedis();
+    if (!r) return; // No Redis configured — silently skip
     const payload: HeartbeatPayload = { timestamp: Date.now(), success: true };
-    await redis.set(`${PREFIX}:${jobName}`, JSON.stringify(payload), { ex: HEARTBEAT_TTL_SECONDS });
+    await r.set(`${PREFIX}:${jobName}`, JSON.stringify(payload), { ex: HEARTBEAT_TTL_SECONDS });
   } catch (err) {
-    // Best-effort — never let heartbeat recording break the cron job itself.
     logger.warn(`[CronHeartbeat] Failed to record heartbeat for ${jobName}:`, err);
   }
 }
@@ -54,10 +61,17 @@ export async function recordCronSuccess(jobName: string): Promise<void> {
  * Returns unknown status (instead of throwing) if Redis is unavailable.
  */
 export async function getCronHealth(): Promise<CronJobHealth[]> {
+  const r = getRedis();
+  if (!r) {
+    return KNOWN_JOBS.map((jobName) => ({
+      jobName, lastRun: null, isHealthy: false,
+      status: 'unknown' as const, expectedIntervalHours: EXPECTED_INTERVALS[jobName],
+    }));
+  }
   try {
     const results: CronJobHealth[] = [];
     const keys = KNOWN_JOBS.map((name) => `${PREFIX}:${name}`);
-    const values = await redis.mget<(string | null)[]>(...keys);
+    const values = await r.mget<(string | null)[]>(...keys);
 
     for (let i = 0; i < KNOWN_JOBS.length; i++) {
       const jobName = KNOWN_JOBS[i];

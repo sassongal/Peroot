@@ -87,15 +87,9 @@ export function useHistory() {
 
   // Add to history mutation with optimistic update
   const addMutation = useMutation({
-    mutationFn: async (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+    mutationFn: async ({ item, optimisticId }: { item: Omit<HistoryItem, 'id' | 'timestamp'>; optimisticId: string }) => {
       const currentUser = userRef.current;
       if (!currentUser) return null;
-
-      const newItem: HistoryItem = {
-        ...item,
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-      };
 
       // Fire-and-forget DB insert — errors logged but don't block UI
       supabase.from('history').insert({
@@ -109,9 +103,9 @@ export function useHistory() {
         if (error) logger.error('[useHistory] addToHistory insert failed:', error);
       });
 
-      return newItem;
+      return { ...item, id: optimisticId, timestamp: Date.now() } as HistoryItem;
     },
-    onMutate: async (item) => {
+    onMutate: async ({ item, optimisticId }) => {
       const currentUser = userRef.current;
       if (!currentUser) return;
 
@@ -122,7 +116,7 @@ export function useHistory() {
 
       const optimisticItem: HistoryItem = {
         ...item,
-        id: crypto.randomUUID(),
+        id: optimisticId,
         timestamp: Date.now(),
       };
 
@@ -169,7 +163,7 @@ export function useHistory() {
 
   const addToHistory = useCallback(
     (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
-      addMutation.mutate(item);
+      addMutation.mutate({ item, optimisticId: crypto.randomUUID() });
     },
     [addMutation]
   );
