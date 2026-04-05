@@ -34,6 +34,10 @@ export async function DELETE(_request: Request) {
     const failures = results.filter((r) => r.status === "rejected");
     if (failures.length > 0) {
       logger.error("[delete-account] Partial data deletion failures:", failures);
+      return NextResponse.json(
+        { error: "Failed to delete all user data. Please try again or contact support." },
+        { status: 500 }
+      );
     }
 
     // Delete auth user using admin client

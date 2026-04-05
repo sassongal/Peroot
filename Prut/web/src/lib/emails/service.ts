@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { createServiceClient } from '@/lib/supabase/service';
 import { logger } from "@/lib/logger";
+import { withRetry } from "@/lib/retry";
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -43,15 +44,17 @@ export class EmailService {
         }
 
         try {
-            const { data, error } = await this.resend.emails.send({
-                from: this.from,
-                to,
-                subject,
-                replyTo: replyTo || this.defaultReplyTo,
-                html: `<div dir="rtl" style="font-family: sans-serif;">${html}</div>`,
-            });
-
-            if (error) throw error;
+            const data = await withRetry(async () => {
+                const { data, error } = await this.resend!.emails.send({
+                    from: this.from,
+                    to,
+                    subject,
+                    replyTo: replyTo || this.defaultReplyTo,
+                    html: `<div dir="rtl" style="font-family: sans-serif;">${html}</div>`,
+                });
+                if (error) throw error;
+                return data;
+            }, { maxAttempts: 3, backoff: [1000, 2000, 4000], label: 'EmailService.send' });
 
             // Log to email_logs table
             await this.logEmail({

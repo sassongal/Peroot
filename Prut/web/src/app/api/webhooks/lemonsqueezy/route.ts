@@ -60,22 +60,18 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient();
 
-  // Idempotency: store event BEFORE processing, skip if already exists.
-  // Uses event_name + subscription_id as dedup key.
+  // Idempotency: INSERT event BEFORE processing. Unique index on event_name
+  // ensures only one concurrent webhook wins the insert. Losers get a constraint error.
   const dedupKey = `${eventName}:${event.data?.id || 'unknown'}`;
-  try {
-    const { data: existing } = await supabase
-      .from('webhook_events')
-      .select('id')
-      .eq('event_name', dedupKey)
-      .eq('processed', true)
-      .limit(1);
-    if (existing && existing.length > 0) {
-      logger.info(`[LemonSqueezy Webhook] Skipping duplicate event: ${dedupKey}`);
-      return new NextResponse('Already processed', { status: 200 });
-    }
-  } catch {
-    // If dedup check fails, continue processing (better than dropping events)
+  const { error: dedupError } = await supabase.from('webhook_events').insert({
+    event_name: dedupKey,
+    body: event,
+    processed: false,
+  });
+  if (dedupError) {
+    // Unique constraint violation = duplicate event; DB error = retry later
+    logger.info(`[LemonSqueezy Webhook] Skipping event (dedup): ${dedupKey}`, dedupError.code);
+    return new NextResponse('Already processed', { status: 200 });
   }
 
   try {
@@ -314,16 +310,10 @@ export async function POST(request: Request) {
       logger.info(`[LemonSqueezy Webhook] Subscription ${eventName}: ${attributes.status} for user ${userId}`);
     }
 
-    // Store webhook event for debugging and idempotency
-    try {
-      await supabase.from('webhook_events').insert({
-        event_name: dedupKey,
-        body: event,
-        processed: true,
-      });
-    } catch {
-      // webhook_events table is optional - ignore errors
-    }
+    // Mark webhook event as processed (was inserted with processed=false before processing)
+    await supabase.from('webhook_events')
+      .update({ processed: true })
+      .eq('event_name', dedupKey);
 
     // Log LemonSqueezy-sent emails (LS sends receipts/confirmations automatically)
     const lsEmailEvents: Record<string, string> = {

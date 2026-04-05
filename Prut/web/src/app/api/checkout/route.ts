@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from "@/lib/ratelimit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { withRetry } from "@/lib/retry";
 
 const CheckoutSchema = z.object({
   variantId: z.string().min(1).transform(v => v.trim()),
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
 
     const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space').trim();
 
-    const lsResponse = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+    const lsResponse = await withRetry(() => fetch('https://api.lemonsqueezy.com/v1/checkouts', {
       method: 'POST',
       headers: {
         'Accept': 'application/vnd.api+json',
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
           },
         },
       }),
-    });
+    }), { maxAttempts: 2, backoff: [1000], label: 'LemonSqueezy.checkout' });
 
     if (!lsResponse.ok) {
       const errorText = await lsResponse.text();

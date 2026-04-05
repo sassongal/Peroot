@@ -106,7 +106,12 @@ async function extractPdf(buffer: Buffer, sizeMb: number): Promise<ExtractionRes
   let parser: PDFParse | undefined;
   try {
     parser = new PDFParse({ data: new Uint8Array(buffer) });
-    const textResult = await parser.getText();
+    const textResult = await Promise.race([
+      parser.getText(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('PDF extraction timed out after 10s')), 10_000)
+      ),
+    ]);
 
     const { text: trimmedText } = trimText(textResult.text);
 
