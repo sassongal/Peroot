@@ -47,28 +47,37 @@
     <!-- Tab: Enhance -->
     <div id="tab-enhance" class="tab-content active">
       <div class="input-section">
+        <div class="mode-selector" id="mode-selector">
+          <button class="mode-btn active" data-mode="STANDARD" title="שדרוג פרומפט רגיל">
+            <span class="mode-icon">&#x1F4AC;</span>
+            <span class="mode-label">רגיל</span>
+          </button>
+          <button class="mode-btn locked" data-mode="DEEP_RESEARCH" title="מחקר מעמיק">
+            <span class="mode-icon">&#x1F310;</span>
+            <span class="mode-label">מחקר</span>
+            <span class="mode-lock">Pro</span>
+          </button>
+          <button class="mode-btn locked" data-mode="IMAGE_GENERATION" title="יצירת תמונות">
+            <span class="mode-icon">&#x1F3A8;</span>
+            <span class="mode-label">תמונה</span>
+            <span class="mode-lock">Pro</span>
+          </button>
+          <button class="mode-btn locked" data-mode="AGENT_BUILDER" title="בניית סוכן AI">
+            <span class="mode-icon">&#x1F916;</span>
+            <span class="mode-label">סוכן</span>
+            <span class="mode-lock">Pro</span>
+          </button>
+        </div>
         <div class="enhance-input-container">
           <div class="textarea-wrap">
             <textarea id="prompt-input" placeholder="הכנס טקסט לשדרוג..." rows="4" maxlength="4000"></textarea>
             <span id="char-count" class="char-count">0</span>
           </div>
         </div>
-        <div class="controls-row">
-          <div class="select-wrap">
-            <select id="tone-select">
-              <option value="Professional">מקצועי</option>
-              <option value="Casual">יומיומי</option>
-              <option value="Creative">יצירתי</option>
-              <option value="Academic">אקדמי</option>
-              <option value="Persuasive">משכנע</option>
-              <option value="Friendly">ידידותי</option>
-            </select>
-          </div>
-          <button id="enhance-btn" class="btn-accent">
-            <span id="enhance-label">שדרג</span>
-            <span id="enhance-spinner" class="spinner hidden"></span>
-          </button>
-        </div>
+        <button id="enhance-btn" class="btn-accent btn-full-width">
+          <span id="enhance-label">שדרג</span>
+          <span id="enhance-spinner" class="spinner hidden"></span>
+        </button>
         <p class="hint">Enter לשדרוג &middot; Shift+Enter שורה חדשה</p>
       </div>
 
@@ -132,11 +141,13 @@
       <div class="settings-section">
         <h3 class="settings-title">שילובי AI נתמכים</h3>
         <div class="integrations-list">
-          <div class="integration-item">&#10003; ChatGPT (chatgpt.com)</div>
-          <div class="integration-item">&#10003; Claude (claude.ai)</div>
-          <div class="integration-item">&#10003; Gemini (gemini.google.com)</div>
-          <div class="integration-item">&#10003; DeepSeek (chat.deepseek.com)</div>
-          <div class="integration-item">&#10003; Perplexity (perplexity.ai)</div>
+          <div class="integration-item">&#10004;&#65039; ChatGPT (chatgpt.com)</div>
+          <div class="integration-item">&#10004;&#65039; Claude (claude.ai)</div>
+          <div class="integration-item">&#10004;&#65039; Gemini (gemini.google.com)</div>
+          <div class="integration-item">&#10004;&#65039; DeepSeek (chat.deepseek.com)</div>
+          <div class="integration-item">&#10004;&#65039; Perplexity (perplexity.ai)</div>
+          <div class="integration-item">&#10004;&#65039; Mistral (chat.mistral.ai)</div>
+          <div class="integration-item">&#x1F51C; Minimax (minimaxi.com)</div>
         </div>
       </div>
       <div class="settings-section">

@@ -27,7 +27,6 @@ const loginBtn = $("login-btn");
 const loginHint = $("login-hint");
 const promptInput = $("prompt-input");
 const charCount = $("char-count");
-const toneSelect = $("tone-select");
 const enhanceBtn = $("enhance-btn");
 const enhanceLabel = $("enhance-label");
 const enhanceSpinner = $("enhance-spinner");
@@ -48,15 +47,14 @@ const clearHistoryBtn = $("clear-history");
 
 let lastEnhanced = "";
 let isEnhancing = false;
+let selectedMode = "STANDARD";
+let userTier = "free";
 let timerInterval = null;
 let libraryLoaded = false;
 let quickPromptsRendered = false;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
-  const stored = await chrome.storage.local.get(["tone"]);
-  if (stored.tone) toneSelect.value = stored.tone;
-
   const auth = await checkAuth();
 
   if (auth.authenticated) {
@@ -104,6 +102,8 @@ async function fetchCredits() {
 
       // Tier badge
       const tier = user.plan_tier || "free";
+      userTier = tier;
+      updateModeButtons();
       const tierLabels = { free: "FREE", pro: "PRO", admin: "ADMIN" };
       tierBadge.textContent = tierLabels[tier] || tier.toUpperCase();
       tierBadge.className = `tier-badge tier-${tier}`;
@@ -170,10 +170,7 @@ promptInput.addEventListener("input", () => {
   charCount.textContent = len;
   charCount.classList.toggle("warning", len > 2500 && len <= 3500);
   charCount.classList.toggle("danger", len > 3500);
-});
-
-toneSelect.addEventListener("change", () => {
-  chrome.storage.local.set({ tone: toneSelect.value });
+  enhanceBtn.classList.toggle("ready", len > 0 && !isEnhancing);
 });
 
 promptInput.addEventListener("keydown", (e) => {
@@ -211,12 +208,11 @@ async function doEnhance() {
     const res = await fetch(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
-      // capability_mode intentionally omitted — defaults to STANDARD
-      // Advanced modes (Research, Image, Agent, Video) only via web UI
       body: JSON.stringify({
         prompt: text,
-        tone: toneSelect.value,
+        tone: "Professional",
         category: "\u05DB\u05DC\u05DC\u05D9",
+        capability_mode: selectedMode,
       }),
     });
 
@@ -259,6 +255,12 @@ async function doEnhance() {
 
     resultText.classList.remove("streaming");
     lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
+
+    // Auto-copy to clipboard
+    try {
+      await navigator.clipboard.writeText(lastEnhanced);
+      flash(copyBtn, "הועתק!");
+    } catch {}
 
     saveToHistory(text, lastEnhanced);
     syncToWebsite(text, lastEnhanced);
@@ -332,7 +334,7 @@ async function syncToWebsite(original, enhanced) {
       body: JSON.stringify({
         prompt: original,
         enhanced_prompt: enhanced,
-        tone: toneSelect.value,
+        tone: "Professional",
         category: "General",
         title: `[תוסף] ${original.substring(0, 50)}${original.length > 50 ? "..." : ""}`,
         source: "extension",
@@ -588,6 +590,31 @@ function timeAgo(ts) {
   if (hours < 24) return `${hours} \u05E9\u05E2'`;
   return `${Math.floor(hours / 24)} \u05D9\u05DE'`;
 }
+
+// ═══ MODE SELECTOR ═══
+function updateModeButtons() {
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    const mode = btn.dataset.mode;
+    const isLocked = mode !== 'STANDARD' && userTier !== 'pro' && userTier !== 'admin';
+    btn.classList.toggle('locked', isLocked);
+    // Show/hide lock badge
+    const lock = btn.querySelector('.mode-lock');
+    if (lock) lock.style.display = isLocked ? '' : 'none';
+  });
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode;
+    if (mode !== 'STANDARD' && userTier !== 'pro' && userTier !== 'admin') {
+      showError('שדרג ל-Pro כדי לפתוח מצבים מתקדמים');
+      return;
+    }
+    selectedMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
 
 // ═══ SETTINGS ═══
 function loadApiKeySettings() {

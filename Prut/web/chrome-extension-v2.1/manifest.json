@@ -21,7 +21,9 @@
     "https://claude.ai/*",
     "https://gemini.google.com/*",
     "https://chat.deepseek.com/*",
-    "https://www.perplexity.ai/*"
+    "https://www.perplexity.ai/*",
+    "https://chat.mistral.ai/*",
+    "https://www.minimaxi.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
@@ -67,7 +69,9 @@
         "https://claude.ai/*",
         "https://gemini.google.com/*",
         "https://chat.deepseek.com/*",
-        "https://www.perplexity.ai/*"
+        "https://www.perplexity.ai/*",
+        "https://chat.mistral.ai/*",
+        "https://www.minimaxi.com/*"
       ],
       "js": ["content/ai-chat-injector.js"],
       "css": ["content/ai-chat-injector.css"],
@@ -88,7 +92,9 @@
         "https://claude.ai/*",
         "https://gemini.google.com/*",
         "https://chat.deepseek.com/*",
-        "https://www.perplexity.ai/*"
+        "https://www.perplexity.ai/*",
+        "https://chat.mistral.ai/*",
+        "https://www.minimaxi.com/*"
       ]
     }
   ],

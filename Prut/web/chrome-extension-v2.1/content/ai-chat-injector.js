@@ -127,6 +127,50 @@
       getUserMessages: () => document.querySelectorAll('[class*="user-message"]'),
       getAssistantMessages: () => document.querySelectorAll('[class*="answer"]'),
     },
+    mistral: {
+      match: () => /chat\.mistral\.ai/.test(location.hostname),
+      inputSelector: 'textarea, div[contenteditable="true"]',
+      sendButtonSelector: 'button[type="submit"], button[aria-label="Send"]',
+      inputArea: () => document.querySelector('form') || document.querySelector('main'),
+      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
+      setInputText: (el, text) => {
+        if (el.tagName === 'TEXTAREA') {
+          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+          if (setter) setter.call(el, text);
+          else el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          el.focus();
+          document.execCommand('selectAll', false, null);
+          document.execCommand('insertText', false, text);
+        }
+      },
+      messageSelector: '[class*="message"]',
+      getUserMessages: () => document.querySelectorAll('[class*="user"]'),
+      getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
+    },
+    minimax: {
+      match: () => /minimaxi\.com/.test(location.hostname),
+      inputSelector: 'textarea, div[contenteditable="true"]',
+      sendButtonSelector: 'button[type="submit"], button[aria-label="Send"]',
+      inputArea: () => document.querySelector('form') || document.querySelector('main'),
+      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
+      setInputText: (el, text) => {
+        if (el.tagName === 'TEXTAREA') {
+          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+          if (setter) setter.call(el, text);
+          else el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          el.focus();
+          document.execCommand('selectAll', false, null);
+          document.execCommand('insertText', false, text);
+        }
+      },
+      messageSelector: '[class*="message"]',
+      getUserMessages: () => document.querySelectorAll('[class*="user"]'),
+      getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
+    },
   };
 
   const currentSite = Object.values(SITES).find(s => s.match());
