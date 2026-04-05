@@ -61,29 +61,24 @@ export async function GET(req: Request) {
     // I saw RPC name exists.
     // Let's rely on direct count queries for robustness and remove dependency on potentially broken RPC.
     
-    const { count: copies } = await supabase.from('prompt_usage_events')
+    // 3 parallel HEAD count queries (no data transferred, only counts)
+    const [copiesRes, savesRes, refinementsRes] = await Promise.all([
+      supabase.from('prompt_usage_events')
         .select('*', { count: 'exact', head: true })
-        .eq('prompt_id', key)
-        .eq('event_type', 'copy');
-        
-    const { count: saves } = await supabase.from('prompt_usage_events')
+        .eq('prompt_id', key).eq('event_type', 'copy'),
+      supabase.from('prompt_usage_events')
         .select('*', { count: 'exact', head: true })
-        .eq('prompt_id', key)
-        .eq('event_type', 'save');
+        .eq('prompt_id', key).eq('event_type', 'save'),
+      supabase.from('prompt_usage_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('prompt_id', key).in('event_type', ['refine', 'enhance']),
+    ]);
 
-    const { count: refinements } = await supabase.from('prompt_usage_events')
-        .select('*', { count: 'exact', head: true })
-        .eq('prompt_id', key)
-        .in('event_type', ['refine', 'enhance']);
-
-    return new Response(
-      JSON.stringify({
-        copies: copies ?? 0,
-        saves: saves ?? 0,
-        refinements: refinements ?? 0,
-      }),
-      { status: 200 }
-    );
+    return new Response(JSON.stringify({
+      copies: copiesRes.count ?? 0,
+      saves: savesRes.count ?? 0,
+      refinements: refinementsRes.count ?? 0,
+    }), { status: 200 });
   } catch {
     return new Response(JSON.stringify({ copies: 0, saves: 0, refinements: 0 }), { status: 200 });
   }

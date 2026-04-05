@@ -20,7 +20,8 @@ export async function GET() {
                 source:source_metadata
             `)
             .eq('is_active', true)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(500);
 
         if (error) {
             logger.error('[Public Library API] Error:', error);

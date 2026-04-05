@@ -10,6 +10,16 @@ const required = [
 
 const serverRequired = [
   'SUPABASE_SERVICE_ROLE_KEY',
+  'CRON_SECRET',
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
+] as const;
+
+// Warn but don't crash — optional services that degrade gracefully
+const serverOptional = [
+  'RESEND_API_KEY',
+  'LEMONSQUEEZY_WEBHOOK_SECRET',
+  'SENTRY_DSN',
 ] as const;
 
 export function validateEnv() {
@@ -30,5 +40,15 @@ export function validateEnv() {
     throw new Error(
       `Missing required environment variables:\n${missing.map(k => `  - ${k}`).join('\n')}`
     );
+  }
+
+  // Warn about optional but recommended vars
+  if (typeof window === 'undefined') {
+    const optionalMissing = serverOptional.filter(k => !process.env[k]);
+    if (optionalMissing.length > 0) {
+      console.warn(
+        `[env] Missing optional environment variables (features may be degraded):\n${optionalMissing.map(k => `  - ${k}`).join('\n')}`
+      );
+    }
   }
 }

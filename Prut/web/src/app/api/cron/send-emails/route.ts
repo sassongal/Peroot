@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { ONBOARDING_STEPS } from "@/lib/emails/onboarding-templates";
 import { logger } from "@/lib/logger";
+import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 
 export const maxDuration = 30;
 
@@ -17,6 +18,11 @@ function verifyCronAuth(request: NextRequest): boolean {
 export async function GET(request: NextRequest) {
   if (!verifyCronAuth(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const locked = await acquireCronLock('cron:send-emails', 35);
+  if (!locked) {
+    return NextResponse.json({ skipped: true, reason: 'Another instance is running' });
   }
 
   const supabase = createServiceClient();
@@ -100,8 +106,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    await releaseCronLock('cron:send-emails');
     return NextResponse.json({ sent, errors, total: sequences?.length || 0 });
   } catch (err) {
+    await releaseCronLock('cron:send-emails');
     logger.error("[Cron/Emails] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

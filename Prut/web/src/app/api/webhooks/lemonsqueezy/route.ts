@@ -60,6 +60,24 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient();
 
+  // Idempotency: store event BEFORE processing, skip if already exists.
+  // Uses event_name + subscription_id as dedup key.
+  const dedupKey = `${eventName}:${event.data?.id || 'unknown'}`;
+  try {
+    const { data: existing } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('event_name', dedupKey)
+      .eq('processed', true)
+      .limit(1);
+    if (existing && existing.length > 0) {
+      logger.info(`[LemonSqueezy Webhook] Skipping duplicate event: ${dedupKey}`);
+      return new NextResponse('Already processed', { status: 200 });
+    }
+  } catch {
+    // If dedup check fails, continue processing (better than dropping events)
+  }
+
   try {
     // Handle subscription events
     if (eventName.startsWith('subscription_')) {
@@ -296,10 +314,10 @@ export async function POST(request: Request) {
       logger.info(`[LemonSqueezy Webhook] Subscription ${eventName}: ${attributes.status} for user ${userId}`);
     }
 
-    // Store webhook event for debugging
+    // Store webhook event for debugging and idempotency
     try {
       await supabase.from('webhook_events').insert({
-        event_name: eventName,
+        event_name: dedupKey,
         body: event,
         processed: true,
       });

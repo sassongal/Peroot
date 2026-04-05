@@ -83,7 +83,8 @@ export async function GET(req: NextRequest) {
       for (const table of BACKUP_TABLES) {
         const { data, error: tblError } = await supabase
           .from(table)
-          .select("*");
+          .select("*")
+          .limit(10000);
         if (!tblError && data) tables[table] = data;
       }
 
