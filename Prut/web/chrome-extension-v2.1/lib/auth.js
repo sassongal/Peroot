@@ -73,24 +73,32 @@ async function openLoginTab() {
 
 /**
  * Check if user is authenticated (local check, no server call).
- * First checks storage, then tries force-sync from open peroot.space tab.
- * If token is expired, attempts refresh before giving up.
+ * Trusts the stored token if it hasn't actually expired.
+ * Only tries force-sync when there's no token at all.
+ * Only shows login screen when token is genuinely expired AND refresh fails.
  */
 async function checkAuth() {
   let token = await getAuthToken();
 
-  // If no token in storage, try force-sync from an open peroot.space tab
-  if (!token) {
-    token = await forceAuthSync();
-  }
+  // If we have a stored token and it's NOT expired, trust it immediately.
+  // No need to contact peroot.space or force-sync.
+  if (token) {
+    const payload = decodeJwtPayload(token);
 
-  if (!token) return { authenticated: false, reason: "no_token" };
+    // Token is still valid (not expired) — return authenticated
+    if (payload?.exp && payload.exp * 1000 > Date.now()) {
+      // If about to expire (within 5 minutes), try background refresh
+      if (isTokenExpired(token)) {
+        tryRefreshToken(); // fire-and-forget, don't block
+      }
+      return {
+        authenticated: true,
+        email: payload?.email || null,
+        userId: payload?.sub || null,
+      };
+    }
 
-  const payload = decodeJwtPayload(token);
-
-  // Check expiry
-  if (payload?.exp && payload.exp * 1000 < Date.now()) {
-    // Token expired — try to refresh it
+    // Token is expired — try to refresh from an open peroot.space tab
     const refreshed = await tryRefreshToken();
     if (refreshed) {
       const newPayload = decodeJwtPayload(refreshed);
@@ -106,16 +114,18 @@ async function checkAuth() {
     return { authenticated: false, reason: "token_expired" };
   }
 
-  // Token about to expire (within 5 minutes) — try background refresh
-  if (isTokenExpired(token)) {
-    tryRefreshToken(); // fire-and-forget, don't block
+  // No token in storage — try force-sync from an open peroot.space tab (one attempt)
+  token = await forceAuthSync();
+  if (token && !isTokenExpired(token)) {
+    const payload = decodeJwtPayload(token);
+    return {
+      authenticated: true,
+      email: payload?.email || null,
+      userId: payload?.sub || null,
+    };
   }
 
-  return {
-    authenticated: true,
-    email: payload?.email || null,
-    userId: payload?.sub || null,
-  };
+  return { authenticated: false, reason: "no_token" };
 }
 
 /**

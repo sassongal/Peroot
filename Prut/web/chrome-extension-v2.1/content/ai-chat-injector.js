@@ -38,7 +38,7 @@
     },
     claude: {
       match: () => /claude\.ai/.test(location.hostname),
-      inputSelector: 'div.ProseMirror[contenteditable="true"], fieldset textarea, div[contenteditable="true"][data-placeholder]',
+      inputSelector: 'div.ProseMirror[contenteditable="true"], div[contenteditable="true"][data-placeholder], fieldset div[contenteditable="true"], fieldset textarea, textarea',
       sendButtonSelector: 'button[aria-label="Send Message"], button[data-testid="send-message"]',
       inputArea: () => document.querySelector('fieldset, div[class*="composer"], form'),
       getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
@@ -60,9 +60,16 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: 'rich-textarea .ql-editor, div.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], textarea',
-      sendButtonSelector: 'button.send-button, button[aria-label="Send message"], button[data-test-id="send-button"]',
-      inputArea: () => document.querySelector('rich-textarea, div[class*="input-area"], div[class*="text-input"]')?.parentElement,
+      inputSelector: 'rich-textarea .ql-editor, div.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], div.input-area-container textarea, textarea, div[contenteditable="true"]',
+      sendButtonSelector: 'button.send-button, button[aria-label="Send message"], button[data-test-id="send-button"], button[mattooltip="Send message"]',
+      inputArea: () => {
+        // Gemini wraps input in shadow DOM sometimes; try multiple strategies
+        return document.querySelector('rich-textarea')?.parentElement
+          || document.querySelector('div[class*="input-area"]')?.parentElement
+          || document.querySelector('div[class*="text-input"]')?.parentElement
+          || document.querySelector('footer')
+          || null;
+      },
       getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
       setInputText: (el, text) => {
         if (el.tagName === 'TEXTAREA') {
@@ -185,7 +192,7 @@
       });
 
       if (res.status === 401) {
-        showToast('Session expired — open peroot.space to refresh', 'error');
+        showToast('התחבר ל-peroot.space כדי לרענן את ההתחברות', 'error');
         updateButtonState('idle');
         isEnhancing = false;
         return;
@@ -237,7 +244,7 @@
         }).catch(() => {});
       }
     } catch (err) {
-      showToast('Connection error', 'error');
+      showToast('שגיאת רשת — בדוק חיבור לאינטרנט', 'error');
       updateButtonState('idle');
     } finally {
       setTimeout(() => {
@@ -425,16 +432,20 @@
         headers: getHeaders(token),
       });
 
+      if (res.status === 401) {
+        content.innerHTML = '<div class="peroot-sp-empty">התחבר ל-Peroot כדי לגשת לספרייה</div>';
+        return;
+      }
       if (!res.ok) {
-        content.innerHTML = '<div class="peroot-sp-empty">Failed to load library</div>';
+        content.innerHTML = '<div class="peroot-sp-empty">שגיאה בטעינת הספרייה</div>';
         return;
       }
 
       const data = await res.json();
-      libraryCache = Array.isArray(data) ? data : (data.prompts || []);
+      libraryCache = Array.isArray(data) ? data : (data.items || data.prompts || []);
       renderLibrary(libraryCache);
     } catch {
-      content.innerHTML = '<div class="peroot-sp-empty">Connection error</div>';
+      content.innerHTML = '<div class="peroot-sp-empty">שגיאת רשת — בדוק חיבור לאינטרנט</div>';
     }
   }
 
