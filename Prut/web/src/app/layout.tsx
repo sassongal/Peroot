@@ -10,6 +10,7 @@ validateEnv();
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
 import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { createClient } from "@/lib/supabase/server";
 
 const frankRuhl = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
@@ -154,7 +155,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = "he";
-  const dictionary = await getDictionary(locale);
+  const [dictionary, initialUser] = await Promise.all([
+    getDictionary(locale),
+    createClient()
+      .then((sb) => sb.auth.getUser())
+      .then(({ data }) => data.user)
+      .catch(() => null),
+  ]);
 
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
@@ -167,9 +174,9 @@ export default async function RootLayout({
             user-controlled, so dangerouslySetInnerHTML is safe here. */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}` }} />
         {/* PWA Splash Screens */}
-        <link rel="apple-touch-startup-image" href="/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-        <link rel="apple-touch-startup-image" href="/splash-iphone-pro.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
-        <link rel="apple-touch-startup-image" href="/splash-ipad.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" />
+        <link rel="apple-touch-startup-image" href="/splash-iphone.webp" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+        <link rel="apple-touch-startup-image" href="/splash-iphone-pro.webp" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+        <link rel="apple-touch-startup-image" href="/splash-ipad.webp" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" />
       </head>
       <body
         className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
@@ -194,7 +201,7 @@ export default async function RootLayout({
             <QueryProvider>
               <I18nProvider dictionary={dictionary} lang={locale}>
                 <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
-                  <GlobalContextWrapper>
+                  <GlobalContextWrapper initialUser={initialUser}>
                     <ErrorBoundary name="AppRoot">
                       <main id="main-content" className="flex-grow">
                         {children}

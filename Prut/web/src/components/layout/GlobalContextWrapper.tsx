@@ -25,19 +25,30 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function GlobalContextWrapper({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export function GlobalContextWrapper({
+  children,
+  initialUser = null,
+}: {
+  children: React.ReactNode;
+  initialUser?: User | null;
+}) {
+  const [user, setUser] = useState<User | null>(initialUser);
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [loginFeature, setLoginFeature] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    // Only fetch user client-side if no server-prefetched user was provided.
+    // This eliminates the extra round-trip after hydration for logged-in users.
+    if (!initialUser) {
+      supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    }
+    // Always subscribe to auth state changes so sign-in/sign-out updates live.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialUser]);
 
   const showLoginRequired = (feature: string) => {
       setLoginFeature(feature);

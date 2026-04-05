@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 
@@ -52,34 +52,44 @@ export function useSiteSettings() {
 
     // Guard against duplicate subscriptions (e.g. StrictMode double-invoke)
     if (subscribedRef.current) return;
-    subscribedRef.current = true;
 
-    // Subscribe to real-time changes
-    const subscription = supabase
-      .channel('site_settings_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'site_settings' },
-        (payload: RealtimePostgresChangesPayload<SiteSettings>) => {
-          logger.info('[Settings] Real-time update received:', payload);
-          if (payload.new) {
-            const newSettings = payload.new as SiteSettings;
-            setSettings(newSettings);
-            settingsCache = newSettings;
-            applyThemeColors(newSettings);
-            
-            // Show toast notification
-            toast.success('הגדרות האתר עודכנו מהשרת');
+    // Site settings change very rarely (admin-only edits). Only open a
+    // real-time WebSocket for authenticated users to avoid wasting a
+    // connection for every anonymous visitor.
+    let channel: RealtimeChannel | null = null;
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user || subscribedRef.current) return;
+      subscribedRef.current = true;
+
+      channel = supabase
+        .channel('site_settings_changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'site_settings' },
+          (payload: RealtimePostgresChangesPayload<SiteSettings>) => {
+            logger.info('[Settings] Real-time update received:', payload);
+            if (payload.new) {
+              const newSettings = payload.new as SiteSettings;
+              setSettings(newSettings);
+              settingsCache = newSettings;
+              applyThemeColors(newSettings);
+
+              // Show toast notification
+              toast.success('הגדרות האתר עודכנו מהשרת');
+            }
           }
-        }
-      )
-      .subscribe((status) => {
-        logger.info('[Settings] Subscription status:', status);
-      });
+        )
+        .subscribe((status) => {
+          logger.info('[Settings] Subscription status:', status);
+        });
+    });
 
     return () => {
       subscribedRef.current = false;
-      subscription.unsubscribe();
+      if (channel) {
+        channel.unsubscribe();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

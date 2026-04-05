@@ -24,6 +24,13 @@ function PostHogPageView() {
     return null;
 }
 
+/**
+ * Non-blocking PostHog analytics wrapper.
+ *
+ * Children render immediately and unconditionally. PostHog initializes in a
+ * deferred useEffect (5 s delay) and once ready the PHProvider context is
+ * layered in without remounting the child tree.
+ */
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
     const [isReady, setIsReady] = useState(false);
 
@@ -35,14 +42,18 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(timer);
     }, []);
 
-    if (!isReady) return <>{children}</>;
-
+    // Always render children first, unconditionally.
+    // Layer PostHog provider and pageview tracker only after init.
     return (
-        <PHProvider client={analytics}>
-            <Suspense fallback={null}>
-                <PostHogPageView />
-            </Suspense>
+        <>
+            {isReady && analytics && (
+                <PHProvider client={analytics}>
+                    <Suspense fallback={null}>
+                        <PostHogPageView />
+                    </Suspense>
+                </PHProvider>
+            )}
             {children}
-        </PHProvider>
+        </>
     );
 }
