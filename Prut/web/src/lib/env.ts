@@ -10,13 +10,13 @@ const required = [
 
 const serverRequired = [
   'SUPABASE_SERVICE_ROLE_KEY',
+] as const;
+
+// Warn but don't crash — optional services or vars not available at build time
+const serverOptional = [
   'CRON_SECRET',
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
-] as const;
-
-// Warn but don't crash — optional services that degrade gracefully
-const serverOptional = [
   'RESEND_API_KEY',
   'LEMONSQUEEZY_WEBHOOK_SECRET',
   'SENTRY_DSN',
