@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const truncated = promptText.slice(0, 1500);
 
     const { text } = await generateText({
-      model: google("gemini-2.0-flash"),
+      model: google("gemini-2.5-flash-lite"),
       system: SYSTEM_PROMPT,
       prompt: `Prompt text:\n${truncated}\n\nExisting categories:\n${cats.join(", ") || "(none)"}`,
       maxOutputTokens: 200,

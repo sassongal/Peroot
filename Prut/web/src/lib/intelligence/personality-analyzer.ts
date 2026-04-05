@@ -47,7 +47,7 @@ export async function analyzeUserStyle(userId: string) {
 
     try {
         const { text } = await generateText({
-            model: google('gemini-2.5-flash'),
+            model: google('gemini-2.5-flash-lite'),
             system: "You are a behavioral linguistics expert specializing in AI Prompt Engineering. Return only valid JSON.",
             prompt: analyzerPrompt
         });

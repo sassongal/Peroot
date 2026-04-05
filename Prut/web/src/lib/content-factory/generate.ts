@@ -4,7 +4,8 @@
  * Uses generateText (non-streaming) so callers receive the full result
  * synchronously before persisting to the database.
  *
- * Model: gemini-2.5-flash — best cost/quality ratio for long-form Hebrew content.
+ * Models: gemini-2.5-flash for blog posts (quality matters),
+ *         gemini-2.5-flash-lite for prompt batch generation (cost savings).
  */
 
 import { generateText } from 'ai';
@@ -324,7 +325,7 @@ ${existingTitles.slice(0, 100).join('\n')}
   const startTime = Date.now();
 
   const { text, usage } = await generateText({
-    model: google('gemini-2.5-flash'),
+    model: google('gemini-2.5-flash-lite'),
     system,
     prompt: userPrompt,
     temperature: 0.8,

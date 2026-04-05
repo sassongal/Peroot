@@ -20,6 +20,7 @@ const serverOptional = [
   'RESEND_API_KEY',
   'LEMONSQUEEZY_WEBHOOK_SECRET',
   'SENTRY_DSN',
+  'MISTRAL_API_KEY',
 ] as const;
 
 export function validateEnv() {
