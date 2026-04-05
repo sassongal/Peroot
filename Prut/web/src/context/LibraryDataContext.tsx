@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLibrary } from "@/hooks/useLibrary";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -90,83 +91,46 @@ interface LibraryDataProviderProps {
 
 export function LibraryDataProvider({ children, user, showLoginRequired }: LibraryDataProviderProps) {
   // --- Library prompts (public) ---
-  const [libraryPrompts, setLibraryPrompts] = useState<LibraryPrompt[]>([]);
-  const [isLibraryFetching, setIsLibraryFetching] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchPublicData = async () => {
+  const { data: libraryPrompts = [], isLoading: isLibraryFetching } = useQuery<LibraryPrompt[]>({
+    queryKey: ['library', 'prompts'],
+    queryFn: async () => {
       try {
         const [pRes, cRes] = await Promise.all([
           fetch(getApiPath("/api/library/prompts")),
           fetch(getApiPath("/api/library/categories"))
         ]);
 
-        if (cancelled) return;
+        // Consume categories response (not used directly but keeps the fetch)
+        if (cRes.ok) await cRes.json();
+
         if (pRes.ok) {
           const pData = await pRes.json();
-          if (pData.length > 0) setLibraryPrompts(pData);
-        }
-        if (cRes.ok) {
-          await cRes.json();
+          if (pData.length > 0) return pData;
         }
       } catch (e) {
         logger.warn("Library synchronization paused:", e);
-      } finally {
-        if (!cancelled) setIsLibraryFetching(false);
       }
-    };
-
-    // Defer library fetch so it doesn't block initial render / LCP
-    const schedule = typeof requestIdleCallback === "function"
-      ? requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 100);
-    const id = schedule(() => { fetchPublicData(); });
-
-    return () => {
-      cancelled = true;
-      if (typeof cancelIdleCallback === "function" && typeof requestIdleCallback === "function") {
-        cancelIdleCallback(id as number);
-      } else {
-        clearTimeout(id as ReturnType<typeof setTimeout>);
-      }
-    };
-  }, []);
+      return [];
+    },
+    placeholderData: [],
+  });
 
   // --- Popularity ---
-  const [popularityMap, setPopularityMap] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadPopularity = async () => {
+  const { data: popularityMap = {} } = useQuery<Record<string, number>>({
+    queryKey: ['library', 'popularity'],
+    queryFn: async () => {
       try {
-        const response = await fetch(getApiPath("/api/library-popularity"), { next: { revalidate: 60 } });
+        const response = await fetch(getApiPath("/api/library-popularity"));
         if (!response.ok) throw new Error(`Failed to load popularity: ${response.status}`);
         const data = await response.json();
-        if (!data?.popularity) return;
-        if (isMounted) {
-          setPopularityMap((prev) => ({ ...prev, ...data.popularity }));
-        }
+        return data?.popularity ?? {};
       } catch (error) {
         logger.warn("Failed to load popularity map", error);
+        return {};
       }
-    };
-
-    // Defer popularity fetch to avoid blocking initial render
-    const schedule = typeof requestIdleCallback === "function"
-      ? requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 150);
-    const id = schedule(() => { loadPopularity(); });
-
-    return () => {
-      isMounted = false;
-      if (typeof cancelIdleCallback === "function" && typeof requestIdleCallback === "function") {
-        cancelIdleCallback(id as number);
-      } else {
-        clearTimeout(id as ReturnType<typeof setTimeout>);
-      }
-    };
-  }, []);
+    },
+    placeholderData: {},
+  });
 
   // --- useLibrary hook ---
   const {

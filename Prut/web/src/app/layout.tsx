@@ -143,6 +143,7 @@ import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 import { Footer } from "@/components/layout/Footer";
 import { DeferredWidgets, DeferredCookieConsent } from "@/components/layout/DeferredWidgets";
@@ -190,18 +191,20 @@ export default async function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema()) }}
           />
           <ThemeProvider>
-            <I18nProvider dictionary={dictionary} lang={locale}>
-              <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
-                <GlobalContextWrapper>
-                  <ErrorBoundary name="AppRoot">
-                    <main id="main-content" className="flex-grow">
-                      {children}
-                    </main>
-                  </ErrorBoundary>
-                  <Footer />
-                </GlobalContextWrapper>
-              </Suspense>
-            </I18nProvider>
+            <QueryProvider>
+              <I18nProvider dictionary={dictionary} lang={locale}>
+                <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+                  <GlobalContextWrapper>
+                    <ErrorBoundary name="AppRoot">
+                      <main id="main-content" className="flex-grow">
+                        {children}
+                      </main>
+                    </ErrorBoundary>
+                    <Footer />
+                  </GlobalContextWrapper>
+                </Suspense>
+              </I18nProvider>
+            </QueryProvider>
           </ThemeProvider>
           <DeferredCookieConsent />
         </PostHogProvider>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getApiPath } from '@/lib/api-path';
 import { logger } from "@/lib/logger";
 
@@ -24,26 +25,18 @@ const FREE_SUBSCRIPTION: Subscription = {
   lemonsqueezy_subscription_id: null,
 };
 
-export function useSubscription() {
-  const [subscription, setSubscription] = useState<Subscription>(FREE_SUBSCRIPTION);
-  const [loading, setLoading] = useState(true);
+async function fetchSubscription(): Promise<Subscription> {
+  const res = await fetch(getApiPath('/api/subscription'));
+  if (!res.ok) return FREE_SUBSCRIPTION;
+  return res.json();
+}
 
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const res = await fetch(getApiPath('/api/subscription'));
-        if (res.ok) {
-          const data = await res.json();
-          setSubscription(data);
-        }
-      } catch {
-        // User not logged in or no subscription - stays free
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSubscription();
-  }, []);
+export function useSubscription() {
+  const { data: subscription = FREE_SUBSCRIPTION, isLoading: loading } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: fetchSubscription,
+    placeholderData: FREE_SUBSCRIPTION,
+  });
 
   const isPro = subscription.status === 'active' || subscription.status === 'on_trial' || subscription.status === 'past_due';
 
