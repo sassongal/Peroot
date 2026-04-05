@@ -159,6 +159,11 @@ export default async function RootLayout({
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
       <head>
         <link rel="preload" href="/Peroot-hero.png" as="image" fetchPriority="high" />
+        {/* Inline blocking script — intentionally NOT using next/script.
+            Must execute synchronously before first paint to read the saved
+            theme class from localStorage and apply it, preventing a flash of
+            wrong-theme content (FOUC). Content is a static string, not
+            user-controlled, so dangerouslySetInnerHTML is safe here. */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}` }} />
         {/* PWA Splash Screens */}
         <link rel="apple-touch-startup-image" href="/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />

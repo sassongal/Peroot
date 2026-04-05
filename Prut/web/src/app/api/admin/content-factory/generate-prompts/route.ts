@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Validate category_id exists, fallback to "general"
-      const validCategoryIds = context.existingCategories.map((c: any) => c.id);
+      const validCategoryIds = context.existingCategories.map((c: { id: string; name_he: string }) => c.id);
       const safeCategoryId = validCategoryIds.includes(prompt.category_id)
         ? prompt.category_id
         : "general";
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
         .update({
           status: "completed",
           result_count: inserted.length,
-          result_ids: inserted.map((p: any) => p.id),
+          result_ids: inserted.map((p: { id: string }) => p.id),
           cost_tokens: usage?.totalTokens ?? 0,
           completed_at: new Date().toISOString(),
         })

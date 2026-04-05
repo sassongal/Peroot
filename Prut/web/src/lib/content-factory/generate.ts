@@ -9,6 +9,7 @@
 
 import { generateText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -353,7 +354,7 @@ ${existingTitles.slice(0, 100).join('\n')}
  * Pass the result directly into generateBlogPost / generatePromptBatch
  * so the model knows what already exists before producing new content.
  */
-export async function getGenerationContext(supabase: any): Promise<{
+export async function getGenerationContext(supabase: SupabaseClient): Promise<{
   existingBlogTitles: string[];
   existingBlogSlugs: string[];
   existingPromptTitles: string[];
@@ -378,13 +379,13 @@ export async function getGenerationContext(supabase: any): Promise<{
   ]);
 
   return {
-    existingBlogTitles: (blogResult.data ?? []).map((b: any) => b.title as string),
-    existingBlogSlugs: (blogResult.data ?? []).map((b: any) => b.slug as string),
-    existingPromptTitles: (promptResult.data ?? []).map((p: any) => p.title as string),
+    existingBlogTitles: (blogResult.data ?? []).map((b: { title: string }) => b.title),
+    existingBlogSlugs: (blogResult.data ?? []).map((b: { slug: string }) => b.slug),
+    existingPromptTitles: (promptResult.data ?? []).map((p: { title: string }) => p.title),
     existingCategories: categoryResult.data ?? [],
     blogCategories: Array.from(new Set(
       (blogResult.data ?? [])
-        .map((b: any) => b.category as string)
+        .map((b: { category: string }) => b.category)
         .filter(Boolean)
     )),
   };

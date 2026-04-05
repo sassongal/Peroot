@@ -19,17 +19,18 @@ function getAnalyticsClient(): BetaAnalyticsDataClient | null {
 
 const GA_PROPERTY_ID = process.env.GA4_PROPERTY_ID;
 
-// Helper to safely parse GA4 metric values
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function metricInt(row: any, idx: number): number {
+interface GA4Row {
+  dimensionValues?: ({ value?: string | null } | null)[] | null;
+  metricValues?: ({ value?: string | null } | null)[] | null;
+}
+
+function metricInt(row: GA4Row | undefined, idx: number): number {
   return parseInt(row?.metricValues?.[idx]?.value || '0', 10);
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function metricFloat(row: any, idx: number): number {
+function metricFloat(row: GA4Row | undefined, idx: number): number {
   return parseFloat(row?.metricValues?.[idx]?.value || '0');
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function dimStr(row: any, idx: number): string {
+function dimStr(row: GA4Row | undefined, idx: number): string {
   return row?.dimensionValues?.[idx]?.value || '';
 }
 

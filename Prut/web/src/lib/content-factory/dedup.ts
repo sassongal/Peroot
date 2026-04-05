@@ -3,6 +3,8 @@
  * Prevents generating content that's too similar to existing entries.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 /**
  * Simple similarity score between two strings (0-1).
  * Uses trigram comparison for fuzzy matching.
@@ -36,7 +38,7 @@ function getTrigrams(str: string): string[] {
  * Returns the most similar existing title and its score, or null if unique enough.
  */
 export async function findDuplicate(
-  supabase: any,
+  supabase: SupabaseClient,
   title: string,
   table: 'blog_posts' | 'public_library_prompts',
   threshold: number = 0.8
@@ -73,7 +75,7 @@ export async function findDuplicate(
  * Returns only titles that are unique enough.
  */
 export async function filterDuplicates(
-  supabase: any,
+  supabase: SupabaseClient,
   titles: string[],
   table: 'blog_posts' | 'public_library_prompts',
   threshold: number = 0.8

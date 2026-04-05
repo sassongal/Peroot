@@ -3,6 +3,8 @@
  * IRON RULE: Only a-z, 0-9, א-ת, single hyphens. No --, no special chars.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 /**
  * Sanitize a string into a valid URL slug.
  * Supports both Hebrew and English slugs.
@@ -77,7 +79,7 @@ function transliterateHebrew(text: string): string {
  * Check if a slug already exists in the database.
  */
 export async function isSlugUnique(
-  supabase: any,
+  supabase: SupabaseClient,
   slug: string,
   table: 'blog_posts' | 'public_library_prompts',
   excludeId?: string
@@ -100,7 +102,7 @@ export async function isSlugUnique(
  * Generate a unique slug by appending a counter if needed.
  */
 export async function ensureUniqueSlug(
-  supabase: any,
+  supabase: SupabaseClient,
   baseSlug: string,
   table: 'blog_posts' | 'public_library_prompts'
 ): Promise<string> {

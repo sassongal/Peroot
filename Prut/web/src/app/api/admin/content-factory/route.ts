@@ -93,10 +93,10 @@ export async function GET() {
 
     // Filter content-factory items in JS (JSONB filter unreliable in Supabase JS)
     const pendingBlogs = (pendingBlogsResult.data ?? []).filter(
-      (b: any) => b.source_metadata?.generated_by === "content-factory"
+      (b: { source_metadata?: { generated_by?: string } }) => b.source_metadata?.generated_by === "content-factory"
     );
     const pendingPrompts = (pendingPromptsResult.data ?? []).filter(
-      (p: any) => p.source_metadata?.generated_by === "content-factory"
+      (p: { source_metadata?: { generated_by?: string } }) => p.source_metadata?.generated_by === "content-factory"
     );
 
     const stats = {

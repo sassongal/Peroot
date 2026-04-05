@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 
@@ -60,7 +60,7 @@ export function useSiteSettings() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'site_settings' },
-        (payload: any) => {
+        (payload: RealtimePostgresChangesPayload<SiteSettings>) => {
           logger.info('[Settings] Real-time update received:', payload);
           if (payload.new) {
             const newSettings = payload.new as SiteSettings;

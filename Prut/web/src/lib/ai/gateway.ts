@@ -38,7 +38,7 @@ export class AIGateway {
                 const config = AVAILABLE_MODELS[modelId];
 
                 // Circuit breaker: skip providers that are currently failing
-                if (!isProviderAvailable(config.provider)) {
+                if (!(await isProviderAvailable(config.provider))) {
                     logger.info(`[AIGateway] Skipping ${config.label} (circuit open)`);
                     continue;
                 }
@@ -76,7 +76,7 @@ export class AIGateway {
                 } catch (error: unknown) {
                     const errorMessage = error instanceof Error ? error.message : String(error);
                     logger.error(`[AIGateway] Failed with ${modelId}: ${errorMessage}`);
-                    recordFailure(config.provider);
+                    await recordFailure(config.provider);
                     lastError = error;
                     continue;
                 }
@@ -109,7 +109,7 @@ export class AIGateway {
         try {
             for (const modelId of models) {
                 const config = AVAILABLE_MODELS[modelId];
-                if (!isProviderAvailable(config.provider)) {
+                if (!(await isProviderAvailable(config.provider))) {
                     logger.info(`[AIGateway] Skipping ${config.label} (circuit open)`);
                     continue;
                 }
@@ -133,7 +133,7 @@ export class AIGateway {
                 } catch (error: unknown) {
                     const errorMessage = error instanceof Error ? error.message : String(error);
                     logger.error(`[AIGateway] generateFull failed with ${modelId}: ${errorMessage}`);
-                    recordFailure(config.provider);
+                    await recordFailure(config.provider);
                     lastError = error;
                     continue;
                 }

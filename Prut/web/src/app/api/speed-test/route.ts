@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
+interface LighthouseAudit {
+  title?: string;
+  description?: string;
+  score?: number | null;
+  displayValue?: string;
+  details?: {
+    type?: string;
+    overallSavingsMs?: number;
+  };
+}
+
 const PAGESPEED_API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 const VALID_STRATEGIES = new Set(["mobile", "desktop"]);
 
@@ -72,7 +83,7 @@ export async function GET(req: NextRequest) {
 
     const lighthouse = data.lighthouseResult;
     const categories_result = lighthouse?.categories || {};
-    const audits = lighthouse?.audits || {};
+    const audits: Record<string, LighthouseAudit> = lighthouse?.audits || {};
 
     const result = {
       url: data.id,
@@ -101,8 +112,8 @@ export async function GET(req: NextRequest) {
         tti: audits["interactive"]?.score,
       },
       opportunities: Object.values(audits)
-        .filter((a: any) => a.details?.type === "opportunity" && a.score !== null && a.score < 0.9)
-        .map((a: any) => ({
+        .filter((a) => a.details?.type === "opportunity" && a.score !== null && a.score !== undefined && a.score < 0.9)
+        .map((a) => ({
           title: a.title,
           description: a.description,
           savings: a.details?.overallSavingsMs
@@ -113,7 +124,7 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch PageSpeed data" },
       { status: 500 }

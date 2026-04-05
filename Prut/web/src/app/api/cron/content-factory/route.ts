@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
 
         // Generate unique ID + validate category
         const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-        const validCategoryIds = context.existingCategories.map((c: any) => c.id);
+        const validCategoryIds = context.existingCategories.map((c: { id: string; name_he: string }) => c.id);
         const safeCategoryId = validCategoryIds.includes(promptData.category_id) ? promptData.category_id : "general";
         const validModes = ["STANDARD", "DEEP_RESEARCH", "IMAGE_GENERATION", "AGENT_BUILDER", "VIDEO_GENERATION"];
         const safeMode = validModes.includes(promptData.capability_mode) ? promptData.capability_mode : "STANDARD";

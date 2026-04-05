@@ -212,8 +212,7 @@ export function useLibrary() {
         // If RPC returned 0 results or errored, fall through to standard ilike query
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = supabase
+      let query = supabase
         .from('personal_library')
         .select('*', { count: 'exact' })
         .eq('user_id', userId);

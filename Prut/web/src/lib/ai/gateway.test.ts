@@ -7,7 +7,7 @@ import { recordSuccess } from '@/lib/ai/circuit-breaker';
 // Mock the 'ai' module
 const mockStreamText = vi.fn();
 vi.mock('ai', () => ({
-  streamText: (args: any) => mockStreamText(args),
+  streamText: (args: Record<string, unknown>) => mockStreamText(args),
 }));
 
 // Mock process.env
