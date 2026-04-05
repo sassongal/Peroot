@@ -118,12 +118,43 @@ export function recordSuccess(provider: string): void {
 
 /**
  * Record a failure from a provider.
+ * Uses Redis EVAL (Lua) for atomic read-increment-write to prevent
+ * concurrent requests from losing failure counts.
  */
 export async function recordFailure(provider: string): Promise<void> {
-  const entry = await readEntry(provider);
+  const key = `${KEY_PREFIX}${provider}`;
+  try {
+    const r = getRedis();
+    if (r) {
+      // Atomic increment via Lua script — avoids TOCTOU race between instances
+      const script = `
+        local data = redis.call('GET', KEYS[1])
+        local entry = data and cjson.decode(data) or {state="closed",failures=0,lastFailure=0,lastSuccess=0}
+        entry.failures = entry.failures + 1
+        entry.lastFailure = tonumber(ARGV[1])
+        if entry.state == "half_open" then
+          entry.state = "open"
+        elseif entry.failures >= tonumber(ARGV[2]) then
+          entry.state = "open"
+        end
+        redis.call('SET', KEYS[1], cjson.encode(entry), 'EX', tonumber(ARGV[3]))
+        return cjson.encode(entry)
+      `;
+      const result = await r.eval(script, [key], [Date.now().toString(), FAILURE_THRESHOLD.toString(), REDIS_TTL_S.toString()]) as string;
+      const entry = JSON.parse(result) as CircuitEntry;
+      if (entry.state === "open") {
+        console.log(`[CircuitBreaker] ${provider}: -> OPEN (${entry.failures} failures)`);
+      }
+      return;
+    }
+  } catch {
+    // Redis unavailable — fall through to in-memory
+  }
+
+  // In-memory fallback
+  const entry = getMemoryEntry(provider);
   entry.failures++;
   entry.lastFailure = Date.now();
-
   if (entry.state === "half_open") {
     entry.state = "open";
     console.log(`[CircuitBreaker] ${provider}: HALF_OPEN -> OPEN (still failing)`);
@@ -131,18 +162,5 @@ export async function recordFailure(provider: string): Promise<void> {
     entry.state = "open";
     console.log(`[CircuitBreaker] ${provider}: CLOSED -> OPEN (${entry.failures} failures)`);
   }
-
-  writeEntry(provider, entry);
 }
 
-/**
- * Get status of all circuits (for monitoring/admin).
- * Note: only returns in-memory entries; Redis entries for other instances are not enumerable.
- */
-export function getCircuitStatus(): Record<string, { state: CircuitState; failures: number }> {
-  const status: Record<string, { state: CircuitState; failures: number }> = {};
-  for (const [provider, entry] of memoryCircuits) {
-    status[provider] = { state: entry.state, failures: entry.failures };
-  }
-  return status;
-}

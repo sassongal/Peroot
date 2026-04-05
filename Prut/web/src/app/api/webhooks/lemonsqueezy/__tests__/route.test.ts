@@ -294,7 +294,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
     it('returns 400 when subscription event has no user_id in custom_data', async () => {
       const event = buildEvent('subscription_created');
       // Remove user_id
-      delete event.meta.custom_data.user_id;
+      (event.meta.custom_data as Record<string, unknown>).user_id = undefined;
       const body = JSON.stringify(event);
       const request = makeRequest(body);
 
