@@ -590,53 +590,6 @@ function timeAgo(ts) {
 }
 
 // ═══ SETTINGS ═══
-const apiKeyInput = $("api-key-input");
-const apiKeyToggle = $("api-key-toggle");
-const saveApiKeyBtn = $("save-api-key");
-const clearApiKeyBtn = $("clear-api-key");
-const apiKeyStatus = $("api-key-status");
-
-// Load saved API key on settings tab open
-async function loadApiKeySettings() {
-  const key = await getApiKey();
-  if (key) {
-    apiKeyInput.value = key;
-  }
-}
-
-if (apiKeyToggle) {
-  apiKeyToggle.addEventListener("click", () => {
-    apiKeyInput.type = apiKeyInput.type === "password" ? "text" : "password";
-  });
-}
-
-if (saveApiKeyBtn) {
-  saveApiKeyBtn.addEventListener("click", async () => {
-    const key = apiKeyInput.value.trim();
-    if (!key) {
-      showApiKeyStatus("הזן מפתח API", "error");
-      return;
-    }
-    if (!key.startsWith("prk_")) {
-      showApiKeyStatus("מפתח חייב להתחיל ב-prk_", "error");
-      return;
-    }
-    await saveApiKey(key);
-    showApiKeyStatus("מפתח נשמר בהצלחה", "success");
-  });
-}
-
-if (clearApiKeyBtn) {
-  clearApiKeyBtn.addEventListener("click", async () => {
-    await saveApiKey(null);
-    apiKeyInput.value = "";
-    showApiKeyStatus("מפתח הוסר", "success");
-  });
-}
-
-function showApiKeyStatus(msg, type) {
-  apiKeyStatus.textContent = msg;
-  apiKeyStatus.className = `settings-status ${type}`;
-  apiKeyStatus.classList.remove("hidden");
-  setTimeout(() => apiKeyStatus.classList.add("hidden"), 3000);
+function loadApiKeySettings() {
+  // Settings tab now only shows shortcuts and about — no API key management
 }

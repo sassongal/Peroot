@@ -60,9 +60,9 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: 'rich-textarea .ql-editor, div.ql-editor[contenteditable="true"], textarea',
-      sendButtonSelector: 'button.send-button, button[aria-label="Send message"]',
-      inputArea: () => document.querySelector('rich-textarea, div[class*="input-area"]')?.parentElement,
+      inputSelector: 'rich-textarea .ql-editor, div.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], textarea',
+      sendButtonSelector: 'button.send-button, button[aria-label="Send message"], button[data-test-id="send-button"]',
+      inputArea: () => document.querySelector('rich-textarea, div[class*="input-area"], div[class*="text-input"]')?.parentElement,
       getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
       setInputText: (el, text) => {
         if (el.tagName === 'TEXTAREA') {

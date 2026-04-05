@@ -11,7 +11,7 @@
 if (!window.__peerootContentLoaded) {
   window.__peerootContentLoaded = true;
 
-  const API_BASE = "https://peroot.space";
+  const API_BASE = "https://www.peroot.space";
 
   let currentPanel = null;
   let lastEnhanced = "";
