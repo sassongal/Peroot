@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { z } from 'zod';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { logger } from '@/lib/logger';
+import { contactEmail, SUBJECT_LABELS, escapeHtml } from '@/lib/emails/templates';
 
 const ContactSchema = z.object({
   name: z.string().min(1).max(200),
@@ -10,14 +11,6 @@ const ContactSchema = z.object({
   subject: z.enum(['question', 'bug', 'feature', 'billing', 'other']),
   message: z.string().min(10).max(5000),
 });
-
-const SUBJECT_LABELS: Record<string, string> = {
-  question: 'שאלה כללית',
-  bug: 'דיווח על באג',
-  feature: 'הצעה לתכונה חדשה',
-  billing: 'חיוב ותשלום',
-  other: 'אחר',
-};
 
 export async function POST(request: Request) {
   try {
@@ -39,9 +32,6 @@ export async function POST(request: Request) {
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@joya-tech.net';
     const contactRecipient = process.env.CONTACT_EMAIL || 'gal@joya-tech.net';
 
-    // HTML-escape user input to prevent email HTML injection
-    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
     if (!apiKey) {
       logger.error('[Contact] Missing RESEND_API_KEY');
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
@@ -53,18 +43,8 @@ export async function POST(request: Request) {
       from: `Peroot Contact <${fromEmail}>`,
       to: contactRecipient,
       replyTo: email,
-      subject: `[Peroot Contact] ${SUBJECT_LABELS[subject] || subject} - ${esc(name)}`,
-      html: `
-        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px;">
-          <h2 style="color: #F59E0B;">הודעה חדשה מ-Peroot</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 8px; font-weight: bold; color: #888;">שם:</td><td style="padding: 8px;">${esc(name)}</td></tr>
-            <tr><td style="padding: 8px; font-weight: bold; color: #888;">אימייל:</td><td style="padding: 8px;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
-            <tr><td style="padding: 8px; font-weight: bold; color: #888;">נושא:</td><td style="padding: 8px;">${SUBJECT_LABELS[subject] || subject}</td></tr>
-          </table>
-          <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px; white-space: pre-wrap;">${esc(message)}</div>
-        </div>
-      `,
+      subject: `[Peroot Contact] ${SUBJECT_LABELS[subject] || subject} - ${escapeHtml(name)}`,
+      html: contactEmail({ name, email, subject, message }),
     });
 
     return NextResponse.json({ success: true });

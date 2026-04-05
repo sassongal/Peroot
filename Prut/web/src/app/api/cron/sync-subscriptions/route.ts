@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { logger } from "@/lib/logger";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
+import { adminCronChurnAlertEmail } from "@/lib/emails/templates/admin-alerts";
 
 /**
  * GET /api/cron/sync-subscriptions
@@ -152,7 +153,10 @@ export async function GET(req: Request) {
           await EmailService.send({
             to: adminEmail,
             subject: `[Peroot] Churn (cron): ${sub?.customer_email || userId}`,
-            html: `<p>Stale pro user fixed by sync-subscriptions cron. User: ${sub?.customer_email || userId}</p>`,
+            html: adminCronChurnAlertEmail({
+              customerEmail: sub?.customer_email || '',
+              userId,
+            }),
             emailType: "admin_churn_alert",
           });
         } catch (emailErr) {

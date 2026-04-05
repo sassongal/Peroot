@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from '@/lib/emails/service';
 import { logger } from "@/lib/logger";
+import { adminChurnAlertEmail } from '@/lib/emails/templates/admin-alerts';
 
 /**
  * POST /api/webhooks/lemonsqueezy
@@ -239,19 +240,15 @@ export async function POST(request: Request) {
               .select('contact_email')
               .single();
             const adminEmail = adminSettings?.contact_email || 'gal@joya-tech.net';
-            const escHtml = (s: string) => s.replace(/[<>&"']/g, c =>
-              ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
             await EmailService.send({
               to: adminEmail,
               subject: `[Peroot] Churn: ${(subscriptionData.customer_email || userId).slice(0, 100)}`,
-              html: `<div dir="rtl" style="font-family: sans-serif;">
-                <h2 style="color: #ef4444;">משתמש ביטל מנוי Pro</h2>
-                <p><strong>שם:</strong> ${escHtml(subscriptionData.customer_name || 'N/A')}</p>
-                <p><strong>אימייל:</strong> ${escHtml(subscriptionData.customer_email || 'N/A')}</p>
-                <p><strong>ID:</strong> ${escHtml(userId)}</p>
-                <p><strong>סטטוס:</strong> ${escHtml(attributes.status)}</p>
-                <p><strong>זמן:</strong> ${new Date().toISOString()}</p>
-              </div>`,
+              html: adminChurnAlertEmail({
+                customerName: subscriptionData.customer_name || 'N/A',
+                customerEmail: subscriptionData.customer_email || 'N/A',
+                userId,
+                status: attributes.status,
+              }),
               emailType: 'admin_churn_alert',
             });
           } catch (adminErr) {
