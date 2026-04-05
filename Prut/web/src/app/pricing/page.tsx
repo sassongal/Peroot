@@ -190,9 +190,14 @@ export default function PricingPage() {
                 {PLANS.pro.nameHe}
                 <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </h3>
-              <div className="flex items-baseline gap-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg text-muted-foreground line-through decoration-2">&#8362;16</span>
                 <span className="text-4xl font-black text-foreground">&#8362;{PLANS.pro.price}</span>
                 <span className="text-muted-foreground text-sm">/ חודש</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-amber-600 dark:text-amber-400 text-xs font-bold">מבצע השקה!</span>
               </div>
               <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
               <div className="flex items-center gap-1.5 mt-2">

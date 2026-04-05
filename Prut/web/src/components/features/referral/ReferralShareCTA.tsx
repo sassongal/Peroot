@@ -24,8 +24,9 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
     const count = parseInt(sessionStorage.getItem(key) || "0", 10) + 1;
     sessionStorage.setItem(key, String(count));
 
-    // Show every 3rd enhancement (1st, 4th, 7th, etc.)
-    if (count % 3 === 1) {
+    // Show on 1st enhance (most exciting moment), then 5th, 10th, 15th, etc.
+    const shouldShow = count === 1 || (count >= 5 && count % 5 === 0);
+    if (shouldShow) {
       // Delay appearance slightly so it doesn't distract from the result
       const timer = setTimeout(() => setVisible(true), 2000);
       return () => clearTimeout(timer);

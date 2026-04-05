@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AlertTriangle, Check, Copy, ExternalLink, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { renderStyledPrompt } from "@/lib/text-utils";
@@ -390,6 +391,18 @@ export function ResultSection({
                     שתף
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    const shareText = encodeURIComponent("שדרגתי פרומפט עם Peroot! \u{1F680} נסו גם: https://www.peroot.space");
+                    window.open(`https://api.whatsapp.com/send?text=${shareText}`, "_blank");
+                    trackShare("whatsapp_result", "https://www.peroot.space");
+                  }}
+                  className="flex items-center justify-center p-2.5 rounded-lg border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-[#25D366]/50 focus-visible:outline-none"
+                  title="שתף בוואטסאפ"
+                  aria-label="שתף בוואטסאפ"
+                >
+                  <WhatsAppIcon className="w-4 h-4" />
+                </button>
                 <button
                   onClick={onSave}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"

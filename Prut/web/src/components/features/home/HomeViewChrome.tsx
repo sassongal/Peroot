@@ -40,6 +40,10 @@ const DidYouKnowBanner = dynamic(
   () => import("@/components/ui/DidYouKnowBanner").then(mod => mod.DidYouKnowBanner),
   { ssr: false, loading: () => null }
 );
+const TodayCounter = dynamic(
+  () => import("@/components/features/home/TodayCounter").then(mod => mod.TodayCounter),
+  { ssr: false, loading: () => <div className="flex justify-center"><div className="h-5 w-48 rounded-full bg-[var(--glass-border)] animate-pulse" /></div> }
+);
 const UpgradeNudge = dynamic(
   () => import("@/components/features/prompt-improver/UpgradeNudge"),
   { ssr: false, loading: () => null }
@@ -174,6 +178,9 @@ function HomeViewChromeInner({
            >
              מה עושים פה?
            </button>
+
+           {/* Social proof counter */}
+           {!hasCompletion && !isLoading && <TodayCounter />}
 
            {/* Did You Know banner — shows one rotating fact per session */}
            {!hasCompletion && !isLoading && <div className="min-h-[48px]"><DidYouKnowBanner /></div>}

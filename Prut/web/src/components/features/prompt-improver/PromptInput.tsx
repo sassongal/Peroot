@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
-import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon } from "lucide-react";
+import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon, Zap } from "lucide-react";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
@@ -18,6 +18,8 @@ import { PromptScore } from "@/lib/engines/base-engine";
 import { TargetModel } from "@/lib/engines/types";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
+import Link from "next/link";
 
 const TARGET_MODEL_OPTIONS: { value: TargetModel; label: string }[] = [
   { value: 'general', label: 'כללי' },
@@ -151,6 +153,7 @@ export function PromptInput({
   creditsRemaining,
 }: PromptInputProps) {
     const t = useI18n();
+    const { isPro } = useSubscription();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
@@ -635,6 +638,24 @@ export function PromptInput({
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Last credit warning - inline banner */}
+            {creditsRemaining === 1 && !isPro && (
+              <div className="flex items-center justify-between gap-3 mx-5 md:mx-7 mt-3 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25" dir="rtl">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="text-sm text-amber-700 dark:text-amber-300">
+                    קרדיט אחרון! שדרג ל-Pro בשביל 150 קרדיטים בחודש
+                  </span>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="shrink-0 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold transition-colors"
+                >
+                  שדרג
+                </Link>
               </div>
             )}
 
