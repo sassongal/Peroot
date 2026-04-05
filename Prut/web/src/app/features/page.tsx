@@ -282,7 +282,7 @@ export default function FeaturesPage() {
         ),
       }}
     />
-    <div
+    <main
       className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"
       dir="rtl"
     >
@@ -305,7 +305,7 @@ export default function FeaturesPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
         {/* Hero */}
         <section className="py-16 md:py-24">
           <PageHeading
@@ -459,8 +459,8 @@ export default function FeaturesPage() {
             <Link href="/pricing" className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors">מחירים ותוכניות</Link>
           </p>
         </section>
-      </main>
-    </div>
+      </div>
+    </main>
     </>
   );
 }

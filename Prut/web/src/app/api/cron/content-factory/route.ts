@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
 import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
 import { findDuplicate } from "@/lib/content-factory/dedup";
+import { recordCronSuccess } from "@/lib/cron-heartbeat";
 
 export const maxDuration = 120;
 
@@ -254,6 +255,8 @@ export async function GET(request: NextRequest) {
     }
 
     logger.info(`[Cron/ContentFactory] Run ${runId} complete. Blog: ${result.blog?.title ?? "none"}, Prompts: ${result.prompts.count}, Errors: ${result.errors.length}`);
+
+    await recordCronSuccess('content-factory');
 
     return NextResponse.json({
       runId,

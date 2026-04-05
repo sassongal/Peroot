@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
+import { recordCronSuccess } from "@/lib/cron-heartbeat";
 
 export const maxDuration = 30;
 
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
 
     logger.info("[DataRetention] Cleanup complete:", results);
     await releaseCronLock("cron:data-retention");
+    await recordCronSuccess('data-retention');
     return NextResponse.json({ success: true, deleted: results });
   } catch (err) {
     await releaseCronLock("cron:data-retention");

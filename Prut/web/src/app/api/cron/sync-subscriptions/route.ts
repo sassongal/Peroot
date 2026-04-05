@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { logger } from "@/lib/logger";
+import { recordCronSuccess } from "@/lib/cron-heartbeat";
 
 /**
  * GET /api/cron/sync-subscriptions
@@ -166,6 +167,7 @@ export async function GET(req: Request) {
     }
 
     logger.info(`[sync-subscriptions] Done. Fixed ${fixedCount} users`);
+    await recordCronSuccess('sync-subscriptions');
     return NextResponse.json({ fixed: fixedCount });
   } catch (error) {
     logger.error("[sync-subscriptions] Error:", error);

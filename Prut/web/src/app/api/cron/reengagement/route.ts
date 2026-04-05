@@ -4,6 +4,7 @@ import { EmailService } from "@/lib/emails/service";
 import { REENGAGEMENT_TEMPLATES } from "@/lib/emails/reengagement-templates";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
+import { recordCronSuccess } from "@/lib/cron-heartbeat";
 
 export const maxDuration = 30;
 
@@ -157,6 +158,7 @@ export async function GET(request: NextRequest) {
     }
 
     await releaseCronLock('cron:reengagement');
+    await recordCronSuccess('reengagement');
     return NextResponse.json({ sent, skipped, errors, total: filteredProfiles.length, excludedActive: recentlyActiveIds.size });
   } catch (err) {
     await releaseCronLock('cron:reengagement');

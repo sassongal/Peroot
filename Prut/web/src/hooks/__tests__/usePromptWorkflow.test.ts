@@ -1,6 +1,22 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+
+// jsdom in vitest provides a localStorage object without getItem/setItem methods.
+// Use vi.hoisted so the mock is applied before static imports evaluate.
+vi.hoisted(() => {
+  const store: Record<string, string> = {};
+  const localStorageMock = {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { Object.keys(store).forEach((k) => delete store[k]); },
+    get length() { return Object.keys(store).length; },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+  };
+  Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
+});
+
 import { usePromptWorkflow, promptCache } from '../usePromptWorkflow';
 import { CapabilityMode } from '@/lib/capability-mode';
 

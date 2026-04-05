@@ -16,9 +16,10 @@ import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-se
 
 export const maxDuration = 30;
 
-// Simple in-memory cache for user profile/tier (survives within same serverless instance)
+// In-memory per-instance cache. Subscription upgrades may take up to 15s to reflect.
+// Acceptable trade-off vs Redis round-trip on every request.
 const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: number }>();
-const PROFILE_CACHE_TTL = 15_000; // 15 seconds (reduced to limit stale tier after subscription changes)
+const PROFILE_CACHE_TTL = 15_000; // 15 seconds
 
 const RequestSchema = z.object({
   prompt: z.string().min(1).max(10000),

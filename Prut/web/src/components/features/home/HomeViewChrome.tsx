@@ -118,7 +118,7 @@ function HomeViewChromeInner({
   children,
 }: HomeViewChromeProps) {
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
+    <main className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
       <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" style={{ contain: 'layout style' }} />
 
@@ -210,7 +210,7 @@ function HomeViewChromeInner({
       {showOnboarding && !!user && (
           <OnboardingOverlay onComplete={onOnboardingComplete} />
       )}
-    </div>
+    </main>
   );
 }
 

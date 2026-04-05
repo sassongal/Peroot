@@ -110,7 +110,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground" dir="rtl">
+    <main className="min-h-screen bg-background text-foreground" dir="rtl">
       <div className="max-w-5xl mx-auto px-6 py-20">
         {/* Back */}
         <Link
@@ -122,7 +122,7 @@ export default function PricingPage() {
         </Link>
 
         {/* Header */}
-        <div className="text-center mb-16 space-y-4">
+        <section className="text-center mb-16 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
             <Sparkles className="w-3.5 h-3.5" />
             שדרג את הפרומפטים שלך
@@ -133,7 +133,7 @@ export default function PricingPage() {
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
             התחל בחינם, שדרג כשתרצה. כולל יום ניסיון במתנה. ללא התחייבות.
           </p>
-        </div>
+        </section>
 
         {/* Social Proof */}
         <div className="text-center mb-12">
@@ -146,7 +146,7 @@ export default function PricingPage() {
         </div>
 
         {/* Plans */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <section className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Free Plan */}
           <div className="rounded-3xl border border-border bg-card p-8 flex flex-col">
             <div className="mb-8">
@@ -226,10 +226,10 @@ export default function PricingPage() {
               </button>
             )}
           </div>
-        </div>
+        </section>
 
         {/* Feature Comparison Table */}
-        <div className="max-w-3xl mx-auto mt-20">
+        <section className="max-w-3xl mx-auto mt-20">
           <h2 className="text-2xl font-bold text-foreground text-center mb-8">השוואת תכונות מפורטת</h2>
           <div className="rounded-2xl border border-border overflow-hidden">
             {/* Table Header */}
@@ -275,7 +275,7 @@ export default function PricingPage() {
               );
             })}
           </div>
-        </div>
+        </section>
 
         {/* Trust badges */}
         <div className="flex flex-wrap items-center justify-center gap-8 mt-16 text-xs text-muted-foreground">
@@ -327,6 +327,6 @@ export default function PricingPage() {
         message="כדי לשדרג לתוכנית Pro, יש להתחבר לחשבון שלך תחילה."
         feature="שדרוג לתוכנית Pro"
       />
-    </div>
+    </main>
   );
 }

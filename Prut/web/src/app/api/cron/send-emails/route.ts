@@ -4,6 +4,7 @@ import { EmailService } from "@/lib/emails/service";
 import { ONBOARDING_STEPS } from "@/lib/emails/onboarding-templates";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
+import { recordCronSuccess } from "@/lib/cron-heartbeat";
 
 export const maxDuration = 30;
 
@@ -107,6 +108,7 @@ export async function GET(request: NextRequest) {
     }
 
     await releaseCronLock('cron:send-emails');
+    await recordCronSuccess('send-emails');
     return NextResponse.json({ sent, errors, total: sequences?.length || 0 });
   } catch (err) {
     await releaseCronLock('cron:send-emails');

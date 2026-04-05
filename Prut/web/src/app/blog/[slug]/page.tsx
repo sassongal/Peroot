@@ -187,7 +187,7 @@ export default async function BlogPostPage({ params }: Props) {
   const enrichedContent = injectH2Ids(post.content ?? "");
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
+    <main className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
       {/* Outer centering wrapper */}
       <div className="max-w-5xl mx-auto">
         <Link
@@ -359,6 +359,6 @@ export default async function BlogPostPage({ params }: Props) {
           />
         ) : null;
       })()}
-    </div>
+    </main>
   );
 }
