@@ -143,14 +143,16 @@ export function CapabilitySelector({
             type="button"
             onClick={() => setIsExpanded(true)}
             className={cn(
-              "flex items-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)]",
-              "hover:border-black/20 dark:hover:border-white/20 hover:text-[var(--text-primary)] transition-all duration-200 shrink-0 snap-start font-medium",
+              "group relative flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-l from-amber-500/10 via-orange-500/10 to-rose-500/10",
+              "text-amber-700 dark:text-amber-300 hover:border-amber-500/60 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-rose-500/20",
+              "transition-all duration-300 shrink-0 snap-start font-semibold",
               compact ? "px-3 py-2 text-sm" : "px-4 py-3 text-base"
             )}
             title="הצג מצבים נוספים"
             aria-label="הצג מצבים נוספים"
           >
-            עוד מצבים +
+            עוד מצבים
+            <span className="inline-block transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">✦</span>
           </button>
         </>
       )}

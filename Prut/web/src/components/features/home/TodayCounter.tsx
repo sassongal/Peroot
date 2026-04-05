@@ -1,80 +1,98 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+
+const POLL_INTERVAL = 20_000; // 20 seconds
 
 /**
- * Animated counter showing how many prompts were enhanced today.
- * Fetches from /api/stats/today and animates the number counting up.
+ * Animated flip-digit counter showing prompts enhanced today.
+ * Polls /api/stats/today every 20s. Digits animate individually on change.
  */
 export function TodayCounter() {
   const [count, setCount] = useState<number | null>(null);
-  const [displayCount, setDisplayCount] = useState(0);
-  const animationRef = useRef<number | null>(null);
+  const [displayDigits, setDisplayDigits] = useState<string[]>([]);
+  const [animatingIndices, setAnimatingIndices] = useState<Set<number>>(new Set());
+  const prevDigitsRef = useRef<string[]>([]);
+  const mountedRef = useRef(true);
 
-  // Fetch count on mount
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/stats/today")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data?.count) {
-          setCount(data.count);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+  const fetchCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/stats/today");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (mountedRef.current && typeof data?.count === "number") {
+        setCount(data.count);
+      }
+    } catch {}
   }, []);
 
-  // Animate counting up when count arrives
+  // Fetch on mount + poll every 20s
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchCount();
+    const interval = setInterval(fetchCount, POLL_INTERVAL);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
+  }, [fetchCount]);
+
+  // Animate digits when count changes
   useEffect(() => {
     if (count === null) return;
 
-    const duration = 1200; // ms
-    const startTime = performance.now();
-    const startVal = 0;
-    const endVal = count;
+    const newDigits = count.toLocaleString("he-IL").split("");
+    const prevDigits = prevDigitsRef.current;
 
-    function tick(now: number) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease-out cubic for smooth deceleration
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayCount(Math.round(startVal + (endVal - startVal) * eased));
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(tick);
-      }
+    // Find which digit positions changed
+    const changed = new Set<number>();
+    const maxLen = Math.max(newDigits.length, prevDigits.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (newDigits[i] !== prevDigits[i]) changed.add(i);
     }
 
-    animationRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
+    if (changed.size > 0 && prevDigits.length > 0) {
+      setAnimatingIndices(changed);
+      // Clear animation class after it completes
+      const timer = setTimeout(() => setAnimatingIndices(new Set()), 400);
+      setDisplayDigits(newDigits);
+      prevDigitsRef.current = newDigits;
+      return () => clearTimeout(timer);
+    } else {
+      setDisplayDigits(newDigits);
+      prevDigitsRef.current = newDigits;
+    }
   }, [count]);
 
-  // Loading skeleton
   if (count === null) {
     return (
       <div className="flex justify-center" dir="rtl">
-        <div className="h-5 w-48 rounded-full bg-[var(--glass-border)] animate-pulse" />
+        <div className="h-5 w-44 rounded-full bg-[var(--glass-border)] animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div
-      className="flex justify-center animate-in fade-in duration-700"
-      dir="rtl"
-    >
-      <p className="text-xs text-[var(--text-muted)] tracking-wide">
-        <span className="font-semibold tabular-nums">
-          {displayCount.toLocaleString("he-IL")}
+    <div className="flex flex-col items-center gap-0.5 animate-in fade-in duration-700" dir="rtl">
+      <p className="text-xs text-[var(--text-muted)] tracking-wide flex items-center gap-1">
+        <span className="inline-flex">
+          {displayDigits.map((digit, i) => (
+            <span
+              key={`${i}-${digit}`}
+              className={`inline-block tabular-nums font-semibold ${
+                animatingIndices.has(i)
+                  ? "animate-in slide-in-from-bottom-2 fade-in duration-300"
+                  : ""
+              }`}
+            >
+              {digit}
+            </span>
+          ))}
         </span>
-        {" "}
-        {"\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8\u05D9\u05DD \u05E9\u05D5\u05D3\u05E8\u05D2\u05D5 \u05D4\u05D9\u05D5\u05DD"} ✨
+        {" פרומפטים שודרגו היום "}
+        <span className="text-amber-500">✦</span>
       </p>
+      <span className="text-[10px] text-[var(--text-muted)]/50">מתאפס ב-06:00</span>
     </div>
   );
 }
