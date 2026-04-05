@@ -38,11 +38,7 @@ const StreamingProgress = dynamic(
 );
 const DidYouKnowBanner = dynamic(
   () => import("@/components/ui/DidYouKnowBanner").then(mod => mod.DidYouKnowBanner),
-  { ssr: false, loading: () => null }
-);
-const TodayCounter = dynamic(
-  () => import("@/components/features/home/TodayCounter").then(mod => mod.TodayCounter),
-  { ssr: false, loading: () => <div className="flex justify-center"><div className="h-5 w-48 rounded-full bg-[var(--glass-border)] animate-pulse" /></div> }
+  { ssr: false, loading: () => <div className="h-[48px]" /> }
 );
 const UpgradeNudge = dynamic(
   () => import("@/components/features/prompt-improver/UpgradeNudge"),
@@ -179,10 +175,7 @@ function HomeViewChromeInner({
              מה עושים פה?
            </button>
 
-           {/* Social proof counter */}
-           {!hasCompletion && !isLoading && <TodayCounter />}
-
-           {/* Did You Know banner — shows one rotating fact per session */}
+           {/* Did You Know banner — reserve min-height to prevent CLS */}
            {!hasCompletion && !isLoading && <div className="min-h-[48px]"><DidYouKnowBanner /></div>}
 
            <LoadingOverlay isVisible={isLoading} />

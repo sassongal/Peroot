@@ -166,7 +166,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
       <head>
-        <link rel="preload" href="/Peroot-hero.png" as="image" fetchPriority="high" />
+        <link rel="preload" href="/_next/image?url=%2FPeroot-hero.png&w=384&q=75" as="image" fetchPriority="high" type="image/avif" />
         {/* Inline blocking script — intentionally NOT using next/script.
             Must execute synchronously before first paint to read the saved
             theme class from localStorage and apply it, preventing a flash of
