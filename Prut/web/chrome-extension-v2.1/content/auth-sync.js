@@ -18,20 +18,28 @@
 
   async function storeToken(token) {
     if (token) {
-      chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
+      // Store directly in chrome.storage (faster, no message passing needed)
+      try {
+        await chrome.storage.local.set({ peroot_token: token });
+      } catch {
+        // Fallback: send via message to service worker
+        chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
+      }
     }
   }
 
   // Sync immediately
   const token = await fetchToken();
-  storeToken(token);
+  if (token) {
+    await storeToken(token);
+  }
 
   // Poll a few times to catch post-login redirects
   let polls = 0;
   const interval = setInterval(async () => {
     const t = await fetchToken();
     if (t) {
-      storeToken(t);
+      await storeToken(t);
       clearInterval(interval);
     }
     if (++polls > 5) clearInterval(interval);
@@ -41,7 +49,18 @@
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "visible") {
       const t = await fetchToken();
-      storeToken(t);
+      if (t) await storeToken(t);
+    }
+  });
+
+  // Listen for explicit sync requests from popup/service worker
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type === "REQUEST_TOKEN_SYNC") {
+      fetchToken().then(t => {
+        if (t) storeToken(t);
+        sendResponse({ token: t });
+      });
+      return true; // async response
     }
   });
 })();

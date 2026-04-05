@@ -163,31 +163,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // ─── Force Auth Sync ───
 async function forceAuthSync() {
   try {
-    let tabs = await chrome.tabs.query({ url: "https://peroot.space/*" });
-    if (tabs.length === 0) {
-      tabs = await chrome.tabs.query({ url: "https://www.peroot.space/*" });
-    }
+    // Find any open peroot.space tab (with or without www)
+    const tabs = await chrome.tabs.query({ url: ["https://peroot.space/*", "https://www.peroot.space/*"] });
     if (tabs.length === 0) return null;
 
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      func: async () => {
-        try {
-          const res = await fetch("/api/extension-token", { credentials: "same-origin" });
-          if (!res.ok) return null;
-          const data = await res.json();
-          return data.token || null;
-        } catch {
-          return null;
+    // Ask the auth-sync content script (already injected) for a fresh token
+    return new Promise((resolve) => {
+      chrome.tabs.sendMessage(tabs[0].id, { type: "REQUEST_TOKEN_SYNC" }, (response) => {
+        if (chrome.runtime.lastError || !response?.token) {
+          // Content script not ready — try injecting it first, then retry
+          chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            files: ["content/auth-sync.js"],
+          }).then(() => {
+            // Give it a moment to initialize, then ask again
+            setTimeout(() => {
+              chrome.tabs.sendMessage(tabs[0].id, { type: "REQUEST_TOKEN_SYNC" }, (r2) => {
+                const token = r2?.token || null;
+                if (token) chrome.storage.local.set({ peroot_token: token });
+                resolve(token);
+              });
+            }, 500);
+          }).catch(() => resolve(null));
+          return;
         }
-      },
+        const token = response.token;
+        if (token) chrome.storage.local.set({ peroot_token: token });
+        resolve(token);
+      });
     });
-
-    const token = results?.[0]?.result || null;
-    if (token) {
-      await chrome.storage.local.set({ peroot_token: token });
-    }
-    return token;
   } catch {
     return null;
   }
