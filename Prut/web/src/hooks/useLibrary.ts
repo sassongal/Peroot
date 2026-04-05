@@ -46,9 +46,11 @@ const persistOrderMap = (userId: string | null, items: PersonalPrompt[]) => {
   localStorage.setItem(key, JSON.stringify(next));
 };
 
-/** Map a raw Supabase row to a PersonalPrompt, applying the orderMap for sort_index. */
+/** Map a raw Supabase row to a PersonalPrompt, applying the orderMap for sort_index.
+ *  Priority: localStorage orderMap > DB sort_index > positional index */
 function rowToPrompt(row: Record<string, unknown>, index: number, orderMap: Record<string, number>): PersonalPrompt {
   const id = row.id as string;
+  const dbSortIndex = typeof row.sort_index === "number" ? row.sort_index : undefined;
   return {
     id,
     title: row.title as string,
@@ -71,7 +73,7 @@ function rowToPrompt(row: Record<string, unknown>, index: number, orderMap: Reco
     is_pinned: (row.is_pinned as boolean) ?? false,
     success_count: (row.success_count as number) ?? 0,
     fail_count: (row.fail_count as number) ?? 0,
-    sort_index: typeof orderMap[id] === "number" ? orderMap[id] : index,
+    sort_index: typeof orderMap[id] === "number" ? orderMap[id] : dbSortIndex ?? index,
   };
 }
 
