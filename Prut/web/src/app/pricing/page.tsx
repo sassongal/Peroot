@@ -191,7 +191,7 @@ export default function PricingPage() {
                 <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-lg text-muted-foreground line-through decoration-2">&#8362;16</span>
+                <span className="text-2xl font-bold text-red-400/80 line-through decoration-red-500/60 decoration-2">&#8362;16</span>
                 <span className="text-4xl font-black text-foreground">&#8362;{PLANS.pro.price}</span>
                 <span className="text-muted-foreground text-sm">/ חודש</span>
               </div>
