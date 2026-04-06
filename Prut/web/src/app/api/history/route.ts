@@ -15,6 +15,47 @@ const HistoryBodySchema = z.object({
 });
 
 /**
+ * GET /api/history
+ * Fetch the user's enhancement history (most recent first).
+ * Used by Chrome extension history tab.
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+
+    const { data: { user } } = bearerToken
+      ? await supabase.auth.getUser(bearerToken)
+      : await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const queryClient = bearerToken ? createServiceClient() : supabase;
+
+    const { data, error } = await queryClient
+      .from("history")
+      .select("id, prompt, enhanced_prompt, tone, category, title, source, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (error) {
+      logger.error("[history] GET error:", error);
+      return NextResponse.json([], { status: 200 });
+    }
+
+    return NextResponse.json(data || []);
+  } catch (error) {
+    logger.error("[history] GET error:", error);
+    return NextResponse.json([], { status: 200 });
+  }
+}
+
+/**
  * POST /api/history
  * Save an enhancement to the user's history.
  * Used by Chrome extension to sync history with website.
