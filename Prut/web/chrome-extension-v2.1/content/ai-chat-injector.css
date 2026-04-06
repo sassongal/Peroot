@@ -43,8 +43,8 @@
    ══════════════════════════════════════════ */
 .peroot-ai-toolbar {
   position: absolute;
-  top: -52px;
-  right: 12px;
+  bottom: calc(100% + 8px);
+  left: 12px;
   display: flex;
   align-items: center;
   gap: 3px;

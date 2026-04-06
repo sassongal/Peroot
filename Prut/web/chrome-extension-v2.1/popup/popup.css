@@ -1048,6 +1048,37 @@ textarea:focus::placeholder {
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.1) !important;
 }
 
+/* ─── Prompt Card Hover Preview ─── */
+.prompt-card {
+  position: relative;
+}
+
+.prompt-card-preview {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  background: #111;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #d4d4d8;
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+  z-index: 100;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.prompt-card:hover .prompt-card-preview {
+  display: block;
+}
+
 /* ════════════════════════════════════════════
    SPINNER
    ════════════════════════════════════════════ */

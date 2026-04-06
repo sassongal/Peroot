@@ -60,13 +60,22 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: '.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], div[contenteditable="true"], textarea',
-      sendButtonSelector: 'button.send-button, button[aria-label="Send message"], button[data-test-id="send-button"], button[mattooltip="Send message"], button[aria-label="Send"]',
+      inputSelector: 'div[contenteditable="true"][aria-label*="prompt" i], div[contenteditable="true"][aria-label*="Enter" i], .ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], p[data-placeholder], div[contenteditable="true"]',
+      sendButtonSelector: 'button[aria-label*="Send" i], button[mattooltip*="Send" i], button.send-button, button[data-test-id="send-button"]',
       inputArea: () => {
-        // Gemini uses custom elements — walk up from the input
+        // Gemini uses custom elements — walk up from the input to find a suitable container
+        const input = document.querySelector('div[contenteditable="true"][aria-label*="prompt" i], div[contenteditable="true"][aria-label*="Enter" i], .ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"]');
+        if (input) {
+          // Walk up to find a reasonably-sized container
+          let parent = input.parentElement;
+          for (let i = 0; i < 8 && parent && parent !== document.body; i++) {
+            if (parent.offsetHeight > 40 && parent.offsetWidth > 200) return parent;
+            parent = parent.parentElement;
+          }
+          return input.parentElement;
+        }
         const richTextarea = document.querySelector('rich-textarea');
         if (richTextarea) {
-          // Try to find the input container that wraps the rich-textarea
           return richTextarea.closest('.input-area-container')
             || richTextarea.closest('[class*="input"]')
             || richTextarea.parentElement?.parentElement
@@ -95,9 +104,23 @@
     },
     aistudio: {
       match: () => /aistudio\.google\.com/.test(location.hostname),
-      inputSelector: 'textarea, div[contenteditable="true"][role="textbox"], div[contenteditable="true"]',
-      sendButtonSelector: 'button[aria-label="Run"], button[aria-label="Send"], button[mattooltip="Run"]',
-      inputArea: () => document.querySelector('mat-form-field')?.parentElement || document.querySelector('form') || document.querySelector('[class*="input"]')?.parentElement,
+      inputSelector: 'textarea[aria-label*="prompt" i], textarea[aria-label*="Type" i], textarea[placeholder*="Type" i], textarea, div[contenteditable="true"][role="textbox"], div[contenteditable="true"]',
+      sendButtonSelector: 'button[aria-label*="Run" i], button[mattooltip*="Run" i], button[aria-label*="Send" i]',
+      inputArea: () => {
+        // AI Studio: find the textarea's form container, walking up to avoid clashing with the Run button
+        const textarea = document.querySelector('textarea[aria-label*="prompt" i], textarea[aria-label*="Type" i], textarea[placeholder*="Type" i], textarea');
+        if (textarea) {
+          const formField = textarea.closest('mat-form-field');
+          if (formField) return formField;
+          let parent = textarea.parentElement;
+          for (let i = 0; i < 5 && parent && parent !== document.body; i++) {
+            if (parent.offsetHeight > 40 && parent.offsetWidth > 200) return parent;
+            parent = parent.parentElement;
+          }
+          return textarea.parentElement;
+        }
+        return document.querySelector('mat-form-field')?.parentElement || document.querySelector('form') || document.querySelector('[class*="input"]')?.parentElement;
+      },
       getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText?.trim() || '',
       setInputText: (el, text) => {
         if (el.tagName === 'TEXTAREA') {
@@ -876,11 +899,11 @@
     || document.body;
   observer.observe(observeTarget, { childList: true, subtree: true });
 
-  // Initial injection (retry a few times for slow-loading SPAs)
+  // Initial injection (retry for slow-loading SPAs — 40 attempts = 20 seconds)
   function tryInject(attempts = 0) {
     if (document.querySelector(currentSite.inputSelector)) {
       injectButton();
-    } else if (attempts < 20) {
+    } else if (attempts < 40) {
       setTimeout(() => tryInject(attempts + 1), 500);
     }
   }

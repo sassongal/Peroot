@@ -622,19 +622,30 @@ function createPromptCard(item) {
   text.className = "prompt-card-text";
   text.textContent = item.prompt;
 
+  // Hover preview showing full prompt text
+  const preview = document.createElement("div");
+  preview.className = "prompt-card-preview";
+  preview.textContent = item.prompt || "";
+
   const actions = document.createElement("div");
   actions.className = "prompt-card-actions";
 
   const useBtn = document.createElement("button");
   useBtn.className = "btn-sm prompt-card-btn-use";
   useBtn.textContent = "השתמש";
-  useBtn.addEventListener("click", (e) => {
+  useBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
-    // Switch to enhance tab with this prompt
+    // Insert directly into active tab's chat input
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      chrome.runtime.sendMessage(
+        { type: "INJECT_AND_INSERT", tabId: tab.id, text: item.prompt },
+        () => flash(useBtn, "הוכנס!")
+      );
+    }
+    // Also fill popup textarea as fallback
     promptInput.value = item.prompt;
-    charCount.textContent = item.prompt.length;
-    document.querySelector('.tab[data-tab="enhance"]').click();
-    promptInput.focus();
+    updateCharCount();
   });
 
   const copyCardBtn = document.createElement("button");
@@ -666,6 +677,7 @@ function createPromptCard(item) {
 
   card.appendChild(header);
   card.appendChild(text);
+  card.appendChild(preview);
   card.appendChild(actions);
 
   // Click card to expand/use
