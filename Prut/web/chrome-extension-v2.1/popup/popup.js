@@ -159,15 +159,38 @@ $("settings-toggle").addEventListener("click", () => {
 // ═══ LOGIN ═══
 loginBtn.addEventListener("click", async () => {
   await openLoginTab();
-  window.close();
+  // Don't close popup — start polling for token
+  loginHint.textContent = "ממתין להתחברות...";
+  loginHint.style.color = "#fbbf24";
+  startAuthPolling();
 });
+
+// Poll for auth token after user clicks login (checks every 2s for 60s)
+function startAuthPolling() {
+  let attempts = 0;
+  const maxAttempts = 30; // 30 x 2s = 60s
+  const pollInterval = setInterval(async () => {
+    attempts++;
+    const auth = await checkAuth();
+    if (auth.authenticated) {
+      clearInterval(pollInterval);
+      show(mainScreen);
+      fetchCredits();
+      detectSelectedText();
+    } else if (attempts >= maxAttempts) {
+      clearInterval(pollInterval);
+      loginHint.textContent = "לא הצלחנו להתחבר. נסה שוב.";
+      loginHint.style.color = "#fca5a5";
+    }
+  }, 2000);
+}
 
 // ═══ RETRY AUTH ═══
 $("retry-btn").addEventListener("click", async () => {
   show(loadingScreen);
   // Force sync from any open peroot.space tab
   await forceAuthSync();
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 1000));
   const auth = await checkAuth();
   if (auth.authenticated) {
     show(mainScreen);
@@ -175,6 +198,8 @@ $("retry-btn").addEventListener("click", async () => {
     detectSelectedText();
   } else {
     showLoginScreen(auth.reason);
+    // Start polling in case auth-sync is slow
+    startAuthPolling();
   }
 });
 

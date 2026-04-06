@@ -17,35 +17,38 @@
   }
 
   async function storeToken(token) {
-    if (token) {
-      // Store directly in chrome.storage (faster, no message passing needed)
-      try {
-        await chrome.storage.local.set({ peroot_token: token });
-      } catch {
-        // Fallback: send via message to service worker
-        chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
-      }
+    if (!token) return;
+    // Try direct storage first (works in MV3 content scripts)
+    try {
+      await chrome.storage.local.set({ peroot_token: token });
+    } catch {
+      // noop
+    }
+    // Also notify service worker (redundant but ensures delivery)
+    try {
+      chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
+    } catch {
+      // noop
     }
   }
 
-  // Sync immediately
+  // Sync immediately on page load
   const token = await fetchToken();
-  if (token) {
-    await storeToken(token);
-  }
+  if (token) await storeToken(token);
 
-  // Poll a few times to catch post-login redirects
+  // Poll aggressively for 20 seconds to catch post-login redirects
   let polls = 0;
   const interval = setInterval(async () => {
+    polls++;
     const t = await fetchToken();
     if (t) {
       await storeToken(t);
-      clearInterval(interval);
+      if (polls > 3) clearInterval(interval); // Keep polling a bit even after finding token
     }
-    if (++polls > 5) clearInterval(interval);
+    if (polls > 10) clearInterval(interval);
   }, 2000);
 
-  // Re-sync when user returns to this tab (e.g. after login redirect)
+  // Re-sync when user returns to this tab
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "visible") {
       const t = await fetchToken();
@@ -53,14 +56,14 @@
     }
   });
 
-  // Listen for explicit sync requests from popup/service worker
+  // Listen for explicit sync requests
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === "REQUEST_TOKEN_SYNC") {
       fetchToken().then(t => {
         if (t) storeToken(t);
         sendResponse({ token: t });
       });
-      return true; // async response
+      return true;
     }
   });
 })();
