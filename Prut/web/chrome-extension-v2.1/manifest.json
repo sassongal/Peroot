@@ -11,11 +11,14 @@
     "activeTab",
     "tabs",
     "storage",
-    "scripting"
+    "scripting",
+    "identity",
+    "alarms"
   ],
   "host_permissions": [
     "https://peroot.space/*",
     "https://www.peroot.space/*",
+    "https://ravinxlujmlvxhgbjxti.supabase.co/*",
     "https://chat.openai.com/*",
     "https://chatgpt.com/*",
     "https://claude.ai/*",

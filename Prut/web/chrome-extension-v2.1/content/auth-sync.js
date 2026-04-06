@@ -11,7 +11,8 @@
 (async function syncAuth() {
   // Method 1: Read Supabase session from localStorage
   // Supabase stores the session in localStorage with a key pattern
-  function getTokenFromLocalStorage() {
+  // Returns { access_token, refresh_token } or null
+  function getTokensFromLocalStorage() {
     try {
       // Try known Supabase storage key patterns
       for (let i = 0; i < localStorage.length; i++) {
@@ -22,11 +23,14 @@
             if (!raw) continue;
             const data = JSON.parse(raw);
             // Supabase stores { access_token, refresh_token, ... } or nested
-            const token = data?.access_token
+            const accessToken = data?.access_token
               || data?.currentSession?.access_token
               || data?.session?.access_token;
-            if (token && typeof token === 'string' && token.length > 20) {
-              return token;
+            const refreshToken = data?.refresh_token
+              || data?.currentSession?.refresh_token
+              || data?.session?.refresh_token;
+            if (accessToken && typeof accessToken === 'string' && accessToken.length > 20) {
+              return { access_token: accessToken, refresh_token: refreshToken || null };
             }
           } catch {
             // Not JSON, skip
@@ -37,6 +41,12 @@
       // localStorage not available
     }
     return null;
+  }
+
+  // Backward-compatible wrapper
+  function getTokenFromLocalStorage() {
+    const tokens = getTokensFromLocalStorage();
+    return tokens?.access_token || null;
   }
 
   // Method 2: Fetch from server API
@@ -71,24 +81,52 @@
     } catch { /* noop */ }
   }
 
-  // Sync immediately
-  const token = await getToken();
-  if (token) await storeToken(token);
+  // Store both access and refresh tokens when available
+  async function storeTokens(accessToken, refreshToken) {
+    if (!accessToken) return;
+    const data = { peroot_token: accessToken };
+    if (refreshToken) data.peroot_refresh_token = refreshToken;
+    try {
+      await chrome.storage.local.set(data);
+    } catch { /* noop */ }
+    try {
+      chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token: accessToken });
+    } catch { /* noop */ }
+  }
+
+  // Sync immediately — store both tokens
+  const tokens = getTokensFromLocalStorage();
+  if (tokens) {
+    await storeTokens(tokens.access_token, tokens.refresh_token);
+  } else {
+    const token = await getToken();
+    if (token) await storeToken(token);
+  }
 
   // Poll for token (catches login redirects, slow page loads)
   let polls = 0;
   const interval = setInterval(async () => {
     polls++;
-    const t = await getToken();
-    if (t) await storeToken(t);
+    const tkns = getTokensFromLocalStorage();
+    if (tkns) {
+      await storeTokens(tkns.access_token, tkns.refresh_token);
+    } else {
+      const t = await getToken();
+      if (t) await storeToken(t);
+    }
     if (polls > 10) clearInterval(interval);
   }, 2000);
 
   // Re-sync when tab becomes visible
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "visible") {
-      const t = await getToken();
-      if (t) await storeToken(t);
+      const tkns = getTokensFromLocalStorage();
+      if (tkns) {
+        await storeTokens(tkns.access_token, tkns.refresh_token);
+      } else {
+        const t = await getToken();
+        if (t) await storeToken(t);
+      }
     }
   });
 

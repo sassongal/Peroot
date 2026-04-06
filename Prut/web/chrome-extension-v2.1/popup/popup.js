@@ -11,8 +11,13 @@ const $ = (id) => document.getElementById(id);
 const loginScreen = $("login-screen");
 const mainScreen = $("main-screen");
 const loadingScreen = $("loading-screen");
-const loginBtn = $("login-btn");
+const googleLoginBtn = $("google-login-btn");
+const emailLoginForm = $("email-login-form");
+const emailInput = $("email-input");
+const passwordInput = $("password-input");
+const emailLoginBtn = $("email-login-btn");
 const loginHint = $("login-hint");
+const logoutBtn = $("logout-btn");
 const promptInput = $("prompt-input");
 const charCount = $("char-count");
 const enhanceBtn = $("enhance-btn");
@@ -42,14 +47,7 @@ let historyTabLoaded = false;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
-  let auth = await checkAuth();
-
-  // If not authenticated, wait 1.5s and try once more
-  // (auth-sync may still be running on peroot.space tab)
-  if (!auth.authenticated) {
-    await new Promise(r => setTimeout(r, 1500));
-    auth = await checkAuth();
-  }
+  const auth = await checkAuth();
 
   if (auth.authenticated) {
     show(mainScreen);
@@ -73,16 +71,11 @@ function show(screen) {
  */
 function showLoginScreen(reason) {
   show(loginScreen);
+  setLoginLoading(false);
   if (reason === "token_expired") {
-    if (loginHint) {
-      loginHint.textContent = "פג תוקף ההתחברות. התחבר שוב כדי להמשיך.";
-      loginHint.style.color = "#fbbf24";
-    }
+    setLoginHint("פג תוקף ההתחברות. התחבר שוב כדי להמשיך.", "#fbbf24");
   } else {
-    if (loginHint) {
-      loginHint.textContent = "התחבר ל-peroot.space ואז פתח שוב את התוסף";
-      loginHint.style.color = "";
-    }
+    setLoginHint("", "");
   }
 }
 
@@ -156,41 +149,88 @@ $("settings-toggle").addEventListener("click", () => {
   $("settings-panel").classList.toggle("open");
 });
 
-// ═══ LOGIN ═══
-loginBtn.addEventListener("click", async () => {
-  await openLoginTab();
-  // Don't close popup — start polling for token
-  loginHint.textContent = "ממתין להתחברות...";
-  loginHint.style.color = "#fbbf24";
-  startAuthPolling();
+// ═══ LOGIN — Google OAuth ═══
+googleLoginBtn.addEventListener("click", async () => {
+  setLoginLoading(true, "מתחבר עם Google...");
+  try {
+    await loginWithGoogle();
+    onLoginSuccess();
+  } catch (err) {
+    const msg = err.message || "";
+    if (msg.includes("canceled") || msg.includes("cancelled") || msg.includes("closed")) {
+      setLoginHint("ההתחברות בוטלה. נסה שוב.", "#fca5a5");
+    } else {
+      setLoginHint("שגיאה בהתחברות. נסה שוב.", "#fca5a5");
+    }
+    setLoginLoading(false);
+  }
 });
 
-// Poll for auth token after user clicks login (checks every 2s for 60s)
-function startAuthPolling() {
-  let attempts = 0;
-  const maxAttempts = 30; // 30 x 2s = 60s
-  const pollInterval = setInterval(async () => {
-    attempts++;
-    const auth = await checkAuth();
-    if (auth.authenticated) {
-      clearInterval(pollInterval);
-      show(mainScreen);
-      fetchCredits();
-      detectSelectedText();
-    } else if (attempts >= maxAttempts) {
-      clearInterval(pollInterval);
-      loginHint.textContent = "לא הצלחנו להתחבר. נסה שוב.";
-      loginHint.style.color = "#fca5a5";
+// ═══ LOGIN — Email/Password ═══
+emailLoginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email || !password) return;
+
+  setLoginLoading(true, "מתחבר...");
+  try {
+    await loginWithEmail(email, password);
+    onLoginSuccess();
+  } catch (err) {
+    const msg = err.message || "שגיאה בהתחברות";
+    // Translate common Supabase error messages to Hebrew
+    if (msg.includes("Invalid login")) {
+      setLoginHint("אימייל או סיסמה שגויים.", "#fca5a5");
+    } else if (msg.includes("Email not confirmed")) {
+      setLoginHint("האימייל לא אומת. בדוק את תיבת הדואר.", "#fca5a5");
+    } else {
+      setLoginHint(msg, "#fca5a5");
     }
-  }, 2000);
+    setLoginLoading(false);
+  }
+});
+
+function onLoginSuccess() {
+  show(mainScreen);
+  setTimeout(() => promptInput.focus(), 80);
+  fetchCredits();
+  detectSelectedText();
 }
+
+function setLoginLoading(loading, msg) {
+  googleLoginBtn.disabled = loading;
+  emailLoginBtn.disabled = loading;
+  if (emailInput) emailInput.disabled = loading;
+  if (passwordInput) passwordInput.disabled = loading;
+  if (msg) setLoginHint(msg, "#fbbf24");
+}
+
+function setLoginHint(text, color) {
+  if (loginHint) {
+    loginHint.textContent = text;
+    loginHint.style.color = color || "";
+  }
+}
+
+// ═══ LOGOUT ═══
+logoutBtn.addEventListener("click", async () => {
+  await clearAuth();
+  // Reset UI state
+  libraryLoaded = false;
+  favoritesLoaded = false;
+  historyTabLoaded = false;
+  showLoginScreen("no_token");
+});
 
 // ═══ RETRY AUTH ═══
 $("retry-btn").addEventListener("click", async () => {
   show(loadingScreen);
-  // Force sync from any open peroot.space tab
-  await forceAuthSync();
-  await new Promise(r => setTimeout(r, 1000));
+  // Try refreshing token or syncing from peroot.space tab
+  const refreshed = await refreshAccessToken();
+  if (!refreshed) {
+    await forceAuthSync();
+  }
   const auth = await checkAuth();
   if (auth.authenticated) {
     show(mainScreen);
@@ -198,8 +238,6 @@ $("retry-btn").addEventListener("click", async () => {
     detectSelectedText();
   } else {
     showLoginScreen(auth.reason);
-    // Start polling in case auth-sync is slow
-    startAuthPolling();
   }
 });
 
@@ -262,8 +300,8 @@ async function doEnhance() {
       else if (res.status === 429) showError("יותר מדי בקשות. נסה שוב בעוד כמה דקות.");
       else if (res.status === 401) {
         showError("פג תוקף ההתחברות. מנסה להתחבר מחדש...");
-        // Try to refresh token
-        const refreshed = await tryRefreshToken();
+        // Try to refresh token via Supabase REST API
+        const refreshed = await refreshAccessToken();
         if (refreshed) {
           hideError();
           // Retry the enhance with the new token

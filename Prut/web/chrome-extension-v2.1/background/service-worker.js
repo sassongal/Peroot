@@ -1,10 +1,16 @@
 /**
- * Peroot Extension - Service Worker
- * Handles: context menu with quick actions, auth token storage/relay,
- *          on-demand content script injection for enhance panel.
+ * Peroot Extension - Service Worker (v2 - Self-contained Auth)
+ *
+ * Handles:
+ *   - Context menu with quick actions
+ *   - Auth token storage/relay
+ *   - Proactive token refresh via alarms
+ *   - On-demand content script injection for enhance panel
  */
 
 const SITE_URL = "https://www.peroot.space";
+const SUPABASE_URL = "https://ravinxlujmlvxhgbjxti.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdmlueGx1am1sdnhoZ2JqeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMDYyMzQsImV4cCI6MjA4NDU4MjIzNH0.Mq-UzPZhFe6fM5J76BcQhS8YhaDxXyBH7hzNGk1T7Kk";
 
 // ─── Context Menu ───
 chrome.runtime.onInstalled.addListener(() => {
@@ -30,6 +36,9 @@ chrome.runtime.onInstalled.addListener(() => {
       contexts: ["selection"],
     });
   });
+
+  // Set up proactive token refresh alarm (every 45 minutes)
+  chrome.alarms.create("peroot-token-refresh", { periodInMinutes: 45 });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -106,6 +115,60 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }).catch(() => {
       // Ignore errors (page might not be accessible)
     });
+  }
+});
+
+// ─── Proactive Token Refresh via Alarms ───
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== "peroot-token-refresh") return;
+
+  const { peroot_token, peroot_refresh_token } = await chrome.storage.local.get([
+    "peroot_token",
+    "peroot_refresh_token",
+  ]);
+
+  // Only refresh if we have a refresh token
+  if (!peroot_refresh_token) return;
+
+  // Check if access token needs refreshing (expired or expiring within 10 minutes)
+  if (peroot_token) {
+    try {
+      const payload = JSON.parse(
+        atob(peroot_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+      );
+      if (payload?.exp && payload.exp * 1000 > Date.now() + 10 * 60 * 1000) {
+        // Token is still fresh, skip refresh
+        return;
+      }
+    } catch {
+      // Can't decode — proceed with refresh
+    }
+  }
+
+  // Refresh the token
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ refresh_token: peroot_refresh_token }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.access_token) {
+        const updates = { peroot_token: data.access_token };
+        if (data.refresh_token) updates.peroot_refresh_token = data.refresh_token;
+        await chrome.storage.local.set(updates);
+      }
+    } else if (res.status === 401 || res.status === 400) {
+      // Refresh token is invalid — clear auth (user will need to re-login)
+      await chrome.storage.local.remove(["peroot_token", "peroot_refresh_token"]);
+    }
+  } catch {
+    // Network error — will retry on next alarm
   }
 });
 
@@ -190,7 +253,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// ─── Force Auth Sync ───
+// ─── Force Auth Sync (legacy — fallback for users with peroot.space open) ───
 async function forceAuthSync() {
   try {
     // Find any open peroot.space tab (with or without www)
