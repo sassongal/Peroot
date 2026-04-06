@@ -110,9 +110,15 @@
     const tkns = getTokensFromLocalStorage();
     if (tkns) {
       await storeTokens(tkns.access_token, tkns.refresh_token);
+      clearInterval(interval); // Stop polling once we have tokens
+      return;
     } else {
       const t = await getToken();
-      if (t) await storeToken(t);
+      if (t) {
+        await storeToken(t);
+        clearInterval(interval); // Stop polling once we have token
+        return;
+      }
     }
     if (polls > 10) clearInterval(interval);
   }, 2000);

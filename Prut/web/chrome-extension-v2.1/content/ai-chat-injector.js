@@ -897,7 +897,12 @@
   const observeTarget = currentSite.inputArea?.()?.parentElement
     || document.querySelector('main')
     || document.body;
-  observer.observe(observeTarget, { childList: true, subtree: true });
+  observer.observe(observeTarget, { childList: true, subtree: false });
+
+  // Cleanup observer on page unload to prevent memory leaks
+  window.addEventListener('beforeunload', () => {
+    observer.disconnect();
+  });
 
   // Initial injection (retry for slow-loading SPAs — 40 attempts = 20 seconds)
   function tryInject(attempts = 0) {

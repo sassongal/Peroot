@@ -1398,6 +1398,39 @@ textarea:focus::placeholder {
   animation: btn-shimmer 1.5s ease-in-out infinite;
 }
 
+/* ─── Tone Chips ─── */
+.tone-chips {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tone-chips::-webkit-scrollbar { display: none; }
+.tone-chip {
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.tone-chip:hover {
+  border-color: rgba(255,255,255,0.12);
+  color: #a1a1aa;
+}
+.tone-chip.active {
+  background: rgba(245,158,11,0.1);
+  border-color: rgba(245,158,11,0.25);
+  color: #fbbf24;
+}
+
 /* ════════════════════════════════════════════
    LIGHT MODE — Auto-detect via system preference
    ════════════════════════════════════════════ */
@@ -1467,4 +1500,16 @@ textarea:focus::placeholder {
   /* Error */
   .error-section { background: rgba(239,68,68,0.06) !important; }
   .error-section p { color: #dc2626 !important; }
+
+  /* Tone Chips */
+  .tone-chip {
+    border-color: rgba(0,0,0,0.08) !important;
+    background: rgba(0,0,0,0.02) !important;
+    color: #71717a !important;
+  }
+  .tone-chip.active {
+    background: rgba(245,158,11,0.08) !important;
+    border-color: rgba(245,158,11,0.3) !important;
+    color: #b45309 !important;
+  }
 }

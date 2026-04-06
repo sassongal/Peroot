@@ -38,6 +38,13 @@ const saveBtn = $("save-btn");
 
 let lastEnhanced = "";
 let isEnhancing = false;
+let selectedTone = "Professional";
+
+function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
 let selectedMode = "STANDARD";
 let userTier = "free";
 let timerInterval = null;
@@ -271,6 +278,7 @@ async function doEnhance() {
 
   const startTime = Date.now();
   resultTimer.textContent = "0.0s";
+  if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     resultTimer.textContent = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
   }, 100);
@@ -282,12 +290,12 @@ async function doEnhance() {
   try {
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
 
-    const res = await fetch(`${API_BASE}/api/enhance`, {
+    const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         prompt: text,
-        tone: "Professional",
+        tone: selectedTone,
         category: "\u05DB\u05DC\u05DC\u05D9",
         capability_mode: selectedMode,
       }),
@@ -546,7 +554,7 @@ function createHistoryCard(item) {
     e.stopPropagation();
     promptInput.value = item.enhanced_prompt || item.prompt || "";
     updateCharCount();
-    document.querySelector('.tab[data-tab="enhance"]').click();
+    document.querySelector('.tab[data-tab="enhance"]')?.click();
     promptInput.focus();
   });
 
@@ -684,7 +692,7 @@ function createPromptCard(item) {
   card.addEventListener("click", () => {
     promptInput.value = item.prompt;
     charCount.textContent = item.prompt.length;
-    document.querySelector('.tab[data-tab="enhance"]').click();
+    document.querySelector('.tab[data-tab="enhance"]')?.click();
     promptInput.focus();
   });
 
@@ -736,6 +744,15 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     selectedMode = mode;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+  });
+});
+
+// ═══ TONE CHIPS ═══
+document.querySelectorAll('.tone-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.tone-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedTone = chip.dataset.tone;
   });
 });
 
