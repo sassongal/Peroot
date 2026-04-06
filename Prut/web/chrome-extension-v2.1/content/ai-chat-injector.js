@@ -60,47 +60,55 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: 'div[contenteditable="true"][aria-label*="prompt" i], div[contenteditable="true"][aria-label*="Enter" i], .ql-editor[contenteditable="true"], div.ql-editor p, div[contenteditable="true"][role="textbox"], p[data-placeholder], div[contenteditable="true"][aria-placeholder*="prompt" i], div[contenteditable="true"]',
-      sendButtonSelector: 'button[aria-label*="Send" i], button[mattooltip*="Send" i], button.send-button, button[data-test-id="send-button"]',
+      inputSelector: [
+        'input-area-v2 .ql-editor',
+        'input-area-v2 div[contenteditable="true"]',
+        'rich-textarea .ql-editor',
+        'rich-textarea div[contenteditable="true"]',
+        'div.ql-editor[contenteditable="true"]',
+        'div[contenteditable="true"][aria-label*="prompt" i]',
+        'div[contenteditable="true"][aria-label*="Enter" i]',
+        'p[data-placeholder]',
+        'div[contenteditable="true"]'
+      ].join(', '),
+      sendButtonSelector: 'button[aria-label*="Send" i], button[aria-label*="send" i], button[mattooltip*="Send" i], button.send-button',
       inputArea: () => {
-        // Gemini uses custom elements — walk up from the input to find a suitable container
-        const input = document.querySelector('div[contenteditable="true"][aria-label*="prompt" i], div[contenteditable="true"][aria-label*="Enter" i], .ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"]');
-        if (input) {
-          // Walk up to find a reasonably-sized container
-          let parent = input.parentElement;
-          for (let i = 0; i < 8 && parent && parent !== document.body; i++) {
+        // input-area-v2 is Gemini's stable custom element
+        const inputArea = document.querySelector('input-area-v2');
+        if (inputArea) return inputArea;
+        // Fallback strategies
+        const richTextarea = document.querySelector('rich-textarea');
+        if (richTextarea) return richTextarea.parentElement;
+        const contenteditable = document.querySelector('div[contenteditable="true"][aria-label*="prompt" i]');
+        if (contenteditable) {
+          let parent = contenteditable.parentElement;
+          for (let i = 0; i < 5 && parent && parent !== document.body; i++) {
             if (parent.offsetHeight > 40 && parent.offsetWidth > 200) return parent;
             parent = parent.parentElement;
           }
-          return input.parentElement;
         }
-        const richTextarea = document.querySelector('rich-textarea');
-        if (richTextarea) {
-          return richTextarea.closest('.input-area-container')
-            || richTextarea.closest('[class*="input"]')
-            || richTextarea.parentElement?.parentElement
-            || richTextarea.parentElement;
-        }
-        return document.querySelector('div[class*="input-area"]')?.parentElement
-          || document.querySelector('footer')
-          || null;
+        return null;
       },
       getInputText: (el) => {
-        // Gemini's rich-textarea may need special handling
+        // Handle p[data-placeholder] — walk up to contenteditable parent
+        if (el.tagName === 'P' && el.dataset.placeholder) {
+          const parent = el.closest('[contenteditable="true"]');
+          return parent ? parent.innerText?.trim() || '' : el.innerText?.trim() || '';
+        }
         if (el.tagName === 'TEXTAREA') return el.value;
         return el.innerText?.trim() || el.textContent?.trim() || '';
       },
       setInputText: (el, text) => {
-        // Walk up to the contenteditable parent if el isn't directly editable
+        // Walk up to the contenteditable container if needed
         let target = el;
         if (!target.isContentEditable) {
-          const parent = target.closest('[contenteditable="true"]');
-          if (parent) target = parent;
+          target = target.closest('[contenteditable="true"]') || target;
         }
         target.focus();
-        // Select all existing content and replace
+        // Clear and insert
         document.execCommand('selectAll', false, null);
         document.execCommand('insertText', false, text);
+        // Dispatch events for Angular detection
         target.dispatchEvent(new Event('input', { bubbles: true }));
         target.dispatchEvent(new Event('change', { bubbles: true }));
       },
@@ -299,6 +307,7 @@
 
     isEnhancing = true;
     updateButtonState('loading');
+    showToast('\u05DE\u05E9\u05D3\u05E8\u05D2...', 'info');
 
     try {
       // Route through service worker to avoid CORS
@@ -338,6 +347,7 @@
         currentSite.setInputText(inputEl, cleaned);
         inputEl.focus();
         updateButtonState('success');
+        showToast('\u05D4\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8 \u05E9\u05D5\u05D3\u05E8\u05D2!', 'success');
         // Note: /api/enhance already saves to history server-side — no duplicate sync needed
       }
     } catch (err) {
@@ -919,11 +929,10 @@
 
     if (document.querySelector(currentSite.inputSelector)) {
       injectButton();
-    } else if (attempts < 10) {
-      // Progressive delay: 300, 500, 800, 1000, 1200, 1500, 1500, 2000, 2000, 2000
-      // Total ~12.8s — enough for slow Angular/SPA boot (Gemini, etc.)
-      const delays = [300, 500, 800, 1000, 1200, 1500, 1500, 2000, 2000, 2000];
-      setTimeout(() => tryInject(attempts + 1), delays[attempts] || 2000);
+    } else if (attempts < 15) {
+      // Progressive delays: 500ms x5, 1000ms x5, 2000ms x5 = ~17.5s total
+      const delay = attempts < 5 ? 500 : attempts < 10 ? 1000 : 2000;
+      setTimeout(() => tryInject(attempts + 1), delay);
     } else {
       // Fallback: fixed-position floating button (works on any site)
       injectFixedButton();

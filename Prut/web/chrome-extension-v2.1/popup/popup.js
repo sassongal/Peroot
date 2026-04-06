@@ -385,6 +385,28 @@ async function doEnhance() {
   scoreBar.classList.add("hidden");
   setLoading(true);
 
+  // Phase-based loading messages
+  const phases = [
+    { text: '\u2726 \u05DE\u05E0\u05EA\u05D7 \u05D0\u05EA \u05D4\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8...', delay: 0 },
+    { text: '\u25C8 \u05DE\u05E9\u05D3\u05E8\u05D2 \u05E2\u05DD AI...', delay: 2500 },
+    { text: '\u2605 \u05DB\u05DE\u05E2\u05D8 \u05DE\u05D5\u05DB\u05DF...', delay: 5000 },
+  ];
+  let phaseInterval = null;
+  let phaseIndex = 0;
+
+  // Show first phase immediately
+  enhanceLabel.textContent = phases[0].text;
+  enhanceLabel.classList.remove("hidden");
+  enhanceSpinner.classList.remove("hidden");
+
+  // Cycle through phases
+  phaseInterval = setInterval(() => {
+    phaseIndex++;
+    if (phaseIndex < phases.length) {
+      enhanceLabel.textContent = phases[phaseIndex].text;
+    }
+  }, 2500);
+
   const startTime = Date.now();
   resultTimer.textContent = "0.0s";
   if (timerInterval) clearInterval(timerInterval);
@@ -411,6 +433,8 @@ async function doEnhance() {
     });
 
     if (!res.ok) {
+      clearInterval(phaseInterval);
+      enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
       const err = await res.json().catch(() => ({}));
       resultSection.classList.add("hidden");
       if (res.status === 403) showError(err.error || "אין מספיק קרדיטים");
@@ -455,6 +479,20 @@ async function doEnhance() {
     lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
     enhanceRetried = false; // Reset retry flag on success
 
+    clearInterval(phaseInterval);
+    enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+
+    // Score comparison flash
+    const beforeScore = scorePrompt(text);
+    const afterScore = scorePrompt(lastEnhanced);
+    if (afterScore.score > beforeScore.score) {
+      const scoreFlash = document.createElement('div');
+      scoreFlash.className = 'score-flash';
+      scoreFlash.innerHTML = `<span class="score-before">${beforeScore.score}%</span> \u2192 <span class="score-after">${afterScore.score}%</span>`;
+      resultSection.prepend(scoreFlash);
+      setTimeout(() => scoreFlash.remove(), 4000);
+    }
+
     // Auto-copy to clipboard
     try {
       await navigator.clipboard.writeText(lastEnhanced);
@@ -465,9 +503,12 @@ async function doEnhance() {
     // Note: syncToWebsite removed — /api/enhance already saves to history server-side
     fetchCredits(); // refresh credits after use
   } catch {
+    clearInterval(phaseInterval);
+    enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
     resultSection.classList.add("hidden");
     showError("שגיאת רשת. בדוק את החיבור.");
   } finally {
+    clearInterval(phaseInterval);
     isEnhancing = false;
     clearInterval(timerInterval);
     setLoading(false);
@@ -476,8 +517,16 @@ async function doEnhance() {
 
 function setLoading(on) {
   enhanceBtn.disabled = on;
-  enhanceLabel.classList.toggle("hidden", on);
-  enhanceSpinner.classList.toggle("hidden", !on);
+  if (on) {
+    // During loading, show both label (phase text) and spinner
+    enhanceLabel.classList.remove("hidden");
+    enhanceSpinner.classList.remove("hidden");
+  } else {
+    // When done, show label (reset to default text), hide spinner
+    enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+    enhanceLabel.classList.remove("hidden");
+    enhanceSpinner.classList.add("hidden");
+  }
 }
 
 // ═══ ERROR ═══

@@ -918,6 +918,37 @@ textarea:focus::placeholder {
 }
 
 /* ════════════════════════════════════════════
+   SCORE FLASH — Before/After Comparison
+   ════════════════════════════════════════════ */
+.score-flash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  animation: score-flash-in 0.5s var(--peroot-ease), score-flash-out 0.5s ease-in 3.5s forwards;
+}
+.score-before {
+  color: #f97316;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.score-after {
+  color: #22c55e;
+  font-size: 16px;
+}
+@keyframes score-flash-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes score-flash-out {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ════════════════════════════════════════════
    ERROR SECTION
    ════════════════════════════════════════════ */
 .error-section {
