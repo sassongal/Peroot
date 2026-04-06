@@ -289,13 +289,35 @@
 
   // ── Enhancement ──────────────────────────────────────────────────────────
 
+  // Try to find the input element — uses site-specific selector first, then broad fallbacks
+  function findInputElement() {
+    // 1. Site-specific selector
+    let el = document.querySelector(currentSite.inputSelector);
+    if (el) return el;
+
+    // 2. Broad fallback: any contenteditable or textarea that looks like a chat input
+    el = document.querySelector('div[contenteditable="true"][role="textbox"]')
+      || document.querySelector('div[contenteditable="true"][aria-label]')
+      || document.querySelector('textarea[aria-label]')
+      || document.querySelector('div[contenteditable="true"]')
+      || document.querySelector('textarea');
+
+    return el;
+  }
+
   async function enhanceInput() {
     if (isEnhancing) return;
-    const inputEl = document.querySelector(currentSite.inputSelector);
-    if (!inputEl) return;
+    const inputEl = findInputElement();
+    if (!inputEl) {
+      showToast('לא נמצא שדה קלט — כתוב טקסט ונסה שוב', 'error');
+      return;
+    }
 
     const text = currentSite.getInputText(inputEl).trim();
-    if (!text || text.length < 3) return;
+    if (!text || text.length < 3) {
+      showToast('כתוב לפחות 3 תווים כדי לשדרג', 'error');
+      return;
+    }
 
     isEnhancing = true;
     updateButtonState('loading');
@@ -905,12 +927,47 @@
   });
 
   // Initial injection (retry for slow-loading SPAs — 40 attempts = 20 seconds)
+  // If input never found, inject a fixed-position floating button as fallback
   function tryInject(attempts = 0) {
     if (document.querySelector(currentSite.inputSelector)) {
       injectButton();
     } else if (attempts < 40) {
       setTimeout(() => tryInject(attempts + 1), 500);
+    } else {
+      // Fallback: inject fixed-position floating button (for Shadow DOM sites like Gemini)
+      injectFixedButton();
     }
+  }
+
+  function injectFixedButton() {
+    if (document.getElementById('peroot-ai-btn')) return;
+
+    const toolbar = document.createElement('div');
+    toolbar.id = 'peroot-ai-toolbar';
+    toolbar.className = 'peroot-ai-toolbar peroot-ai-toolbar-fixed';
+
+    peerootBtn = document.createElement('button');
+    peerootBtn.id = 'peroot-ai-btn';
+    peerootBtn.className = 'peroot-ai-btn';
+    peerootBtn.title = 'Peroot — שדרג פרומפט';
+    peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
+    peerootBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      enhanceInput();
+    });
+
+    toolbar.appendChild(peerootBtn);
+
+    // Library button
+    const libBtn = document.createElement('button');
+    libBtn.className = 'peroot-ai-tool-btn';
+    libBtn.title = 'ספריית פרומפטים';
+    libBtn.innerHTML = '\u25C8';
+    libBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleSidePanel(); });
+    toolbar.appendChild(libBtn);
+
+    document.body.appendChild(toolbar);
   }
 
   tryInject();
