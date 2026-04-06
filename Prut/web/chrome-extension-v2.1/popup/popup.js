@@ -42,7 +42,14 @@ let historyTabLoaded = false;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
-  const auth = await checkAuth();
+  let auth = await checkAuth();
+
+  // If not authenticated, wait 1.5s and try once more
+  // (auth-sync may still be running on peroot.space tab)
+  if (!auth.authenticated) {
+    await new Promise(r => setTimeout(r, 1500));
+    auth = await checkAuth();
+  }
 
   if (auth.authenticated) {
     show(mainScreen);
@@ -153,6 +160,22 @@ $("settings-toggle").addEventListener("click", () => {
 loginBtn.addEventListener("click", async () => {
   await openLoginTab();
   window.close();
+});
+
+// ═══ RETRY AUTH ═══
+$("retry-btn").addEventListener("click", async () => {
+  show(loadingScreen);
+  // Force sync from any open peroot.space tab
+  await forceAuthSync();
+  await new Promise(r => setTimeout(r, 500));
+  const auth = await checkAuth();
+  if (auth.authenticated) {
+    show(mainScreen);
+    fetchCredits();
+    detectSelectedText();
+  } else {
+    showLoginScreen(auth.reason);
+  }
 });
 
 // ═══ INPUT ═══

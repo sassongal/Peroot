@@ -1173,3 +1173,122 @@ textarea:focus::placeholder {
   background: rgba(245, 158, 11, 0.2);
   color: var(--text-primary);
 }
+
+/* ════════════════════════════════════════════
+   RETRY AUTH BUTTON
+   ════════════════════════════════════════════ */
+.btn-retry {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #71717a;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 8px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-retry:hover {
+  border-color: rgba(245,158,11,0.3);
+  color: #fbbf24;
+}
+
+/* ════════════════════════════════════════════
+   ENHANCED LOADING ANIMATIONS (FIX 3)
+   ════════════════════════════════════════════ */
+
+/* Shimmer loading effect on result section */
+.result-text.streaming {
+  position: relative;
+  overflow: hidden;
+}
+.result-text.streaming::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245,158,11,0.03), transparent);
+  animation: shimmer 2s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Enhance button gradient shimmer while loading */
+.btn-accent:disabled {
+  background-size: 200% 100%;
+  animation: btn-shimmer 1.5s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════
+   LIGHT MODE — Auto-detect via system preference
+   ════════════════════════════════════════════ */
+@media (prefers-color-scheme: light) {
+  body {
+    background: #fafafa;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(249, 115, 22, 0.04) 0%, transparent 40%);
+    color: #1c1c1e;
+  }
+
+  /* Surfaces */
+  textarea, .prompt-card, .result-section, select,
+  .mode-btn, .quick-prompt-card {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    color: #1c1c1e !important;
+  }
+  textarea::placeholder { color: #a1a1aa !important; }
+  textarea:focus {
+    border-color: rgba(245, 158, 11, 0.4) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
+  }
+
+  /* Header */
+  .main-header { background: rgba(255,255,255,0.8) !important; border-bottom-color: rgba(0,0,0,0.06) !important; }
+  .header-title { color: #1c1c1e !important; }
+
+  /* Tabs */
+  .tabs { background: rgba(0,0,0,0.04) !important; }
+  .tab { color: #71717a !important; }
+  .tab.active { background: rgba(245,158,11,0.1) !important; color: #b45309 !important; }
+
+  /* Cards */
+  .prompt-card:hover { background: rgba(0,0,0,0.05) !important; }
+  .prompt-card-title { color: #1c1c1e !important; }
+  .prompt-card-text { color: #71717a !important; }
+
+  /* Buttons */
+  .btn-sm { background: rgba(0,0,0,0.04) !important; color: #52525b !important; border-color: rgba(0,0,0,0.08) !important; }
+  .btn-sm:hover { background: rgba(0,0,0,0.08) !important; color: #1c1c1e !important; }
+
+  /* Result */
+  .result-text { color: #1c1c1e !important; }
+  .result-label { color: #b45309 !important; }
+
+  /* Mode buttons */
+  .mode-btn.active { background: rgba(245,158,11,0.12) !important; }
+
+  /* Settings */
+  .settings-panel { background: rgba(255,255,255,0.9) !important; border-color: rgba(0,0,0,0.06) !important; }
+  .shortcut-item kbd { background: rgba(0,0,0,0.04) !important; color: #52525b !important; border-color: rgba(0,0,0,0.1) !important; }
+
+  /* Login */
+  #login-screen { background: #fafafa !important; }
+  .login-title { color: #1c1c1e !important; }
+  .login-subtitle, .login-hint { color: #71717a !important; }
+
+  /* Retry button */
+  .btn-retry { border-color: rgba(0,0,0,0.1); color: #71717a; }
+  .btn-retry:hover { border-color: rgba(245,158,11,0.3); color: #b45309; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1) !important; }
+
+  /* Error */
+  .error-section { background: rgba(239,68,68,0.06) !important; }
+  .error-section p { color: #dc2626 !important; }
+}
