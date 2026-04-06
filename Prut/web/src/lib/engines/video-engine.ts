@@ -9,8 +9,18 @@ import { VideoPlatform } from "../video-platforms";
 // community best practices, and empirical testing.
 
 const PLATFORM_OVERRIDES: Record<VideoPlatform, string> = {
-  general: `OUTPUT STRUCTURE - weave ALL 7 mandatory layers into one flowing English paragraph.
-The paragraph must read as a seamless cinematic description, not a list. Transition naturally between camera, subject, motion, environment, lighting, and style. Every sentence should serve the motion narrative. 30-80 words.
+  general: `OUTPUT FORMAT: A single flowing cinematic paragraph in English. Weave ALL elements (camera movement, subject, action, environment, lighting, style, mood) into natural flowing prose. No numbered sections, no headers, no bullet points. Start directly with the shot description. 30-80 words.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your FIRST WORD must be a shot type or visual description in English. Example: "Close-up", "A", "Wide", "Aerial".
 
 EXAMPLE:
 Concept: "ציפור ממריאה מענף"
@@ -47,6 +57,19 @@ Rules:
 - Genre-adapt: Action/Thriller = fast verbs, dynamic angles. Drama = slow movements, close-ups. Documentary = steady pans, natural light. Horror = creeping motion, low light.
 - Output in English only.
 
+Gen-4.5 Director Mode: supports multi-scene storyboarding with scene transitions. For Director Mode, structure as: Scene 1: [description] → Scene 2: [description]. Each scene 4-10 seconds.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Runway:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your FIRST WORD must be a shot type or camera term. Example: "Close-up", "Wide", "Aerial", "A", "Tracking".
+
 EXAMPLE:
 Concept: "אישה הולכת ברחוב גשום"
 Output: Wide shot. Slow tracking shot follows a woman in a red coat walking along a rain-soaked cobblestone street at dusk. Neon shop signs reflect in puddles as she passes. Wind catches her umbrella slightly. Shallow depth of field, anamorphic lens flare from distant headlights. Moody neo-noir atmosphere.`,
@@ -80,6 +103,19 @@ Rules:
 - Multi-character: Describe each motion separately, then their interaction.
 - Sweet spot: 50-200 words. The model rewards detail.
 - Output in English only.
+
+Lip-sync dialogue example: include dialogue in format: Character says: "exact line" (delivery: warm, confident). Kling 3.0 supports multilingual lip-sync.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Kling:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your FIRST WORD must be a camera movement or shot type. Example: "Slow", "Dolly", "Close-up", "A".
 
 EXAMPLE:
 Concept: "רקדנית בלט"
@@ -120,6 +156,19 @@ Rules:
 - More detail = more control. Shorter prompts = more model creativity.
 - Sweet spot: 50-150 words.
 - Output in English only.
+
+Character reference system: use [character_ref: ID] to maintain consistency across scenes. Each character needs 5+ unique visual identifiers: hair, build, clothing, accessories, distinguishing features.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Sora:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your output must start with the scene description section directly. First word must describe the scene. Example: "A", "In", "The", "Inside".
 
 EXAMPLE:
 Concept: "עיר עתידנית"
@@ -177,6 +226,19 @@ Rules:
 - Sweet spot: 50-100 words visual + 20-40 words audio.
 - Output in English only.
 
+Veo 3.1 improvements: better temporal coherence for scenes >10s. Audio is Veo's KILLER FEATURE — always include a detailed Audio section with dialogue lines, SFX, ambient sounds, and music direction. Without explicit audio, Veo hallucinates sounds.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Veo:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your FIRST WORD must begin the visual description. Audio section comes AFTER visual. Example: "A", "Close-up", "Wide", "The".
+
 EXAMPLE:
 Concept: "שף מבשל"
 Output: Close-up of a chef's weathered hands expertly julienning bright orange carrots on a worn wooden cutting board, the knife moving in rapid precise strokes. Steam rises from a copper pot simmering on the gas range behind. Warm golden kitchen lighting with practical overhead brass pendants casting soft shadows. Film grain, documentary style, shallow depth of field on the hands.
@@ -219,6 +281,19 @@ Rules:
 - Sweet spot: 30-60 words. Tight, punchy, no fluff.
 - Output in English only.
 
+Compound timing cues are critical: "at 0s: subject enters frame → at 1.5s: turns to camera → at 3s: begins speaking". Always include Total duration.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Higgsfield:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your FIRST WORD must be "[Camera:" for the structured format. Example: "[Camera: medium shot, slow push in]".
+
 EXAMPLE:
 Concept: "ריקוד ברחוב"
 Output: Wide angle, handheld.
@@ -257,6 +332,19 @@ Rules:
 - Video-to-video: Describe only the CONTINUATION of motion.
 - Sweet spot: 40-100 words.
 - Output in English only.
+
+Anime/illustration trigger: include "anime style" or "cel-shaded" in style description. For anime, emphasize dramatic expressions and speedlines. Micro-expression vocabulary: "pupils dilate", "lip quivers", "jaw tightens", "nostrils flare", "brow arches".
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Minimax:"
+- "I've created/crafted a prompt:"
+- "To generate this video, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the cinematic description.
+Your FIRST WORD must be a [Camera bracket command]. Example: "[Push in]", "[Tracking shot]", "[Pan left]".
 
 EXAMPLE:
 Concept: "אישה מקבלת בשורה טובה"
@@ -413,8 +501,8 @@ export class VideoEngine extends BaseEngine {
     }
 
     // English cinematic GENIUS_QUESTIONS focused on the 7 video layers
-    finalSystem += `\n\n[GENIUS_ANALYSIS]
-Before generating, perform this rigorous internal quality check (do NOT output this analysis):
+    finalSystem += `\n\n<internal_quality_check hidden="true">
+Silently verify before generating (NEVER include any of this in output):
 1. CAMERA: Is the shot type, lens choice, and camera movement clearly specified?
 2. SUBJECT: Is the subject's appearance, position, and emotional state vividly described?
 3. MOTION: Is there a clear motion arc with physical detail (weight, momentum, endpoints)?
@@ -422,6 +510,7 @@ Before generating, perform this rigorous internal quality check (do NOT output t
 5. SCENE MOTION: Are environmental dynamics (wind, particles, ambient life) addressed?
 6. LIGHTING: Is the light direction, quality, color temperature, and mood defined?
 7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?
+</internal_quality_check>
 
 After the enhanced prompt, on a new line add a short descriptive Hebrew title:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]

@@ -121,13 +121,14 @@ export const FALLBACK_ORDER: ModelId[] = [
     'deepseek-chat'
 ];
 
-export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'chain';
+export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'video' | 'chain';
 
 export const TASK_ROUTING: Record<string, ModelId[]> = {
   enhance:  ['gemini-2.5-flash', 'mistral-small', 'gemini-2.5-flash-lite', 'llama-4-scout', 'gpt-oss-20b'],
   research: ['gemini-2.5-flash', 'mistral-small', 'deepseek-chat', 'gemini-2.5-flash-lite'],
   agent:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
   image:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  video:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite'],
   chain:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
 };
 

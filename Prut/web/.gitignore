@@ -53,3 +53,6 @@ chrome-extension-v2.1/
 .claude/
 .planning/
 .superpowers/
+.gitnexus/
+repomix-output.*
+repomix.config.json

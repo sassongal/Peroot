@@ -256,10 +256,10 @@
   opacity: 1;
   pointer-events: auto;
 }
-.peroot-radial-open .peroot-radial-option:nth-child(1) { --tx: -52px; --ty: -16px; transform: scale(1) translateY(-16px) translateX(-52px); transition-delay: 0ms; }
-.peroot-radial-open .peroot-radial-option:nth-child(2) { --tx: -18px; --ty: -50px; transform: scale(1) translateY(-50px) translateX(-18px); transition-delay: 40ms; }
-.peroot-radial-open .peroot-radial-option:nth-child(3) { --tx: 18px; --ty: -50px; transform: scale(1) translateY(-50px) translateX(18px); transition-delay: 80ms; }
-.peroot-radial-open .peroot-radial-option:nth-child(4) { --tx: 52px; --ty: -16px; transform: scale(1) translateY(-16px) translateX(52px); transition-delay: 120ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(1) { --tx: -68px; --ty: -20px; transform: scale(1) translateY(-20px) translateX(-68px); transition-delay: 0ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(2) { --tx: -24px; --ty: -65px; transform: scale(1) translateY(-65px) translateX(-24px); transition-delay: 40ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(3) { --tx: 24px; --ty: -65px; transform: scale(1) translateY(-65px) translateX(24px); transition-delay: 80ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(4) { --tx: 68px; --ty: -20px; transform: scale(1) translateY(-20px) translateX(68px); transition-delay: 120ms; }
 
 /* Tooltip labels on hover */
 .peroot-radial-option:hover .peroot-radial-option-label {
@@ -271,8 +271,8 @@
   background: var(--peroot-bg);
   border: 1px solid var(--peroot-border);
   border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 9px;
+  padding: 4px 10px;
+  font-size: 10px;
   white-space: nowrap;
   color: var(--peroot-text);
   pointer-events: none;
@@ -829,7 +829,7 @@
   -webkit-backdrop-filter: var(--peroot-blur-strong);
   border: 1px solid rgba(245, 158, 11, 0.1);
   border-radius: 14px;
-  padding: 5px;
+  padding: 8px 6px;
   z-index: 999999;
   min-width: 150px;
   box-shadow:
@@ -846,13 +846,14 @@
 .peroot-mode-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 10px 14px;
   border-radius: 10px;
   border: none;
   background: none;
   color: var(--peroot-text-dim);
-  font-size: 11.5px;
+  font-size: 12px;
+  min-height: 38px;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
@@ -899,6 +900,13 @@
   border-radius: 4px;
   margin-right: auto;
   text-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+}
+
+/* Platform Sub-Selector */
+.peroot-platform-item {
+  padding: 7px 14px !important;
+  font-size: 11px !important;
+  min-height: 32px;
 }
 
 /* ══════════════════════════════════════════

@@ -18,7 +18,8 @@
     "test:e2e:ui": "playwright test --ui",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "repomix": "npx repomix --compress --style xml -o repomix-output.xml"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",

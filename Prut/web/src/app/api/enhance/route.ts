@@ -229,7 +229,10 @@ export async function POST(req: Request) {
         system: engineOutput.systemPrompt,
         prompt: engineOutput.userPrompt,
         temperature: 0.7,
-        task: 'enhance',
+        task: mode === CapabilityMode.IMAGE_GENERATION ? 'image'
+            : mode === CapabilityMode.VIDEO_GENERATION ? 'video'
+            : mode === CapabilityMode.DEEP_RESEARCH ? 'research'
+            : 'enhance',
         userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;

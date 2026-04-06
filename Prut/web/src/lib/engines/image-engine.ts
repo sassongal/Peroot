@@ -30,9 +30,22 @@ CRITICAL RULES:
 
 PROMPT FORMULA: Subject + Medium + Lighting + Aspect Ratio. For complex scenes: Subject → Action/Context → Style/Medium → Environment → Mood/Lighting → --params.
 
+For v8 (when --hd is used): even more natural conversational language, increased context window. Midjourney v8 understands nuance — describe the feeling, not just the visual.
+
 EXAMPLE:
 Concept: "חתול על גג בשקיעה"
 Output: A ginger tabby cat perched on a Mediterranean clay rooftop, golden hour sunlight catching its whiskers, overlooking a coastal village with terracotta roofs descending toward a turquoise sea, warm amber light, editorial wildlife photography --ar 16:9 --s 600
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for Midjourney:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must be a visual subject noun or article (A/An/The). Example first words: "A", "An", "The", "Golden", "Cinematic".
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
@@ -55,6 +68,8 @@ CRITICAL RULES:
 11. NEVER reference copyrighted characters or real people by name. Describe visual characteristics instead.
 12. Conversational refinement: The prompt should be self-contained but designed so the user can ask for iterative adjustments naturally.
 
+GPT Image's KILLER FEATURE is perfect text rendering — if the concept involves any text, signs, labels, or typography, describe the exact text, font style, and placement with precision.
+
 PROMPT ARCHITECTURE:
 - Open with the primary subject and scene
 - Describe spatial relationships, poses, expressions in detail
@@ -67,6 +82,17 @@ PROMPT ARCHITECTURE:
 EXAMPLE:
 Concept: "רובוט שותה קפה"
 Output: A humanoid robot with polished silver chrome plating sits at a small Parisian cafe table, delicately holding a tiny white espresso cup between its articulated fingers. Morning sunlight streams through the cafe window casting long golden shadows across the marble tabletop. The robot's LED eyes glow a warm amber as steam rises from the cup. Other cafe patrons in the background barely notice — a woman reads a newspaper, a couple shares a croissant. The color palette is warm ivory, burnished gold, and cool chrome. In a vivid style, photorealistic rendering with cinematic depth of field and film grain. [size: 1792x1024] [quality: hd]
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for DALL-E:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must begin a descriptive scene. Example first words: "A", "An", "The", "Inside", "Against".
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
@@ -102,6 +128,19 @@ Output: Minimalist logo design on pure #FFFFFF background, geometric letter "P" 
 
 Concept: "פורטרט אופנה"
 Output: A woman in her 30s wearing a tailored blazer in #1E3A5F navy, shot on Hasselblad X2D, 80mm lens, f/2.8, natural window light from the left, warm earth tones, shallow depth of field, editorial fashion photography, confident expression
+
+For FLUX.2 Ultra: supports higher resolution up to 2048x2048. Include "ultra quality" in prompt for Ultra variant.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for FLUX.2:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must be the primary subject. Example first words: "A", "Portrait", "Aerial", "Close-up".
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
@@ -156,6 +195,17 @@ Output: (snow-covered mountain peaks:1.4), dramatic alpine landscape, (golden ho
 Negative prompt: worst quality, low quality, blurry, deformed, ugly, watermark, text, signature, oversaturated
 Recommended: sampler DPM++ 2M Karras, steps 35, clip skip 1
 
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for Stable Diffusion:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your output must start with quality tags or subject keywords. Example: "masterpiece, best quality," or "(subject:1.4),".
+
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
@@ -204,6 +254,17 @@ GUIDELINES:
 - hires_fix: enable for high-res outputs, denoising_strength 0.3-0.5, upscaler "4x-UltraSharp" or "R-ESRGAN 4x+"
 - lora: array of {"name": "lora_name", "weight": 0.8} objects - include when a specific style model is implied
 
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for Stable Diffusion:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your output must start with quality tags or subject keywords. Example: "masterpiece, best quality," or "{" for JSON.
+
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
@@ -235,6 +296,19 @@ EXAMPLE:
 Concept: "ילדה מציירת על קיר"
 Output: A young girl around 7 years old with curly brown hair tied in two pigtails, wearing a paint-splattered denim overalls and a bright yellow t-shirt, reaches up on her tiptoes to paint a large colorful butterfly on a white brick wall. Her small hand grips a thick paintbrush loaded with vibrant purple paint. Splatters of blue, green, and orange dot the wall and floor around her. Warm afternoon sunlight pours in from a nearby window, creating a golden rim light around her hair. Shallow depth of field, the background softly blurred. Joyful, whimsical, candid moment captured in editorial lifestyle photography style. [aspectRatio: 3:2] [exclude: watermark, blurry, deformed, text]
 
+Supports Ultra resolution (2048x2048). For maximum quality, specify "[resolution: ultra]" at the end.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for Imagen:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must begin a narrative description. Example first words: "A", "An", "The", "In".
+
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
@@ -263,6 +337,19 @@ PROMPT ARCHITECTURE:
 EXAMPLE:
 Concept: "קפה על שולחן עם ספר"
 Output: A steaming ceramic cup of cappuccino with intricate latte art sits on a worn oak table next to an open hardcover book, morning light streaming through a rain-streaked window creating soft bokeh highlights, cozy minimalist interior, warm earth tones, shallow depth of field focusing on the foam art, editorial food photography, no text overlay, no watermarks [aspectRatio: 4:3]
+
+For multi-turn refinement: use consistency_id fields to maintain character identity across iterations. Each character should have a unique consistency_id.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for Gemini Image:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must be the subject description. Never a meta-sentence.
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
@@ -322,6 +409,19 @@ GUIDELINES:
 - environment.weather: clear, cloudy, overcast, foggy, rainy, snowy, stormy - affects lighting and mood
 - aspect_ratio: choose from 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
 - constraints: always include "no watermark", "no deformed hands", "no extra fingers", add others as relevant (e.g., "photorealistic skin texture", "no text overlay")
+
+For multi-turn refinement: use consistency_id fields to maintain character identity across iterations. Each character should have a unique consistency_id.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt for Gemini Image:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must be "{" for JSON output. Never a meta-sentence.
 
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
@@ -388,7 +488,18 @@ Add explicit exclusions when relevant:
 
 Tone: {{tone}}.
 
-OUTPUT FORMAT: Produce a single, flowing prompt paragraph (not sectioned) that weaves all relevant layers into a cohesive, vivid description. Start with the subject, layer in style and composition, add technical specs. The prompt should read as a masterful cinematic description.`,
+OUTPUT FORMAT: A single flowing vivid description paragraph in Hebrew. Weave ALL elements (subject, style, composition, lighting, color, technical specs, exclusions) into natural flowing prose. No numbered sections, no headers, no bullet points. Start directly with the subject. Include English technical terms where needed (camera specs, rendering engines, quality keywords).
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a prompt:"
+- "I've created/crafted a prompt:"
+- "To create this image, use:"
+- "כתוב את הפרומפט הבא:"
+- "הנה הפרומפט:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the visual description or keywords.
+Your FIRST WORD must be a Hebrew visual description word. Example: "צילום", "איור", "דמות", "נוף".`,
 };
 
 const PLATFORM_USER_PROMPTS: Record<string, string> = {
@@ -509,7 +620,7 @@ export class ImageEngine extends BaseEngine {
 
       if (isGeneral) {
           // General mode gets the full GENIUS analysis + questions treatment
-          finalSystem += `\n\n[GENIUS_ANALYSIS]\nBefore generating, perform this rigorous internal quality check (do NOT output this analysis):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
+          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
       } else {
           // Platform-specific modes: add title + questions but keep prompt clean
           finalSystem += `\n\nAfter the prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;

@@ -216,6 +216,37 @@
   const currentSite = Object.values(SITES).find(s => s.match());
   if (!currentSite) return;
 
+  // ── Platform Auto-Detection ────────────────────────────────────────────────
+  const SITE_IMAGE_PLATFORM_MAP = {
+    chatgpt: 'dalle',
+    gemini: 'nanobanana',
+  };
+  const SITE_VIDEO_PLATFORM_MAP = {
+    gemini: 'veo',
+  };
+  const detectedSiteKey = Object.keys(SITES).find(k => SITES[k] === currentSite);
+  const autoImagePlatform = SITE_IMAGE_PLATFORM_MAP[detectedSiteKey] || 'general';
+  const autoVideoPlatform = SITE_VIDEO_PLATFORM_MAP[detectedSiteKey] || 'general';
+
+  // ── Output Sanitizer ──────────────────────────────────────────────────────
+  function sanitizeOutput(text) {
+    const META_PREFIXES = [
+      /^here'?s?\s+(your|the|a)\s+.*?prompt.*?:?\s*\n?/i,
+      /^i'?ve\s+(created|crafted|generated).*?:?\s*\n?/i,
+      /^below\s+is.*?:?\s*\n?/i,
+      /^the\s+following\s+.*?prompt.*?:?\s*\n?/i,
+      /^to\s+(create|generate)\s+this.*?:?\s*\n?/i,
+      /^כתוב את הפרומפט הבא:?\s*\n?/,
+      /^הנה הפרומפט.*?:?\s*\n?/,
+      /^פרומפט מוכן.*?:?\s*\n?/,
+    ];
+    let cleaned = text;
+    for (const pattern of META_PREFIXES) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+    return cleaned.trimStart();
+  }
+
   // ── State ──────────────────────────────────────────────────────────────────
 
   let peerootBtn = null;
@@ -292,7 +323,28 @@
     { key: 'AGENT_BUILDER', icon: MODE_SVGS.AGENT_BUILDER, label: 'סוכן', proOnly: true, color: MODE_COLORS.AGENT_BUILDER },
   ];
 
-  let selectedVideoPlatform = 'general';
+  let selectedVideoPlatform = autoVideoPlatform;
+  let selectedImagePlatform = autoImagePlatform;
+
+  const IMAGE_PLATFORMS = [
+    { id: 'general', label: 'כללי' },
+    { id: 'midjourney', label: 'Midjourney' },
+    { id: 'dalle', label: 'GPT Image' },
+    { id: 'flux', label: 'FLUX.2' },
+    { id: 'stable-diffusion', label: 'SD' },
+    { id: 'imagen', label: 'Imagen' },
+    { id: 'nanobanana', label: 'Gemini' },
+  ];
+
+  const VIDEO_PLATFORMS = [
+    { id: 'general', label: 'כללי' },
+    { id: 'runway', label: 'Runway' },
+    { id: 'kling', label: 'Kling' },
+    { id: 'sora', label: 'Sora' },
+    { id: 'veo', label: 'Veo 3' },
+    { id: 'higgsfield', label: 'Higgsfield' },
+    { id: 'minimax', label: 'Minimax' },
+  ];
 
   // ── Enhancement ──────────────────────────────────────────────────────────
 
@@ -346,6 +398,7 @@
           tone: 'Professional',
           category: '\u05DB\u05DC\u05DC\u05D9',
           capability_mode: selectedMode,
+          ...(selectedMode === 'IMAGE_GENERATION' && { mode_params: { image_platform: selectedImagePlatform } }),
           ...(selectedMode === 'VIDEO_GENERATION' && { mode_params: { video_platform: selectedVideoPlatform } }),
         },
         stream: true,
@@ -370,9 +423,10 @@
         return;
       }
 
-      // Result comes as full text from proxy — strip metadata tags
+      // Result comes as full text from proxy — strip metadata tags + sanitize meta-text
       const raw = (res.text || '').split('[GENIUS_QUESTIONS]')[0];
-      const cleaned = raw.replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').trim();
+      const stripped = raw.replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, '').trim();
+      const cleaned = sanitizeOutput(stripped);
       if (cleaned) {
         currentSite.setInputText(inputEl, cleaned);
         inputEl.focus();
@@ -495,7 +549,14 @@
         }
         selectedMode = mode.key;
         updateRadialHalo();
-        // Close dropdown
+
+        // Show platform sub-selector for image/video modes
+        if (mode.key === 'IMAGE_GENERATION' || mode.key === 'VIDEO_GENERATION') {
+          showPlatformSubSelector(dropdown, mode.key);
+          return;
+        }
+
+        // Close dropdown for other modes
         dropdown.remove();
         modeDropdownOpen = false;
         if (modeDropdownOutsideHandler) {
@@ -518,6 +579,55 @@
       }
     };
     setTimeout(() => document.addEventListener('click', modeDropdownOutsideHandler, true), 0);
+  }
+
+  function showPlatformSubSelector(dropdown, modeKey) {
+    const platforms = modeKey === 'IMAGE_GENERATION' ? IMAGE_PLATFORMS : VIDEO_PLATFORMS;
+    const currentPlatform = modeKey === 'IMAGE_GENERATION' ? selectedImagePlatform : selectedVideoPlatform;
+    const modeColor = MODE_COLORS[modeKey];
+
+    // Remove existing platform section
+    const existingSub = dropdown.querySelector('.peroot-platform-sub');
+    if (existingSub) existingSub.remove();
+
+    const sub = document.createElement('div');
+    sub.className = 'peroot-platform-sub';
+
+    // Divider
+    const divider = document.createElement('div');
+    divider.style.cssText = `height:1px;background:rgba(255,255,255,0.06);margin:6px 8px;`;
+    sub.appendChild(divider);
+
+    // Label
+    const label = document.createElement('div');
+    label.style.cssText = `font-size:9px;color:rgba(255,255,255,0.3);padding:2px 14px 4px;direction:rtl;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;`;
+    label.textContent = modeKey === 'IMAGE_GENERATION' ? 'פלטפורמה' : 'פלטפורמה';
+    sub.appendChild(label);
+
+    platforms.forEach(p => {
+      const btn = document.createElement('button');
+      const isActive = p.id === currentPlatform;
+      btn.className = 'peroot-mode-item peroot-platform-item' + (isActive ? ' active' : '');
+      if (isActive) btn.style.setProperty('--mode-color', modeColor);
+      btn.innerHTML = `<span style="font-size:11px">${p.label}</span>`;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (modeKey === 'IMAGE_GENERATION') selectedImagePlatform = p.id;
+        else selectedVideoPlatform = p.id;
+        // Close dropdown
+        dropdown.remove();
+        modeDropdownOpen = false;
+        if (modeDropdownOutsideHandler) {
+          document.removeEventListener('click', modeDropdownOutsideHandler, true);
+          modeDropdownOutsideHandler = null;
+        }
+        showToast(`${p.label} נבחר`, 'success');
+      });
+      sub.appendChild(btn);
+    });
+
+    dropdown.appendChild(sub);
   }
 
   // ── Radial Menu Options ──
