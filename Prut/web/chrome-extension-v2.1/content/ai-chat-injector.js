@@ -205,18 +205,34 @@
     return { 'Authorization': prefix + token, 'Content-Type': 'application/json' };
   }
 
+  // ── API Proxy (routes through service worker to avoid CORS) ──────────
+
+  function apiFetch(path, options = {}) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+        type: "API_FETCH",
+        path,
+        method: options.method || "GET",
+        body: options.body || null,
+        stream: options.stream || false,
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          resolve({ ok: false, status: 0, error: chrome.runtime.lastError.message });
+        } else {
+          resolve(response || { ok: false, status: 0 });
+        }
+      });
+    });
+  }
+
   // ── User Profile ────────────────────────────────────────────────────────
 
   async function fetchUserProfile() {
     try {
-      const token = await getToken();
-      if (!token) return null;
-      const res = await fetch(`${API_BASE}/api/me`, {
-        headers: getHeaders(token),
-      });
+      const res = await apiFetch('/api/me');
       if (!res.ok) return null;
-      const data = await res.json();
-      userProfile = { plan_tier: data.plan_tier || 'free', credits_balance: data.credits_balance ?? 0 };
+      const data = res.data;
+      userProfile = { plan_tier: data?.plan_tier || 'free', credits_balance: data?.credits_balance ?? 0 };
       return userProfile;
     } catch { return null; }
   }
@@ -248,24 +264,16 @@
     updateButtonState('loading');
 
     try {
-      const token = await getToken();
-      if (!token) {
-        showToast('התחבר ל-Peroot כדי להשתמש', 'error');
-        updateButtonState('idle');
-        isEnhancing = false;
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/api/enhance`, {
+      // Route through service worker to avoid CORS
+      const res = await apiFetch('/api/enhance', {
         method: 'POST',
-        headers: getHeaders(token),
-        body: JSON.stringify({
+        body: {
           prompt: text,
-          tone: 'professional',
-          category: 'general',
+          tone: 'Professional',
+          category: '\u05DB\u05DC\u05DC\u05D9',
           capability_mode: selectedMode,
-          source: 'extension_ai_chat',
-        }),
+        },
+        stream: true,
       });
 
       if (res.status === 401) {
@@ -287,39 +295,25 @@
         return;
       }
 
-      // Stream response
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let result = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        result += chunk;
-      }
-
-      // Clean up result
-      const cleaned = result.split('[GENIUS_QUESTIONS]')[0].trim();
+      // Result comes as full text from proxy
+      const cleaned = (res.text || '').split('[GENIUS_QUESTIONS]')[0].trim();
       if (cleaned) {
         currentSite.setInputText(inputEl, cleaned);
         inputEl.focus();
         updateButtonState('success');
 
-        // Sync to history (fire-and-forget)
-        fetch(`${API_BASE}/api/history`, {
+        // Sync to history (fire-and-forget via proxy)
+        apiFetch('/api/history', {
           method: 'POST',
-          headers: getHeaders(token),
-          body: JSON.stringify({
+          body: {
             prompt: text,
             enhanced_prompt: cleaned,
-            tone: 'professional',
-            category: 'general',
-            capability_mode: selectedMode,
+            tone: 'Professional',
+            category: 'General',
             title: text.slice(0, 60),
             source: 'extension_ai_chat',
-          }),
-        }).catch(() => {});
+          },
+        });
       }
     } catch (err) {
       showToast('שגיאת רשת — בדוק חיבור לאינטרנט', 'error');
@@ -597,15 +591,7 @@
     content.innerHTML = '<div class="peroot-sp-loading"><span class="peroot-ai-spinner"></span></div>';
 
     try {
-      const token = await getToken();
-      if (!token) {
-        content.innerHTML = '<div class="peroot-sp-empty">Log in to Peroot to see your library</div>';
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/api/personal-library`, {
-        headers: getHeaders(token),
-      });
+      const res = await apiFetch('/api/personal-library');
 
       if (res.status === 401) {
         content.innerHTML = '<div class="peroot-sp-empty">התחבר ל-Peroot כדי לגשת לספרייה</div>';
@@ -616,8 +602,8 @@
         return;
       }
 
-      const data = await res.json();
-      libraryCache = Array.isArray(data) ? data : (data.items || data.prompts || []);
+      const data = res.data;
+      libraryCache = Array.isArray(data) ? data : (data?.items || data?.prompts || []);
       renderLibrary(libraryCache);
     } catch {
       content.innerHTML = '<div class="peroot-sp-empty">שגיאת רשת — בדוק חיבור לאינטרנט</div>';
@@ -732,9 +718,7 @@
         return;
       }
 
-      const res = await fetch(`${API_BASE}/api/favorites`, {
-        headers: getHeaders(token),
-      });
+      const res = await apiFetch('/api/favorites');
 
       if (res.status === 401) {
         content.innerHTML = '<div class="peroot-sp-empty">\u05D4\u05EA\u05D7\u05D1\u05E8 \u05DC-Peroot \u05DB\u05D3\u05D9 \u05DC\u05D2\u05E9\u05EA \u05DC\u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD</div>';
@@ -745,8 +729,8 @@
         return;
       }
 
-      const data = await res.json();
-      const favorites = data.favorites || data.items || data || [];
+      const data = res.data;
+      const favorites = data?.favorites || data?.items || (Array.isArray(data) ? data : []);
 
       if (!favorites.length) {
         content.innerHTML = '<div class="peroot-sp-empty">\u05D0\u05D9\u05DF \u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD \u05E2\u05D3\u05D9\u05D9\u05DF.<br>\u05E1\u05DE\u05DF \u05E4\u05E8\u05D5\u05DE\u05E4\u05D8\u05D9\u05DD \u05D1-peroot.space!</div>';

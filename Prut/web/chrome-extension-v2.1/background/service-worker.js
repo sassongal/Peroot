@@ -133,6 +133,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // API proxy for content scripts (avoids CORS issues)
+  if (message.type === "API_FETCH") {
+    (async () => {
+      try {
+        const { peroot_token, peroot_api_key } = await chrome.storage.local.get(["peroot_token", "peroot_api_key"]);
+        const token = peroot_api_key || peroot_token;
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${SITE_URL}${message.path}`, {
+          method: message.method || "GET",
+          headers,
+          body: message.body ? JSON.stringify(message.body) : undefined,
+        });
+
+        if (message.stream) {
+          // For streaming responses, read the full body and return as text
+          const text = await res.text();
+          sendResponse({ ok: res.ok, status: res.status, text });
+        } else {
+          const data = await res.json().catch(() => null);
+          sendResponse({ ok: res.ok, status: res.status, data });
+        }
+      } catch (err) {
+        sendResponse({ ok: false, status: 0, error: err.message });
+      }
+    })();
+    return true;
+  }
+
   // Inject content script into a tab on behalf of popup
   if (message.type === "INJECT_AND_INSERT") {
     (async () => {
