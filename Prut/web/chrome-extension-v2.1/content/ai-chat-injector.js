@@ -60,7 +60,7 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: 'div[contenteditable="true"][aria-label*="prompt" i], div[contenteditable="true"][aria-label*="Enter" i], .ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], p[data-placeholder], div[contenteditable="true"]',
+      inputSelector: 'div[contenteditable="true"][aria-label*="prompt" i], div[contenteditable="true"][aria-label*="Enter" i], .ql-editor[contenteditable="true"], div.ql-editor p, div[contenteditable="true"][role="textbox"], p[data-placeholder], div[contenteditable="true"][aria-placeholder*="prompt" i], div[contenteditable="true"]',
       sendButtonSelector: 'button[aria-label*="Send" i], button[mattooltip*="Send" i], button.send-button, button[data-test-id="send-button"]',
       inputArea: () => {
         // Gemini uses custom elements — walk up from the input to find a suitable container
@@ -91,52 +91,22 @@
         return el.innerText?.trim() || el.textContent?.trim() || '';
       },
       setInputText: (el, text) => {
-        el.focus();
+        // Walk up to the contenteditable parent if el isn't directly editable
+        let target = el;
+        if (!target.isContentEditable) {
+          const parent = target.closest('[contenteditable="true"]');
+          if (parent) target = parent;
+        }
+        target.focus();
         // Select all existing content and replace
         document.execCommand('selectAll', false, null);
         document.execCommand('insertText', false, text);
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+        target.dispatchEvent(new Event('change', { bubbles: true }));
       },
       messageSelector: 'message-content, .message-content',
       getUserMessages: () => document.querySelectorAll('user-query, .user-query, [data-message-author="user"]'),
       getAssistantMessages: () => document.querySelectorAll('model-response, .model-response, [data-message-author="model"]'),
-    },
-    aistudio: {
-      match: () => /aistudio\.google\.com/.test(location.hostname),
-      inputSelector: 'textarea[aria-label*="prompt" i], textarea[aria-label*="Type" i], textarea[placeholder*="Type" i], textarea, div[contenteditable="true"][role="textbox"], div[contenteditable="true"]',
-      sendButtonSelector: 'button[aria-label*="Run" i], button[mattooltip*="Run" i], button[aria-label*="Send" i]',
-      inputArea: () => {
-        // AI Studio: find the textarea's form container, walking up to avoid clashing with the Run button
-        const textarea = document.querySelector('textarea[aria-label*="prompt" i], textarea[aria-label*="Type" i], textarea[placeholder*="Type" i], textarea');
-        if (textarea) {
-          const formField = textarea.closest('mat-form-field');
-          if (formField) return formField;
-          let parent = textarea.parentElement;
-          for (let i = 0; i < 5 && parent && parent !== document.body; i++) {
-            if (parent.offsetHeight > 40 && parent.offsetWidth > 200) return parent;
-            parent = parent.parentElement;
-          }
-          return textarea.parentElement;
-        }
-        return document.querySelector('mat-form-field')?.parentElement || document.querySelector('form') || document.querySelector('[class*="input"]')?.parentElement;
-      },
-      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText?.trim() || '',
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.focus();
-          document.execCommand('selectAll', false, null);
-          document.execCommand('insertText', false, text);
-        }
-      },
-      messageSelector: '[class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[class*="user-message"], [data-role="user"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="model-message"], [data-role="model"]'),
     },
     deepseek: {
       match: () => /chat\.deepseek\.com/.test(location.hostname),
@@ -240,6 +210,7 @@
   let selectedMode = 'STANDARD';
   let userProfile = null; // { plan_tier, credits_balance }
   let modeDropdownOpen = false;
+  let modeDropdownOutsideHandler = null;
 
   // ── API Proxy (routes through service worker to avoid CORS) ──────────
 
@@ -293,16 +264,23 @@
   function findInputElement() {
     // 1. Site-specific selector
     let el = document.querySelector(currentSite.inputSelector);
-    if (el) return el;
+    if (el && !el.closest('#peroot-side-panel, #peroot-ai-toolbar')) return el;
 
     // 2. Broad fallback: any contenteditable or textarea that looks like a chat input
-    el = document.querySelector('div[contenteditable="true"][role="textbox"]')
-      || document.querySelector('div[contenteditable="true"][aria-label]')
-      || document.querySelector('textarea[aria-label]')
-      || document.querySelector('div[contenteditable="true"]')
-      || document.querySelector('textarea');
+    // Exclude Peroot's own UI elements
+    const candidates = [
+      'div[contenteditable="true"][role="textbox"]',
+      'div[contenteditable="true"][aria-label]',
+      'textarea[aria-label]',
+      'div[contenteditable="true"]',
+      'textarea',
+    ];
+    for (const sel of candidates) {
+      el = document.querySelector(sel);
+      if (el && !el.closest('#peroot-side-panel, #peroot-ai-toolbar, #peroot-export-modal')) return el;
+    }
 
-    return el;
+    return null;
   }
 
   async function enhanceInput() {
@@ -410,6 +388,10 @@
   function closeModeDropdown() {
     const dd = document.getElementById('peroot-mode-dropdown');
     if (dd) dd.remove();
+    if (modeDropdownOutsideHandler) {
+      document.removeEventListener('click', modeDropdownOutsideHandler, true);
+      modeDropdownOutsideHandler = null;
+    }
     modeDropdownOpen = false;
   }
 
@@ -454,13 +436,12 @@
     modeDropdownOpen = true;
 
     // Close on outside click
-    const outsideHandler = (e) => {
+    modeDropdownOutsideHandler = (e) => {
       if (!dropdown.contains(e.target) && !anchorEl.contains(e.target)) {
         closeModeDropdown();
-        document.removeEventListener('click', outsideHandler, true);
       }
     };
-    setTimeout(() => document.addEventListener('click', outsideHandler, true), 0);
+    setTimeout(() => document.addEventListener('click', modeDropdownOutsideHandler, true), 0);
   }
 
   function injectButton() {
@@ -541,7 +522,10 @@
     toolbar.appendChild(expBtn);
 
     // Insert toolbar relative to the input area
-    inputArea.style.position = inputArea.style.position || 'relative';
+    const computedPos = window.getComputedStyle(inputArea).position;
+    if (computedPos === 'static') {
+      inputArea.style.position = 'relative';
+    }
     inputArea.appendChild(toolbar);
   }
 
@@ -919,28 +903,29 @@
     }, 500);
   });
 
-  // Observe the narrowest useful container (input area or main, not entire body)
-  const observeTarget = currentSite.inputArea?.()?.parentElement
-    || document.querySelector('main')
-    || document.body;
-  observer.observe(observeTarget, { childList: true, subtree: false });
+  // Observe for SPA navigation changes that remove the button.
+  // Use subtree: true on a narrow container, or childList on main/body.
+  const observeTarget = document.querySelector('main') || document.body;
+  observer.observe(observeTarget, { childList: true, subtree: true });
 
   // Cleanup observer on page unload to prevent memory leaks
   window.addEventListener('beforeunload', () => {
     observer.disconnect();
   });
 
-  // Initial injection with fast fallback to fixed-position button
+  // Initial injection with progressive retry and fixed-position fallback
   function tryInject(attempts = 0) {
     if (document.getElementById('peroot-ai-btn')) return; // Already injected
 
     if (document.querySelector(currentSite.inputSelector)) {
       injectButton();
-    } else if (attempts < 6) {
-      // Try 6 times (3 seconds) before falling back
-      setTimeout(() => tryInject(attempts + 1), 500);
+    } else if (attempts < 10) {
+      // Progressive delay: 300, 500, 800, 1000, 1200, 1500, 1500, 2000, 2000, 2000
+      // Total ~12.8s — enough for slow Angular/SPA boot (Gemini, etc.)
+      const delays = [300, 500, 800, 1000, 1200, 1500, 1500, 2000, 2000, 2000];
+      setTimeout(() => tryInject(attempts + 1), delays[attempts] || 2000);
     } else {
-      // Fallback: fixed-position floating button (works on any site including Shadow DOM)
+      // Fallback: fixed-position floating button (works on any site)
       injectFixedButton();
     }
   }

@@ -45,7 +45,7 @@ let isEnhancing = false;
 let selectedTone = "Professional";
 let scoreTimeout = null;
 
-function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
@@ -56,6 +56,7 @@ let timerInterval = null;
 let libraryLoaded = false;
 let favoritesLoaded = false;
 let historyTabLoaded = false;
+let enhanceRetried = false;
 
 // ═══ PROMPT QUALITY SCORE ═══
 function scorePrompt(text) {
@@ -415,18 +416,22 @@ async function doEnhance() {
       if (res.status === 403) showError(err.error || "אין מספיק קרדיטים");
       else if (res.status === 429) showError("יותר מדי בקשות. נסה שוב בעוד כמה דקות.");
       else if (res.status === 401) {
-        showError("פג תוקף ההתחברות. מנסה להתחבר מחדש...");
-        // Try to refresh token via Supabase REST API
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          hideError();
-          // Retry the enhance with the new token
-          isEnhancing = false;
-          clearInterval(timerInterval);
-          setLoading(false);
-          doEnhance();
-          return;
+        if (!enhanceRetried) {
+          showError("פג תוקף ההתחברות. מנסה להתחבר מחדש...");
+          // Try to refresh token via Supabase REST API
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            hideError();
+            // Retry the enhance with the new token (once only)
+            enhanceRetried = true;
+            isEnhancing = false;
+            clearInterval(timerInterval);
+            setLoading(false);
+            doEnhance();
+            return;
+          }
         }
+        enhanceRetried = false;
         showLoginScreen("token_expired");
       }
       else showError(err.error || "שגיאה בשדרוג");
@@ -448,6 +453,7 @@ async function doEnhance() {
 
     resultText.classList.remove("streaming");
     lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
+    enhanceRetried = false; // Reset retry flag on success
 
     // Auto-copy to clipboard
     try {

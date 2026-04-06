@@ -81,7 +81,7 @@ function decodeJwtPayload(token) {
  */
 function isTokenExpired(token) {
   const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return false;
+  if (!payload?.exp) return true; // Treat malformed tokens as expired
   return payload.exp * 1000 < Date.now() + 5 * 60 * 1000;
 }
 
@@ -90,7 +90,7 @@ function isTokenExpired(token) {
  */
 function isTokenGenuinelyExpired(token) {
   const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return false;
+  if (!payload?.exp) return true; // Treat malformed tokens as expired
   return payload.exp * 1000 < Date.now();
 }
 

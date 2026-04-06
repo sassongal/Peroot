@@ -1491,7 +1491,7 @@ textarea:focus::placeholder {
 
   /* Surfaces */
   textarea, .prompt-card, .result-section, select,
-  .mode-btn, .quick-prompt-card {
+  .mode-btn {
     background: rgba(0, 0, 0, 0.03) !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
     color: #1c1c1e !important;
