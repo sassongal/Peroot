@@ -3,6 +3,7 @@ import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engin
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import { VideoPlatform } from "../video-platforms";
+import { getExamplesBlock } from "./skills";
 
 // ── Platform-specific system prompt overrides ──
 // Each platform has a unique prompting architecture based on official docs,
@@ -498,6 +499,12 @@ export class VideoEngine extends BaseEngine {
     let finalSystem = systemPrompt;
     if (identity) {
       finalSystem += `\n\n${identity}`;
+    }
+
+    // Inject few-shot examples from skill files
+    const examplesBlock = getExamplesBlock('video', platform);
+    if (examplesBlock) {
+      finalSystem += examplesBlock;
     }
 
     // English cinematic GENIUS_QUESTIONS focused on the 7 video layers

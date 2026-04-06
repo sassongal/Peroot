@@ -3,6 +3,7 @@ import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engin
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import type { ImagePlatform, ImageOutputFormat } from "../media-platforms";
+import { getExamplesBlock } from "./skills";
 
 // ── Platform-specific system prompt fragments ──
 
@@ -616,6 +617,13 @@ export class ImageEngine extends BaseEngine {
       const identity = this.getSystemIdentity();
       if (identity) {
           finalSystem += `\n\n${identity}`;
+      }
+
+      // Inject few-shot examples from skill files
+      const skillPlatformKey = platform === 'general' ? 'general' : platform;
+      const examplesBlock = getExamplesBlock('image', skillPlatformKey);
+      if (examplesBlock) {
+          finalSystem += examplesBlock;
       }
 
       if (isGeneral) {
