@@ -55,6 +55,9 @@ export function Footer() {
           <Link href="/guide" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "מדריך" : "Guide"}
           </Link>
+          <Link href="/guides" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+            {isHe ? "מדריכי פלטפורמות" : "Platform Guides"}
+          </Link>
           <Link href="/examples" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
             {isHe ? "דוגמאות" : "Examples"}
           </Link>

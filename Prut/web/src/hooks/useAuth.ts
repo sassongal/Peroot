@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-export type PlanTier = 'guest' | 'free' | 'pro';
+export type PlanTier = 'guest' | 'free' | 'pro' | 'admin';
 
 interface AuthState {
   user: User | null;
@@ -30,7 +30,9 @@ export function useAuth() {
           .select('plan_tier')
           .eq('id', data.user.id)
           .maybeSingle();
-        if (profile?.plan_tier === 'pro') tier = 'pro';
+        const pt = profile?.plan_tier;
+        if (pt === 'admin') tier = 'admin';
+        else if (pt === 'pro') tier = 'pro';
       }
       setState((prev) => ({
         ...prev,
@@ -51,7 +53,9 @@ export function useAuth() {
           .select('plan_tier')
           .eq('id', user.id)
           .maybeSingle();
-        if (profile?.plan_tier === 'pro') tier = 'pro';
+        const pt = profile?.plan_tier;
+        if (pt === 'admin') tier = 'admin';
+        else if (pt === 'pro') tier = 'pro';
       }
       setState((prev) => ({
         ...prev,

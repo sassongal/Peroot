@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap">
   <title>Peroot</title>
 </head>
 <body>
@@ -108,25 +109,48 @@
     <div id="tab-enhance" class="tab-content active">
       <div class="input-section">
         <div class="mode-selector" id="mode-selector">
-          <button class="mode-btn active" data-mode="STANDARD" title="שדרוג פרומפט רגיל">
-            <span class="mode-icon">&#9670;</span>
+          <button class="mode-btn active" data-mode="STANDARD" data-color="#f59e0b" title="שדרוג פרומפט רגיל">
+            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8L12 14.6l-4.9 3.6 1.9-5.8L4 8.8h6.1z"/></svg></span>
             <span class="mode-label">רגיל</span>
           </button>
-          <button class="mode-btn locked" data-mode="DEEP_RESEARCH" title="מחקר מעמיק">
-            <span class="mode-icon">&#9673;</span>
+          <button class="mode-btn locked" data-mode="DEEP_RESEARCH" data-color="#10b981" title="מחקר מעמיק">
+            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span class="mode-label">מחקר</span>
             <span class="mode-lock">Pro</span>
           </button>
-          <button class="mode-btn locked" data-mode="IMAGE_GENERATION" title="יצירת תמונות">
-            <span class="mode-icon">&#9671;</span>
+          <button class="mode-btn locked" data-mode="IMAGE_GENERATION" data-color="#ec4899" title="יצירת תמונות">
+            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg></span>
             <span class="mode-label">תמונה</span>
             <span class="mode-lock">Pro</span>
           </button>
-          <button class="mode-btn locked" data-mode="AGENT_BUILDER" title="בניית סוכן AI">
-            <span class="mode-icon">&#9678;</span>
+          <button class="mode-btn locked" data-mode="VIDEO_GENERATION" data-color="#3b82f6" title="יצירת סרטונים">
+            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="15" height="16" rx="2"/><path d="M17 8l5-3v14l-5-3"/></svg></span>
+            <span class="mode-label">וידאו</span>
+            <span class="mode-lock">Pro</span>
+          </button>
+          <button class="mode-btn locked" data-mode="AGENT_BUILDER" data-color="#8b5cf6" title="בניית סוכן AI">
+            <span class="mode-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h.01M15 9h.01M9 15h6"/></svg></span>
             <span class="mode-label">סוכן</span>
             <span class="mode-lock">Pro</span>
           </button>
+        </div>
+        <div id="image-platform-selector" class="platform-selector platform-selector-image hidden">
+          <button class="platform-chip active" data-iplatform="general">🎨 כללי</button>
+          <button class="platform-chip" data-iplatform="midjourney">Midjourney</button>
+          <button class="platform-chip" data-iplatform="dalle">GPT Image</button>
+          <button class="platform-chip" data-iplatform="flux">FLUX.2</button>
+          <button class="platform-chip" data-iplatform="stable-diffusion">Stable Diffusion</button>
+          <button class="platform-chip" data-iplatform="imagen">Imagen</button>
+          <button class="platform-chip" data-iplatform="nanobanana">Gemini</button>
+        </div>
+        <div id="video-platform-selector" class="platform-selector hidden">
+          <button class="platform-chip active" data-vplatform="general">🎬 כללי</button>
+          <button class="platform-chip" data-vplatform="runway">Runway</button>
+          <button class="platform-chip" data-vplatform="kling">Kling</button>
+          <button class="platform-chip" data-vplatform="sora">Sora</button>
+          <button class="platform-chip" data-vplatform="veo">Veo</button>
+          <button class="platform-chip" data-vplatform="higgsfield">Higgsfield</button>
+          <button class="platform-chip" data-vplatform="minimax">Minimax</button>
         </div>
         <div class="tone-chips" id="tone-chips">
           <button class="tone-chip active" data-tone="Professional">מקצועי</button>

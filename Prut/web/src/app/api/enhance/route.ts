@@ -107,14 +107,14 @@ export async function POST(req: Request) {
         : supabase;
 
     // 1. Context Fetching - check cache for profile/tier first
-    let tier: 'free' | 'pro' | 'guest' = 'guest';
+    let tier: 'free' | 'pro' | 'admin' | 'guest' = 'guest';
     let isAdmin = false;
     let cachedHit = false;
 
     if (userId) {
         const cached = profileCache.get(userId);
         if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
-            tier = cached.tier as 'free' | 'pro';
+            tier = cached.tier as 'free' | 'pro' | 'admin';
             isAdmin = cached.isAdmin;
             cachedHit = true;
         }
@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     // 1.1 Process Profile & Tier (from DB if not cached)
     if (!cachedHit && profileRes.data) {
         const profile = profileRes.data;
-        tier = (profile.plan_tier as 'free' | 'pro') || 'free';
+        tier = (profile.plan_tier as 'free' | 'pro' | 'admin') || 'free';
         isAdmin = !!adminRoleRes?.data || isAdmin;
 
         // Store in cache
@@ -163,7 +163,8 @@ export async function POST(req: Request) {
         }
 
         // Guests get stricter rate limiting (5/hour via 'guest' tier)
-        const rateLimitTier = isGuest ? 'guest' : tier;
+        // Admin tier is treated as 'pro' for rate limiting
+        const rateLimitTier = isGuest ? 'guest' : (tier === 'admin' ? 'pro' : tier);
         const limitResult = await checkRateLimit(identifier, rateLimitTier);
 
         if (!limitResult.success) {
@@ -229,7 +230,7 @@ export async function POST(req: Request) {
         prompt: engineOutput.userPrompt,
         temperature: 0.7,
         task: 'enhance',
-        userTier: tier === 'guest' ? 'guest' : tier,
+        userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;
 

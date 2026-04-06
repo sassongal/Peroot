@@ -46,7 +46,7 @@ export function usePromptLimits() {
 
       if (profile) {
         setCredits(profile.credits_balance);
-        setIsPro(profile.plan_tier === 'pro');
+        setIsPro(profile.plan_tier === 'pro' || profile.plan_tier === 'admin');
       }
 
       const hasAdminMetadata = activeUser.app_metadata?.role === 'admin';

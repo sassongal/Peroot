@@ -33,38 +33,30 @@
   --peroot-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --peroot-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  /* Mode identity colors */
+  --peroot-mode-standard: #f59e0b;
+  --peroot-mode-research: #10b981;
+  --peroot-mode-image: #ec4899;
+  --peroot-mode-video: #3b82f6;
+  --peroot-mode-agent: #8b5cf6;
+
   /* Glass */
   --peroot-blur: blur(20px);
   --peroot-blur-strong: blur(30px);
 }
 
 /* ══════════════════════════════════════════
-   TOOLBAR — Frosted Glass Pill + Neon Border
+   RADIAL BUTTON — Single Trigger + Halo
    ══════════════════════════════════════════ */
-.peroot-ai-toolbar {
+.peroot-radial-container {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 12px);
   left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 5px;
-  border-radius: 22px;
-  background: var(--peroot-bg);
-  backdrop-filter: var(--peroot-blur-strong);
-  -webkit-backdrop-filter: var(--peroot-blur-strong);
-  border: 1px solid rgba(245, 158, 11, 0.1);
-  box-shadow:
-    0 0 20px rgba(245, 158, 11, 0.06),
-    0 4px 24px rgba(0, 0, 0, 0.5),
-    inset 0 0 20px rgba(255, 255, 255, 0.02);
   z-index: 999999;
   animation: peroot-toolbar-in 0.5s var(--peroot-ease-spring);
-  transition: all 0.3s var(--peroot-ease);
 }
 
-/* Fixed-position fallback for sites with Shadow DOM (Gemini, AI Studio) */
-.peroot-ai-toolbar.peroot-ai-toolbar-fixed {
+.peroot-radial-fixed {
   position: fixed;
   bottom: 80px;
   right: 20px;
@@ -72,148 +64,199 @@
   top: auto;
 }
 
-.peroot-ai-toolbar:hover {
-  box-shadow:
-    0 0 30px rgba(245, 158, 11, 0.12),
-    0 4px 28px rgba(0, 0, 0, 0.5),
-    inset 0 0 24px rgba(255, 255, 255, 0.03);
-  border-color: rgba(245, 158, 11, 0.2);
-  transform: translateY(-2px);
-}
-
 @keyframes peroot-toolbar-in {
-  0% {
-    opacity: 0;
-    transform: translateY(16px) scale(0.85);
-    filter: blur(8px);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(-3px) scale(1.02);
-    filter: blur(0);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
+  0% { opacity: 0; transform: translateY(16px) scale(0.85); filter: blur(8px); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.02); filter: blur(0); }
+  100% { transform: translateY(0) scale(1); filter: blur(0); }
 }
 
-/* ══════════════════════════════════════════
-   MAIN ENHANCE BUTTON — Circular Amber
-   ══════════════════════════════════════════ */
-.peroot-ai-btn {
-  width: 38px;
-  height: 38px;
+.peroot-radial-trigger {
+  --halo-color: #f59e0b;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  border: none;
-  background: linear-gradient(145deg, rgba(245, 158, 11, 0.2), rgba(249, 115, 22, 0.1));
-  color: var(--peroot-amber);
-  font-size: 16px;
+  border: 1.5px solid color-mix(in srgb, var(--halo-color) 25%, transparent);
+  background: var(--peroot-bg);
+  backdrop-filter: var(--peroot-blur-strong);
+  -webkit-backdrop-filter: var(--peroot-blur-strong);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s var(--peroot-ease);
   position: relative;
-  overflow: hidden;
+  transition: all 0.3s var(--peroot-ease);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--halo-color) 15%, transparent),
+    0 0 40px color-mix(in srgb, var(--halo-color) 8%, transparent),
+    0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* Inner glow */
-.peroot-ai-btn::before {
+/* Animated halo ring */
+.peroot-radial-trigger::after {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -4px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, rgba(245, 158, 11, 0.15), transparent 70%);
+  border: 2px solid color-mix(in srgb, var(--halo-color) 30%, transparent);
+  animation: peroot-halo-pulse 2.5s ease-in-out infinite;
   pointer-events: none;
-  transition: opacity 0.3s;
-  opacity: 0.5;
 }
 
-.peroot-ai-btn:hover {
-  background: linear-gradient(145deg, rgba(245, 158, 11, 0.3), rgba(249, 115, 22, 0.15));
-  box-shadow: 0 0 24px rgba(245, 158, 11, 0.2), 0 0 8px rgba(245, 158, 11, 0.1);
-  transform: scale(1.08);
+@keyframes peroot-halo-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.12); opacity: 1; }
 }
 
-.peroot-ai-btn:hover::before {
-  opacity: 1;
+.peroot-radial-trigger:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--halo-color) 25%, transparent),
+    0 0 60px color-mix(in srgb, var(--halo-color) 12%, transparent),
+    0 4px 20px rgba(0, 0, 0, 0.5);
+  border-color: color-mix(in srgb, var(--halo-color) 40%, transparent);
 }
 
-.peroot-ai-btn:active {
-  transform: scale(0.94);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+.peroot-radial-trigger:active {
+  transform: scale(0.95);
 }
 
-.peroot-ai-btn img {
-  width: 20px;
-  height: 20px;
-  transition: all 0.2s;
-  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.3));
+.peroot-radial-logo {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--halo-color) 40%, transparent));
+  transition: filter 0.3s;
 }
 
-.peroot-ai-btn:hover img {
-  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+.peroot-radial-trigger:hover .peroot-radial-logo {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--halo-color) 60%, transparent));
 }
 
-/* Loading state: spinning amber ring */
-.peroot-ai-btn.peroot-ai-loading {
-  background: linear-gradient(145deg, rgba(245, 158, 11, 0.15), rgba(249, 115, 22, 0.08));
+.peroot-radial-mode-indicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--peroot-bg-solid);
+  border-radius: 50%;
+  border: 1.5px solid var(--peroot-border);
+  font-size: 8px;
+  pointer-events: none;
 }
+.peroot-radial-mode-indicator svg { width: 10px; height: 10px; }
 
-.peroot-ai-btn.peroot-ai-loading::after {
+/* Loading state */
+.peroot-radial-trigger.peroot-ai-loading {
+  animation: peroot-loading-pulse 1.5s ease-in-out infinite;
+}
+.peroot-radial-trigger.peroot-ai-loading::before {
   content: '';
   position: absolute;
-  inset: -3px;
+  inset: -4px;
   border-radius: 50%;
   border: 2px solid transparent;
-  border-top-color: var(--peroot-amber);
-  border-right-color: rgba(245, 158, 11, 0.3);
+  border-top-color: var(--halo-color);
+  border-right-color: color-mix(in srgb, var(--halo-color) 30%, transparent);
   animation: peroot-spin 0.7s linear infinite;
-  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.3));
 }
 
-/* Success state: green pulse */
-.peroot-ai-btn.peroot-ai-success {
+/* Success state */
+.peroot-radial-trigger.peroot-ai-success {
   background: rgba(34, 197, 94, 0.12);
   color: var(--peroot-success);
-  animation: peroot-success-pulse 0.5s var(--peroot-ease);
-}
-
-@keyframes peroot-success-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
-  50% { box-shadow: 0 0 24px 6px rgba(34, 197, 94, 0.15); }
-  100% { box-shadow: 0 0 8px rgba(34, 197, 94, 0.05); }
+  font-size: 18px;
+  font-weight: 700;
 }
 
 /* ══════════════════════════════════════════
-   TOOL BUTTONS (Library, Export)
+   RADIAL MENU — Fan-out Options
    ══════════════════════════════════════════ */
-.peroot-ai-tool-btn {
-  width: 34px;
-  height: 34px;
+.peroot-radial-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.peroot-radial-option {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
   border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--peroot-text-muted);
-  font-size: 14px;
+  border: 1px solid var(--peroot-border);
+  background: var(--peroot-bg);
+  backdrop-filter: var(--peroot-blur);
+  -webkit-backdrop-filter: var(--peroot-blur);
+  color: var(--peroot-text-dim);
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s var(--peroot-ease);
+  gap: 0px;
+  font-family: 'Alef', 'SF Pro Display', -apple-system, sans-serif;
+  font-size: 7px;
+  font-weight: 700;
+  transform: scale(0) translateY(0);
+  opacity: 0;
+  transition: transform 0.35s var(--peroot-ease-spring), opacity 0.25s ease, background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition-delay: 0s;
+  pointer-events: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
-.peroot-ai-tool-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+.peroot-radial-option-icon { display: flex; align-items: center; justify-content: center; }
+.peroot-radial-option-icon svg { width: 16px; height: 16px; }
+.peroot-radial-option-label { display: none; }
+
+.peroot-radial-option:hover {
+  background: var(--peroot-surface-hover);
+  color: var(--peroot-amber);
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.1), 0 4px 16px rgba(0, 0, 0, 0.4);
+  transform: scale(1.15) translateY(var(--ty)) translateX(var(--tx)) !important;
+}
+
+/* Fan-out positions: arc above the trigger */
+.peroot-radial-open .peroot-radial-option {
+  opacity: 1;
+  pointer-events: auto;
+}
+.peroot-radial-open .peroot-radial-option:nth-child(1) { --tx: -52px; --ty: -16px; transform: scale(1) translateY(-16px) translateX(-52px); transition-delay: 0ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(2) { --tx: -18px; --ty: -50px; transform: scale(1) translateY(-50px) translateX(-18px); transition-delay: 40ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(3) { --tx: 18px; --ty: -50px; transform: scale(1) translateY(-50px) translateX(18px); transition-delay: 80ms; }
+.peroot-radial-open .peroot-radial-option:nth-child(4) { --tx: 52px; --ty: -16px; transform: scale(1) translateY(-16px) translateX(52px); transition-delay: 120ms; }
+
+/* Tooltip labels on hover */
+.peroot-radial-option:hover .peroot-radial-option-label {
+  display: block;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--peroot-bg);
+  border: 1px solid var(--peroot-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 9px;
+  white-space: nowrap;
   color: var(--peroot-text);
-  transform: scale(1.08);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.peroot-ai-tool-btn:active {
-  transform: scale(0.92);
-}
+/* ══════════════════════════════════════════
+   SPINNER (shared)
+   ══════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════
    SPINNER
@@ -249,7 +292,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: -12px 0 50px rgba(0, 0, 0, 0.6), -2px 0 20px rgba(0, 0, 0, 0.3);
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Alef', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   color: var(--peroot-text);
   direction: rtl;
   -webkit-font-smoothing: antialiased;
@@ -559,7 +602,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Alef', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   animation: peroot-fade-in 0.25s var(--peroot-ease);
   -webkit-font-smoothing: antialiased;
 }
@@ -713,7 +756,7 @@
   border-radius: 14px;
   font-size: 12px;
   font-weight: 700;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Alef', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   z-index: 2147483647;
   opacity: 0;
   transition: all 0.4s var(--peroot-ease-spring);
@@ -748,55 +791,6 @@
   border: 1px solid rgba(59, 130, 246, 0.25);
   color: #3b82f6;
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.08), 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-/* ══════════════════════════════════════════
-   MODE SELECTOR — Arrow + Dropdown
-   ══════════════════════════════════════════ */
-.peroot-mode-arrow {
-  width: 20px;
-  height: 34px;
-  border-radius: 0 16px 16px 0;
-  border: none;
-  background: transparent;
-  color: var(--peroot-text-muted);
-  font-size: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s var(--peroot-ease);
-  margin-left: -6px;
-  padding: 0 5px 0 2px;
-}
-
-.peroot-mode-arrow:hover {
-  color: var(--peroot-text);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.peroot-mode-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.peroot-mode-badge {
-  position: absolute;
-  top: -7px;
-  right: -5px;
-  font-size: 7px;
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--peroot-amber);
-  padding: 1px 4px;
-  border-radius: 5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  pointer-events: none;
-  line-height: 1.2;
-  white-space: nowrap;
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  text-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
 }
 
 /* Mode Dropdown — Glass + Neon Border */
@@ -849,10 +843,19 @@
 }
 
 .peroot-mode-item.active {
-  color: var(--peroot-amber);
-  background: rgba(245, 158, 11, 0.08);
-  box-shadow: inset 0 0 12px rgba(245, 158, 11, 0.04);
+  color: var(--mode-color, var(--peroot-amber));
+  background: color-mix(in srgb, var(--mode-color, var(--peroot-amber)) 8%, transparent);
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--mode-color, var(--peroot-amber)) 4%, transparent);
 }
+
+.peroot-mode-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+.peroot-mode-item-icon svg { width: 16px; height: 16px; }
 
 .peroot-mode-item.locked {
   opacity: 0.35;
@@ -874,27 +877,28 @@
 }
 
 /* ══════════════════════════════════════════
-   LOADING PULSE GLOW (FIX 3)
+   LOADING PULSE GLOW
    ══════════════════════════════════════════ */
-.peroot-ai-btn.peroot-ai-loading {
-  animation: peroot-loading-pulse 1.5s ease-in-out infinite;
-}
 @keyframes peroot-loading-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.3); }
-  50% { box-shadow: 0 0 12px 4px rgba(245,158,11,0.15); }
+  50% { box-shadow: 0 0 16px 6px rgba(245,158,11,0.15); }
 }
 
 /* ══════════════════════════════════════════
    LIGHT MODE — Auto-detect via system preference
    ══════════════════════════════════════════ */
 @media (prefers-color-scheme: light) {
-  .peroot-ai-toolbar {
-    background: rgba(255,255,255,0.85) !important;
+  .peroot-radial-trigger {
+    background: rgba(255,255,255,0.9) !important;
     border-color: rgba(0,0,0,0.08) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 0 20px color-mix(in srgb, var(--halo-color) 10%, transparent) !important;
   }
-  .peroot-ai-tool-btn { color: #71717a !important; }
-  .peroot-ai-tool-btn:hover { background: rgba(0,0,0,0.04) !important; color: #1c1c1e !important; }
+  .peroot-radial-option {
+    background: rgba(255,255,255,0.92) !important;
+    color: #3f3f46 !important;
+    border-color: rgba(0,0,0,0.08) !important;
+  }
+  .peroot-radial-option:hover { background: rgba(0,0,0,0.04) !important; color: #1c1c1e !important; }
   .peroot-mode-dropdown {
     background: rgba(255,255,255,0.95) !important;
     border-color: rgba(0,0,0,0.08) !important;

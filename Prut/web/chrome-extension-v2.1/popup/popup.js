@@ -51,6 +51,8 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 let selectedMode = "STANDARD";
+let selectedImagePlatform = "general";
+let selectedVideoPlatform = "general";
 let userTier = "free";
 let timerInterval = null;
 let libraryLoaded = false;
@@ -204,7 +206,7 @@ async function fetchCredits() {
       const tier = user.plan_tier || "free";
       userTier = tier;
       updateModeButtons();
-      const tierLabels = { free: "FREE", pro: "PRO", admin: "ADMIN" };
+      const tierLabels = { free: "FREE", pro: "PRO", premium: "PRO", admin: "ADMIN" };
       tierBadge.textContent = tierLabels[tier] || tier.toUpperCase();
       tierBadge.className = `tier-badge tier-${tier}`;
       tierBadge.classList.remove("hidden");
@@ -429,6 +431,8 @@ async function doEnhance() {
         tone: selectedTone,
         category: "\u05DB\u05DC\u05DC\u05D9",
         capability_mode: selectedMode,
+        ...(selectedMode === "IMAGE_GENERATION" && { mode_params: { image_platform: selectedImagePlatform } }),
+        ...(selectedMode === "VIDEO_GENERATION" && { mode_params: { video_platform: selectedVideoPlatform } }),
       }),
     });
 
@@ -888,10 +892,14 @@ function timeAgo(ts) {
 }
 
 // ═══ MODE SELECTOR ═══
+function isProOrAdmin() {
+  return userTier === 'pro' || userTier === 'premium' || userTier === 'admin';
+}
+
 function updateModeButtons() {
   document.querySelectorAll('.mode-btn').forEach(btn => {
     const mode = btn.dataset.mode;
-    const isLocked = mode !== 'STANDARD' && userTier !== 'pro' && userTier !== 'admin';
+    const isLocked = mode !== 'STANDARD' && !isProOrAdmin();
     btn.classList.toggle('locked', isLocked);
     // Show/hide lock badge
     const lock = btn.querySelector('.mode-lock');
@@ -902,13 +910,51 @@ function updateModeButtons() {
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const mode = btn.dataset.mode;
-    if (mode !== 'STANDARD' && userTier !== 'pro' && userTier !== 'admin') {
+    if (mode !== 'STANDARD' && !isProOrAdmin()) {
       showError('שדרג ל-Pro כדי לפתוח מצבים מתקדמים');
       return;
     }
     selectedMode = mode;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    // Bounce animation
+    btn.classList.add('mode-switching');
+    btn.addEventListener('animationend', () => btn.classList.remove('mode-switching'), { once: true });
+    // Toggle platform selectors based on mode
+    togglePlatformSelectors();
+  });
+});
+
+// ═══ PLATFORM SELECTORS (Image + Video) ═══
+const imagePlatformSelector = $("image-platform-selector");
+const videoPlatformSelector = $("video-platform-selector");
+
+function togglePlatformSelectors() {
+  if (selectedMode === "IMAGE_GENERATION") {
+    imagePlatformSelector.classList.remove("hidden");
+    videoPlatformSelector.classList.add("hidden");
+  } else if (selectedMode === "VIDEO_GENERATION") {
+    videoPlatformSelector.classList.remove("hidden");
+    imagePlatformSelector.classList.add("hidden");
+  } else {
+    imagePlatformSelector.classList.add("hidden");
+    videoPlatformSelector.classList.add("hidden");
+  }
+}
+
+document.querySelectorAll('.platform-chip[data-iplatform]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.platform-chip[data-iplatform]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedImagePlatform = chip.dataset.iplatform;
+  });
+});
+
+document.querySelectorAll('.platform-chip[data-vplatform]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.platform-chip[data-vplatform]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedVideoPlatform = chip.dataset.vplatform;
   });
 });
 

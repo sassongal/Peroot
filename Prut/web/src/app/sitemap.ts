@@ -12,10 +12,23 @@ import { CATEGORY_SLUG_MAP } from '@/lib/category-slugs';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space';
 
+  // Guide slugs for sitemap (image + video platforms)
+  const guideSlugs = [
+    'midjourney', 'gpt-image', 'flux', 'stable-diffusion', 'imagen', 'gemini-image', 'image-prompts',
+    'runway', 'kling', 'sora', 'veo', 'minimax', 'video-prompts',
+  ];
+
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
     { url: `${baseUrl}/features`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/guide`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/guides`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    ...guideSlugs.map(slug => ({
+      url: `${baseUrl}/guides/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
     { url: `${baseUrl}/pricing`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/teachers`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/examples`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },

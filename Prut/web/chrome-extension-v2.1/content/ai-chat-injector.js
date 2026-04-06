@@ -11,6 +11,15 @@
   const API_BASE = "https://www.peroot.space";
   const LOGO_URL = chrome.runtime.getURL('icons/icon-48.png');
 
+  // Inject Alef font
+  if (!document.getElementById('peroot-alef-font')) {
+    const fontLink = document.createElement('link');
+    fontLink.id = 'peroot-alef-font';
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap';
+    document.head.appendChild(fontLink);
+  }
+
   // ── Site Detection ──────────────────────────────────────────────────────────
 
   const SITES = {
@@ -259,12 +268,31 @@
 
   // ── Mode Config ─────────────────────────────────────────────────────────
 
+  const MODE_COLORS = {
+    STANDARD: '#f59e0b',
+    DEEP_RESEARCH: '#10b981',
+    IMAGE_GENERATION: '#ec4899',
+    VIDEO_GENERATION: '#3b82f6',
+    AGENT_BUILDER: '#8b5cf6',
+  };
+
+  const MODE_SVGS = {
+    STANDARD: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8L12 14.6l-4.9 3.6 1.9-5.8L4 8.8h6.1z"/></svg>',
+    DEEP_RESEARCH: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg>',
+    IMAGE_GENERATION: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg>',
+    VIDEO_GENERATION: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="15" height="16" rx="2"/><path d="M17 8l5-3v14l-5-3"/></svg>',
+    AGENT_BUILDER: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h.01M15 9h.01M9 15h6"/></svg>',
+  };
+
   const MODES = [
-    { key: 'STANDARD', icon: '💬', label: 'רגיל', proOnly: false },
-    { key: 'DEEP_RESEARCH', icon: '🌐', label: 'מחקר', proOnly: true },
-    { key: 'IMAGE_GENERATION', icon: '🎨', label: 'תמונה', proOnly: true },
-    { key: 'AGENT_BUILDER', icon: '🤖', label: 'סוכן', proOnly: true },
+    { key: 'STANDARD', icon: MODE_SVGS.STANDARD, label: 'רגיל', proOnly: false, color: MODE_COLORS.STANDARD },
+    { key: 'DEEP_RESEARCH', icon: MODE_SVGS.DEEP_RESEARCH, label: 'מחקר', proOnly: true, color: MODE_COLORS.DEEP_RESEARCH },
+    { key: 'IMAGE_GENERATION', icon: MODE_SVGS.IMAGE_GENERATION, label: 'תמונה', proOnly: true, color: MODE_COLORS.IMAGE_GENERATION },
+    { key: 'VIDEO_GENERATION', icon: MODE_SVGS.VIDEO_GENERATION, label: 'וידאו', proOnly: true, color: MODE_COLORS.VIDEO_GENERATION },
+    { key: 'AGENT_BUILDER', icon: MODE_SVGS.AGENT_BUILDER, label: 'סוכן', proOnly: true, color: MODE_COLORS.AGENT_BUILDER },
   ];
+
+  let selectedVideoPlatform = 'general';
 
   // ── Enhancement ──────────────────────────────────────────────────────────
 
@@ -318,6 +346,7 @@
           tone: 'Professional',
           category: '\u05DB\u05DC\u05DC\u05D9',
           capability_mode: selectedMode,
+          ...(selectedMode === 'VIDEO_GENERATION' && { mode_params: { video_platform: selectedVideoPlatform } }),
         },
         stream: true,
       });
@@ -373,46 +402,73 @@
       peerootBtn.classList.add('peroot-ai-success');
       peerootBtn.innerHTML = '✓';
     } else {
-      peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
+      peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" class="peroot-radial-logo"><span class="peroot-radial-mode-indicator" style="display:none"></span>`;
+      updateRadialHalo();
     }
   }
 
-  function getModeBadgeLabel() {
-    if (selectedMode === 'STANDARD') return null;
-    const mode = MODES.find(m => m.key === selectedMode);
-    return mode ? mode.icon : null;
+  function getActiveColor() {
+    return MODE_COLORS[selectedMode] || MODE_COLORS.STANDARD;
   }
 
-  function updateModeBadge() {
-    const badge = document.getElementById('peroot-mode-badge');
-    if (!badge) return;
-    const label = getModeBadgeLabel();
-    if (label) {
-      badge.textContent = label;
-      badge.style.display = '';
+  function updateRadialHalo() {
+    const trigger = document.getElementById('peroot-radial-trigger');
+    if (!trigger) return;
+    const color = getActiveColor();
+    trigger.style.setProperty('--halo-color', color);
+    // Update mode indicator
+    const indicator = trigger.querySelector('.peroot-radial-mode-indicator');
+    if (indicator) {
+      const mode = MODES.find(m => m.key === selectedMode);
+      if (mode && selectedMode !== 'STANDARD') {
+        indicator.innerHTML = mode.icon;
+        indicator.style.color = color;
+        indicator.style.display = '';
+      } else {
+        indicator.style.display = 'none';
+      }
+    }
+  }
+
+  function closeRadialMenu() {
+    const menu = document.getElementById('peroot-radial-menu');
+    if (menu) menu.classList.remove('peroot-radial-open');
+    radialOpen = false;
+    if (radialOutsideHandler) {
+      document.removeEventListener('click', radialOutsideHandler, true);
+      radialOutsideHandler = null;
+    }
+  }
+
+  let radialOpen = false;
+  let radialOutsideHandler = null;
+
+  function toggleRadialMenu() {
+    const menu = document.getElementById('peroot-radial-menu');
+    if (!menu) return;
+    if (radialOpen) {
+      closeRadialMenu();
     } else {
-      badge.style.display = 'none';
+      menu.classList.add('peroot-radial-open');
+      radialOpen = true;
+      radialOutsideHandler = (e) => {
+        const container = document.getElementById('peroot-radial-container');
+        if (container && !container.contains(e.target)) closeRadialMenu();
+      };
+      setTimeout(() => document.addEventListener('click', radialOutsideHandler, true), 0);
     }
   }
 
-  function closeModeDropdown() {
-    const dd = document.getElementById('peroot-mode-dropdown');
-    if (dd) dd.remove();
-    if (modeDropdownOutsideHandler) {
-      document.removeEventListener('click', modeDropdownOutsideHandler, true);
-      modeDropdownOutsideHandler = null;
-    }
-    modeDropdownOpen = false;
-  }
-
-  async function toggleModeDropdown(anchorEl) {
-    if (modeDropdownOpen) {
-      closeModeDropdown();
-      return;
-    }
-
-    // Ensure profile is loaded before showing lock state
+  async function showModeSubmenu() {
+    closeRadialMenu();
     if (!userProfile) await fetchUserProfile();
+
+    const container = document.getElementById('peroot-radial-container');
+    if (!container) return;
+
+    // Remove existing dropdown
+    const existing = document.getElementById('peroot-mode-dropdown');
+    if (existing) { existing.remove(); modeDropdownOpen = false; return; }
 
     const dropdown = document.createElement('div');
     dropdown.id = 'peroot-mode-dropdown';
@@ -423,9 +479,10 @@
       const isLocked = mode.proOnly && !isProUser();
       const isActive = mode.key === selectedMode;
       item.className = 'peroot-mode-item' + (isActive ? ' active' : '') + (isLocked ? ' locked' : '');
+      item.style.setProperty('--mode-color', mode.color);
 
-      let html = `<span>${mode.icon}</span><span>${mode.label}</span>`;
-      if (isLocked) html += '<span class="peroot-mode-lock">🔒 Pro</span>';
+      let html = `<span class="peroot-mode-item-icon" style="color:${isActive ? mode.color : 'inherit'}">${mode.icon}</span><span>${mode.label}</span>`;
+      if (isLocked) html += '<span class="peroot-mode-lock">Pro</span>';
       item.innerHTML = html;
 
       item.addEventListener('click', (e) => {
@@ -436,107 +493,141 @@
           return;
         }
         selectedMode = mode.key;
-        updateModeBadge();
-        closeModeDropdown();
+        updateRadialHalo();
+        // Close dropdown
+        dropdown.remove();
+        modeDropdownOpen = false;
+        if (modeDropdownOutsideHandler) {
+          document.removeEventListener('click', modeDropdownOutsideHandler, true);
+          modeDropdownOutsideHandler = null;
+        }
       });
       dropdown.appendChild(item);
     });
 
-    anchorEl.appendChild(dropdown);
+    container.appendChild(dropdown);
     modeDropdownOpen = true;
 
-    // Close on outside click
     modeDropdownOutsideHandler = (e) => {
-      if (!dropdown.contains(e.target) && !anchorEl.contains(e.target)) {
-        closeModeDropdown();
+      if (!dropdown.contains(e.target) && !container.contains(e.target)) {
+        dropdown.remove();
+        modeDropdownOpen = false;
+        document.removeEventListener('click', modeDropdownOutsideHandler, true);
+        modeDropdownOutsideHandler = null;
       }
     };
     setTimeout(() => document.addEventListener('click', modeDropdownOutsideHandler, true), 0);
   }
 
+  // ── Radial Menu Options ──
+  const RADIAL_OPTIONS = [
+    { id: 'enhance', label: 'שדרג', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>', action: () => { closeRadialMenu(); enhanceInput(); } },
+    { id: 'modes', label: 'מצבים', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>', action: () => showModeSubmenu() },
+    { id: 'library', label: 'ספרייה', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>', action: () => { closeRadialMenu(); toggleSidePanel(); } },
+    { id: 'export', label: 'ייצוא', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>', action: () => { closeRadialMenu(); exportConversation(); } },
+  ];
+
   function injectButton() {
-    if (document.getElementById('peroot-ai-btn')) return;
+    if (document.getElementById('peroot-radial-trigger')) return;
 
     const inputEl = document.querySelector(currentSite.inputSelector);
     if (!inputEl) return;
 
-    // Find the input container to position the button
     const inputArea = currentSite.inputArea?.() || inputEl.closest('form') || inputEl.parentElement;
     if (!inputArea) return;
 
-    // Create toolbar container (button + mode arrow + library + export)
-    const toolbar = document.createElement('div');
-    toolbar.id = 'peroot-ai-toolbar';
-    toolbar.className = 'peroot-ai-toolbar';
+    // Create radial container
+    const container = document.createElement('div');
+    container.id = 'peroot-radial-container';
+    container.className = 'peroot-radial-container';
 
-    // Mode wrapper (enhance btn + arrow)
-    const modeWrapper = document.createElement('div');
-    modeWrapper.className = 'peroot-mode-wrapper';
+    // Main trigger button with halo
+    const trigger = document.createElement('button');
+    trigger.id = 'peroot-radial-trigger';
+    trigger.className = 'peroot-radial-trigger';
+    trigger.title = 'Peroot — שדרג פרומפט (Ctrl+M)';
+    trigger.style.setProperty('--halo-color', getActiveColor());
+    trigger.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" class="peroot-radial-logo"><span class="peroot-radial-mode-indicator" style="display:none"></span>`;
 
-    // Create enhance button
-    peerootBtn = document.createElement('button');
-    peerootBtn.id = 'peroot-ai-btn';
-    peerootBtn.className = 'peroot-ai-btn';
-    peerootBtn.title = 'Peroot — שדרג פרומפט (Ctrl+M)';
-    peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
-    peerootBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      enhanceInput();
+    // Also set the peerootBtn reference for state updates
+    peerootBtn = trigger;
+
+    // Single click = enhance. Long press (300ms) = open radial menu.
+    let pressTimer = null;
+    let didLongPress = false;
+
+    trigger.addEventListener('mousedown', (e) => {
+      didLongPress = false;
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        toggleRadialMenu();
+      }, 300);
     });
 
-    // Mode badge (shows current mode icon when not STANDARD)
-    const badge = document.createElement('span');
-    badge.id = 'peroot-mode-badge';
-    badge.className = 'peroot-mode-badge';
-    badge.style.display = 'none';
-
-    // Mode arrow button
-    const arrowBtn = document.createElement('button');
-    arrowBtn.className = 'peroot-mode-arrow';
-    arrowBtn.title = 'בחר מצב';
-    arrowBtn.innerHTML = '▾';
-    arrowBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleModeDropdown(modeWrapper);
+    trigger.addEventListener('mouseup', (e) => {
+      if (pressTimer) clearTimeout(pressTimer);
+      if (!didLongPress) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (radialOpen) {
+          closeRadialMenu();
+        } else {
+          enhanceInput();
+        }
+      }
     });
 
-    modeWrapper.appendChild(peerootBtn);
-    modeWrapper.appendChild(badge);
-    modeWrapper.appendChild(arrowBtn);
-    toolbar.appendChild(modeWrapper);
-
-    // Library button
-    const libBtn = document.createElement('button');
-    libBtn.className = 'peroot-ai-tool-btn';
-    libBtn.title = 'ספריית פרומפטים (Ctrl+Alt+S)';
-    libBtn.innerHTML = '📚';
-    libBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleSidePanel();
+    trigger.addEventListener('mouseleave', () => {
+      if (pressTimer) clearTimeout(pressTimer);
     });
-    toolbar.appendChild(libBtn);
 
-    // Export button
-    const expBtn = document.createElement('button');
-    expBtn.className = 'peroot-ai-tool-btn';
-    expBtn.title = 'ייצא שיחה (Ctrl+Alt+E)';
-    expBtn.innerHTML = '📤';
-    expBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      exportConversation();
+    // Also handle touch
+    trigger.addEventListener('touchstart', (e) => {
+      didLongPress = false;
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        toggleRadialMenu();
+      }, 400);
+    }, { passive: true });
+
+    trigger.addEventListener('touchend', (e) => {
+      if (pressTimer) clearTimeout(pressTimer);
+      if (!didLongPress) {
+        e.preventDefault();
+        if (radialOpen) {
+          closeRadialMenu();
+        } else {
+          enhanceInput();
+        }
+      }
     });
-    toolbar.appendChild(expBtn);
 
-    // Insert toolbar relative to the input area
+    // Radial menu
+    const menu = document.createElement('div');
+    menu.id = 'peroot-radial-menu';
+    menu.className = 'peroot-radial-menu';
+
+    RADIAL_OPTIONS.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'peroot-radial-option';
+      btn.title = opt.label;
+      btn.style.setProperty('--i', i);
+      btn.innerHTML = `<span class="peroot-radial-option-icon">${opt.svg}</span><span class="peroot-radial-option-label">${opt.label}</span>`;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        opt.action();
+      });
+      menu.appendChild(btn);
+    });
+
+    container.appendChild(trigger);
+    container.appendChild(menu);
+
+    // Position
     const computedPos = window.getComputedStyle(inputArea).position;
-    if (computedPos === 'static') {
-      inputArea.style.position = 'relative';
-    }
-    inputArea.appendChild(toolbar);
+    if (computedPos === 'static') inputArea.style.position = 'relative';
+    inputArea.appendChild(container);
   }
 
   // ── Side Panel (Prompt Library) ───────────────────────────────────────────
@@ -883,9 +974,15 @@
       e.preventDefault();
       exportConversation();
     }
-    // Escape — close side panel
-    if (e.key === 'Escape' && sidePanelOpen) {
-      closeSidePanel();
+    // Escape — close radial menu or side panel
+    if (e.key === 'Escape') {
+      if (radialOpen) closeRadialMenu();
+      else if (modeDropdownOpen) {
+        const dd = document.getElementById('peroot-mode-dropdown');
+        if (dd) dd.remove();
+        modeDropdownOpen = false;
+      }
+      else if (sidePanelOpen) closeSidePanel();
     }
   });
 
@@ -903,12 +1000,10 @@
   const observer = new MutationObserver(() => {
     if (injectTimeout) clearTimeout(injectTimeout);
     injectTimeout = setTimeout(() => {
-      if (!document.getElementById('peroot-ai-btn')) {
-        // Try normal inject first, fall back to fixed
+      if (!document.getElementById('peroot-radial-trigger')) {
         if (document.querySelector(currentSite.inputSelector)) {
           injectButton();
         }
-        // Don't inject fixed here — tryInject handles the fallback
       }
     }, 500);
   });
@@ -925,49 +1020,67 @@
 
   // Initial injection with progressive retry and fixed-position fallback
   function tryInject(attempts = 0) {
-    if (document.getElementById('peroot-ai-btn')) return; // Already injected
+    if (document.getElementById('peroot-radial-trigger')) return;
 
     if (document.querySelector(currentSite.inputSelector)) {
       injectButton();
     } else if (attempts < 15) {
-      // Progressive delays: 500ms x5, 1000ms x5, 2000ms x5 = ~17.5s total
       const delay = attempts < 5 ? 500 : attempts < 10 ? 1000 : 2000;
       setTimeout(() => tryInject(attempts + 1), delay);
     } else {
-      // Fallback: fixed-position floating button (works on any site)
       injectFixedButton();
     }
   }
 
   function injectFixedButton() {
-    if (document.getElementById('peroot-ai-btn')) return;
+    if (document.getElementById('peroot-radial-trigger')) return;
 
-    const toolbar = document.createElement('div');
-    toolbar.id = 'peroot-ai-toolbar';
-    toolbar.className = 'peroot-ai-toolbar peroot-ai-toolbar-fixed';
+    const container = document.createElement('div');
+    container.id = 'peroot-radial-container';
+    container.className = 'peroot-radial-container peroot-radial-fixed';
 
-    peerootBtn = document.createElement('button');
-    peerootBtn.id = 'peroot-ai-btn';
-    peerootBtn.className = 'peroot-ai-btn';
-    peerootBtn.title = 'Peroot — שדרג פרומפט';
-    peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
-    peerootBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      enhanceInput();
+    const trigger = document.createElement('button');
+    trigger.id = 'peroot-radial-trigger';
+    trigger.className = 'peroot-radial-trigger';
+    trigger.title = 'Peroot — שדרג פרומפט';
+    trigger.style.setProperty('--halo-color', getActiveColor());
+    trigger.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" class="peroot-radial-logo"><span class="peroot-radial-mode-indicator" style="display:none"></span>`;
+    peerootBtn = trigger;
+
+    // Single click = enhance, long press = radial menu
+    let fxPressTimer = null;
+    let fxDidLongPress = false;
+    trigger.addEventListener('mousedown', () => {
+      fxDidLongPress = false;
+      fxPressTimer = setTimeout(() => { fxDidLongPress = true; toggleRadialMenu(); }, 300);
+    });
+    trigger.addEventListener('mouseup', (e) => {
+      if (fxPressTimer) clearTimeout(fxPressTimer);
+      if (!fxDidLongPress) { e.preventDefault(); e.stopPropagation(); radialOpen ? closeRadialMenu() : enhanceInput(); }
+    });
+    trigger.addEventListener('mouseleave', () => { if (fxPressTimer) clearTimeout(fxPressTimer); });
+
+    const menu = document.createElement('div');
+    menu.id = 'peroot-radial-menu';
+    menu.className = 'peroot-radial-menu';
+
+    RADIAL_OPTIONS.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'peroot-radial-option';
+      btn.title = opt.label;
+      btn.style.setProperty('--i', i);
+      btn.innerHTML = `<span class="peroot-radial-option-icon">${opt.svg}</span><span class="peroot-radial-option-label">${opt.label}</span>`;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        opt.action();
+      });
+      menu.appendChild(btn);
     });
 
-    toolbar.appendChild(peerootBtn);
-
-    // Library button
-    const libBtn = document.createElement('button');
-    libBtn.className = 'peroot-ai-tool-btn';
-    libBtn.title = 'ספריית פרומפטים';
-    libBtn.innerHTML = '\u25C8';
-    libBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleSidePanel(); });
-    toolbar.appendChild(libBtn);
-
-    document.body.appendChild(toolbar);
+    container.appendChild(trigger);
+    container.appendChild(menu);
+    document.body.appendChild(container);
   }
 
   tryInject();

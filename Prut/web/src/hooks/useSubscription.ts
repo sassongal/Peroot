@@ -10,6 +10,7 @@ export type SubscriptionStatus = 'free' | 'active' | 'cancelled' | 'past_due' | 
 export interface Subscription {
   status: SubscriptionStatus;
   plan_name: string;
+  plan_tier?: string;
   renews_at: string | null;
   ends_at: string | null;
   trial_ends_at: string | null;
@@ -38,7 +39,8 @@ export function useSubscription() {
     placeholderData: FREE_SUBSCRIPTION,
   });
 
-  const isPro = subscription.status === 'active' || subscription.status === 'on_trial' || subscription.status === 'past_due';
+  const isPro = subscription.status === 'active' || subscription.status === 'on_trial' || subscription.status === 'past_due'
+    || subscription.plan_tier === 'pro' || subscription.plan_tier === 'admin';
 
   const checkout = useCallback(async (variantId?: string) => {
     const vid = (variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || '').trim();
