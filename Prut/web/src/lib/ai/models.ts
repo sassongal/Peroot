@@ -135,7 +135,10 @@ export const TASK_ROUTING: Record<string, ModelId[]> = {
 export function getModelsForTask(task: string, userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
   const models = TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
   if (userTier === 'pro') {
-    return [...new Set(['deepseek-chat' as ModelId, 'gemini-2.5-pro' as ModelId, ...models])];
+    // Put pro models AFTER the primary free model to avoid tripping the Google circuit breaker
+    // if gemini-2.5-pro fails (which would block ALL Google models including the healthy flash)
+    const [primary, ...rest] = models;
+    return [...new Set([primary, 'gemini-2.5-pro' as ModelId, 'deepseek-chat' as ModelId, ...rest])];
   }
   // Free/guest users: filter out pro-only models, but ensure at least one model remains
   const freeModels = models.filter(id => AVAILABLE_MODELS[id].tier === 'free');
