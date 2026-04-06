@@ -534,6 +534,7 @@
       </div>
       <div class="peroot-sp-tabs">
         <button class="peroot-sp-tab active" data-tab="library">הספריה שלי</button>
+        <button class="peroot-sp-tab" data-tab="favorites">&#11088; מועדפים</button>
         <button class="peroot-sp-tab" data-tab="quick">מהירים</button>
       </div>
       <div class="peroot-sp-content" id="peroot-sp-content">
@@ -551,6 +552,7 @@
         sidePanel.querySelectorAll('.peroot-sp-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         if (tab.dataset.tab === 'library') loadLibrary();
+        else if (tab.dataset.tab === 'favorites') loadSidePanelFavorites();
         else loadQuickPrompts();
       });
     });
@@ -713,6 +715,48 @@
         }
       });
     });
+  }
+
+  // ── Side Panel Favorites ──────────────────────────────────────────────────
+
+  async function loadSidePanelFavorites() {
+    const content = document.getElementById('peroot-sp-content');
+    if (!content) return;
+
+    content.innerHTML = '<div class="peroot-sp-loading"><span class="peroot-ai-spinner"></span></div>';
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        content.innerHTML = '<div class="peroot-sp-empty">\u05D4\u05EA\u05D7\u05D1\u05E8 \u05DC-Peroot \u05DB\u05D3\u05D9 \u05DC\u05D2\u05E9\u05EA \u05DC\u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD</div>';
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/favorites`, {
+        headers: getHeaders(token),
+      });
+
+      if (res.status === 401) {
+        content.innerHTML = '<div class="peroot-sp-empty">\u05D4\u05EA\u05D7\u05D1\u05E8 \u05DC-Peroot \u05DB\u05D3\u05D9 \u05DC\u05D2\u05E9\u05EA \u05DC\u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD</div>';
+        return;
+      }
+      if (!res.ok) {
+        content.innerHTML = '<div class="peroot-sp-empty">\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05D8\u05E2\u05D9\u05E0\u05EA \u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD</div>';
+        return;
+      }
+
+      const data = await res.json();
+      const favorites = data.favorites || data.items || data || [];
+
+      if (!favorites.length) {
+        content.innerHTML = '<div class="peroot-sp-empty">\u05D0\u05D9\u05DF \u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD \u05E2\u05D3\u05D9\u05D9\u05DF.<br>\u05E1\u05DE\u05DF \u05E4\u05E8\u05D5\u05DE\u05E4\u05D8\u05D9\u05DD \u05D1-peroot.space!</div>';
+        return;
+      }
+
+      renderLibrary(favorites);
+    } catch {
+      content.innerHTML = '<div class="peroot-sp-empty">\u05E9\u05D2\u05D9\u05D0\u05EA \u05E8\u05E9\u05EA</div>';
+    }
   }
 
   // ── Conversation Export ───────────────────────────────────────────────────

@@ -1,22 +1,10 @@
 /**
  * Peroot Extension - Popup
- * Tabs: Enhance | Library | Quick Prompts
+ * Tabs: Enhance | Library | Favorites | History
  * Credits synced from website
  */
 
 const API_BASE = "https://www.peroot.space";
-const MAX_HISTORY = 8;
-
-const QUICK_PROMPTS = [
-  { label: "מייל מקצועי", prompt: "כתוב מייל מקצועי קצר ובהיר", icon: "\u2709\uFE0F", category: "\u05E2\u05E1\u05E7\u05D9\u05DD" },
-  { label: "פוסט לינקדאין", prompt: "כתוב פוסט מקצועי ומעורר לדיון ללינקדאין", icon: "\uD83D\uDCBC", category: "\u05E1\u05D5\u05E9\u05D0\u05DC" },
-  { label: "תיאור מוצר", prompt: "כתוב תיאור מוצר משכנע ומכירתי", icon: "\uD83D\uDED2", category: "\u05E9\u05D9\u05D5\u05D5\u05E7" },
-  { label: "סיכום פגישה", prompt: "סכם את הפגישה עם נקודות עיקריות ומשימות", icon: "\uD83D\uDCCB", category: "\u05E2\u05E1\u05E7\u05D9\u05DD" },
-  { label: "בדיקת קוד", prompt: "בצע Code Review מקצועי לקוד הבא", icon: "\uD83D\uDCBB", category: "\u05E4\u05D9\u05EA\u05D5\u05D7" },
-  { label: "תגובה ללקוח", prompt: "כתוב תגובה מקצועית ואמפתית ללקוח", icon: "\uD83D\uDCAC", category: "\u05EA\u05DE\u05D9\u05DB\u05D4" },
-  { label: "פוסט אינסטגרם", prompt: "כתוב כיתוב קצר ומעניין לפוסט אינסטגרם", icon: "\uD83D\uDCF8", category: "\u05E1\u05D5\u05E9\u05D0\u05DC" },
-  { label: "הצעת מחיר", prompt: "כתוב הצעת מחיר מקצועית ומשכנעת", icon: "\uD83D\uDCB0", category: "\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA" },
-];
 
 // ─── DOM ───
 const $ = (id) => document.getElementById(id);
@@ -41,9 +29,7 @@ const errorText = $("error-text");
 const tierBadge = $("tier-badge");
 const creditsBadge = $("credits-badge");
 const creditsCount = $("credits-count");
-const historySection = $("history-section");
-const historyList = $("history-list");
-const clearHistoryBtn = $("clear-history");
+const saveBtn = $("save-btn");
 
 let lastEnhanced = "";
 let isEnhancing = false;
@@ -51,7 +37,8 @@ let selectedMode = "STANDARD";
 let userTier = "free";
 let timerInterval = null;
 let libraryLoaded = false;
-let quickPromptsRendered = false;
+let favoritesLoaded = false;
+let historyTabLoaded = false;
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
@@ -59,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (auth.authenticated) {
     show(mainScreen);
-    loadHistory();
     setTimeout(() => promptInput.focus(), 80);
     fetchCredits();
     detectSelectedText();
@@ -153,9 +139,14 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
     // Lazy-load data
     if (target === "library" && !libraryLoaded) loadLibrary();
-    if (target === "quick-prompts" && !quickPromptsRendered) renderQuickPrompts();
-    if (target === "settings") loadApiKeySettings();
+    if (target === "favorites" && !favoritesLoaded) loadFavorites();
+    if (target === "history" && !historyTabLoaded) loadHistoryTab();
   });
+});
+
+// ═══ SETTINGS TOGGLE ═══
+$("settings-toggle").addEventListener("click", () => {
+  $("settings-panel").classList.toggle("open");
 });
 
 // ═══ LOGIN ═══
@@ -384,45 +375,129 @@ async function loadLibrary() {
   }
 }
 
-// ═══ QUICK PROMPTS ═══
-function renderQuickPrompts() {
-  const grid = $("quick-prompts-grid");
-  if (!grid) return;
-  quickPromptsRendered = true;
-  grid.innerHTML = "";
+// ═══ FAVORITES ═══
+async function loadFavorites() {
+  const loading = $("favorites-loading");
+  const empty = $("favorites-empty");
+  const list = $("favorites-list");
 
-  QUICK_PROMPTS.forEach((qp) => {
-    const card = document.createElement("div");
-    card.className = "quick-prompt-card";
+  try {
+    const res = await authFetch("/api/favorites");
+    loading.classList.add("hidden");
 
-    const icon = document.createElement("span");
-    icon.className = "quick-prompt-icon";
-    icon.textContent = qp.icon;
+    if (!res.ok) {
+      if (res.status === 401) { showLoginScreen("token_expired"); return; }
+      empty.querySelector(".empty-title").textContent = "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05D8\u05E2\u05D9\u05E0\u05D4";
+      empty.classList.remove("hidden");
+      return;
+    }
 
-    const label = document.createElement("span");
-    label.className = "quick-prompt-label";
-    label.textContent = qp.label;
+    const data = await res.json();
+    const favorites = data.favorites || data.items || data || [];
+    favoritesLoaded = true;
 
-    const cat = document.createElement("span");
-    cat.className = "quick-prompt-cat";
-    cat.textContent = qp.category;
+    if (!favorites.length) {
+      empty.classList.remove("hidden");
+      return;
+    }
 
-    card.appendChild(icon);
-    card.appendChild(label);
-    card.appendChild(cat);
+    list.innerHTML = "";
+    favorites.forEach((item) => list.appendChild(createPromptCard(item)));
+    list.classList.remove("hidden");
+  } catch {
+    loading.classList.add("hidden");
+    empty.classList.remove("hidden");
+  }
+}
 
-    card.addEventListener("click", () => {
-      // Fill the enhance textarea
-      promptInput.value = qp.prompt;
-      charCount.textContent = qp.prompt.length;
-      // Switch to enhance tab
-      document.querySelector('.tab[data-tab="enhance"]').click();
-      // Trigger enhance
-      setTimeout(() => doEnhance(), 100);
+// ═══ HISTORY TAB ═══
+async function loadHistoryTab() {
+  const loading = $("tab-history-loading");
+  const empty = $("tab-history-empty");
+  const list = $("tab-history-list");
+
+  try {
+    const res = await authFetch("/api/history");
+    loading.classList.add("hidden");
+
+    if (!res.ok) {
+      if (res.status === 401) { showLoginScreen("token_expired"); return; }
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    const items = await res.json();
+    historyTabLoaded = true;
+
+    if (!items || !items.length) {
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    list.innerHTML = "";
+    items.slice(0, 20).forEach((item) => {
+      list.appendChild(createHistoryCard(item));
     });
+    list.classList.remove("hidden");
+  } catch {
+    loading.classList.add("hidden");
+    empty.classList.remove("hidden");
+  }
+}
 
-    grid.appendChild(card);
+function createHistoryCard(item) {
+  const card = document.createElement("div");
+  card.className = "prompt-card";
+
+  const header = document.createElement("div");
+  header.className = "prompt-card-header";
+
+  const title = document.createElement("span");
+  title.className = "prompt-card-title";
+  title.textContent = item.title || (item.prompt ? item.prompt.substring(0, 50) : "\u05DC\u05DC\u05D0 \u05DB\u05D5\u05EA\u05E8\u05EA");
+
+  const time = document.createElement("span");
+  time.className = "prompt-card-cat";
+  time.textContent = timeAgo(new Date(item.created_at).getTime());
+
+  header.appendChild(title);
+  header.appendChild(time);
+
+  const text = document.createElement("div");
+  text.className = "prompt-card-text";
+  text.textContent = item.enhanced_prompt || item.prompt || "";
+
+  const actions = document.createElement("div");
+  actions.className = "prompt-card-actions";
+
+  const useBtn = document.createElement("button");
+  useBtn.className = "btn-sm prompt-card-btn-use";
+  useBtn.textContent = "\u05D4\u05E9\u05EA\u05DE\u05E9";
+  useBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    promptInput.value = item.enhanced_prompt || item.prompt || "";
+    updateCharCount();
+    document.querySelector('.tab[data-tab="enhance"]').click();
+    promptInput.focus();
   });
+
+  const copyCardBtn = document.createElement("button");
+  copyCardBtn.className = "btn-sm";
+  copyCardBtn.textContent = "\u05D4\u05E2\u05EA\u05E7";
+  copyCardBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(item.enhanced_prompt || item.prompt || "");
+    flash(copyCardBtn, "\u05D4\u05D5\u05E2\u05EA\u05E7!");
+  });
+
+  actions.appendChild(useBtn);
+  actions.appendChild(copyCardBtn);
+
+  card.appendChild(header);
+  card.appendChild(text);
+  card.appendChild(actions);
+
+  return card;
 }
 
 // ═══ SELECTED TEXT DETECTION ═══
@@ -535,36 +610,7 @@ function createPromptCard(item) {
   return card;
 }
 
-// ═══ HISTORY ═══
-async function loadHistory() {
-  const { history = [] } = await chrome.storage.local.get("history");
-  if (!history.length) {
-    historySection.classList.add("hidden");
-    return;
-  }
-  historySection.classList.remove("hidden");
-  historyList.innerHTML = "";
-
-  history.slice(0, MAX_HISTORY).forEach((item) => {
-    const el = document.createElement("div");
-    el.className = "history-item";
-    const textSpan = document.createElement("span");
-    textSpan.className = "history-item-text";
-    textSpan.textContent = item.original;
-    const timeSpan = document.createElement("span");
-    timeSpan.className = "history-item-time";
-    timeSpan.textContent = timeAgo(item.time);
-    el.appendChild(textSpan);
-    el.appendChild(timeSpan);
-    el.addEventListener("click", () => {
-      promptInput.value = item.original;
-      charCount.textContent = item.original.length;
-      promptInput.focus();
-    });
-    historyList.appendChild(el);
-  });
-}
-
+// ═══ LOCAL HISTORY (for sync) ═══
 async function saveToHistory(original, enhanced) {
   const { history = [] } = await chrome.storage.local.get("history");
   history.unshift({
@@ -572,14 +618,10 @@ async function saveToHistory(original, enhanced) {
     enhanced: enhanced.substring(0, 500),
     time: Date.now(),
   });
-  await chrome.storage.local.set({ history: history.slice(0, MAX_HISTORY) });
-  loadHistory();
+  await chrome.storage.local.set({ history: history.slice(0, 20) });
+  // Invalidate history tab cache so it reloads next time
+  historyTabLoaded = false;
 }
-
-clearHistoryBtn.addEventListener("click", async () => {
-  await chrome.storage.local.set({ history: [] });
-  historySection.classList.add("hidden");
-});
 
 function timeAgo(ts) {
   const diff = Date.now() - ts;
@@ -616,7 +658,28 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
   });
 });
 
-// ═══ SETTINGS ═══
-function loadApiKeySettings() {
-  // Settings tab now only shows shortcuts and about — no API key management
-}
+// ═══ SAVE TO LIBRARY ═══
+saveBtn.addEventListener("click", async () => {
+  if (!lastEnhanced) return;
+  try {
+    const headers = await getAuthHeaders({ "Content-Type": "application/json" });
+    const res = await fetch(`${API_BASE}/api/personal-library`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        title: promptInput.value.substring(0, 60) || "\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8 \u05DE\u05E9\u05D5\u05D3\u05E8\u05D2",
+        prompt: lastEnhanced,
+        category: "\u05DB\u05DC\u05DC\u05D9",
+        source: "extension",
+      }),
+    });
+    if (res.ok) {
+      flash(saveBtn, "\u05E0\u05E9\u05DE\u05E8!");
+      libraryLoaded = false; // force reload next time
+    } else {
+      flash(saveBtn, "\u05E9\u05D2\u05D9\u05D0\u05D4");
+    }
+  } catch {
+    flash(saveBtn, "\u05E9\u05D2\u05D9\u05D0\u05D4");
+  }
+});

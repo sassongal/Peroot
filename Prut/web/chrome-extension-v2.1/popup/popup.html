@@ -33,15 +33,45 @@
         <span id="credits-badge" class="credits-badge hidden">
           <span id="credits-count">0</span> קרדיטים
         </span>
+        <button id="settings-toggle" class="settings-gear" title="הגדרות">&#9881;</button>
       </div>
     </header>
+
+    <!-- Settings Panel (collapsible from header) -->
+    <div id="settings-panel" class="settings-panel">
+      <div class="settings-section">
+        <h3 class="settings-title">קיצורי מקשים</h3>
+        <div class="shortcuts-list">
+          <div class="shortcut-item"><kbd>Alt + P</kbd><span>פתח תוסף</span></div>
+          <div class="shortcut-item"><kbd>Alt + Shift + E</kbd><span>שדרג טקסט מסומן</span></div>
+          <div class="shortcut-item"><kbd>&#8984;/Ctrl + M</kbd><span>שדרג פרומפט בצ׳אט AI</span></div>
+          <div class="shortcut-item"><kbd>Enter</kbd><span>שדרג (בתוסף)</span></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-title">שילובי AI נתמכים</h3>
+        <div class="integrations-list">
+          <div class="integration-item">&#10004;&#65039; ChatGPT (chatgpt.com)</div>
+          <div class="integration-item">&#10004;&#65039; Claude (claude.ai)</div>
+          <div class="integration-item">&#10004;&#65039; Gemini (gemini.google.com)</div>
+          <div class="integration-item">&#10004;&#65039; DeepSeek (chat.deepseek.com)</div>
+          <div class="integration-item">&#10004;&#65039; Perplexity (perplexity.ai)</div>
+          <div class="integration-item">&#10004;&#65039; Mistral (chat.mistral.ai)</div>
+          <div class="integration-item">&#x1F51C; Minimax (minimaxi.com)</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-title">אודות</h3>
+        <p class="settings-desc">Peroot v1.0.0 · <a href="https://www.peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
+      </div>
+    </div>
 
     <!-- Tabs -->
     <nav class="tabs">
       <button class="tab active" data-tab="enhance">שדרוג</button>
       <button class="tab" data-tab="library">ספרייה</button>
-      <button class="tab" data-tab="quick-prompts">&#9889; מהיר</button>
-      <button class="tab" data-tab="settings">⚙️</button>
+      <button class="tab" data-tab="favorites">&#11088; מועדפים</button>
+      <button class="tab" data-tab="history">&#128203; היסטוריה</button>
     </nav>
 
     <!-- Tab: Enhance -->
@@ -92,6 +122,7 @@
           <button id="copy-btn" class="btn-sm">העתק</button>
           <button id="insert-btn" class="btn-sm">הכנס לשדה</button>
           <button id="reuse-btn" class="btn-sm">שדרג שוב</button>
+          <button id="save-btn" class="btn-sm prompt-card-btn-use">&#128190; שמור</button>
         </div>
       </div>
 
@@ -100,14 +131,6 @@
         <p id="error-text"></p>
       </div>
 
-      <!-- History -->
-      <div id="history-section" class="history-section hidden">
-        <div class="history-header">
-          <span>אחרונים</span>
-          <button id="clear-history" class="btn-ghost">נקה</button>
-        </div>
-        <div id="history-list"></div>
-      </div>
     </div>
 
     <!-- Tab: Library -->
@@ -122,38 +145,24 @@
       <div id="library-list" class="prompt-list hidden"></div>
     </div>
 
-    <!-- Tab: Quick Prompts -->
-    <div id="tab-quick-prompts" class="tab-content">
-      <div id="quick-prompts-grid" class="quick-prompts-grid"></div>
+    <!-- Tab: Favorites -->
+    <div id="tab-favorites" class="tab-content">
+      <div id="favorites-loading" class="tab-empty"><span class="spinner large"></span></div>
+      <div id="favorites-empty" class="tab-empty hidden">
+        <p class="empty-title">אין מועדפים</p>
+        <p class="empty-sub">סמן פרומפטים כמועדפים כדי לגשת אליהם מהר</p>
+      </div>
+      <div id="favorites-list" class="prompt-list hidden"></div>
     </div>
 
-    <!-- Tab: Settings -->
-    <div id="tab-settings" class="tab-content">
-      <div class="settings-section">
-        <h3 class="settings-title">קיצורי מקשים</h3>
-        <div class="shortcuts-list">
-          <div class="shortcut-item"><kbd>Alt + P</kbd><span>פתח תוסף</span></div>
-          <div class="shortcut-item"><kbd>Alt + Shift + E</kbd><span>שדרג טקסט מסומן</span></div>
-          <div class="shortcut-item"><kbd>&#8984;/Ctrl + M</kbd><span>שדרג פרומפט בצ׳אט AI</span></div>
-          <div class="shortcut-item"><kbd>Enter</kbd><span>שדרג (בתוסף)</span></div>
-        </div>
+    <!-- Tab: History -->
+    <div id="tab-history" class="tab-content">
+      <div id="tab-history-loading" class="tab-empty"><span class="spinner large"></span></div>
+      <div id="tab-history-empty" class="tab-empty hidden">
+        <p class="empty-title">אין היסטוריה</p>
+        <p class="empty-sub">פרומפטים שדרגת יופיעו כאן</p>
       </div>
-      <div class="settings-section">
-        <h3 class="settings-title">שילובי AI נתמכים</h3>
-        <div class="integrations-list">
-          <div class="integration-item">&#10004;&#65039; ChatGPT (chatgpt.com)</div>
-          <div class="integration-item">&#10004;&#65039; Claude (claude.ai)</div>
-          <div class="integration-item">&#10004;&#65039; Gemini (gemini.google.com)</div>
-          <div class="integration-item">&#10004;&#65039; DeepSeek (chat.deepseek.com)</div>
-          <div class="integration-item">&#10004;&#65039; Perplexity (perplexity.ai)</div>
-          <div class="integration-item">&#10004;&#65039; Mistral (chat.mistral.ai)</div>
-          <div class="integration-item">&#x1F51C; Minimax (minimaxi.com)</div>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3 class="settings-title">אודות</h3>
-        <p class="settings-desc">Peroot v1.0.0 · <a href="https://www.peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
-      </div>
+      <div id="tab-history-list" class="prompt-list hidden"></div>
     </div>
   </div>
 

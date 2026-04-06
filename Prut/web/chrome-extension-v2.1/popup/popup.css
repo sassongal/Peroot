@@ -13,7 +13,7 @@ body {
   min-height: 200px;
   max-height: 580px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #0a0a0b;
+  background: linear-gradient(180deg, #0a0a0b 0%, #0d0d10 50%, #0a0a0b 100%);
   color: #d4d4d8;
   direction: rtl;
   overflow-y: auto;
@@ -61,6 +61,18 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
+  position: relative;
+  padding-bottom: 10px;
+}
+.main-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--peroot-gold), transparent);
+  border-radius: 1px;
 }
 .header-brand { display: flex; align-items: center; gap: 7px; }
 .header-logo { border-radius: 5px; }
@@ -109,31 +121,32 @@ body {
 /* ─── Tabs ─── */
 .tabs {
   display: flex;
-  gap: 2px;
+  gap: 3px;
   background: rgba(255,255,255,0.03);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 3px;
   margin-bottom: 10px;
 }
 .tab {
   flex: 1;
-  padding: 6px 8px;
+  padding: 7px 6px;
   background: none;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #52525b;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s var(--peroot-ease);
+  transition: all 0.25s var(--peroot-ease);
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
-.tab:hover { color: #a1a1aa; }
+.tab:hover { color: #a1a1aa; background: rgba(255,255,255,0.03); }
 .tab.active {
   background: rgba(251,191,36,0.1);
   color: var(--peroot-gold);
-  box-shadow: 0 1px 4px rgba(251,191,36,0.08);
+  box-shadow: 0 1px 6px rgba(251,191,36,0.1);
 }
 
 /* ─── Tab Content ─── */
@@ -298,8 +311,8 @@ textarea::placeholder { color: #52525b; }
 /* ─── Result ─── */
 .result-section {
   margin-top: 10px;
-  background: #18181b;
-  border: 1px solid rgba(251,191,36,0.1);
+  background: linear-gradient(135deg, #18181b 0%, #1a1a1f 100%);
+  border: 1px solid rgba(251,191,36,0.15);
   border-radius: 10px;
   overflow: hidden;
   animation: fade-up 0.2s ease-out;
@@ -346,31 +359,6 @@ textarea::placeholder { color: #52525b; }
 }
 .error-section p { font-size: 12px; color: #fca5a5; line-height: 1.4; }
 
-/* ─── History ─── */
-.history-section {
-  margin-top: 12px; padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.04);
-}
-.history-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 6px; font-size: 10px; font-weight: 600;
-  color: #52525b; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.history-item {
-  padding: 7px 8px; border-radius: 6px;
-  cursor: pointer; transition: background 0.15s;
-  display: flex; justify-content: space-between;
-  align-items: center; gap: 8px;
-}
-.history-item:hover { background: rgba(255,255,255,0.04); }
-.history-item-text {
-  font-size: 12px; color: #71717a;
-  overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; flex: 1;
-}
-.history-item-time {
-  font-size: 10px; color: #3f3f46; white-space: nowrap;
-}
 
 /* ─── Prompt List (Library & Favorites) ─── */
 .prompt-list {
@@ -385,13 +373,16 @@ textarea::placeholder { color: #52525b; }
   padding: 10px 12px;
   background: #18181b;
   border: 1px solid rgba(255,255,255,0.06);
+  border-left: 2px solid transparent;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s var(--peroot-ease);
 }
 .prompt-card:hover {
   border-color: rgba(251,191,36,0.2);
+  border-left-color: var(--peroot-gold);
   background: #1c1c1f;
+  transform: translateX(-2px);
 }
 .prompt-card-header {
   display: flex;
@@ -464,6 +455,34 @@ textarea::placeholder { color: #52525b; }
 .loading-screen {
   display: flex; align-items: center;
   justify-content: center; min-height: 200px;
+}
+
+/* ─── Settings Gear ─── */
+.settings-gear {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  opacity: 0.5;
+  line-height: 1;
+  color: #a1a1aa;
+}
+.settings-gear:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+
+/* ─── Settings Panel (slide down) ─── */
+.settings-panel {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 0 14px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.settings-panel.open {
+  max-height: 400px;
+  padding: 10px 14px;
 }
 
 /* ─── Settings ─── */
@@ -562,50 +581,6 @@ textarea::placeholder { color: #52525b; }
   gap: 6px;
 }
 
-/* ─── Quick Prompts Grid ─── */
-.quick-prompts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 4px 0;
-}
-.quick-prompt-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 8px;
-  background: #18181b;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-.quick-prompt-card:hover {
-  border-color: rgba(251,191,36,0.25);
-  background: #1c1c1f;
-  transform: translateY(-1px);
-}
-.quick-prompt-card:active {
-  transform: translateY(0);
-}
-.quick-prompt-icon {
-  font-size: 20px;
-  line-height: 1;
-}
-.quick-prompt-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #e4e4e7;
-}
-.quick-prompt-cat {
-  font-size: 9px;
-  color: #52525b;
-  padding: 1px 6px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 99px;
-}
 
 /* ─── Selection Badge ─── */
 .selection-badge {
