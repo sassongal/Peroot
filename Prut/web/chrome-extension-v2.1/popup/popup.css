@@ -1432,6 +1432,52 @@ textarea:focus::placeholder {
 }
 
 /* ════════════════════════════════════════════
+   SCORE BAR — Real-time prompt quality indicator
+   ════════════════════════════════════════════ */
+.score-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+  margin-bottom: 6px;
+  animation: fade-up 0.2s var(--ease-out-expo);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.score-progress {
+  flex: 0 0 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s var(--ease-out-expo), background-color 0.3s;
+  width: 0%;
+}
+
+.score-label {
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 32px;
+}
+
+.score-tip {
+  font-size: 9px;
+  color: var(--text-muted);
+  flex: 1;
+  text-align: left;
+  direction: rtl;
+}
+
+/* ════════════════════════════════════════════
    LIGHT MODE — Auto-detect via system preference
    ════════════════════════════════════════════ */
 @media (prefers-color-scheme: light) {
@@ -1512,4 +1558,8 @@ textarea:focus::placeholder {
     border-color: rgba(245,158,11,0.3) !important;
     color: #b45309 !important;
   }
+
+  /* Score bar */
+  .score-progress { background: rgba(0,0,0,0.06) !important; }
+  .score-tip { color: #a1a1aa !important; }
 }

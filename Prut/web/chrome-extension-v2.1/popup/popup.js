@@ -35,10 +35,15 @@ const tierBadge = $("tier-badge");
 const creditsBadge = $("credits-badge");
 const creditsCount = $("credits-count");
 const saveBtn = $("save-btn");
+const scoreBar = $("score-bar");
+const scoreFill = $("score-fill");
+const scoreLabel = $("score-label");
+const scoreTip = $("score-tip");
 
 let lastEnhanced = "";
 let isEnhancing = false;
 let selectedTone = "Professional";
+let scoreTimeout = null;
 
 function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   const controller = new AbortController();
@@ -51,6 +56,107 @@ let timerInterval = null;
 let libraryLoaded = false;
 let favoritesLoaded = false;
 let historyTabLoaded = false;
+
+// ═══ PROMPT QUALITY SCORE ═══
+function scorePrompt(text) {
+  if (!text || text.trim().length < 3) return { score: 0, tips: [], label: '', color: '' };
+
+  const words = text.trim().split(/\s+/);
+  const wc = words.length;
+  let total = 0;
+  const tips = [];
+
+  // 1. Length (12 pts)
+  if (wc <= 3) { total += 0; tips.push('\u05D4\u05D5\u05E1\u05E3 \u05E2\u05D5\u05D3 \u05E4\u05E8\u05D8\u05D9\u05DD'); }
+  else if (wc <= 6) total += 2;
+  else if (wc <= 12) total += 4;
+  else if (wc <= 25) total += 7;
+  else if (wc <= 50) total += 10;
+  else total += 12;
+
+  // 2. Role (12 pts)
+  if (/\u05D0\u05EA\u05D4\s+\S+|you\s+are|act\s+as|as\s+a\s+\w+/i.test(text)) total += 12;
+  else if (/\u05DE\u05D5\u05DE\u05D7\u05D4|\u05DE\u05E0\u05D4\u05DC|\u05D9\u05D5\u05E2\u05E5|\u05DB\u05D5\u05EA\u05D1|expert|specialist|coach/i.test(text)) total += 6;
+  else tips.push('\u05D4\u05D2\u05D3\u05E8 \u05EA\u05E4\u05E7\u05D9\u05D3 (\u05D0\u05EA\u05D4 \u05DE\u05D5\u05DE\u05D7\u05D4...)');
+
+  // 3. Task (10 pts)
+  if (/\u05DB\u05EA\u05D5\u05D1|\u05E6\u05D5\u05E8|\u05D1\u05E0\u05D4|\u05E0\u05E1\u05D7|\u05D4\u05DB\u05DF|\u05E2\u05E8\u05D5\u05DA|\u05E1\u05DB\u05DD|\u05EA\u05E8\u05D2\u05DD|\u05E0\u05EA\u05D7|write|create|build|draft|generate|analyze/i.test(text)) {
+    total += /\u05DB\u05EA\u05D5\u05D1\s+\S+|\u05E6\u05D5\u05E8\s+\S+|write\s+a|create\s+a/i.test(text) ? 10 : 5;
+  } else tips.push('\u05D4\u05D2\u05D3\u05E8 \u05DE\u05E9\u05D9\u05DE\u05D4 (\u05DB\u05EA\u05D5\u05D1, \u05E6\u05D5\u05E8, \u05E0\u05EA\u05D7...)');
+
+  // 4. Context (12 pts)
+  let ctx = 0;
+  if (/\u05E7\u05D4\u05DC|\u05DC\u05E7\u05D5\u05D7\u05D5\u05EA|audience|target|\u05E2\u05D1\u05D5\u05E8\s+\S+/i.test(text)) ctx += 4;
+  if (/\u05DE\u05D8\u05E8\u05D4|\u05D9\u05E2\u05D3|goal|\u05DB\u05D3\u05D9\s+\u05DC|\u05E2\u05DC\s+\u05DE\u05E0\u05EA/i.test(text)) ctx += 4;
+  if (/\u05E8\u05E7\u05E2|\u05D4\u05E7\u05E9\u05E8|context|background|\u05D1\u05D2\u05DC\u05DC|\u05DE\u05DB\u05D9\u05D5\u05D5\u05DF/i.test(text)) ctx += 4;
+  total += ctx;
+  if (ctx === 0) tips.push('\u05E1\u05E4\u05E7 \u05D4\u05E7\u05E9\u05E8 (\u05DC\u05DE\u05D9? \u05DC\u05DE\u05D4?)');
+
+  // 5. Specificity (10 pts)
+  let spec = 0;
+  if (/\d+/.test(text)) spec += 3;
+  if (/["""\u05F4]|\u05DC\u05DE\u05E9\u05DC|for\s+example/i.test(text)) spec += 4;
+  if (/[A-Z][a-z]{2,}/.test(text)) spec += 3;
+  total += Math.min(10, spec);
+
+  // 6. Format (10 pts)
+  let fmt = 0;
+  if (/\u05E4\u05D5\u05E8\u05DE\u05D8|\u05D8\u05D1\u05DC\u05D4|\u05E8\u05E9\u05D9\u05DE\u05D4|bullet|json|markdown/i.test(text)) fmt += 5;
+  if (/\u05D0\u05D5\u05E8\u05DA|\u05DE\u05D9\u05DC\u05D9\u05DD|\u05E9\u05D5\u05E8\u05D5\u05EA|words|short|long|\u05E7\u05E6\u05E8|\u05D0\u05E8\u05D5\u05DA/i.test(text)) fmt += 3;
+  if (/\u05DB\u05D5\u05EA\u05E8\u05EA|\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD|header|section/i.test(text)) fmt += 2;
+  total += Math.min(10, fmt);
+
+  // 7. Constraints (10 pts)
+  let con = 0;
+  if (/\u05D0\u05DC\s+\u05EA|\u05D0\u05E1\u05D5\u05E8|\u05DC\u05DC\u05D0|don't|avoid|without/i.test(text)) con += 4;
+  if (/\u05D8\u05D5\u05DF|\u05E1\u05D2\u05E0\u05D5\u05DF|tone|style|\u05DE\u05E7\u05E6\u05D5\u05E2\u05D9|\u05D9\u05D3\u05D9\u05D3\u05D5\u05EA\u05D9/i.test(text)) con += 3;
+  if (/\u05D1\u05E2\u05D1\u05E8\u05D9\u05EA|\u05D1\u05D0\u05E0\u05D2\u05DC\u05D9\u05EA|in\s+hebrew|in\s+english/i.test(text)) con += 3;
+  total += Math.min(10, con);
+
+  // 8. Structure (8 pts)
+  let str = 0;
+  if (/\n/.test(text)) str += 3;
+  if (/^\s*[\d\u2022\-\*]\s*/m.test(text)) str += 3;
+  if (/---|===|\*\*/m.test(text)) str += 2;
+  total += Math.min(8, str);
+
+  // 9. Channel (8 pts)
+  if (/\u05DE\u05D9\u05D9\u05DC|email|\u05DC\u05D9\u05E0\u05E7\u05D3\u05D0\u05D9\u05DF|linkedin|\u05E4\u05D9\u05D9\u05E1\u05D1\u05D5\u05E7|\u05D0\u05D9\u05E0\u05E1\u05D8\u05D2\u05E8\u05DD|\u05D1\u05DC\u05D5\u05D2|blog|\u05D0\u05EA\u05E8|website/i.test(text)) total += 8;
+
+  // 10. Examples (8 pts)
+  if (/\u05D3\u05D5\u05D2\u05DE\u05D4 \u05DC\u05E4\u05DC\u05D8|output\s+example|expected/i.test(text)) total += 8;
+  else if (/\u05D3\u05D5\u05D2\u05DE\u05D4|example|sample/i.test(text)) total += 4;
+
+  // Max is 100
+  const score = Math.min(100, total);
+
+  // Label
+  let label, color;
+  if (score <= 20) { label = '\u05D7\u05DC\u05E9'; color = '#ef4444'; }
+  else if (score <= 40) { label = '\u05D1\u05E1\u05D9\u05E1\u05D9'; color = '#f97316'; }
+  else if (score <= 60) { label = '\u05E1\u05D1\u05D9\u05E8'; color = '#eab308'; }
+  else if (score <= 80) { label = '\u05D8\u05D5\u05D1'; color = '#22c55e'; }
+  else { label = '\u05DE\u05E6\u05D5\u05D9\u05DF'; color = '#10b981'; }
+
+  return { score, tips: tips.slice(0, 2), label, color };
+}
+
+function updateScoreBar(text) {
+  if (scoreTimeout) clearTimeout(scoreTimeout);
+  scoreTimeout = setTimeout(() => {
+    const result = scorePrompt(text);
+    if (result.score > 0) {
+      scoreBar.classList.remove("hidden");
+      scoreFill.style.width = result.score + "%";
+      scoreFill.style.backgroundColor = result.color;
+      scoreLabel.textContent = result.label;
+      scoreLabel.style.color = result.color;
+      scoreTip.textContent = result.tips[0] || '';
+    } else {
+      scoreBar.classList.add("hidden");
+    }
+  }, 300);
+}
 
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", async () => {
@@ -255,6 +361,7 @@ promptInput.addEventListener("input", () => {
   charCount.classList.toggle("warning", len > 2500 && len <= 3500);
   charCount.classList.toggle("danger", len > 3500);
   enhanceBtn.classList.toggle("ready", len > 0 && !isEnhancing);
+  updateScoreBar(promptInput.value);
 });
 
 promptInput.addEventListener("keydown", (e) => {
@@ -274,6 +381,7 @@ async function doEnhance() {
   isEnhancing = true;
   hideError();
   resultSection.classList.add("hidden");
+  scoreBar.classList.add("hidden");
   setLoading(true);
 
   const startTime = Date.now();
@@ -399,6 +507,7 @@ reuseBtn.addEventListener("click", () => {
   promptInput.value = lastEnhanced;
   charCount.textContent = lastEnhanced.length;
   resultSection.classList.add("hidden");
+  updateScoreBar(lastEnhanced);
   promptInput.focus();
 });
 
@@ -594,6 +703,7 @@ function detectSelectedText() {
           badge.textContent = '\u05D8\u05E7\u05E1\u05D8 \u05DE\u05E1\u05D5\u05DE\u05DF \u05D6\u05D5\u05D4\u05D4';
           document.querySelector('.enhance-input-container')?.prepend(badge);
           updateCharCount();
+          updateScoreBar(selectedText);
         }
       }).catch(() => {}); // Silently fail if no permission
     }
