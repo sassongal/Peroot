@@ -910,7 +910,11 @@
     if (injectTimeout) clearTimeout(injectTimeout);
     injectTimeout = setTimeout(() => {
       if (!document.getElementById('peroot-ai-btn')) {
-        injectButton();
+        // Try normal inject first, fall back to fixed
+        if (document.querySelector(currentSite.inputSelector)) {
+          injectButton();
+        }
+        // Don't inject fixed here — tryInject handles the fallback
       }
     }, 500);
   });
@@ -926,15 +930,17 @@
     observer.disconnect();
   });
 
-  // Initial injection (retry for slow-loading SPAs — 40 attempts = 20 seconds)
-  // If input never found, inject a fixed-position floating button as fallback
+  // Initial injection with fast fallback to fixed-position button
   function tryInject(attempts = 0) {
+    if (document.getElementById('peroot-ai-btn')) return; // Already injected
+
     if (document.querySelector(currentSite.inputSelector)) {
       injectButton();
-    } else if (attempts < 40) {
+    } else if (attempts < 6) {
+      // Try 6 times (3 seconds) before falling back
       setTimeout(() => tryInject(attempts + 1), 500);
     } else {
-      // Fallback: inject fixed-position floating button (for Shadow DOM sites like Gemini)
+      // Fallback: fixed-position floating button (works on any site including Shadow DOM)
       injectFixedButton();
     }
   }
