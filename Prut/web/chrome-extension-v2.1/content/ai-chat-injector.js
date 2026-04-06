@@ -184,6 +184,9 @@
   let libraryCache = null;
   let isEnhancing = false;
   let escHandler = null;
+  let selectedMode = 'STANDARD';
+  let userProfile = null; // { plan_tier, credits_balance }
+  let modeDropdownOpen = false;
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -202,6 +205,35 @@
     return { 'Authorization': prefix + token, 'Content-Type': 'application/json' };
   }
 
+  // ── User Profile ────────────────────────────────────────────────────────
+
+  async function fetchUserProfile() {
+    try {
+      const token = await getToken();
+      if (!token) return null;
+      const res = await fetch(`${API_BASE}/api/me`, {
+        headers: getHeaders(token),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      userProfile = { plan_tier: data.plan_tier || 'free', credits_balance: data.credits_balance ?? 0 };
+      return userProfile;
+    } catch { return null; }
+  }
+
+  function isProUser() {
+    return userProfile?.plan_tier === 'pro' || userProfile?.plan_tier === 'premium';
+  }
+
+  // ── Mode Config ─────────────────────────────────────────────────────────
+
+  const MODES = [
+    { key: 'STANDARD', icon: '💬', label: 'רגיל', proOnly: false },
+    { key: 'DEEP_RESEARCH', icon: '🌐', label: 'מחקר', proOnly: true },
+    { key: 'IMAGE_GENERATION', icon: '🎨', label: 'תמונה', proOnly: true },
+    { key: 'AGENT_BUILDER', icon: '🤖', label: 'סוכן', proOnly: true },
+  ];
+
   // ── Enhancement ──────────────────────────────────────────────────────────
 
   async function enhanceInput() {
@@ -218,7 +250,7 @@
     try {
       const token = await getToken();
       if (!token) {
-        showToast('Please log in to Peroot first', 'error');
+        showToast('התחבר ל-Peroot כדי להשתמש', 'error');
         updateButtonState('idle');
         isEnhancing = false;
         return;
@@ -231,6 +263,7 @@
           prompt: text,
           tone: 'professional',
           category: 'general',
+          capability_mode: selectedMode,
           source: 'extension_ai_chat',
         }),
       });
@@ -242,13 +275,13 @@
         return;
       }
       if (res.status === 403) {
-        showToast('No credits remaining', 'error');
+        showToast('אין קרדיטים. שדרג ל-Pro', 'error');
         updateButtonState('idle');
         isEnhancing = false;
         return;
       }
       if (!res.ok) {
-        showToast('Enhancement failed', 'error');
+        showToast('שגיאה בשדרוג', 'error');
         updateButtonState('idle');
         isEnhancing = false;
         return;
@@ -282,6 +315,7 @@
             enhanced_prompt: cleaned,
             tone: 'professional',
             category: 'general',
+            capability_mode: selectedMode,
             title: text.slice(0, 60),
             source: 'extension_ai_chat',
           }),
@@ -314,6 +348,77 @@
     }
   }
 
+  function getModeBadgeLabel() {
+    if (selectedMode === 'STANDARD') return null;
+    const mode = MODES.find(m => m.key === selectedMode);
+    return mode ? mode.icon : null;
+  }
+
+  function updateModeBadge() {
+    const badge = document.getElementById('peroot-mode-badge');
+    if (!badge) return;
+    const label = getModeBadgeLabel();
+    if (label) {
+      badge.textContent = label;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function closeModeDropdown() {
+    const dd = document.getElementById('peroot-mode-dropdown');
+    if (dd) dd.remove();
+    modeDropdownOpen = false;
+  }
+
+  function toggleModeDropdown(anchorEl) {
+    if (modeDropdownOpen) {
+      closeModeDropdown();
+      return;
+    }
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'peroot-mode-dropdown';
+    dropdown.className = 'peroot-mode-dropdown';
+
+    MODES.forEach(mode => {
+      const item = document.createElement('button');
+      const isLocked = mode.proOnly && !isProUser();
+      const isActive = mode.key === selectedMode;
+      item.className = 'peroot-mode-item' + (isActive ? ' active' : '') + (isLocked ? ' locked' : '');
+
+      let html = `<span>${mode.icon}</span><span>${mode.label}</span>`;
+      if (isLocked) html += '<span class="peroot-mode-lock">🔒 Pro</span>';
+      item.innerHTML = html;
+
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isLocked) {
+          showToast('שדרג ל-Pro כדי להשתמש במצב זה', 'error');
+          return;
+        }
+        selectedMode = mode.key;
+        updateModeBadge();
+        closeModeDropdown();
+      });
+      dropdown.appendChild(item);
+    });
+
+    anchorEl.appendChild(dropdown);
+    modeDropdownOpen = true;
+
+    // Close on outside click
+    const outsideHandler = (e) => {
+      if (!dropdown.contains(e.target) && !anchorEl.contains(e.target)) {
+        closeModeDropdown();
+        document.removeEventListener('click', outsideHandler, true);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', outsideHandler, true), 0);
+  }
+
   function injectButton() {
     if (document.getElementById('peroot-ai-btn')) return;
 
@@ -324,11 +429,20 @@
     const inputArea = currentSite.inputArea?.() || inputEl.closest('form') || inputEl.parentElement;
     if (!inputArea) return;
 
-    // Create button
+    // Create toolbar container (button + mode arrow + library + export)
+    const toolbar = document.createElement('div');
+    toolbar.id = 'peroot-ai-toolbar';
+    toolbar.className = 'peroot-ai-toolbar';
+
+    // Mode wrapper (enhance btn + arrow)
+    const modeWrapper = document.createElement('div');
+    modeWrapper.className = 'peroot-mode-wrapper';
+
+    // Create enhance button
     peerootBtn = document.createElement('button');
     peerootBtn.id = 'peroot-ai-btn';
     peerootBtn.className = 'peroot-ai-btn';
-    peerootBtn.title = 'Peroot — Enhance prompt (Ctrl+M)';
+    peerootBtn.title = 'Peroot — שדרג פרומפט (Ctrl+M)';
     peerootBtn.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" style="width:20px;height:20px;">`;
     peerootBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -336,17 +450,32 @@
       enhanceInput();
     });
 
-    // Create toolbar container (button + library + export)
-    const toolbar = document.createElement('div');
-    toolbar.id = 'peroot-ai-toolbar';
-    toolbar.className = 'peroot-ai-toolbar';
+    // Mode badge (shows current mode icon when not STANDARD)
+    const badge = document.createElement('span');
+    badge.id = 'peroot-mode-badge';
+    badge.className = 'peroot-mode-badge';
+    badge.style.display = 'none';
 
-    toolbar.appendChild(peerootBtn);
+    // Mode arrow button
+    const arrowBtn = document.createElement('button');
+    arrowBtn.className = 'peroot-mode-arrow';
+    arrowBtn.title = 'בחר מצב';
+    arrowBtn.innerHTML = '▾';
+    arrowBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleModeDropdown(modeWrapper);
+    });
+
+    modeWrapper.appendChild(peerootBtn);
+    modeWrapper.appendChild(badge);
+    modeWrapper.appendChild(arrowBtn);
+    toolbar.appendChild(modeWrapper);
 
     // Library button
     const libBtn = document.createElement('button');
     libBtn.className = 'peroot-ai-tool-btn';
-    libBtn.title = 'Prompt Library (Ctrl+Alt+S)';
+    libBtn.title = 'ספריית פרומפטים (Ctrl+Alt+S)';
     libBtn.innerHTML = '📚';
     libBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -358,7 +487,7 @@
     // Export button
     const expBtn = document.createElement('button');
     expBtn.className = 'peroot-ai-tool-btn';
-    expBtn.title = 'Export Conversation (Ctrl+Alt+E)';
+    expBtn.title = 'ייצא שיחה (Ctrl+Alt+E)';
     expBtn.innerHTML = '📤';
     expBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -770,4 +899,7 @@
   }
 
   tryInject();
+
+  // Fetch user profile once on init (fire-and-forget)
+  fetchUserProfile();
 })();
