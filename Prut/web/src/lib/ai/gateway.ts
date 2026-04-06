@@ -45,7 +45,6 @@ export class AIGateway {
 
                 // Provider API key checks
                 if (config.provider === 'groq' && !process.env.GROQ_API_KEY) continue;
-                if (config.provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY) continue;
                 if (config.provider === 'mistral' && !process.env.MISTRAL_API_KEY) continue;
 
                 try {
@@ -115,7 +114,6 @@ export class AIGateway {
                     continue;
                 }
                 if (config.provider === 'groq' && !process.env.GROQ_API_KEY) continue;
-                if (config.provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY) continue;
                 if (config.provider === 'mistral' && !process.env.MISTRAL_API_KEY) continue;
 
                 try {

@@ -73,8 +73,8 @@ describe('AIGateway', () => {
         .rejects
         .toThrow();
 
-    // FALLBACK_ORDER: flash, mistral-small, flash-lite, llama-4-scout(skip), gpt-oss-20b(skip), deepseek = 4 calls
-    expect(mockStreamText).toHaveBeenCalledTimes(4);
+    // FALLBACK_ORDER: flash, mistral-small, flash-lite, llama-4-scout(skip), gpt-oss-20b(skip) = 3 calls
+    expect(mockStreamText).toHaveBeenCalledTimes(3);
   });
 
   it('should throw if all models fail', async () => {
@@ -114,17 +114,11 @@ describe('Task-Based Model Routing', () => {
     expect(models[0]).toBe('gemini-2.5-flash');
   });
 
-  it('prepends deepseek-chat and gemini-2.5-pro for pro-tier users', () => {
-    const models = getModelsForTask('enhance', 'pro');
-    expect(models[0]).toBe('deepseek-chat');
-    expect(models[1]).toBe('gemini-2.5-pro');
-    expect(models[2]).toBe('gemini-2.5-flash');
-  });
-
-  it('excludes pro models for free-tier users', () => {
-    const models = getModelsForTask('enhance', 'free');
-    expect(models.every(m => m !== 'gemini-2.5-pro')).toBe(true);
-    expect(models.every(m => m !== 'deepseek-chat')).toBe(true);
+  it('returns same low-cost models for all tiers (no expensive pro models)', () => {
+    const freeModels = getModelsForTask('enhance', 'free');
+    const proModels = getModelsForTask('enhance', 'pro');
+    expect(freeModels).toEqual(proModels);
+    expect(freeModels[0]).toBe('gemini-2.5-flash');
   });
 
   it('falls back to enhance routing for unknown task', () => {

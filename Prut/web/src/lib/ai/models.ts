@@ -1,10 +1,9 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { groq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
-import { createOpenAI } from "@ai-sdk/openai";
 import { LanguageModel } from "ai";
 
-export type ModelId = 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-2.5-flash-lite' | 'gemini-2.0-flash-lite' | 'llama-4-scout' | 'llama-3-70b' | 'gpt-oss-20b' | 'deepseek-chat' | 'mistral-small' | 'mistral-nemo';
+export type ModelId = 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'gemini-2.0-flash-lite' | 'llama-4-scout' | 'llama-3-70b' | 'gpt-oss-20b' | 'mistral-small' | 'mistral-nemo';
 
 // Server-side Google provider - no Referer header needed.
 // API key restrictions should use "None" or IP-based (not HTTP referrer)
@@ -13,16 +12,11 @@ const google = createGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const deepseek = createOpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY,
-});
-
 const mistralProvider = createMistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export interface ModelConfig {
     id: ModelId;
-    provider: 'google' | 'groq' | 'deepseek' | 'mistral';
+    provider: 'google' | 'groq' | 'mistral';
     model: LanguageModel;
     label: string;
     contextWindow: number;
@@ -37,14 +31,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         label: 'Gemini 2.5 Flash (Primary)',
         contextWindow: 1000000,
         tier: 'free'
-    },
-    'gemini-2.5-pro': {
-        id: 'gemini-2.5-pro',
-        provider: 'google',
-        model: google('gemini-2.5-pro'),
-        label: 'Gemini 2.5 Pro (Premium)',
-        contextWindow: 1000000,
-        tier: 'pro'
     },
     'gemini-2.0-flash-lite': {
         id: 'gemini-2.0-flash-lite',
@@ -61,14 +47,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         label: 'Llama 3 70B (Groq)',
         contextWindow: 8192,
         tier: 'free'
-    },
-    'deepseek-chat': {
-        id: 'deepseek-chat',
-        provider: 'deepseek',
-        model: deepseek('deepseek-chat'),
-        label: 'DeepSeek Chat (Alternative)',
-        contextWindow: 64000,
-        tier: 'pro'
     },
     'gemini-2.5-flash-lite': {
         id: 'gemini-2.5-flash-lite',
@@ -113,50 +91,40 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
 };
 
 export const FALLBACK_ORDER: ModelId[] = [
-    'gemini-2.5-flash',
-    'mistral-small',
-    'gemini-2.5-flash-lite',
-    'llama-4-scout',
-    'gpt-oss-20b',
-    'deepseek-chat'
+    'gemini-2.5-flash',         // Best quality, free tier on Google
+    'mistral-small',            // Fast, free tier on Mistral
+    'gemini-2.5-flash-lite',    // Lighter Google backup
+    'llama-4-scout',            // Free on Groq
+    'gpt-oss-20b',              // Free on Groq
 ];
 
 export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'video' | 'chain';
 
+// All models are free/low-cost — no expensive pro models in any route
 export const TASK_ROUTING: Record<string, ModelId[]> = {
   enhance:  ['gemini-2.5-flash', 'mistral-small', 'gemini-2.5-flash-lite', 'llama-4-scout', 'gpt-oss-20b'],
-  research: ['gemini-2.5-flash', 'mistral-small', 'deepseek-chat', 'gemini-2.5-flash-lite'],
+  research: ['gemini-2.5-flash', 'mistral-small', 'gemini-2.5-flash-lite', 'llama-4-scout'],
   agent:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
-  image:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite'],
-  video:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  image:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small'],
+  video:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small'],
   chain:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
 };
 
-export function getModelsForTask(task: string, userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
-  const models = TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
-  if (userTier === 'pro') {
-    // Put pro models AFTER the primary free model to avoid tripping the Google circuit breaker
-    // if gemini-2.5-pro fails (which would block ALL Google models including the healthy flash)
-    const [primary, ...rest] = models;
-    return [...new Set([primary, 'gemini-2.5-pro' as ModelId, 'deepseek-chat' as ModelId, ...rest])];
-  }
-  // Free/guest users: filter out pro-only models, but ensure at least one model remains
-  const freeModels = models.filter(id => AVAILABLE_MODELS[id].tier === 'free');
-  return freeModels.length > 0 ? freeModels : [models[0]];
+export function getModelsForTask(task: string, _userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
+  // All users get the same optimized low-cost model routing
+  return TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
 }
 
 /**
- * Check if a specific model requires pro tier
+ * Check if a specific model requires pro tier (all models are now free-tier)
  */
-export function isProModel(modelId: ModelId): boolean {
-  return AVAILABLE_MODELS[modelId]?.tier === 'pro';
+export function isProModel(_modelId: ModelId): boolean {
+  return false;
 }
 
 /**
  * Get the free-tier fallback for a given model
  */
 export function getFreeFallback(modelId: ModelId): ModelId {
-  if (AVAILABLE_MODELS[modelId]?.tier === 'free') return modelId;
-  // Return the first free model in fallback order
-  return FALLBACK_ORDER.find(id => AVAILABLE_MODELS[id].tier === 'free') ?? 'gemini-2.5-flash';
+  return AVAILABLE_MODELS[modelId] ? modelId : 'gemini-2.5-flash';
 }
