@@ -11,27 +11,28 @@
 if (!window.__peerootContentLoaded) {
   window.__peerootContentLoaded = true;
 
-  const API_BASE = "https://www.peroot.space";
-
   let currentPanel = null;
   let lastEnhanced = "";
   let lastSelectionElement = null;
   let isDragging = false;
 
-  // ─── Auth: get token from storage ───
-  function getAuthToken() {
+  // ─── API Proxy (routes through service worker to avoid CORS) ───
+  function apiFetch(path, options = {}) {
     return new Promise((resolve) => {
-      chrome.storage.local.get("peroot_token", (data) => {
-        resolve(data.peroot_token || null);
+      chrome.runtime.sendMessage({
+        type: "API_FETCH",
+        path,
+        method: options.method || "GET",
+        body: options.body || null,
+        stream: options.stream || false,
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          resolve({ ok: false, status: 0, error: chrome.runtime.lastError.message });
+        } else {
+          resolve(response || { ok: false, status: 0 });
+        }
       });
     });
-  }
-
-  async function getAuthHeaders(extra = {}) {
-    const token = await getAuthToken();
-    const headers = { ...extra };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    return headers;
   }
 
   // ─── Action Definitions ───
@@ -194,53 +195,37 @@ if (!window.__peerootContentLoaded) {
     const actionDef = ACTIONS[action] || ACTIONS.enhance;
 
     try {
-      const headers = await getAuthHeaders({ "Content-Type": "application/json" });
-
-      const res = await fetch(`${API_BASE}/api/enhance`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(actionDef.buildBody(text)),
+      const res = await apiFetch('/api/enhance', {
+        method: 'POST',
+        body: actionDef.buildBody(text),
+        stream: true,
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
         body.classList.remove("peroot-loading");
         body.classList.add("peroot-error");
         if (status) status.textContent = "\u05E9\u05D2\u05D9\u05D0\u05D4";
         body.textContent = res.status === 401
           ? "\u05E0\u05D3\u05E8\u05E9\u05EA \u05D4\u05EA\u05D7\u05D1\u05E8\u05D5\u05EA \u05DE\u05D7\u05D3\u05E9"
           : res.status === 403
-          ? (err.error || "\u05D0\u05D9\u05DF \u05E7\u05E8\u05D3\u05D9\u05D8\u05D9\u05DD")
+          ? (res.data?.error || "\u05D0\u05D9\u05DF \u05E7\u05E8\u05D3\u05D9\u05D8\u05D9\u05DD")
           : res.status === 429
           ? "\u05D9\u05D5\u05EA\u05E8 \u05DE\u05D3\u05D9 \u05D1\u05E7\u05E9\u05D5\u05EA"
           : "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05E9\u05D3\u05E8\u05D5\u05D2";
         return;
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
+      // Service worker proxy returns full text for stream responses
+      const fullText = res.text || '';
 
       body.classList.remove("peroot-loading");
       body.textContent = "";
-      body.classList.add("peroot-streaming");
-      if (status) status.textContent = "\u05DB\u05D5\u05EA\u05D1...";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        fullText += decoder.decode(value, { stream: true });
-        body.textContent = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
-        body.scrollTop = body.scrollHeight;
-      }
-
-      body.classList.remove("peroot-streaming");
       lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
+      body.textContent = lastEnhanced;
+      body.scrollTop = body.scrollHeight;
+
       if (status) status.textContent = "\u05D4\u05D5\u05E9\u05DC\u05DD";
       if (actions) actions.style.display = "flex";
-
-      // Sync to website history
-      syncToWebsite(text, lastEnhanced, action);
 
       // Hide replace if not editable
       if (!isEditable(lastSelectionElement)) {
@@ -256,26 +241,10 @@ if (!window.__peerootContentLoaded) {
   }
 
   // ─── Sync to Website ───
-  async function syncToWebsite(text, enhanced, action) {
-    try {
-      const actionDef = ACTIONS[action] || ACTIONS.enhance;
-      const headers = await getAuthHeaders({ "Content-Type": "application/json" });
-      await fetch(`${API_BASE}/api/history`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          prompt: text,
-          enhanced_prompt: enhanced,
-          tone: "Professional",
-          category: "General",
-          title: `[${actionDef.label}] ${text.substring(0, 50)}${text.length > 50 ? "..." : ""}`,
-          source: "extension",
-        }),
-      });
-    } catch {
-      // Non-critical
-    }
-  }
+  // Note: The /api/enhance endpoint already creates history entries server-side.
+  // This function is kept only for non-enhance actions (shorten, lengthen, fix, translate)
+  // which call the enhance API with refinementInstruction and also get history saved server-side.
+  // Therefore, this function is intentionally removed to avoid duplicate history entries.
 
   // ─── Editable ───
   function isEditable(el) {

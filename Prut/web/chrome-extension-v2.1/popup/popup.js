@@ -254,7 +254,7 @@ async function doEnhance() {
     } catch {}
 
     saveToHistory(text, lastEnhanced);
-    syncToWebsite(text, lastEnhanced);
+    // Note: syncToWebsite removed — /api/enhance already saves to history server-side
     fetchCredits(); // refresh credits after use
   } catch {
     resultSection.classList.add("hidden");
@@ -316,25 +316,8 @@ function flash(btn, msg) {
 }
 
 // ═══ SYNC TO WEBSITE ═══
-async function syncToWebsite(original, enhanced) {
-  try {
-    const headers = await getAuthHeaders({ "Content-Type": "application/json" });
-    await fetch(`${API_BASE}/api/history`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        prompt: original,
-        enhanced_prompt: enhanced,
-        tone: "Professional",
-        category: "General",
-        title: `[תוסף] ${original.substring(0, 50)}${original.length > 50 ? "..." : ""}`,
-        source: "extension",
-      }),
-    });
-  } catch {
-    // Non-critical
-  }
-}
+// Removed: /api/enhance already saves to history server-side.
+// Keeping this section header for reference.
 
 // ═══ LIBRARY ═══
 async function loadLibrary() {

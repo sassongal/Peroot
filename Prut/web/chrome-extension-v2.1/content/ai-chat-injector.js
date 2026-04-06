@@ -188,23 +188,6 @@
   let userProfile = null; // { plan_tier, credits_balance }
   let modeDropdownOpen = false;
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
-
-  async function getToken() {
-    return new Promise(resolve => {
-      chrome.storage.local.get(['peroot_token', 'peroot_api_key'], r => {
-        if (r.peroot_api_key) resolve(r.peroot_api_key);
-        else resolve(r.peroot_token || null);
-      });
-    });
-  }
-
-  function getHeaders(token) {
-    if (!token) return {};
-    const prefix = token.startsWith('prk_') ? 'Bearer ' : 'Bearer ';
-    return { 'Authorization': prefix + token, 'Content-Type': 'application/json' };
-  }
-
   // ── API Proxy (routes through service worker to avoid CORS) ──────────
 
   function apiFetch(path, options = {}) {
@@ -238,7 +221,8 @@
   }
 
   function isProUser() {
-    return userProfile?.plan_tier === 'pro' || userProfile?.plan_tier === 'premium';
+    const tier = userProfile?.plan_tier;
+    return tier === 'pro' || tier === 'premium' || tier === 'admin';
   }
 
   // ── Mode Config ─────────────────────────────────────────────────────────
@@ -301,19 +285,7 @@
         currentSite.setInputText(inputEl, cleaned);
         inputEl.focus();
         updateButtonState('success');
-
-        // Sync to history (fire-and-forget via proxy)
-        apiFetch('/api/history', {
-          method: 'POST',
-          body: {
-            prompt: text,
-            enhanced_prompt: cleaned,
-            tone: 'Professional',
-            category: 'General',
-            title: text.slice(0, 60),
-            source: 'extension_ai_chat',
-          },
-        });
+        // Note: /api/enhance already saves to history server-side — no duplicate sync needed
       }
     } catch (err) {
       showToast('שגיאת רשת — בדוק חיבור לאינטרנט', 'error');
@@ -527,9 +499,8 @@
         <input type="text" id="peroot-sp-search-input" placeholder="חפש פרומפט..." />
       </div>
       <div class="peroot-sp-tabs">
-        <button class="peroot-sp-tab active" data-tab="library">הספריה שלי</button>
+        <button class="peroot-sp-tab active" data-tab="library">ספרייה</button>
         <button class="peroot-sp-tab" data-tab="favorites">&#11088; מועדפים</button>
-        <button class="peroot-sp-tab" data-tab="quick">מהירים</button>
       </div>
       <div class="peroot-sp-content" id="peroot-sp-content">
         <div class="peroot-sp-loading"><span class="peroot-ai-spinner"></span></div>
@@ -547,7 +518,6 @@
         tab.classList.add('active');
         if (tab.dataset.tab === 'library') loadLibrary();
         else if (tab.dataset.tab === 'favorites') loadSidePanelFavorites();
-        else loadQuickPrompts();
       });
     });
 
@@ -665,45 +635,7 @@
     renderLibrary(filtered);
   }
 
-  const QUICK_PROMPTS = [
-    { icon: '✍️', title: 'שפר טקסט', prompt: 'שפר את הטקסט הבא מבחינת בהירות, זרימה ודקדוק, תוך שמירה על המשמעות המקורית:' },
-    { icon: '📧', title: 'מייל מקצועי', prompt: 'כתוב מייל מקצועי ומנומס בנושא הבא:' },
-    { icon: '📝', title: 'סכם טקסט', prompt: 'סכם את הטקסט הבא בצורה תמציתית ובהירה, בנקודות עיקריות:' },
-    { icon: '🌐', title: 'תרגם לאנגלית', prompt: 'Translate the following text to fluent English, preserving the original tone and meaning:' },
-    { icon: '💡', title: 'רעיונות יצירתיים', prompt: 'תן לי 5 רעיונות יצירתיים ומקוריים בנושא:' },
-    { icon: '📊', title: 'ניתוח נתונים', prompt: 'נתח את הנתונים הבאים והצג תובנות מרכזיות, מגמות ומסקנות:' },
-    { icon: '🎯', title: 'אסטרטגיה', prompt: 'בנה אסטרטגיה מפורטת עם יעדים, צעדים ולוח זמנים בנושא:' },
-    { icon: '🔍', title: 'מחקר מעמיק', prompt: 'ערוך מחקר מקיף בנושא הבא, כולל רקע, נתונים עדכניים ומסקנות:' },
-  ];
-
-  function loadQuickPrompts() {
-    const content = document.getElementById('peroot-sp-content');
-    if (!content) return;
-
-    content.innerHTML = QUICK_PROMPTS.map((p, i) => `
-      <div class="peroot-sp-card peroot-sp-quick" data-idx="${i}">
-        <div class="peroot-sp-card-title">${p.icon} ${p.title}</div>
-        <div class="peroot-sp-card-text">${escHtml(p.prompt.slice(0, 80))}...</div>
-        <div class="peroot-sp-card-actions">
-          <button class="peroot-sp-use-btn peroot-sp-quick-use" data-idx="${i}">השתמש</button>
-        </div>
-      </div>
-    `).join('');
-
-    content.querySelectorAll('.peroot-sp-quick-use').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const qp = QUICK_PROMPTS[parseInt(btn.dataset.idx)];
-        const inputEl = document.querySelector(currentSite.inputSelector);
-        if (inputEl && qp) {
-          currentSite.setInputText(inputEl, qp.prompt);
-          inputEl.focus();
-          closeSidePanel();
-        }
-      });
-    });
-  }
-
-  // ── Side Panel Favorites ──────────────────────────────────────────────────
+  // -- Side Panel Favorites --
 
   async function loadSidePanelFavorites() {
     const content = document.getElementById('peroot-sp-content');
@@ -712,12 +644,6 @@
     content.innerHTML = '<div class="peroot-sp-loading"><span class="peroot-ai-spinner"></span></div>';
 
     try {
-      const token = await getToken();
-      if (!token) {
-        content.innerHTML = '<div class="peroot-sp-empty">\u05D4\u05EA\u05D7\u05D1\u05E8 \u05DC-Peroot \u05DB\u05D3\u05D9 \u05DC\u05D2\u05E9\u05EA \u05DC\u05DE\u05D5\u05E2\u05D3\u05E4\u05D9\u05DD</div>';
-        return;
-      }
-
       const res = await apiFetch('/api/favorites');
 
       if (res.status === 401) {
