@@ -26,7 +26,8 @@
     "https://chat.deepseek.com/*",
     "https://www.perplexity.ai/*",
     "https://chat.mistral.ai/*",
-    "https://www.minimaxi.com/*"
+    "https://www.minimaxi.com/*",
+    "https://aistudio.google.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
@@ -74,7 +75,8 @@
         "https://chat.deepseek.com/*",
         "https://www.perplexity.ai/*",
         "https://chat.mistral.ai/*",
-        "https://www.minimaxi.com/*"
+        "https://www.minimaxi.com/*",
+        "https://aistudio.google.com/*"
       ],
       "js": ["content/ai-chat-injector.js"],
       "css": ["content/ai-chat-injector.css"],
@@ -97,7 +99,8 @@
         "https://chat.deepseek.com/*",
         "https://www.perplexity.ai/*",
         "https://chat.mistral.ai/*",
-        "https://www.minimaxi.com/*"
+        "https://www.minimaxi.com/*",
+        "https://aistudio.google.com/*"
       ]
     }
   ],

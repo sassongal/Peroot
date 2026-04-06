@@ -60,20 +60,50 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: 'rich-textarea .ql-editor, div.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], div.input-area-container textarea, textarea, div[contenteditable="true"]',
-      sendButtonSelector: 'button.send-button, button[aria-label="Send message"], button[data-test-id="send-button"], button[mattooltip="Send message"]',
+      inputSelector: '.ql-editor[contenteditable="true"], div[contenteditable="true"][role="textbox"], div[contenteditable="true"], textarea',
+      sendButtonSelector: 'button.send-button, button[aria-label="Send message"], button[data-test-id="send-button"], button[mattooltip="Send message"], button[aria-label="Send"]',
       inputArea: () => {
-        // Gemini wraps input in shadow DOM sometimes; try multiple strategies
-        return document.querySelector('rich-textarea')?.parentElement
-          || document.querySelector('div[class*="input-area"]')?.parentElement
-          || document.querySelector('div[class*="text-input"]')?.parentElement
+        // Gemini uses custom elements — walk up from the input
+        const richTextarea = document.querySelector('rich-textarea');
+        if (richTextarea) {
+          // Try to find the input container that wraps the rich-textarea
+          return richTextarea.closest('.input-area-container')
+            || richTextarea.closest('[class*="input"]')
+            || richTextarea.parentElement?.parentElement
+            || richTextarea.parentElement;
+        }
+        return document.querySelector('div[class*="input-area"]')?.parentElement
           || document.querySelector('footer')
           || null;
       },
-      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
+      getInputText: (el) => {
+        // Gemini's rich-textarea may need special handling
+        if (el.tagName === 'TEXTAREA') return el.value;
+        return el.innerText?.trim() || el.textContent?.trim() || '';
+      },
+      setInputText: (el, text) => {
+        el.focus();
+        // Select all existing content and replace
+        document.execCommand('selectAll', false, null);
+        document.execCommand('insertText', false, text);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      },
+      messageSelector: 'message-content, .message-content',
+      getUserMessages: () => document.querySelectorAll('user-query, .user-query, [data-message-author="user"]'),
+      getAssistantMessages: () => document.querySelectorAll('model-response, .model-response, [data-message-author="model"]'),
+    },
+    aistudio: {
+      match: () => /aistudio\.google\.com/.test(location.hostname),
+      inputSelector: 'textarea, div[contenteditable="true"][role="textbox"], div[contenteditable="true"]',
+      sendButtonSelector: 'button[aria-label="Run"], button[aria-label="Send"], button[mattooltip="Run"]',
+      inputArea: () => document.querySelector('mat-form-field')?.parentElement || document.querySelector('form') || document.querySelector('[class*="input"]')?.parentElement,
+      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText?.trim() || '',
       setInputText: (el, text) => {
         if (el.tagName === 'TEXTAREA') {
-          el.value = text;
+          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+          if (setter) setter.call(el, text);
+          else el.value = text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
           el.focus();
@@ -81,9 +111,9 @@
           document.execCommand('insertText', false, text);
         }
       },
-      messageSelector: 'message-content',
-      getUserMessages: () => document.querySelectorAll('user-query message-content, .user-query'),
-      getAssistantMessages: () => document.querySelectorAll('model-response message-content, .model-response'),
+      messageSelector: '[class*="message"]',
+      getUserMessages: () => document.querySelectorAll('[class*="user-message"], [data-role="user"]'),
+      getAssistantMessages: () => document.querySelectorAll('[class*="model-message"], [data-role="model"]'),
     },
     deepseek: {
       match: () => /chat\.deepseek\.com/.test(location.hostname),
