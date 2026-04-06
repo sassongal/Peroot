@@ -474,13 +474,13 @@ async function doEnhance() {
       const { done, value } = await reader.read();
       if (done) break;
       fullText += decoder.decode(value, { stream: true });
-      const display = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
+      const display = fullText.split("[GENIUS_QUESTIONS]")[0].replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').trim();
       resultText.textContent = display;
       resultText.scrollTop = resultText.scrollHeight;
     }
 
     resultText.classList.remove("streaming");
-    lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
+    lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').trim();
     enhanceRetried = false; // Reset retry flag on success
 
     clearInterval(phaseInterval);

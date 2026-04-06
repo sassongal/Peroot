@@ -370,8 +370,9 @@
         return;
       }
 
-      // Result comes as full text from proxy
-      const cleaned = (res.text || '').split('[GENIUS_QUESTIONS]')[0].trim();
+      // Result comes as full text from proxy — strip metadata tags
+      const raw = (res.text || '').split('[GENIUS_QUESTIONS]')[0];
+      const cleaned = raw.replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').trim();
       if (cleaned) {
         currentSite.setInputText(inputEl, cleaned);
         inputEl.focus();
@@ -552,54 +553,32 @@
     // Also set the peerootBtn reference for state updates
     peerootBtn = trigger;
 
-    // Single click = enhance. Long press (300ms) = open radial menu.
-    let pressTimer = null;
-    let didLongPress = false;
-
-    trigger.addEventListener('mousedown', (e) => {
-      didLongPress = false;
-      pressTimer = setTimeout(() => {
-        didLongPress = true;
-        toggleRadialMenu();
-      }, 300);
-    });
-
-    trigger.addEventListener('mouseup', (e) => {
-      if (pressTimer) clearTimeout(pressTimer);
-      if (!didLongPress) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (radialOpen) {
-          closeRadialMenu();
-        } else {
-          enhanceInput();
-        }
+    // Left click = enhance. Right-click = open radial menu.
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (radialOpen) {
+        closeRadialMenu();
+      } else {
+        enhanceInput();
       }
     });
 
-    trigger.addEventListener('mouseleave', () => {
-      if (pressTimer) clearTimeout(pressTimer);
+    trigger.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleRadialMenu();
     });
 
-    // Also handle touch
-    trigger.addEventListener('touchstart', (e) => {
-      didLongPress = false;
-      pressTimer = setTimeout(() => {
-        didLongPress = true;
-        toggleRadialMenu();
-      }, 400);
-    }, { passive: true });
-
-    trigger.addEventListener('touchend', (e) => {
-      if (pressTimer) clearTimeout(pressTimer);
-      if (!didLongPress) {
-        e.preventDefault();
-        if (radialOpen) {
-          closeRadialMenu();
-        } else {
-          enhanceInput();
-        }
-      }
+    // Menu indicator arrow (visible click target for menu)
+    const menuArrow = document.createElement('button');
+    menuArrow.className = 'peroot-radial-arrow';
+    menuArrow.title = 'תפריט';
+    menuArrow.innerHTML = '▾';
+    menuArrow.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleRadialMenu();
     });
 
     // Radial menu
@@ -622,6 +601,7 @@
     });
 
     container.appendChild(trigger);
+    container.appendChild(menuArrow);
     container.appendChild(menu);
 
     // Position
@@ -1047,18 +1027,16 @@
     trigger.innerHTML = `<img src="${LOGO_URL}" alt="Peroot" class="peroot-radial-logo"><span class="peroot-radial-mode-indicator" style="display:none"></span>`;
     peerootBtn = trigger;
 
-    // Single click = enhance, long press = radial menu
-    let fxPressTimer = null;
-    let fxDidLongPress = false;
-    trigger.addEventListener('mousedown', () => {
-      fxDidLongPress = false;
-      fxPressTimer = setTimeout(() => { fxDidLongPress = true; toggleRadialMenu(); }, 300);
-    });
-    trigger.addEventListener('mouseup', (e) => {
-      if (fxPressTimer) clearTimeout(fxPressTimer);
-      if (!fxDidLongPress) { e.preventDefault(); e.stopPropagation(); radialOpen ? closeRadialMenu() : enhanceInput(); }
-    });
-    trigger.addEventListener('mouseleave', () => { if (fxPressTimer) clearTimeout(fxPressTimer); });
+    // Left click = enhance, right-click = menu
+    trigger.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); radialOpen ? closeRadialMenu() : enhanceInput(); });
+    trigger.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); toggleRadialMenu(); });
+
+    // Menu arrow indicator
+    const fxArrow = document.createElement('button');
+    fxArrow.className = 'peroot-radial-arrow';
+    fxArrow.title = 'תפריט';
+    fxArrow.innerHTML = '▾';
+    fxArrow.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleRadialMenu(); });
 
     const menu = document.createElement('div');
     menu.id = 'peroot-radial-menu';
@@ -1079,6 +1057,7 @@
     });
 
     container.appendChild(trigger);
+    container.appendChild(fxArrow);
     container.appendChild(menu);
     document.body.appendChild(container);
   }
@@ -1087,4 +1066,22 @@
 
   // Fetch user profile once on init (fire-and-forget)
   fetchUserProfile();
+
+  // ── Listen for INSERT_TEXT from popup ────────────────────────────────────
+  // The popup sends INSERT_TEXT via service worker to insert enhanced text into the chat input
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'INSERT_TEXT' && message.text) {
+      const inputEl = findInputElement();
+      if (inputEl) {
+        currentSite.setInputText(inputEl, message.text);
+        inputEl.focus();
+        showToast('הפרומפט הוכנס בהצלחה', 'success');
+      } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(message.text).then(() => {
+          showToast('הועתק ללוח — הדבק בשדה הקלט', 'info');
+        });
+      }
+    }
+  });
 })();
