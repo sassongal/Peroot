@@ -338,11 +338,14 @@
     modeDropdownOpen = false;
   }
 
-  function toggleModeDropdown(anchorEl) {
+  async function toggleModeDropdown(anchorEl) {
     if (modeDropdownOpen) {
       closeModeDropdown();
       return;
     }
+
+    // Ensure profile is loaded before showing lock state
+    if (!userProfile) await fetchUserProfile();
 
     const dropdown = document.createElement('div');
     dropdown.id = 'peroot-mode-dropdown';
