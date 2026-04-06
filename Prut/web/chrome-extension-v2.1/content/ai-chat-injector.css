@@ -1,190 +1,262 @@
-/* ── Peroot AI Chat Injector — Glass-Dark Design ────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   Peroot AI Chat Injector — Glassmorphism + Neon Amber
+   Premium floating toolbar, side panel, export modal, toast
+   ══════════════════════════════════════════════════════════════════ */
 
 :root {
-  --peroot-orange: #e97a1f;
-  --peroot-gold: #fbbf24;
-  --peroot-gold-dim: #f59e0b;
-  --peroot-bg: rgba(17, 17, 19, 0.92);
-  --peroot-bg-solid: #111113;
+  /* Core palette */
+  --peroot-bg: rgba(7, 7, 10, 0.88);
+  --peroot-bg-solid: #07070a;
+  --peroot-surface: rgba(255, 255, 255, 0.03);
+  --peroot-surface-hover: rgba(255, 255, 255, 0.06);
   --peroot-border: rgba(255, 255, 255, 0.06);
-  --peroot-border-hover: rgba(255, 255, 255, 0.12);
-  --peroot-text: #e5e5e5;
-  --peroot-text-dim: #777;
-  --peroot-text-muted: #555;
+  --peroot-border-hover: rgba(255, 255, 255, 0.1);
+
+  /* Amber neon */
+  --peroot-amber: #f59e0b;
+  --peroot-orange: #f97316;
+  --peroot-gold: #f59e0b;
+  --peroot-gold-dim: #d97706;
+  --peroot-neon-glow: rgba(245, 158, 11, 0.1);
+  --peroot-neon-glow-strong: rgba(245, 158, 11, 0.25);
+
+  /* Text */
+  --peroot-text: #fafafa;
+  --peroot-text-dim: #a1a1aa;
+  --peroot-text-muted: #52525b;
+
+  /* Semantic */
+  --peroot-success: #22c55e;
+  --peroot-error: #ef4444;
+
+  /* Motion */
   --peroot-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --peroot-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Glass */
+  --peroot-blur: blur(20px);
+  --peroot-blur-strong: blur(30px);
 }
 
-/* ── Toolbar (pill-shaped, glassmorphic) ── */
+/* ══════════════════════════════════════════
+   TOOLBAR — Frosted Glass Pill + Neon Border
+   ══════════════════════════════════════════ */
 .peroot-ai-toolbar {
   position: absolute;
-  top: -48px;
+  top: -52px;
   right: 12px;
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px;
-  border-radius: 20px;
+  gap: 3px;
+  padding: 5px;
+  border-radius: 22px;
   background: var(--peroot-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--peroot-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: var(--peroot-blur-strong);
+  -webkit-backdrop-filter: var(--peroot-blur-strong);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  box-shadow:
+    0 0 20px rgba(245, 158, 11, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    inset 0 0 20px rgba(255, 255, 255, 0.02);
   z-index: 999999;
-  animation: peroot-toolbar-in 0.4s var(--peroot-ease);
-  transition: box-shadow 0.3s var(--peroot-ease), border-color 0.3s var(--peroot-ease);
+  animation: peroot-toolbar-in 0.5s var(--peroot-ease-spring);
+  transition: all 0.3s var(--peroot-ease);
 }
 
 .peroot-ai-toolbar:hover {
-  box-shadow: 0 4px 24px rgba(233,122,31,0.1), 0 4px 20px rgba(0,0,0,0.4);
-  border-color: rgba(233,122,31,0.15);
+  box-shadow:
+    0 0 30px rgba(245, 158, 11, 0.12),
+    0 4px 28px rgba(0, 0, 0, 0.5),
+    inset 0 0 24px rgba(255, 255, 255, 0.03);
+  border-color: rgba(245, 158, 11, 0.2);
+  transform: translateY(-2px);
 }
 
 @keyframes peroot-toolbar-in {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.9);
-    filter: blur(4px);
+    transform: translateY(16px) scale(0.85);
+    filter: blur(8px);
   }
-  to {
+  60% {
     opacity: 1;
+    transform: translateY(-3px) scale(1.02);
+    filter: blur(0);
+  }
+  100% {
     transform: translateY(0) scale(1);
     filter: blur(0);
   }
 }
 
-/* ── Main Enhance Button ── */
+/* ══════════════════════════════════════════
+   MAIN ENHANCE BUTTON — Circular Amber
+   ══════════════════════════════════════════ */
 .peroot-ai-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, rgba(233, 122, 31, 0.15), rgba(233, 122, 31, 0.05));
-  color: var(--peroot-orange);
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.2), rgba(249, 115, 22, 0.1));
+  color: var(--peroot-amber);
   font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s var(--peroot-ease);
+  transition: all 0.25s var(--peroot-ease);
   position: relative;
   overflow: hidden;
 }
 
+/* Inner glow */
+.peroot-ai-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(245, 158, 11, 0.15), transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.3s;
+  opacity: 0.5;
+}
+
 .peroot-ai-btn:hover {
-  background: linear-gradient(135deg, rgba(233, 122, 31, 0.25), rgba(233, 122, 31, 0.1));
-  box-shadow: 0 0 16px rgba(233, 122, 31, 0.15);
-  transform: scale(1.05);
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.3), rgba(249, 115, 22, 0.15));
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.2), 0 0 8px rgba(245, 158, 11, 0.1);
+  transform: scale(1.08);
+}
+
+.peroot-ai-btn:hover::before {
+  opacity: 1;
 }
 
 .peroot-ai-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.94);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
 }
 
 .peroot-ai-btn img {
   width: 20px;
   height: 20px;
-  transition: opacity 0.15s;
+  transition: all 0.2s;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.3));
 }
 
-/* Loading: pulsing orange ring */
+.peroot-ai-btn:hover img {
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+}
+
+/* Loading state: spinning amber ring */
 .peroot-ai-btn.peroot-ai-loading {
-  background: linear-gradient(135deg, rgba(233, 122, 31, 0.2), rgba(233, 122, 31, 0.08));
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.15), rgba(249, 115, 22, 0.08));
 }
 
 .peroot-ai-btn.peroot-ai-loading::after {
   content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: 18px;
+  inset: -3px;
+  border-radius: 50%;
   border: 2px solid transparent;
-  border-top-color: var(--peroot-orange);
+  border-top-color: var(--peroot-amber);
+  border-right-color: rgba(245, 158, 11, 0.3);
   animation: peroot-spin 0.7s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.3));
 }
 
-/* Success: green flash */
+/* Success state: green pulse */
 .peroot-ai-btn.peroot-ai-success {
   background: rgba(34, 197, 94, 0.12);
-  color: #22c55e;
-  animation: peroot-success-flash 0.4s var(--peroot-ease);
+  color: var(--peroot-success);
+  animation: peroot-success-pulse 0.5s var(--peroot-ease);
 }
 
-@keyframes peroot-success-flash {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(34, 197, 94, 0.15); }
-  100% { box-shadow: none; }
+@keyframes peroot-success-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 24px 6px rgba(34, 197, 94, 0.15); }
+  100% { box-shadow: 0 0 8px rgba(34, 197, 94, 0.05); }
 }
 
-/* ── Tool Buttons (Library, Export) ── */
+/* ══════════════════════════════════════════
+   TOOL BUTTONS (Library, Export)
+   ══════════════════════════════════════════ */
 .peroot-ai-tool-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   border: none;
   background: transparent;
-  color: #666;
+  color: var(--peroot-text-muted);
   font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s var(--peroot-ease);
+  transition: all 0.25s var(--peroot-ease);
 }
 
 .peroot-ai-tool-btn:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--peroot-text);
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.03);
 }
 
 .peroot-ai-tool-btn:active {
   transform: scale(0.92);
 }
 
-/* ── Spinner ── */
+/* ══════════════════════════════════════════
+   SPINNER
+   ══════════════════════════════════════════ */
 .peroot-ai-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(233, 122, 31, 0.15);
-  border-top-color: var(--peroot-orange);
+  border: 2px solid rgba(245, 158, 11, 0.12);
+  border-top-color: var(--peroot-amber);
   border-radius: 50%;
   animation: peroot-spin 0.7s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.2));
 }
 
 @keyframes peroot-spin {
   to { transform: rotate(360deg); }
 }
 
-/* ── Side Panel (glass) ── */
+/* ══════════════════════════════════════════
+   SIDE PANEL — Full-Height Frosted Glass
+   ══════════════════════════════════════════ */
 .peroot-side-panel {
   position: fixed;
   top: 0;
   right: 0;
-  width: 340px;
+  width: 360px;
   height: 100vh;
   background: var(--peroot-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--peroot-blur-strong);
+  -webkit-backdrop-filter: var(--peroot-blur-strong);
   border-left: 1px solid var(--peroot-border);
   z-index: 2147483646;
   display: flex;
   flex-direction: column;
-  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: -12px 0 50px rgba(0, 0, 0, 0.6), -2px 0 20px rgba(0, 0, 0, 0.3);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   color: var(--peroot-text);
   direction: rtl;
+  -webkit-font-smoothing: antialiased;
 }
 
 .peroot-side-panel-enter {
-  animation: peroot-slide-in 0.35s var(--peroot-ease);
+  animation: peroot-slide-in 0.4s var(--peroot-ease);
 }
 
 .peroot-side-panel-exit {
-  animation: peroot-slide-out 0.25s var(--peroot-ease) forwards;
+  animation: peroot-slide-out 0.3s var(--peroot-ease) forwards;
 }
 
 @keyframes peroot-slide-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from { transform: translateX(100%); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes peroot-slide-out {
@@ -192,24 +264,26 @@
   to { transform: translateX(100%); opacity: 0; }
 }
 
+/* Panel Header */
 .peroot-sp-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 14px;
+  padding: 18px 22px 16px;
   border-bottom: 1px solid var(--peroot-border);
   position: relative;
+  background: rgba(255, 255, 255, 0.015);
 }
 
-/* Orange accent line under header */
+/* Amber accent line under header */
 .peroot-sp-header::after {
   content: '';
   position: absolute;
   bottom: -1px;
-  right: 20px;
-  width: 40px;
+  right: 22px;
+  width: 50px;
   height: 2px;
-  background: linear-gradient(90deg, var(--peroot-orange), transparent);
+  background: linear-gradient(90deg, var(--peroot-amber), rgba(245, 158, 11, 0.3), transparent);
   border-radius: 1px;
 }
 
@@ -220,104 +294,133 @@
 }
 
 .peroot-sp-logo-img {
-  width: 22px !important;
-  height: 22px !important;
+  width: 24px !important;
+  height: 24px !important;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.15));
 }
 
 .peroot-sp-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--peroot-text);
-  letter-spacing: -0.03em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .peroot-sp-close {
   background: none;
   border: none;
-  color: #555;
-  font-size: 14px;
+  color: var(--peroot-text-muted);
+  font-size: 15px;
   cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 8px;
-  transition: all 0.15s;
+  padding: 7px 9px;
+  border-radius: 10px;
+  transition: all 0.2s var(--peroot-ease);
   line-height: 1;
 }
 
 .peroot-sp-close:hover {
-  color: #fff;
+  color: var(--peroot-text);
   background: rgba(255, 255, 255, 0.06);
+  transform: scale(1.05);
 }
 
+/* Search Input — Glass with Amber Focus */
 .peroot-sp-search {
-  padding: 12px 16px;
+  padding: 14px 18px;
 }
 
 .peroot-sp-search input {
   width: 100%;
-  padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 10px 14px;
+  background: var(--peroot-surface);
   border: 1px solid var(--peroot-border);
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--peroot-text);
-  font-size: 12px;
+  font-size: 12.5px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.3s var(--peroot-ease);
   direction: rtl;
   box-sizing: border-box;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: inherit;
 }
 
 .peroot-sp-search input:focus {
-  border-color: rgba(233, 122, 31, 0.3);
-  box-shadow: 0 0 0 3px rgba(233, 122, 31, 0.06);
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow:
+    0 0 0 3px rgba(245, 158, 11, 0.06),
+    0 0 20px rgba(245, 158, 11, 0.06);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .peroot-sp-search input::placeholder {
   color: var(--peroot-text-muted);
 }
 
+/* Tabs */
 .peroot-sp-tabs {
   display: flex;
   gap: 4px;
-  padding: 0 16px 10px;
+  padding: 0 18px 12px;
 }
 
 .peroot-sp-tab {
   flex: 1;
-  padding: 7px 6px;
-  border-radius: 8px;
+  padding: 8px 6px;
+  border-radius: 10px;
   border: none;
   background: transparent;
-  color: #555;
+  color: var(--peroot-text-muted);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s var(--peroot-ease);
+  transition: all 0.25s var(--peroot-ease);
   letter-spacing: -0.01em;
+  position: relative;
+  font-family: inherit;
 }
 
 .peroot-sp-tab.active {
-  background: rgba(251, 191, 36, 0.08);
-  color: var(--peroot-gold);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--peroot-amber);
+  text-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+}
+
+.peroot-sp-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--peroot-amber), transparent);
+  border-radius: 1px;
 }
 
 .peroot-sp-tab:hover:not(.active) {
-  color: #999;
+  color: var(--peroot-text-dim);
   background: rgba(255, 255, 255, 0.03);
 }
 
+/* Content area */
 .peroot-sp-content {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 12px 16px;
+  padding: 6px 14px 18px;
 }
 
-.peroot-sp-content::-webkit-scrollbar {
-  width: 3px;
-}
-
+.peroot-sp-content::-webkit-scrollbar { width: 2px; }
+.peroot-sp-content::-webkit-scrollbar-track { background: transparent; }
 .peroot-sp-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.peroot-sp-content:hover::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.12);
 }
 
 .peroot-sp-loading {
@@ -329,87 +432,94 @@
 
 .peroot-sp-empty {
   text-align: center;
-  padding: 48px 20px;
+  padding: 48px 24px;
   color: var(--peroot-text-muted);
-  font-size: 12px;
-  line-height: 1.7;
+  font-size: 12.5px;
+  line-height: 1.8;
 }
 
-/* ── Cards (staggered entry) ── */
+/* ══════════════════════════════════════════
+   CARDS — Staggered Entry + Amber Accent
+   ══════════════════════════════════════════ */
 .peroot-sp-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--peroot-surface);
   border: 1px solid var(--peroot-border);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 6px;
-  transition: all 0.2s var(--peroot-ease);
+  border-right: 3px solid transparent;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 8px;
+  transition: all 0.25s var(--peroot-ease);
   cursor: default;
-  border-left: 2px solid transparent;
-  animation: peroot-card-in 0.3s var(--peroot-ease) backwards;
+  animation: peroot-card-in 0.4s var(--peroot-ease) backwards;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .peroot-sp-card:nth-child(1) { animation-delay: 0ms; }
-.peroot-sp-card:nth-child(2) { animation-delay: 40ms; }
-.peroot-sp-card:nth-child(3) { animation-delay: 80ms; }
-.peroot-sp-card:nth-child(4) { animation-delay: 120ms; }
-.peroot-sp-card:nth-child(5) { animation-delay: 160ms; }
-.peroot-sp-card:nth-child(6) { animation-delay: 200ms; }
-.peroot-sp-card:nth-child(7) { animation-delay: 240ms; }
-.peroot-sp-card:nth-child(8) { animation-delay: 280ms; }
+.peroot-sp-card:nth-child(2) { animation-delay: 50ms; }
+.peroot-sp-card:nth-child(3) { animation-delay: 100ms; }
+.peroot-sp-card:nth-child(4) { animation-delay: 150ms; }
+.peroot-sp-card:nth-child(5) { animation-delay: 200ms; }
+.peroot-sp-card:nth-child(6) { animation-delay: 250ms; }
+.peroot-sp-card:nth-child(7) { animation-delay: 300ms; }
+.peroot-sp-card:nth-child(8) { animation-delay: 350ms; }
 
 @keyframes peroot-card-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .peroot-sp-card:hover {
-  border-color: var(--peroot-border-hover);
-  border-left-color: var(--peroot-orange);
-  background: rgba(255, 255, 255, 0.04);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: rgba(245, 158, 11, 0.12);
+  border-right-color: var(--peroot-amber);
+  background: var(--peroot-surface-hover);
+  transform: translateY(-2px) translateX(-2px);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(245, 158, 11, 0.04);
 }
 
 .peroot-sp-card-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--peroot-text);
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   letter-spacing: -0.01em;
 }
 
 .peroot-sp-card-text {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--peroot-text-dim);
-  line-height: 1.5;
-  margin-bottom: 8px;
+  line-height: 1.6;
+  margin-bottom: 10px;
 }
 
 .peroot-sp-card-actions {
   display: flex;
-  gap: 5px;
+  gap: 6px;
 }
 
 .peroot-sp-use-btn,
 .peroot-sp-copy-btn {
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: all 0.15s var(--peroot-ease);
+  transition: all 0.2s var(--peroot-ease);
   letter-spacing: -0.01em;
+  font-family: inherit;
 }
 
 .peroot-sp-use-btn {
-  background: linear-gradient(135deg, var(--peroot-gold), var(--peroot-gold-dim));
+  background: linear-gradient(135deg, var(--peroot-amber), var(--peroot-gold-dim));
   color: #000;
 }
 
 .peroot-sp-use-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25);
 }
 
 .peroot-sp-use-btn:active {
@@ -417,17 +527,22 @@
 }
 
 .peroot-sp-copy-btn {
-  background: rgba(255, 255, 255, 0.04);
-  color: #888;
+  background: var(--peroot-surface);
+  color: var(--peroot-text-dim);
   border: 1px solid var(--peroot-border);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .peroot-sp-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ccc;
+  background: var(--peroot-surface-hover);
+  color: var(--peroot-text);
+  border-color: var(--peroot-border-hover);
 }
 
-/* ── Export Modal (glass overlay) ── */
+/* ══════════════════════════════════════════
+   EXPORT MODAL — Glass Overlay
+   ══════════════════════════════════════════ */
 .peroot-export-modal {
   position: fixed;
   inset: 0;
@@ -435,8 +550,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  animation: peroot-fade-in 0.2s var(--peroot-ease);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  animation: peroot-fade-in 0.25s var(--peroot-ease);
+  -webkit-font-smoothing: antialiased;
 }
 
 @keyframes peroot-fade-in {
@@ -447,37 +563,40 @@
 .peroot-export-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .peroot-export-content {
   position: relative;
   width: 90%;
-  max-width: 520px;
+  max-width: 540px;
   background: var(--peroot-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--peroot-blur-strong);
+  -webkit-backdrop-filter: var(--peroot-blur-strong);
   border: 1px solid var(--peroot-border);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow:
+    0 0 40px rgba(245, 158, 11, 0.04),
+    0 28px 90px rgba(0, 0, 0, 0.6);
   color: var(--peroot-text);
-  animation: peroot-modal-in 0.3s var(--peroot-ease);
+  animation: peroot-modal-in 0.35s var(--peroot-ease-spring);
 }
 
 @keyframes peroot-modal-in {
-  from { transform: scale(0.92) translateY(10px); opacity: 0; }
-  to { transform: scale(1) translateY(0); opacity: 1; }
+  0% { transform: scale(0.9) translateY(12px); opacity: 0; filter: blur(4px); }
+  60% { transform: scale(1.01) translateY(-2px); opacity: 1; filter: blur(0); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .peroot-export-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  font-size: 15px;
+  margin-bottom: 16px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -485,74 +604,77 @@
 .peroot-export-close {
   background: none;
   border: none;
-  color: #555;
-  font-size: 14px;
+  color: var(--peroot-text-muted);
+  font-size: 15px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.15s;
+  padding: 5px 9px;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
 .peroot-export-close:hover {
-  color: #fff;
+  color: var(--peroot-text);
   background: rgba(255, 255, 255, 0.06);
 }
 
 .peroot-export-stats {
   font-size: 11px;
   color: var(--peroot-text-dim);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   letter-spacing: -0.01em;
 }
 
 .peroot-export-preview {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--peroot-surface);
   border: 1px solid var(--peroot-border);
-  border-radius: 12px;
-  padding: 14px;
-  max-height: 180px;
+  border-radius: 14px;
+  padding: 16px;
+  max-height: 200px;
   overflow-y: auto;
-  font-size: 11px;
-  color: #888;
-  line-height: 1.6;
+  font-size: 11.5px;
+  color: var(--peroot-text-dim);
+  line-height: 1.7;
   white-space: pre-wrap;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-.peroot-export-preview::-webkit-scrollbar {
-  width: 3px;
-}
-
+.peroot-export-preview::-webkit-scrollbar { width: 2px; }
 .peroot-export-preview::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 2px;
 }
 
 .peroot-export-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .peroot-export-btn {
   flex: 1;
   min-width: 130px;
-  padding: 9px 14px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
   border: 1px solid var(--peroot-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--peroot-surface);
   color: var(--peroot-text);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s var(--peroot-ease);
+  transition: all 0.25s var(--peroot-ease);
   letter-spacing: -0.01em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: inherit;
 }
 
 .peroot-export-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--peroot-surface-hover);
   border-color: var(--peroot-border-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .peroot-export-btn:active {
@@ -560,34 +682,37 @@
 }
 
 .peroot-export-btn.peroot-export-primary {
-  background: linear-gradient(135deg, var(--peroot-gold), var(--peroot-gold-dim));
+  background: linear-gradient(135deg, var(--peroot-amber), var(--peroot-gold-dim));
   color: #000;
   border: none;
 }
 
 .peroot-export-btn.peroot-export-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.08);
 }
 
-/* ── Toast (bottom-center, bouncy) ── */
+/* ══════════════════════════════════════════
+   TOAST — Glass Pill + Neon Border
+   ══════════════════════════════════════════ */
 .peroot-toast {
   position: fixed;
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  padding: 8px 18px;
-  border-radius: 10px;
+  padding: 10px 20px;
+  border-radius: 14px;
   font-size: 12px;
   font-weight: 700;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   z-index: 2147483647;
   opacity: 0;
-  transition: all 0.35s var(--peroot-ease);
+  transition: all 0.4s var(--peroot-ease-spring);
   pointer-events: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: var(--peroot-blur);
+  -webkit-backdrop-filter: var(--peroot-blur);
   letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
 .peroot-toast-show {
@@ -596,39 +721,44 @@
 }
 
 .peroot-toast-success {
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--peroot-success);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.08), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .peroot-toast-error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--peroot-error);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.08), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .peroot-toast-info {
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
   color: #3b82f6;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.08), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
-/* ── Mode Selector (arrow + dropdown) ── */
+/* ══════════════════════════════════════════
+   MODE SELECTOR — Arrow + Dropdown
+   ══════════════════════════════════════════ */
 .peroot-mode-arrow {
-  width: 18px;
-  height: 32px;
-  border-radius: 0 14px 14px 0;
+  width: 20px;
+  height: 34px;
+  border-radius: 0 16px 16px 0;
   border: none;
   background: transparent;
-  color: #555;
+  color: var(--peroot-text-muted);
   font-size: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s var(--peroot-ease);
+  transition: all 0.2s var(--peroot-ease);
   margin-left: -6px;
-  padding: 0 4px 0 2px;
+  padding: 0 5px 0 2px;
 }
 
 .peroot-mode-arrow:hover {
@@ -644,76 +774,92 @@
 
 .peroot-mode-badge {
   position: absolute;
-  top: -6px;
-  right: -4px;
+  top: -7px;
+  right: -5px;
   font-size: 7px;
-  background: rgba(251, 191, 36, 0.15);
-  color: var(--peroot-gold);
-  padding: 1px 3px;
-  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--peroot-amber);
+  padding: 1px 4px;
+  border-radius: 5px;
   font-weight: 800;
   letter-spacing: -0.02em;
   pointer-events: none;
   line-height: 1.2;
   white-space: nowrap;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  text-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
 }
 
+/* Mode Dropdown — Glass + Neon Border */
 .peroot-mode-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 6px;
-  background: var(--peroot-bg-solid);
-  border: 1px solid var(--peroot-border);
-  border-radius: 12px;
-  padding: 4px;
+  margin-top: 8px;
+  background: var(--peroot-bg);
+  backdrop-filter: var(--peroot-blur-strong);
+  -webkit-backdrop-filter: var(--peroot-blur-strong);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  border-radius: 14px;
+  padding: 5px;
   z-index: 999999;
-  min-width: 140px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  animation: peroot-toolbar-in 0.2s var(--peroot-ease);
+  min-width: 150px;
+  box-shadow:
+    0 0 20px rgba(245, 158, 11, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.6);
+  animation: peroot-dropdown-in 0.25s var(--peroot-ease-spring);
+}
+
+@keyframes peroot-dropdown-in {
+  0% { opacity: 0; transform: translateY(6px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .peroot-mode-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
   border: none;
   background: none;
   color: var(--peroot-text-dim);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
   text-align: right;
   direction: rtl;
-  transition: all 0.15s;
+  transition: all 0.2s var(--peroot-ease);
+  font-family: inherit;
 }
 
 .peroot-mode-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--peroot-text);
 }
 
 .peroot-mode-item.active {
-  color: var(--peroot-gold);
-  background: rgba(251, 191, 36, 0.08);
+  color: var(--peroot-amber);
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: inset 0 0 12px rgba(245, 158, 11, 0.04);
 }
 
 .peroot-mode-item.locked {
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 .peroot-mode-item.locked:hover {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .peroot-mode-lock {
   font-size: 8px;
-  color: var(--peroot-gold);
-  background: rgba(251, 191, 36, 0.15);
-  padding: 1px 4px;
-  border-radius: 3px;
+  color: var(--peroot-amber);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 1px 5px;
+  border-radius: 4px;
   margin-right: auto;
+  text-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
 }
