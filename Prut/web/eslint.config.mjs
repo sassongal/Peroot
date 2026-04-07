@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local experimentation / audit tooling — contains a Python venv with
+    // >500MB of third-party JS that OOMs the linter.
+    "tools/**",
+    // Git worktrees — avoid double-linting files shared with the main tree.
+    ".worktrees/**",
+    // Generated codebase snapshot (~160K tokens)
+    "repomix-output.*",
   ]),
 ]);
 

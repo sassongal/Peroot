@@ -1,0 +1,46 @@
+# Dependencies & build artifacts
+node_modules/
+.next/
+dist/
+build/
+.turbo/
+.vercel/
+out/
+
+# Lock files (huge, low signal)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+*.lock
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+
+# TS/Next caches
+*.tsbuildinfo
+next-env.d.ts
+
+# Generated codebase snapshot (~160K tokens — never auto-load)
+repomix-output.xml
+
+# Local experimentation / audit output
+tools/crewai-ui-audit/
+
+# Logs
+*.log
+logs/
+
+# Env (safety + tokens)
+.env
+.env.*
+!.env.example
+
+# Git internals
+.git/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/

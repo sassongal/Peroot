@@ -49,6 +49,9 @@ next-env.d.ts
 # chrome extension (separate project)
 chrome-extension-v2.1/
 
+# local experimentation / audit output
+tools/crewai-ui-audit/
+
 # tooling / AI config
 .claude/
 .planning/
