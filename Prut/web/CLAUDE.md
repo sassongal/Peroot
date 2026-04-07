@@ -18,7 +18,7 @@ npm run format     # Prettier
 - `app/` — App Router pages + `api/` REST routes (`admin/` role-protected, `p/[id]/` shared prompt, `prompts/`, `blog/`, `guides/`)
 - `components/` — `ui/` (shadcn), `features/` (library, prompt-improver, chains), `admin/`, `layout/`, `providers/`
 - `hooks/` — `useLibrary`, `usePromptWorkflow`, `useHistory`, …
-- `context/` — Library, Settings, Favorites, I18n
+- `context/` — Library, Favorites, I18n
 - `lib/ai/` — `gateway.ts`, `circuit-breaker.ts`, `concurrency.ts` (model routing)
 - `lib/engines/` — 5 engines extending `BaseEngine`: Standard, Image, Video, Research, Agent. Input: `EngineInput`
 - `lib/services/credit-service.ts` — atomic RPC `refresh_and_decrement_credits`. Free 2/day (reset 14:00 IL), Pro 150/mo. Refund on error. Ledger: `credit_ledger`
@@ -34,7 +34,7 @@ npm run format     # Prettier
 Supabase Postgres, RLS-enforced isolation. Migrations in `supabase/migrations/`. Read table list directly from migrations when needed.
 
 ## State
-React Context (Library/Settings/Favorites/I18n) + React Query for server state + local state for ephemeral UI.
+React Context (Library/Favorites/I18n) + React Query for server state + local state for ephemeral UI.
 
 ## Conventions
 - Imports: `@/*` → `./src/`
