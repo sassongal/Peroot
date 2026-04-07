@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { AlertTriangle, Check, Copy, ExternalLink, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { renderStyledPrompt } from "@/lib/text-utils";
-import { SafeHtml } from "@/components/ui/SafeHtml";
 import { PromptScore } from "@/lib/engines/base-engine";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
 import { ReferralShareCTA } from "@/components/features/referral/ReferralShareCTA";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { getVariablePlaceholder } from "@/lib/variable-utils";
+import { BeforeAfterSplit } from "@/components/ui/BeforeAfterSplit";
+import { ScoreDelta } from "@/components/ui/ScoreDelta";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -58,7 +58,7 @@ interface ResultSectionProps {
 }
 
 import { useI18n } from "@/context/I18nContext";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 /** Platform URLs for image/video generation tools - opens the platform so users can paste the prompt */
 const GENERATION_PLATFORM_URLS: Record<string, { name: string; url: string; color: string }> = {
@@ -110,24 +110,12 @@ export function ResultSection({
   const copyShortcutHint = isMac ? "⌘⇧C" : "Ctrl+⇧C";
   // Pro users can toggle the watermark off; free users always get the watermark.
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
-  // Before/After tab - only rendered when originalPrompt is provided
-  const [activeTab, setActiveTab] = useState<'before' | 'after'>('after');
-
-  // Reset to "after" tab when a new enhancement starts
-  useEffect(() => {
-    if (isLoading) setActiveTab('after');
-  }, [isLoading]);
 
   const isInterrupted = streamPhase === 'interrupted';
   // ... rest of logic ...
   const displayCompletion = completion.replace(/\{([^}]+)\}/g, (match, ph) => {
     return variableValues[ph] || match;
   });
-
-  // Append a streaming cursor sentinel that CSS will style as blinking
-  const styledHtml = isLoading && completion
-    ? renderStyledPrompt(displayCompletion) + '<span class="peroot-streaming-cursor" aria-hidden="true">│</span>'
-    : renderStyledPrompt(displayCompletion);
 
   // Unified copy handler used by all copy entry-points inside this component.
   // withWatermark is determined by isPro + toggle state unless explicitly overridden.
@@ -137,10 +125,6 @@ export function ResultSection({
       : isPro ? proWatermarkEnabled : true;
     onCopy(text, shouldWatermark);
   };
-
-  // Whether the before/after toggle is available
-  const showTabs = !!originalPrompt && !isLoading;
-  const isBeforeTab = showTabs && activeTab === 'before';
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -171,19 +155,13 @@ export function ResultSection({
           <h2 className="text-2xl font-serif text-[var(--text-primary)] mb-1">{t.result_section.title}</h2>
           <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
             <span>{t.result_section.ready}</span>
-            {improvementDelta > 0 && (
-              <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full font-medium">
-                {t.result_section.performance_boost.replace('{delta}', improvementDelta.toString())}
-              </span>
-            )}
           </div>
         </div>
         {completionScore && (
-          <div className="flex flex-col items-end">
-            <div className={cn("text-xs font-semibold px-2 py-1 rounded-full bg-[var(--glass-bg)] text-[var(--text-primary)] mb-1")}>
-              {completionScore.label} · {completionScore.score}%
-            </div>
-          </div>
+          <ScoreDelta
+            before={improvementDelta > 0 ? Math.max(0, completionScore.score - improvementDelta) : null}
+            after={completionScore.score}
+          />
         )}
       </div>
 
@@ -192,59 +170,20 @@ export function ResultSection({
         {/* Main Result Area */}
         <div className={cn("glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
 
-          {/* Before / After tab strip */}
-          {showTabs && (
-            <div className="flex items-center gap-1 px-4 pt-4 pb-0" dir="rtl">
-              <button
-                onClick={() => setActiveTab('before')}
-                className={cn(
-                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  activeTab === 'before'
-                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                    : "text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]"
-                )}
-                aria-pressed={activeTab === 'before'}
-              >
-                לפני
-              </button>
-              <button
-                onClick={() => setActiveTab('after')}
-                className={cn(
-                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  activeTab === 'after'
-                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                    : "text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]"
-                )}
-                aria-pressed={activeTab === 'after'}
-              >
-                אחרי
-              </button>
-            </div>
-          )}
-
-          {/* Floating copy button - hidden in "before" view */}
-          {!isBeforeTab && (
-            <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
-              <button
-                onClick={() => handleCopy(displayCompletion)}
-                className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                title={t.result_section.copy_tooltip}
-                aria-label="העתק פרומפט"
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </button>
-            </div>
-          )}
-
-          {/* Content area - swaps between before/after */}
-          {isBeforeTab ? (
-            <div
-              className="p-8 text-lg text-[var(--text-muted)] leading-relaxed font-sans max-h-[60vh] overflow-y-auto flex-1 whitespace-pre-wrap"
-              dir="rtl"
+          {/* Floating copy button */}
+          <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
+            <button
+              onClick={() => handleCopy(displayCompletion)}
+              className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              title={t.result_section.copy_tooltip}
+              aria-label="העתק פרומפט"
             >
-              {originalPrompt}
-            </div>
-          ) : isLoading && !completion ? (
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Content area - loading skeleton OR shared BeforeAfterSplit */}
+          {isLoading && !completion ? (
             <div className="p-8 space-y-4 animate-pulse" dir="rtl">
               <div className="h-4 bg-[var(--glass-border)] rounded w-3/4" />
               <div className="h-4 bg-[var(--glass-border)] rounded w-full" />
@@ -253,16 +192,26 @@ export function ResultSection({
               <div className="h-4 bg-[var(--glass-border)] rounded w-4/5" />
             </div>
           ) : (
-            <SafeHtml
-              html={styledHtml}
-              className="p-8 text-lg text-[var(--text-primary)] leading-relaxed font-sans max-h-[60vh] overflow-y-auto styled-prompt-output flex-1"
-              dir="rtl"
-            />
+            <div className="p-4 flex-1">
+              <BeforeAfterSplit
+                original={originalPrompt ?? ''}
+                enhanced={displayCompletion}
+                mode="tabs"
+                score={
+                  completionScore
+                    ? {
+                        before: improvementDelta > 0 ? Math.max(0, completionScore.score - improvementDelta) : null,
+                        after: completionScore.score,
+                      }
+                    : undefined
+                }
+              />
+            </div>
           )}
 
-          {/* AI Platform Quick-Launch Bar - hidden in "before" view */}
+          {/* AI Platform Quick-Launch Bar */}
           {/* 5.2 Mobile: grid-cols-2 on mobile, flex on sm+ */}
-          {!isBeforeTab && (
+          {!isLoading && (
             <div className="px-4 py-4 border-t border-[var(--glass-border)] bg-linear-to-r from-black/[0.02] dark:from-white/2 to-transparent">
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
                 <span className="hidden sm:inline text-xs text-slate-500 ms-2">פתח ב:</span>
