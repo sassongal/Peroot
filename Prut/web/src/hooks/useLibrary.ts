@@ -689,7 +689,8 @@ export function useLibrary() {
         source: prompt.source,
         sort_index: nextSortIndex,
         capability_mode: prompt.capability_mode ?? CapabilityMode.STANDARD,
-        tags: prompt.tags || []
+        tags: prompt.tags || [],
+        updated_at: new Date().toISOString(),
       };
 
       const { data: inserted, error } = await supabase
