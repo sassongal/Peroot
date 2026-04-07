@@ -16,6 +16,8 @@ import { PersonalPrompt } from "@/lib/types";
 import { toast } from "sonner";
 import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
+import { DateBadge } from "@/components/ui/DateBadge";
+import { fromPersonalLibraryRow } from "@/lib/prompt-entity";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { VariableFiller } from "@/components/features/variables/VariableFiller";
@@ -102,6 +104,22 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
   const isMenuOpen = openMenuId === prompt.id;
   const hasVariables = extractVariablesFromPrompt(prompt.prompt).length > 0;
 
+  const toIso = (v: unknown): string =>
+    typeof v === 'number' ? new Date(v).toISOString() : (typeof v === 'string' ? v : new Date().toISOString());
+  const toIsoOrNull = (v: unknown): string | null =>
+    v == null ? null : toIso(v);
+
+  const entity = fromPersonalLibraryRow({
+    id: prompt.id,
+    title: prompt.title,
+    prompt: prompt.prompt,
+    category: prompt.category,
+    capability_mode: prompt.capability_mode,
+    created_at: toIso(prompt.created_at),
+    updated_at: toIso(prompt.updated_at),
+    last_used_at: toIsoOrNull(prompt.last_used_at),
+  });
+
   const toggleExpand = () => {
     if (selectionMode) { toggleSelection(prompt.id); return; }
     setExpandedIds(prev => {
@@ -175,10 +193,11 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
           )}
         </span>
 
-        {/* Meta: use count + category */}
+        {/* Meta: use count + category + date */}
         <span className="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)] shrink-0">
           {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
           <span className="px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+          <DateBadge mode="compact" entity={entity} />
         </span>
 
         {/* Quick actions (collapsed) */}
