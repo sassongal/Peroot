@@ -672,7 +672,18 @@ export class ImageEngine extends BaseEngine {
           if (scoringBlock) {
               finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this platform-specific quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
           }
-          finalSystem += `\n\nAfter the prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
+          // JSON mode is mutually exclusive with the PROMPT_TITLE/GENIUS_QUESTIONS
+          // trailer: the nanobanana-json / stable-diffusion-json system prompts
+          // start with "Output ONLY valid JSON. No explanations, no markdown
+          // code fences, no preamble." — appending an instruction to also emit
+          // [PROMPT_TITLE] and [GENIUS_QUESTIONS] after the `}` creates a
+          // contradiction that Gemini 2.5 Flash resolves by stopping
+          // mid-description (truncating the JSON) or by inlining the tokens
+          // inside string values. Titles and questions can be derived via a
+          // separate lightweight pass in JSON mode.
+          if (!isJsonMode) {
+              finalSystem += `\n\nAfter the prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
+          }
       }
 
       return {
