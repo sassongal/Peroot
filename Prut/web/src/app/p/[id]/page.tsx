@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { SharePageClient } from "./client";
 import { logger } from "@/lib/logger";
+import { BeforeAfterSplit } from '@/components/ui/BeforeAfterSplit';
+import { DateBadge } from '@/components/ui/DateBadge';
+import { fromSharedPromptRow } from '@/lib/prompt-entity';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -62,6 +65,8 @@ export default async function SharedPromptPage({ params }: Props) {
   if (error || !prompt) {
     notFound();
   }
+
+  const entity = fromSharedPromptRow(prompt);
 
   // Increment views (fire and forget) via atomic RPC
   void Promise.resolve(supabase.rpc('increment_shared_prompt_views', { prompt_id: id }))
@@ -121,20 +126,13 @@ export default async function SharedPromptPage({ params }: Props) {
             </span>
           </div>
 
-          {prompt.original_input && (
-            <div className="px-6 pt-4">
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">הפרומפט המקורי</div>
-              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-sm text-slate-400">
-                {prompt.original_input}
-              </div>
-            </div>
-          )}
-
-          <div className="p-6">
-            <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider mb-3">הפרומפט המשודרג</div>
-            <div className="p-4 rounded-lg bg-black/40 border border-white/5 text-sm text-slate-200 leading-relaxed whitespace-pre-wrap font-mono">
-              {prompt.prompt}
-            </div>
+          <div className="p-6 flex flex-col gap-4" dir="rtl">
+            <DateBadge mode="inline" entity={entity} />
+            <BeforeAfterSplit
+              original={prompt.original_input || ''}
+              enhanced={prompt.prompt}
+              mode="tabs"
+            />
           </div>
 
           <SharePageClient prompt={prompt.prompt} />
