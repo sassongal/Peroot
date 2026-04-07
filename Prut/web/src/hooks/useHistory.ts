@@ -4,7 +4,6 @@ import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
 import { fromHistoryRow } from '@/lib/prompt-entity';
 import type { PromptEntity } from '@/lib/prompt-entity';
 
@@ -101,18 +100,10 @@ export function useHistory() {
 
       const nowIso = new Date().toISOString();
 
-      // Fire-and-forget DB insert — errors logged but don't block UI
-      supabase.from('history').insert({
-        user_id: currentUser.id,
-        prompt: item.original,
-        enhanced_prompt: item.enhanced,
-        category: item.category,
-        tone: item.tone,
-        title: item.title || null,
-        updated_at: nowIso,
-      }).then(({ error }) => {
-        if (error) logger.error('[useHistory] addToHistory insert failed:', error);
-      });
+      // NOTE: DB insert is performed server-side by /api/enhance (single writer).
+      // This mutation only updates the local cache for instant UI feedback.
+      // After the next history fetch, the optimistic row will be replaced with
+      // the real server row. See fix for history double-insert bug.
 
       const optimisticEntity = fromHistoryRow({
         id: optimisticId,
@@ -168,6 +159,14 @@ export function useHistory() {
       const currentUser = userRef.current;
       if (currentUser && context?.previousHistory) {
         queryClient.setQueryData(['history', currentUser.id], context.previousHistory);
+      }
+    },
+    onSuccess: () => {
+      // Server has already inserted the row (via /api/enhance). Refetch to
+      // replace the optimistic row with the authoritative server row.
+      const currentUser = userRef.current;
+      if (currentUser) {
+        queryClient.invalidateQueries({ queryKey: ['history', currentUser.id] });
       }
     },
   });

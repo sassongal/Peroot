@@ -83,7 +83,12 @@ export function BeforeAfterSplit({
       )}
 
       {mode === 'split' ? (
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-3 items-start">
+        <div
+          className={cn(
+            'grid gap-3 items-start',
+            hasOriginal ? 'grid-cols-1 md:grid-cols-[1fr_2fr]' : 'grid-cols-1'
+          )}
+        >
           {hasOriginal && (
             <div className="rounded-lg bg-[var(--glass-bg)]/40 opacity-60">
               <div className="px-3 pt-2 text-[9px] font-normal uppercase tracking-wider text-[var(--text-muted)]">
