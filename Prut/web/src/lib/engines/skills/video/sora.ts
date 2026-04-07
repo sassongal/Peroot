@@ -1,4 +1,6 @@
-export const skill = {
+import type { PlatformSkill } from '../index';
+
+export const skill: PlatformSkill = {
   platform: 'sora' as const,
   name: 'Sora 2',
   examples: [
@@ -18,6 +20,7 @@ Actions:
 
 Lighting: Orange atmospheric glow from above, blue thruster light from below, cockpit lit by green and amber instrument panels; palette: burnt orange, cobalt blue, obsidian black, silver.
 Style: Anamorphic 2.0x, Villeneuve-scale grandeur, practical-feeling VFX, IMAX clarity.`,
+      category: 'sci-fi',
     },
     {
       concept: 'אב ובת אופים עוגה יחד',
@@ -39,6 +42,7 @@ Father: (laughing) "Inside snow, huh? Your grandma is going to love this mess."
 
 Lighting: Soft morning window light from the right, warm fill from overhead pendant lamp; palette: cream, honey gold, soft white, blush pink.
 Style: 35mm film stock texture, A24 domestic intimacy, shallow DOF on the daughter's face.`,
+      category: 'emotion',
     },
     {
       concept: 'דולפינים קופצים ליד סירה',
@@ -56,6 +60,7 @@ Actions:
 
 Lighting: Low golden backlight through water spray creating rim-lit silhouettes, deep blue-green water reflecting sky; palette: turquoise, gold, silver, weathered blue.
 Style: National Geographic cinematic grade, Attenborough-era nature documentary beauty, 85mm compression.`,
+      category: 'nature',
     },
     {
       concept: 'זמרת שרה בהקלטה באולפן',
@@ -76,6 +81,7 @@ Singer: (singing, soulful and building) "I been holding on so long, my hands don
 
 Lighting: Warm amber from a desk lamp stage-left, cool blue monitor glow from the control room behind glass, red recording light glowing above the door; palette: burgundy, amber, midnight blue, gold.
 Style: Anamorphic bokeh, intimate music documentary feel, grain and warmth of Kodak Vision3 500T.`,
+      category: 'music-video',
     },
     {
       concept: 'פרסומת לשעון יוקרה',
@@ -93,6 +99,179 @@ Actions:
 
 Lighting: Single overhead spotlight on the watch with dramatic falloff, warm amber from the whiskey, cool blue city glow from the window; palette: midnight blue, brushed silver, amber, deep charcoal.
 Style: Fincher-level product photography precision, anamorphic flare on highlights, 4K razor sharpness.`,
+      category: 'commercial',
     },
+    {
+      concept: 'קוסם מבצע טריק קלפים ברחוב',
+      output: `A narrow cobblestone street in the Latin Quarter of Paris, late afternoon. A street magician — a man in his late 20s with sharp dark eyes, a fitted black vest over a white henley, sleeves rolled to the elbows, silver rings on his fingers — stands before a small crowd. Duration: 10s.
+
+Cinematography:
+Camera shot: 50mm, starts at medium shot, pushes to close-up on hands at the climax
+Mood: Playful mystery
+
+Actions:
+- Magician fans a deck of cards between both hands in the first two seconds, cards spreading in a perfect arc, each one catching the light
+- At three seconds he invites a woman from the crowd to pick a card, she reaches forward tentatively
+- He shuffles the deck with a cascade flourish at five seconds, cards waterfalling between hands
+- At eight seconds he slaps the deck on the table and flips the top card — her card — as the crowd erupts, the woman's hands flying to her mouth
+
+Dialogue:
+Magician: "Now watch very carefully — the card doesn't choose you, you choose the card."
+Woman: (gasping) "No way... that's impossible!"
+
+Lighting: Warm golden hour light raking down the narrow street, soft shadows from awnings, Parisian storefronts glowing in background; palette: warm stone, ivory, charcoal, gold.
+Style: Handheld intimacy, Linklater-style street realism, 35mm grain, available light only.`,
+      category: 'street',
+    },
+    {
+      concept: 'דרקון מתעורר במערה',
+      output: `A vast underground cavern filled with mountains of ancient gold coins, jeweled goblets, and rusted swords. In the center, a colossal dragon — emerald scales the size of shields, horns like gnarled oak branches, a ridge of spines running down its back — lies coiled in sleep. Its belly glows faintly from internal fire. Duration: 12s.
+
+Cinematography:
+Camera shot: Wide establishing shot on 24mm, slowly pushing in toward the dragon's massive head
+Mood: Ancient, ominous dread
+
+Actions:
+- A single gold coin tumbles down a treasure pile in the first two seconds, the tiny metallic clink echoing through the cavern
+- The dragon's nostril twitches at three seconds, a curl of smoke escaping
+- At five seconds one enormous amber eye snaps open, the vertical slit pupil dilating as it focuses
+- The dragon raises its head at eight seconds, coins cascading off its neck, a deep rumbling growl vibrating the gold piles into small avalanches
+- At ten seconds it opens its jaws revealing rows of obsidian teeth and a glow building deep in its throat
+
+Lighting: Faint amber glow from the dragon's internal fire illuminating the gold, cool blue mineral light from bioluminescent cave crystals above; palette: emerald green, molten gold, obsidian black, amber.
+Style: Peter Jackson epic scale, 65mm IMAX, VFX-heavy with practical weight, deep Dolby contrast.`,
+      category: 'fantasy',
+    },
+    {
+      concept: 'צלם מתעד חתונה בגשם',
+      output: `A country estate garden where an outdoor wedding reception continues despite sudden rain. A wedding photographer — a woman in her 30s with a pixie cut, wearing a dark blazer with camera straps crossed over her chest, Canon R5 in hand — moves through the chaos. Duration: 10s.
+
+Cinematography:
+Camera shot: 35mm, medium shot tracking the photographer, shallow DOF
+Mood: Romantic chaos, beautiful imperfection
+
+Actions:
+- Guests scatter from the long banquet table in the first two seconds, grabbing napkins and champagne flutes, laughing
+- The photographer drops to one knee at three seconds, framing the bride and groom who have stayed at the table, rain streaming down their faces as they laugh
+- At five seconds she fires a burst of shots, the flash illuminating raindrops frozen in mid-air
+- The bride grabs the groom's face and kisses him at seven seconds, rain soaking them both, the photographer circling them for the shot
+
+Dialogue:
+Bride: (laughing through rain) "This is perfect — this is actually perfect!"
+Photographer: "Don't stop, don't stop — that's the cover shot!"
+
+Lighting: Overcast grey sky with warm string lights glowing along the table, camera flash creating staccato highlights on rain; palette: ivory, sage green, warm gold, storm grey.
+Style: Documentary wedding film aesthetic, Robert Richardson natural light sensibility, beautiful chaos.`,
+      category: 'documentary',
+    },
+    {
+      concept: 'מנתח רובוט מבצע ניתוח עתידני',
+      output: `A sterile white surgical suite in a futuristic hospital. A humanoid robot surgeon — matte white chassis with articulated surgical arms ending in micro-tool fingers, a single blue optical sensor as its "eye" — stands over a patient on a hovering surgical table. Holographic displays float around the operating field. Duration: 10s.
+
+Cinematography:
+Camera shot: 50mm, begins at wide establishing, moves to extreme close-up on the robot's precise instruments
+Mood: Clinical wonder, unsettling precision
+
+Actions:
+- The robot's optical sensor scans the patient in the first two seconds, a blue laser line tracing the body contour, holographic anatomy appearing above
+- At three seconds it selects a micro-scalpel from a rotating instrument array with mechanical precision
+- The robot makes an incision at five seconds, its movements impossibly steady, a magnified hologram showing the work at cellular level
+- At eight seconds a human surgeon watching from behind glass leans forward and nods slowly, impressed
+
+Lighting: Cool clinical white overhead panels, blue holographic glow on the robot's chassis, warm amber observation room behind glass; palette: sterile white, surgical blue, chrome, amber.
+Style: Ex Machina precision, Kubrickian symmetry, 4K ultra-sharp with shallow DOF on the instruments.`,
+      category: 'sci-fi',
+    },
+    {
+      concept: 'ילד מגלה כלב גור ברחוב',
+      output: `A quiet residential street lined with autumn maple trees dropping red and gold leaves. A boy around 8 years old — dark hair, oversized denim jacket, backpack slung over one shoulder — walks home from school kicking a small rock. Duration: 8s.
+
+Cinematography:
+Camera shot: 35mm, medium shot at the boy's eye level, gentle handheld following from behind
+Mood: Pure discovery, instant love
+
+Actions:
+- The boy stops mid-kick at the first second, head turning toward a cardboard box beside a lamppost
+- At two seconds he crouches down and peers inside — a tiny golden retriever puppy looks up at him with huge brown eyes
+- His mouth falls open at three seconds, then transforms into the widest grin, eyes watering
+- At five seconds he reaches in with both hands and carefully lifts the puppy, which immediately licks his chin, and the boy dissolves into helpless giggles, pressing the puppy to his chest
+- He stands at seven seconds, looking around the empty street as if asking permission, then tucks the puppy inside his jacket
+
+Dialogue:
+Boy: (whispering, voice cracking) "Hey... hey little guy. Are you alone? You're coming home with me."
+
+Lighting: Warm golden autumn afternoon, long shadows from the maple trees, leaves backlit as they fall; palette: amber, russet red, denim blue, golden retriever gold.
+Style: Spielberg suburban magic, 35mm Kodak warmth, shallow DOF isolating the boy and puppy from the world.`,
+      category: 'emotion',
+    },
+    {
+      concept: 'פרסומת לנעלי ספורט',
+      output: `A concrete basketball court in an industrial neighborhood at dawn. A pair of brand-new neon green running shoes sit on the free-throw line, morning dew beading on the mesh upper. The city skyline is a silhouette behind. Duration: 8s.
+
+Cinematography:
+Camera shot: 100mm macro opening, pulling to 35mm wide as action begins
+Mood: Electric anticipation, launch energy
+
+Actions:
+- Camera orbits the shoes at ground level in the first three seconds, catching light refracting through dew drops on the sole tread
+- A runner's foot steps into frame at three seconds, sliding into the right shoe with a satisfying fit
+- At five seconds both shoes are laced and the runner explodes into a sprint, camera tracking at ankle height, shoes pounding the court with visible impact compression
+- At seven seconds the runner leaps, shoes catching golden dawn light mid-air, freeze-frame at the apex
+
+Lighting: Cool blue pre-dawn shifting to warm golden first light, neon green shoe color popping against grey concrete; palette: neon green, concrete grey, dawn gold, urban steel.
+Style: Nike commercial grade, slow-motion at 120fps for the sprint, macro-to-action transition, product hero lighting.`,
+      category: 'commercial',
+    },
+    {
+      concept: 'גיטריסט מנגן סולו בהופעה חיה',
+      output: `A packed concert venue, haze machines filling the air with thick atmosphere. A lead guitarist — a man in his 40s with long grey-streaked hair, worn leather jacket, vintage Fender Stratocaster in sunburst finish — stands center stage in a pool of white spotlight. Duration: 10s.
+
+Cinematography:
+Camera shot: 50mm anamorphic, starts at medium shot, crash-zooms to close-up on fretboard at the solo climax
+Mood: Transcendent intensity
+
+Actions:
+- He bends a note in the first two seconds, face contorting with effort, left hand vibrato shaking the string
+- At three seconds his right hand shifts to rapid alternate picking, fingers blurring across the strings, the crowd's hands visible reaching upward
+- At six seconds he steps to the monitor edge, leans back at a dramatic angle, the spotlight catching sweat on his forehead
+- At eight seconds he hits the final sustained note, holding the guitar up toward the ceiling, feedback ringing, the crowd erupting
+
+Dialogue:
+(No spoken dialogue — the guitar's wailing solo fills the entire audio space)
+
+Lighting: Single harsh white spot from directly above cutting through blue haze, crowd lit by red and purple wash; palette: spotlight white, haze blue, leather brown, guitar sunburst amber.
+Style: Concert film aesthetic, Scorsese-Shine a Light energy, 35mm pushed stock grain, anamorphic flares through haze.`,
+      category: 'music-video',
+    },
+  ],
+  mistakes: [
+    {
+      bad: 'A spaceship lands on a planet. It looks cool and cinematic.',
+      good: 'A battered silver spacecraft with glowing blue thrusters descends through a swirling orange atmosphere toward an alien landscape of dark obsidian plains. The pilot — a woman with close-cropped auburn hair, grey flight suit, visor raised — grips the controls. Duration: 12s.\n\nActions:\n- Ship rattles as it hits turbulence in the first three seconds\n- Ship punches through clouds at six seconds revealing the vista\n- Landing struts deploy as the ship settles, kicking up iridescent dust',
+      why: 'Sora requires structured sections (Cinematography, Actions, Lighting, Style) and a specified duration. Vague descriptions without structure produce unfocused results.',
+    },
+    {
+      bad: 'Duration: 8s. A man walks into a room and sits down. Actions: - He walks. - He sits.',
+      good: 'Duration: 8s.\n\nActions:\n- Man pushes open the heavy oak door in the first two seconds, warm light spilling across his face\n- He pauses in the doorway at three seconds, scanning the room, right hand still on the handle\n- At five seconds he crosses to a leather armchair and lowers himself into it with a weary exhale\n- At seven seconds he loosens his tie and leans back, eyes closing',
+      why: 'Sora actions need beat-timed specificity — "in the first two seconds," "at five seconds." Each action should be a vivid micro-moment, not a generic description. Aim for 5+ timed action beats.',
+    },
+    {
+      bad: 'A woman talks to a man in a cafe. She has brown hair. He wears a blue shirt.',
+      good: 'A woman — dark brown hair in a low bun, tortoiseshell glasses, olive linen blazer with a silver pendant, three freckles across her left cheek — sits across from a man — sandy hair parted left, fitted navy henley with sleeves pushed to the elbows, a faded tattoo of a compass on his right forearm. Duration: 8s.',
+      why: 'Characters need 5+ identifying details for Sora to maintain consistency. Include hair, clothing, accessories, distinguishing marks, and posture to prevent the model from morphing features between frames.',
+    },
+    {
+      bad: 'A dog runs in a park. It is sunny. The dog is happy.',
+      good: 'A golden retriever with a red bandana sprints across a manicured park lawn, ears flapping, tongue lolling sideways. Duration: 6s.\n\nCinematography:\nCamera shot: 35mm, low tracking shot at the dog\'s eye level\nMood: Unbridled joy\n\nActions:\n- Dog launches from a sitting position in the first second, rear legs driving forward\n- At two seconds it catches a frisbee mid-leap, body fully extended\n- Lands and skids on the grass at four seconds, immediately spinning back to its owner\n\nLighting: Bright midday sun with hard shadows on green grass; palette: golden fur, red bandana, emerald green, blue sky.',
+      why: 'Sora needs the full structured format including Duration, Cinematography, Actions, and Lighting sections. Missing duration means the model picks arbitrarily. Missing structure means the visual coherence drops significantly.',
+    },
+  ],
+  scoringCriteria: [
+    'Structured sections present: Cinematography, Actions, Lighting, and Style are all explicitly labeled',
+    'Duration is specified (e.g., "Duration: 8s") at the beginning or end of the scene description',
+    'Characters have 5+ identifying details (hair, clothing, accessories, distinguishing marks, posture)',
+    'Actions are beat-timed with specific second markers ("in the first two seconds," "at five seconds")',
+    'Lighting section specifies source direction, color temperature, and a named color palette',
+    'At least 4 timed action beats are included in the Actions section',
   ],
 };

@@ -3,7 +3,8 @@ import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engin
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import type { ImagePlatform, ImageOutputFormat } from "../media-platforms";
-import { getExamplesBlock } from "./skills";
+import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 
 // ── Platform-specific system prompt fragments ──
 
@@ -611,26 +612,47 @@ export class ImageEngine extends BaseEngine {
 
       let finalSystem = systemPrompt;
 
-      // User text-style context (userHistory / userPersonality) is intentionally
-      // skipped for image mode - text-mode preferences are noise for visual prompts.
+      // Text-mode userPersonality is still skipped (noise for visual prompts),
+      // but we DO extract visual preferences from image prompt history.
 
       const identity = this.getSystemIdentity();
       if (identity) {
           finalSystem += `\n\n${identity}`;
       }
 
-      // Inject few-shot examples from skill files
+      // Extract and inject visual preferences from user's prompt history
+      if (input.userHistory && input.userHistory.length >= 2) {
+          const visualPrefs = extractVisualPreferences(input.userHistory);
+          const prefsBlock = buildVisualPreferencesBlock(visualPrefs);
+          if (prefsBlock) {
+              finalSystem += prefsBlock;
+          }
+      }
+
+      // Inject few-shot examples from skill files (smart selection based on user concept)
       const skillPlatformKey = platform === 'general' ? 'general' : platform;
-      const examplesBlock = getExamplesBlock('image', skillPlatformKey);
+      const examplesBlock = getExamplesBlock('image', skillPlatformKey, input.prompt, 3);
       if (examplesBlock) {
           finalSystem += examplesBlock;
       }
 
+      // Inject common mistakes to avoid
+      const mistakesBlock = getMistakesBlock('image', skillPlatformKey);
+      if (mistakesBlock) {
+          finalSystem += mistakesBlock;
+      }
+
+      // Inject platform-specific scoring criteria for quality gate
+      const scoringBlock = getScoringBlock('image', skillPlatformKey);
+
       if (isGeneral) {
           // General mode gets the full GENIUS analysis + questions treatment
-          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
+          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?${scoringBlock ? scoringBlock.replace(/\n/g, '\n') : ''}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
       } else {
-          // Platform-specific modes: add title + questions but keep prompt clean
+          // Platform-specific modes: add platform quality gate + title + questions, keep prompt clean
+          if (scoringBlock) {
+              finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this platform-specific quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+          }
           finalSystem += `\n\nAfter the prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
       }
 

@@ -5,6 +5,7 @@ import { ArrowRight, Clock, Calendar, ExternalLink } from "lucide-react";
 import { breadcrumbSchema, articleSchema, faqSchema, howToSchema } from "@/lib/schema";
 import { IMAGE_GUIDES } from "../_data/image-guides";
 import type { Guide } from "../_data/image-guides";
+import { enrichGuideFromSkills } from "@/lib/engines/skills/guide-enricher";
 
 async function getAllGuides(): Promise<Guide[]> {
   const { VIDEO_GUIDES } = await import("../_data/video-guides");
@@ -59,8 +60,11 @@ export default async function GuidePage({
 }) {
   const { slug } = await params;
   const guides = await getAllGuides();
-  const guide = getGuide(slug, guides);
-  if (!guide) notFound();
+  const rawGuide = getGuide(slug, guides);
+  if (!rawGuide) notFound();
+
+  // Enrich guide with fresh data from skill files (single source of truth for examples/mistakes)
+  const guide = enrichGuideFromSkills(rawGuide, { mergeMode: 'append' });
 
   const relatedGuides = guide.relatedSlugs
     .map((s: string) => guides.find((g) => g.slug === s))

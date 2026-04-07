@@ -3,7 +3,8 @@ import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engin
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import { VideoPlatform } from "../video-platforms";
-import { getExamplesBlock } from "./skills";
+import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 
 // ── Platform-specific system prompt overrides ──
 // Each platform has a unique prompting architecture based on official docs,
@@ -492,8 +493,8 @@ export class VideoEngine extends BaseEngine {
     const userTemplate = VIDEO_USER_PROMPTS[platform] || VIDEO_USER_PROMPTS['general'];
     const userPrompt = this.buildTemplate(userTemplate, variables);
 
-    // Video prompts are English-only - skip text-focused style/personality context
-    // which adds noise to cinematic generation
+    // Text-mode userPersonality stays skipped (noise for cinematic prompts),
+    // but we DO extract visual/cinematic preferences from video prompt history.
 
     const identity = this.getSystemIdentity();
     let finalSystem = systemPrompt;
@@ -501,13 +502,31 @@ export class VideoEngine extends BaseEngine {
       finalSystem += `\n\n${identity}`;
     }
 
-    // Inject few-shot examples from skill files
-    const examplesBlock = getExamplesBlock('video', platform);
+    // Extract and inject visual preferences from user's prompt history
+    if (input.userHistory && input.userHistory.length >= 2) {
+      const visualPrefs = extractVisualPreferences(input.userHistory);
+      const prefsBlock = buildVisualPreferencesBlock(visualPrefs);
+      if (prefsBlock) {
+        finalSystem += prefsBlock;
+      }
+    }
+
+    // Inject few-shot examples from skill files (smart selection based on user concept)
+    const examplesBlock = getExamplesBlock('video', platform, input.prompt, 3);
     if (examplesBlock) {
       finalSystem += examplesBlock;
     }
 
-    // English cinematic GENIUS_QUESTIONS focused on the 7 video layers
+    // Inject common mistakes to avoid
+    const mistakesBlock = getMistakesBlock('video', platform);
+    if (mistakesBlock) {
+      finalSystem += mistakesBlock;
+    }
+
+    // Inject platform-specific scoring criteria
+    const scoringBlock = getScoringBlock('video', platform);
+
+    // English cinematic GENIUS_QUESTIONS focused on the 7 video layers + platform-specific gate
     finalSystem += `\n\n<internal_quality_check hidden="true">
 Silently verify before generating (NEVER include any of this in output):
 1. CAMERA: Is the shot type, lens choice, and camera movement clearly specified?
@@ -516,7 +535,7 @@ Silently verify before generating (NEVER include any of this in output):
 4. ENVIRONMENT: Is the setting, time of day, and atmosphere established?
 5. SCENE MOTION: Are environmental dynamics (wind, particles, ambient life) addressed?
 6. LIGHTING: Is the light direction, quality, color temperature, and mood defined?
-7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?
+7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?${scoringBlock || ''}
 </internal_quality_check>
 
 After the enhanced prompt, on a new line add a short descriptive Hebrew title:
