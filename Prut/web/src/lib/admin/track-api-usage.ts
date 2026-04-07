@@ -27,6 +27,14 @@ function estimateCost(modelId: string, inputTokens: number, outputTokens: number
     return (inputTokens * pricing.input + outputTokens * pricing.output) / 1_000_000;
 }
 
+export interface SkillMetadata {
+    type?: 'image' | 'video' | 'text';
+    platform?: string;
+    examplesSelected?: string[]; // Category names of selected examples
+    hasMistakes?: boolean;
+    hasScoring?: boolean;
+}
+
 export interface ApiUsageData {
     userId?: string;
     modelId: ModelId;
@@ -34,11 +42,17 @@ export interface ApiUsageData {
     outputTokens: number;
     durationMs: number;
     endpoint?: string;
+    skillMetadata?: SkillMetadata;
 }
 
 /**
  * Track API usage to api_usage_logs table.
  * Fire-and-forget - errors are logged but don't block the request.
+ *
+ * Skill metadata is logged via logger.info as structured JSON so it appears
+ * in Vercel logs and can be queried later. We also attempt to insert it into
+ * the api_usage_logs.metadata column if it exists, with a try/catch fallback
+ * to a metadata-less insert if the column is missing.
  */
 export async function trackApiUsage(data: ApiUsageData): Promise<void> {
     try {
@@ -46,7 +60,7 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
         const config = AVAILABLE_MODELS[data.modelId];
         const cost = estimateCost(data.modelId, data.inputTokens, data.outputTokens);
 
-        await supabase.from('api_usage_logs').insert({
+        const baseRow = {
             user_id: data.userId || null,
             provider: config?.provider || 'unknown',
             model: data.modelId,
@@ -55,7 +69,33 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
             estimated_cost_usd: cost,
             endpoint: data.endpoint || 'enhance',
             duration_ms: data.durationMs,
-        });
+        };
+
+        // Always log skill metadata as structured info so it's queryable in Vercel logs.
+        if (data.skillMetadata) {
+            logger.info('[ApiUsage:skill]', JSON.stringify({
+                userId: data.userId || null,
+                model: data.modelId,
+                endpoint: data.endpoint || 'enhance',
+                durationMs: data.durationMs,
+                skill: data.skillMetadata,
+            }));
+        }
+
+        // Attempt insert with metadata column first; fall back to a plain insert
+        // if the column doesn't exist (schema not yet migrated).
+        if (data.skillMetadata) {
+            const { error: metaError } = await supabase
+                .from('api_usage_logs')
+                .insert({ ...baseRow, metadata: data.skillMetadata });
+
+            if (metaError) {
+                // Likely the column doesn't exist — fall back silently.
+                await supabase.from('api_usage_logs').insert(baseRow);
+            }
+        } else {
+            await supabase.from('api_usage_logs').insert(baseRow);
+        }
     } catch (error) {
         logger.error('[TrackApiUsage] Failed to log usage:', error);
     }

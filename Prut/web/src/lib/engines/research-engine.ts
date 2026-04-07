@@ -2,7 +2,13 @@
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
-import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import {
+  getExamplesBlock,
+  getMistakesBlock,
+  getScoringBlock,
+  getChainOfThoughtBlock,
+  getRefinementExamplesBlock,
+} from "./skills";
 
 export class ResearchEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -86,6 +92,16 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
 
       if (examplesBlock) result.systemPrompt += examplesBlock;
       if (mistakesBlock) result.systemPrompt += mistakesBlock;
+
+      // Chain-of-Thought reasoning — research questions almost always benefit
+      // from explicit decomposition, so we apply the same length heuristic to
+      // skip only the most trivial inputs.
+      const concept = input.prompt || '';
+      if (concept.trim().length > 30) {
+          const cotBlock = getChainOfThoughtBlock('text', 'research', concept);
+          if (cotBlock) result.systemPrompt += cotBlock;
+      }
+
       if (scoringBlock) {
           result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your research brief passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
       }
@@ -112,8 +128,12 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
 
       const identity = this.getSystemIdentity();
 
+      // Pull a refinement example calibrated to the current iteration so the
+      // model can see exactly how a research prompt evolves between rounds.
+      const refinementBlock = getRefinementExamplesBlock('text', 'research', iteration);
+
       return {
-          systemPrompt: `אתה אנליסט מחקר בכיר ברמת מודיעין - מומחה בבניית פרומפטי מחקר עמוק. משימתך: לשדרג את פרומפט המחקר הקיים לרמת מושלמות מתודולוגית על בסיס המשוב והפרטים החדשים שסופקו.
+          systemPrompt: `אתה אנליסט מחקר בכיר ברמת מודיעין - מומחה בבניית פרומפטי מחקר עמוק. משימתך: לשדרג את פרומפט המחקר הקיים לרמת מושלמות מתודולוגית על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}
 
 כללי שדרוג מחקר:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.

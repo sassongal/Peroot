@@ -2,7 +2,13 @@
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
-import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import {
+  getExamplesBlock,
+  getMistakesBlock,
+  getScoringBlock,
+  getChainOfThoughtBlock,
+  getRefinementExamplesBlock,
+} from "./skills";
 
 export class StandardEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -149,6 +155,16 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
 
       if (examplesBlock) result.systemPrompt += examplesBlock;
       if (mistakesBlock) result.systemPrompt += mistakesBlock;
+
+      // Chain-of-Thought reasoning — only inject when the concept looks complex
+      // enough to benefit from multi-step thinking. The 30-char heuristic is a
+      // rough proxy for "more than just a tagline or one-line request".
+      const concept = input.prompt || '';
+      if (concept.trim().length > 30) {
+          const cotBlock = getChainOfThoughtBlock('text', 'standard', concept);
+          if (cotBlock) result.systemPrompt += cotBlock;
+      }
+
       if (scoringBlock) {
           result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
       }
@@ -175,8 +191,12 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
 
       const identity = this.getSystemIdentity();
 
+      // Pull a refinement example calibrated to the current iteration. Round 1
+      // shows expansion (raw → enhanced); round 3+ shows surgical precision.
+      const refinementBlock = getRefinementExamplesBlock('text', 'standard', iteration);
+
       return {
-          systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
+          systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.${refinementBlock}
 
 כללי שדרוג:
 1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט, גם הקטן ביותר.

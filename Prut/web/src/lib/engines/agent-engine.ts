@@ -2,7 +2,13 @@
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
-import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import {
+  getExamplesBlock,
+  getMistakesBlock,
+  getScoringBlock,
+  getChainOfThoughtBlock,
+  getRefinementExamplesBlock,
+} from "./skills";
 
 export class AgentEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -121,6 +127,15 @@ Requirements:
 
       if (examplesBlock) result.systemPrompt += examplesBlock;
       if (mistakesBlock) result.systemPrompt += mistakesBlock;
+
+      // Chain-of-Thought reasoning — agent design always benefits from
+      // reasoning about identity and Iron Dome boundaries before writing.
+      const concept = input.prompt || '';
+      if (concept.trim().length > 30) {
+          const cotBlock = getChainOfThoughtBlock('text', 'agent', concept);
+          if (cotBlock) result.systemPrompt += cotBlock;
+      }
+
       if (scoringBlock) {
           result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your agent system prompt passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
       }
@@ -147,8 +162,12 @@ Requirements:
 
       const identity = this.getSystemIdentity();
 
+      // Pull a refinement example calibrated to the current iteration so the
+      // model can see exactly how an agent prompt evolves between rounds.
+      const refinementBlock = getRefinementExamplesBlock('text', 'agent', iteration);
+
       return {
-          systemPrompt: `אתה מהנדס מטה-פרומפטים ברמה העילאית - מומחה בבניית הוראות מערכת לסוכני AI ברמה production-grade. משימתך: לשדרג את הוראת הסוכן הקיימת לרמת מושלמות על בסיס המשוב והפרטים החדשים שסופקו.
+          systemPrompt: `אתה מהנדס מטה-פרומפטים ברמה העילאית - מומחה בבניית הוראות מערכת לסוכני AI ברמה production-grade. משימתך: לשדרג את הוראת הסוכן הקיימת לרמת מושלמות על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}
 
 כללי שדרוג הוראת סוכן:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.

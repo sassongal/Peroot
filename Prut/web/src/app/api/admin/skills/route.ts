@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
-import { getImageSkill, getVideoSkill } from "@/lib/engines/skills";
+import {
+  getImageSkill,
+  getVideoSkill,
+  getSelectionStats,
+  getRecentSelections,
+} from "@/lib/engines/skills";
 import type { PlatformSkill } from "@/lib/engines/skills";
 import { logger } from "@/lib/logger";
 
@@ -110,7 +115,12 @@ export async function GET() {
       },
     };
 
-    return NextResponse.json({ skills, stats });
+    return NextResponse.json({
+      skills,
+      stats,
+      analytics: getSelectionStats(),
+      recentSelections: getRecentSelections(50),
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("[admin/skills] Failed to load skills:", err);

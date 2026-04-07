@@ -64,12 +64,27 @@ export interface SkillMistake {
   why: string;
 }
 
+export interface ChainOfThoughtExample {
+  concept: string;
+  reasoning: string;
+  output: string;
+}
+
+export interface RefinementExample {
+  iteration: number;
+  beforePrompt: string;
+  afterPrompt: string;
+  changes: string[];
+}
+
 export interface PlatformSkill {
   platform: string;
   name: string;
   examples: SkillExample[];
   mistakes?: SkillMistake[];
   scoringCriteria?: string[];
+  chainOfThoughtExamples?: ChainOfThoughtExample[];
+  refinementExamples?: RefinementExample[];
 }
 
 // ── Skill Registry ──
@@ -215,11 +230,95 @@ function selectRelevantExamples(
   return selected;
 }
 
+// ── Selection Tracking (in-memory analytics) ──
+
+export interface SkillSelection {
+  type: string;
+  platform: string;
+  concept: string;
+  selectedCategories: string[];
+  timestamp: number;
+}
+
+const recentSelections: SkillSelection[] = [];
+const MAX_SELECTIONS = 1000;
+
+/**
+ * Record a skill example selection event in the in-memory ring buffer.
+ * Uses LRU-style eviction: when full, the oldest entry is dropped.
+ */
+export function recordSelection(
+  type: string,
+  platform: string,
+  concept: string,
+  categories: string[]
+): void {
+  recentSelections.push({
+    type,
+    platform,
+    concept,
+    selectedCategories: categories,
+    timestamp: Date.now(),
+  });
+  if (recentSelections.length > MAX_SELECTIONS) {
+    recentSelections.shift();
+  }
+}
+
+/**
+ * Get the most recent skill selections (newest first).
+ */
+export function getRecentSelections(limit?: number): SkillSelection[] {
+  const reversed = [...recentSelections].reverse();
+  return typeof limit === 'number' ? reversed.slice(0, limit) : reversed;
+}
+
+/**
+ * Aggregate stats over the in-memory selection buffer.
+ */
+export function getSelectionStats(): {
+  totalSelections: number;
+  topCategories: Array<{ category: string; count: number }>;
+  topPlatforms: Array<{ platform: string; count: number }>;
+  byType: Record<string, number>;
+} {
+  const categoryCounts: Record<string, number> = {};
+  const platformCounts: Record<string, number> = {};
+  const typeCounts: Record<string, number> = {};
+
+  for (const sel of recentSelections) {
+    typeCounts[sel.type] = (typeCounts[sel.type] || 0) + 1;
+    platformCounts[sel.platform] = (platformCounts[sel.platform] || 0) + 1;
+    for (const cat of sel.selectedCategories) {
+      if (!cat) continue;
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    }
+  }
+
+  const topCategories = Object.entries(categoryCounts)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const topPlatforms = Object.entries(platformCounts)
+    .map(([platform, count]) => ({ platform, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    totalSelections: recentSelections.length,
+    topCategories,
+    topPlatforms,
+    byType: typeCounts,
+  };
+}
+
 // ── Public API ──
 
 /**
  * Get few-shot examples formatted for injection into a system prompt.
  * When concept is provided, selects the most relevant examples.
+ *
+ * Side effect: records the selection in the in-memory analytics buffer
+ * so the admin dashboard can display which examples are being used.
  */
 export function getExamplesBlock(
   type: 'image' | 'video' | 'text',
@@ -234,6 +333,16 @@ export function getExamplesBlock(
   const selected = concept
     ? selectRelevantExamples(skill.examples, concept, maxExamples)
     : skill.examples.slice(0, maxExamples);
+
+  // Record selection for analytics (fire-and-forget, in-memory only)
+  try {
+    const categories = selected
+      .map(ex => ex.category)
+      .filter((c): c is ExampleCategory => Boolean(c));
+    recordSelection(type, platform, concept || '', categories);
+  } catch {
+    // Never let analytics break prompt building.
+  }
 
   const lines = selected.map((ex, i) =>
     `Example ${i + 1}:\nConcept: "${ex.concept}"\nOutput: ${ex.output}`
@@ -279,4 +388,77 @@ export function getImageSkill(platform: string): PlatformSkill | undefined {
 
 export function getVideoSkill(platform: string): PlatformSkill | undefined {
   return VIDEO_SKILLS[platform];
+}
+
+/**
+ * Get a chain-of-thought reasoning block for injection into a system prompt.
+ *
+ * Picks up to 2 examples — preferring an exact concept match when provided,
+ * otherwise the first available examples on the skill. Returns an empty string
+ * if the platform has no chainOfThoughtExamples defined.
+ */
+export function getChainOfThoughtBlock(
+  type: 'text',
+  platform: string,
+  concept?: string
+): string {
+  const skills = type === 'text' ? TEXT_SKILLS : null;
+  const skill = skills?.[platform];
+  if (!skill?.chainOfThoughtExamples || skill.chainOfThoughtExamples.length === 0) {
+    return '';
+  }
+
+  // Score by simple keyword overlap with the concept (if provided).
+  const all = skill.chainOfThoughtExamples;
+  let selected = all.slice(0, 2);
+  if (concept && concept.trim()) {
+    const lower = concept.toLowerCase();
+    const tokens = lower.split(/\s+/).filter(t => t.length >= 3);
+    const scored = all.map(ex => {
+      const exLower = ex.concept.toLowerCase();
+      let score = 0;
+      for (const tok of tokens) {
+        if (exLower.includes(tok)) score++;
+      }
+      return { ex, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    selected = scored.slice(0, 2).map(s => s.ex);
+  }
+
+  const lines = selected.map((ex, i) =>
+    `Example ${i + 1}:\nConcept: "${ex.concept}"\nReasoning chain: ${ex.reasoning}\nResulting prompt: ${ex.output}`
+  ).join('\n\n');
+
+  return `\nCHAIN-OF-THOUGHT REASONING EXAMPLES (study HOW to think through the problem before writing the prompt):\n${lines}\n`;
+}
+
+/**
+ * Get a refinement examples block for injection into a refinement system prompt.
+ *
+ * Selects examples whose iteration matches the requested round. Falls back to
+ * any available examples if no exact match is found. Returns an empty string
+ * if the platform has no refinementExamples defined.
+ */
+export function getRefinementExamplesBlock(
+  type: 'text',
+  platform: string,
+  iteration: number
+): string {
+  const skills = type === 'text' ? TEXT_SKILLS : null;
+  const skill = skills?.[platform];
+  if (!skill?.refinementExamples || skill.refinementExamples.length === 0) {
+    return '';
+  }
+
+  const all = skill.refinementExamples;
+  const exact = all.filter(ex => ex.iteration === iteration);
+  const selected = exact.length > 0 ? exact : all.slice(0, 1);
+
+  const lines = selected.map((ex, i) => {
+    const changesList = ex.changes.map(c => `- ${c}`).join('\n');
+    return `Example ${i + 1} (iteration ${ex.iteration}):\nBEFORE:\n${ex.beforePrompt}\n\nAFTER:\n${ex.afterPrompt}\n\nKey changes:\n${changesList}`;
+  }).join('\n\n---\n\n');
+
+  return `\nREFINEMENT EXAMPLES FOR ROUND ${iteration} (study HOW prompts are upgraded between rounds):\n${lines}\n`;
 }
