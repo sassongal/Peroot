@@ -11,7 +11,6 @@ import {
   Search, 
   RefreshCw, 
   FileText,
-  Clock,
   RotateCcw,
   Zap,
   Cpu
@@ -42,6 +41,8 @@ interface PromptVersion {
 
 import { useI18n } from "@/context/I18nContext";
 import { User } from "@supabase/supabase-js";
+import { DateBadge } from "@/components/ui/DateBadge";
+import { fromAiPromptRow } from "@/lib/prompt-entity";
 
 export function SystemPromptsTab() {
   const t = useI18n();
@@ -263,10 +264,7 @@ export function SystemPromptsTab() {
                             <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase border border-blue-500/10">
                                v{prompt.version}
                             </div>
-                            <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest flex items-center gap-2">
-                               <Clock className="w-3.5 h-3.5" />
-                               {new Date(prompt.updated_at).toLocaleString(t.locale === 'he' ? 'he-IL' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-                            </span>
+                            <DateBadge mode="inline" entity={fromAiPromptRow(prompt as unknown as Record<string, unknown>)} />
                          </div>
                        </div>
                     </div>
