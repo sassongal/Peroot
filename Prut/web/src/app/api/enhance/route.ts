@@ -225,17 +225,61 @@ export async function POST(req: Request) {
 
     // 5. Execution with Streaming & Telemetry via Gateway
     const startTime = Date.now();
+    // NOTE: Do NOT pass temperature/maxOutputTokens here. The gateway's
+    // pickDefaults() chooses task-aware values (e.g., image/video get
+    // 0.5 temp + 8192 maxOutputTokens because JSON image prompts need
+    // more headroom and tighter structure than prose). Overriding with a
+    // hardcoded 0.7 here would bypass that and cause the exact truncation
+    // bug we just fixed upstream.
+    const resolvedTask = mode === CapabilityMode.IMAGE_GENERATION ? 'image'
+        : mode === CapabilityMode.VIDEO_GENERATION ? 'video'
+        : mode === CapabilityMode.DEEP_RESEARCH ? 'research'
+        : 'enhance';
+    const isJsonOutput = engineOutput.outputFormat === 'json';
+
     const { result, modelId } = await AIGateway.generateStream({
         system: engineOutput.systemPrompt,
         prompt: engineOutput.userPrompt,
-        temperature: 0.7,
-        task: mode === CapabilityMode.IMAGE_GENERATION ? 'image'
-            : mode === CapabilityMode.VIDEO_GENERATION ? 'video'
-            : mode === CapabilityMode.DEEP_RESEARCH ? 'research'
-            : 'enhance',
+        task: resolvedTask,
         userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;
+
+            // JSON validity check — applied only to engines that declared
+            // outputFormat 'json' (currently: Stable Diffusion JSON and
+            // Gemini Image JSON). We strip GENIUS_QUESTIONS / PROMPT_TITLE
+            // trailing blocks before parsing because the engine appends
+            // those after the main JSON payload. If parsing still fails,
+            // we log the first 200 chars of the failing output to
+            // activity_logs so admins can monitor invalid-JSON rate. We do
+            // NOT auto-retry here: the stream has already been sent to the
+            // client, and silently retrying would double the cost while
+            // producing a response the user never sees. When we have
+            // enough data to know the failure rate, we will add a
+            // pre-stream validation path via generateFull for JSON mode.
+            let jsonValid: boolean | null = null;
+            let jsonError: string | null = null;
+            if (isJsonOutput && completion.text.length > 0) {
+                const cleaned = completion.text
+                    .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/, '')
+                    .replace(/\[GENIUS_QUESTIONS\][\s\S]*$/, '')
+                    .replace(/^```(?:json)?\s*/i, '')
+                    .replace(/\s*```\s*$/i, '')
+                    .trim();
+                try {
+                    JSON.parse(cleaned);
+                    jsonValid = true;
+                } catch (err) {
+                    jsonValid = false;
+                    jsonError = err instanceof Error ? err.message : String(err);
+                    logger.warn('[Enhance] Invalid JSON output', {
+                        modelId,
+                        capability_mode,
+                        error: jsonError,
+                        sample: cleaned.slice(0, 200),
+                    });
+                }
+            }
 
             // Track API usage for cost analysis
             const usage = completion.usage as { promptTokens?: number; completionTokens?: number } | undefined;
@@ -291,6 +335,12 @@ export async function POST(req: Request) {
                         has_context: !!(contextAttachments && contextAttachments.length > 0),
                         context_count: contextAttachments?.length || 0,
                         iteration: iteration || 0,
+                        // JSON mode observability: lets the admin audit page
+                        // compute "invalid JSON rate" by filtering on
+                        // details->>json_valid = 'false'.
+                        json_output: isJsonOutput,
+                        json_valid: jsonValid,
+                        json_error: jsonError,
                     }
                 }).then(({ error: actErr }) => {
                     if (actErr) logger.warn('[Enhance] Activity log insert failed:', actErr.message);

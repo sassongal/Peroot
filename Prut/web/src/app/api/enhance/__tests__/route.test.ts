@@ -733,15 +733,18 @@ describe("POST /api/enhance", () => {
         "text/plain; charset=utf-8",
       );
       expect(mockResult.toTextStreamResponse).toHaveBeenCalled();
+      // Note: temperature is no longer passed from the route — the gateway's
+      // pickDefaults(task) picks task-aware values. See enhance/route.ts.
       expect(mockGenerateStream).toHaveBeenCalledWith(
         expect.objectContaining({
           system: "mock system",
           prompt: "mock user",
-          temperature: 0.7,
           task: "enhance",
           userTier: "free",
         }),
       );
+      const callArgs = mockGenerateStream.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty('temperature');
     });
 
     it("streams response for pro-tier user", async () => {
