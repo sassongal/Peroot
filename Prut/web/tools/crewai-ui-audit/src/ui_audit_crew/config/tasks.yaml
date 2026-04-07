@@ -1,0 +1,57 @@
+map_urls:
+  description: >
+    Using the provided base URL and the sitemap crawl results, produce a final
+    list of URLs to audit. Prefer the highest-impact public pages (pricing,
+    onboarding/login, core product pages, docs/guides, blog index, share pages).
+    Include 15-40 URLs depending on max-urls. Output must be markdown with one
+    URL per line, and a short label per URL.
+  expected_output: >
+    Markdown list of labeled URLs, 15-40 items, each line:
+    - [label] https://...
+  agent: site_mapper
+
+ui_audit:
+  description: >
+    For each audited URL, review the desktop + mobile screenshots and the page
+    notes to identify cosmetic/UX issues. Focus on: button clusters, CTA
+    hierarchy, spacing, overlapping sticky elements, broken wrapping, modals,
+    and any “WhatsApp share button pushing other buttons” issue you find.
+    For each issue provide: title, severity (P0-P3), where (URL + viewport),
+    steps, evidence, fix suggestion, acceptance criteria, estimate (S/M/L).
+  expected_output: >
+    A prioritized markdown issue list grouped by category with full issue
+    fields (title, severity, where, steps, evidence, fix, acceptance criteria, estimate).
+  agent: ui_qa
+
+rtl_audit:
+  description: >
+    Using the same screenshots and notes, find RTL/Hebrew issues and propose
+    fixes. Focus on directionality, logical CSS properties, icons, mixed LTR/RTL
+    strings, and typography. Output issues in the same format (P0-P3) so they
+    can be merged into the main issue list.
+  expected_output: >
+    Markdown list of RTL/Hebrew issues with the same fields.
+  agent: rtl_specialist
+
+big_improvements:
+  description: >
+    Propose 5-10 big improvements that would significantly improve quality and
+    shipping velocity right now. Include GitHub/CI/QA/process suggestions.
+    For each, include: rationale, concrete next step, and success metric.
+  expected_output: >
+    Markdown list of 5-10 “big improvements” with rationale, next step, metric.
+  agent: platform_engineer
+
+final_report:
+  description: >
+    Merge the UI audit, RTL audit, and big improvements into:
+    1) out/issue_list.md
+    2) out/big_improvements.md
+    3) out/prompt_for_fix_agent.md — a ready-to-paste prompt instructing an
+       implementation agent how to fix the issues and how to self-verify.
+    Keep it concise, actionable, and prioritized. Ensure the WhatsApp share
+    button issue is included if observed.
+  expected_output: >
+    Three markdown outputs: issue list, big improvements, and fix-agent prompt.
+  agent: editor
+

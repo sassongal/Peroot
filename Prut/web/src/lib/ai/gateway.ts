@@ -37,7 +37,27 @@ export interface GatewayParams {
  *   - chain: 3072 tokens + 0.4 temp. Chain steps should be concise and
  *     deterministic so downstream steps can reference them reliably.
  */
-function pickDefaults(task?: string, userMax?: number, userTemp?: number): {
+/**
+ * Absolute ceiling applied to maxOutputTokens regardless of caller override.
+ * Protects against a buggy or malicious internal caller passing something
+ * like maxOutputTokens: 999999 and blowing out provider cost budgets.
+ *
+ * Chosen above the largest planned preset (image/video: 8192) so no
+ * legitimate caller is ever clipped, but low enough that a runaway caller
+ * cannot exceed ~2x the largest planned task output.
+ *
+ * Raise this constant if a future task type legitimately needs more.
+ */
+const HARD_MAX_OUTPUT_TOKENS = 16384;
+
+/**
+ * @internal Exported for tests only. Treat as module-private.
+ *
+ * Task-aware generation parameter defaults + clamp. See the multi-line
+ * comment above this function definition in the source file for rationale
+ * on the per-task presets.
+ */
+export function pickDefaults(task?: string, userMax?: number, userTemp?: number): {
     maxOutputTokens: number;
     temperature: number;
 } {
@@ -50,8 +70,9 @@ function pickDefaults(task?: string, userMax?: number, userTemp?: number): {
         chain:    { max: 3072, temp: 0.4 },
     };
     const preset = presets[task ?? 'enhance'] ?? presets.enhance;
+    const requestedMax = userMax ?? preset.max;
     return {
-        maxOutputTokens: userMax ?? preset.max,
+        maxOutputTokens: Math.min(requestedMax, HARD_MAX_OUTPUT_TOKENS),
         temperature: userTemp ?? preset.temp,
     };
 }

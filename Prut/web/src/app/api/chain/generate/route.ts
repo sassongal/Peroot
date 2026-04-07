@@ -127,11 +127,14 @@ export async function POST(req: Request) {
       userPrompt += `\nקטגוריות: ${user_context.recent_categories.join(", ")}`;
     }
 
-    // Use generateFull (non-streaming) — more efficient for JSON output
+    // Use generateFull (non-streaming) — more efficient for JSON output.
+    // Do not pass temperature here: pickDefaults('chain') in gateway.ts
+    // returns 0.4 by design, which is the same value we used to hardcode.
+    // Letting the gateway own it means a future tweak to the chain preset
+    // automatically propagates without callers drifting out of sync.
     const { text: fullText, modelId } = await AIGateway.generateFull({
       system: CHAIN_BUILDER_SYSTEM_PROMPT,
       prompt: userPrompt,
-      temperature: 0.4, // Lower temp for structured JSON — more reliable parsing
       task: "chain",    // Uses flash-first routing for cost efficiency
       userTier: tier,
     });

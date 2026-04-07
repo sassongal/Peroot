@@ -29,3 +29,17 @@
 Prut/web/.git.bak/
 .vscode/
 *.code-workspace
+
+# Python tooling (crewai-ui-audit and similar helper tools)
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Absolute-path leakage artifacts from tools that wrote to $HOME
+# instead of cwd (e.g., a previous crewai run created a recursive
+# Users/galsasson/Peirutech/... nesting inside the tool dir).
+Prut/web/tools/*/Users/

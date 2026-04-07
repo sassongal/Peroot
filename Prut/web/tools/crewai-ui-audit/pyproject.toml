@@ -1,0 +1,25 @@
+[project]
+name = "crewai-ui-audit"
+version = "0.1.0"
+description = "CrewAI-based UI/RTL audit for Prut (public site)"
+requires-python = ">=3.11"
+dependencies = [
+  "crewai>=1.2.0",
+  "litellm>=1.40.0",
+  "pydantic>=2.7",
+  "httpx>=0.27",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.2",
+  "playwright>=1.48",
+  "pyyaml>=6.0.1",
+]
+
+[project.scripts]
+crewai-ui-audit = "ui_audit_crew.main:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

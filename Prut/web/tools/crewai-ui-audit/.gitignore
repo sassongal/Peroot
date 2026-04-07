@@ -1,0 +1,22 @@
+# crewai-ui-audit — local-only artifacts
+# Belt-and-suspenders protection in addition to the root .gitignore.
+# If someone ever runs `git add` scoped to this directory (or clones
+# only this subtree), these rules still apply.
+
+# Python virtualenv
+.venv/
+
+# Bytecode / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Absolute-path leakage: previous crewai runs wrote outputs to
+# ~/Users/... and nested the entire home path inside this dir.
+Users/
+
+# Tool outputs — regenerated on every run, not sources
+out/
