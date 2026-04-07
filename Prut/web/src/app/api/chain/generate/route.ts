@@ -5,6 +5,7 @@ import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 import { logger } from "@/lib/logger";
+import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import type { GeneratedChain, GeneratedChainStep } from "@/lib/chain-types";
 
 const CHAIN_CREDIT_COST = 2;
@@ -132,7 +133,8 @@ export async function POST(req: Request) {
     // returns 0.4 by design, which is the same value we used to hardcode.
     // Letting the gateway own it means a future tweak to the chain preset
     // automatically propagates without callers drifting out of sync.
-    const { text: fullText, modelId } = await AIGateway.generateFull({
+    const chainStartTime = Date.now();
+    const { text: fullText, modelId, usage: chainUsage } = await AIGateway.generateFull({
       system: CHAIN_BUILDER_SYSTEM_PROMPT,
       prompt: userPrompt,
       task: "chain",    // Uses flash-first routing for cost efficiency
@@ -140,6 +142,19 @@ export async function POST(req: Request) {
     });
 
     logger.info(`[chain/generate] Model: ${modelId}, response length: ${fullText.length}`);
+
+    // Track usage for the cost dashboard. Fire-and-forget.
+    const chainUsageTyped = chainUsage as
+        | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
+        | undefined;
+    trackApiUsage({
+      userId,
+      modelId,
+      inputTokens: chainUsageTyped?.inputTokens ?? chainUsageTyped?.promptTokens ?? 0,
+      outputTokens: chainUsageTyped?.outputTokens ?? chainUsageTyped?.completionTokens ?? 0,
+      durationMs: Date.now() - chainStartTime,
+      endpoint: "chain",
+    });
 
     // Parse JSON — refund credits on failure
     const cleaned = extractJSON(fullText);

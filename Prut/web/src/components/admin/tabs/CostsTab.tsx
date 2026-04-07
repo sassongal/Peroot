@@ -63,6 +63,19 @@ interface CostsData {
   monthly: MonthlyRow[];
 }
 
+interface CoverageData {
+  endpoints: { endpoint: string; lastSeen: string | null }[];
+  untracked: string[];
+  windowHours: number;
+  cacheStats: {
+    totalRequests: number;
+    cacheHits: number;
+    hitRate: number;
+    tokensSavedInput: number;
+    tokensSavedOutput: number;
+  };
+}
+
 type SortKey = keyof ProviderRow;
 type SortDir = "asc" | "desc";
 
@@ -128,6 +141,57 @@ function exportToCSV(data: Record<string, unknown>[], filename: string) {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+
+function UntrackedEndpointsWarning({ untracked, windowHours }: { untracked: string[]; windowHours: number }) {
+  if (untracked.length === 0) return null;
+  return (
+    <div className="p-6 rounded-[32px] bg-amber-950/20 border border-amber-500/20 flex items-start gap-4">
+      <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+        <TrendingUp className="w-4 h-4" />
+      </div>
+      <div className="flex-1 space-y-2">
+        <div className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em]">
+          Untracked Endpoints
+        </div>
+        <div className="text-sm text-amber-200/80 font-medium">
+          No <code className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 text-xs">api_usage_logs</code> rows in the last {windowHours}h for:{" "}
+          <span className="font-bold">{untracked.join(", ")}</span>
+        </div>
+        <div className="text-[11px] text-amber-500/60">
+          Either nobody used the feature, or <code>trackApiUsage()</code> is not wired up. Cost dashboard may undercount.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CacheHitRateCard({ stats }: { stats: CoverageData["cacheStats"] }) {
+  const pct = (stats.hitRate * 100).toFixed(1);
+  const tokensSaved = stats.tokensSavedInput + stats.tokensSavedOutput;
+  return (
+    <div className="group p-8 rounded-[40px] bg-zinc-950 border border-emerald-500/10 flex flex-col gap-6 transition-all duration-700 hover:border-emerald-500/20">
+      <div className="flex justify-between items-start">
+        <div className="p-2.5 rounded-xl border bg-emerald-500/5 border-emerald-500/20 text-emerald-400">
+          <Zap className="w-4 h-4" />
+        </div>
+        <div className="px-3 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/10 text-[8px] font-black text-emerald-500 tracking-[0.2em] uppercase">
+          24h
+        </div>
+      </div>
+      <div className="space-y-1">
+        <div className="text-4xl font-black text-white tracking-tighter transition-transform duration-700 group-hover:scale-110 group-hover:translate-x-2 origin-right leading-none">
+          {stats.totalRequests > 0 ? `${pct}%` : "—"}
+        </div>
+        <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
+          Cache Hit Rate
+        </div>
+        <div className="text-[9px] text-zinc-800 font-bold">
+          {stats.cacheHits.toLocaleString()}/{stats.totalRequests.toLocaleString()} requests · ~{tokensSaved.toLocaleString()} tokens saved
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function CostCard({
   label,
@@ -222,6 +286,7 @@ export default function CostsTab() {
   // Data state
   const [data, setData] = useState<CostsData | null>(null);
   const [manualEntries, setManualEntries] = useState<ManualCostEntry[]>([]);
+  const [coverage, setCoverage] = useState<CoverageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingManual, setLoadingManual] = useState(true);
 
@@ -273,9 +338,22 @@ export default function CostsTab() {
     }
   }, []);
 
+  const fetchCoverage = useCallback(async () => {
+    try {
+      const res = await fetch(getApiPath("/api/admin/costs/coverage"));
+      if (!res.ok) throw new Error("Failed to fetch coverage");
+      const json: CoverageData = await res.json();
+      setCoverage(json);
+    } catch (err) {
+      // Coverage is non-critical — swallow errors rather than toasting
+      logger.warn("[CostsTab] coverage fetch failed:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCosts();
     fetchManualCosts();
+    fetchCoverage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -402,8 +480,15 @@ export default function CostsTab() {
         </div>
       </div>
 
+      {/* ── Coverage / Cache health ── */}
+      {coverage && (
+        <div className="space-y-6 px-2">
+          <UntrackedEndpointsWarning untracked={coverage.untracked} windowHours={coverage.windowHours} />
+        </div>
+      )}
+
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 px-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 px-2">
         <CostCard
           label="Total MTD"
           value={data ? fmtCostShort(data.summary.totalCost) : "-"}
@@ -432,6 +517,7 @@ export default function CostsTab() {
           color="amber"
           sub="Average LLM cost"
         />
+        {coverage && <CacheHitRateCard stats={coverage.cacheStats} />}
       </div>
 
       {/* ── Date Filter ── */}

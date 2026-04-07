@@ -43,6 +43,13 @@ export interface ApiUsageData {
     durationMs: number;
     endpoint?: string;
     skillMetadata?: SkillMetadata;
+    /**
+     * True when the response was served from the Redis result cache and no
+     * LLM provider was called. For cache hits, inputTokens/outputTokens/cost
+     * should all be zero — we still log the row so the dashboard can compute
+     * hit rate per endpoint.
+     */
+    cacheHit?: boolean;
 }
 
 /**
@@ -69,6 +76,7 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
             estimated_cost_usd: cost,
             endpoint: data.endpoint || 'enhance',
             duration_ms: data.durationMs,
+            cache_hit: data.cacheHit === true,
         };
 
         // Always log skill metadata as structured info so it's queryable in Vercel logs.

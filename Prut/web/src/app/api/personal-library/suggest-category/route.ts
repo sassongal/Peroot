@@ -4,6 +4,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { trackApiUsage } from "@/lib/admin/track-api-usage";
 
 // ---------------------------------------------------------------------------
 // Provider
@@ -76,11 +77,25 @@ export async function POST(req: NextRequest) {
     // Truncate very long prompts to save tokens
     const truncated = promptText.slice(0, 1500);
 
-    const { text } = await generateText({
+    const suggestStart = Date.now();
+    const { text, usage } = await generateText({
       model: google("gemini-2.5-flash-lite"),
       system: SYSTEM_PROMPT,
       prompt: `Prompt text:\n${truncated}\n\nExisting categories:\n${cats.join(", ") || "(none)"}`,
       maxOutputTokens: 200,
+    });
+
+    // Track usage for the cost dashboard. Fire-and-forget.
+    const usageTyped = usage as
+        | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
+        | undefined;
+    trackApiUsage({
+      userId: user.id,
+      modelId: "gemini-2.5-flash-lite",
+      inputTokens: usageTyped?.inputTokens ?? usageTyped?.promptTokens ?? 0,
+      outputTokens: usageTyped?.outputTokens ?? usageTyped?.completionTokens ?? 0,
+      durationMs: Date.now() - suggestStart,
+      endpoint: "suggest-category",
     });
 
     // Parse the JSON response from the model

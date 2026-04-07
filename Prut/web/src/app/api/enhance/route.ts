@@ -13,6 +13,7 @@ import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
 import { validateApiKey } from "@/lib/api-auth";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
+import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 
 export const maxDuration = 30;
 
@@ -223,6 +224,57 @@ export async function POST(req: Request) {
         ? engine.generateRefinement(engineInput)
         : engine.generate(engineInput);
 
+    // 4.6 Result cache lookup. Skipped for refinements (they carry per-user
+    // previousResult and are effectively unique). Also honors the
+    // X-Peroot-Cache-Bypass header so admins/power users can force a fresh
+    // generation. Cache keys ignore userId by design — the point of the cache
+    // is to dedupe across users who ask the same question with the same
+    // settings.
+    const bypassCache = req.headers.get("x-peroot-cache-bypass") === "1";
+    const cacheKey = bypassCache ? null : buildCacheKey({
+        prompt,
+        mode: capability_mode,
+        tone,
+        category,
+        targetModel: target_model || "general",
+        isRefinement,
+    });
+
+    if (cacheKey) {
+        const cached = await getCached(cacheKey);
+        if (cached) {
+            // Log the hit so the dashboard can compute hit rate. inputTokens
+            // and outputTokens are 0 because no LLM was called.
+            trackApiUsage({
+                userId,
+                modelId: cached.modelId as Parameters<typeof trackApiUsage>[0]["modelId"],
+                inputTokens: 0,
+                outputTokens: 0,
+                durationMs: 0,
+                endpoint: "enhance",
+                cacheHit: true,
+            });
+
+            // Return the cached text as a plain text stream. We use a
+            // ReadableStream rather than a new Response(text) so the client
+            // sees the same text-stream shape as the live path, keeping the
+            // frontend parser unchanged.
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream<Uint8Array>({
+                start(controller) {
+                    controller.enqueue(encoder.encode(cached.text));
+                    controller.close();
+                },
+            });
+            return new Response(stream, {
+                headers: {
+                    "Content-Type": "text/plain; charset=utf-8",
+                    "X-Peroot-Cache": "hit",
+                },
+            });
+        }
+    }
+
     // 5. Execution with Streaming & Telemetry via Gateway
     const startTime = Date.now();
     // NOTE: Do NOT pass temperature/maxOutputTokens here. The gateway's
@@ -281,16 +333,35 @@ export async function POST(req: Request) {
                 }
             }
 
-            // Track API usage for cost analysis
-            const usage = completion.usage as { promptTokens?: number; completionTokens?: number } | undefined;
+            // Track API usage for cost analysis.
+            // AI SDK v6 uses inputTokens/outputTokens (v5 was
+            // promptTokens/completionTokens). We keep the legacy names as a
+            // fallback so older SDK versions don't silently log zeros.
+            const usage = completion.usage as
+                | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
+                | undefined;
             trackApiUsage({
                 userId: userId,
                 modelId,
-                inputTokens: usage?.promptTokens || 0,
-                outputTokens: usage?.completionTokens || 0,
+                inputTokens: usage?.inputTokens ?? usage?.promptTokens ?? 0,
+                outputTokens: usage?.outputTokens ?? usage?.completionTokens ?? 0,
                 durationMs,
                 endpoint: 'enhance',
+                cacheHit: false,
             });
+
+            // Store successful (non-empty) generations in the result cache so
+            // future identical requests can skip the LLM entirely. Fire-and-
+            // forget — cache failures must not break the response. We do not
+            // cache empty or errored outputs (those will be refunded below).
+            const finishReasonForCache = (completion as { finishReason?: string }).finishReason;
+            if (cacheKey && completion.text.length > 0 && finishReasonForCache !== 'error') {
+                setCached(cacheKey, {
+                    text: completion.text,
+                    modelId,
+                    cachedAt: Date.now(),
+                });
+            }
 
             // Only refund on genuinely failed generations (empty output or error finish reason).
             // Length-based refund removed: short valid responses are legitimate and should not trigger refunds.

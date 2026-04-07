@@ -8,6 +8,7 @@ import { validateAdminSession, logAdminAction, parseAdminInput } from '@/lib/adm
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/ratelimit';
+import { trackApiUsage } from '@/lib/admin/track-api-usage';
 
 const TestEngineSchema = z.object({
     prompt: z.string().min(1),
@@ -78,14 +79,29 @@ export async function POST(req: Request) {
     });
     const endTime = Date.now();
     const durationMs = endTime - startTime;
-    const tokenUsage = result.usage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    // AI SDK v6 uses inputTokens/outputTokens; keep v5 names as a fallback.
+    const tokenUsage = result.usage as
+        | { inputTokens?: number; outputTokens?: number; totalTokens?: number; promptTokens?: number; completionTokens?: number }
+        | undefined;
+    const inputTokens = tokenUsage?.inputTokens ?? tokenUsage?.promptTokens ?? 0;
+    const outputTokens = tokenUsage?.outputTokens ?? tokenUsage?.completionTokens ?? 0;
+
+    // Track usage for the cost dashboard. Fire-and-forget.
+    trackApiUsage({
+        userId: user.id,
+        modelId: 'gemini-2.5-flash',
+        inputTokens,
+        outputTokens,
+        durationMs,
+        endpoint: 'test-engine',
+    });
 
     // 5. Audit Log (Shelf) with Telemetry
-    await logAdminAction(user.id, `Engine Test: ${mode}`, { 
+    await logAdminAction(user.id, `Engine Test: ${mode}`, {
         prompt_length: prompt.length,
         has_custom_templates: !!(customSystemPrompt || customUserPrompt),
         latency_ms: durationMs,
-        tokens: tokenUsage
+        tokens: { inputTokens, outputTokens, totalTokens: tokenUsage?.totalTokens ?? inputTokens + outputTokens }
     });
 
     return NextResponse.json({
