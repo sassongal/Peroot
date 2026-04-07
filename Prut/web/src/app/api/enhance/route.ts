@@ -267,6 +267,7 @@ export async function POST(req: Request) {
                     capability_mode: capability_mode || 'STANDARD',
                     title: prompt.slice(0, 60),
                     source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
+                    updated_at: new Date().toISOString(),
                 }).then(({ error: histErr }) => {
                     if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
                 });

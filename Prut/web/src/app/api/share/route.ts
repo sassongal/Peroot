@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
         category: category || 'General',
         capability_mode: capability_mode || 'STANDARD',
         user_id: user.id,
+        updated_at: new Date().toISOString(),
       })
       .select('id')
       .single();

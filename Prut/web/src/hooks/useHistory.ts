@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import { fromHistoryRow } from '@/lib/prompt-entity';
+import type { PromptEntity } from '@/lib/prompt-entity';
 
 export interface HistoryItem {
   id: string; // UUID
@@ -15,6 +17,8 @@ export interface HistoryItem {
   title?: string;
   source?: string; // "web" | "extension"
   timestamp: number;
+  /** Full PromptEntity for use by DateBadge / BeforeAfterSplit. */
+  entity: PromptEntity;
 }
 
 
@@ -70,16 +74,20 @@ export function useHistory() {
 
       if (!data) return [];
 
-      return data.map(row => ({
-        id: row.id,
-        original: row.prompt,
-        enhanced: row.enhanced_prompt,
-        tone: row.tone,
-        category: row.category,
-        title: row.title || undefined,
-        source: row.source || "web",
-        timestamp: new Date(row.created_at).getTime(),
-      }));
+      return data.map((row) => {
+        const entity = fromHistoryRow(row);
+        return {
+          id: entity.id,
+          original: entity.original,
+          enhanced: entity.enhanced,
+          tone: entity.tone ?? '',
+          category: entity.category,
+          title: entity.title || undefined,
+          source: entity.source,
+          timestamp: new Date(entity.createdAt).getTime(),
+          entity,
+        } satisfies HistoryItem;
+      });
     },
     // When user is null, we still run the query but it returns [] immediately.
     // This keeps isLoaded (isSuccess) accurate for consumers.
@@ -87,9 +95,11 @@ export function useHistory() {
 
   // Add to history mutation with optimistic update
   const addMutation = useMutation({
-    mutationFn: async ({ item, optimisticId }: { item: Omit<HistoryItem, 'id' | 'timestamp'>; optimisticId: string }) => {
+    mutationFn: async ({ item, optimisticId }: { item: Omit<HistoryItem, 'id' | 'timestamp' | 'entity'>; optimisticId: string }) => {
       const currentUser = userRef.current;
       if (!currentUser) return null;
+
+      const nowIso = new Date().toISOString();
 
       // Fire-and-forget DB insert — errors logged but don't block UI
       supabase.from('history').insert({
@@ -99,11 +109,24 @@ export function useHistory() {
         category: item.category,
         tone: item.tone,
         title: item.title || null,
+        updated_at: nowIso,
       }).then(({ error }) => {
         if (error) logger.error('[useHistory] addToHistory insert failed:', error);
       });
 
-      return { ...item, id: optimisticId, timestamp: Date.now() } as HistoryItem;
+      const optimisticEntity = fromHistoryRow({
+        id: optimisticId,
+        prompt: item.original,
+        enhanced_prompt: item.enhanced,
+        category: item.category,
+        tone: item.tone,
+        title: item.title ?? '',
+        source: item.source ?? 'web',
+        created_at: nowIso,
+        updated_at: nowIso,
+      });
+
+      return { ...item, id: optimisticId, timestamp: Date.now(), entity: optimisticEntity } satisfies HistoryItem;
     },
     onMutate: async ({ item, optimisticId }) => {
       const currentUser = userRef.current;
@@ -114,10 +137,24 @@ export function useHistory() {
 
       const previousHistory = queryClient.getQueryData<HistoryItem[]>(queryKey);
 
+      const nowIso = new Date().toISOString();
+      const optimisticEntity = fromHistoryRow({
+        id: optimisticId,
+        prompt: item.original,
+        enhanced_prompt: item.enhanced,
+        category: item.category,
+        tone: item.tone,
+        title: item.title ?? '',
+        source: item.source ?? 'web',
+        created_at: nowIso,
+        updated_at: nowIso,
+      });
+
       const optimisticItem: HistoryItem = {
         ...item,
         id: optimisticId,
         timestamp: Date.now(),
+        entity: optimisticEntity,
       };
 
       queryClient.setQueryData<HistoryItem[]>(queryKey, (old = []) => {
@@ -162,7 +199,7 @@ export function useHistory() {
   });
 
   const addToHistory = useCallback(
-    (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+    (item: Omit<HistoryItem, 'id' | 'timestamp' | 'entity'>) => {
       addMutation.mutate({ item, optimisticId: crypto.randomUUID() });
     },
     [addMutation]
