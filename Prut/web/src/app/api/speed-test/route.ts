@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+import { checkRateLimit } from "@/lib/ratelimit";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 interface LighthouseAudit {
   title?: string;
@@ -13,23 +18,6 @@ interface LighthouseAudit {
 
 const PAGESPEED_API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 const VALID_STRATEGIES = new Set(["mobile", "desktop"]);
-
-// Simple in-memory rate limiter: max 10 requests per minute per IP
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 10;
-const RATE_WINDOW = 60_000;
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT) return false;
-  entry.count++;
-  return true;
-}
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
@@ -54,13 +42,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Strategy must be 'mobile' or 'desktop'" }, { status: 400 });
   }
 
-  // Rate limit
+  // Rate limit — Upstash sliding window (10/min per IP)
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
+  const rl = await checkRateLimit(`speed-test:${ip}`, "speedTest");
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again in a minute." },
+      { status: 429 }
+    );
   }
 
-  const apiKey = process.env.PAGESPEED_API_KEY;
+  const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "PageSpeed API key not configured" }, { status: 500 });
   }
@@ -70,7 +62,7 @@ export async function GET(req: NextRequest) {
     const categoryParams = categories.map((c) => `category=${c}`).join("&");
     const apiUrl = `${PAGESPEED_API}?url=${encodeURIComponent(url)}&key=${apiKey}&strategy=${strategy}&${categoryParams}`;
 
-    const response = await fetch(apiUrl, { next: { revalidate: 0 } });
+    const response = await fetch(apiUrl);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -124,7 +116,8 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(result);
-  } catch {
+  } catch (err) {
+    Sentry.captureException(err, { tags: { route: "api/speed-test" } });
     return NextResponse.json(
       { error: "Failed to fetch PageSpeed data" },
       { status: 500 }

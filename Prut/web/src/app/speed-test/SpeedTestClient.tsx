@@ -70,21 +70,24 @@ export function SpeedTestClient() {
   const [error, setError] = useState<string | null>(null);
 
   const runTest = useCallback(async () => {
-    if (!url.trim()) return;
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    // Auto-prefix https:// if user omitted the scheme
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const res = await fetch(`/api/speed-test?url=${encodeURIComponent(url)}&strategy=${strategy}`);
+      const res = await fetch(`/api/speed-test?url=${encodeURIComponent(normalized)}&strategy=${strategy}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to run speed test");
         return;
       }
       setResult(data);
-    } catch (e: any) {
-      setError(e.message || "Network error");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Network error");
     } finally {
       setLoading(false);
     }
@@ -116,6 +119,7 @@ export function SpeedTestClient() {
           <button
             onClick={() => setStrategy(strategy === "mobile" ? "desktop" : "mobile")}
             className="px-4 py-3 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] text-sm hover:bg-[var(--glass-bg-hover)] transition-colors"
+            title={`החלף ל-${strategy === "mobile" ? "Desktop" : "Mobile"}`}
           >
             {strategy === "mobile" ? "Mobile" : "Desktop"}
           </button>
@@ -147,7 +151,7 @@ export function SpeedTestClient() {
       {loading && (
         <div className="flex flex-col items-center justify-center py-16 gap-4 text-[var(--text-muted)]">
           <Loader2 className="w-10 h-10 animate-spin text-[#E17100]" />
-          <p>מריץ בדיקת מהירות... (עד 30 שניות)</p>
+          <p>מריץ בדיקת מהירות... (עד 90 שניות)</p>
         </div>
       )}
 

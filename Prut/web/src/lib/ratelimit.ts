@@ -89,9 +89,14 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(50, '1 h'),
     prefix: '@peroot/ratelimit:chain-pro',
   }),
+  speedTest: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1 m'),
+    prefix: '@peroot/ratelimit:speed-test',
+  }),
 };
 
-export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro';
+export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro' | 'speedTest';
 
 export interface RateLimitResult {
   success: boolean;
