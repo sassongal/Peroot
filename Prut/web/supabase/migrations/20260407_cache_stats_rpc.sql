@@ -18,6 +18,9 @@ RETURNS TABLE (
 )
 LANGUAGE sql
 STABLE
+-- Pin search_path to prevent search-path injection (Supabase advisor
+-- best practice: function_search_path_mutable).
+SET search_path = public, pg_temp
 AS $$
     SELECT
         COUNT(*)::BIGINT AS total_requests,
