@@ -37,7 +37,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   compress: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', '@radix-ui/react-slot', 'posthog-js', '@sentry/nextjs'],
+    optimizePackageImports: ['lucide-react', 'date-fns', 'posthog-js', '@sentry/nextjs'],
   },
   async redirects() {
     return [
