@@ -13,6 +13,7 @@ import { CapabilityMode } from "@/lib/capability-mode";
 import { getVariablePlaceholder } from "@/lib/variable-utils";
 import { BeforeAfterSplit } from "@/components/ui/BeforeAfterSplit";
 import { ScoreDelta } from "@/components/ui/ScoreDelta";
+import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -170,8 +171,25 @@ export function ResultSection({
         {/* Main Result Area */}
         <div className={cn("glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
 
-          {/* Floating copy button */}
+          {/* Floating copy + export buttons */}
           <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
+            <ExportPdfButton
+              title={displayCompletion.slice(0, 60)}
+              original={originalPrompt ?? ''}
+              enhanced={displayCompletion}
+              score={
+                completionScore
+                  ? {
+                      before:
+                        improvementDelta > 0
+                          ? Math.max(0, completionScore.score - improvementDelta)
+                          : null,
+                      after: completionScore.score,
+                    }
+                  : null
+              }
+              disabled={isLoading || !completion}
+            />
             <button
               onClick={() => handleCopy(displayCompletion)}
               className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
