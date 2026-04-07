@@ -148,9 +148,13 @@ describe('ImageEngine', () => {
     expect(result.userPrompt).toContain('צור תמונה של נוף הרים');
   });
 
-  it('systemPrompt contains GENIUS_ANALYSIS section', () => {
+  it('systemPrompt contains an internal quality-check section', () => {
+    // ImageEngine uses a hidden <internal_quality_check> block instead of
+    // the text-engine [GENIUS_ANALYSIS] marker. The purpose is identical:
+    // force a silent pre-generation self-review. Image prompts are fed to
+    // image models that would leak the marker into the rendered image.
     const result = engine.generate(makeInput({ mode: CapabilityMode.IMAGE_GENERATION }));
-    expect(result.systemPrompt).toContain('GENIUS_ANALYSIS');
+    expect(result.systemPrompt).toMatch(/internal_quality_check|GENIUS_ANALYSIS/);
   });
 });
 
@@ -209,9 +213,12 @@ describe('All engines - common behavior', () => {
         expect(Array.isArray(result.requiredFields)).toBe(true);
       });
 
-      it('includes GENIUS_ANALYSIS in systemPrompt', () => {
+      it('includes an internal quality-check section in systemPrompt', () => {
+        // Text engines use [GENIUS_ANALYSIS]; image/video engines use
+        // <internal_quality_check hidden="true"> because the prompt is fed
+        // to a visual model that would render the marker literally.
         const result = engine.generate(makeInput({ mode }));
-        expect(result.systemPrompt).toContain('GENIUS_ANALYSIS');
+        expect(result.systemPrompt).toMatch(/GENIUS_ANALYSIS|internal_quality_check/);
       });
 
       it('includes GENIUS_QUESTIONS in systemPrompt', () => {
