@@ -3,10 +3,36 @@ import sanitizeHtml from "sanitize-html";
 
 export const PLACEHOLDER_REGEX = /{[^}]+}/g;
 
+/**
+ * Real placeholders look like {audience}, {tone}, {product_name}. Structured
+ * JSON outputs (e.g., the nanobanana-json / stable-diffusion-json image engine
+ * modes) emit whole objects inside braces, and the naive regex above
+ * mis-identifies `{\n  "subject": {\n    "description": "..."\n  }` as a
+ * single "placeholder" whose name is a multi-line JSON fragment. That in turn
+ * flips the ResultSection layout into variable-panel mode and makes the
+ * result column shrink to half width, so the user perceives the JSON as
+ * "truncated" when in fact the layout is just wrong.
+ *
+ * A real placeholder has no whitespace, no quotes, no control characters, no
+ * brackets, and is short. This filter rejects the JSON bodies without
+ * breaking any legitimate single-word placeholder.
+ */
+const MAX_PLACEHOLDER_LENGTH = 40;
+const PLACEHOLDER_DISALLOWED = /[\s"':,\[\]{}]/;
+
 export const extractPlaceholders = (text: string): string[] => {
   const matches = text.match(PLACEHOLDER_REGEX) || [];
-  const unique = new Set(matches.map((match) => match.replace(/[{}]/g, "").trim()));
-  return Array.from(unique).filter(Boolean);
+  const unique = new Set(
+    matches
+      .map((match) => match.replace(/[{}]/g, "").trim())
+      .filter(
+        (name) =>
+          name.length > 0 &&
+          name.length <= MAX_PLACEHOLDER_LENGTH &&
+          !PLACEHOLDER_DISALLOWED.test(name)
+      )
+  );
+  return Array.from(unique);
 };
 
 export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
