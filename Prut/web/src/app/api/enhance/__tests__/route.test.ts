@@ -116,6 +116,17 @@ vi.mock("@/lib/admin/track-api-usage", () => ({
   trackApiUsage: (...args: unknown[]) => mockTrackApiUsage(...args),
 }));
 
+// Enhance result cache — controllable per-test
+const mockBuildCacheKey = vi.fn();
+const mockGetCached = vi.fn();
+const mockSetCached = vi.fn();
+vi.mock("@/lib/ai/enhance-cache", () => ({
+  buildCacheKey: (...args: unknown[]) => mockBuildCacheKey(...args),
+  getCached: (...args: unknown[]) => mockGetCached(...args),
+  setCached: (...args: unknown[]) => mockSetCached(...args),
+  ENGINE_VERSION: "test-engine-version",
+}));
+
 // Logger -- silent in tests
 vi.mock("@/lib/logger", () => ({
   logger: {
@@ -1211,6 +1222,177 @@ describe("POST /api/enhance", () => {
           endpoint: "enhance",
         }),
       );
+    });
+  });
+
+  // ===========================================================================
+  // Cache path — added after the 2026-04-07 security/correctness review
+  // ===========================================================================
+  describe("result cache", () => {
+    beforeEach(() => {
+      // Cache tests all run as an authenticated user so the refund/history
+      // side effects have a userId to write against.
+      setupAuthenticatedUser();
+      mockBuildCacheKey.mockReset();
+      mockGetCached.mockReset();
+      mockSetCached.mockReset();
+      // Default: cache returns a non-null key and a miss. Individual tests
+      // override mockGetCached to return a hit when they need one.
+      mockBuildCacheKey.mockReturnValue("peroot:enhance:test:fake-key");
+      mockGetCached.mockResolvedValue(null);
+      mockSetCached.mockResolvedValue(undefined);
+    });
+
+    it("returns cached text with X-Peroot-Cache: hit header on cache hit", async () => {
+      mockGetCached.mockResolvedValueOnce({
+        text: "cached enhanced prompt",
+        modelId: "gemini-2.5-flash",
+        cachedAt: Date.now(),
+      });
+
+      const { POST } = await import("../route");
+      const req = makeRequest(VALID_BODY);
+      const res = await POST(req);
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get("X-Peroot-Cache")).toBe("hit");
+      const body = await res.text();
+      expect(body).toBe("cached enhanced prompt");
+      // LLM was not called on a hit
+      expect(mockGenerateStream).not.toHaveBeenCalled();
+    });
+
+    it("logs trackApiUsage with cacheHit:true and zero tokens on a hit", async () => {
+      mockGetCached.mockResolvedValueOnce({
+        text: "cached",
+        modelId: "gemini-2.5-flash",
+        cachedAt: Date.now(),
+      });
+
+      const { POST } = await import("../route");
+      await POST(makeRequest(VALID_BODY));
+
+      expect(mockTrackApiUsage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cacheHit: true,
+          inputTokens: 0,
+          outputTokens: 0,
+          endpoint: "enhance",
+        }),
+      );
+    });
+
+    it("refunds the credit on a cache hit (user pays zero when server pays zero)", async () => {
+      mockGetCached.mockResolvedValueOnce({
+        text: "cached",
+        modelId: "gemini-2.5-flash",
+        cachedAt: Date.now(),
+      });
+
+      const { POST } = await import("../route");
+      await POST(makeRequest(VALID_BODY));
+
+      expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
+    });
+
+    it("writes a history row on a cache hit", async () => {
+      mockGetCached.mockResolvedValueOnce({
+        text: "cached enhanced prompt",
+        modelId: "gemini-2.5-flash",
+        cachedAt: Date.now(),
+      });
+
+      // Track calls to `from('history').insert(...)`
+      const historyInsert = vi.fn().mockReturnValue({
+        then: (resolve: (v: unknown) => void) => {
+          resolve({ error: null });
+          return Promise.resolve({ error: null });
+        },
+      });
+      mockSupabaseFrom.mockImplementation((table: string) => {
+        if (table === "history") {
+          return { insert: historyInsert };
+        }
+        return mockQueryBuilder({ data: null });
+      });
+
+      const { POST } = await import("../route");
+      await POST(makeRequest(VALID_BODY));
+
+      expect(historyInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: lastUserId,
+          enhanced_prompt: "cached enhanced prompt",
+        }),
+      );
+    });
+
+    it("falls through to the LLM when cache is a miss", async () => {
+      mockGetCached.mockResolvedValueOnce(null);
+
+      const { POST } = await import("../route");
+      await POST(makeRequest(VALID_BODY));
+
+      expect(mockGenerateStream).toHaveBeenCalled();
+    });
+
+    it("skips the cache lookup when X-Peroot-Cache-Bypass:1 header is set", async () => {
+      const { POST } = await import("../route");
+      await POST(
+        makeRequest(VALID_BODY, { "x-peroot-cache-bypass": "1" }),
+      );
+
+      expect(mockGetCached).not.toHaveBeenCalled();
+      expect(mockGenerateStream).toHaveBeenCalled();
+    });
+
+    it("skips the cache for refinement requests", async () => {
+      const { POST } = await import("../route");
+      await POST(
+        makeRequest({
+          ...VALID_BODY,
+          previousResult: "old output",
+          refinementInstruction: "make it shorter",
+        }),
+      );
+
+      // buildCacheKey is still called (the route builds the key regardless),
+      // but we assert the ROUTE passed isRefinement:true so that the real
+      // buildCacheKey would have returned null. Check the argument:
+      expect(mockBuildCacheKey).toHaveBeenCalledWith(
+        expect.objectContaining({ isRefinement: true }),
+      );
+    });
+
+    it("stores result in cache on successful LLM generation (miss path)", async () => {
+      mockGetCached.mockResolvedValueOnce(null);
+
+      const { POST } = await import("../route");
+      await POST(makeRequest(VALID_BODY));
+
+      // onFinish fires to close the stream and write the cache
+      const onFinish = mockGenerateStream.mock.calls[0][0].onFinish;
+      await onFinish({
+        usage: { inputTokens: 100, outputTokens: 50 },
+        text: "fresh enhanced output",
+      });
+
+      expect(mockSetCached).toHaveBeenCalledWith(
+        "peroot:enhance:test:fake-key",
+        expect.objectContaining({ text: "fresh enhanced output" }),
+      );
+    });
+
+    it("does NOT store empty completions in cache", async () => {
+      mockGetCached.mockResolvedValueOnce(null);
+
+      const { POST } = await import("../route");
+      await POST(makeRequest(VALID_BODY));
+
+      const onFinish = mockGenerateStream.mock.calls[0][0].onFinish;
+      await onFinish({ usage: {}, text: "" });
+
+      expect(mockSetCached).not.toHaveBeenCalled();
     });
   });
 });

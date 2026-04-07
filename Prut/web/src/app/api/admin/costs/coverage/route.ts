@@ -65,41 +65,37 @@ export async function GET() {
 
         const untracked = results.filter(r => r.lastSeen === null).map(r => r.endpoint);
 
-        // Cache hit stats for the same 24h window. One aggregate query across
-        // all endpoints; the dashboard uses this for the CacheHitRateCard.
+        // Cache hit stats for the same 24h window. Delegated to the
+        // get_cache_stats(since_ts) Postgres function so aggregation runs
+        // on the DB side (the previous client-side loop OOMed at scale).
         const { data: statsRows, error: statsErr } = await supabase
-            .from('api_usage_logs')
-            .select('cache_hit, input_tokens, output_tokens')
-            .gte('created_at', cutoff);
+            .rpc('get_cache_stats', { since_ts: cutoff });
 
         let totalRequests = 0;
         let cacheHits = 0;
         let tokensSavedInput = 0;
         let tokensSavedOutput = 0;
-        // When we hit the cache we log 0 tokens. To estimate "tokens saved"
-        // we take the average tokens per non-cache-hit request in the same
-        // window and multiply by cacheHits.
-        let realInputTotal = 0;
-        let realOutputTotal = 0;
-        let realCount = 0;
 
-        if (!statsErr && statsRows) {
-            for (const row of statsRows) {
-                totalRequests++;
-                if (row.cache_hit) {
-                    cacheHits++;
-                } else {
-                    realInputTotal += row.input_tokens ?? 0;
-                    realOutputTotal += row.output_tokens ?? 0;
-                    realCount++;
-                }
+        if (statsErr) {
+            logger.warn('[costs/coverage] get_cache_stats rpc failed:', statsErr.message);
+        } else if (Array.isArray(statsRows) && statsRows.length > 0) {
+            const row = statsRows[0] as {
+                total_requests: number | string;
+                cache_hits: number | string;
+                avg_input_tokens: number | string;
+                avg_output_tokens: number | string;
+            };
+            totalRequests = Number(row.total_requests) || 0;
+            cacheHits = Number(row.cache_hits) || 0;
+            const avgIn = Number(row.avg_input_tokens) || 0;
+            const avgOut = Number(row.avg_output_tokens) || 0;
+            // "Tokens saved" is an estimate: assume a cache-hit request
+            // would have consumed the average tokens of a non-cache-hit
+            // request in the same window. Rough but useful as a trend.
+            if (cacheHits > 0) {
+                tokensSavedInput = Math.round(avgIn * cacheHits);
+                tokensSavedOutput = Math.round(avgOut * cacheHits);
             }
-            if (realCount > 0 && cacheHits > 0) {
-                tokensSavedInput = Math.round((realInputTotal / realCount) * cacheHits);
-                tokensSavedOutput = Math.round((realOutputTotal / realCount) * cacheHits);
-            }
-        } else if (statsErr) {
-            logger.warn('[costs/coverage] stats query failed:', statsErr.message);
         }
 
         return NextResponse.json({

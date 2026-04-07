@@ -14,6 +14,7 @@ import { logger } from "@/lib/logger";
 import { validateApiKey } from "@/lib/api-auth";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
+import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
 
 export const maxDuration = 30;
 
@@ -224,12 +225,10 @@ export async function POST(req: Request) {
         ? engine.generateRefinement(engineInput)
         : engine.generate(engineInput);
 
-    // 4.6 Result cache lookup. Skipped for refinements (they carry per-user
-    // previousResult and are effectively unique). Also honors the
-    // X-Peroot-Cache-Bypass header so admins/power users can force a fresh
-    // generation. Cache keys ignore userId by design — the point of the cache
-    // is to dedupe across users who ask the same question with the same
-    // settings.
+    // 4.6 Result cache lookup. Scoped PER USER (no cross-user sharing) and
+    // skipped whenever personalization signal or context attachments are
+    // present — see src/lib/ai/enhance-cache.ts for the full skip rules.
+    // The X-Peroot-Cache-Bypass header lets power users force a fresh run.
     const bypassCache = req.headers.get("x-peroot-cache-bypass") === "1";
     const cacheKey = bypassCache ? null : buildCacheKey({
         prompt,
@@ -237,23 +236,103 @@ export async function POST(req: Request) {
         tone,
         category,
         targetModel: target_model || "general",
+        userId,
+        hasContext: !!(contextAttachments && contextAttachments.length > 0),
+        hasPersonalization: !!(userHistory.length > 0 || userPersonality),
         isRefinement,
     });
 
     if (cacheKey) {
+        const cacheCheckStart = Date.now();
         const cached = await getCached(cacheKey);
         if (cached) {
+            const cacheLatencyMs = Date.now() - cacheCheckStart;
+
+            // Runtime-validate the cached modelId against the current model
+            // union. A model removed between cache write and read (e.g., the
+            // recent removal of gemini-2.5-pro / deepseek-chat) would otherwise
+            // write 'unknown' provider rows and pollute the dashboard.
+            const cachedModelId: ModelId =
+                cached.modelId in AVAILABLE_MODELS
+                    ? (cached.modelId as ModelId)
+                    : "gemini-2.5-flash";
+
             // Log the hit so the dashboard can compute hit rate. inputTokens
-            // and outputTokens are 0 because no LLM was called.
+            // and outputTokens are 0 because no LLM was called. durationMs
+            // reflects the actual cache-lookup latency (small, but real — so
+            // cache-hit rows do not skew average-duration metrics toward 0).
             trackApiUsage({
                 userId,
-                modelId: cached.modelId as Parameters<typeof trackApiUsage>[0]["modelId"],
+                modelId: cachedModelId,
                 inputTokens: 0,
                 outputTokens: 0,
-                durationMs: 0,
+                durationMs: cacheLatencyMs,
                 endpoint: "enhance",
                 cacheHit: true,
             });
+
+            // Fix #3: refund the credit we decremented above. Cache hits cost
+            // Peroot zero LLM tokens, so the user should not pay a quota unit
+            // for them either. Guests have no credit, admins were never
+            // charged; both are no-ops in refundCredit.
+            if (userId) {
+                await refundCredit(userId);
+            }
+
+            // Fix #2: replicate the onFinish side effects so that cache-hit
+            // responses still show up in the user's personal history, feed
+            // the activity log audit trail, and fire achievement progress.
+            // We skip style_analysis — that one reads real token data which
+            // we do not have on a cache hit.
+            if (userId && supabase) {
+                await queryClient.from('history').insert({
+                    user_id: userId,
+                    prompt,
+                    enhanced_prompt: cached.text,
+                    tone,
+                    category,
+                    capability_mode: capability_mode || 'STANDARD',
+                    title: prompt.slice(0, 60),
+                    source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
+                    updated_at: new Date().toISOString(),
+                }).then(({ error: histErr }) => {
+                    if (histErr) logger.warn('[Enhance:cache-hit] History insert failed:', histErr.message);
+                });
+
+                await queryClient.from('activity_logs').insert({
+                    user_id: userId,
+                    action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
+                    entity_type: 'prompt',
+                    details: {
+                        mode,
+                        model: cachedModelId,
+                        latency_ms: cacheLatencyMs,
+                        tokens: { inputTokens: 0, outputTokens: 0 },
+                        prompt_length: prompt.length,
+                        result_length: cached.text.length,
+                        tone,
+                        category,
+                        capability_mode: capability_mode || 'STANDARD',
+                        target_model: target_model || 'general',
+                        is_refinement: isRefinement,
+                        has_context: !!(contextAttachments && contextAttachments.length > 0),
+                        context_count: contextAttachments?.length || 0,
+                        iteration: iteration || 0,
+                        json_output: engineOutput.outputFormat === 'json',
+                        // Non-null marker so admins can filter cache-hit rows
+                        // in activity_logs without adding a new column.
+                        cache_hit: true,
+                    }
+                }).then(({ error: actErr }) => {
+                    if (actErr) logger.warn('[Enhance:cache-hit] Activity log insert failed:', actErr.message);
+                });
+
+                try {
+                    await enqueueJob('achievement_check', { userId });
+                } catch (bgError) {
+                    logger.error("[EnhanceAPI:cache-hit] achievement_check enqueue failed:", bgError);
+                }
+            }
 
             // Return the cached text as a plain text stream. We use a
             // ReadableStream rather than a new Response(text) so the client

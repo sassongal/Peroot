@@ -44,25 +44,51 @@ beforeEach(() => {
 });
 
 describe("buildCacheKey", () => {
+    const userA = "user-a-uuid";
+
     it("returns null for refinement requests", () => {
         const key = buildCacheKey({
             prompt: "write a poem about the sea",
+            userId: userA,
             isRefinement: true,
         });
         expect(key).toBeNull();
     });
 
+    it("returns null when userId is missing (guests bypass cache)", () => {
+        const key = buildCacheKey({ prompt: "write a poem" });
+        expect(key).toBeNull();
+    });
+
+    it("returns null when the request has context attachments", () => {
+        const key = buildCacheKey({
+            prompt: "summarize this",
+            userId: userA,
+            hasContext: true,
+        });
+        expect(key).toBeNull();
+    });
+
+    it("returns null when the request has personalization loaded", () => {
+        const key = buildCacheKey({
+            prompt: "write a poem",
+            userId: userA,
+            hasPersonalization: true,
+        });
+        expect(key).toBeNull();
+    });
+
     it("normalizes prompt whitespace, case, and trailing punctuation", () => {
-        const a = buildCacheKey({ prompt: "Write a Poem!" });
-        const b = buildCacheKey({ prompt: "  write   a poem  " });
-        const c = buildCacheKey({ prompt: "write a poem." });
+        const a = buildCacheKey({ prompt: "Write a Poem!", userId: userA });
+        const b = buildCacheKey({ prompt: "  write   a poem  ", userId: userA });
+        const c = buildCacheKey({ prompt: "write a poem.", userId: userA });
         expect(a).toBeTruthy();
         expect(a).toBe(b);
         expect(a).toBe(c);
     });
 
     it("produces different keys for different mode/tone/category/targetModel", () => {
-        const base = { prompt: "write a poem" };
+        const base = { prompt: "write a poem", userId: userA };
         const keys = new Set([
             buildCacheKey(base),
             buildCacheKey({ ...base, mode: "IMAGE_GENERATION" }),
@@ -73,8 +99,21 @@ describe("buildCacheKey", () => {
         expect(keys.size).toBe(5);
     });
 
+    it("produces different keys for different users (no cross-user leak)", () => {
+        const keyA = buildCacheKey({ prompt: "write a poem", userId: "user-a" });
+        const keyB = buildCacheKey({ prompt: "write a poem", userId: "user-b" });
+        expect(keyA).toBeTruthy();
+        expect(keyB).toBeTruthy();
+        expect(keyA).not.toBe(keyB);
+    });
+
+    it("includes the user id in the key path for GDPR bulk deletion", () => {
+        const key = buildCacheKey({ prompt: "hello", userId: "user-xyz" });
+        expect(key).toContain(":user:user-xyz:");
+    });
+
     it("includes the engine version in the key prefix", () => {
-        const key = buildCacheKey({ prompt: "hello" });
+        const key = buildCacheKey({ prompt: "hello", userId: userA });
         expect(key).toContain(`peroot:enhance:${ENGINE_VERSION}`);
     });
 });

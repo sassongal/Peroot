@@ -19,7 +19,10 @@ import { logger } from "@/lib/logger";
  * entries become unreachable (no migration needed, they just TTL out).
  */
 
-export const ENGINE_VERSION = "v1-2026-04-07";
+// Bumped from v1-2026-04-07 after the cross-user leak fix — the old keys
+// were scoped globally (no userId) and must not be reused even after the
+// fix ships, because they could still return another user's output.
+export const ENGINE_VERSION = "v2-2026-04-07";
 const CACHE_PREFIX = `peroot:enhance:${ENGINE_VERSION}`;
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 hour
 
@@ -29,6 +32,30 @@ export interface EnhanceCacheKeyInput {
     tone?: string;
     category?: string;
     targetModel?: string;
+    /**
+     * The authenticated user ID. REQUIRED for the key to resolve — guests
+     * (no userId) never hit the cache, and per-user scoping prevents the
+     * cross-user data leak where user A's PDF-influenced output could
+     * leak to user B asking the same prompt. See the code-review findings
+     * in docs/superpowers/specs/2026-04-07-cost-optimization-quickwins-design.md.
+     */
+    userId?: string;
+    /**
+     * True when the request has file/URL/image context attachments. Context
+     * can contain confidential documents whose content the engine incorporates
+     * into the generated prompt — we never cache those. Even though the key
+     * is now per-user, context also varies within the same user, and storing
+     * multi-KB PDF-derived prompts in Redis is wasteful.
+     */
+    hasContext?: boolean;
+    /**
+     * True when any style/history personalization was loaded for this
+     * request. The engine output depends on user personality + history, but
+     * those live in the DB and change over time. Rather than invalidate on
+     * every personality update, we skip the cache whenever personalization
+     * is active. Same-user repeat requests are still the dominant cache case.
+     */
+    hasPersonalization?: boolean;
     /**
      * Set true for refinement requests. Refinements carry previousResult +
      * refinementInstruction + answers, all of which make the request effectively
@@ -51,13 +78,25 @@ function normalizePrompt(input: string): string {
 }
 
 /**
- * Build the Redis key for a request. Refinements always return null so the
- * caller skips cache lookup entirely.
+ * Build the Redis key for a request. Returns null (cache disabled) when any
+ * of these conditions hold:
+ *   - Refinement request (per-user ephemeral state)
+ *   - No authenticated user (guests are rate-limited, not cached)
+ *   - Request has context attachments (PDF/URL/image — may contain PII)
+ *   - Request has user personality/history loaded (per-user signal varies)
+ *
+ * The key itself is namespaced by userId so that even for a hypothetical
+ * future case where two users produced the same normalized key inputs,
+ * their Redis entries live in separate slots.
  */
 export function buildCacheKey(input: EnhanceCacheKeyInput): string | null {
     if (input.isRefinement) return null;
+    if (!input.userId) return null;
+    if (input.hasContext) return null;
+    if (input.hasPersonalization) return null;
 
     const parts = [
+        input.userId,
         normalizePrompt(input.prompt),
         input.mode ?? "STANDARD",
         input.tone ?? "",
@@ -65,7 +104,10 @@ export function buildCacheKey(input: EnhanceCacheKeyInput): string | null {
         input.targetModel ?? "general",
     ];
     const hash = createHash("sha256").update(parts.join("\u0000")).digest("hex");
-    return `${CACHE_PREFIX}:${hash}`;
+    // userId lives in the hash AND as a key prefix so that bulk operations
+    // (e.g., GDPR user deletion) can scan `peroot:enhance:v2-*:user:<id>:*`
+    // and nuke all of a user's cached entries without collision.
+    return `${CACHE_PREFIX}:user:${input.userId}:${hash}`;
 }
 
 // Lazily-initialized Redis client. Matches the pattern in src/lib/ratelimit.ts.
