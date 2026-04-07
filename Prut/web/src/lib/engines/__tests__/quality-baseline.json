@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-04-07T18:17:26.032Z",
+  "fixtureCount": 14,
+  "averageScore": 32.86,
+  "entries": [
+    {
+      "group": "badText",
+      "name": "empty string",
+      "score": 0,
+      "level": "low"
+    },
+    {
+      "group": "badText",
+      "name": "single word",
+      "score": 11,
+      "level": "low"
+    },
+    {
+      "group": "badText",
+      "name": "two-word fragment",
+      "score": 10,
+      "level": "low"
+    },
+    {
+      "group": "badText",
+      "name": "whitespace only",
+      "score": 0,
+      "level": "low"
+    },
+    {
+      "group": "badVisual",
+      "name": "bare visual concept",
+      "score": 0,
+      "level": "low"
+    },
+    {
+      "group": "badVisual",
+      "name": "two-word visual",
+      "score": 9,
+      "level": "low"
+    },
+    {
+      "group": "eliteText",
+      "name": "elite CO-STAR with all 15 dimensions",
+      "score": 85,
+      "level": "high"
+    },
+    {
+      "group": "mediumText",
+      "name": "role + task + audience + tone",
+      "score": 43,
+      "level": "medium"
+    },
+    {
+      "group": "mediumText",
+      "name": "task + numbers + format",
+      "score": 33,
+      "level": "low"
+    },
+    {
+      "group": "strongText",
+      "name": "full RISEN Hebrew prompt",
+      "score": 77,
+      "level": "high"
+    },
+    {
+      "group": "strongVideo",
+      "name": "detailed cinematic video",
+      "score": 75,
+      "level": "high"
+    },
+    {
+      "group": "strongVisual",
+      "name": "detailed visual portrait",
+      "score": 79,
+      "level": "high"
+    },
+    {
+      "group": "weakText",
+      "name": "bare task verb + object",
+      "score": 19,
+      "level": "low"
+    },
+    {
+      "group": "weakText",
+      "name": "task with channel only",
+      "score": 19,
+      "level": "low"
+    }
+  ],
+  "groupAverages": {
+    "badText": 5.25,
+    "weakText": 19,
+    "mediumText": 38,
+    "strongText": 77,
+    "eliteText": 85,
+    "badVisual": 4.5,
+    "strongVisual": 79,
+    "strongVideo": 75
+  }
+}
