@@ -2,6 +2,7 @@
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
+import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
 
 export class AgentEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -112,6 +113,18 @@ Requirements:
   generate(input: EngineInput): EngineOutput {
       const result = super.generate(input);
       result.outputFormat = "markdown";
+
+      // Inject skill-based few-shot examples, mistakes, and scoring criteria
+      const examplesBlock = getExamplesBlock('text', 'agent', input.prompt, 3);
+      const mistakesBlock = getMistakesBlock('text', 'agent');
+      const scoringBlock = getScoringBlock('text', 'agent');
+
+      if (examplesBlock) result.systemPrompt += examplesBlock;
+      if (mistakesBlock) result.systemPrompt += mistakesBlock;
+      if (scoringBlock) {
+          result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your agent system prompt passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+      }
+
       return result;
   }
 

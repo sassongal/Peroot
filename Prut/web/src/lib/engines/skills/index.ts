@@ -26,13 +26,31 @@ import { skill as higgsfield } from './video/higgsfield';
 import { skill as minimax } from './video/minimax';
 import { skill as videoGeneral } from './video/general';
 
+// Text mode skills (standard/research/agent)
+import { skill as standardSkill } from './text/standard';
+import { skill as researchSkill } from './text/research';
+import { skill as agentSkill } from './text/agent';
+
 // ── Types ──
 
 export type ExampleCategory =
+  // Visual categories (image/video)
   | 'portrait' | 'landscape' | 'product' | 'food' | 'architecture'
   | 'abstract' | 'action' | 'emotion' | 'nature' | 'sci-fi'
   | 'fantasy' | 'editorial' | 'street' | 'fashion' | 'commercial'
-  | 'documentary' | 'narrative' | 'macro' | 'music-video' | 'interior';
+  | 'documentary' | 'narrative' | 'macro' | 'music-video' | 'interior'
+  // Text mode categories (standard)
+  | 'marketing' | 'email' | 'technical' | 'creative' | 'strategy'
+  | 'sales' | 'educational' | 'social-media' | 'business'
+  // Research categories
+  | 'research-market' | 'research-academic' | 'research-technical'
+  | 'research-competitive' | 'research-legal' | 'research-healthcare'
+  | 'research-historical' | 'research-financial' | 'research-policy'
+  | 'research-trends'
+  // Agent categories
+  | 'agent-customer-service' | 'agent-tutor' | 'agent-coach'
+  | 'agent-writer' | 'agent-analyst' | 'agent-advisor'
+  | 'agent-therapist' | 'agent-recruiter' | 'agent-legal' | 'agent-creative';
 
 export interface SkillExample {
   concept: string;
@@ -76,6 +94,12 @@ const VIDEO_SKILLS: Record<string, PlatformSkill> = {
   general: videoGeneral,
 };
 
+const TEXT_SKILLS: Record<string, PlatformSkill> = {
+  standard: standardSkill,
+  research: researchSkill,
+  agent: agentSkill,
+};
+
 // ── Category Detection ──
 
 const CATEGORY_KEYWORDS: Record<ExampleCategory, string[]> = {
@@ -99,6 +123,38 @@ const CATEGORY_KEYWORDS: Record<ExampleCategory, string[]> = {
   macro:        ['מאקרו', 'קרוב', 'פרט', 'macro', 'close-up', 'detail', 'texture', 'droplet', 'tiny'],
   'music-video': ['קליפ', 'מוזיקה', 'להקה', 'music video', 'clip', 'band', 'concert', 'performance', 'stage'],
   interior:     ['פנים', 'חדר', 'סלון', 'מטבח', 'interior', 'room', 'living room', 'kitchen', 'decor', 'furniture'],
+  // Text mode categories
+  marketing:    ['שיווק', 'פרסום', 'קמפיין', 'מותג', 'פוסט', 'marketing', 'ad', 'campaign', 'brand', 'promo'],
+  email:        ['מייל', 'אימייל', 'הודעה', 'email', 'newsletter', 'invite', 'outreach'],
+  technical:    ['טכני', 'קוד', 'API', 'תיעוד', 'מפתח', 'technical', 'code', 'documentation', 'developer', 'engineering'],
+  creative:     ['יצירתי', 'סיפור', 'סיפורת', 'שיר', 'creative', 'story', 'fiction', 'poem', 'screenplay'],
+  strategy:     ['אסטרטגיה', 'תכנון', 'ניתוח', 'SWOT', 'strategy', 'planning', 'analysis', 'business plan'],
+  sales:        ['מכירות', 'עסקה', 'לקוח', 'הצעה', 'sales', 'deal', 'pitch', 'proposal', 'B2B', 'CRM'],
+  educational:  ['חינוך', 'הוראה', 'הסבר', 'שיעור', 'learning', 'teaching', 'explain', 'lesson', 'tutorial'],
+  'social-media': ['סושיאל', 'אינסטגרם', 'פייסבוק', 'טיקטוק', 'instagram', 'facebook', 'tiktok', 'twitter', 'social'],
+  business:     ['עסקים', 'מצגת', 'דוח', 'ישיבה', 'presentation', 'report', 'meeting', 'corporate'],
+  // Research categories
+  'research-market':      ['שוק', 'מתחרים', 'צרכנים', 'ניתוח שוק', 'market research', 'consumers', 'market size'],
+  'research-academic':    ['אקדמי', 'מחקר', 'ספרות', 'תזה', 'academic', 'literature review', 'thesis', 'paper'],
+  'research-technical':   ['מחקר טכני', 'ביצועים', 'ארכיטקטורה', 'technical research', 'benchmark', 'architecture'],
+  'research-competitive': ['מתחרים', 'השוואה', 'SWOT', 'competitors', 'comparison', 'competitive'],
+  'research-legal':       ['משפטי', 'חוק', 'תקנה', 'legal research', 'law', 'regulation', 'compliance'],
+  'research-healthcare':  ['רפואי', 'בריאות', 'תרופה', 'medical research', 'healthcare', 'clinical'],
+  'research-historical':  ['היסטורי', 'עבר', 'ציר זמן', 'historical', 'timeline', 'history'],
+  'research-financial':   ['פיננסי', 'כלכלי', 'השקעות', 'financial', 'economic', 'investment', 'markets'],
+  'research-policy':      ['מדיניות', 'ממשל', 'רגולציה', 'policy', 'government', 'regulation'],
+  'research-trends':      ['מגמות', 'עתיד', 'תחזית', 'trends', 'future', 'forecast', 'outlook'],
+  // Agent categories
+  'agent-customer-service': ['שירות', 'תמיכה', 'לקוחות', 'customer service', 'support', 'help desk'],
+  'agent-tutor':         ['מורה', 'לימוד', 'tutor', 'teacher', 'learning'],
+  'agent-coach':         ['מאמן', 'כושר', 'אימון', 'coach', 'fitness', 'training'],
+  'agent-writer':        ['כתיבה', 'עריכה', 'בלוג', 'writing', 'editor', 'blog'],
+  'agent-analyst':       ['אנליסט', 'ניתוח נתונים', 'analyst', 'data'],
+  'agent-advisor':       ['יועץ', 'קריירה', 'advisor', 'career', 'guidance'],
+  'agent-therapist':     ['טיפולי', 'רגשי', 'תמיכה נפשית', 'therapist', 'emotional', 'counseling'],
+  'agent-recruiter':     ['גיוס', 'משאבי אנוש', 'recruiter', 'HR', 'hiring'],
+  'agent-legal':         ['עוזר משפטי', 'חוזה', 'legal assistant', 'paralegal', 'contract'],
+  'agent-creative':      ['רעיונות', 'יצירתיות', 'מוח', 'creative partner', 'brainstorming'],
 };
 
 /**
@@ -166,12 +222,12 @@ function selectRelevantExamples(
  * When concept is provided, selects the most relevant examples.
  */
 export function getExamplesBlock(
-  type: 'image' | 'video',
+  type: 'image' | 'video' | 'text',
   platform: string,
   concept?: string,
   maxExamples: number = 3
 ): string {
-  const skills = type === 'image' ? IMAGE_SKILLS : VIDEO_SKILLS;
+  const skills = type === 'image' ? IMAGE_SKILLS : type === 'video' ? VIDEO_SKILLS : TEXT_SKILLS;
   const skill = skills[platform];
   if (!skill || skill.examples.length === 0) return '';
 
@@ -189,8 +245,8 @@ export function getExamplesBlock(
 /**
  * Get common mistakes block for injection into system prompt.
  */
-export function getMistakesBlock(type: 'image' | 'video', platform: string): string {
-  const skills = type === 'image' ? IMAGE_SKILLS : VIDEO_SKILLS;
+export function getMistakesBlock(type: 'image' | 'video' | 'text', platform: string): string {
+  const skills = type === 'image' ? IMAGE_SKILLS : type === 'video' ? VIDEO_SKILLS : TEXT_SKILLS;
   const skill = skills[platform];
   if (!skill?.mistakes || skill.mistakes.length === 0) return '';
 
@@ -204,8 +260,8 @@ export function getMistakesBlock(type: 'image' | 'video', platform: string): str
 /**
  * Get platform-specific scoring criteria for injection into quality check.
  */
-export function getScoringBlock(type: 'image' | 'video', platform: string): string {
-  const skills = type === 'image' ? IMAGE_SKILLS : VIDEO_SKILLS;
+export function getScoringBlock(type: 'image' | 'video' | 'text', platform: string): string {
+  const skills = type === 'image' ? IMAGE_SKILLS : type === 'video' ? VIDEO_SKILLS : TEXT_SKILLS;
   const skill = skills[platform];
   if (!skill?.scoringCriteria || skill.scoringCriteria.length === 0) return '';
 

@@ -2,6 +2,7 @@
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
+import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
 
 export class StandardEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -140,7 +141,18 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
 
   generate(input: EngineInput): EngineOutput {
       const result = super.generate(input);
-      // Standard engine logic additions if needed
+
+      // Inject skill-based few-shot examples, mistakes, and scoring criteria
+      const examplesBlock = getExamplesBlock('text', 'standard', input.prompt, 3);
+      const mistakesBlock = getMistakesBlock('text', 'standard');
+      const scoringBlock = getScoringBlock('text', 'standard');
+
+      if (examplesBlock) result.systemPrompt += examplesBlock;
+      if (mistakesBlock) result.systemPrompt += mistakesBlock;
+      if (scoringBlock) {
+          result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+      }
+
       return result;
   }
 

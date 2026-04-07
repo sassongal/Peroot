@@ -23,6 +23,7 @@ import {
   GitBranch,
   Plug,
   Factory,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -53,6 +54,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "מודרציה", href: "/admin/moderation", icon: GitBranch },
     // ── System ──
     { name: t.admin.layout.engines, href: "/admin/engines", icon: Cpu },
+    { name: "מאגר סקילים", href: "/admin/skills", icon: Sparkles },
     { name: "תפעול", href: "/admin/ops", icon: HeartPulse },
     { name: "ביקורת", href: "/admin/audit", icon: Shield },
     { name: "אינטגרציות", href: "/admin/integrations", icon: Plug },
