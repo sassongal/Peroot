@@ -22,9 +22,9 @@ export enum CapabilityMode {
 export type IconName = 'MessageSquare' | 'Globe' | 'Palette' | 'Bot' | 'Video';
 
 /** Tailwind color names for theming */
-export type ColorName = 'sky' | 'emerald' | 'purple' | 'amber' | 'rose';
+type ColorName = 'sky' | 'emerald' | 'purple' | 'amber' | 'rose';
 
-export interface CapabilityConfig {
+interface CapabilityConfig {
   mode: CapabilityMode;
   label: string;
   labelHe: string;
@@ -90,16 +90,8 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
   },
 };
 
-/** Get all capability modes as an array */
-export const CAPABILITY_MODES = Object.values(CapabilityMode);
-
-/** Get capability config by mode */
-export function getCapabilityConfig(mode: CapabilityMode): CapabilityConfig {
-  return CAPABILITY_CONFIGS[mode];
-}
-
 /** Check if a string is a valid CapabilityMode */
-export function isValidCapabilityMode(value: string): value is CapabilityMode {
+function isValidCapabilityMode(value: string): value is CapabilityMode {
   return Object.values(CapabilityMode).includes(value as CapabilityMode);
 }
 
