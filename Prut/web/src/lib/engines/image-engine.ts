@@ -5,6 +5,7 @@ import { CapabilityMode } from "../capability-mode";
 import type { ImagePlatform, ImageOutputFormat } from "../media-platforms";
 import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
+import { getJsonExamplesBlock } from "./json-examples";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 
 // ── Platform-specific system prompt fragments ──
@@ -633,17 +634,31 @@ export class ImageEngine extends BaseEngine {
       // Inject concept classification (LLM-level semantic understanding)
       finalSystem += getConceptClassificationBlock('image');
 
-      // Inject few-shot examples from skill files (smart selection based on user concept)
+      // Inject few-shot examples. JSON mode gets fully-filled JSON examples
+      // that match the exact schema the LLM is expected to produce — otherwise
+      // the LLM was seeing an empty schema template alongside plain-text
+      // examples from the text-mode skill files and producing inconsistent,
+      // often-truncated JSON. Text mode keeps the existing skill examples.
+      const isJsonMode = (platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json';
       const skillPlatformKey = platform === 'general' ? 'general' : platform;
-      const examplesBlock = getExamplesBlock('image', skillPlatformKey, input.prompt, 3);
-      if (examplesBlock) {
-          finalSystem += examplesBlock;
-      }
 
-      // Inject common mistakes to avoid
-      const mistakesBlock = getMistakesBlock('image', skillPlatformKey);
-      if (mistakesBlock) {
-          finalSystem += mistakesBlock;
+      if (isJsonMode) {
+          const jsonExamplesBlock = getJsonExamplesBlock(platformKey, 3);
+          if (jsonExamplesBlock) {
+              finalSystem += jsonExamplesBlock;
+          }
+          // Skip getMistakesBlock in JSON mode — the mistakes taxonomy was
+          // authored against text prompts (bad vs good comma-separated
+          // keywords) and is noise when the output is structured JSON.
+      } else {
+          const examplesBlock = getExamplesBlock('image', skillPlatformKey, input.prompt, 3);
+          if (examplesBlock) {
+              finalSystem += examplesBlock;
+          }
+          const mistakesBlock = getMistakesBlock('image', skillPlatformKey);
+          if (mistakesBlock) {
+              finalSystem += mistakesBlock;
+          }
       }
 
       // Inject platform-specific scoring criteria for quality gate

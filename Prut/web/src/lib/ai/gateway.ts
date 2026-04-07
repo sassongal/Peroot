@@ -8,8 +8,52 @@ export interface GatewayParams {
     system: string;
     prompt: string;
     temperature?: number;
+    /**
+     * Maximum output tokens. If omitted, the gateway picks a task-appropriate
+     * default (see pickDefaults). Image/video tasks need a higher ceiling
+     * because structured or JSON output is 2-3× the token count of prose.
+     */
+    maxOutputTokens?: number;
     onFinish?: (completion: { usage: unknown; text: string }) => Promise<void>;
     onStreamEnd?: () => void;
+}
+
+/**
+ * Task-aware generation parameter defaults. Before this existed we called
+ * streamText with just temperature: 0.7 and no maxOutputTokens, which meant:
+ *   - Gemini 2.5 Flash defaulted to ~8192 output tokens — fine for prose,
+ *     but JSON image/video prompts exceeded that and got truncated mid-value.
+ *   - temperature 0.7 introduced structural noise in JSON (missing commas,
+ *     unclosed brackets) because the sampler wandered at decision points.
+ *
+ * Values tuned per task type:
+ *   - image/video: 8192 tokens + 0.5 temp. JSON-style image/video prompts
+ *     often run 1500-3000 tokens; 8192 gives headroom for verbose cinematic
+ *     specs. Temp 0.5 keeps creative variation while stabilizing structure.
+ *   - enhance/agent: 4096 tokens + 0.7 temp. Text prompts rarely exceed
+ *     2000 tokens; 4096 is safe. 0.7 preserves the existing creative feel.
+ *   - research: 6144 tokens + 0.6 temp. Research outputs are longer due to
+ *     citations and summaries but need more factual stability.
+ *   - chain: 3072 tokens + 0.4 temp. Chain steps should be concise and
+ *     deterministic so downstream steps can reference them reliably.
+ */
+function pickDefaults(task?: string, userMax?: number, userTemp?: number): {
+    maxOutputTokens: number;
+    temperature: number;
+} {
+    const presets: Record<string, { max: number; temp: number }> = {
+        image:    { max: 8192, temp: 0.5 },
+        video:    { max: 8192, temp: 0.5 },
+        research: { max: 6144, temp: 0.6 },
+        enhance:  { max: 4096, temp: 0.7 },
+        agent:    { max: 4096, temp: 0.7 },
+        chain:    { max: 3072, temp: 0.4 },
+    };
+    const preset = presets[task ?? 'enhance'] ?? presets.enhance;
+    return {
+        maxOutputTokens: userMax ?? preset.max,
+        temperature: userTemp ?? preset.temp,
+    };
 }
 
 export class AIGateway {
@@ -50,11 +94,13 @@ export class AIGateway {
                 try {
                     logger.info(`[AIGateway] Attempting: ${config.label}...`);
 
+                    const defaults = pickDefaults(params.task, params.maxOutputTokens, params.temperature);
                     const result = await streamText({
                         model: config.model,
                         system: params.system,
                         prompt: params.prompt,
-                        temperature: params.temperature ?? 0.7,
+                        temperature: defaults.temperature,
+                        maxOutputTokens: defaults.maxOutputTokens,
                         onFinish: async (completion) => {
                             recordSuccess(config.provider);
                             safeRelease();
@@ -118,11 +164,13 @@ export class AIGateway {
 
                 try {
                     logger.info(`[AIGateway] generateFull: ${config.label}...`);
+                    const defaults = pickDefaults(params.task, params.maxOutputTokens, params.temperature);
                     const result = await generateText({
                         model: config.model,
                         system: params.system,
                         prompt: params.prompt,
-                        temperature: params.temperature ?? 0.7,
+                        temperature: defaults.temperature,
+                        maxOutputTokens: defaults.maxOutputTokens,
                     });
                     recordSuccess(config.provider);
                     safeRelease();
