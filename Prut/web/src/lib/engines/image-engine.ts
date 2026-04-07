@@ -4,6 +4,7 @@ import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import type { ImagePlatform, ImageOutputFormat } from "../media-platforms";
 import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 
 // ── Platform-specific system prompt fragments ──
@@ -628,6 +629,9 @@ export class ImageEngine extends BaseEngine {
               finalSystem += prefsBlock;
           }
       }
+
+      // Inject concept classification (LLM-level semantic understanding)
+      finalSystem += getConceptClassificationBlock('image');
 
       // Inject few-shot examples from skill files (smart selection based on user concept)
       const skillPlatformKey = platform === 'general' ? 'general' : platform;

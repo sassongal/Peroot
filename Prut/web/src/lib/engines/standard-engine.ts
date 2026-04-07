@@ -9,6 +9,7 @@ import {
   getChainOfThoughtBlock,
   getRefinementExamplesBlock,
 } from "./skills";
+import { getConceptClassificationBlock } from "./skills/concept-classification";
 
 export class StandardEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -147,6 +148,9 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
 
   generate(input: EngineInput): EngineOutput {
       const result = super.generate(input);
+
+      // Inject concept classification (LLM-level semantic understanding, zero cost)
+      result.systemPrompt += getConceptClassificationBlock('text');
 
       // Inject skill-based few-shot examples, mistakes, and scoring criteria
       const examplesBlock = getExamplesBlock('text', 'standard', input.prompt, 3);

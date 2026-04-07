@@ -118,58 +118,138 @@ const TEXT_SKILLS: Record<string, PlatformSkill> = {
 // ── Category Detection ──
 
 const CATEGORY_KEYWORDS: Record<ExampleCategory, string[]> = {
-  portrait:     ['פורטרט', 'דיוקן', 'פנים', 'אדם', 'אישה', 'גבר', 'ילד', 'ילדה', 'זקן', 'portrait', 'face', 'headshot', 'person', 'woman', 'man', 'child', 'elderly'],
-  landscape:    ['נוף', 'הרים', 'ים', 'שקיעה', 'זריחה', 'שמיים', 'יער', 'מדבר', 'landscape', 'mountain', 'sea', 'sunset', 'sunrise', 'sky', 'forest', 'desert', 'ocean', 'beach'],
-  product:      ['מוצר', 'שעון', 'בקבוק', 'נעל', 'טלפון', 'product', 'watch', 'bottle', 'shoe', 'phone', 'packaging', 'brand', 'luxury'],
-  food:         ['אוכל', 'מאכל', 'בישול', 'שף', 'מסעדה', 'עוגה', 'food', 'cooking', 'chef', 'restaurant', 'cake', 'dish', 'meal', 'sushi', 'pasta', 'coffee'],
-  architecture: ['בניין', 'אדריכלות', 'מבנה', 'בית', 'גשר', 'building', 'architecture', 'house', 'bridge', 'interior', 'room', 'skyscraper', 'temple'],
-  abstract:     ['מופשט', 'גיאומטרי', 'צורות', 'abstract', 'geometric', 'shapes', 'pattern', 'fluid', 'generative', 'fractal'],
-  action:       ['פעולה', 'ריצה', 'קפיצה', 'ספורט', 'מרדף', 'action', 'running', 'jumping', 'sports', 'chase', 'explosion', 'fight', 'parkour'],
-  emotion:      ['רגש', 'שמחה', 'עצב', 'הפתעה', 'פחד', 'emotion', 'joy', 'sad', 'surprise', 'fear', 'love', 'tears', 'smile', 'reaction'],
-  nature:       ['טבע', 'חיה', 'פרח', 'ציפור', 'עץ', 'nature', 'animal', 'flower', 'bird', 'tree', 'wildlife', 'insect', 'butterfly', 'wolf', 'eagle'],
-  'sci-fi':     ['עתידני', 'חלל', 'רובוט', 'סייבר', 'sci-fi', 'futuristic', 'space', 'robot', 'cyber', 'neon', 'hologram', 'spaceship', 'alien'],
-  fantasy:      ['פנטזיה', 'דרקון', 'קסם', 'שריון', 'fantasy', 'dragon', 'magic', 'armor', 'wizard', 'castle', 'mythical', 'enchanted', 'fairy'],
-  editorial:    ['עריכה', 'מגזין', 'אופנה', 'סטודיו', 'editorial', 'magazine', 'vogue', 'studio', 'professional', 'commercial', 'advertising'],
-  street:       ['רחוב', 'עירוני', 'שוק', 'street', 'urban', 'market', 'city', 'graffiti', 'alley', 'nightlife', 'cafe'],
-  fashion:      ['אופנה', 'בגד', 'שמלה', 'דוגמן', 'fashion', 'dress', 'model', 'outfit', 'haute couture', 'runway', 'style'],
-  commercial:   ['פרסומת', 'מותג', 'שיווק', 'commercial', 'ad', 'brand', 'marketing', 'promo', 'campaign'],
-  documentary:  ['תיעודי', 'דוקו', 'ריאליסטי', 'documentary', 'realistic', 'authentic', 'raw', 'candid', 'journalism'],
-  narrative:    ['סיפור', 'סצנה', 'דרמה', 'narrative', 'story', 'scene', 'drama', 'cinematic', 'movie', 'film'],
-  macro:        ['מאקרו', 'קרוב', 'פרט', 'macro', 'close-up', 'detail', 'texture', 'droplet', 'tiny'],
-  'music-video': ['קליפ', 'מוזיקה', 'להקה', 'music video', 'clip', 'band', 'concert', 'performance', 'stage'],
-  interior:     ['פנים', 'חדר', 'סלון', 'מטבח', 'interior', 'room', 'living room', 'kitchen', 'decor', 'furniture'],
-  // Text mode categories
-  marketing:    ['שיווק', 'פרסום', 'קמפיין', 'מותג', 'פוסט', 'marketing', 'ad', 'campaign', 'brand', 'promo'],
-  email:        ['מייל', 'אימייל', 'הודעה', 'email', 'newsletter', 'invite', 'outreach'],
-  technical:    ['טכני', 'קוד', 'API', 'תיעוד', 'מפתח', 'technical', 'code', 'documentation', 'developer', 'engineering'],
-  creative:     ['יצירתי', 'סיפור', 'סיפורת', 'שיר', 'creative', 'story', 'fiction', 'poem', 'screenplay'],
-  strategy:     ['אסטרטגיה', 'תכנון', 'ניתוח', 'SWOT', 'strategy', 'planning', 'analysis', 'business plan'],
-  sales:        ['מכירות', 'עסקה', 'לקוח', 'הצעה', 'sales', 'deal', 'pitch', 'proposal', 'B2B', 'CRM'],
-  educational:  ['חינוך', 'הוראה', 'הסבר', 'שיעור', 'learning', 'teaching', 'explain', 'lesson', 'tutorial'],
-  'social-media': ['סושיאל', 'אינסטגרם', 'פייסבוק', 'טיקטוק', 'instagram', 'facebook', 'tiktok', 'twitter', 'social'],
-  business:     ['עסקים', 'מצגת', 'דוח', 'ישיבה', 'presentation', 'report', 'meeting', 'corporate'],
-  // Research categories
-  'research-market':      ['שוק', 'מתחרים', 'צרכנים', 'ניתוח שוק', 'market research', 'consumers', 'market size'],
-  'research-academic':    ['אקדמי', 'מחקר', 'ספרות', 'תזה', 'academic', 'literature review', 'thesis', 'paper'],
-  'research-technical':   ['מחקר טכני', 'ביצועים', 'ארכיטקטורה', 'technical research', 'benchmark', 'architecture'],
-  'research-competitive': ['מתחרים', 'השוואה', 'SWOT', 'competitors', 'comparison', 'competitive'],
-  'research-legal':       ['משפטי', 'חוק', 'תקנה', 'legal research', 'law', 'regulation', 'compliance'],
-  'research-healthcare':  ['רפואי', 'בריאות', 'תרופה', 'medical research', 'healthcare', 'clinical'],
-  'research-historical':  ['היסטורי', 'עבר', 'ציר זמן', 'historical', 'timeline', 'history'],
-  'research-financial':   ['פיננסי', 'כלכלי', 'השקעות', 'financial', 'economic', 'investment', 'markets'],
-  'research-policy':      ['מדיניות', 'ממשל', 'רגולציה', 'policy', 'government', 'regulation'],
-  'research-trends':      ['מגמות', 'עתיד', 'תחזית', 'trends', 'future', 'forecast', 'outlook'],
-  // Agent categories
-  'agent-customer-service': ['שירות', 'תמיכה', 'לקוחות', 'customer service', 'support', 'help desk'],
-  'agent-tutor':         ['מורה', 'לימוד', 'tutor', 'teacher', 'learning'],
-  'agent-coach':         ['מאמן', 'כושר', 'אימון', 'coach', 'fitness', 'training'],
-  'agent-writer':        ['כתיבה', 'עריכה', 'בלוג', 'writing', 'editor', 'blog'],
-  'agent-analyst':       ['אנליסט', 'ניתוח נתונים', 'analyst', 'data'],
-  'agent-advisor':       ['יועץ', 'קריירה', 'advisor', 'career', 'guidance'],
-  'agent-therapist':     ['טיפולי', 'רגשי', 'תמיכה נפשית', 'therapist', 'emotional', 'counseling'],
-  'agent-recruiter':     ['גיוס', 'משאבי אנוש', 'recruiter', 'HR', 'hiring'],
-  'agent-legal':         ['עוזר משפטי', 'חוזה', 'legal assistant', 'paralegal', 'contract'],
-  'agent-creative':      ['רעיונות', 'יצירתיות', 'מוח', 'creative partner', 'brainstorming'],
+  // ── Visual: Portrait (30+ synonyms) ──
+  portrait: ['פורטרט', 'דיוקן', 'פנים', 'אדם', 'אישה', 'גבר', 'ילד', 'ילדה', 'זקן', 'זקנה', 'תינוק', 'נערה', 'נער', 'צעיר', 'צעירה', 'קשיש', 'גברת', 'אדון', 'ראש', 'חיוך', 'עיניים', 'הבעה', 'דוגמנית', 'אמן', 'סטודנט', 'portrait', 'face', 'headshot', 'person', 'people', 'woman', 'man', 'boy', 'girl', 'child', 'kid', 'elderly', 'old', 'young', 'teenager', 'adult', 'human', 'individual', 'selfie', 'close-up face', 'bust', 'self-portrait'],
+
+  // ── Visual: Landscape (30+ synonyms) ──
+  landscape: ['נוף', 'הרים', 'הר', 'ים', 'אוקיינוס', 'שקיעה', 'זריחה', 'שמיים', 'יער', 'מדבר', 'חוף', 'אגם', 'נהר', 'מפל', 'עמק', 'גבעה', 'שדה', 'מרחב', 'פנורמה', 'נופי', 'ערבה', 'טבע פראי', 'קרחון', 'landscape', 'mountain', 'mountains', 'sea', 'ocean', 'sunset', 'sunrise', 'sky', 'clouds', 'forest', 'woods', 'desert', 'dunes', 'beach', 'shore', 'coast', 'lake', 'river', 'waterfall', 'valley', 'hill', 'field', 'meadow', 'panorama', 'vista', 'horizon', 'wilderness', 'glacier', 'canyon', 'prairie'],
+
+  // ── Visual: Product (30+ synonyms) ──
+  product: ['מוצר', 'שעון', 'בקבוק', 'נעל', 'טלפון', 'תיק', 'אריזה', 'גאדג׳ט', 'מכשיר', 'לוגו', 'מותג', 'יוקרה', 'פרימיום', 'בקבוקים', 'קופסה', 'משקפיים', 'עט', 'תכשיט', 'אוזניות', 'מחשב נייד', 'סמארטפון', 'קטלוג', 'קטנטן', 'product', 'products', 'watch', 'bottle', 'bottles', 'shoe', 'shoes', 'phone', 'smartphone', 'packaging', 'package', 'box', 'brand', 'luxury', 'premium', 'high-end', 'gadget', 'device', 'electronics', 'logo', 'glasses', 'sunglasses', 'pen', 'bag', 'jewelry', 'earrings', 'ring', 'headphones', 'laptop', 'catalog', 'e-commerce', 'merchandise'],
+
+  // ── Visual: Food (30+ synonyms) ──
+  food: ['אוכל', 'מאכל', 'בישול', 'שף', 'מסעדה', 'עוגה', 'עוגיות', 'לחם', 'פיצה', 'המבורגר', 'סלט', 'ארוחה', 'ארוחת בוקר', 'ארוחת צהריים', 'ארוחת ערב', 'קינוח', 'מנה', 'צלחת', 'קפה', 'תה', 'קוקטייל', 'משקה', 'יין', 'פירות', 'ירקות', 'בשר', 'דג', 'פסטה', 'סושי', 'המלצה', 'food', 'foods', 'cuisine', 'cooking', 'cook', 'chef', 'restaurant', 'bistro', 'cafe', 'cake', 'cookies', 'bread', 'pizza', 'burger', 'salad', 'meal', 'breakfast', 'lunch', 'dinner', 'dessert', 'dish', 'plate', 'coffee', 'tea', 'cocktail', 'drink', 'wine', 'fruit', 'vegetable', 'meat', 'fish', 'pasta', 'sushi', 'ramen', 'noodle', 'soup'],
+
+  // ── Visual: Architecture (30+ synonyms) ──
+  architecture: ['בניין', 'בניינים', 'אדריכלות', 'מבנה', 'בית', 'גשר', 'מגדל', 'מקדש', 'כנסייה', 'מסגד', 'טירה', 'מוזיאון', 'חלונות', 'דלתות', 'קשתות', 'עמודים', 'שוק מקורה', 'מנהרה', 'גלריה', 'תערוכה', 'פנים', 'architecture', 'architectural', 'building', 'buildings', 'structure', 'house', 'home', 'bridge', 'tower', 'skyscraper', 'temple', 'church', 'mosque', 'cathedral', 'castle', 'palace', 'museum', 'library', 'stadium', 'arena', 'arch', 'column', 'pillar', 'facade', 'window', 'door', 'staircase', 'courtyard', 'plaza', 'gallery', 'exhibition', 'monument', 'tunnel'],
+
+  // ── Visual: Abstract (30+ synonyms) ──
+  abstract: ['מופשט', 'גיאומטרי', 'צורות', 'קווים', 'דוגמה', 'טקסטורה', 'מינימליסטי', 'צבעוני', 'הפשטה', 'ויזואלי', 'ארטי', 'נוזלי', 'שבר', 'אקראי', 'אור', 'השתקפות', 'abstract', 'abstraction', 'geometric', 'shapes', 'lines', 'pattern', 'texture', 'minimalist', 'minimalism', 'colorful', 'visual', 'artsy', 'fluid', 'generative', 'fractal', 'glitch', 'surreal', 'surrealism', 'conceptual', 'gradient', 'noise', 'psychedelic', 'kaleidoscope', 'reflection', 'mirror', 'light art', 'holographic', 'iridescent', 'liquid', 'organic'],
+
+  // ── Visual: Action (30+ synonyms) ──
+  action: ['פעולה', 'ריצה', 'קפיצה', 'ספורט', 'מרדף', 'תנועה', 'מהירות', 'דינמי', 'קרב', 'מערכה', 'אקשן', 'אגרוף', 'רכיבה', 'סקי', 'גלישה', 'הצלה', 'מלחמה', 'קונג פו', 'לחימה', 'action', 'running', 'sprint', 'jumping', 'jump', 'sports', 'sport', 'chase', 'explosion', 'fight', 'fighting', 'battle', 'war', 'parkour', 'dynamic', 'motion', 'speed', 'fast', 'athlete', 'athletics', 'boxing', 'martial arts', 'biking', 'skating', 'snowboarding', 'surfing', 'skiing', 'diving', 'rescue', 'stunt'],
+
+  // ── Visual: Emotion (30+ synonyms) ──
+  emotion: ['רגש', 'רגשות', 'שמחה', 'עצב', 'הפתעה', 'פחד', 'כעס', 'אהבה', 'געגוע', 'חרדה', 'נוסטלגיה', 'דמעות', 'חיוך', 'צחוק', 'הלם', 'תדהמה', 'התלהבות', 'יאוש', 'בושה', 'גאווה', 'תגובה', 'מבט', 'רגשי', 'emotion', 'emotional', 'joy', 'joyful', 'happy', 'happiness', 'sad', 'sadness', 'surprise', 'surprised', 'shocked', 'fear', 'scared', 'anger', 'angry', 'love', 'longing', 'anxiety', 'nostalgia', 'tears', 'crying', 'smile', 'laugh', 'laughter', 'excitement', 'despair', 'shame', 'pride', 'proud', 'reaction', 'expressive', 'stare', 'gaze'],
+
+  // ── Visual: Nature (30+ synonyms) ──
+  nature: ['טבע', 'חיה', 'חיות', 'פרח', 'פרחים', 'ציפור', 'ציפורים', 'עץ', 'עצים', 'עלים', 'דבורה', 'פרפר', 'זאב', 'אריה', 'נמר', 'דוב', 'שועל', 'סנאי', 'צבי', 'שפן', 'צב', 'דג', 'כלב', 'חתול', 'סוס', 'פרה', 'nature', 'natural', 'animal', 'animals', 'wildlife', 'flower', 'flowers', 'bird', 'birds', 'tree', 'trees', 'leaf', 'leaves', 'insect', 'bee', 'butterfly', 'wolf', 'lion', 'tiger', 'bear', 'fox', 'squirrel', 'deer', 'rabbit', 'turtle', 'fish', 'dog', 'cat', 'horse', 'cow', 'eagle', 'owl', 'reptile', 'mammal'],
+
+  // ── Visual: Sci-Fi (30+ synonyms) ──
+  'sci-fi': ['עתידני', 'עתידנות', 'חלל', 'ספייס', 'רובוט', 'רובוטי', 'סייבר', 'סייברפאנק', 'ניאון', 'הולוגרמה', 'חייזר', 'חייזרים', 'חללית', 'ירח', 'מאדים', 'גלקסיה', 'דיסטופיה', 'מטריקס', 'אנדרואיד', 'ביוניקה', 'טכנולוגיה עתידית', 'מכונה', 'sci-fi', 'science fiction', 'scifi', 'futuristic', 'future', 'space', 'outer space', 'robot', 'robots', 'robotic', 'cyber', 'cyberpunk', 'neon', 'hologram', 'holographic', 'alien', 'aliens', 'spaceship', 'spacecraft', 'moon', 'mars', 'galaxy', 'universe', 'dystopia', 'dystopian', 'matrix', 'android', 'bionic', 'mech', 'mecha', 'ai', 'artificial'],
+
+  // ── Visual: Fantasy (30+ synonyms) ──
+  fantasy: ['פנטזיה', 'דרקון', 'דרקונים', 'קסם', 'קסמים', 'שריון', 'חרב', 'אביר', 'טירה', 'טירות', 'אלף', 'גמד', 'מכשף', 'מכשפה', 'יער קסום', 'יצור מיתי', 'ענק', 'פיה', 'חד קרן', 'מיתוס', 'fantasy', 'fantastical', 'dragon', 'dragons', 'magic', 'magical', 'armor', 'sword', 'knight', 'wizard', 'witch', 'sorcerer', 'castle', 'castles', 'kingdom', 'elf', 'dwarf', 'orc', 'troll', 'giant', 'fairy', 'unicorn', 'phoenix', 'griffin', 'mythical', 'enchanted', 'spell', 'rune', 'potion', 'mystical', 'legend', 'myth'],
+
+  // ── Visual: Editorial (30+ synonyms) ──
+  editorial: ['עריכה', 'מגזין', 'אופנה', 'סטודיו', 'פרסום', 'שער מגזין', 'קולנועי', 'מקצועי', 'מסחרי', 'גלוסי', 'איכותי', 'פרימיום', 'editorial', 'magazine', 'cover', 'vogue', 'elle', 'harper', 'gq', 'studio', 'professional', 'commercial', 'advertising', 'ad campaign', 'print', 'glossy', 'publishing', 'high fashion', 'high-end', 'luxury editorial', 'cinematic', 'polished', 'refined', 'glamour', 'glam', 'spread', 'feature', 'lookbook'],
+
+  // ── Visual: Street (30+ synonyms) ──
+  street: ['רחוב', 'עירוני', 'שוק', 'סמטה', 'גרפיטי', 'חיי לילה', 'בית קפה', 'כיכר', 'מרכז עיר', 'תחנה', 'מטרו', 'אוטובוס', 'פיגום', 'מכירה', 'מדרחוב', 'פינת רחוב', 'street', 'streets', 'urban', 'city', 'downtown', 'metropolis', 'market', 'bazaar', 'alley', 'alleyway', 'graffiti', 'mural', 'nightlife', 'night scene', 'cafe', 'coffee shop', 'plaza', 'square', 'station', 'subway', 'metro', 'bus', 'corner', 'crossroad', 'sidewalk', 'pavement', 'tram', 'streetlight', 'vendor', 'buskers'],
+
+  // ── Visual: Fashion (30+ synonyms) ──
+  fashion: ['אופנה', 'בגד', 'בגדים', 'שמלה', 'שמלת ערב', 'דוגמן', 'דוגמנית', 'מסלול', 'אקססוריז', 'תכשיטים', 'סטייל', 'יוקרה', 'הום קוטור', 'בוטיק', 'קולקציה', 'רטרו', 'וינטאג', 'עיצוב אופנה', 'fashion', 'fashionable', 'dress', 'gown', 'model', 'models', 'outfit', 'clothing', 'clothes', 'apparel', 'haute couture', 'couture', 'runway', 'catwalk', 'style', 'stylish', 'chic', 'elegant', 'boutique', 'collection', 'vintage', 'retro', 'streetwear', 'avant-garde', 'designer', 'accessories', 'jewelry'],
+
+  // ── Visual: Commercial (30+ synonyms) ──
+  commercial: ['פרסומת', 'מותג', 'שיווק', 'מוצר מסחרי', 'תדמית', 'קמפיין פרסומי', 'שיווק דיגיטלי', 'תדמית מותג', 'פרזנטציה', 'באנר', 'commercial', 'ad', 'advertisement', 'advert', 'brand', 'branding', 'marketing', 'promo', 'promotion', 'campaign', 'banner', 'billboard', 'spokesperson', 'testimonial', 'endorsement', 'sponsored', 'promotional', 'tv ad', 'print ad', 'digital ad', 'rebrand', 'tagline', 'slogan'],
+
+  // ── Visual: Documentary (30+ synonyms) ──
+  documentary: ['תיעודי', 'דוקו', 'ריאליסטי', 'אותנטי', 'חדשות', 'כתבה', 'גולמי', 'מציאותי', 'אמיתי', 'עיתונאי', 'דוקומנטרי', 'documentary', 'doc', 'docu', 'realistic', 'realism', 'authentic', 'raw', 'real', 'journalism', 'journalistic', 'candid', 'unposed', 'verité', 'cinema verité', 'observational', 'newsroom', 'press', 'reportage', 'photojournalism', 'street photography', 'life moment', 'everyday', 'slice of life'],
+
+  // ── Visual: Narrative (30+ synonyms) ──
+  narrative: ['סיפור', 'סצנה', 'דרמה', 'קולנוע', 'סרט', 'תסריט', 'סיפורי', 'עלילה', 'דמות ראשית', 'קונפליקט', 'נרטיב', 'נקודת מפנה', 'דרמטי', 'narrative', 'story', 'storytelling', 'scene', 'drama', 'dramatic', 'cinematic', 'movie', 'film', 'filmic', 'plot', 'protagonist', 'character', 'conflict', 'twist', 'arc', 'storyboard', 'screenplay', 'script', 'theatrical', 'saga', 'tale', 'epic', 'mood piece'],
+
+  // ── Visual: Macro (30+ synonyms) ──
+  macro: ['מאקרו', 'קרוב', 'קרוב מאוד', 'פרט', 'תקריב', 'מיקרו', 'טיפה', 'אבק', 'בועה', 'נמלה', 'כנף', 'מרקם', 'סיבים', 'זעיר', 'עדין', 'macro', 'macro photography', 'close-up', 'closeup', 'super close', 'detail', 'details', 'texture', 'fiber', 'fibers', 'micro', 'droplet', 'drop', 'bubble', 'dust', 'tiny', 'miniature', 'minute', 'ant', 'insect wing', 'pollen', 'petals', 'minute details', 'granular', 'extreme close-up', 'magnified'],
+
+  // ── Visual: Music Video (30+ synonyms) ──
+  'music-video': ['קליפ', 'מוזיקה', 'להקה', 'זמר', 'זמרת', 'הופעה', 'קונצרט', 'רוק', 'פופ', 'היפ הופ', 'ג׳אז', 'במה', 'גיטרה', 'דיג׳יי', 'סטודיו הקלטות', 'כוריאוגרפיה', 'music video', 'clip', 'band', 'singer', 'vocalist', 'concert', 'live', 'performance', 'show', 'stage', 'rock', 'pop', 'hip hop', 'rap', 'jazz', 'classical', 'edm', 'dj', 'guitar', 'drums', 'piano', 'studio recording', 'album', 'tour', 'choreography', 'dance routine', 'lyrics', 'mv', 'beats'],
+
+  // ── Visual: Interior (30+ synonyms) ──
+  interior: ['פנים', 'חדר', 'סלון', 'מטבח', 'חדר שינה', 'אמבטיה', 'משרד', 'חלל פתוח', 'ריהוט', 'עיצוב פנים', 'לופט', 'דירה', 'בית', 'תאורה ביתית', 'שטיח', 'ספה', 'שולחן', 'ארון', 'interior', 'interiors', 'room', 'rooms', 'living room', 'lounge', 'kitchen', 'bedroom', 'bathroom', 'office', 'workspace', 'loft', 'apartment', 'flat', 'house', 'home', 'decor', 'decoration', 'furniture', 'furnishings', 'sofa', 'couch', 'table', 'cabinet', 'shelf', 'lamp', 'rug', 'carpet', 'minimalist interior', 'scandinavian', 'modern interior', 'rustic'],
+
+  // ══════ TEXT MODE CATEGORIES (30+ synonyms each) ══════
+
+  // ── Text: Marketing ──
+  marketing: ['שיווק', 'פרסום', 'קמפיין', 'מותג', 'פוסט', 'מייל שיווקי', 'ניוזלטר', 'לנדינג פייג׳', 'דף נחיתה', 'מודעה', 'פרומו', 'מבצע', 'קופירייטינג', 'קופי', 'פנייה ללקוחות', 'הנעה לפעולה', 'CTA', 'פאנל', 'marketing', 'marketer', 'ad', 'ads', 'campaign', 'brand', 'branding', 'promo', 'promotion', 'copy', 'copywriting', 'copywriter', 'landing page', 'email marketing', 'newsletter', 'digital marketing', 'content marketing', 'inbound', 'outbound', 'cta', 'call to action', 'funnel', 'conversion', 'lead generation', 'roas', 'ctr'],
+
+  // ── Text: Email ──
+  email: ['מייל', 'אימייל', 'הודעה', 'הודעת אימייל', 'ניוזלטר', 'הזמנה', 'פנייה', 'גיוס משקיעים', 'התראה', 'מכתב', 'השבה', 'מייל מכירה', 'מייל קר', 'email', 'emails', 'mail', 'letter', 'message', 'newsletter', 'invite', 'invitation', 'outreach', 'cold email', 'sales email', 'drip email', 'follow-up', 'reply', 'response', 'thank you email', 'welcome email', 'confirmation', 'notification', 'reminder', 'announcement', 'digest', 'subject line', 'inbox'],
+
+  // ── Text: Technical ──
+  technical: ['טכני', 'קוד', 'API', 'תיעוד', 'מפתח', 'מתכנת', 'הנדסה', 'אלגוריתם', 'בדיקה', 'דיבאג', 'ארכיטקטורה', 'עיצוב מערכות', 'פרונטאנד', 'בקאנד', 'פולסטאק', 'מסד נתונים', 'דאטה', 'REST', 'GraphQL', 'SDK', 'ספריה', 'פריימוורק', 'technical', 'tech', 'code', 'coding', 'programming', 'program', 'api', 'sdk', 'library', 'framework', 'documentation', 'docs', 'developer', 'engineer', 'engineering', 'software', 'algorithm', 'testing', 'debug', 'debugging', 'architecture', 'system design', 'frontend', 'backend', 'fullstack', 'database', 'sql', 'rest', 'graphql', 'microservice', 'deployment', 'devops'],
+
+  // ── Text: Creative ──
+  creative: ['יצירתי', 'סיפור', 'סיפורת', 'שיר', 'שירה', 'תסריט', 'יצירה', 'פרוזה', 'ספר', 'רומן', 'נובלה', 'פואטי', 'קריאטיב', 'ספרותי', 'מטאפורה', 'דמיון', 'פנטזיה יצירתית', 'creative', 'creativity', 'story', 'fiction', 'poem', 'poetry', 'screenplay', 'script', 'novel', 'novella', 'prose', 'literary', 'writing', 'writer', 'author', 'book', 'chapter', 'narrative', 'metaphor', 'imagination', 'imaginative', 'lyrical', 'artistic', 'creative writing', 'short story', 'flash fiction', 'verse', 'stanza'],
+
+  // ── Text: Strategy ──
+  strategy: ['אסטרטגיה', 'תכנון', 'ניתוח', 'SWOT', 'מפת דרכים', 'חזון', 'יעדים', 'OKR', 'KPI', 'ניתוח תחרותי', 'מודל עסקי', 'קנבס', 'אסטרטגיית שוק', 'גו טו מרקט', 'צמיחה', 'strategy', 'strategic', 'planning', 'plan', 'analysis', 'analyze', 'business plan', 'business strategy', 'roadmap', 'vision', 'mission', 'goals', 'objectives', 'okr', 'kpi', 'swot', 'competitive analysis', 'business model', 'canvas', 'go-to-market', 'gtm', 'growth', 'scaling', 'pivot', 'positioning', 'framework', 'playbook'],
+
+  // ── Text: Sales ──
+  sales: ['מכירות', 'עסקה', 'לקוח', 'הצעה', 'הצעת מחיר', 'סקריפט מכירות', 'פיץ׳', 'דמו', 'שיחת מכירה', 'סגירה', 'פולואפ', 'SDR', 'AE', 'אאוטבאונד', 'לידים', 'פייפליין', 'אובג׳קשנים', 'טיפול בהתנגדויות', 'sales', 'selling', 'sell', 'deal', 'deals', 'customer', 'client', 'prospect', 'lead', 'leads', 'pipeline', 'pitch', 'demo', 'discovery call', 'sales call', 'close', 'closing', 'follow-up', 'proposal', 'quote', 'b2b', 'b2c', 'crm', 'sdr', 'bdr', 'ae', 'outbound', 'inbound sales', 'objections', 'qbr', 'upsell', 'cross-sell'],
+
+  // ── Text: Educational ──
+  educational: ['חינוך', 'הוראה', 'הסבר', 'שיעור', 'מצגת לימוד', 'קורס', 'הדרכה', 'טיוטוריאל', 'מבוא', 'תלמיד', 'סטודנט', 'מורה', 'מרצה', 'אקדמיה', 'הכשרה', 'ויזואליזציה של מושגים', 'חומר לימוד', 'educational', 'education', 'learning', 'learn', 'teaching', 'teach', 'teacher', 'instructor', 'explain', 'explanation', 'lesson', 'course', 'curriculum', 'syllabus', 'tutorial', 'guide', 'walkthrough', 'primer', 'intro', 'introduction', 'lecture', 'workshop', 'training', 'onboarding', 'student', 'pupil', 'learner', 'academy', 'academic', 'edtech', 'pedagogy'],
+
+  // ── Text: Social Media ──
+  'social-media': ['סושיאל', 'אינסטגרם', 'פייסבוק', 'טיקטוק', 'טוויטר', 'לינקדאין', 'יוטיוב', 'סנאפצ׳אט', 'ת׳רדס', 'פוסט', 'סטורי', 'ריל', 'האשטג', 'אלגוריתם', 'פיד', 'כיתוב', 'social', 'social media', 'socials', 'instagram', 'ig', 'insta', 'facebook', 'fb', 'tiktok', 'twitter', 'x.com', 'linkedin', 'youtube', 'yt', 'snapchat', 'threads', 'reddit', 'pinterest', 'post', 'posts', 'story', 'stories', 'reel', 'reels', 'hashtag', 'feed', 'algorithm', 'caption', 'dm', 'direct message', 'influencer', 'creator', 'virality', 'engagement'],
+
+  // ── Text: Business ──
+  business: ['עסקים', 'מצגת', 'דוח', 'ישיבה', 'ישיבת דירקטוריון', 'ניתוח פיננסי', 'חברה', 'סטארטאפ', 'תאגיד', 'יזמות', 'מנכ״ל', 'סמנכ״ל', 'כוח אדם', 'משאבי אנוש', 'תפעול', 'לוגיסטיקה', 'business', 'corporate', 'enterprise', 'company', 'startup', 'firm', 'corporation', 'presentation', 'deck', 'slide', 'slides', 'report', 'quarterly', 'annual', 'meeting', 'board meeting', 'board', 'ceo', 'cto', 'cfo', 'executive', 'management', 'hr', 'human resources', 'operations', 'logistics', 'supply chain', 'procurement', 'finance', 'accounting', 'budget', 'p&l', 'revenue'],
+
+  // ══════ RESEARCH CATEGORIES (30+ synonyms each) ══════
+
+  'research-market': ['שוק', 'מתחרים', 'צרכנים', 'ניתוח שוק', 'גודל שוק', 'נתח שוק', 'TAM', 'SAM', 'SOM', 'מחקר צרכנים', 'סקר', 'פוקוס גרופ', 'מותגים מובילים', 'מגמות שוק', 'דמוגרפיה', 'פלח שוק', 'מחירים', 'מוצרים מתחרים', 'market', 'market research', 'market analysis', 'market size', 'market share', 'tam', 'sam', 'som', 'consumers', 'consumer research', 'survey', 'focus group', 'competitors', 'competitor analysis', 'competitive landscape', 'market trends', 'demographics', 'segmentation', 'pricing research', 'product research', 'brand research', 'market intelligence', 'market sizing'],
+
+  'research-academic': ['אקדמי', 'מחקר אקדמי', 'ספרות', 'סקירת ספרות', 'תזה', 'דיסרטציה', 'מאמר מדעי', 'ביבליוגרפיה', 'ציטוטים', 'פיר ריוויו', 'מתודולוגיה', 'השערה', 'ניסוי', 'סטטיסטיקה', 'academic', 'academia', 'research', 'literature review', 'lit review', 'thesis', 'dissertation', 'paper', 'academic paper', 'scholarly', 'journal', 'publication', 'citation', 'citations', 'bibliography', 'references', 'peer review', 'peer-reviewed', 'methodology', 'hypothesis', 'experiment', 'study', 'scholar', 'scholarly article', 'meta-analysis', 'systematic review', 'doctoral', 'phd', 'postgraduate'],
+
+  'research-technical': ['מחקר טכני', 'ביצועים', 'ארכיטקטורה', 'בנצ׳מרק', 'השוואת טכנולוגיות', 'מחקר הנדסי', 'ניסויים טכניים', 'אופטימיזציה', 'מחקר ביצועים', 'תשתית', 'technical research', 'tech research', 'benchmark', 'benchmarks', 'benchmarking', 'performance', 'performance analysis', 'architecture', 'engineering research', 'feasibility study', 'technical feasibility', 'prototype', 'proof of concept', 'poc', 'white paper', 'infrastructure', 'stack comparison', 'framework comparison', 'technology evaluation', 'tech stack', 'scalability', 'throughput', 'latency', 'load testing'],
+
+  'research-competitive': ['מתחרים', 'השוואה', 'SWOT', 'ניתוח תחרותי', 'מחקר מתחרים', 'בנצ׳מרק תחרותי', 'פיצ׳רים', 'השוואת מחירים', 'מיצוב', 'חוזקות וחולשות', 'הזדמנויות', 'איומים', 'competitive', 'competitors', 'competitor', 'competition', 'competitive analysis', 'competitive research', 'swot', 'comparison', 'feature comparison', 'vs', 'versus', 'competitive landscape', 'competitive intelligence', 'positioning', 'differentiation', 'strengths', 'weaknesses', 'opportunities', 'threats', 'compete', 'benchmarking', 'market positioning', 'moat', 'battlecard', 'alternatives'],
+
+  'research-legal': ['משפטי', 'חוק', 'תקנה', 'רגולציה', 'תקדים', 'חוות דעת משפטית', 'חוזה', 'מחקר משפטי', 'פסיקה', 'חקיקה', 'משפט מסחרי', 'משפט מנהלי', 'ציות', 'legal', 'legal research', 'law', 'laws', 'regulation', 'regulations', 'regulatory', 'compliance', 'gdpr', 'hipaa', 'precedent', 'case law', 'statute', 'legislation', 'legal opinion', 'contract', 'contracts', 'legal analysis', 'jurisdiction', 'litigation', 'liability', 'intellectual property', 'ip', 'patent', 'trademark', 'copyright', 'terms of service', 'privacy policy'],
+
+  'research-healthcare': ['רפואי', 'בריאות', 'תרופה', 'תרופות', 'טיפול', 'מחקר קליני', 'מטופל', 'מחלה', 'אבחון', 'בטיחות תרופתית', 'FDA', 'ניסוי קליני', 'פסיכולוגיה', 'פסיכיאטריה', 'רפואה מונעת', 'medical', 'medical research', 'healthcare', 'health', 'clinical', 'clinical research', 'clinical trial', 'drug', 'drugs', 'medication', 'pharmaceutical', 'pharma', 'therapy', 'therapeutic', 'treatment', 'patient', 'disease', 'diagnosis', 'diagnostic', 'fda', 'ema', 'public health', 'epidemiology', 'oncology', 'cardiology', 'mental health', 'psychology research', 'medical device'],
+
+  'research-historical': ['היסטורי', 'עבר', 'ציר זמן', 'תקופה היסטורית', 'מחקר היסטורי', 'ארכיון', 'מסמכים היסטוריים', 'ההיסטוריה של', 'תיעוד עבר', 'עתיקות', 'ארכיאולוגיה', 'historical', 'history', 'history of', 'historical research', 'past', 'era', 'period', 'timeline', 'chronology', 'archive', 'archives', 'archival', 'ancient', 'medieval', 'renaissance', 'victorian', 'modern era', 'pre-war', 'post-war', 'primary source', 'historiography', 'archaeology', 'archaeological', 'artifact', 'excavation', 'genealogy', 'ancestry'],
+
+  'research-financial': ['פיננסי', 'כלכלי', 'השקעות', 'שוק הון', 'בורסה', 'מניות', 'אג״ח', 'קריפטו', 'ניתוח פיננסי', 'דוחות כספיים', 'מאקרו', 'מיקרו', 'שערי ריבית', 'אינפלציה', 'תשואה', 'תיק השקעות', 'מכפיל', 'financial', 'finance', 'financial research', 'economic', 'economics', 'investment', 'investments', 'stock market', 'stocks', 'equity', 'bonds', 'treasury', 'crypto', 'cryptocurrency', 'defi', 'macro', 'macroeconomics', 'microeconomics', 'interest rates', 'inflation', 'yield', 'portfolio', 'valuation', 'p/e ratio', 'multiple', 'earnings', 'quarterly report', '10-k', 'balance sheet', 'cash flow'],
+
+  'research-policy': ['מדיניות', 'ממשל', 'חקיקה', 'תקנות', 'רפורמה', 'ניתוח מדיניות', 'מחקר מדיניות', 'מכון מחקר', 'ראש הממשלה', 'כנסת', 'חוק', 'ועדה', 'policy', 'public policy', 'policy research', 'policy analysis', 'government', 'governance', 'legislation', 'legislative', 'regulation', 'regulatory', 'reform', 'think tank', 'white paper', 'position paper', 'political analysis', 'parliament', 'congress', 'senate', 'administration', 'executive order', 'bill', 'committee', 'lobbying', 'advocacy', 'civic', 'public sector'],
+
+  'research-trends': ['מגמות', 'עתיד', 'תחזית', 'טרנדים', 'עתידנות', 'חיזוי', 'מגמות שוק', 'חידושים', 'טכנולוגיות מתפתחות', 'מחקר חזון', 'tipping point', 'trends', 'trending', 'trend analysis', 'future', 'future research', 'futurism', 'futurist', 'forecast', 'forecasting', 'prediction', 'outlook', 'foresight', 'emerging trends', 'emerging tech', 'megatrends', 'macrotrends', 'innovation', 'disruption', 'disruptive', 'early signal', 'weak signal', 'scenario planning', 'horizon scanning', 'what next', 'next big thing'],
+
+  // ══════ AGENT CATEGORIES (30+ synonyms each) ══════
+
+  'agent-customer-service': ['שירות', 'שירות לקוחות', 'תמיכה', 'תמיכה טכנית', 'לקוחות', 'help desk', 'service desk', 'טיקטים', 'פניות', 'מענה ראשוני', 'צ׳אט לייב', 'FAQ', 'שאלות נפוצות', 'customer service', 'customer support', 'cs', 'support', 'help desk', 'helpdesk', 'service desk', 'customer care', 'customer experience', 'cx', 'tickets', 'ticket system', 'live chat', 'chatbot support', 'faq', 'faqs', 'knowledge base', 'kb', 'first response', 'resolution', 'customer success', 'csm', 'customer retention', 'escalation', 'sla', 'nps'],
+
+  'agent-tutor': ['מורה', 'לימוד', 'שיעור פרטי', 'תלמיד', 'סטודנט', 'הכנה למבחן', 'שיעורי בית', 'עזר לימודי', 'חיזוק לימודי', 'בגרות', 'פסיכומטרי', 'tutor', 'tutoring', 'teacher', 'teaching assistant', 'private lesson', 'lesson', 'student', 'pupil', 'homework help', 'homework', 'exam prep', 'test prep', 'sat prep', 'act prep', 'study help', 'study partner', 'learning assistant', 'educational', 'education agent', 'school help', 'coaching academic', 'grade improvement', 'skill building', 'remedial', 'enrichment'],
+
+  'agent-coach': ['מאמן', 'כושר', 'אימון', 'ספורט', 'אימון אישי', 'תזונה', 'דיאטה', 'חדר כושר', 'רצועת ריצה', 'קרוספיט', 'יוגה', 'מדיטציה', 'מיינדפולנס', 'coach', 'coaching', 'fitness', 'fitness coach', 'personal trainer', 'pt', 'training', 'workout', 'gym', 'crossfit', 'yoga', 'pilates', 'nutrition', 'nutritionist', 'diet', 'dietitian', 'wellness', 'life coach', 'mental coach', 'mindfulness', 'meditation', 'running coach', 'strength coach', 'bodybuilding', 'athlete', 'athletic performance'],
+
+  'agent-writer': ['כתיבה', 'עריכה', 'בלוג', 'עוזר כתיבה', 'קופירייטר', 'עורך תוכן', 'סיפור', 'מאמרים', 'תוכן שיווקי', 'טקסט', 'סטייל גייד', 'writer', 'writing', 'writing assistant', 'copywriter', 'copywriting', 'editor', 'editing', 'ghostwriter', 'blog', 'blogger', 'content', 'content writer', 'content creator', 'articles', 'storytelling', 'author', 'novelist', 'screenwriter', 'journalist', 'freelance writer', 'seo writer', 'technical writer', 'proofreader', 'style guide', 'grammar', 'prose'],
+
+  'agent-analyst': ['אנליסט', 'ניתוח נתונים', 'דאטה', 'ביג דאטה', 'ויזואליזציה', 'BI', 'ניתוח עסקי', 'דוחות', 'KPI', 'מדדים', 'אקסל', 'SQL', 'Power BI', 'Tableau', 'analyst', 'analysis', 'data analyst', 'data', 'big data', 'data science', 'data scientist', 'analytics', 'business analyst', 'ba', 'business intelligence', 'bi', 'dashboards', 'visualization', 'reports', 'reporting', 'kpis', 'metrics', 'excel', 'sql', 'tableau', 'power bi', 'looker', 'data mining', 'statistical analysis', 'forecasting', 'predictive analytics'],
+
+  'agent-advisor': ['יועץ', 'קריירה', 'ייעוץ', 'הכוונה', 'תכנון קריירה', 'חיפוש עבודה', 'קורות חיים', 'ראיון עבודה', 'לינקדאין', 'פרופיל מקצועי', 'advisor', 'advising', 'consultant', 'consulting', 'guidance', 'mentor', 'mentoring', 'career', 'career advisor', 'career coach', 'career planning', 'job search', 'job seeker', 'resume', 'cv', 'curriculum vitae', 'interview prep', 'interview coaching', 'linkedin profile', 'professional brand', 'networking', 'career change', 'job transition', 'salary negotiation', 'life advisor', 'personal advisor'],
+
+  'agent-therapist': ['טיפולי', 'רגשי', 'תמיכה נפשית', 'פסיכולוג', 'מטפל', 'בריאות הנפש', 'חרדה', 'דיכאון', 'מצב רוח', 'מיינדפולנס', 'שלוות נפש', 'CBT', 'DBT', 'therapist', 'therapy', 'emotional', 'emotional support', 'mental health', 'mental wellness', 'wellness', 'psychologist', 'psychology', 'psychiatry', 'counselor', 'counseling', 'therapy bot', 'companion', 'anxiety', 'depression', 'mood', 'stress', 'stress management', 'mindfulness', 'self-help', 'self care', 'cbt', 'dbt', 'cognitive behavioral', 'grief', 'trauma', 'burnout'],
+
+  'agent-recruiter': ['גיוס', 'גיוס עובדים', 'משאבי אנוש', 'HR', 'ראיונות', 'צילום מועמדים', 'מיון מועמדים', 'תפקידים פתוחים', 'גיוס טכני', 'headhunter', 'recruiter', 'recruiting', 'recruitment', 'hr', 'human resources', 'talent acquisition', 'ta', 'talent', 'headhunter', 'headhunting', 'sourcer', 'sourcing', 'screening', 'interviews', 'interview process', 'candidates', 'candidate screening', 'open roles', 'job posting', 'job description', 'tech recruiter', 'technical recruiter', 'executive search', 'placement', 'hiring manager', 'offer negotiation'],
+
+  'agent-legal': ['עוזר משפטי', 'פארלגל', 'חוזה', 'ניסוח חוזה', 'בדיקת חוזים', 'ייעוץ משפטי ראשוני', 'תקנון', 'מסמכים משפטיים', 'legal assistant', 'paralegal', 'paralegal bot', 'legal bot', 'contract', 'contracts', 'contract review', 'contract drafting', 'terms of service', 'tos', 'privacy policy', 'nda', 'non-disclosure', 'legal documents', 'legal forms', 'legal research assistant', 'compliance assistant', 'case preparation', 'legal summaries', 'legal admin', 'document review', 'e-discovery', 'redlining', 'legal intake'],
+
+  'agent-creative': ['רעיונות', 'יצירתיות', 'מוח', 'שותף יצירה', 'סיעור מוחות', 'ברנד מחשבות', 'קריאטיב', 'רעיון מרכזי', 'קונספט', 'אידיאציה', 'creative partner', 'creativity', 'creative assistant', 'brainstorming', 'brainstorm', 'ideation', 'ideas', 'idea generation', 'concept', 'concepts', 'creative brief', 'inspiration', 'muse', 'creative companion', 'imagination', 'innovate', 'innovation', 'think partner', 'thought partner', 'creative director', 'cd', 'lateral thinking', 'divergent thinking', 'blue sky', 'moonshot', 'disrupt', 'reimagine'],
 };
 
 /**

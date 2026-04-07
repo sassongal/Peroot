@@ -9,6 +9,7 @@ import {
   getChainOfThoughtBlock,
   getRefinementExamplesBlock,
 } from "./skills";
+import { getConceptClassificationBlock } from "./skills/concept-classification";
 
 export class ResearchEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -84,6 +85,9 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
       const result = super.generate(input);
       result.outputFormat = "markdown";
       result.requiredFields = ["citations", "summary"];
+
+      // Inject concept classification (LLM-level semantic understanding)
+      result.systemPrompt += getConceptClassificationBlock('text');
 
       // Inject skill-based few-shot examples, mistakes, and scoring criteria
       const examplesBlock = getExamplesBlock('text', 'research', input.prompt, 3);

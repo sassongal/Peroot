@@ -4,6 +4,7 @@ import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import { VideoPlatform } from "../video-platforms";
 import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 
 // ── Platform-specific system prompt overrides ──
@@ -510,6 +511,9 @@ export class VideoEngine extends BaseEngine {
         finalSystem += prefsBlock;
       }
     }
+
+    // Inject concept classification (LLM-level semantic understanding)
+    finalSystem += getConceptClassificationBlock('video');
 
     // Inject few-shot examples from skill files (smart selection based on user concept)
     const examplesBlock = getExamplesBlock('video', platform, input.prompt, 3);

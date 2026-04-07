@@ -9,6 +9,7 @@ import {
   getChainOfThoughtBlock,
   getRefinementExamplesBlock,
 } from "./skills";
+import { getConceptClassificationBlock } from "./skills/concept-classification";
 
 export class AgentEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -119,6 +120,9 @@ Requirements:
   generate(input: EngineInput): EngineOutput {
       const result = super.generate(input);
       result.outputFormat = "markdown";
+
+      // Inject concept classification (LLM-level semantic understanding)
+      result.systemPrompt += getConceptClassificationBlock('text');
 
       // Inject skill-based few-shot examples, mistakes, and scoring criteria
       const examplesBlock = getExamplesBlock('text', 'agent', input.prompt, 3);
