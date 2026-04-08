@@ -85,6 +85,7 @@ export const useLibraryContext = () => {
     incrementUseCount: data.incrementUseCount,
     togglePin: data.togglePin,
     ratePrompt: data.ratePrompt,
+    bumpPersonalLibraryLastUsed: data.bumpPersonalLibraryLastUsed,
     addPrompts: data.addPrompts,
     deletePrompts: data.deletePrompts,
     movePrompts: data.movePrompts,

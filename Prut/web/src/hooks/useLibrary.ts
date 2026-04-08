@@ -892,6 +892,20 @@ export function useLibrary() {
     }
   };
 
+  // Anchor 1 — bump last_used_at on personal library prompts via the
+  // SECURITY DEFINER RPC. Fire-and-forget, never throws to the caller.
+  const bumpPersonalLibraryLastUsed = (id: string): void => {
+    if (!user) return;
+    void supabase
+      .rpc('bump_prompt_last_used', { p_table: 'personal_library', p_id: id })
+      .then(({ error }) => {
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.warn('[useLibrary] bump_prompt_last_used failed:', error.message);
+        }
+      });
+  };
+
   const updatePromptContent = async (id: string, prompt: string, prompt_style?: string) => {
     const trimmed = prompt.trim();
     if (user) {
@@ -1397,6 +1411,7 @@ export function useLibrary() {
     ratePrompt,
     updatePrompt,
     updatePromptContent,
+    bumpPersonalLibraryLastUsed,
     reorderPrompts,
     movePrompt,
     renameCategory,

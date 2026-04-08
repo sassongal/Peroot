@@ -1,11 +1,17 @@
 "use client";
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, lazy, Suspense } from 'react';
 import { Check } from 'lucide-react';
 import { ScoreDelta } from './ScoreDelta';
 import { cn } from '@/lib/utils';
 
-type Mode = 'tabs' | 'split';
+// Lazy: keeps diff-match-patch (~60KB gzip) out of the initial bundle.
+// Only loaded when the user toggles to diff mode.
+const TextDiff = lazy(() =>
+  import('./TextDiff').then(mod => ({ default: mod.TextDiff }))
+);
+
+type Mode = 'tabs' | 'split' | 'diff';
 
 interface BeforeAfterSplitProps {
   original: string;
@@ -119,6 +125,24 @@ export function BeforeAfterSplit({
             <div className={cn(PANE_BASE, 'text-base text-[var(--text-primary)]')}>
               {enhancedDisplay}
             </div>
+          </div>
+        </div>
+      ) : mode === 'diff' && hasOriginal ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.04] shadow-sm">
+          <div className="px-4 pt-3 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center justify-between">
+            <span>השוואה</span>
+            <span className="text-[9px] font-normal text-[var(--text-muted)]">
+              <span className="text-emerald-500">ירוק</span> = נוסף · <span className="text-red-500">אדום</span> = הוסר
+            </span>
+          </div>
+          <div className={cn(PANE_BASE)}>
+            <Suspense
+              fallback={
+                <div className="text-sm text-[var(--text-muted)]">טוען השוואה…</div>
+              }
+            >
+              <TextDiff before={original} after={enhanced} />
+            </Suspense>
           </div>
         </div>
       ) : (

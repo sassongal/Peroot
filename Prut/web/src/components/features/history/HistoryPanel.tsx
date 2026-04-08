@@ -1,11 +1,13 @@
 "use client";
 
-import { Trash2, History, ArrowRight, Plus, Copy, Search, Filter, Clock } from "lucide-react";
+import { Trash2, ArrowRight, Plus, Copy, Search, Filter, Clock, Pencil, Check, X } from "lucide-react";
 import { HistoryItem } from "@/hooks/useHistory";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { DateBadge } from "@/components/ui/DateBadge";
+import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // Category color mapping for inline-start border accent stripes (RTL-safe logical property)
 const CATEGORY_COLORS: Record<string, string> = {
@@ -42,6 +44,10 @@ interface HistoryPanelProps {
   onSaveToPersonal: (item: HistoryItem) => void;
   onCopy: (text: string) => void;
   onStartNew?: () => void;
+  /** Anchor 4: rename a history item title. Optional so guest mode (no DB) still works. */
+  onRenameTitle?: (id: string, title: string) => Promise<void>;
+  /** Anchor 1: bump last_used_at on Copy / Restore / Export. Fire-and-forget. */
+  onBumpLastUsed?: (id: string) => void;
 }
 
 export function HistoryPanel({
@@ -52,10 +58,37 @@ export function HistoryPanel({
   onSaveToPersonal,
   onCopy,
   onStartNew,
+  onRenameTitle,
+  onBumpLastUsed,
 }: HistoryPanelProps) {
   const [hasHydrated, setHasHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
+
+  const startRename = (item: HistoryItem) => {
+    setRenamingId(item.id);
+    setRenameDraft(item.title || item.original.slice(0, 60));
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameDraft("");
+  };
+
+  const saveRename = async () => {
+    if (!renamingId || !onRenameTitle) return;
+    const id = renamingId;
+    try {
+      await onRenameTitle(id, renameDraft);
+      toast.success("השם עודכן");
+      setRenamingId(null);
+      setRenameDraft("");
+    } catch {
+      toast.error("שגיאה בעדכון השם");
+    }
+  };
 
   useEffect(() => {
     queueMicrotask(() => setHasHydrated(true));
@@ -191,7 +224,10 @@ export function HistoryPanel({
                 categoryColor,
                 isFirst && "border-black/15 dark:border-white/20 bg-black/[0.03] dark:bg-white/[0.03]"
               )}
-              onClick={() => onRestore(item)}
+              onClick={() => {
+                onBumpLastUsed?.(item.id);
+                onRestore(item);
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
@@ -211,17 +247,61 @@ export function HistoryPanel({
                   {hasHydrated ? <DateBadge mode="compact" entity={item.entity} /> : "..."}
                 </span>
               </div>
-              {item.title && (
-                <p className="text-sm font-bold text-[var(--text-primary)] mt-2" dir="rtl">
-                  {item.title}
-                </p>
+              {/* Title row — inline rename if active, otherwise display + edit pencil */}
+              {renamingId === item.id ? (
+                <div className="mt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    value={renameDraft}
+                    onChange={(e) => setRenameDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void saveRename();
+                      if (e.key === "Escape") cancelRename();
+                    }}
+                    autoFocus
+                    dir="rtl"
+                    className="flex-1 px-2 py-1 text-sm rounded-md bg-[var(--glass-bg)] border border-amber-500/40 focus:outline-none focus:border-amber-500"
+                    aria-label="עריכת כותרת פרומפט"
+                  />
+                  <button
+                    onClick={() => void saveRename()}
+                    className="p-1 rounded-md bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                    aria-label="שמור כותרת"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={cancelRename}
+                    className="p-1 rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                    aria-label="בטל עריכה"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                item.title && (
+                  <div className="mt-2 flex items-center gap-2 group/title">
+                    <p className="text-sm font-bold text-[var(--text-primary)] flex-1 truncate" dir="rtl">
+                      {item.title}
+                    </p>
+                    {onRenameTitle && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); startRename(item); }}
+                        className="opacity-0 group-hover/title:opacity-60 hover:opacity-100 transition-opacity p-1 rounded text-[var(--text-muted)] hover:text-amber-400"
+                        title="שנה שם"
+                        aria-label="שנה שם פרומפט"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )
               )}
               <p className={cn("text-sm text-[var(--text-primary)] leading-relaxed max-h-16 overflow-hidden", item.title ? "mt-1 text-xs text-[var(--text-muted)]" : "mt-2")} dir="rtl">
                 {item.original}
               </p>
-              <div className="mt-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <div className="mt-3 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                 <button
-                  onClick={() => onRestore(item)}
+                  onClick={() => { onBumpLastUsed?.(item.id); onRestore(item); }}
                   className="flex items-center gap-2 px-2.5 py-1 rounded-md accent-gradient text-black text-xs hover:shadow-[0_0_12px_rgba(245,158,11,0.2)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <ArrowRight className="w-3 h-3" />
@@ -235,12 +315,20 @@ export function HistoryPanel({
                   שמור לאישי
                 </button>
                 <button
-                  onClick={() => onCopy(item.enhanced)}
+                  onClick={() => { onBumpLastUsed?.(item.id); onCopy(item.enhanced); }}
                   className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Copy className="w-3 h-3" />
                   העתק פלט
                 </button>
+                {/* Anchor 3 — Export button on every history row */}
+                <ExportPdfButton
+                  title={item.title || item.original.slice(0, 60)}
+                  original={item.original}
+                  enhanced={item.enhanced}
+                  createdAt={new Date(item.timestamp).toISOString()}
+                  className="!p-1 !min-h-0 !min-w-0 !w-7 !h-7"
+                />
               </div>
             </div>
           );

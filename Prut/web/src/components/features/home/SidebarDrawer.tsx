@@ -28,6 +28,8 @@ interface SidebarDrawerProps {
   onNavLibrary: () => void;
   personalView: string;
   prefetchPersonalLibrary: () => void;
+  onRenameHistoryTitle?: (id: string, title: string) => Promise<void>;
+  onBumpHistoryLastUsed?: (id: string) => void;
 }
 
 export const SidebarDrawer = memo<SidebarDrawerProps>(({
@@ -45,6 +47,8 @@ export const SidebarDrawer = memo<SidebarDrawerProps>(({
   onNavLibrary,
   personalView,
   prefetchPersonalLibrary,
+  onRenameHistoryTitle,
+  onBumpHistoryLastUsed,
 }) => {
   const t = useI18n();
   const [expanded, setExpanded] = useState(false);
@@ -169,6 +173,8 @@ export const SidebarDrawer = memo<SidebarDrawerProps>(({
             onSaveToPersonal={onSaveToPersonal}
             onCopy={onCopy}
             onStartNew={handleStartNew}
+            onRenameTitle={onRenameHistoryTitle}
+            onBumpLastUsed={onBumpHistoryLastUsed}
           />
         </div>
       </div>

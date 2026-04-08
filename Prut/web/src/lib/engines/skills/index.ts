@@ -326,6 +326,11 @@ const MAX_SELECTIONS = 1000;
 /**
  * Record a skill example selection event in the in-memory ring buffer.
  * Uses LRU-style eviction: when full, the oldest entry is dropped.
+ *
+ * Also persists to the `skill_selections` Postgres table (T5 — analytics
+ * persistence). The DB write is fire-and-forget and runs ONLY on the
+ * server (gated on `typeof window === 'undefined'`) so client bundles
+ * never pull in the service Supabase client.
  */
 export function recordSelection(
   type: string,
@@ -333,6 +338,7 @@ export function recordSelection(
   concept: string,
   categories: string[]
 ): void {
+  // 1. In-memory ring buffer (fast-path; survives the current process only).
   recentSelections.push({
     type,
     platform,
@@ -343,6 +349,32 @@ export function recordSelection(
   if (recentSelections.length > MAX_SELECTIONS) {
     recentSelections.shift();
   }
+
+  // 2. Persist to Postgres. Server-side only (engines run on Vercel
+  // Functions). Dynamic import keeps the service client out of any
+  // client bundle that imports from this file. Errors are swallowed —
+  // the in-memory copy is still recorded above.
+  if (typeof window !== 'undefined') return;
+  void import('@/lib/supabase/service')
+    .then(({ createServiceClient }) => {
+      try {
+        const client = createServiceClient();
+        return client.from('skill_selections').insert({
+          type,
+          platform,
+          concept: concept.slice(0, 500),
+          categories,
+        });
+      } catch {
+        return null;
+      }
+    })
+    .then((result) => {
+      if (result && 'error' in result && result.error) {
+        console.warn('[skills] persist failed:', result.error.message);
+      }
+    })
+    .catch(() => { /* swallow */ });
 }
 
 /**

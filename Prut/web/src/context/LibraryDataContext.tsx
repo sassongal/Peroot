@@ -53,6 +53,7 @@ export interface LibraryDataContextType {
   incrementUseCount: (id: string) => Promise<void>;
   togglePin: (id: string) => Promise<void>;
   ratePrompt: (id: string, success: boolean) => Promise<void>;
+  bumpPersonalLibraryLastUsed: (id: string) => void;
 
   // Batch Actions
   addPrompts: (prompts: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">[]) => Promise<void>;
@@ -140,6 +141,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     ratePrompt,
     updatePrompt,
     updatePromptContent,
+    bumpPersonalLibraryLastUsed,
     reorderPrompts,
     movePrompt,
     renameCategory,
@@ -334,6 +336,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     personalCapabilityCounts,
     addPrompt: addPromptWithSuggestion, removePrompt, updatePrompt, duplicatePrompt,
     incrementUseCount, togglePin, ratePrompt,
+    bumpPersonalLibraryLastUsed,
     addPrompts, deletePrompts, movePrompts, updateTags,
     updateProfile, completeOnboarding,
     addPersonalCategory, deletePersonalCategory,
@@ -351,6 +354,7 @@ export function LibraryDataProvider({ children, user, showLoginRequired }: Libra
     libraryCapabilityCounts, personalCapabilityCounts,
     addPromptWithSuggestion, removePrompt, updatePrompt, duplicatePrompt,
     incrementUseCount, togglePin, ratePrompt,
+    bumpPersonalLibraryLastUsed,
     addPrompts, deletePrompts, movePrompts, updateTags,
     updateProfile, completeOnboarding,
     addPersonalCategory, deletePersonalCategory,

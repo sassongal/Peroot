@@ -208,5 +208,65 @@ export function useHistory() {
     await clearMutation.mutateAsync();
   }, [clearMutation]);
 
-  return { history, addToHistory, clearHistory, isLoaded, user };
+  // Anchor 4 — rename a history item.
+  // Direct supabase write with .eq('user_id', user.id) RLS guard. The new
+  // title triggers history_set_updated_at automatically.
+  const updateHistoryTitle = useCallback(
+    async (id: string, title: string): Promise<void> => {
+      const currentUser = userRef.current;
+      if (!currentUser) return;
+      const trimmed = title.trim().slice(0, 200);
+      if (!trimmed) return;
+
+      const queryKey = ['history', currentUser.id];
+      // Optimistic update
+      const previousHistory = queryClient.getQueryData<HistoryItem[]>(queryKey);
+      queryClient.setQueryData<HistoryItem[]>(queryKey, (old = []) =>
+        old.map(h => (h.id === id ? { ...h, title: trimmed } : h))
+      );
+      try {
+        const { error } = await supabase
+          .from('history')
+          .update({ title: trimmed })
+          .eq('id', id)
+          .eq('user_id', currentUser.id);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey });
+      } catch (err) {
+        // Rollback
+        queryClient.setQueryData(queryKey, previousHistory);
+        throw err;
+      }
+    },
+    [supabase, queryClient]
+  );
+
+  // Anchor 1 — bump last_used_at via the SECURITY DEFINER RPC.
+  // Fire-and-forget: failures are non-critical (the prompt still loads),
+  // but we log so admins can spot abuse. Caller should debounce/dedup
+  // since this is meant to be triggered on Copy / Open / Export.
+  const bumpHistoryLastUsed = useCallback(
+    (id: string): void => {
+      const currentUser = userRef.current;
+      if (!currentUser) return;
+      void supabase
+        .rpc('bump_prompt_last_used', { p_table: 'history', p_id: id })
+        .then(({ error }) => {
+          if (error) {
+            console.warn('[useHistory] bump_prompt_last_used failed:', error.message);
+          }
+        });
+    },
+    [supabase]
+  );
+
+  return {
+    history,
+    addToHistory,
+    clearHistory,
+    updateHistoryTitle,
+    bumpHistoryLastUsed,
+    isLoaded,
+    user,
+  };
 }

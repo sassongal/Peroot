@@ -249,6 +249,67 @@ describe('EnhancedScorer — dimension behaviour', () => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
+// EnhancedScorer — anti-gaming signals (added 2026-04-08)
+// These tests prove that the 3 new penalty signals fire on prompts that
+// would have looked artificially strong under the old scorer.
+// ────────────────────────────────────────────────────────────────────────────
+
+describe('EnhancedScorer — anti-gaming penalties', () => {
+  it('penalizes buzzword inflation when 3+ vague superlatives appear without concrete specs', () => {
+    const bloated = `אתה מומחה מקצועי ברמה הגבוהה ביותר. כתוב תוכן מקיף, איכותי ומצוין שיהיה world-class ו-premium. צור משהו innovative ו-comprehensive שיהיה state-of-the-art.`;
+    const concrete = `אתה מומחה. כתוב תוכן ב-200 מילים בדיוק, ב-5 נקודות, עם מספרים ספציפיים.`;
+
+    const bloatedScore = EnhancedScorer.score(bloated, CapabilityMode.STANDARD);
+    const concreteScore = EnhancedScorer.score(concrete, CapabilityMode.STANDARD);
+
+    const bloatedClarity = bloatedScore.breakdown.find(d => d.dimension === 'clarity');
+    const concreteClarity = concreteScore.breakdown.find(d => d.dimension === 'clarity');
+
+    expect(bloatedClarity).toBeDefined();
+    expect(concreteClarity).toBeDefined();
+    // The bloated version (5+ buzzwords, no concrete spec) must score
+    // strictly LOWER on clarity than the concrete version (zero buzzwords).
+    expect(bloatedClarity!.score).toBeLessThan(concreteClarity!.score);
+    // And the bloated version should explicitly call out the inflation.
+    expect(bloatedClarity!.missing.some(m => m.includes('buzzword inflation'))).toBe(true);
+  });
+
+  it('penalizes contradictions: brevity + high word count', () => {
+    // Both prompts have the SAME safety scaffolding (out-of-scope marker
+    // + edge-case marker + fallback) so the safety dim has a non-zero
+    // base. The contradictory version then has its base reduced by the
+    // brevity-vs-1500 contradiction.
+    const safetyBase = 'מחוץ לתחום: לא לעסוק בפוליטיקה. מקרה קצה: אם המידע חסר, אם אין נתון אז ציין.';
+    const contradictory = `אתה כותב מאמרים. כתוב פוסט קצר מאוד, בדיוק 1500 מילים. ${safetyBase}`;
+    const consistent = `אתה כותב מאמרים. כתוב פוסט מפורט של 1500 מילים. ${safetyBase}`;
+
+    const contradictoryScore = EnhancedScorer.score(contradictory, CapabilityMode.STANDARD);
+    const consistentScore = EnhancedScorer.score(consistent, CapabilityMode.STANDARD);
+
+    const contradictorySafety = contradictoryScore.breakdown.find(d => d.dimension === 'safety');
+    const consistentSafety = consistentScore.breakdown.find(d => d.dimension === 'safety');
+
+    expect(contradictorySafety!.score).toBeLessThan(consistentSafety!.score);
+    expect(contradictorySafety!.missing.some(m => m.includes('contradiction'))).toBe(true);
+  });
+
+  it('rewards task-relevant numbers more than free-floating numbers in specificity', () => {
+    const taskRelevant = 'אתה מומחה. כתוב 200 מילים על הנושא, ב-5 נקודות. למשל: "כותרת". Apple Inc.';
+    const freeFloating = 'אתה מומחה. כתוב על הנושא בשנת 2026. למשל: "כותרת". Apple Inc.';
+
+    const taskScore = EnhancedScorer.score(taskRelevant, CapabilityMode.STANDARD);
+    const freeScore = EnhancedScorer.score(freeFloating, CapabilityMode.STANDARD);
+
+    const taskSpec = taskScore.breakdown.find(d => d.dimension === 'specificity');
+    const freeSpec = freeScore.breakdown.find(d => d.dimension === 'specificity');
+
+    expect(taskSpec!.score).toBeGreaterThan(freeSpec!.score);
+    // Task-relevant should report the new label
+    expect(taskSpec!.matched.some(m => m.includes('task-relevant'))).toBe(true);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
 // Engine system prompts — must always inject skill blocks
 // ────────────────────────────────────────────────────────────────────────────
 

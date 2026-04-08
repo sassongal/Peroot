@@ -11,7 +11,9 @@ vi.mock("@upstash/redis", () => {
     class Redis {
         get = mockGet;
         set = mockSet;
-        constructor(_opts: unknown) {}
+        constructor(_opts: unknown) {
+            void _opts;
+        }
     }
     return { Redis };
 });

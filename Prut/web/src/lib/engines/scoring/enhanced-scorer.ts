@@ -123,8 +123,24 @@ const TEXT_DIMENSIONS: DimensionDef[] = [
       const matched: string[] = [];
       const missing: string[] = [];
       let pts = 0;
-      if (/\d+/.test(t)) { matched.push('numbers'); pts += 3; }
-      else missing.push('concrete numbers');
+
+      // Anti-gaming #3 — Specificity-per-task: a free-floating number (e.g.
+      // "2026" or "42") is worth less than a number tied to a task quantity
+      // (e.g. "200 words", "5 bullets"). The latter actually constrains the
+      // output; the former is decoration.
+      const taskQuantityRegex = /\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters)/i;
+      const hasNumber = /\d+/.test(t);
+      if (taskQuantityRegex.test(t)) {
+        matched.push('task-relevant numbers');
+        pts += 3;
+      } else if (hasNumber) {
+        matched.push('numbers (loose)');
+        pts += 1; // 33% credit for free-floating numbers
+        missing.push('numbers tied to a task quantity');
+      } else {
+        missing.push('concrete numbers');
+      }
+
       if (/[""״]|למשל|לדוגמה|for\s+example|e\.g\./i.test(t)) { matched.push('examples mentioned'); pts += 4; }
       else missing.push('examples');
       if (/[A-Z][a-z]{2,}/.test(t) || /\b[A-Z]{2,}\b/.test(t)) { matched.push('proper nouns'); pts += 3; }
@@ -218,6 +234,24 @@ const TEXT_DIMENSIONS: DimensionDef[] = [
         pts -= Math.min(6, hedgeCount * 2);
         missing.push(`${hedgeCount} hedge word(s)`);
       }
+      // Anti-gaming #1 — Buzzword inflation penalty.
+      // "מקצועי ברמה הגבוהה ביותר", "world-class premium expert content"
+      // — these are filler words that look impressive but say nothing
+      // concrete. If 3+ buzzwords appear AND the text has no numeric
+      // specificity to back them up, deduct 5 points from clarity.
+      const buzzwords = [
+        'מקצועי', 'מקיף', 'איכותי', 'מצוין', 'יוצא דופן', 'ברמה הגבוהה',
+        'מתקדם', 'חדשני', 'מהמובילים', 'world-class', 'premium', 'expert',
+        'best-in-class', 'cutting-edge', 'state-of-the-art', 'top-tier',
+        'high-quality', 'excellent', 'outstanding', 'superior', 'advanced',
+        'comprehensive', 'professional', 'innovative', 'revolutionary', 'unique',
+      ];
+      const buzzwordHits = buzzwords.filter(b => new RegExp(b, 'i').test(t)).length;
+      const hasConcreteSpec = /\d+\s*(מילים|שורות|נקודות|words|lines|items|points|bullets|sentences)/i.test(t);
+      if (buzzwordHits >= 3 && !hasConcreteSpec) {
+        pts -= 5;
+        missing.push(`buzzword inflation: ${buzzwordHits} vague superlatives without concrete specs`);
+      }
       // Bonus for strong imperatives
       if (/^(כתוב|צור|בנה|נסח|write|create|build|generate)\s/im.test(t)) {
         matched.push('strong imperative opening');
@@ -253,6 +287,32 @@ const TEXT_DIMENSIONS: DimensionDef[] = [
       if (/מקרה קצה|edge\s+case|exception|חריג/i.test(t)) { matched.push('edge case handling'); pts += 2; }
       if (/אם\s+.*\s+אז|if\s+.*\s+then|fallback|נסיגה/i.test(t)) { matched.push('fallback logic'); pts += 1; }
       if (pts === 0) missing.push('boundary/edge-case handling');
+
+      // Anti-gaming #2 — Contradiction detection.
+      // Internally inconsistent prompts ("be brief, but write 1000 words")
+      // confuse the model and produce low-quality output. Deduct 3 pts per
+      // contradiction pair detected.
+      const contradictions: Array<[RegExp, RegExp, string]> = [
+        // "short" + a high word count
+        [/(קצר|תקציר|בקצרה|short|brief|concise)/i, /\b([5-9]\d{2,}|[1-9]\d{3,})\b/, 'brevity vs high word count'],
+        // "no table" + "in a table"
+        [/(בלי|ללא|without|no)\s*טבלה|בלי\s*table|no\s+table/i, /(בטבלה|in\s+a?\s*table|table\s+format)/i, 'no table vs in a table'],
+        // "no list" + "list of"
+        [/(בלי|ללא|no|without)\s*(רשימ|list|bullets)/i, /(רשימה של|list of|bullet\s+points)/i, 'no list vs list of'],
+        // "concise" + "long"
+        [/(קצר|concise|brief)/i, /(ארוך|מפורט מאוד|long|extensive|comprehensive)/i, 'concise vs long'],
+      ];
+      let contradictionCount = 0;
+      for (const [a, b, label] of contradictions) {
+        if (a.test(t) && b.test(t)) {
+          contradictionCount++;
+          missing.push(`contradiction: ${label}`);
+        }
+      }
+      if (contradictionCount > 0) {
+        pts = Math.max(0, pts - contradictionCount * 3);
+      }
+
       return { score: Math.min(6, pts), matched, missing };
     },
   },

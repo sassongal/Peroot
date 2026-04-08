@@ -3,16 +3,17 @@
 import { useState, lazy, Suspense } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { cn } from "@/lib/utils";
-import { TrendingUp, DollarSign, RefreshCw } from "lucide-react";
+import { TrendingUp, DollarSign, RefreshCw, Webhook } from "lucide-react";
 
 // ── Lazy-loaded tab components ────────────────────────────────────────────────
 
 const RevenueTab = lazy(() => import("@/components/admin/tabs/RevenueTab"));
 const CostsTab = lazy(() => import("@/components/admin/tabs/CostsTab"));
+const WebhookEventsTab = lazy(() => import("@/components/admin/tabs/WebhookEventsTab"));
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type TabId = "revenue" | "costs";
+type TabId = "revenue" | "costs" | "webhooks";
 
 interface Tab {
   id: TabId;
@@ -25,6 +26,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: "revenue", label: "הכנסות", icon: TrendingUp },
   { id: "costs", label: "עלויות", icon: DollarSign },
+  { id: "webhooks", label: "Webhooks", icon: Webhook },
 ];
 
 // ── Tab Fallback ──────────────────────────────────────────────────────────────
@@ -80,6 +82,7 @@ export default function FinancePage() {
         <Suspense fallback={<TabFallback />}>
           {activeTab === "revenue" && <RevenueTab />}
           {activeTab === "costs" && <CostsTab />}
+          {activeTab === "webhooks" && <WebhookEventsTab />}
         </Suspense>
 
       </div>

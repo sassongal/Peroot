@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { DateBadge } from "@/components/ui/DateBadge";
+import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { fromPersonalLibraryRow } from "@/lib/prompt-entity";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
@@ -36,6 +37,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
   const {
     favoritePersonalIds,
     handleToggleFavorite,
+    bumpPersonalLibraryLastUsed,
     editingPersonalId,
     editingTitle,
     setEditingTitle,
@@ -206,14 +208,14 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            onClick={(e) => { e.stopPropagation(); onCopyText(prompt.prompt); }}
+            onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }}
             title="העתק"
             className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onUsePrompt(prompt); }}
+            onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onUsePrompt(prompt); }}
             title="השתמש"
             className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
@@ -609,12 +611,23 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
 
               {/* Full action buttons row */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[var(--glass-border)]">
-                <button onClick={() => onUsePrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={() => { bumpPersonalLibraryLastUsed?.(prompt.id); onUsePrompt(prompt); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Plus className="w-3 h-3" /> השתמש
                 </button>
-                <button onClick={() => onCopyText(prompt.prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={() => { bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Copy className="w-3 h-3" /> העתק
                 </button>
+                {/* Anchor 3 — Export to PDF. The personal library row is its
+                    own "after" content (the saved enhanced prompt); there's
+                    no separate "before" string here, so we pass the same
+                    text as both. */}
+                <ExportPdfButton
+                  title={prompt.title || prompt.prompt.slice(0, 60)}
+                  original={prompt.prompt}
+                  enhanced={prompt.prompt}
+                  createdAt={typeof prompt.created_at === 'number' ? new Date(prompt.created_at).toISOString() : (prompt.created_at as string | undefined)}
+                  className="!p-1.5 !min-h-0 !min-w-0 !w-7 !h-7"
+                />
                 <button onClick={() => openStyleEditor(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Wand2 className="w-3 h-3" /> עיצוב
                 </button>

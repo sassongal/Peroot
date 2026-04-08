@@ -225,6 +225,17 @@ export async function POST(req: Request) {
         ? engine.generateRefinement(engineInput)
         : engine.generate(engineInput);
 
+    // Anchor 4: classify the input by what the USER attached, not where the
+    // request came from. The first context attachment wins; raw text is the
+    // default. This populates history.input_source so the dashboard and
+    // future filters can group "from PDF" vs "from URL" etc.
+    const firstContextType = contextAttachments?.[0]?.type;
+    const inputSource: 'text' | 'file' | 'url' | 'image' =
+        firstContextType === 'file' ? 'file'
+        : firstContextType === 'url' ? 'url'
+        : firstContextType === 'image' ? 'image'
+        : 'text';
+
     // 4.6 Result cache lookup. Scoped PER USER (no cross-user sharing) and
     // skipped whenever personalization signal or context attachments are
     // present — see src/lib/ai/enhance-cache.ts for the full skip rules.
@@ -294,6 +305,7 @@ export async function POST(req: Request) {
                     capability_mode: capability_mode || 'STANDARD',
                     title: prompt.slice(0, 60),
                     source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
+                    input_source: inputSource,
                     updated_at: new Date().toISOString(),
                 }).then(({ error: histErr }) => {
                     if (histErr) logger.warn('[Enhance:cache-hit] History insert failed:', histErr.message);
@@ -461,6 +473,7 @@ export async function POST(req: Request) {
                     capability_mode: capability_mode || 'STANDARD',
                     title: prompt.slice(0, 60),
                     source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
+                    input_source: inputSource,
                     updated_at: new Date().toISOString(),
                 }).then(({ error: histErr }) => {
                     if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
