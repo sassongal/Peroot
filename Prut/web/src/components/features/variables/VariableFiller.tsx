@@ -5,7 +5,12 @@ import { Save, Trash2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VariablePreset } from "@/hooks/usePresets";
 import { toast } from "sonner";
-import { getVariablePlaceholder } from "@/lib/variable-utils";
+import {
+  extractVariables,
+  getVariableLabel,
+  getVariablePlaceholder,
+  substituteVariables,
+} from "@/lib/variable-utils";
 
 interface VariableFillerProps {
   promptText: string;
@@ -13,12 +18,6 @@ interface VariableFillerProps {
   presets: VariablePreset[];
   onSavePreset: (name: string, variables: Record<string, string>) => Promise<void>;
   onDeletePreset: (id: string) => Promise<void>;
-}
-
-function extractVariables(text: string): string[] {
-  const matches = text.match(/\{([a-zA-Z_\u0590-\u05FF][a-zA-Z0-9_\u0590-\u05FF ]*)\}/g);
-  if (!matches) return [];
-  return [...new Set(matches.map(m => m.slice(1, -1)))];
 }
 
 export function VariableFiller({ promptText, onApply, presets, onSavePreset, onDeletePreset }: VariableFillerProps) {
@@ -33,11 +32,10 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
   if (variables.length === 0) return null;
 
   const handleApply = () => {
-    let filled = promptText;
-    for (const [key, val] of Object.entries(values)) {
-      filled = filled.replaceAll(`{${key}}`, val || `{${key}}`);
-    }
-    onApply(filled);
+    // Canonical substitution via the shared helper — identical logic to
+    // ResultSection and all other call sites, so behavior stays uniform
+    // across the whole app.
+    onApply(substituteVariables(promptText, values));
   };
 
   const loadPreset = (preset: VariablePreset) => {
@@ -97,21 +95,36 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
         </div>
       </div>
 
-      {/* Variable inputs */}
+      {/* Variable inputs — Hebrew labels from the canonical registry,
+          matching the ResultSection Variables Panel. The raw snake_case
+          key is exposed only through the `title` tooltip for power users. */}
       <div className="space-y-2 mb-4">
-        {variables.map(v => (
-          <div key={v} className="flex items-center gap-3">
-            <label className="text-xs text-[var(--text-muted)] w-28 shrink-0 truncate" title={v}>
-              {`{${v}}`}
-            </label>
-            <input
-              value={values[v] || ""}
-              onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
-              placeholder={getVariablePlaceholder(v)}
-              className="flex-1 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
-            />
-          </div>
-        ))}
+        {variables.map(v => {
+          const label = getVariableLabel(v);
+          const isFilled = (values[v] ?? "").trim().length > 0;
+          return (
+            <div key={v} className="flex items-center gap-3">
+              <label
+                className="text-xs text-[var(--text-secondary)] w-28 shrink-0 truncate font-medium"
+                title={v}
+              >
+                {label}
+              </label>
+              <input
+                value={values[v] || ""}
+                onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
+                placeholder={getVariablePlaceholder(v)}
+                aria-label={label}
+                className={cn(
+                  "flex-1 rounded-lg px-3 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-slate-600 focus:outline-none transition-colors border",
+                  isFilled
+                    ? "bg-emerald-500/[0.04] border-emerald-500/40 focus:border-emerald-500/60"
+                    : "bg-black/5 dark:bg-black/30 border-[var(--glass-border)] focus:border-sky-500/50"
+                )}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Actions */}

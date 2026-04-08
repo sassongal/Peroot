@@ -484,38 +484,58 @@ export function ResultSection({
           <ReferralShareCTA isAuthenticated={isAuthenticated} />
         )}
 
-        {/* Variables Panel - 5.6 RTL: stacks vertically on mobile, side-by-side on lg+ */}
+        {/* Variables Panel — shows Hebrew labels from the canonical
+            variable registry. Each input is bound to a `{token}` slot in
+            the prompt; typed values are inlined live via the displayNode
+            memo above, so the user sees the result update as they type.
+            Color scheme: sky-blue accent matches the unfilled-chip color
+            in the rendered prompt; emerald border appears when the
+            current input has a non-empty value, echoing the filled-mark
+            color. Pre-filled hints from prior prompts use the brand
+            amber so they stand out as "history, not mandatory". */}
         {placeholders.length > 0 && (
           <div className="glass-card p-5 rounded-xl border-[var(--glass-border)] bg-[var(--glass-bg)] flex flex-col gap-4 h-fit lg:w-72">
             <div className="flex items-center gap-2 pb-3 border-b border-[var(--glass-border)]">
-               <div className="bg-amber-500/20 text-amber-700 dark:text-amber-300 p-1.5 rounded-md">
+               <div className="bg-sky-500/20 text-sky-700 dark:text-sky-300 p-1.5 rounded-md">
                  <Plus className="w-4 h-4" />
                </div>
                <span className="text-sm font-semibold text-[var(--text-primary)]">{t.result_section.variables_title}</span>
             </div>
             <div className="flex flex-col gap-3">
                {placeholders.map((ph, i) => {
-                 const isPreFilled = preFilledKeys.includes(ph) && !!variableValues[ph];
+                 const label = getVariableLabel(ph);
+                 const exampleHint = getVariablePlaceholder(ph);
+                 const currentValue = variableValues[ph] || "";
+                 const isFilled = currentValue.trim().length > 0;
+                 const isPreFilled = preFilledKeys.includes(ph) && isFilled;
                  return (
                  <div key={i} className="space-y-1.5">
-                    <label className="text-xs text-[var(--text-muted)] font-medium ms-1 flex items-center justify-between" dir="rtl">
-                      <span>{ph}</span>
+                    <label className="text-xs font-medium ms-1 flex items-center justify-between gap-2" dir="rtl">
+                      <span
+                        className="text-[var(--text-primary)] truncate"
+                        title={ph}
+                      >
+                        {label}
+                      </span>
                       {isPreFilled && (
-                        <span className="text-[10px] text-amber-500 dark:text-amber-400 font-normal">
-                          from your last prompt
+                        <span className="text-[10px] text-amber-500 dark:text-amber-400 font-normal shrink-0">
+                          נטען מפרומפט קודם
                         </span>
                       )}
                     </label>
                     <input
                       dir="rtl"
-                      value={variableValues[ph] || ""}
+                      value={currentValue}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
-                      placeholder={getVariablePlaceholder(ph)}
+                      placeholder={exampleHint}
+                      aria-label={label}
                       className={cn(
-                        "w-full border rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-[var(--text-muted)]",
-                        isPreFilled
-                          ? "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-500/20"
-                          : "bg-black/5 dark:bg-black/40 border-[var(--glass-border)]"
+                        "w-full border rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none transition-colors placeholder:text-[var(--text-muted)]",
+                        isFilled
+                          ? "bg-emerald-500/[0.04] dark:bg-emerald-400/[0.04] border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60"
+                          : isPreFilled
+                            ? "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-500/20 focus:border-amber-500/50"
+                            : "bg-black/5 dark:bg-black/40 border-[var(--glass-border)] focus:border-sky-500/50"
                       )}
                     />
                  </div>
