@@ -116,6 +116,13 @@ export function ResultSection({
 
   const isInterrupted = streamPhase === 'interrupted';
 
+  // Hover sync: when the user hovers an input row in the Variables
+  // Panel, the matching chip in the rendered prompt picks up a stronger
+  // ring (and vice-versa). Cleared on mouse leave / blur. Cheap because
+  // typical prompts have <50 chips and React diffing is fast at that
+  // scale.
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+
   // Plain-text substitution: keeps copy, export, share, and WhatsApp
   // handoffs semantically identical to the string the LLM returned,
   // with user-filled variable values inlined. Missing values leave the
@@ -127,10 +134,15 @@ export function ResultSection({
 
   // Styled rendering for the "after" view: shows Hebrew labels in
   // sky-blue chips for unfilled tokens and emerald marks for filled
-  // values. This is visual-only — it never touches copy/export flows.
+  // values. The third arg threads the hover state in so chips light up
+  // when their matching input row is hovered. onHoverKey lets the chips
+  // sync the highlight back to the input column.
   const displayNode = useMemo(
-    () => renderPromptWithVariables(completion, variableValues),
-    [completion, variableValues]
+    () => renderPromptWithVariables(completion, variableValues, {
+      hoveredKey,
+      onHoverKey: setHoveredKey,
+    }),
+    [completion, variableValues, hoveredKey]
   );
 
   // Unified copy handler used by all copy entry-points inside this component.
@@ -546,8 +558,22 @@ export function ResultSection({
                  const currentValue = variableValues[ph] || "";
                  const isFilled = currentValue.trim().length > 0;
                  const isPreFilled = preFilledKeys.includes(ph) && isFilled;
+                 const isHovered = hoveredKey === ph;
+                 // Sync hover state with the matching chip/mark in the
+                 // rendered prompt. We attach to the row wrapper so both
+                 // the label and the input itself trigger highlight, and
+                 // we mirror onFocus/onBlur for keyboard navigation.
+                 const hoverHandlers = {
+                   onMouseEnter: () => setHoveredKey(ph),
+                   onMouseLeave: () => setHoveredKey(null),
+                 };
                  return (
-                 <div key={i} className="space-y-1.5">
+                 <div
+                   key={i}
+                   className="space-y-1.5"
+                   data-var-key={ph}
+                   {...hoverHandlers}
+                 >
                     <label className="text-xs font-medium ms-1 flex items-center justify-between gap-2" dir="rtl">
                       <span
                         className="text-[var(--text-primary)] truncate"
@@ -565,15 +591,20 @@ export function ResultSection({
                       dir="rtl"
                       value={currentValue}
                       onChange={(e) => onVariableChange?.(ph, e.target.value)}
+                      onFocus={() => setHoveredKey(ph)}
+                      onBlur={() => setHoveredKey(null)}
                       placeholder={exampleHint}
                       aria-label={label}
                       className={cn(
-                        "w-full border rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none transition-colors placeholder:text-[var(--text-muted)]",
+                        "w-full border rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none transition-all placeholder:text-[var(--text-muted)]",
                         isFilled
                           ? "bg-emerald-500/[0.04] dark:bg-emerald-400/[0.04] border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60"
                           : isPreFilled
                             ? "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-500/20 focus:border-amber-500/50"
-                            : "bg-black/5 dark:bg-black/40 border-[var(--glass-border)] focus:border-sky-500/50"
+                            : "bg-black/5 dark:bg-black/40 border-[var(--glass-border)] focus:border-sky-500/50",
+                        isHovered && (isFilled
+                          ? "ring-2 ring-emerald-500/40 dark:ring-emerald-400/40"
+                          : "ring-2 ring-sky-500/40 dark:ring-sky-400/40")
                       )}
                     />
                  </div>

@@ -1,5 +1,6 @@
 import { ReactNode, Children, isValidElement, cloneElement, ReactElement, Fragment } from "react";
 import sanitizeHtml from "sanitize-html";
+import { cn } from "@/lib/utils";
 import { VARIABLE_TOKEN_REGEX, extractVariables, getVariableLabel } from "@/lib/variable-utils";
 
 /**
@@ -33,11 +34,30 @@ export const extractPlaceholders = extractVariables;
  * The function is side-effect-free and memoization-friendly — callers
  * should wrap the call in `useMemo(..., [text, values])`.
  */
+export interface RenderPromptOptions {
+    /**
+     * The variable key currently hovered in the Variables Panel input
+     * column. When set, the matching chip/mark in the rendered prompt
+     * gets a stronger ring so the user can visually trace
+     * input ↔ prompt position. Used by ResultSection.
+     */
+    hoveredKey?: string | null;
+    /**
+     * Callback fired when the user hovers a chip/mark inside the
+     * rendered prompt. Lets the parent ResultSection sync the highlight
+     * back to the matching input row in the Variables Panel.
+     */
+    onHoverKey?: (key: string | null) => void;
+}
+
 export function renderPromptWithVariables(
     text: string,
-    values: Record<string, string | undefined> = {}
+    values: Record<string, string | undefined> = {},
+    options: RenderPromptOptions = {}
 ): ReactNode[] {
     if (!text) return [];
+
+    const { hoveredKey = null, onHoverKey } = options;
 
     // Clone the global regex into a local one so concurrent callers don't
     // share `lastIndex` state. matchAll would also work but we need the
@@ -60,6 +80,16 @@ export function renderPromptWithVariables(
 
         const key = rawKey.trim();
         const value = values[key]?.trim();
+        const isHovered = hoveredKey === key;
+
+        // Hover handlers — only attached when the parent provided an
+        // onHoverKey callback. Otherwise the chips behave as before.
+        const hoverProps = onHoverKey
+            ? {
+                  onMouseEnter: () => onHoverKey(key),
+                  onMouseLeave: () => onHoverKey(null),
+              }
+            : {};
 
         if (value) {
             // Filled: show the user's value prominently so they can
@@ -67,8 +97,15 @@ export function renderPromptWithVariables(
             parts.push(
                 <mark
                     key={`v-${start}-${key}`}
-                    className="rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 border border-emerald-500/30 dark:border-emerald-400/30 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 font-semibold"
+                    data-var-key={key}
+                    className={cn(
+                        "rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 border text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 font-semibold transition-all",
+                        isHovered
+                            ? "border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/40 dark:ring-emerald-400/40"
+                            : "border-emerald-500/30 dark:border-emerald-400/30"
+                    )}
                     title={`${getVariableLabel(key)}: ${value}`}
+                    {...hoverProps}
                 >
                     {value}
                 </mark>
@@ -85,9 +122,16 @@ export function renderPromptWithVariables(
             parts.push(
                 <span
                     key={`p-${start}-${key}`}
+                    data-var-key={key}
                     dir="ltr"
-                    className="inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border border-sky-500/40 dark:border-sky-400/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 font-medium whitespace-nowrap"
+                    className={cn(
+                        "inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border text-sky-700 dark:text-sky-300 px-1.5 py-0.5 font-medium whitespace-nowrap transition-all",
+                        isHovered
+                            ? "border-sky-500 dark:border-sky-400 ring-2 ring-sky-500/40 dark:ring-sky-400/40"
+                            : "border-sky-500/40 dark:border-sky-400/40"
+                    )}
                     title={key}
+                    {...hoverProps}
                 >
                     <span aria-hidden="true">{"{"}</span>
                     <span dir="rtl" className="px-0.5">
