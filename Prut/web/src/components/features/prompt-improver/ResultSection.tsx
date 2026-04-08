@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, RefreshCw, Star } from "lucide-react";
 import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,12 @@ interface ResultSectionProps {
   onCopy: (text: string, withWatermark?: boolean) => void;
   onBack: () => void;
   onSave: () => void;
+  /**
+   * Save the current completion to the personal library AND immediately
+   * mark it as a favorite. Replaces the old like/dislike buttons with a
+   * single "keeper" signal the user asked for.
+   */
+  onSaveAsFavorite?: () => void;
   onSaveAsTemplate?: () => void;
   placeholders?: string[];
   variableValues?: Record<string, string>;
@@ -92,6 +98,7 @@ export function ResultSection({
   onCopy,
   onBack,
   onSave,
+  onSaveAsFavorite,
   onSaveAsTemplate,
   placeholders = [],
   variableValues = {},
@@ -125,6 +132,34 @@ export function ResultSection({
     const computed = EnhancedScorer.score(textToScore, capabilityMode ?? CapabilityMode.STANDARD);
     setBreakdownScore(computed);
   };
+
+  // Pre-compute the score breakdown for the PDF export. We use useMemo so
+  // the scorer only runs when the generated prompt or the mode actually
+  // changes — clicking "export" must be instant, not re-score on every
+  // click. Mirrors the drawer's Hebrew label map so the printed table
+  // matches what the user sees on screen.
+  const pdfBreakdown = useMemo(() => {
+    if (!completion) return null;
+    const labels: Record<string, string> = {
+      length: 'אורך', role: 'תפקיד', task: 'משימה', context: 'הקשר',
+      specificity: 'ספציפיות', format: 'פורמט פלט', constraints: 'מגבלות',
+      structure: 'מבנה', channel: 'ערוץ / פלטפורמה', examples: 'דוגמאות',
+      clarity: 'בהירות', groundedness: 'עיגון במקורות', safety: 'גבולות ובטיחות',
+      measurability: 'מדידות', framework: 'מסגרת',
+      subject: 'נושא', style: 'סגנון', composition: 'קומפוזיציה',
+      lighting: 'תאורה', color: 'צבע', quality: 'איכות טכנית', motion: 'תנועה',
+    };
+    const s = EnhancedScorer.score(completion, capabilityMode ?? CapabilityMode.STANDARD);
+    return {
+      breakdown: s.breakdown.map(d => ({
+        label: labels[d.dimension] ?? d.dimension,
+        score: d.score,
+        maxScore: d.maxScore,
+      })),
+      strengths: s.strengths,
+      weaknesses: s.topWeaknesses,
+    };
+  }, [completion, capabilityMode]);
 
   const isInterrupted = streamPhase === 'interrupted';
 
@@ -228,6 +263,9 @@ export function ResultSection({
                     }
                   : null
               }
+              breakdown={pdfBreakdown?.breakdown}
+              strengths={pdfBreakdown?.strengths}
+              weaknesses={pdfBreakdown?.weaknesses}
               disabled={isLoading || !completion}
             />
             <button
@@ -454,6 +492,17 @@ export function ResultSection({
                     <Plus className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">{t.result_section.save}</span>
                   </button>
+                  {onSaveAsFavorite && (
+                    <button
+                      onClick={onSaveAsFavorite}
+                      className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/5 text-amber-600 dark:text-amber-300 text-xs hover:bg-amber-500/15 transition-colors cursor-pointer min-h-11 min-w-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                      title="שמור ומסמן כמועדף"
+                      aria-label="שמור ומסמן כמועדף"
+                    >
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span className="hidden sm:inline">שמור למועדפים</span>
+                    </button>
+                  )}
                   {onSaveAsTemplate && placeholders.length > 0 && (
                     <button
                       onClick={onSaveAsTemplate}

@@ -11,6 +11,14 @@ export interface ExportPdfButtonProps {
   enhanced: string;
   score?: { before: number | null; after: number } | null;
   createdAt?: string;
+  /**
+   * Optional per-dimension breakdown. When passed, the generated PDF will
+   * include a table that mirrors the in-app ScoreBreakdownDrawer so the
+   * export matches what the user sees on screen.
+   */
+  breakdown?: { label: string; score: number; maxScore: number }[];
+  strengths?: string[];
+  weaknesses?: string[];
   className?: string;
   disabled?: boolean;
 }
@@ -26,6 +34,9 @@ export function ExportPdfButton({
   enhanced,
   score,
   createdAt,
+  breakdown,
+  strengths,
+  weaknesses,
   className,
   disabled,
 }: ExportPdfButtonProps) {
@@ -38,7 +49,16 @@ export function ExportPdfButton({
       const { downloadPromptPdf } = await import(
         '@/lib/export/download-prompt-pdf'
       );
-      await downloadPromptPdf({ title, original, enhanced, score, createdAt });
+      await downloadPromptPdf({
+        title,
+        original,
+        enhanced,
+        score,
+        createdAt,
+        breakdown,
+        strengths,
+        weaknesses,
+      });
       toast.success('ה-PDF הורד בהצלחה');
     } catch (err) {
       console.error('[ExportPdfButton] download failed:', err);

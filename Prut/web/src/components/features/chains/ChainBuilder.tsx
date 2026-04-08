@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, GripVertical, ArrowDown, X, Save } from "lucide-react";
+import { Plus, Trash2, GripVertical, ArrowDown, X, Save, HelpCircle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChainStep } from "@/hooks/useChains";
 import { PersonalPrompt } from "@/lib/types";
@@ -25,6 +25,12 @@ export function ChainBuilder({
 }: ChainBuilderProps) {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
+  // Collapsed "how it works" card. Expanded by default on first build
+  // (no initial title / no initial steps), collapsed when editing an
+  // existing chain — experienced users don't need the explainer.
+  const [introOpen, setIntroOpen] = useState(
+    !initialTitle && initialSteps.length === 0
+  );
   const [steps, setSteps] = useState<ChainStep[]>(
     initialSteps.length > 0
       ? initialSteps
@@ -108,6 +114,40 @@ export function ChainBuilder({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* How-it-works intro card — explains chains in 2-3 lines with a
+            concrete example. Collapsible so it doesn't get in the way on
+            re-visits. */}
+        <div className="mb-5 rounded-xl border border-purple-500/20 bg-purple-500/5 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIntroOpen(!introOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-500/10 transition-colors"
+            aria-expanded={introOpen}
+          >
+            <div className="flex items-center gap-2 text-purple-300">
+              <HelpCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">איך שרשראות עובדות?</span>
+            </div>
+            <ChevronDown className={cn("w-4 h-4 text-purple-300 transition-transform", introOpen && "rotate-180")} />
+          </button>
+          {introOpen && (
+            <div className="px-4 pb-4 text-xs text-slate-300 leading-relaxed space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+              <p>
+                שרשרת פרומפטים היא רצף של 2–10 שלבים שמייצרים יחד תוצר מורכב. כל שלב מקבל את
+                הפלט של השלב הקודם כקלט, כך שתוכל לפרק משימה גדולה (למשל: מחקר → סיכום → כתיבת פוסט → עריכה)
+                לשלבים קטנים שכל אחד מהם מבצע משהו ממוקד.
+              </p>
+              <div className="rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-[11px] text-slate-400 space-y-1">
+                <div className="text-purple-300 font-semibold">דוגמה: יצירת פוסט לינקדאין</div>
+                <div>1. מחקר על הנושא → 2. חילוץ 3 תובנות מרכזיות → 3. כתיבת טיוטה → 4. חידוד טון → 5. הוספת hook</div>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                <strong className="text-slate-300">מה נשמר:</strong> השם, התיאור, כל השלבים, וסדר הריצה. ערכי משתנים נקבעים בזמן הריצה ולא נשמרים עם השרשרת.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Title & Description */}

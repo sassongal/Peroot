@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot, RotateCcw, ExternalLink } from "lucide-react";
+import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot, RotateCcw, ExternalLink, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
+import { buildChainShareUrl } from "@/lib/chains/share-url";
 import { toast } from "sonner";
 
 const MODE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -54,6 +55,34 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
     toast.success("השרשרת אופסה");
   };
 
+  // Share: encode the chain into a self-contained URL and copy it. The
+  // receiver opens the link, HomeClient decodes `?chain=...` on mount,
+  // and offers to import. No backend needed for the MVP — the full
+  // payload lives in the URL itself (base64url).
+  const handleShare = async () => {
+    try {
+      const url = buildChainShareUrl(chain);
+      // Prefer native share sheet on mobile (iOS/Android), fall back to
+      // clipboard on desktop so the user can paste into chat/email.
+      if (typeof navigator !== 'undefined' && 'share' in navigator) {
+        try {
+          await navigator.share({
+            title: `שרשרת: ${chain.title}`,
+            text: chain.description || 'שרשרת פרומפטים מ-Peroot',
+            url,
+          });
+          return;
+        } catch {
+          // User cancelled — fall through to clipboard copy.
+        }
+      }
+      await navigator.clipboard.writeText(url);
+      toast.success('קישור לשיתוף הועתק ללוח');
+    } catch {
+      toast.error('שיתוף נכשל');
+    }
+  };
+
   // Open the resolved prompt in an external LLM in a new tab. ChatGPT and
   // Claude both accept a `?q=` style deep-link but use different query
   // param names. We fall back to URL-encoded clipboard + toast when the
@@ -74,6 +103,34 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  // Bulk-launch all steps at once. We stagger window.open by 150ms per
+  // tab because most browsers throttle rapid bulk popups and only open
+  // the first one. For the ChatGPT/Claude URL-query case this gives the
+  // user one tab per step with the resolved prompt pre-filled. For
+  // Gemini we fall back to concatenating all steps into clipboard and
+  // opening a single tab, since Gemini has no query param.
+  const openAllStepsInLLM = (target: 'chatgpt' | 'claude' | 'gemini') => {
+    if (target === 'gemini') {
+      const all = chain.steps
+        .map((_, i) => `## שלב ${i + 1}\n${getResolvedPrompt(i)}`)
+        .join('\n\n---\n\n');
+      void navigator.clipboard.writeText(all);
+      window.open('https://gemini.google.com/app', '_blank', 'noopener,noreferrer');
+      toast.success('כל השלבים הועתקו — הדבק ב-Gemini');
+      return;
+    }
+    chain.steps.forEach((_, i) => {
+      const encoded = encodeURIComponent(getResolvedPrompt(i));
+      const url = target === 'chatgpt'
+        ? `https://chat.openai.com/?q=${encoded}`
+        : `https://claude.ai/new?q=${encoded}`;
+      setTimeout(() => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }, i * 150);
+    });
+    toast.success(`נפתחים ${chain.steps.length} טאבים ב-${target === 'chatgpt' ? 'ChatGPT' : 'Claude'}`);
   };
 
   // Build the prompt with variable substitution and previous output injection
@@ -126,6 +183,14 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                 <RotateCcw className="w-4 h-4" />
               </button>
             )}
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors"
+              title="שתף שרשרת"
+              aria-label="העתק קישור לשיתוף"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
             <button
               onClick={onClose}
               className="p-2 rounded-full hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors"
@@ -282,7 +347,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             directly in ChatGPT / Claude / Gemini in a new tab. Gemini
             lacks a deep-link prefill, so we copy and toast a hint. */}
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--glass-border)]">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider shrink-0">פתח ב:</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider shrink-0">פתח שלב זה ב:</span>
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => openInLLM('chatgpt', resolvedPrompt)}
@@ -310,6 +375,42 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             </button>
           </div>
         </div>
+
+        {/* Bulk launcher — open all resolved steps at once. For
+            ChatGPT/Claude this opens one tab per step (staggered to
+            avoid popup throttling). For Gemini it concatenates into
+            clipboard and opens a single tab. */}
+        {chain.steps.length > 1 && (
+          <div className="flex items-center gap-2 mt-3">
+            <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider shrink-0">פתח את כל השלבים ב:</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => openAllStepsInLLM('chatgpt')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-300 text-xs hover:bg-amber-500/15 transition-colors"
+                title={`פתח ${chain.steps.length} טאבים ב-ChatGPT`}
+              >
+                <ExternalLink className="w-3 h-3" />
+                ChatGPT ×{chain.steps.length}
+              </button>
+              <button
+                onClick={() => openAllStepsInLLM('claude')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-300 text-xs hover:bg-amber-500/15 transition-colors"
+                title={`פתח ${chain.steps.length} טאבים ב-Claude`}
+              >
+                <ExternalLink className="w-3 h-3" />
+                Claude ×{chain.steps.length}
+              </button>
+              <button
+                onClick={() => openAllStepsInLLM('gemini')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-300 text-xs hover:bg-amber-500/15 transition-colors"
+                title="העתק הכל ופתח Gemini"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Gemini (הכל)
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

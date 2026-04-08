@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { toast } from "sonner";
 import {
     BookOpen, Star, Plus, Search,
     ChevronDown, ChevronLeft, ChevronRight, Link2
@@ -53,6 +55,25 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
     handlePageChange,
     getPaginationPages,
   } = shared;
+
+  // Listen for shared-chain imports dispatched by HomeClient after it
+  // decodes a `?chain=<base64>` query param on mount. We import via the
+  // same path as manual import so dedupe/validation stays in one place.
+  useEffect(() => {
+    const handler = async (e: Event) => {
+      const detail = (e as CustomEvent<{ json: string }>).detail;
+      if (!detail?.json) return;
+      try {
+        await importChain(detail.json);
+        setChainsExpanded(true);
+        toast.success('שרשרת משותפת נוספה לספריה שלך');
+      } catch {
+        toast.error('ייבוא השרשרת נכשל');
+      }
+    };
+    window.addEventListener('peroot:import-shared-chain', handler);
+    return () => window.removeEventListener('peroot:import-shared-chain', handler);
+  }, [importChain, setChainsExpanded]);
 
   // ─── Skeleton ─────────────────────────────────────────────────────────────
 
@@ -127,7 +148,7 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
     <main className="flex-1 min-w-0 space-y-4">
 
       {/* Chains section (collapsible) */}
-      <div className="rounded-xl border border-white/8 bg-[var(--glass-bg)] overflow-hidden">
+      <div data-chains-section className="rounded-xl border border-white/8 bg-[var(--glass-bg)] overflow-hidden">
         <button
           onClick={() => setChainsExpanded(!chainsExpanded)}
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"

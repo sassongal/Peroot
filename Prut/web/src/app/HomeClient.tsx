@@ -25,7 +25,7 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useContextAttachments } from "@/hooks/useContextAttachments";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
-import { Clock } from "lucide-react";
+import { Clock, Link2 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
@@ -88,7 +88,8 @@ function PageContent() {
     filteredLibrary,
     libraryPrompts,
     personalLibrary,
-    incrementUseCount
+    incrementUseCount,
+    handleToggleFavorite,
   } = useLibraryContext();
 
   const { state: ps, dispatch } = usePromptWorkflow();
@@ -231,6 +232,44 @@ function PageContent() {
       setShowWhatIsThis(true);
       localStorage.setItem('peroot_seen_explainer', 'true');
     }
+  }, []);
+
+  // Shared-chain deep link: when a user opens `?chain=<base64>`, decode
+  // the payload, navigate to personal view, and hand off to
+  // PersonalLibraryGrid to import via useChains (single source of truth
+  // for dedupe/validation). The URL is cleaned up so reloads don't
+  // re-import the same chain. Invalid payloads are silently ignored
+  // because HomeClient mounts on every route entry.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const encoded = url.searchParams.get('chain');
+    if (!encoded) return;
+    (async () => {
+      const { decodeSharedChain } = await import('@/lib/chains/share-url');
+      const payload = decodeSharedChain(encoded);
+      // Clean up the URL regardless of validity so a reload doesn't retry.
+      url.searchParams.delete('chain');
+      window.history.replaceState({}, '', url.toString());
+      if (!payload) return;
+      // Navigate to personal view and dispatch the import event; the
+      // PersonalLibraryGrid listener will call importChain + toast.
+      handleNavPersonal();
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent('peroot:import-shared-chain', {
+            detail: {
+              json: JSON.stringify({
+                title: payload.title,
+                description: payload.description,
+                steps: payload.steps,
+              }),
+            },
+          })
+        );
+      }, 100);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Show celebratory toast when a referral bonus was redeemed at signup
@@ -779,6 +818,38 @@ function PageContent() {
     toast.success("נשמר לספריה האישית!");
   }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
 
+  // Save-and-favorite: one-tap action that saves the current completion
+  // to the personal library AND marks it as a favorite. This is the
+  // star-icon replacement for the old thumbs-up — the "keeper" signal
+  // users asked for on the result card. Uses the id returned by
+  // addPrompt to immediately toggle favorite state, so the star lights
+  // up in the library the moment the user hits the star.
+  const saveCompletionAsFavorite = useCallback(async () => {
+    if (!user) {
+       showLoginRequired("שמירת מועדפים");
+       return;
+    }
+    if (!ps.completion.trim()) return;
+    const newId = await addPrompt({
+      title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
+      prompt: ps.completion,
+      category: ps.detectedCategory || ps.selectedCategory,
+      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
+      capability_mode: ps.selectedCapability,
+      use_case: "נשמר מהתוצאה",
+      source: "manual"
+    });
+    recordUsageSignal("save", ps.completion);
+    markFeatureUsed("peroot_used_personal_library");
+    if (newId) {
+      await handleToggleFavorite("personal", newId);
+      toast.success("נשמר ונוסף למועדפים ⭐");
+    } else {
+      // addPrompt returned undefined when a fuzzy duplicate was found.
+      // The dedupe toast already fired — no second toast here.
+    }
+  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, handleToggleFavorite, showLoginRequired]);
+
   const saveAsTemplate = useCallback(() => {
     if (!user) {
        showLoginRequired("שמירת תבניות");
@@ -896,9 +967,31 @@ function PageContent() {
     else if (view === "personal") handleNavPersonal();
   }, [setViewMode, handleNavLibrary, handleNavPersonal]);
 
+  // Deep-link the top-nav "Chains" tab into the personal library's
+  // chains section. We navigate to personal view first, then dispatch a
+  // window event that PersonalLibraryView listens for to auto-expand the
+  // collapsible chains block and scroll it into view. Keeps the nav
+  // stateless — no prop drilling, no new context.
+  const handleOpenChainsFromNav = useCallback(() => {
+    handleNavPersonal();
+    // Let the personal view mount first, then trigger the expand.
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('peroot:open-chains'));
+    }, 50);
+  }, [handleNavPersonal]);
+
   const topNavBar = (
     <TopNavBar viewMode={viewMode} onNavigate={handleTopNavNavigate}>
       <PromptLimitIndicator creditsBalance={creditsRemaining} />
+      <button
+        onClick={handleOpenChainsFromNav}
+        className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border border-white/10 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 cursor-pointer"
+        aria-label="שרשראות"
+        title="שרשראות פרומפטים"
+      >
+        <Link2 className="w-4 h-4" />
+        <span className="hidden md:inline">שרשראות</span>
+      </button>
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className={cn(
@@ -1065,6 +1158,7 @@ function PageContent() {
           completionScore={completionScore}
           inputScore={inputScore}
           onSave={saveCompletionToPersonal}
+          onSaveAsFavorite={saveCompletionAsFavorite}
           onSaveAsTemplate={saveAsTemplate}
           onBack={() => dispatch({ type: 'SET_COMPLETION', payload: "" })}
           placeholders={placeholders}

@@ -28,6 +28,7 @@ export interface HomeResultSectionProps {
   completionScore: PromptScore;
   inputScore: PromptScore;
   onSave: () => void;
+  onSaveAsFavorite: () => void;
   onSaveAsTemplate: () => void;
   onBack: () => void;
   placeholders: string[];
@@ -63,6 +64,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(({
   completionScore,
   inputScore,
   onSave,
+  onSaveAsFavorite,
   onSaveAsTemplate,
   onBack,
   placeholders,
@@ -98,6 +100,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(({
               onCopy={onCopy}
               completionScore={completionScore}
               onSave={onSave}
+              onSaveAsFavorite={onSaveAsFavorite}
               onSaveAsTemplate={onSaveAsTemplate}
               onBack={onBack}
               placeholders={placeholders}

@@ -144,6 +144,53 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     lineHeight: 1.7,
   },
+  breakdownBox: {
+    marginTop: 4,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 6,
+    padding: 12,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 3,
+  },
+  breakdownLabel: {
+    fontSize: 10,
+    color: '#333',
+    textAlign: 'right',
+    flex: 1,
+  },
+  breakdownBar: {
+    width: 110,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#f1f1f1',
+    marginHorizontal: 8,
+    overflow: 'hidden',
+  },
+  breakdownBarFill: {
+    height: 5,
+    borderRadius: 3,
+  },
+  breakdownScore: {
+    fontSize: 9,
+    color: '#666',
+    width: 38,
+    textAlign: 'left',
+  },
+  strengthsBox: {
+    marginBottom: 10,
+  },
+  chipLine: {
+    fontSize: 9,
+    color: '#555',
+    textAlign: 'right',
+    marginTop: 2,
+  },
   footer: {
     position: 'absolute',
     bottom: 24,
@@ -159,12 +206,28 @@ const styles = StyleSheet.create({
   },
 });
 
+export interface PromptPdfBreakdownDimension {
+  label: string;
+  score: number;
+  maxScore: number;
+}
+
 export interface PromptPdfDocumentProps {
   title: string;
   original: string;
   enhanced: string;
   score?: { before: number | null; after: number } | null;
   createdAt?: string;
+  /** Optional per-dimension breakdown — mirrors the in-app ScoreBreakdownDrawer. */
+  breakdown?: PromptPdfBreakdownDimension[];
+  strengths?: string[];
+  weaknesses?: string[];
+}
+
+function barColor(pct: number): string {
+  if (pct >= 70) return '#10b981'; // emerald
+  if (pct >= 40) return '#f59e0b'; // amber
+  return '#ef4444'; // rose
 }
 
 function formatHeDate(iso?: string): string {
@@ -186,6 +249,9 @@ export function PromptPdfDocument({
   enhanced,
   score,
   createdAt,
+  breakdown,
+  strengths,
+  weaknesses,
 }: PromptPdfDocumentProps) {
   ensureFontRegistered();
 
@@ -218,6 +284,49 @@ export function PromptPdfDocument({
           <View style={styles.scoreBadge}>
             <Text style={styles.scoreText}>{scoreLabel}</Text>
           </View>
+        ) : null}
+
+        {/* Per-dimension breakdown — mirrors the in-app ScoreBreakdownDrawer
+            so the printed export matches what the user sees on screen. */}
+        {breakdown && breakdown.length > 0 ? (
+          <>
+            <Text style={styles.sectionLabel}>פירוק הציון</Text>
+            <View style={styles.breakdownBox}>
+              {(strengths && strengths.length > 0) || (weaknesses && weaknesses.length > 0) ? (
+                <View style={styles.strengthsBox}>
+                  {strengths && strengths.length > 0 ? (
+                    <Text style={styles.chipLine}>
+                      ✓ מה עובד: {strengths.slice(0, 3).join(' · ')}
+                    </Text>
+                  ) : null}
+                  {weaknesses && weaknesses.length > 0 ? (
+                    <Text style={styles.chipLine}>
+                      ! איך לשפר: {weaknesses.slice(0, 3).join(' · ')}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+              {breakdown.map((dim, i) => {
+                const pct = Math.round((dim.score / dim.maxScore) * 100);
+                return (
+                  <View key={i} style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>{dim.label}</Text>
+                    <View style={styles.breakdownBar}>
+                      <View
+                        style={[
+                          styles.breakdownBarFill,
+                          { width: `${pct}%`, backgroundColor: barColor(pct) },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.breakdownScore}>
+                      {dim.score}/{dim.maxScore}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </>
         ) : null}
 
         {hasBefore ? (
