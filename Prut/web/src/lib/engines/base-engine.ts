@@ -1,10 +1,11 @@
 
-import { EngineConfig, EngineInput, EngineOutput, PromptEngine, TargetModel } from "./types";
+import { EngineConfig, EngineInput, EngineOutput, PromptEngine, TargetModel, InjectionStats } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import { getRegistryInstructionBlock } from "../variable-utils";
 import { getIterationInstructions } from "./refinement/iteration-guidance";
 import { getQuestionsPromptInstructions } from "./refinement/enhanced-questions";
 import { EnhancedScorer, type EnhancedScore } from "./scoring/enhanced-scorer";
+import { memoryFlags } from "../memory/injection-flags";
 
 /**
  * Escape template variable patterns in user-supplied values to prevent
@@ -521,26 +522,62 @@ ${registryList}`;
      };
 
      const systemPrompt = this.buildTemplate(this.config.system_prompt_template, variables);
-     
+
      let contextInjected = systemPrompt;
-     if (input.userHistory && input.userHistory.length > 0) {
+
+     // Personalization injection telemetry. Stamped onto EngineOutput so the
+     // enhance route can persist it to activity_logs.details for A/B and
+     // score-impact analysis. Without this we cannot prove the layers work.
+     const injectionStats: InjectionStats = {
+         personalityInjected: false,
+         historyCount: 0,
+         historyHasEnhanced: false,
+         historySource: 'none',
+         approxAddedTokens: 0,
+     };
+     const startLen = contextInjected.length;
+
+     if (memoryFlags.historyEnabled && input.userHistory && input.userHistory.length > 0) {
+         // When `enhanced` is present we render before→after pairs, which
+         // teach the model the desired transformation, not just the user's
+         // raw style. Falls back to the legacy "raw prompt only" rendering
+         // for entries without an enhanced version (e.g., personal_library
+         // rows that were never run through Peroot).
+         const hasEnhanced = input.userHistory.some(h => h.enhanced && h.enhanced.trim().length > 0);
          const historyBlock = input.userHistory
-            .map(h => `Title: ${h.title}\nPrompt:\n${h.prompt.slice(0, 500)}`)
+            .map(h => {
+                const before = h.prompt.slice(0, 500);
+                if (h.enhanced && h.enhanced.trim().length > 0) {
+                    return `Title: ${h.title}\nBefore (user wrote):\n${before}\n\nAfter (Peroot enhanced):\n${h.enhanced.slice(0, 800)}`;
+                }
+                return `Title: ${h.title}\nPrompt:\n${before}`;
+            })
             .join('\n\n---\n\n');
-            
-         contextInjected += `\n\n[USER_STYLE_CONTEXT]\nThe following are examples of prompts this user has saved or liked. 
-Analyze their tone, phrasing, and structure to ensure the result feels natural to them while maintaining professional engineering standards:
-\n${historyBlock}\n`;
+
+         const intro = hasEnhanced
+            ? `The following are recent before→after pairs from this user's own enhancement history. Learn the transformation pattern — how their raw ideas were elevated into great prompts — and apply the same level of structure, specificity, and tone to the new request:`
+            : `The following are examples of prompts this user has saved or liked. Analyze their tone, phrasing, and structure to ensure the result feels natural to them while maintaining professional engineering standards:`;
+
+         contextInjected += `\n\n[USER_STYLE_CONTEXT]\n${intro}\n\n${historyBlock}\n`;
+
+         injectionStats.historyCount = input.userHistory.length;
+         injectionStats.historyHasEnhanced = hasEnhanced;
+         injectionStats.historySource = hasEnhanced ? 'recent_history' : 'use_count';
      }
 
-     if (input.userPersonality) {
+     if (memoryFlags.personalityEnabled && input.userPersonality) {
          const { tokens, brief, format } = input.userPersonality;
          contextInjected += `\n\n[USER_PERSONALITY_TRAITS]\n`;
          if (tokens.length > 0) contextInjected += `- Key Style Tokens: ${tokens.join(', ')}\n`;
          if (format) contextInjected += `- Preferred Format: ${format}\n`;
          if (brief) contextInjected += `- Personality Profile: ${brief}\n`;
          contextInjected += `\nApply these traits strictly to the output.\n`;
+         injectionStats.personalityInjected = true;
      }
+
+     // Rough char/4 token estimate for cost observability. Not exact, but
+     // good enough to spot a runaway block in the dashboard.
+     injectionStats.approxAddedTokens = Math.round((contextInjected.length - startLen) / 4);
 
      if (input.context && input.context.length > 0) {
          const fileCount = input.context.filter(a => a.type === 'file').length;
@@ -664,6 +701,7 @@ ${isMinimalPrompt ? `## חשוב — פרומפט מינימלי זוהה!
              : this.buildTemplate(this.config.user_prompt_template, variables),
          outputFormat: "text",
          requiredFields: [],
+         injectionStats,
      };
   }
 

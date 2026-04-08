@@ -15,6 +15,7 @@ import { validateApiKey } from "@/lib/api-auth";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
+import { memoryFlags } from "@/lib/memory/injection-flags";
 
 export const maxDuration = 30;
 
@@ -124,10 +125,33 @@ export async function POST(req: Request) {
 
     // Parallel fetch: skip profile+admin queries if cached
     // Uses queryClient (service role for Bearer token, regular supabase otherwise)
+    //
+    // History recall source: by default we now fetch from `history` (top-3
+    // most recent enhances) which gives us the *enhanced_prompt* — letting
+    // the model see before→after pairs instead of raw user prompts only.
+    // Set PEROOT_LEGACY_HISTORY_RECALL=1 to revert to the use_count-ordered
+    // fetch from personal_library (raw prompts only).
+    const useHistoryTable = memoryFlags.useHistoryTableForRecall;
+    const historyRecallPromise = !isRefinement && memoryFlags.historyEnabled
+        ? (useHistoryTable
+            ? queryClient.from('history')
+                .select('title, prompt, enhanced_prompt')
+                .eq('user_id', userId)
+                .not('enhanced_prompt', 'is', null)
+                .order('created_at', { ascending: false })
+                .limit(3)
+            : queryClient.from('personal_library')
+                .select('title, prompt')
+                .eq('user_id', userId)
+                .order('use_count', { ascending: false })
+                .order('created_at', { ascending: false })
+                .limit(3))
+        : Promise.resolve({ data: null });
+
     const contextPromise = userId ? Promise.all([
         cachedHit ? Promise.resolve({ data: null }) : queryClient.from('profiles').select('plan_tier').eq('id', userId).maybeSingle(),
-        !isRefinement ? queryClient.from('personal_library').select('title, prompt').eq('user_id', userId).order('use_count', { ascending: false }).order('created_at', { ascending: false }).limit(3) : Promise.resolve({ data: null }),
-        !isRefinement ? queryClient.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null }),
+        historyRecallPromise,
+        !isRefinement && memoryFlags.personalityEnabled ? queryClient.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null }),
         cachedHit ? Promise.resolve({ data: null }) : queryClient.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle()
     ]) : Promise.resolve([ { data: null }, { data: null }, { data: null }, { data: null } ]);
 
@@ -190,11 +214,25 @@ export async function POST(req: Request) {
     const engine = await getEngine(mode);
 
     // 4.5 Style RAG Processing (using pre-fetched data)
-    let userHistory: { title: string; prompt: string }[] = [];
+    let userHistory: { title: string; prompt: string; enhanced?: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined = undefined;
 
     if (userId && !isGuest && !isRefinement) {
-        if (historyRes.data) userHistory = historyRes.data;
+        if (historyRes.data) {
+            // historyRes can come from two sources depending on the flag:
+            //   - history table:        { title, prompt, enhanced_prompt }
+            //   - personal_library:     { title, prompt }
+            // We normalize both into the engine's expected shape so the
+            // engine code stays source-agnostic.
+            const rawRows = historyRes.data as Array<{ title?: string | null; prompt?: string | null; enhanced_prompt?: string | null }>;
+            userHistory = rawRows
+                .filter(r => r.prompt && r.prompt.trim().length > 0)
+                .map(r => ({
+                    title: r.title || '',
+                    prompt: r.prompt as string,
+                    ...(r.enhanced_prompt ? { enhanced: r.enhanced_prompt } : {}),
+                }));
+        }
 
         if (personalityRes.data) {
             userPersonality = {
@@ -504,6 +542,10 @@ export async function POST(req: Request) {
                         json_output: isJsonOutput,
                         json_valid: jsonValid,
                         json_error: jsonError,
+                        // Memory injection telemetry — see InjectionStats
+                        // in src/lib/engines/types.ts. Lets us A/B-test the
+                        // L2/L3 layers by joining on these fields.
+                        injection: engineOutput.injectionStats || null,
                     }
                 }).then(({ error: actErr }) => {
                     if (actErr) logger.warn('[Enhance] Activity log insert failed:', actErr.message);
