@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Check, Copy, ExternalLink, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -111,6 +111,8 @@ export function ResultSection({
   const copyShortcutHint = isMac ? "⌘⇧C" : "Ctrl+⇧C";
   // Pro users can toggle the watermark off; free users always get the watermark.
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
+  // Anchor 2 — toggle to show word-level diff between original and enhanced.
+  const [showDiff, setShowDiff] = useState(false);
 
   const isInterrupted = streamPhase === 'interrupted';
 
@@ -224,11 +226,31 @@ export function ResultSection({
             </div>
           ) : (
             <div className="p-4 flex-1">
+              {/* Anchor 2 — Diff toggle: tabs (default) ↔ visual diff.
+                  Only shown when the original prompt exists (refinement
+                  flows reuse this component without an "original"). */}
+              {(originalPrompt ?? '').trim().length > 0 && (
+                <div className="flex items-center justify-end mb-2" dir="rtl">
+                  <button
+                    type="button"
+                    onClick={() => setShowDiff(v => !v)}
+                    aria-pressed={showDiff}
+                    className={cn(
+                      'px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors',
+                      showDiff
+                        ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40'
+                        : 'text-[var(--text-muted)] border-[var(--glass-border)] hover:text-[var(--text-primary)]'
+                    )}
+                  >
+                    {showDiff ? '↩ חזור לתצוגה רגילה' : 'הצג שינויים'}
+                  </button>
+                </div>
+              )}
               <BeforeAfterSplit
                 original={originalPrompt ?? ''}
                 enhanced={displayCompletion}
                 enhancedNode={displayNode}
-                mode="tabs"
+                mode={showDiff ? 'diff' : 'tabs'}
                 score={
                   completionScore
                     ? {
@@ -495,11 +517,27 @@ export function ResultSection({
             amber so they stand out as "history, not mandatory". */}
         {placeholders.length > 0 && (
           <div className="glass-card p-5 rounded-xl border-[var(--glass-border)] bg-[var(--glass-bg)] flex flex-col gap-4 h-fit lg:w-72">
-            <div className="flex items-center gap-2 pb-3 border-b border-[var(--glass-border)]">
-               <div className="bg-sky-500/20 text-sky-700 dark:text-sky-300 p-1.5 rounded-md">
+            <div className="flex items-start gap-2 pb-3 border-b border-[var(--glass-border)]">
+               <div className="bg-sky-500/20 text-sky-700 dark:text-sky-300 p-1.5 rounded-md mt-0.5">
                  <Plus className="w-4 h-4" />
                </div>
-               <span className="text-sm font-semibold text-[var(--text-primary)]">{t.result_section.variables_title}</span>
+               <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-1.5">
+                   <span className="text-sm font-semibold text-[var(--text-primary)]">
+                     {t.result_section.variables_title}
+                   </span>
+                   <span
+                     className="cursor-help text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                     title="כל שדה מחליף את החלון הצבוע המתאים בתוך הפרומפט. הפרומפט מתעדכן בזמן אמת. אפשר לדלג על שדות — הם יישארו כפלייסהולדר עד שתמלא אותם."
+                     aria-label="הסבר על משתנים"
+                   >
+                     <HelpCircle className="w-3.5 h-3.5" />
+                   </span>
+                 </div>
+                 <p className="text-[10px] text-[var(--text-muted)] mt-0.5 leading-relaxed">
+                   מלא את השדות והפרומפט יתעדכן בזמן אמת
+                 </p>
+               </div>
             </div>
             <div className="flex flex-col gap-3">
                {placeholders.map((ph, i) => {
@@ -542,8 +580,23 @@ export function ResultSection({
                  );
                })}
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] text-center mt-2">
-              {t.result_section.auto_update_hint}
+            {/* Color legend — explains the three input/chip states the
+                user will encounter. Mirrors the same tokens used in the
+                rendered prompt so the legend doubles as a key for
+                reading the highlighted output. */}
+            <div className="flex items-center justify-around pt-3 mt-1 border-t border-[var(--glass-border)] text-[10px] text-[var(--text-muted)]" aria-label="מקרא מצבים">
+              <div className="flex items-center gap-1.5" title="משתנה שעדיין לא מולא — מופיע כתווית כחולה בפרומפט">
+                <span className="w-2.5 h-2.5 rounded-sm bg-sky-500/15 border border-sky-500/50" aria-hidden="true" />
+                <span>ריק</span>
+              </div>
+              <div className="flex items-center gap-1.5" title="משתנה שמילאת — מופיע כהדגשה ירוקה בפרומפט">
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/15 border border-emerald-500/50" aria-hidden="true" />
+                <span>מלא</span>
+              </div>
+              <div className="flex items-center gap-1.5" title="ערך שנטען אוטומטית מפרומפט קודם שלך">
+                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/15 border border-amber-500/50" aria-hidden="true" />
+                <span>היסטוריה</span>
+              </div>
             </div>
           </div>
         )}
