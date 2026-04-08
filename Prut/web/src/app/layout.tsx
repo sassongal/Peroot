@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { createClient } from "@/lib/supabase/server";
 
 const frankRuhl = Frank_Ruhl_Libre({
+  weight: ["400", "700"],
   subsets: ["hebrew", "latin"],
   variable: "--font-frank",
   display: "swap",

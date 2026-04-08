@@ -35,11 +35,40 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        let cancelled = false;
+        const boot = () => {
+            if (cancelled) return;
+            cancelled = true;
             initAnalytics();
             setIsReady(true);
-        }, 5000);
-        return () => clearTimeout(timer);
+        };
+
+        // Prefer idle callback — runs only when the main thread is free.
+        // Fall back to a short timeout on browsers without requestIdleCallback.
+        // Also boot on first user interaction (whichever fires first) so
+        // analytics are ready by the time anything meaningful happens.
+        const ric = (window as any).requestIdleCallback as
+            | ((cb: () => void, opts?: { timeout: number }) => number)
+            | undefined;
+        const idleHandle = ric
+            ? ric(boot, { timeout: 4000 })
+            : (window.setTimeout(boot, 2500) as unknown as number);
+
+        const interactionEvents = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+        const onInteract = () => boot();
+        interactionEvents.forEach((e) =>
+            window.addEventListener(e, onInteract, { once: true, passive: true })
+        );
+
+        return () => {
+            cancelled = true;
+            if (ric && (window as any).cancelIdleCallback) {
+                (window as any).cancelIdleCallback(idleHandle);
+            } else {
+                window.clearTimeout(idleHandle);
+            }
+            interactionEvents.forEach((e) => window.removeEventListener(e, onInteract));
+        };
     }, []);
 
     // Always render children first, unconditionally.

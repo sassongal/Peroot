@@ -44,12 +44,23 @@ const PersonalLibraryView = dynamic(
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
 );
 
-// Extracted components
-import { SidebarDrawer } from "@/components/features/home/SidebarDrawer";
-import { MobileFaqPanel } from "@/components/features/home/MobileFaqPanel";
+// Extracted components — InputSection + HomeViewChrome are above the fold,
+// so they stay static. The rest load on demand to keep the initial JS lean.
 import { InputSection } from "@/components/features/home/InputSection";
-import { HomeResultSection } from "@/components/features/home/HomeResultSection";
 import { HomeViewChrome } from "@/components/features/home/HomeViewChrome";
+
+const SidebarDrawer = dynamic(
+  () => import("@/components/features/home/SidebarDrawer").then(m => m.SidebarDrawer),
+  { ssr: false, loading: () => null }
+);
+const MobileFaqPanel = dynamic(
+  () => import("@/components/features/home/MobileFaqPanel").then(m => m.MobileFaqPanel),
+  { ssr: false, loading: () => null }
+);
+const HomeResultSection = dynamic(
+  () => import("@/components/features/home/HomeResultSection").then(m => m.HomeResultSection),
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
+);
 
 // Constants
 
