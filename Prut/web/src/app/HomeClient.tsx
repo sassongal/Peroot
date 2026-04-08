@@ -166,37 +166,41 @@ function PageContent() {
     }
   }, [dispatch]);
 
-  // Mutable refs for streaming delimiter parsing
-  const streamAccRef = useRef({ promptText: "", questionsPart: "", foundDelimiter: false });
+  // Single raw buffer — we never drop or redirect incoming chunks. The
+  // promptText / questionsPart split happens ONLY at stream-end, on the
+  // final rawText, so an accidental or early `[GENIUS_QUESTIONS]` in the
+  // model output can't cause the "missing middle" bug where the rest of
+  // the prompt body is misrouted into the questions buffer and lost.
+  const streamAccRef = useRef({ rawText: "" });
 
   const { startStream } = useStreamingCompletion({
     onChunk: useCallback((chunk: string) => {
       const acc = streamAccRef.current;
-      if (!acc.foundDelimiter) {
-        acc.promptText += chunk;
-        const delimIdx = acc.promptText.indexOf("[GENIUS_QUESTIONS]");
-        if (delimIdx !== -1) {
-          acc.foundDelimiter = true;
-          acc.questionsPart = acc.promptText.slice(delimIdx + "[GENIUS_QUESTIONS]".length);
-          acc.promptText = acc.promptText.slice(0, delimIdx);
-        }
-        // Strip <thinking> blocks AND [PROMPT_TITLE] tags from the live
-        // display. The PROMPT_TITLE block is parsed for the saved-prompt
-        // title at stream-end (see the post-stream block below) but
-        // until then it briefly renders as visible Hebrew text inside
-        // the prompt body — a 0.5–2s flicker the user sees on every
-        // generation. We strip both fully-closed tags and any trailing
-        // unclosed `[PROMPT_TITLE]` (if the closing tag hasn't streamed
-        // in yet).
-        const displayText = acc.promptText
-          .replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '')
-          .replace(/<thinking>[\s\S]*$/gi, '')
-          .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]\n?/g, '')
-          .replace(/\[PROMPT_TITLE\][\s\S]*$/g, '');
-        dispatch({ type: 'SET_COMPLETION', payload: displayText });
-      } else {
-        acc.questionsPart += chunk;
+      acc.rawText += chunk;
+
+      // Derive a safe display string from the raw buffer. We only HIDE
+      // trailing auxiliary blocks; we never truncate the canonical buffer.
+      let displayText = acc.rawText;
+
+      // Hide from the first `[GENIUS_QUESTIONS]` marker onward during
+      // streaming. (Final split uses lastIndexOf — see processStreamResult.)
+      const firstGeniusIdx = displayText.indexOf("[GENIUS_QUESTIONS]");
+      if (firstGeniusIdx !== -1) {
+        displayText = displayText.slice(0, firstGeniusIdx);
       }
+
+      // Strip <thinking> blocks — both fully-closed and unclosed trailing.
+      displayText = displayText
+        .replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '')
+        .replace(/<thinking>[\s\S]*$/gi, '');
+
+      // Strip [PROMPT_TITLE]…[/PROMPT_TITLE] — both closed and unclosed
+      // trailing, so the user never sees the marker flicker mid-stream.
+      displayText = displayText
+        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]\n?/g, '')
+        .replace(/\[PROMPT_TITLE\][\s\S]*$/g, '');
+
+      dispatch({ type: 'SET_COMPLETION', payload: displayText });
     }, [dispatch]),
     onDone: useCallback(() => {
       dispatch({ type: 'STREAM_DONE' });
@@ -396,13 +400,26 @@ function PageContent() {
   const processStreamResult = (label: string) => {
     const acc = streamAccRef.current;
 
-    // Guard: skip saving partial/interrupted results
-    if (acc.promptText.length < 20) {
+    // Guard: skip saving partial/interrupted results.
+    if (acc.rawText.length < 20) {
       return { text: '', title: null };
     }
-    if (acc.foundDelimiter) {
+
+    // Split body/questions at the LAST `[GENIUS_QUESTIONS]` marker. Using
+    // lastIndexOf protects us from earlier accidental occurrences (e.g.
+    // the model echoing the marker in an example or thinking block).
+    const GENIUS_MARKER = "[GENIUS_QUESTIONS]";
+    const lastGeniusIdx = acc.rawText.lastIndexOf(GENIUS_MARKER);
+    let body = lastGeniusIdx !== -1
+      ? acc.rawText.slice(0, lastGeniusIdx)
+      : acc.rawText;
+    const questionsPart = lastGeniusIdx !== -1
+      ? acc.rawText.slice(lastGeniusIdx + GENIUS_MARKER.length)
+      : '';
+
+    if (lastGeniusIdx !== -1) {
       try {
-        let jsonStr = acc.questionsPart.trim();
+        let jsonStr = questionsPart.trim();
         if (jsonStr.startsWith("```json")) jsonStr = jsonStr.replace(/^```json\s*/, "").replace(/```\s*$/, "");
         if (jsonStr.startsWith("```")) jsonStr = jsonStr.replace(/^```\s*/, "").replace(/```\s*$/, "");
         const parsed = jsonStr ? JSON.parse(jsonStr) : [];
@@ -410,7 +427,7 @@ function PageContent() {
         dispatch({ type: 'SET_QUESTIONS', payload: questions });
       } catch (e) {
         logger.warn(`[${label}] Questions parse failed, attempting recovery`, e);
-        const arrayMatch = acc.questionsPart.match(/\[[\s\S]*\]/);
+        const arrayMatch = questionsPart.match(/\[[\s\S]*\]/);
         if (arrayMatch) {
           try {
             dispatch({ type: 'SET_QUESTIONS', payload: JSON.parse(arrayMatch[0]) });
@@ -425,16 +442,29 @@ function PageContent() {
       dispatch({ type: 'SET_QUESTIONS', payload: [] });
     }
 
-    // Strip AI thinking/reasoning tags and their content
-    acc.promptText = acc.promptText.replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '').trim();
+    // Strip AI thinking/reasoning tags and their content.
+    body = body.replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '').trim();
 
-    const titleMatch = acc.promptText.match(/\[PROMPT_TITLE\](.*?)\[\/PROMPT_TITLE\]/);
+    // Extract [PROMPT_TITLE]…[/PROMPT_TITLE] with dotall-safe regex (the
+    // title may contain newlines when the model wraps it weirdly).
+    const titleMatch = body.match(/\[PROMPT_TITLE\]([\s\S]*?)\[\/PROMPT_TITLE\]/);
     const generatedTitle = titleMatch ? titleMatch[1].trim() : null;
-    acc.promptText = acc.promptText.replace(/\[PROMPT_TITLE\].*?\[\/PROMPT_TITLE\]\n?/, '').trim();
+    body = body.replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]\n?/g, '').trim();
 
-    dispatch({ type: 'SET_COMPLETION', payload: acc.promptText });
+    // Defensive cleanup: if an earlier, accidental `[GENIUS_QUESTIONS]`
+    // leaked into the body (lastIndexOf guarded the split, but the body
+    // may still contain the literal marker string), strip it so copy /
+    // save / display never show the raw delimiter.
+    body = body.replace(/\[GENIUS_QUESTIONS\]/g, '').trim();
 
-    const extracted = extractPlaceholders(acc.promptText);
+    // Persist the cleaned body back to the ref so any downstream reader
+    // (copy, save, refine) sees the canonical final text, not the raw
+    // buffer with markers and thinking blocks still in it.
+    acc.rawText = body;
+
+    dispatch({ type: 'SET_COMPLETION', payload: body });
+
+    const extracted = extractPlaceholders(body);
     const newVars = { ...variableValuesRef.current };
     extracted.forEach(ph => { if (!(ph in newVars)) newVars[ph] = ""; });
     dispatch({ type: 'SET_VARIABLE_VALUES', payload: newVars });
@@ -464,7 +494,7 @@ function PageContent() {
       }
     }
 
-    return { text: acc.promptText, title: generatedTitle };
+    return { text: body, title: generatedTitle };
   };
 
   const enhanceCooldownRef = useRef(false);
@@ -513,7 +543,7 @@ function PageContent() {
       category: ps.selectedCategory,
       tone: ps.selectedTone,
     }});
-    streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
+    streamAccRef.current = { rawText: "" };
 
     const enhanceStart = Date.now();
     trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
@@ -600,7 +630,7 @@ function PageContent() {
 
     dispatch({ type: 'SET_PREVIOUS_SCORE', payload: completionScore.score });
     dispatch({ type: 'START_STREAM' });
-    streamAccRef.current = { promptText: "", questionsPart: "", foundDelimiter: false };
+    streamAccRef.current = { rawText: "" };
 
     const answerParts = ps.questions
       .filter(q => ps.questionAnswers[String(q.id)]?.trim())
