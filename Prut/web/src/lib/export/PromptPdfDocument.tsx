@@ -19,20 +19,28 @@ import {
   Font,
 } from '@react-pdf/renderer';
 
-// Register Noto Sans Hebrew (regular + bold). Google Fonts serves these as
-// static .ttf files under the /s/notosanshebrew/ CDN path.
+// Register Noto Sans Hebrew (regular + bold).
+//
+// Self-hosted under /public/fonts/ so the PDF export is immune to Google
+// Fonts CDN hash rotations — the previous version pointed at v46 URLs
+// that 404'd when Google bumped to v50, which silently broke every bold
+// text in the generated PDF. Bundling locally adds ~92KB to the repo but
+// guarantees forever-working export.
 let fontRegistered = false;
 function ensureFontRegistered() {
   if (fontRegistered) return;
+  // Absolute URL resolved against the current origin so @react-pdf's
+  // internal fetch has a fully-qualified URL regardless of base path.
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
   Font.register({
     family: 'NotoHebrew',
     fonts: [
       {
-        src: 'https://fonts.gstatic.com/s/notosanshebrew/v46/or3HQ7v33eiDljA1IufXTtVf7V6RvEEdhQlk0LlGxCyaeNKYZC0sqk3xXGiXd4qtoiJltutR2g.ttf',
+        src: `${origin}/fonts/NotoSansHebrew-Regular.ttf`,
         fontWeight: 'normal',
       },
       {
-        src: 'https://fonts.gstatic.com/s/notosanshebrew/v46/or3HQ7v33eiDljA1IufXTtVf7V6RvEEdhQlk0LlGxCyaeNKYZC0sqk3xXGiXd4qtoiJltk5T2g.ttf',
+        src: `${origin}/fonts/NotoSansHebrew-Bold.ttf`,
         fontWeight: 'bold',
       },
     ],

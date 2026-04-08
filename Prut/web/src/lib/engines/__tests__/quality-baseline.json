@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-07T18:17:26.032Z",
+  "generatedAt": "2026-04-08T02:22:37.552Z",
   "fixtureCount": 14,
-  "averageScore": 32.86,
+  "averageScore": 32.43,
   "entries": [
     {
       "group": "badText",
@@ -66,13 +66,13 @@
     {
       "group": "strongVideo",
       "name": "detailed cinematic video",
-      "score": 75,
+      "score": 71,
       "level": "high"
     },
     {
       "group": "strongVisual",
       "name": "detailed visual portrait",
-      "score": 79,
+      "score": 77,
       "level": "high"
     },
     {
@@ -95,7 +95,7 @@
     "strongText": 77,
     "eliteText": 85,
     "badVisual": 4.5,
-    "strongVisual": 79,
-    "strongVideo": 75
+    "strongVisual": 77,
+    "strongVideo": 71
   }
 }

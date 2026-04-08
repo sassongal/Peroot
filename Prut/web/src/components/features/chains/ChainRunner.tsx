@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot } from "lucide-react";
+import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot, RotateCcw, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { toast } from "sonner";
@@ -44,6 +44,38 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
     }
   };
 
+  // Reset the runner back to step 0 with clean state. Lets the user re-run
+  // the same chain without closing the drawer (e.g. to try different
+  // variable values or different outputs at each step).
+  const handleReset = () => {
+    setCurrentStep(0);
+    setCompletedSteps(new Set());
+    setStepOutputs({});
+    toast.success("השרשרת אופסה");
+  };
+
+  // Open the resolved prompt in an external LLM in a new tab. ChatGPT and
+  // Claude both accept a `?q=` style deep-link but use different query
+  // param names. We fall back to URL-encoded clipboard + toast when the
+  // platform doesn't support a prompt deep-link (e.g. Gemini).
+  const openInLLM = (target: 'chatgpt' | 'claude' | 'gemini', text: string) => {
+    const encoded = encodeURIComponent(text);
+    let url: string | null = null;
+    if (target === 'chatgpt') {
+      url = `https://chat.openai.com/?q=${encoded}`;
+    } else if (target === 'claude') {
+      url = `https://claude.ai/new?q=${encoded}`;
+    } else if (target === 'gemini') {
+      url = `https://gemini.google.com/app`;
+      // Gemini doesn't accept a prefill param — copy + open
+      void navigator.clipboard.writeText(text);
+      toast.success("הפרומפט הועתק — הדבק ב-Gemini");
+    }
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Build the prompt with variable substitution and previous output injection
   const getResolvedPrompt = (stepIndex: number): string => {
     const s = chain.steps[stepIndex];
@@ -83,12 +115,25 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
               <p className="text-xs text-[var(--text-muted)] mt-1">{chain.description}</p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {completedSteps.size > 0 && (
+              <button
+                onClick={handleReset}
+                className="p-2 rounded-full hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors"
+                title="אפס שרשרת"
+                aria-label="אפס שרשרת והתחל מחדש"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors"
+              aria-label="סגור"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Progress Steps */}
@@ -231,6 +276,39 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
               )}
             </button>
           )}
+        </div>
+
+        {/* LLM quick-launchers — open the current step's resolved prompt
+            directly in ChatGPT / Claude / Gemini in a new tab. Gemini
+            lacks a deep-link prefill, so we copy and toast a hint. */}
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--glass-border)]">
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider shrink-0">פתח ב:</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => openInLLM('chatgpt', resolvedPrompt)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors"
+              title="פתח ב-ChatGPT"
+            >
+              <ExternalLink className="w-3 h-3" />
+              ChatGPT
+            </button>
+            <button
+              onClick={() => openInLLM('claude', resolvedPrompt)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors"
+              title="פתח ב-Claude"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Claude
+            </button>
+            <button
+              onClick={() => openInLLM('gemini', resolvedPrompt)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors"
+              title="העתק ופתח Gemini"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Gemini
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import {
     Star, ArrowRight, Plus, Copy, Pencil, Check, X,
     Trash2, CheckSquare, Square, Tag, Download,
-    FolderInput, Upload, Pin, ThumbsUp, ThumbsDown, History,
+    FolderInput, Upload, Pin, History,
     ChevronDown, ChevronLeft, ChevronRight, Folder,
     MoreHorizontal, Link2
 } from "lucide-react";
@@ -60,7 +60,6 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
     dragOverPersonalId,
     duplicatePrompt,
     togglePin,
-    ratePrompt,
     deletePrompts,
     movePrompts,
     personalCategories,
@@ -185,49 +184,70 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
           <CapabilityBadge mode={prompt.capability_mode} className="scale-90 origin-center" />
         </div>
 
-        {/* Title + Template badge */}
-        <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] font-medium truncate flex items-center gap-2" dir="rtl">
-          {prompt.title}
-          {prompt.is_template && (
-            <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-wider">
-              תבנית
+        {/* Title + Template badge + (mobile) DateBadge */}
+        <div className="flex-1 min-w-0" dir="rtl">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-[var(--text-primary)] font-medium truncate">
+              {prompt.title}
             </span>
-          )}
-        </span>
+            {prompt.is_template && (
+              <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-wider">
+                תבנית
+              </span>
+            )}
+          </div>
+          {/* Mobile-only meta line — dates + category always visible on small screens.
+              Desktop uses the inline md:flex row below. */}
+          <div className="flex md:hidden items-center gap-2 text-[10px] text-[var(--text-muted)] mt-0.5">
+            <DateBadge mode="compact" entity={entity} />
+            <span className="opacity-50">·</span>
+            <span className="truncate">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+            {prompt.use_count > 0 && (
+              <>
+                <span className="opacity-50">·</span>
+                <span>{prompt.use_count}x</span>
+              </>
+            )}
+          </div>
+        </div>
 
-        {/* Meta: use count + category + date */}
+        {/* Meta: use count + category + date (desktop) */}
         <span className="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)] shrink-0">
           {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
           <span className="px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
           <DateBadge mode="compact" entity={entity} />
         </span>
 
-        {/* Quick actions (collapsed) */}
+        {/* Quick actions (collapsed) — always visible on mobile (no hover),
+            hover-revealed on desktop. Bigger tap targets on mobile. */}
         <div
-          className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }}
             title="העתק"
-            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            aria-label="העתק פרומפט"
+            className="p-2 md:p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
           >
-            <Copy className="w-3.5 h-3.5" />
+            <Copy className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onUsePrompt(prompt); }}
             title="השתמש"
-            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            aria-label="השתמש בפרומפט"
+            className="p-2 md:p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
           >
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : prompt.id); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
               title="עוד"
-              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              aria-label="פעולות נוספות"
+              className="p-2 md:p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
             >
-              <MoreHorizontal className="w-3.5 h-3.5" />
+              <MoreHorizontal className="w-4 h-4 md:w-3.5 md:h-3.5" />
             </button>
             {isMenuOpen && (
               <div
@@ -486,29 +506,31 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                 </div>
               )}
 
-              {/* Use count + ratings */}
+              {/* Use count + favorites (ratings removed 2026-04-08;
+                  the Star at the top of the card is the single source
+                  of sentiment now). */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 text-[var(--text-muted)]">
                   {prompt.use_count > 0
                     ? <span className="text-emerald-400/80">שומש {prompt.use_count} פעמים</span>
                     : <span className="text-blue-400/80">חדש</span>
                   }
-                  {((prompt.success_count ?? 0) + (prompt.fail_count ?? 0)) > 0 && (
-                    <span className="flex items-center gap-1">
-                      <ThumbsUp className="w-3 h-3 text-emerald-400" />{prompt.success_count ?? 0}
-                      <ThumbsDown className="w-3 h-3 text-red-400 ms-1" />{prompt.fail_count ?? 0}
-                    </span>
-                  )}
                   <span className="hidden md:inline text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => ratePrompt(prompt.id, true)} className="p-1 rounded text-[var(--text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="הצלחה">
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => ratePrompt(prompt.id, false)} className="p-1 rounded text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="כישלון">
-                    <ThumbsDown className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleToggleFavorite('personal', prompt.id)}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                    isFavorite
+                      ? "text-amber-500 hover:bg-amber-500/10"
+                      : "text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10"
+                  )}
+                  title={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                  aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                  aria-pressed={isFavorite}
+                >
+                  <Star className={cn("w-4 h-4", isFavorite && "fill-amber-500")} />
+                </button>
               </div>
 
               {/* Variable Filler */}

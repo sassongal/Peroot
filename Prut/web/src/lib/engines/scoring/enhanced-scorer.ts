@@ -410,16 +410,25 @@ const VISUAL_DIMENSIONS: DimensionDef[] = [
   {
     key: 'composition',
     maxPoints: 12,
-    tip: 'הוסף זווית מצלמה ומסגור',
+    tip: 'הוסף זווית מצלמה, מסגור, ויחס גובה-רוחב',
     visual: true,
     test: (t) => {
       const matched: string[] = [];
       const missing: string[] = [];
       let pts = 0;
-      if (/close-up|wide shot|aerial|medium shot|full body|low angle|high angle|תקריב|זווית/i.test(t)) { matched.push('shot type'); pts += 6; }
+      if (/close-up|wide shot|aerial|medium shot|full body|low angle|high angle|תקריב|זווית/i.test(t)) { matched.push('shot type'); pts += 4; }
       else missing.push('shot type');
-      if (/rule of thirds|centered|symmetr|diagonal|foreground|background|depth|bokeh|שדה|רקע/i.test(t)) { matched.push('composition'); pts += 6; }
+      if (/rule of thirds|centered|symmetr|diagonal|foreground|background|depth|bokeh|שדה|רקע/i.test(t)) { matched.push('composition'); pts += 4; }
       else missing.push('framing details');
+      // Image-specific: aspect ratio / orientation — critical for Midjourney
+      // (--ar 16:9), ChatGPT Image, and any platform that crops to square
+      // by default. A prompt that doesn't specify aspect is rolling the dice.
+      if (/--ar\s*\d+:\d+|aspect\s*ratio|\d+:\d+\s*(ratio|aspect)|portrait|landscape|square|vertical|horizontal|פורטרט|אופקי|אנכי|ריבועי|יחס/i.test(t)) {
+        matched.push('aspect ratio / orientation');
+        pts += 4;
+      } else {
+        missing.push('aspect ratio (--ar 16:9 / portrait / landscape)');
+      }
       return { score: Math.min(12, pts), matched, missing };
     },
   },
@@ -458,16 +467,28 @@ const VISUAL_DIMENSIONS: DimensionDef[] = [
   {
     key: 'quality',
     maxPoints: 10,
-    tip: 'הוסף מפרטים טכניים (רזולוציה, עדשה, engine)',
+    tip: 'הוסף מפרטים טכניים (רזולוציה, עדשה, engine, prompt weights)',
     visual: true,
     test: (t) => {
       const matched: string[] = [];
       const missing: string[] = [];
       let pts = 0;
-      if (/4k|8k|hdr|masterpiece|best quality|highly detailed|professional|ultra|premium/i.test(t)) { matched.push('quality boosters'); pts += 5; }
+      if (/4k|8k|hdr|masterpiece|best quality|highly detailed|professional|ultra|premium/i.test(t)) { matched.push('quality boosters'); pts += 3; }
       else missing.push('quality booster tags');
-      if (/sony|canon|nikon|leica|arri|85mm|50mm|35mm|f\/\d|octane|unreal|redshift/i.test(t)) { matched.push('camera/engine specs'); pts += 5; }
+      if (/sony|canon|nikon|leica|arri|85mm|50mm|35mm|f\/\d|octane|unreal|redshift/i.test(t)) { matched.push('camera/engine specs'); pts += 3; }
       else missing.push('camera specs / rendering engine');
+      // Image-specific: negative prompts ("no X", "without Y") and SD-style
+      // weight syntax "(word:1.3)". Both are hallmarks of pro image prompts.
+      if (/\(\s*[^)]+:\s*[\d.]+\s*\)/i.test(t)) {
+        matched.push('weight syntax (word:n)');
+        pts += 2;
+      }
+      if (/(negative\s*prompt|no\s+\w+|without\s+\w+|ללא|בלי)\s*:?\s*[\w\u0590-\u05FF,\s]+/i.test(t)) {
+        matched.push('negative prompt');
+        pts += 2;
+      } else {
+        missing.push('negative prompt (what NOT to render)');
+      }
       return { score: Math.min(10, pts), matched, missing };
     },
   },

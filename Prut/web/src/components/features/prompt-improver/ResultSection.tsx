@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, RefreshCw } from "lucide-react";
 import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,8 @@ import { getVariableLabel, getVariablePlaceholder, substituteVariables } from "@
 import { renderPromptWithVariables } from "@/lib/text-utils";
 import { BeforeAfterSplit } from "@/components/ui/BeforeAfterSplit";
 import { ScoreDelta } from "@/components/ui/ScoreDelta";
+import { ScoreBreakdownDrawer } from "@/components/ui/ScoreBreakdownDrawer";
+import { EnhancedScorer, type EnhancedScore } from "@/lib/engines/scoring/enhanced-scorer";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 
 const blinkKeyframes = `
@@ -113,6 +115,16 @@ export function ResultSection({
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
   // Anchor 2 — toggle to show word-level diff between original and enhanced.
   const [showDiff, setShowDiff] = useState(false);
+  // P3 — score breakdown drawer state. Computed lazily on click so we
+  // don't run EnhancedScorer on every render (it's cheap but no reason to).
+  const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null>(null);
+
+  const openScoreBreakdown = () => {
+    const textToScore = displayCompletion || "";
+    if (!textToScore) return;
+    const computed = EnhancedScorer.score(textToScore, capabilityMode ?? CapabilityMode.STANDARD);
+    setBreakdownScore(computed);
+  };
 
   const isInterrupted = streamPhase === 'interrupted';
 
@@ -189,6 +201,7 @@ export function ResultSection({
           <ScoreDelta
             before={improvementDelta > 0 ? Math.max(0, completionScore.score - improvementDelta) : null}
             after={completionScore.score}
+            onDrillDown={openScoreBreakdown}
           />
         )}
       </div>
@@ -498,18 +511,9 @@ export function ResultSection({
               </div>
             )}
 
-            {/* Feedback row - subtle */}
-            <div className="flex items-center justify-center gap-4 pt-2 border-t border-[var(--glass-border)]">
-              <span className="text-[10px] text-[var(--text-muted)]">מה דעתך על התוצאה?</span>
-              <div className="flex items-center gap-1">
-                <button disabled aria-label="Like" className="p-1.5 rounded-md text-slate-500 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-60 disabled:cursor-default">
-                  <ThumbsUp className="w-3.5 h-3.5" />
-                </button>
-                <button disabled aria-label="Dislike" className="p-1.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-60 disabled:cursor-default">
-                  <ThumbsDown className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+            {/* Feedback row — removed disabled thumbs-up/down (no product
+                meaning). Save-to-personal button above already carries the
+                "keeper" signal; no need for a second rating layer. */}
           </div>
         </div>
 
@@ -632,6 +636,18 @@ export function ResultSection({
           </div>
         )}
       </div>
+
+      {/* P3 — Score breakdown drawer. Opens on ScoreDelta click. */}
+      <ScoreBreakdownDrawer
+        isOpen={breakdownScore !== null}
+        onClose={() => setBreakdownScore(null)}
+        score={breakdownScore}
+        title={capabilityMode === CapabilityMode.IMAGE_GENERATION
+          ? 'ציון פרומפט התמונה'
+          : capabilityMode === CapabilityMode.VIDEO_GENERATION
+          ? 'ציון פרומפט הווידאו'
+          : 'ציון הפרומפט'}
+      />
     </div>
   );
 }

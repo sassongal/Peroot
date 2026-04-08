@@ -2,7 +2,7 @@
 
 import { useLibraryContext } from "@/context/LibraryContext";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronLeft, ChevronsLeft, ChevronsRight, TrendingUp, Rocket, PenTool, Settings, Code, Sparkles as SparklesIcon } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ChevronDown, ChevronUp, ChevronLeft, ChevronsLeft, ChevronsRight, TrendingUp, Rocket, PenTool, Settings, Code, Sparkles as SparklesIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -81,27 +81,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [lightboxImage]);
-
-  // Rating state (localStorage-based)
-  const [userRatings, setUserRatings] = useState<Record<string, 1 | -1>>(() => {
-    if (typeof window === 'undefined') return {};
-    try {
-      return JSON.parse(localStorage.getItem('peroot_library_ratings') || '{}');
-    } catch { return {}; }
-  });
-
-  const handleRate = (promptId: string, rating: 1 | -1) => {
-    setUserRatings(prev => {
-      const next = { ...prev };
-      if (next[promptId] === rating) {
-        delete next[promptId];
-      } else {
-        next[promptId] = rating;
-      }
-      localStorage.setItem('peroot_library_ratings', JSON.stringify(next));
-      return next;
-    });
-  };
 
   const toggleExpanded = (id: string) => {
     setExpandedIds(prev => {
@@ -199,12 +178,9 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           return a.title.localeCompare(b.title);
         case "newest":
           return 0;
-        case "rating": {
-          const aRating = userRatings[a.id] ?? 0;
-          const bRating = userRatings[b.id] ?? 0;
-          if (aRating !== bRating) return bRating - aRating;
-          return (popularityMap[b.id] ?? 0) - (popularityMap[a.id] ?? 0);
-        }
+        case "rating":
+          // "Rating" sort is kept for backward compat — with rate-prompts
+          // removed, it now behaves identically to "popularity".
         case "popularity":
         default: {
           const aP = popularityMap[a.id] ?? 0;
@@ -214,7 +190,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
         }
       }
     });
-  }, [collectionFilteredLibrary, librarySort, favoriteLibraryIds, popularityMap, userRatings]);
+  }, [collectionFilteredLibrary, librarySort, favoriteLibraryIds, popularityMap]);
 
   const totalCount = sortedPrompts.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
@@ -453,7 +429,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 categoryLabel={categoryLabel}
                 selectionMode={selectionMode}
                 isSelected={selectedIds.has(prompt.id)}
-                userRating={userRatings[prompt.id]}
                 onToggleExpand={() => toggleExpanded(prompt.id)}
                 onToggleFavorite={() => handleToggleFavorite("library", prompt.id)}
                 onToggleSelection={() => toggleSelection(prompt.id)}
@@ -466,7 +441,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                   category: categoryLabel,
                   useCase: prompt.use_case,
                 })}
-                onRate={(rating) => handleRate(prompt.id, rating)}
                 onImageClick={(url, title) => setLightboxImage({ url, title })}
               />
             );

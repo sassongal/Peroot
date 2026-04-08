@@ -1,8 +1,14 @@
+"use client";
+
 /**
  * download-prompt-pdf — client-only utility that dynamically imports
  * @react-pdf/renderer, renders a PromptPdfDocument to a blob, and triggers
  * a browser download. The dynamic import keeps the ~500KB renderer out of
  * the initial bundle — it is only fetched when the user clicks Export.
+ *
+ * "use client" is defensive — any accidental server-side import would
+ * blow up because @react-pdf/renderer v4 dispatches to browser APIs at
+ * render time.
  */
 
 import type { PromptPdfDocumentProps } from './PromptPdfDocument';

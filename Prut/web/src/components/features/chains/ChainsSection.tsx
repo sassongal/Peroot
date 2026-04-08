@@ -92,14 +92,21 @@ export function ChainsSection({
         <p className="font-medium text-[var(--text-secondary)]">איך עובדות שרשראות פרומפטים?</p>
         <ul className="space-y-1.5 list-disc list-inside text-xs leading-relaxed">
           <li>שרשרת היא סדרה של פרומפטים שרצים אחד אחרי השני</li>
-          <li>התוצאה של כל שלב יכולה לשמש כקלט לשלב הבא</li>
+          <li>התוצאה של כל שלב יכולה לשמש כקלט אוטומטי לשלב הבא</li>
           <li>לחצו על <strong className="text-amber-400">צור שרשרת</strong> והוסיפו שלבים מהספרייה האישית או כתבו חדשים</li>
           <li>גררו שלבים כדי לשנות את הסדר</li>
           <li>לחצו <strong className="text-amber-400">הפעל</strong> כדי להריץ את השרשרת שלב אחרי שלב</li>
+          <li>בתוך ה-Runner אפשר לפתוח כל שלב ישירות ב-ChatGPT / Claude / Gemini בלחיצה</li>
         </ul>
-        <p className="text-xs text-[var(--text-muted)] pt-1">
-          <strong>דוגמה:</strong> צרו שרשרת &quot;מחקר → סיכום → פוסט לינקדאין&quot; כדי להפוך מחקר לתוכן מוכן לפרסום.
-        </p>
+        <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-2.5 space-y-1 mt-2">
+          <p className="text-[11px] font-semibold text-amber-400">דוגמה:</p>
+          <p className="text-[11px] leading-relaxed">
+            &quot;מחקר שוק &lt;br&gt;→ סיכום ל-5 נקודות &lt;br&gt;→ פוסט לינקדאין&quot; — הפלט של השלב הראשון נזרק אוטומטית לשני, ואז לשלישי.
+          </p>
+        </div>
+        <div className="text-[10px] text-[var(--text-muted)]/80 pt-1.5 border-t border-[var(--glass-border)] mt-2">
+          <strong>מה נשמר:</strong> הכותרת, התיאור, כל השלבים עם המשתנים, וסדר השלבים. הפלטים שאתם מדביקים בזמן הריצה נשמרים רק באותו session (לא עולים לשרת).
+        </div>
       </div>
     </div>
   );

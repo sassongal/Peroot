@@ -6,7 +6,7 @@ import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { calculatePromptStrength, getStrengthInfo } from "@/lib/prompt-strength";
 import {
   Star, Plus, Copy, BookOpen, ImageIcon,
-  ThumbsUp, ThumbsDown, ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp,
   CheckSquare, Square,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -20,7 +20,6 @@ interface PromptCardProps {
   categoryLabel: string;
   selectionMode: boolean;
   isSelected: boolean;
-  userRating?: 1 | -1;
   onToggleExpand: () => void;
   onToggleFavorite: () => void;
   onToggleSelection: () => void;
@@ -28,7 +27,6 @@ interface PromptCardProps {
   onSaveToPersonal: () => void;
   onCopy: () => void;
   onExportImage: () => void;
-  onRate: (rating: 1 | -1) => void;
   onImageClick?: (url: string, title: string) => void;
 }
 
@@ -41,7 +39,6 @@ export function PromptCard({
   categoryLabel,
   selectionMode,
   isSelected,
-  userRating,
   onToggleExpand,
   onToggleFavorite,
   onToggleSelection,
@@ -49,7 +46,6 @@ export function PromptCard({
   onSaveToPersonal,
   onCopy,
   onExportImage,
-  onRate,
   onImageClick,
 }: PromptCardProps) {
   const [hovered, setHovered] = useState(false);
@@ -260,33 +256,6 @@ export function PromptCard({
               title="ייצא כתמונה"
             >
               <ImageIcon className="w-4 h-4" />
-            </button>
-
-            <div className="w-px h-5 bg-black/5 dark:bg-white/10 shrink-0 mx-0.5" />
-
-            <button
-              onClick={() => onRate(1)}
-              className={cn(
-                "shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer",
-                userRating === 1
-                  ? "bg-emerald-500/20 text-emerald-400"
-                  : "text-[var(--text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10"
-              )}
-              title="מועיל"
-            >
-              <ThumbsUp className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onRate(-1)}
-              className={cn(
-                "shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer",
-                userRating === -1
-                  ? "bg-red-500/20 text-red-400"
-                  : "text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10"
-              )}
-              title="לא מועיל"
-            >
-              <ThumbsDown className="w-4 h-4" />
             </button>
           </div>
         </div>
