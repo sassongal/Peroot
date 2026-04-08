@@ -41,20 +41,19 @@ describe("extractPlaceholders", () => {
         expect(extractPlaceholders(json)).toEqual([]);
     });
 
-    it("does not leak placeholders from inside a JSON envelope", () => {
-        // The regex is greedy and advances past each matched region. The
-        // first match swallows `{\n  "prompt": "Hello {name}` as one
-        // compound token (filtered out because it contains quotes/newlines),
-        // so the `{name}` inside the JSON string is intentionally NOT
-        // picked up as a placeholder. `{greeting}` sits in a clean region
-        // after that match and IS detected. This is the desired behavior:
-        // when the output is a JSON envelope, we do not want to prompt the
-        // user to "fill in" tokens that appear inside JSON string values.
+    it("finds embedded valid tokens but still ignores the surrounding JSON structure", () => {
+        // With the canonical (strict) VARIABLE_TOKEN_REGEX, the extractor
+        // finds `{name}` and `{greeting}` as legitimate single-word tokens
+        // — they happen to live inside a JSON string value, but as far as
+        // the user is concerned they are still fillable placeholders. The
+        // surrounding JSON structure (outer `{`, `"prompt":`, `"settings":
+        // { "tone": "formal" }`) is correctly IGNORED because none of
+        // those fragments match the strict token shape.
         const mixed = `{
   "prompt": "Hello {name}, this is {greeting}",
   "settings": { "tone": "formal" }
 }`;
-        expect(extractPlaceholders(mixed)).toEqual(["greeting"]);
+        expect(extractPlaceholders(mixed)).toEqual(["name", "greeting"]);
     });
 
     it("rejects placeholder candidates that are too long", () => {

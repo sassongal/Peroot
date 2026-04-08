@@ -1,39 +1,18 @@
 import { ReactNode, Children, isValidElement, cloneElement, ReactElement } from "react";
 import sanitizeHtml from "sanitize-html";
-
-export const PLACEHOLDER_REGEX = /{[^}]+}/g;
+import { VARIABLE_TOKEN_REGEX, extractVariables } from "@/lib/variable-utils";
 
 /**
- * Real placeholders look like {audience}, {tone}, {product_name}. Structured
- * JSON outputs (e.g., the nanobanana-json / stable-diffusion-json image engine
- * modes) emit whole objects inside braces, and the naive regex above
- * mis-identifies `{\n  "subject": {\n    "description": "..."\n  }` as a
- * single "placeholder" whose name is a multi-line JSON fragment. That in turn
- * flips the ResultSection layout into variable-panel mode and makes the
- * result column shrink to half width, so the user perceives the JSON as
- * "truncated" when in fact the layout is just wrong.
+ * Back-compat re-exports. All placeholder handling now routes through
+ * `@/lib/variable-utils` which owns the canonical regex, extractor,
+ * Hebrew-label lookup, and substitution logic. These aliases exist so
+ * legacy callers (`renderStyledPrompt`, `toStyledHtml`,
+ * `highlightTextWithPlaceholders`) keep working without churn.
  *
- * A real placeholder has no whitespace, no quotes, no control characters, no
- * brackets, and is short. This filter rejects the JSON bodies without
- * breaking any legitimate single-word placeholder.
+ * New code should import directly from `@/lib/variable-utils`.
  */
-const MAX_PLACEHOLDER_LENGTH = 40;
-const PLACEHOLDER_DISALLOWED = /[\s"':,\[\]{}]/;
-
-export const extractPlaceholders = (text: string): string[] => {
-  const matches = text.match(PLACEHOLDER_REGEX) || [];
-  const unique = new Set(
-    matches
-      .map((match) => match.replace(/[{}]/g, "").trim())
-      .filter(
-        (name) =>
-          name.length > 0 &&
-          name.length <= MAX_PLACEHOLDER_LENGTH &&
-          !PLACEHOLDER_DISALLOWED.test(name)
-      )
-  );
-  return Array.from(unique);
-};
+export const PLACEHOLDER_REGEX = VARIABLE_TOKEN_REGEX;
+export const extractPlaceholders = extractVariables;
 
 export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
   const COMBINED_REGEX = /{[^}]+}|\[[^\]]+\]/g;

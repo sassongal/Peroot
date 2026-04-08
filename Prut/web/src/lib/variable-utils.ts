@@ -1,6 +1,14 @@
 /**
  * Canonical Variable Registry for prompt enhancement.
  * All engines use this registry to produce consistent, predictable variable names.
+ *
+ * This module is the SINGLE SOURCE OF TRUTH for anything that deals with
+ * `{placeholder}` tokens in prompt text. Consumers (the Variables Panel in
+ * ResultSection, the VariableFiller in library cards, the engine-side
+ * registry instruction block) MUST all route through this file. Before this
+ * consolidation the codebase had three different regexes and two different
+ * extractor implementations, each with its own bugs and Hebrew-label
+ * inconsistencies.
  */
 
 export interface VariableDefinition {
@@ -8,6 +16,22 @@ export interface VariableDefinition {
   label: string;     // Hebrew description for UI display
   example: string;   // Hebrew example value
 }
+
+/**
+ * Canonical regex for matching `{token}` placeholders inside prompt text.
+ *
+ * Deliberately restrictive so that structured JSON outputs (image/video
+ * engines in JSON mode) can never be mis-identified as placeholders:
+ *   - The first character must be a letter (ASCII or Hebrew) or underscore.
+ *   - Subsequent characters are letters / digits / underscore / hyphen /
+ *     single space (for multi-word names like `{target audience}`).
+ *   - No quotes, colons, commas, braces, newlines, or other JSON syntax.
+ *
+ * Matches: `{brand_name}`, `{target audience}`, `{קהל_יעד}`, `{tone-style}`
+ * Rejects: `{ "subject": {...} }`, `{\n  "k": "v"\n}`, `{ }`, `{}`
+ */
+export const VARIABLE_TOKEN_REGEX =
+  /\{([A-Za-z_\u0590-\u05FF][A-Za-z0-9_\u0590-\u05FF\- ]{0,39})\}/g;
 
 export const VARIABLE_REGISTRY: Record<string, VariableDefinition[]> = {
   core: [
@@ -95,7 +119,131 @@ export function getVariablePlaceholder(varName: string): string {
   for (const [key, val] of Object.entries(VARIABLE_EXAMPLES)) {
     if (lower.includes(key) || key.includes(lower)) return val;
   }
-  return `לדוגמה: ערך עבור ${varName}`;
+  // Fall back to a localized hint that uses the human-readable Hebrew label
+  // so the user sees something meaningful even for unregistered variables.
+  return `לדוגמה: ${getVariableLabel(varName).toLowerCase()}`;
+}
+
+// --- Hebrew label lookup ---------------------------------------------------
+
+// Flat map: variable key (lowercase, snake_case) → Hebrew label from the
+// registry. Built once at module load so consumers can do an O(1) lookup
+// without iterating the registry on every render.
+const LABEL_BY_KEY: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  for (const group of Object.values(VARIABLE_REGISTRY)) {
+    for (const def of group) out[def.key] = def.label;
+  }
+  return out;
+})();
+
+// Common backward-compat aliases whose Hebrew label we want even though
+// they don't live in the registry (the engines sometimes still emit them).
+const ALIAS_LABELS: Record<string, string> = {
+  name: "שם",
+  company: "שם החברה",
+  brand: "שם המותג",
+  audience: "קהל יעד",
+  tone: "טון",
+  format: "פורמט",
+  role: "תפקיד",
+  goal: "מטרה",
+  location: "מיקום",
+  color: "צבע",
+  size: "גודל",
+  subject: "נושא",
+  topic: "נושא",
+  language: "שפה",
+  style: "סגנון",
+  mood: "מצב רוח",
+  lighting: "תאורה",
+  camera: "מצלמה",
+  setting: "סצנה",
+  background: "רקע",
+};
+
+// Humanize a snake_case / kebab-case identifier into a space-separated
+// phrase. Used only as the absolute last fallback — real keys should live
+// in the registry above.
+function humanize(key: string): string {
+  return key
+    .replace(/[_\-]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * Returns the Hebrew display label for a variable key.
+ *
+ * Lookup order:
+ *   1. Exact match in the canonical registry (`VARIABLE_REGISTRY`).
+ *   2. Exact match in the alias table (common LLM outputs like `{tone}`).
+ *   3. Partial substring match against registry keys (e.g. `brand_voice`
+ *      resolves via the `brand_name` alias to "שם המותג" → "מותג").
+ *   4. Humanized form of the raw key — last resort, but never raw
+ *      snake_case so the UI never surfaces `brand_name` to the user.
+ */
+export function getVariableLabel(varName: string): string {
+  const raw = varName.trim();
+  if (!raw) return "";
+  const lower = raw.toLowerCase().replace(/\s+/g, "_");
+
+  if (LABEL_BY_KEY[lower]) return LABEL_BY_KEY[lower];
+  if (ALIAS_LABELS[lower]) return ALIAS_LABELS[lower];
+
+  // Partial match: let `brand_voice` find `brand_name` → use its label
+  // stem. This is a pragmatic fallback — tight enough that it rarely
+  // mislabels, loose enough that the user almost always gets Hebrew.
+  for (const [key, label] of Object.entries(ALIAS_LABELS)) {
+    if (lower.includes(key)) return label;
+  }
+  for (const [key, label] of Object.entries(LABEL_BY_KEY)) {
+    if (lower.includes(key) || key.includes(lower)) return label;
+  }
+
+  return humanize(raw);
+}
+
+// --- Extraction & substitution --------------------------------------------
+
+/**
+ * Extract every unique `{token}` placeholder from a piece of prompt text.
+ * Uses the canonical VARIABLE_TOKEN_REGEX so the result is always a clean
+ * list of single-token identifiers — never a JSON body fragment.
+ *
+ * Returns variable keys in the order they first appear in the text.
+ */
+export function extractVariables(text: string): string[] {
+  if (!text) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const match of text.matchAll(VARIABLE_TOKEN_REGEX)) {
+    const key = match[1].trim();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
+}
+
+/**
+ * Substitute every `{token}` in the text with the caller-provided value.
+ * Missing or empty values leave the original `{token}` in place so the
+ * user can still see which placeholders are unfilled.
+ *
+ * Only tokens matching VARIABLE_TOKEN_REGEX are substituted — stray `{`
+ * in JSON content is left untouched.
+ */
+export function substituteVariables(
+  text: string,
+  values: Record<string, string | undefined>
+): string {
+  if (!text) return text;
+  return text.replace(VARIABLE_TOKEN_REGEX, (match, key: string) => {
+    const trimmed = key.trim();
+    const val = values[trimmed];
+    return val && val.trim().length > 0 ? val : match;
+  });
 }
 
 /**
