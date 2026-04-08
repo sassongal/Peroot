@@ -14,6 +14,7 @@ vi.mock('@react-pdf/renderer', () => ({
   Page: ({ children }: { children: React.ReactNode }) => children,
   Text: ({ children }: { children: React.ReactNode }) => children,
   View: ({ children }: { children: React.ReactNode }) => children,
+  Image: () => null,
   StyleSheet: { create: (s: unknown) => s },
   Font: { register: vi.fn(), registerHyphenationCallback: vi.fn() },
 }));

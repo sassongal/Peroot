@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, RefreshCw, Star } from "lucide-react";
-import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PromptScore } from "@/lib/engines/base-engine";
@@ -387,16 +386,31 @@ export function ResultSection({
           )}
 
           <div className="p-4 bg-[var(--glass-bg)] border-t border-[var(--glass-border)] mt-auto space-y-3">
-            {/* Primary actions row */}
+            {/*
+              Action bar — two wrapping groups on one wrap-enabled row.
+
+              Left group: navigation (back, reset, back-to-original).
+              Right group: actions. Ordered from least to most important so
+              the visually dominant "העתק פרומפט" ends on the inline-end
+              (start of the line in RTL, since the group is justify-end),
+              never clipped. The WhatsApp icon button was removed — the
+              full "פתח ב:" bar above already has a labeled WhatsApp link,
+              and the redundant icon was what pushed the copy button off
+              the line in the screenshot.
+
+              `flex-wrap` on both the outer row and each inner group means
+              every button stays visible at every viewport width. The
+              primary copy button is `shrink-0` so even after wrapping it
+              keeps its full label + shortcut hint.
+            */}
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={onBack}
                   className="px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                 >
                   {t.result_section.back_to_edit}
                 </button>
-                {/* Reset - start fresh with a new prompt */}
                 {onReset && (
                   <button
                     onClick={onReset}
@@ -408,7 +422,6 @@ export function ResultSection({
                     לאפס
                   </button>
                 )}
-                {/* Back to Original - only shown after at least one refinement */}
                 {onResetToOriginal && (iterationCount ?? 0) > 0 && (
                   <button
                     onClick={onResetToOriginal}
@@ -421,99 +434,71 @@ export function ResultSection({
                   </button>
                 )}
               </div>
-              {/*
-                Mobile-first action bar — two-tier on mobile, single row on sm+.
-                Primary actions (Improve Again + Copy) get their own row at the
-                top of the bar on mobile so the main CTA never gets wrapped or
-                hidden behind secondary buttons. Secondary actions (Share /
-                WhatsApp / Save / Template) collapse to icon-only on mobile and
-                wrap if needed. On sm+ we use `contents` to unwrap both groups
-                into the parent flex row, recovering the original single-row
-                desktop layout without duplicating markup.
-              */}
-              <div className="flex flex-col-reverse items-stretch gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
-                {/* Secondary actions — icon-only on mobile, labeled on sm+ */}
-                <div className="flex items-center justify-end gap-2 flex-wrap sm:contents">
-                  {onShare && (
-                    <button
-                      onClick={onShare}
-                      className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 min-w-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                      title="שתף"
-                      aria-label="שתף"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">שתף</span>
-                    </button>
-                  )}
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                {onShare && (
                   <button
-                    onClick={() => {
-                      const shareText = encodeURIComponent("שדרגתי פרומפט עם Peroot! \u{1F680} נסו גם: https://www.peroot.space");
-                      window.open(`https://api.whatsapp.com/send?text=${shareText}`, "_blank");
-                      trackShare("whatsapp_result", "https://www.peroot.space");
-                    }}
-                    className="flex items-center justify-center p-2.5 rounded-lg border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 transition-colors cursor-pointer min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-[#25D366]/50 focus-visible:outline-none"
-                    title="שתף בוואטסאפ"
-                    aria-label="שתף בוואטסאפ"
+                    onClick={onShare}
+                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    title="שתף"
+                    aria-label="שתף"
                   >
-                    <WhatsAppIcon className="w-4 h-4" />
+                    <Share2 className="w-3.5 h-3.5" />
+                    שתף
                   </button>
+                )}
+                <button
+                  onClick={onSave}
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  title={t.result_section.save}
+                  aria-label={t.result_section.save}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {t.result_section.save}
+                </button>
+                {onSaveAsFavorite && (
                   <button
-                    onClick={onSave}
-                    className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 min-w-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                    title={t.result_section.save}
-                    aria-label={t.result_section.save}
+                    onClick={onSaveAsFavorite}
+                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/5 text-amber-600 dark:text-amber-300 text-xs hover:bg-amber-500/15 transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    title="שמור ומסמן כמועדף"
+                    aria-label="שמור ומסמן כמועדף"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">{t.result_section.save}</span>
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    שמור למועדפים
                   </button>
-                  {onSaveAsFavorite && (
-                    <button
-                      onClick={onSaveAsFavorite}
-                      className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/5 text-amber-600 dark:text-amber-300 text-xs hover:bg-amber-500/15 transition-colors cursor-pointer min-h-11 min-w-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                      title="שמור ומסמן כמועדף"
-                      aria-label="שמור ומסמן כמועדף"
-                    >
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      <span className="hidden sm:inline">שמור למועדפים</span>
-                    </button>
-                  )}
-                  {onSaveAsTemplate && placeholders.length > 0 && (
-                    <button
-                      onClick={onSaveAsTemplate}
-                      className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2.5 rounded-lg border border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs hover:bg-purple-500/10 transition-colors cursor-pointer min-h-11 min-w-11 justify-center focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:outline-none"
-                      title="שמור כתבנית לשימוש חוזר"
-                      aria-label="שמור כתבנית"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">שמור כתבנית</span>
-                    </button>
-                  )}
-                </div>
-                {/* Primary actions — full-width row on mobile, inline on sm+ */}
-                <div className="flex items-center justify-end gap-2 sm:contents">
-                  {onImproveAgain && (
-                    <button
-                      onClick={onImproveAgain}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      {t.result?.improve_again || 'שפר שוב'}
-                      {(iterationCount ?? 0) > 0 && (
-                        <span className="bg-amber-500/30 text-amber-200 text-[10px] px-1.5 py-0.5 rounded-full">
-                          #{iterationCount}
-                        </span>
-                      )}
-                    </button>
-                  )}
+                )}
+                {onSaveAsTemplate && placeholders.length > 0 && (
                   <button
-                    onClick={() => handleCopy(displayCompletion)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg accent-gradient text-black font-medium text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    onClick={onSaveAsTemplate}
+                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs hover:bg-purple-500/10 transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:outline-none"
+                    title="שמור כתבנית לשימוש חוזר"
+                    aria-label="שמור כתבנית"
                   >
-                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? t.result_section.copied : t.result_section.copy_button}
-                    {!copied && <kbd className="hidden sm:inline text-[10px] opacity-50 font-normal font-mono bg-black/10 px-1.5 py-0.5 rounded">{copyShortcutHint}</kbd>}
+                    <Copy className="w-3.5 h-3.5" />
+                    שמור כתבנית
                   </button>
-                </div>
+                )}
+                {onImproveAgain && (
+                  <button
+                    onClick={onImproveAgain}
+                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    {t.result?.improve_again || 'שפר שוב'}
+                    {(iterationCount ?? 0) > 0 && (
+                      <span className="bg-amber-500/30 text-amber-200 text-[10px] px-1.5 py-0.5 rounded-full">
+                        #{iterationCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleCopy(displayCompletion)}
+                  className="shrink-0 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg accent-gradient text-black font-semibold text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? t.result_section.copied : t.result_section.copy_button}
+                  {!copied && <kbd className="hidden sm:inline text-[10px] opacity-50 font-normal font-mono bg-black/15 px-1.5 py-0.5 rounded">{copyShortcutHint}</kbd>}
+                </button>
               </div>
             </div>
 
