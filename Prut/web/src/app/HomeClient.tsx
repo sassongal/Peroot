@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useContextAttachments } from "@/hooks/useContextAttachments";
+import { consumePendingPrompt } from "@/lib/pending-prompt";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 import { Clock, Link2 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
@@ -814,6 +815,32 @@ function PageContent() {
     setViewMode("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [viewMode, dispatch, setViewMode]);
+
+  // Pickup pending prompt handoff from external routes like /prompts/[slug]
+  // and /templates. Those pages can't dispatch into this reducer directly
+  // (different route tree), so they stash the prompt in sessionStorage and
+  // navigate here; we consume it on mount and route it through the same
+  // canonical handleUsePrompt path the in-app library buttons use. Runs
+  // once on mount — consumePendingPrompt is self-clearing, so a page
+  // refresh won't re-apply the same prompt. Guarded with a ref because
+  // handleUsePrompt references viewMode, which changes — without the
+  // guard, the effect would fire twice when viewMode updates from the
+  // first dispatch and re-trigger the load loop.
+  const pendingConsumedRef = useRef(false);
+  useEffect(() => {
+    if (pendingConsumedRef.current) return;
+    const pending = consumePendingPrompt();
+    if (!pending) return;
+    pendingConsumedRef.current = true;
+    handleUsePrompt({
+      id: pending.id ?? `pending-${Date.now()}`,
+      title: pending.title ?? '',
+      prompt: pending.prompt,
+      category: pending.category ?? PERSONAL_DEFAULT_CATEGORY,
+      is_template: !!pending.is_template,
+    } as unknown as LibraryPrompt);
+    toast.success('הפרומפט נטען');
+  }, [handleUsePrompt]);
 
   const handleBackToLibrary = useCallback(() => {
     if (previousView === "personal" || previousView === "library") {

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Crown, Variable } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LibraryPrompt } from "@/lib/types";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
+import { setPendingPrompt } from "@/lib/pending-prompt";
 
 interface TemplateGridProps {
   templates: LibraryPrompt[];
@@ -34,7 +35,20 @@ function groupByCategory(templates: LibraryPrompt[]) {
 }
 
 export function TemplateGrid({ templates }: TemplateGridProps) {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const handleUseTemplate = (template: LibraryPrompt) => {
+    setPendingPrompt({
+      id: template.id,
+      title: template.title,
+      prompt: template.prompt,
+      category: template.category,
+      is_template: true,
+      source: "templates",
+    });
+    router.push("/?ref=templates");
+  };
 
   const categories = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -158,12 +172,13 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
 
                     {/* Footer: Use button */}
                     <div className="px-5 pb-4 pt-1">
-                      <Link
-                        href={`/?ref=templates&template=${encodeURIComponent(template.id)}`}
-                        className="flex items-center justify-center w-full py-2.5 rounded-lg text-sm font-bold transition-all border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                      <button
+                        type="button"
+                        onClick={() => handleUseTemplate(template)}
+                        className="flex items-center justify-center w-full py-2.5 rounded-lg text-sm font-bold transition-all border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer"
                       >
                         השתמש בתבנית
-                      </Link>
+                      </button>
                     </div>
                   </article>
                 );

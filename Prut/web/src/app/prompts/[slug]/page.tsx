@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Copy, ExternalLink } from "lucide-react";
+import { ArrowRight, Copy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_SLUG_MAP, CATEGORY_ID_TO_SLUG, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { breadcrumbSchema, promptCollectionSchema } from "@/lib/schema";
 import { CopyButton } from "./CopyButton";
+import { UsePromptButton } from "./UsePromptButton";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -253,13 +254,12 @@ export default async function CategoryPage({ params }: Props) {
                     {/* Actions */}
                     <div className="flex items-center gap-2 mt-auto pt-1">
                       <CopyButton text={prompt.prompt} />
-                      <Link
-                        href="/?ref=prompts-library"
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs hover:bg-amber-500/20 transition-colors"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                        השתמש ב-Peroot
-                      </Link>
+                      <UsePromptButton
+                        id={prompt.id}
+                        title={prompt.title}
+                        prompt={prompt.prompt}
+                        category={slug}
+                      />
                     </div>
                   </article>
                 ))}
