@@ -162,14 +162,34 @@ const ALIAS_LABELS: Record<string, string> = {
   background: "רקע",
 };
 
-// Humanize a snake_case / kebab-case identifier into a space-separated
-// phrase. Used only as the absolute last fallback — real keys should live
-// in the registry above.
+// Humanize a snake_case / kebab-case / camelCase identifier into a
+// space-separated phrase. Used only as the absolute last fallback — real
+// keys should live in the registry above. The camelCase split handles
+// engine outputs like `{brandName}` which Gemini occasionally produces
+// instead of the canonical snake_case convention.
 function humanize(key: string): string {
   return key
+    .replace(/([a-z\u0590-\u05FF])([A-Z])/g, "$1 $2") // camelCase → "camel Case"
     .replace(/[_\-]+/g, " ")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+/**
+ * Word-boundary check for partial-key matching. The previous version of
+ * `getVariableLabel` used a naive `lower.includes(key)` which produced
+ * false-positive labels — `{stone}` was matched as containing `tone` and
+ * labelled "טון", `{phone}` likewise, `{username}` got "שם", and so on.
+ *
+ * This helper requires the alias key to be either the full name or a
+ * standalone segment delimited by `_`/`-`/space, so `tone_style` /
+ * `brand_tone` / `default-tone` still resolve to "טון", but `stone`
+ * does not.
+ */
+function containsAsSegment(haystack: string, needle: string): boolean {
+  if (haystack === needle) return true;
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[_\\- ])${escaped}([_\\- ]|$)`).test(haystack);
 }
 
 /**
@@ -186,19 +206,25 @@ function humanize(key: string): string {
 export function getVariableLabel(varName: string): string {
   const raw = varName.trim();
   if (!raw) return "";
-  const lower = raw.toLowerCase().replace(/\s+/g, "_");
+  // Pre-process camelCase → snake_case BEFORE lowercasing. Without this
+  // step the case boundary is lost (`brandName` → `brandname`) and the
+  // alias lookup fails. With it, `brandName` → `brand_name` → exact
+  // registry hit → "שם המותג".
+  const snake = raw.replace(/([a-z\u0590-\u05FF])([A-Z])/g, "$1_$2");
+  const lower = snake.toLowerCase().replace(/\s+/g, "_");
 
   if (LABEL_BY_KEY[lower]) return LABEL_BY_KEY[lower];
   if (ALIAS_LABELS[lower]) return ALIAS_LABELS[lower];
 
-  // Partial match: let `brand_voice` find `brand_name` → use its label
-  // stem. This is a pragmatic fallback — tight enough that it rarely
-  // mislabels, loose enough that the user almost always gets Hebrew.
+  // Word-boundary partial match: `brand_voice` resolves via the `brand`
+  // alias to "שם המותג", `tone_style` resolves via `tone` to "טון", but
+  // `stone` / `phone` / `username` no longer false-match short aliases
+  // because the alias key must sit on a `_`/`-`/space boundary.
   for (const [key, label] of Object.entries(ALIAS_LABELS)) {
-    if (lower.includes(key)) return label;
+    if (containsAsSegment(lower, key)) return label;
   }
   for (const [key, label] of Object.entries(LABEL_BY_KEY)) {
-    if (lower.includes(key) || key.includes(lower)) return label;
+    if (containsAsSegment(lower, key) || containsAsSegment(key, lower)) return label;
   }
 
   return humanize(raw);

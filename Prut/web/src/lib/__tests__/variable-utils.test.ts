@@ -87,6 +87,34 @@ describe("getVariableLabel", () => {
         expect(getVariableLabel("unknown_custom_thing")).toBe("unknown custom thing");
     });
 
+    it("humanizes camelCase keys (engines occasionally emit them)", () => {
+        expect(getVariableLabel("brandName")).toBe("שם המותג"); // ALIAS partial via 'brand'
+        expect(getVariableLabel("totallyMadeUpKey")).toBe("totally Made Up Key");
+    });
+
+    // Regression: short alias keys (`tone`, `name`, `goal`, `role`)
+    // were producing false-positive labels because the previous
+    // partial-match used naive substring `includes`. The new
+    // word-boundary check requires the alias to sit on a `_`/`-`/space.
+    it("does NOT mislabel words that merely contain a short alias as a substring", () => {
+        expect(getVariableLabel("stone")).toBe("stone");          // NOT "טון"
+        expect(getVariableLabel("phone")).toBe("phone");          // NOT "טון"
+        expect(getVariableLabel("gone")).toBe("gone");            // NOT "טון"
+        expect(getVariableLabel("hostname")).toBe("hostname");    // NOT "שם"
+    });
+
+    it("still resolves short aliases when they ARE word-bounded segments", () => {
+        // tone_style is in the canonical registry as its own entry, so
+        // exact-match wins (step 1) and returns the full registry label.
+        expect(getVariableLabel("tone_style")).toBe("טון וסגנון");
+        // brand_tone is not in the registry; in the alias loop the iteration
+        // order has `brand` before `tone`, so the brand alias wins.
+        expect(getVariableLabel("brand_tone")).toBe("שם המותג");
+        // default-tone has no `default` alias, so the loop reaches `tone`.
+        expect(getVariableLabel("default-tone")).toBe("טון");
+        expect(getVariableLabel("user_name")).toBe("שם");
+    });
+
     it("returns empty string for empty input", () => {
         expect(getVariableLabel("")).toBe("");
         expect(getVariableLabel("   ")).toBe("");

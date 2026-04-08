@@ -74,18 +74,26 @@ export function renderPromptWithVariables(
                 </mark>
             );
         } else {
-            // Unfilled: show the Hebrew label wrapped in curly braces
-            // so the user still recognizes it as a template slot, but
-            // reads Hebrew instead of snake_case.
+            // Unfilled: show the Hebrew label wrapped in curly braces.
+            // The outer span is forced to dir="ltr" so the `{` and `}`
+            // characters never get re-ordered by the BiDi algorithm in
+            // RTL parents — without this, in a Hebrew-direction container
+            // the brackets can flip to the wrong sides because they are
+            // BiDi neutrals adjacent to strong-RTL Hebrew text. The inner
+            // span carries dir="rtl" so the Hebrew label itself still
+            // reads in its natural direction.
             parts.push(
                 <span
                     key={`p-${start}-${key}`}
+                    dir="ltr"
                     className="inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border border-sky-500/40 dark:border-sky-400/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 font-medium whitespace-nowrap"
                     title={key}
                 >
-                    {"{"}
-                    {getVariableLabel(key)}
-                    {"}"}
+                    <span aria-hidden="true">{"{"}</span>
+                    <span dir="rtl" className="px-0.5">
+                        {getVariableLabel(key)}
+                    </span>
+                    <span aria-hidden="true">{"}"}</span>
                 </span>
             );
         }
