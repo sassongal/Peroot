@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { ComponentType, useState } from "react";
 import {
     Rocket, ArrowRight, ArrowLeft,
-    MessageSquare, Globe, Palette, Bot,
+    MessageSquare, Globe, Palette, Bot, Video,
     Sparkles, CheckCircle2,
 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -11,38 +11,49 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
+import { CAPABILITY_CONFIGS, CapabilityMode, type IconName } from "@/lib/capability-mode";
 
 interface OnboardingOverlayProps {
     onComplete: (data: { role: string; goal: string }) => void;
 }
 
-const CAPABILITY_MODES = [
-    {
-        icon: MessageSquare,
-        color: "sky",
-        labelHe: "סטנדרטי",
-        descriptionHe: "יצירת טקסט וצ'אט רגיל - מושלם לרוב המשימות",
-    },
-    {
-        icon: Globe,
-        color: "emerald",
-        labelHe: "מחקר מעמיק",
-        descriptionHe: "חיפוש ברשת עם מקורות ושרשרת חשיבה מפורטת",
-    },
-    {
-        icon: Palette,
-        color: "purple",
-        labelHe: "יצירת תמונה",
-        descriptionHe: "יצירת פרומפטים לתמונות עם DALL-E או Midjourney",
-    },
-    {
-        icon: Bot,
-        color: "amber",
-        labelHe: "בונה סוכנים",
-        descriptionHe: "הגדרת GPT מותאמים וסוכני AI עצמאיים",
-        comingSoon: true,
-    },
+// Map registry icon names to actual lucide React components. Keeps the
+// canonical CAPABILITY_CONFIGS in capability-mode.ts JSX-free (it's pure
+// data) while letting components like this one project it onto a UI tree.
+const ICON_BY_NAME: Record<IconName, ComponentType<{ className?: string }>> = {
+    MessageSquare,
+    Globe,
+    Palette,
+    Bot,
+    Video,
+};
+
+// Onboarding-specific overlay on the canonical registry: which modes to
+// surface in the onboarding tour, and which to label as "coming soon"
+// for first-time users. The 4-mode subset (skipping Video) and the
+// "Agent Builder is coming soon" copy are PRESERVED from the previous
+// hand-rolled local list — this commit is purely a deduplication, not
+// a behavior change.
+const ONBOARDING_MODES: Array<{ mode: CapabilityMode; comingSoon?: boolean }> = [
+    { mode: CapabilityMode.STANDARD },
+    { mode: CapabilityMode.DEEP_RESEARCH },
+    { mode: CapabilityMode.IMAGE_GENERATION },
+    { mode: CapabilityMode.AGENT_BUILDER, comingSoon: true },
 ];
+
+// Project the onboarding subset onto the registry, attaching the React
+// icon component and the onboarding-specific copy/flags. Built once at
+// module load — the registry never changes at runtime.
+const CAPABILITY_MODES = ONBOARDING_MODES.map(({ mode, comingSoon }) => {
+    const cfg = CAPABILITY_CONFIGS[mode];
+    return {
+        icon: ICON_BY_NAME[cfg.icon],
+        color: cfg.color,
+        labelHe: cfg.labelHe,
+        descriptionHe: cfg.descriptionHe,
+        comingSoon,
+    };
+});
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string; ring: string }> = {
     sky:     { bg: "bg-sky-500/10",     border: "border-sky-500/30",     text: "text-sky-400",     ring: "ring-sky-500/20"     },
