@@ -120,8 +120,6 @@ export function ResultSection({
   const copyShortcutHint = isMac ? "⌘⇧C" : "Ctrl+⇧C";
   // Pro users can toggle the watermark off; free users always get the watermark.
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
-  // Anchor 2 — toggle to show word-level diff between original and enhanced.
-  const [showDiff, setShowDiff] = useState(false);
   // P3 — score breakdown drawer state. Computed lazily on click so we
   // don't run EnhancedScorer on every render (it's cheap but no reason to).
   const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null>(null);
@@ -244,39 +242,7 @@ export function ResultSection({
       {/* 5.6 RTL: use flex-col lg:flex-row for variable panel stacking */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Result Area */}
-        <div className={cn("glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden relative group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
-
-          {/* Floating copy + export buttons */}
-          <div className="absolute top-4 end-4 flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity z-10">
-            <ExportPdfButton
-              title={displayCompletion.slice(0, 60)}
-              original={originalPrompt ?? ''}
-              enhanced={displayCompletion}
-              score={
-                completionScore
-                  ? {
-                      before:
-                        improvementDelta > 0
-                          ? Math.max(0, completionScore.score - improvementDelta)
-                          : null,
-                      after: completionScore.score,
-                    }
-                  : null
-              }
-              breakdown={pdfBreakdown?.breakdown}
-              strengths={pdfBreakdown?.strengths}
-              weaknesses={pdfBreakdown?.weaknesses}
-              disabled={isLoading || !completion}
-            />
-            <button
-              onClick={() => handleCopy(displayCompletion)}
-              className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              title={t.result_section.copy_tooltip}
-              aria-label="העתק פרומפט"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
+        <div className={cn("glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
 
           {/* Content area - loading skeleton OR shared BeforeAfterSplit */}
           {isLoading && !completion ? (
@@ -289,39 +255,47 @@ export function ResultSection({
             </div>
           ) : (
             <div className="p-4 flex-1">
-              {/* Anchor 2 — Diff toggle: tabs (default) ↔ visual diff.
-                  Only shown when the original prompt exists (refinement
-                  flows reuse this component without an "original"). */}
-              {(originalPrompt ?? '').trim().length > 0 && (
-                <div className="flex items-center justify-end mb-2" dir="rtl">
-                  <button
-                    type="button"
-                    onClick={() => setShowDiff(v => !v)}
-                    aria-pressed={showDiff}
-                    className={cn(
-                      'px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors',
-                      showDiff
-                        ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40'
-                        : 'text-[var(--text-muted)] border-[var(--glass-border)] hover:text-[var(--text-primary)]'
-                    )}
-                  >
-                    {showDiff ? '↩ חזור לתצוגה רגילה' : 'הצג שינויים'}
-                  </button>
-                </div>
-              )}
+              {/* Inline toolbar — lives above the result text so it never
+                  overlaps the "אחרי/לפני" tabs inside BeforeAfterSplit.
+                  The "הצג שינויים" diff toggle was removed: the score
+                  drawer (opened by clicking the score pill in the header)
+                  already surfaces per-dimension strengths and gaps, so
+                  the extra diff button became redundant noise. */}
+              <div className="flex items-center justify-end gap-2 mb-3" dir="rtl">
+                <ExportPdfButton
+                  title={displayCompletion.slice(0, 60)}
+                  original={originalPrompt ?? ''}
+                  enhanced={displayCompletion}
+                  score={
+                    completionScore
+                      ? {
+                          before:
+                            improvementDelta > 0
+                              ? Math.max(0, completionScore.score - improvementDelta)
+                              : null,
+                          after: completionScore.score,
+                        }
+                      : null
+                  }
+                  breakdown={pdfBreakdown?.breakdown}
+                  strengths={pdfBreakdown?.strengths}
+                  weaknesses={pdfBreakdown?.weaknesses}
+                  disabled={isLoading || !completion}
+                />
+                <button
+                  onClick={() => handleCopy(displayCompletion)}
+                  className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  title={t.result_section.copy_tooltip}
+                  aria-label="העתק פרומפט"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
               <BeforeAfterSplit
                 original={originalPrompt ?? ''}
                 enhanced={displayCompletion}
                 enhancedNode={displayNode}
-                mode={showDiff ? 'diff' : 'tabs'}
-                score={
-                  completionScore
-                    ? {
-                        before: improvementDelta > 0 ? Math.max(0, completionScore.score - improvementDelta) : null,
-                        after: completionScore.score,
-                      }
-                    : undefined
-                }
+                mode="tabs"
               />
             </div>
           )}

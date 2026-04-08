@@ -19,6 +19,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
+import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
 import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -351,10 +352,32 @@ function PageContent() {
     () => BaseEngine.scorePrompt(debouncedInput, ps.selectedCapability),
     [debouncedInput, ps.selectedCapability]
   );
-  const completionScore = useMemo(
-    () => BaseEngine.scorePrompt(debouncedCompletion, ps.selectedCapability),
-    [debouncedCompletion, ps.selectedCapability]
-  );
+  // IMPORTANT: The result-section header score must match the numbers shown
+  // inside the score-breakdown drawer and the PDF export. Both of those use
+  // EnhancedScorer, so compute the header score from the same source to
+  // avoid a silent mismatch (e.g. header says 100 but the drawer breakdown
+  // sums to a different total). We synthesize a PromptScore-shaped object
+  // so ResultSection continues to work unchanged.
+  const completionScore = useMemo(() => {
+    const trimmed = debouncedCompletion.trim();
+    if (!trimmed) {
+      return { score: 0, baseScore: 0, level: 'empty' as const, label: 'חסר', tips: [], usageBoost: 0 };
+    }
+    const enhanced = EnhancedScorer.score(debouncedCompletion, ps.selectedCapability);
+    const level: 'low' | 'medium' | 'high' = enhanced.total >= 70
+      ? 'high'
+      : enhanced.total >= 40
+        ? 'medium'
+        : 'low';
+    return {
+      score: enhanced.total,
+      baseScore: enhanced.total,
+      level,
+      label: enhanced.label,
+      tips: enhanced.topWeaknesses.slice(0, 3),
+      usageBoost: 0,
+    };
+  }, [debouncedCompletion, ps.selectedCapability]);
 
   const scoreTone =
     inputScore.level === "high"
