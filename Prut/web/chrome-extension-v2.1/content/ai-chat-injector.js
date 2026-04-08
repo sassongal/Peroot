@@ -390,6 +390,15 @@
     showToast('\u05DE\u05E9\u05D3\u05E8\u05D2...', 'info');
 
     try {
+      // Map the detected site to target_model so the server tunes the
+      // enhanced prompt for the exact platform the user is sitting on.
+      // detectedSiteKey is set at module init (line ~227) via SITES.
+      const targetModel =
+        detectedSiteKey === 'chatgpt' ? 'chatgpt'
+        : detectedSiteKey === 'claude' ? 'claude'
+        : detectedSiteKey === 'gemini' ? 'gemini'
+        : 'general';
+
       // Route through service worker to avoid CORS
       const res = await apiFetch('/api/enhance', {
         method: 'POST',
@@ -398,6 +407,7 @@
           tone: 'Professional',
           category: '\u05DB\u05DC\u05DC\u05D9',
           capability_mode: selectedMode,
+          target_model: targetModel,
           ...(selectedMode === 'IMAGE_GENERATION' && { mode_params: { image_platform: selectedImagePlatform } }),
           ...(selectedMode === 'VIDEO_GENERATION' && { mode_params: { video_platform: selectedVideoPlatform } }),
         },

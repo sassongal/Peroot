@@ -35,16 +35,33 @@ if (!window.__peerootContentLoaded) {
     });
   }
 
+  // ─── Target Model Detection ───
+  // Read the current tab host and map it to /api/enhance's target_model.
+  // This tunes the server's output for the platform the user is on —
+  // e.g. ChatGPT likes numbered lists, Claude likes XML delimiters.
+  function detectTargetModel() {
+    const host = location.hostname;
+    if (/chat\.openai\.com|chatgpt\.com/.test(host)) return "chatgpt";
+    if (/claude\.ai/.test(host)) return "claude";
+    if (/gemini\.google\.com/.test(host)) return "gemini";
+    return "general";
+  }
+  const TARGET_MODEL = detectTargetModel();
+
   // ─── Action Definitions ───
   const ACTIONS = {
     enhance: {
       label: "\u05E9\u05D3\u05E8\u05D2",
-      buildBody: (text) => ({ prompt: text, tone: "Professional", category: "General" }),
+      buildBody: (text) => ({
+        prompt: text, tone: "Professional", category: "General",
+        target_model: TARGET_MODEL,
+      }),
     },
     shorten: {
       label: "\u05E7\u05E6\u05E8",
       buildBody: (text) => ({
         prompt: text, tone: "Professional", category: "General",
+        target_model: TARGET_MODEL,
         refinementInstruction: "Make this significantly shorter and more concise. Keep the core message but remove all unnecessary words. Output ONLY the shortened text.",
         previousResult: text,
       }),
@@ -53,6 +70,7 @@ if (!window.__peerootContentLoaded) {
       label: "\u05D4\u05D0\u05E8\u05DA",
       buildBody: (text) => ({
         prompt: text, tone: "Professional", category: "General",
+        target_model: TARGET_MODEL,
         refinementInstruction: "Expand and elaborate on this text. Add more detail, examples, and depth while maintaining the original tone. Output ONLY the expanded text.",
         previousResult: text,
       }),
@@ -61,6 +79,7 @@ if (!window.__peerootContentLoaded) {
       label: "\u05EA\u05E7\u05DF",
       buildBody: (text) => ({
         prompt: text, tone: "Professional", category: "General",
+        target_model: TARGET_MODEL,
         refinementInstruction: "Fix all grammar, spelling, and punctuation errors. Improve sentence structure where needed. Output ONLY the corrected text.",
         previousResult: text,
       }),
@@ -69,6 +88,7 @@ if (!window.__peerootContentLoaded) {
       label: "\u05EA\u05E8\u05D2\u05DD",
       buildBody: (text) => ({
         prompt: text, tone: "Professional", category: "General",
+        target_model: TARGET_MODEL,
         refinementInstruction: "Translate this text to English. If already in English, translate to Hebrew. Output ONLY the translation.",
         previousResult: text,
       }),

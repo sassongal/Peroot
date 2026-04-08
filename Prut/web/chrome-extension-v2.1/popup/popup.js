@@ -44,11 +44,64 @@ let lastEnhanced = "";
 let isEnhancing = false;
 let selectedTone = "Professional";
 let scoreTimeout = null;
+let detectedTargetModel = "general";
 
 function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Detect which AI chat platform the user is currently on and return the
+ * matching `target_model` value expected by /api/enhance. The server uses
+ * this to tune output for the target platform — e.g., ChatGPT likes
+ * numbered lists, Claude likes XML-style delimiters, Gemini likes
+ * markdown headers. Defaults to 'general' on unknown hosts.
+ */
+async function detectTargetModel() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const host = tab?.url ? new URL(tab.url).hostname : "";
+    if (/chat\.openai\.com|chatgpt\.com/.test(host)) return "chatgpt";
+    if (/claude\.ai/.test(host)) return "claude";
+    if (/gemini\.google\.com/.test(host)) return "gemini";
+  } catch {
+    // Permission denied or invalid URL — silently fall through.
+  }
+  return "general";
+}
+
+/**
+ * Extract a complete JSON object from a text stream using brace-matched
+ * parsing. Used when the enhanced output is expected to be JSON (image
+ * platforms like Stable Diffusion / Nano Banana). Replaces the naive
+ * `split("[GENIUS_QUESTIONS]")[0]` approach which could cut mid-JSON if
+ * the model accidentally emits that marker inside a string value.
+ *
+ * Returns the text unchanged if no opening brace is found.
+ */
+function extractJSONFromStream(raw) {
+  const trimmed = raw.trim();
+  const firstBrace = trimmed.indexOf("{");
+  if (firstBrace === -1) return trimmed;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = firstBrace; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return trimmed.slice(firstBrace, i + 1);
+    }
+  }
+  // Unterminated — return what we have so far so the UI still shows progress
+  return trimmed.slice(firstBrace);
 }
 let selectedMode = "STANDARD";
 let selectedImagePlatform = "general";
@@ -130,8 +183,46 @@ function scorePrompt(text) {
   if (/\u05D3\u05D5\u05D2\u05DE\u05D4 \u05DC\u05E4\u05DC\u05D8|output\s+example|expected/i.test(text)) total += 8;
   else if (/\u05D3\u05D5\u05D2\u05DE\u05D4|example|sample/i.test(text)) total += 4;
 
+  // ═════════ ANTI-GAMING SIGNALS (synced with web EnhancedScorer) ═════════
+
+  // 11. Buzzword inflation penalty (-5 if >= 3 vague superlatives with no
+  //     concrete spec to back them up). Mirrors the web scorer's clarity
+  //     dimension rule added after users started submitting prompts like
+  //     "world-class premium comprehensive professional content".
+  const buzzwords = /\u05DE\u05E7\u05E6\u05D5\u05E2\u05D9|\u05DE\u05E7\u05D9\u05E3|\u05D0\u05D9\u05DB\u05D5\u05EA\u05D9|\u05DE\u05E6\u05D5\u05D9\u05DF|\u05D9\u05D5\u05E6\u05D0 \u05D3\u05D5\u05E4\u05DF|\u05D1\u05E8\u05DE\u05D4 \u05D4\u05D2\u05D1\u05D5\u05D4\u05D4|world-class|premium|expert|best-in-class|cutting-edge|state-of-the-art|top-tier|high-quality|excellent|outstanding|superior|advanced|comprehensive|professional|innovative|revolutionary|unique/gi;
+  const buzzMatches = text.match(buzzwords) || [];
+  const hasConcreteSpec = /\d+\s*(\u05DE\u05D9\u05DC\u05D9\u05DD|\u05E9\u05D5\u05E8\u05D5\u05EA|\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA|words|lines|items|points|bullets|sentences)/i.test(text);
+  if (buzzMatches.length >= 3 && !hasConcreteSpec) {
+    total -= 5;
+    tips.push('\u05D9\u05D5\u05EA\u05E8 \u05DE\u05D3\u05D9 \u05DE\u05D9\u05DC\u05D5\u05EA \u05DB\u05DC\u05DC\u05D9\u05D5\u05EA — \u05D4\u05D7\u05DC\u05E3 \u05D1\u05DE\u05E1\u05E4\u05E8\u05D9\u05DD \u05E7\u05D5\u05E0\u05E7\u05E8\u05D8\u05D9\u05D9\u05DD');
+  }
+
+  // 12. Contradiction detection (-3 per pair). Brevity vs high word count,
+  //     no-table vs in-table, no-list vs list-of, concise vs long.
+  const contradictionPairs = [
+    [/(\u05E7\u05E6\u05E8|short|brief|concise)/i, /\b([5-9]\d{2,}|[1-9]\d{3,})\b/],
+    [/(\u05D1\u05DC\u05D9|\u05DC\u05DC\u05D0|without|no)\s*\u05D8\u05D1\u05DC\u05D4|no\s+table/i, /(\u05D1\u05D8\u05D1\u05DC\u05D4|in\s+a?\s*table|table\s+format)/i],
+    [/(\u05E7\u05E6\u05E8|concise|brief)/i, /(\u05D0\u05E8\u05D5\u05DA|\u05DE\u05E4\u05D5\u05E8\u05D8 \u05DE\u05D0\u05D5\u05D3|long|extensive|comprehensive)/i],
+  ];
+  let contradictions = 0;
+  for (const [a, b] of contradictionPairs) {
+    if (a.test(text) && b.test(text)) contradictions++;
+  }
+  if (contradictions > 0) {
+    total -= contradictions * 3;
+    tips.push('\u05E1\u05EA\u05D9\u05E8\u05D4 \u05D1\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA (\u05DC\u05DE\u05E9\u05DC "\u05E7\u05E6\u05E8" + \u05DE\u05E1\u05E4\u05E8 \u05DE\u05D9\u05DC\u05D9\u05DD \u05D2\u05D1\u05D5\u05D4)');
+  }
+
+  // 13. Specificity-per-task: if specificity already gave 3 pts for a
+  //     number but the number is free-floating (not tied to a quantity
+  //     keyword), downgrade the credit. Same logic as the web scorer.
+  const hasFreeFloatingNumber = /\d+/.test(text) && !hasConcreteSpec;
+  if (hasFreeFloatingNumber && spec >= 3) {
+    total -= 2; // Trim the specificity bonus from 3 → 1 for loose numbers
+  }
+
   // Max is 100
-  const score = Math.min(100, total);
+  const score = Math.max(0, Math.min(100, total));
 
   // Label
   let label, color;
@@ -423,6 +514,12 @@ async function doEnhance() {
   try {
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
 
+    // Sync target_model from the active tab so the server tunes output
+    // for the platform the user is actually sitting on.
+    if (detectedTargetModel === "general") {
+      detectedTargetModel = await detectTargetModel();
+    }
+
     const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
@@ -431,6 +528,7 @@ async function doEnhance() {
         tone: selectedTone,
         category: "\u05DB\u05DC\u05DC\u05D9",
         capability_mode: selectedMode,
+        target_model: detectedTargetModel,
         ...(selectedMode === "IMAGE_GENERATION" && { mode_params: { image_platform: selectedImagePlatform } }),
         ...(selectedMode === "VIDEO_GENERATION" && { mode_params: { video_platform: selectedVideoPlatform } }),
       }),
@@ -470,17 +568,33 @@ async function doEnhance() {
     const decoder = new TextDecoder();
     let fullText = "";
 
+    // JSON mode is expected for Stable Diffusion and Nano Banana image
+    // platforms. For these we extract the first balanced JSON object
+    // instead of relying on the greedy [GENIUS_QUESTIONS] split — the
+    // model can emit that marker inside a string value, which used to
+    // destroy valid JSON.
+    const isJsonMode = selectedMode === "IMAGE_GENERATION" &&
+      (selectedImagePlatform === "stable-diffusion" || selectedImagePlatform === "nanobanana");
+
+    const cleanDisplay = (raw) => {
+      if (isJsonMode) return extractJSONFromStream(raw);
+      return raw
+        .split("[GENIUS_QUESTIONS]")[0]
+        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
+        .trim();
+    };
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       fullText += decoder.decode(value, { stream: true });
-      const display = fullText.split("[GENIUS_QUESTIONS]")[0].replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').trim();
+      const display = cleanDisplay(fullText);
       resultText.textContent = display;
       resultText.scrollTop = resultText.scrollHeight;
     }
 
     resultText.classList.remove("streaming");
-    lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '').trim();
+    lastEnhanced = cleanDisplay(fullText);
     enhanceRetried = false; // Reset retry flag on success
 
     clearInterval(phaseInterval);
@@ -506,11 +620,20 @@ async function doEnhance() {
     saveToHistory(text, lastEnhanced);
     // Note: syncToWebsite removed — /api/enhance already saves to history server-side
     fetchCredits(); // refresh credits after use
-  } catch {
+  } catch (err) {
     clearInterval(phaseInterval);
     enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
     resultSection.classList.add("hidden");
-    showError("שגיאת רשת. בדוק את החיבור.");
+    // Surface the real failure instead of a generic "network error" —
+    // AbortError (timeout), TypeError (DNS), and named server errors
+    // all deserve distinct messages so users can self-diagnose.
+    if (err?.name === "AbortError") {
+      showError("הבקשה נתקעה יותר מדי זמן. נסה שוב.");
+    } else if (err?.message?.includes("Failed to fetch")) {
+      showError("אין חיבור לשרת. בדוק את החיבור לאינטרנט.");
+    } else {
+      showError(err?.message ? `שגיאה: ${err.message}` : "שגיאת רשת. בדוק את החיבור.");
+    }
   } finally {
     clearInterval(phaseInterval);
     isEnhancing = false;
