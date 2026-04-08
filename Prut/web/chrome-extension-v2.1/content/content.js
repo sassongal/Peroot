@@ -240,7 +240,15 @@ if (!window.__peerootContentLoaded) {
 
       body.classList.remove("peroot-loading");
       body.textContent = "";
-      lastEnhanced = fullText.split("[GENIUS_QUESTIONS]")[0].trim();
+      // Strip: [GENIUS_QUESTIONS] trailer, [PROMPT_TITLE] block, AND the
+      // <internal_quality_check> self-review XML block. The last one
+      // used to leak into the visible output — that's been a long-
+      // standing bug in the context-menu flow, finally closed here.
+      lastEnhanced = fullText
+        .split("[GENIUS_QUESTIONS]")[0]
+        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, '')
+        .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, '')
+        .trim();
       body.textContent = lastEnhanced;
       body.scrollTop = body.scrollHeight;
 

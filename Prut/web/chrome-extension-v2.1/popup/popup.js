@@ -253,6 +253,74 @@ function updateScoreBar(text) {
 }
 
 // ═══ INIT ═══
+
+/**
+ * Restore the user's last-used enhancement settings from chrome.storage.
+ * Keeps the popup feeling like a continuation of the previous session
+ * instead of resetting to STANDARD/Professional every time.
+ */
+async function restoreLastUsedSettings() {
+  try {
+    const { peroot_last_mode, peroot_last_tone, peroot_last_image_platform, peroot_last_video_platform } =
+      await chrome.storage.local.get([
+        "peroot_last_mode",
+        "peroot_last_tone",
+        "peroot_last_image_platform",
+        "peroot_last_video_platform",
+      ]);
+
+    // Only restore Pro-gated modes if the user is actually Pro — otherwise
+    // fall back to STANDARD. This avoids a locked-mode selected state.
+    if (peroot_last_mode) {
+      const isStandard = peroot_last_mode === "STANDARD";
+      if (isStandard || isProOrAdmin()) {
+        selectedMode = peroot_last_mode;
+        document.querySelectorAll(".mode-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.mode === peroot_last_mode);
+        });
+        togglePlatformSelectors();
+      }
+    }
+    if (peroot_last_tone) {
+      selectedTone = peroot_last_tone;
+      document.querySelectorAll(".tone-chip").forEach(c => {
+        c.classList.toggle("active", c.dataset.tone === peroot_last_tone);
+      });
+    }
+    if (peroot_last_image_platform) {
+      selectedImagePlatform = peroot_last_image_platform;
+      document.querySelectorAll(".platform-chip[data-iplatform]").forEach(c => {
+        c.classList.toggle("active", c.dataset.iplatform === peroot_last_image_platform);
+      });
+    }
+    if (peroot_last_video_platform) {
+      selectedVideoPlatform = peroot_last_video_platform;
+      document.querySelectorAll(".platform-chip[data-vplatform]").forEach(c => {
+        c.classList.toggle("active", c.dataset.vplatform === peroot_last_video_platform);
+      });
+    }
+  } catch {
+    /* storage unavailable — proceed with defaults */
+  }
+}
+
+/**
+ * Persist the user's current enhancement settings. Called on every
+ * successful enhance so the next popup open continues where they left off.
+ */
+function persistLastUsedSettings() {
+  try {
+    chrome.storage.local.set({
+      peroot_last_mode: selectedMode,
+      peroot_last_tone: selectedTone,
+      peroot_last_image_platform: selectedImagePlatform,
+      peroot_last_video_platform: selectedVideoPlatform,
+    });
+  } catch {
+    /* non-critical */
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const auth = await checkAuth();
 
@@ -261,6 +329,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => promptInput.focus(), 80);
     fetchCredits();
     detectSelectedText();
+    // Restore after auth check so isProOrAdmin() has the tier loaded.
+    // fetchCredits sets userTier async, so we queue the restore a tick later.
+    setTimeout(restoreLastUsedSettings, 300);
   } else {
     showLoginScreen(auth.reason);
   }
@@ -581,6 +652,12 @@ async function doEnhance() {
       return raw
         .split("[GENIUS_QUESTIONS]")[0]
         .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
+        // CRITICAL: strip the <internal_quality_check> self-review block
+        // that the engine injects for the model to verify its own output
+        // against platform-specific criteria. Without this strip the
+        // user sees the raw XML block leaking into the Copy action and
+        // into the displayed result. ai-chat-injector.js does the same.
+        .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
         .trim();
     };
 
@@ -618,6 +695,9 @@ async function doEnhance() {
     } catch {}
 
     saveToHistory(text, lastEnhanced);
+    // Persist the user's current settings so next popup open continues
+    // from the same mode/tone/platform instead of resetting to defaults.
+    persistLastUsedSettings();
     // Note: syncToWebsite removed — /api/enhance already saves to history server-side
     fetchCredits(); // refresh credits after use
   } catch (err) {
