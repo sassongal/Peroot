@@ -108,8 +108,25 @@ export function renderPromptWithVariables(
     return parts;
 }
 
+/**
+ * Live highlighting for the input textarea side. Renders `{token}`
+ * placeholders and `[header]` section markers as colored chips so the
+ * user can see structure as they type.
+ *
+ * Uses the canonical VARIABLE_TOKEN_REGEX for the `{token}` part so the
+ * input side rejects JSON-shaped braces the same way the output side
+ * does — pasting a JSON snippet into the input field no longer produces
+ * mis-highlighted "placeholder" chips around object bodies.
+ *
+ * Color tokens match `renderPromptWithVariables` (sky-blue chips) so
+ * the visual treatment is continuous from input → result.
+ */
 export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
-  const COMBINED_REGEX = /{[^}]+}|\[[^\]]+\]/g;
+  // Combine the strict variable regex with the section-header regex.
+  // Both alternatives carry their own capture groups so we can tell
+  // them apart by which one matched.
+  const variableSource = VARIABLE_TOKEN_REGEX.source; // \{(...)\}
+  const COMBINED_REGEX = new RegExp(`${variableSource}|(\\[[^\\]\\n]+\\])`, "g");
   const matches = Array.from(text.matchAll(COMBINED_REGEX));
   if (matches.length === 0) return [text];
 
@@ -121,13 +138,14 @@ export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
       parts.push(text.slice(cursor, start));
     }
     const token = match[0];
-    const isHeader = token.startsWith("[");
-    
+    const headerMatch = match[2]; // group 2 = the [header] alternative
+    const isHeader = !!headerMatch;
+
     if (isHeader) {
       parts.push(
         <span
           key={`header-${start}-${index}`}
-          className="text-yellow-400 font-bold"
+          className="text-amber-600 dark:text-amber-400 font-bold"
         >
           {token}
         </span>
@@ -136,7 +154,7 @@ export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
       parts.push(
         <span
           key={`ph-${start}-${index}`}
-          className="inline-flex items-center rounded-md border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.5 text-[0.8em] text-sky-200"
+          className="inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border border-sky-500/40 dark:border-sky-400/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 text-[0.85em] font-medium whitespace-nowrap"
         >
           {token}
         </span>

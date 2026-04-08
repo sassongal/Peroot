@@ -13,7 +13,7 @@ import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
-import { getVariablePlaceholder } from "@/lib/variable-utils";
+import { getVariableLabel, getVariablePlaceholder } from "@/lib/variable-utils";
 import { PromptScore } from "@/lib/engines/base-engine";
 import { TargetModel } from "@/lib/engines/types";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
@@ -275,12 +275,19 @@ export function PromptInput({
             <div className="mt-4 space-y-3">
               {variables.map((variable, index) => {
                 const inputId = `variable-input-${index}`;
+                const label = getVariableLabel(variable);
                 const isEmpty = !(variableValues[variable] ?? "").trim();
                 return (
                   <div key={`${variable}-${index}`} className="space-y-2">
-                    <label htmlFor={inputId} className="text-xs text-amber-600 dark:text-amber-300 font-semibold flex items-center gap-1">
-                      {`{${variable}}`}
-                      <span className="text-red-400" aria-hidden="true">*</span>
+                    <label
+                      htmlFor={inputId}
+                      className="text-xs font-semibold flex items-center gap-1 text-[var(--text-primary)]"
+                      title={variable}
+                    >
+                      <span>{label}</span>
+                      {isEmpty && (
+                        <span className="text-red-400" aria-hidden="true">*</span>
+                      )}
                     </label>
                     <input
                       id={inputId}
@@ -289,11 +296,12 @@ export function PromptInput({
                       onChange={(e) =>
                         setVariableValues({ ...variableValues, [variable]: e.target.value })
                       }
+                      aria-label={label}
                       className={cn(
-                        "w-full bg-black/5 dark:bg-black/30 border rounded-lg py-2.5 px-3 text-base md:text-sm text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none transition-colors",
+                        "w-full border rounded-lg py-2.5 px-3 text-base md:text-sm text-[var(--text-primary)] focus-visible:outline-none focus:outline-none transition-colors",
                         isEmpty
-                          ? "border-amber-500/50 ring-1 ring-amber-500/30 focus:border-amber-500/70"
-                          : "border-[var(--glass-border)] focus:border-amber-500/50"
+                          ? "bg-black/5 dark:bg-black/30 border-sky-500/40 focus:border-sky-500/60 focus-visible:ring-2 focus-visible:ring-sky-500/30"
+                          : "bg-emerald-500/[0.04] dark:bg-emerald-400/[0.04] border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60 focus-visible:ring-2 focus-visible:ring-emerald-500/30"
                       )}
                       placeholder={getVariablePlaceholder(variable)}
                     />
