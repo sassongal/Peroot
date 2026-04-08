@@ -53,23 +53,24 @@
   <!-- Main Screen -->
   <div id="main-screen" class="screen hidden">
     <!-- Header -->
-    <header class="main-header">
+    <header class="main-header" role="banner">
       <div class="header-brand">
         <img src="../icons/icon-48.png" alt="" width="20" height="20" class="header-logo">
         <span class="header-title">Peroot</span>
+        <span id="target-model-badge" class="target-model-badge hidden" aria-live="polite" title="המודל שזוהה בלשונית הפעילה"></span>
       </div>
       <div class="header-meta">
-        <span id="tier-badge" class="tier-badge hidden"></span>
-        <span id="credits-badge" class="credits-badge hidden">
+        <span id="tier-badge" class="tier-badge hidden" aria-live="polite"></span>
+        <span id="credits-badge" class="credits-badge hidden" aria-live="polite" aria-label="קרדיטים שנותרו">
           <span id="credits-count">0</span> קרדיטים
         </span>
-        <button id="settings-toggle" class="settings-gear" title="הגדרות">&#9881;</button>
-        <button id="logout-btn" class="btn-logout" title="התנתק">&#x23FB;</button>
+        <button id="settings-toggle" class="settings-gear" type="button" aria-label="הגדרות" aria-expanded="false" aria-controls="settings-panel">&#9881;</button>
+        <button id="logout-btn" class="btn-logout" type="button" aria-label="התנתק" title="התנתק">&#x23FB;</button>
       </div>
     </header>
 
     <!-- Settings Panel (collapsible from header) -->
-    <div id="settings-panel" class="settings-panel">
+    <div id="settings-panel" class="settings-panel" role="region" aria-label="הגדרות">
       <div class="settings-section">
         <h3 class="settings-title">קיצורי מקשים</h3>
         <div class="shortcuts-list">
@@ -93,20 +94,20 @@
       </div>
       <div class="settings-section">
         <h3 class="settings-title">אודות</h3>
-        <p class="settings-desc">Peroot v1.0.0 · <a href="https://www.peroot.space" target="_blank" class="settings-link">peroot.space</a></p>
+        <p class="settings-desc">Peroot <span id="ext-version">v1.2.0</span> · <a href="https://www.peroot.space" target="_blank" rel="noopener" class="settings-link">peroot.space</a></p>
       </div>
     </div>
 
     <!-- Tabs -->
-    <nav class="tabs">
-      <button class="tab active" data-tab="enhance">&#10022; שדרוג</button>
-      <button class="tab" data-tab="library">&#9672; ספרייה</button>
-      <button class="tab" data-tab="favorites">&#9733; מועדפים</button>
-      <button class="tab" data-tab="history">&#9719; היסטוריה</button>
+    <nav class="tabs" role="tablist" aria-label="מצבי פעולה">
+      <button class="tab active" data-tab="enhance" role="tab" aria-selected="true" aria-controls="tab-enhance" id="tab-btn-enhance" type="button">&#10022; שדרוג</button>
+      <button class="tab" data-tab="library" role="tab" aria-selected="false" aria-controls="tab-library" id="tab-btn-library" type="button" tabindex="-1">&#9672; ספרייה</button>
+      <button class="tab" data-tab="favorites" role="tab" aria-selected="false" aria-controls="tab-favorites" id="tab-btn-favorites" type="button" tabindex="-1">&#9733; מועדפים</button>
+      <button class="tab" data-tab="history" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-btn-history" type="button" tabindex="-1">&#9719; היסטוריה</button>
     </nav>
 
     <!-- Tab: Enhance -->
-    <div id="tab-enhance" class="tab-content active">
+    <div id="tab-enhance" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-enhance">
       <div class="input-section">
         <div class="mode-selector" id="mode-selector">
           <button class="mode-btn active" data-mode="STANDARD" data-color="#f59e0b" title="שדרוג פרומפט רגיל">
@@ -202,7 +203,7 @@
     </div>
 
     <!-- Tab: Library -->
-    <div id="tab-library" class="tab-content">
+    <div id="tab-library" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-library" hidden>
       <div id="library-loading" class="tab-empty">
         <span class="spinner large"></span>
       </div>
@@ -214,7 +215,7 @@
     </div>
 
     <!-- Tab: Favorites -->
-    <div id="tab-favorites" class="tab-content">
+    <div id="tab-favorites" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-favorites" hidden>
       <div id="favorites-loading" class="tab-empty"><span class="spinner large"></span></div>
       <div id="favorites-empty" class="tab-empty hidden">
         <p class="empty-title">אין מועדפים</p>
@@ -224,7 +225,7 @@
     </div>
 
     <!-- Tab: History -->
-    <div id="tab-history" class="tab-content">
+    <div id="tab-history" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-history" hidden>
       <div id="tab-history-loading" class="tab-empty"><span class="spinner large"></span></div>
       <div id="tab-history-empty" class="tab-empty hidden">
         <p class="empty-title">אין היסטוריה</p>

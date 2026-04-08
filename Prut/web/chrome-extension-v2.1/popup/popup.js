@@ -62,10 +62,18 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
 async function detectTargetModel() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const host = tab?.url ? new URL(tab.url).hostname : "";
+    const url = tab?.url || "";
+    const host = url ? new URL(url).hostname : "";
+    const path = url ? new URL(url).pathname : "";
     if (/chat\.openai\.com|chatgpt\.com/.test(host)) return "chatgpt";
     if (/claude\.ai/.test(host)) return "claude";
     if (/gemini\.google\.com/.test(host)) return "gemini";
+    if (/grok\.com/.test(host) || (/x\.com/.test(host) && /\/i\/grok/.test(path))) return "grok";
+    if (/copilot\.microsoft\.com/.test(host)) return "copilot";
+    if (/poe\.com/.test(host)) return "poe";
+    if (/chat\.deepseek\.com/.test(host)) return "deepseek";
+    if (/perplexity\.ai/.test(host)) return "perplexity";
+    if (/chat\.mistral\.ai/.test(host)) return "mistral";
   } catch {
     // Permission denied or invalid URL — silently fall through.
   }
@@ -221,7 +229,46 @@ function scorePrompt(text) {
     total -= 2; // Trim the specificity bonus from 3 → 1 for loose numbers
   }
 
-  // Max is 100
+  // ═════════ DIMENSIONS SYNCED FROM WEB enhanced-scorer.ts ═════════
+  // These 3 dimensions existed only in the web scorer. Porting them
+  // here closes the parity gap so extension scores match the web app.
+
+  // 14. Groundedness (up to 8 pts) — anti-hallucination instructions.
+  let grounded = 0;
+  if (/\u05E6\u05D8\u05D8|\u05DE\u05E7\u05D5\u05E8|cite|source|reference|based\s+on/i.test(text)) grounded += 3;
+  if (/\u05D0\u05DD \u05DC\u05D0 \u05D1\u05D8\u05D5\u05D7|\u05D0\u05DC \u05EA\u05DE\u05E6\u05D9\u05D0|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|\u05D4\u05E1\u05EA\u05DE\u05DA \u05E2\u05DC/i.test(text)) grounded += 3;
+  if (/\u05E2\u05D5\u05D1\u05D3\u05D5\u05EA|fact|ground|\u05D0\u05DE\u05EA|verify/i.test(text)) grounded += 2;
+  total += Math.min(8, grounded);
+  if (grounded === 0 && wc > 15) {
+    tips.push('\u05D4\u05D5\u05E1\u05E3 \u05D4\u05D5\u05E8\u05D0\u05D5\u05EA \u05E0\u05D2\u05D3 \u05D4\u05D6\u05D9\u05D5\u05EA ("\u05D0\u05DD \u05D0\u05D9\u05E0\u05DA \u05D1\u05D8\u05D5\u05D7 - \u05E6\u05D9\u05D9\u05DF")');
+  }
+
+  // 15. Measurability (up to 6 pts) — numeric success criteria + bounds.
+  let measure = 0;
+  if (/\d+\s*(\u05E4\u05E8\u05D9\u05D8\u05D9\u05DD|\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA|\u05E9\u05D5\u05E8\u05D5\u05EA|\u05E4\u05E1\u05E7\u05D0\u05D5\u05EA|bullets|items|sentences|paragraphs|points)/i.test(text)) measure += 3;
+  if (/\u05DE\u05E7\u05E1\u05D9\u05DE\u05D5\u05DD|\u05DC\u05DB\u05DC \u05D4\u05D9\u05D5\u05EA\u05E8|up\s+to|at\s+most|\u05EA\u05E7\u05E8\u05D4|ceiling|limit/i.test(text)) measure += 2;
+  if (/\u05DE\u05D9\u05E0\u05D9\u05DE\u05D5\u05DD|\u05DC\u05E4\u05D7\u05D5\u05EA|at\s+least|minimum/i.test(text)) measure += 1;
+  total += Math.min(6, measure);
+
+  // 16. Framework (up to 8 pts) — CO-STAR / RISEN / Hebrew structure.
+  const costarMatches = (text.match(/context|objective|style|tone|audience|response\s+format/gi) || []).length;
+  const risenMatches = (text.match(/role|instructions|steps|expectations|narrowing|end\s+goal/gi) || []).length;
+  const hebrewFramework = /\u05EA\u05E4\u05E7\u05D9\u05D3|\u05DE\u05E9\u05D9\u05DE\u05D4|\u05E9\u05DC\u05D1\u05D9\u05DD|\u05D4\u05D2\u05D1\u05DC\u05D5\u05EA|\u05D8\u05D5\u05DF|\u05E4\u05D5\u05E8\u05DE\u05D8 \u05E4\u05DC\u05D8|\u05E7\u05D4\u05DC \u05D9\u05E2\u05D3|\u05DE\u05D8\u05E8\u05D4/i.test(text);
+  let framework = 0;
+  if (costarMatches >= 4) framework = 8;
+  else if (risenMatches >= 3) framework = 7;
+  else if (costarMatches >= 2 || risenMatches >= 2) framework = 4;
+  else if (hebrewFramework) framework = 3;
+  total += framework;
+
+  // Hedge penalty (synced with web clarity dimension)
+  const hedgeCount = (text.match(/\u05D0\u05D5\u05DC\u05D9|\u05E0\u05E1\u05D4 \u05DC|\u05D9\u05D9\u05EA\u05DB\u05DF|\u05D0\u05E4\u05E9\u05E8|maybe|perhaps|try\s+to|somewhat|kind\s+of|sort\s+of/gi) || []).length;
+  if (hedgeCount > 0) {
+    total -= Math.min(6, hedgeCount * 2);
+    if (hedgeCount >= 2) tips.push('\u05D4\u05D5\u05E8\u05D0\u05D5\u05EA \u05DE\u05D4\u05D5\u05E1\u05E1\u05D5\u05EA ("\u05D0\u05D5\u05DC\u05D9", "\u05E0\u05E1\u05D4") \u05DE\u05D7\u05DC\u05D9\u05E9\u05D5\u05EA \u05D0\u05EA \u05D4\u05EA\u05D5\u05E6\u05D0\u05D4');
+  }
+
+  // Max is 100 (extra dimensions push the raw total higher; cap to 100)
   const score = Math.max(0, Math.min(100, total));
 
   // Label
@@ -406,26 +453,90 @@ async function fetchCredits() {
 }
 
 // ═══ TABS ═══
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    // Switch active tab
-    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-    tab.classList.add("active");
-    const target = tab.dataset.tab;
-    $(`tab-${target}`).classList.add("active");
+const tabButtons = Array.from(document.querySelectorAll(".tab"));
 
-    // Lazy-load data
-    if (target === "library" && !libraryLoaded) loadLibrary();
-    if (target === "favorites" && !favoritesLoaded) loadFavorites();
-    if (target === "history" && !historyTabLoaded) loadHistoryTab();
+function activateTab(tab) {
+  if (!tab) return;
+  tabButtons.forEach((t) => {
+    const isActive = t === tab;
+    t.classList.toggle("active", isActive);
+    t.setAttribute("aria-selected", isActive ? "true" : "false");
+    t.tabIndex = isActive ? 0 : -1;
+  });
+  document.querySelectorAll(".tab-content").forEach((c) => {
+    c.classList.remove("active");
+    c.hidden = true;
+  });
+  const target = tab.dataset.tab;
+  const panel = $(`tab-${target}`);
+  if (panel) {
+    panel.classList.add("active");
+    panel.hidden = false;
+  }
+
+  // Lazy-load data
+  if (target === "library" && !libraryLoaded) loadLibrary();
+  if (target === "favorites" && !favoritesLoaded) loadFavorites();
+  if (target === "history" && !historyTabLoaded) loadHistoryTab();
+}
+
+tabButtons.forEach((tab) => {
+  tab.addEventListener("click", () => activateTab(tab));
+  tab.addEventListener("keydown", (e) => {
+    const idx = tabButtons.indexOf(tab);
+    let nextIdx = -1;
+    // Respect RTL: ArrowLeft = forward in LTR tab order
+    if (e.key === "ArrowRight") nextIdx = (idx - 1 + tabButtons.length) % tabButtons.length;
+    else if (e.key === "ArrowLeft") nextIdx = (idx + 1) % tabButtons.length;
+    else if (e.key === "Home") nextIdx = 0;
+    else if (e.key === "End") nextIdx = tabButtons.length - 1;
+    if (nextIdx !== -1) {
+      e.preventDefault();
+      const nextTab = tabButtons[nextIdx];
+      activateTab(nextTab);
+      nextTab.focus();
+    }
   });
 });
 
 // ═══ SETTINGS TOGGLE ═══
 $("settings-toggle").addEventListener("click", () => {
-  $("settings-panel").classList.toggle("open");
+  const panel = $("settings-panel");
+  const isOpen = panel.classList.toggle("open");
+  $("settings-toggle").setAttribute("aria-expanded", isOpen ? "true" : "false");
 });
+
+// ═══ VERSION + MODEL BADGE WIRING ═══
+try {
+  const versionEl = $("ext-version");
+  if (versionEl) {
+    const v = chrome.runtime.getManifest().version;
+    versionEl.textContent = `v${v}`;
+  }
+} catch { /* ignore */ }
+
+function updateTargetModelBadge(model) {
+  const el = $("target-model-badge");
+  if (!el) return;
+  if (!model || model === "general") {
+    el.classList.add("hidden");
+    el.textContent = "";
+    return;
+  }
+  const labels = {
+    chatgpt: "ChatGPT",
+    claude: "Claude",
+    gemini: "Gemini",
+    grok: "Grok",
+    copilot: "Copilot",
+    poe: "Poe",
+    deepseek: "DeepSeek",
+    perplexity: "Perplexity",
+    mistral: "Mistral",
+  };
+  el.textContent = `✦ ${labels[model] || model}`;
+  el.classList.remove("hidden");
+}
 
 // ═══ LOGIN — Google OAuth ═══
 googleLoginBtn.addEventListener("click", async () => {
@@ -474,6 +585,12 @@ function onLoginSuccess() {
   setTimeout(() => promptInput.focus(), 80);
   fetchCredits();
   detectSelectedText();
+  // Eagerly detect target model so the user sees which LLM UI we're tuned
+  // for before they even hit Enhance.
+  detectTargetModel().then((m) => {
+    detectedTargetModel = m;
+    updateTargetModelBadge(m);
+  }).catch(() => {});
 }
 
 function setLoginLoading(loading, msg) {

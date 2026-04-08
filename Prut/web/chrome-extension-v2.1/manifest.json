@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Peroot - AI Prompt Enhancer",
   "short_name": "Peroot",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Enhance any prompt instantly with AI. Auto-detects ChatGPT, Claude, Gemini, DeepSeek, Perplexity, Mistral & MiniMax — tunes output for each. Image/video JSON prompts now bulletproof (no more truncation). Smart live scoring, prompt library, conversation export, and more.",
   "homepage_url": "https://www.peroot.space",
   "author": "Peroot by Joyatech",
@@ -26,7 +26,11 @@
     "https://chat.deepseek.com/*",
     "https://www.perplexity.ai/*",
     "https://chat.mistral.ai/*",
-    "https://www.minimaxi.com/*"
+    "https://www.minimaxi.com/*",
+    "https://grok.com/*",
+    "https://x.com/i/grok*",
+    "https://copilot.microsoft.com/*",
+    "https://poe.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
@@ -74,7 +78,11 @@
         "https://chat.deepseek.com/*",
         "https://www.perplexity.ai/*",
         "https://chat.mistral.ai/*",
-        "https://www.minimaxi.com/*"
+        "https://www.minimaxi.com/*",
+        "https://grok.com/*",
+        "https://x.com/i/grok*",
+        "https://copilot.microsoft.com/*",
+        "https://poe.com/*"
       ],
       "js": ["content/ai-chat-injector.js"],
       "css": ["content/ai-chat-injector.css"],
@@ -97,9 +105,20 @@
         "https://chat.deepseek.com/*",
         "https://www.perplexity.ai/*",
         "https://chat.mistral.ai/*",
-        "https://www.minimaxi.com/*"
+        "https://www.minimaxi.com/*",
+        "https://grok.com/*",
+        "https://x.com/i/grok*",
+        "https://copilot.microsoft.com/*",
+        "https://poe.com/*"
       ]
     }
   ],
-  "privacy_policy_url": "https://www.peroot.space/privacy"
+  "privacy_policy_url": "https://www.peroot.space/privacy",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; base-uri 'self'; frame-ancestors 'none'"
+  },
+  "options_ui": {
+    "page": "popup/options.html",
+    "open_in_tab": true
+  }
 }

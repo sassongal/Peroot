@@ -211,6 +211,66 @@
       getUserMessages: () => document.querySelectorAll('[class*="user"]'),
       getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
     },
+    grok: {
+      match: () => /grok\.com|x\.com\/i\/grok/.test(location.hostname + location.pathname),
+      inputSelector: 'textarea, div[contenteditable="true"]',
+      sendButtonSelector: 'button[type="submit"], button[aria-label*="Send" i]',
+      inputArea: () => document.querySelector('form') || document.querySelector('main'),
+      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
+      setInputText: (el, text) => {
+        if (el.tagName === 'TEXTAREA') {
+          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+          if (setter) setter.call(el, text);
+          else el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          el.focus();
+          document.execCommand('selectAll', false, null);
+          document.execCommand('insertText', false, text);
+        }
+      },
+      messageSelector: '[class*="message"]',
+      getUserMessages: () => document.querySelectorAll('[class*="user"]'),
+      getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
+    },
+    copilot: {
+      match: () => /copilot\.microsoft\.com/.test(location.hostname),
+      inputSelector: 'textarea#userInput, textarea, div[contenteditable="true"]',
+      sendButtonSelector: 'button[data-testid="submit-button"], button[aria-label*="Submit" i], button[type="submit"]',
+      inputArea: () => document.querySelector('form') || document.querySelector('main'),
+      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
+      setInputText: (el, text) => {
+        if (el.tagName === 'TEXTAREA') {
+          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+          if (setter) setter.call(el, text);
+          else el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          el.focus();
+          document.execCommand('selectAll', false, null);
+          document.execCommand('insertText', false, text);
+        }
+      },
+      messageSelector: '[data-content="ai-message"], [class*="message"]',
+      getUserMessages: () => document.querySelectorAll('[data-content="user-message"], [class*="user"]'),
+      getAssistantMessages: () => document.querySelectorAll('[data-content="ai-message"], [class*="assistant"]'),
+    },
+    poe: {
+      match: () => /poe\.com/.test(location.hostname),
+      inputSelector: 'textarea[class*="GrowingTextArea"], textarea',
+      sendButtonSelector: 'button[class*="ChatMessageSendButton"], button[aria-label*="Send" i]',
+      inputArea: () => document.querySelector('form') || document.querySelector('[class*="ChatMessageInputContainer"]'),
+      getInputText: (el) => el.value,
+      setInputText: (el, text) => {
+        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+        if (setter) setter.call(el, text);
+        else el.value = text;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      },
+      messageSelector: '[class*="ChatMessage_messageRow"]',
+      getUserMessages: () => document.querySelectorAll('[class*="ChatMessage_messageRow"][class*="human"]'),
+      getAssistantMessages: () => document.querySelectorAll('[class*="ChatMessage_messageRow"][class*="bot"]'),
+    },
   };
 
   const currentSite = Object.values(SITES).find(s => s.match());
