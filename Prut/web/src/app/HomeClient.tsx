@@ -65,7 +65,7 @@ const getPromptKey = (text: string) => {
 
 function PageContent() {
   const t = useI18n();
-  const { user, history, addToHistory, clearHistory, isLoaded } = useHistory();
+  const { user, history, addToHistory, clearHistory, updateHistoryTitle, bumpHistoryLastUsed, isLoaded } = useHistory();
   const {
     viewMode,
     setViewMode,
@@ -168,10 +168,19 @@ function PageContent() {
           acc.questionsPart = acc.promptText.slice(delimIdx + "[GENIUS_QUESTIONS]".length);
           acc.promptText = acc.promptText.slice(0, delimIdx);
         }
-        // Strip <thinking> blocks and incomplete opening tags from display
+        // Strip <thinking> blocks AND [PROMPT_TITLE] tags from the live
+        // display. The PROMPT_TITLE block is parsed for the saved-prompt
+        // title at stream-end (see the post-stream block below) but
+        // until then it briefly renders as visible Hebrew text inside
+        // the prompt body — a 0.5–2s flicker the user sees on every
+        // generation. We strip both fully-closed tags and any trailing
+        // unclosed `[PROMPT_TITLE]` (if the closing tag hasn't streamed
+        // in yet).
         const displayText = acc.promptText
           .replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '')
-          .replace(/<thinking>[\s\S]*$/gi, '');
+          .replace(/<thinking>[\s\S]*$/gi, '')
+          .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]\n?/g, '')
+          .replace(/\[PROMPT_TITLE\][\s\S]*$/g, '');
         dispatch({ type: 'SET_COMPLETION', payload: displayText });
       } else {
         acc.questionsPart += chunk;
@@ -968,6 +977,8 @@ function PageContent() {
             onNavLibrary={handleNavLibrary}
             personalView={personalView}
             prefetchPersonalLibrary={prefetchPersonalLibrary}
+            onRenameHistoryTitle={updateHistoryTitle}
+            onBumpHistoryLastUsed={bumpHistoryLastUsed}
           />
 
           {/* Mobile FAQ Panel (extracted component) */}
