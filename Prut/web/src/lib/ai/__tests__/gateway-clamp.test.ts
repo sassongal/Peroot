@@ -9,9 +9,11 @@
  *    like maxOutputTokens: 999999.
  *
  * 2. Each task's preset temperature/maxOutputTokens stays stable across
- *    refactors — image/video stay at 0.5 temp + 8192 tokens, chain stays
- *    at 0.4 temp + 3072 tokens. If someone accidentally tweaks a preset
- *    while "cleaning up" the gateway, this test fails loudly.
+ *    refactors — image/video stay at 0.5 temp + 16384 tokens (raised from
+ *    8192 after the thinking-token truncation incident, see
+ *    buildProviderOptions), chain stays at 0.4 temp + 3072 tokens. If
+ *    someone accidentally tweaks a preset while "cleaning up" the
+ *    gateway, this test fails loudly.
  *
  * pickDefaults is module-private but re-exported with an @internal JSDoc
  * tag specifically so this test can call it directly. Do NOT import it
@@ -19,7 +21,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { pickDefaults } from '../gateway';
+import { pickDefaults, buildProviderOptions } from '../gateway';
 
 describe('gateway pickDefaults — hard clamp', () => {
   it('clamps an egregious userMax override to 16384', () => {
@@ -46,12 +48,12 @@ describe('gateway pickDefaults — hard clamp', () => {
 });
 
 describe('gateway pickDefaults — presets', () => {
-  it('image task defaults to 8192 tokens and 0.5 temp', () => {
-    expect(pickDefaults('image')).toEqual({ maxOutputTokens: 8192, temperature: 0.5 });
+  it('image task defaults to 16384 tokens and 0.5 temp', () => {
+    expect(pickDefaults('image')).toEqual({ maxOutputTokens: 16384, temperature: 0.5 });
   });
 
-  it('video task defaults to 8192 tokens and 0.5 temp', () => {
-    expect(pickDefaults('video')).toEqual({ maxOutputTokens: 8192, temperature: 0.5 });
+  it('video task defaults to 16384 tokens and 0.5 temp', () => {
+    expect(pickDefaults('video')).toEqual({ maxOutputTokens: 16384, temperature: 0.5 });
   });
 
   it('research task defaults to 6144 tokens and 0.6 temp', () => {
@@ -90,5 +92,51 @@ describe('gateway pickDefaults — caller temperature override', () => {
   it('does not honor undefined temperature (preset wins)', () => {
     const result = pickDefaults('image', undefined, undefined);
     expect(result.temperature).toBe(0.5);
+  });
+});
+
+describe('gateway buildProviderOptions — disables Gemini thinking', () => {
+  // Root cause of the JSON truncation incident: Gemini 2.5 Flash's
+  // reasoning tokens count against maxOutputTokens. For image/video JSON
+  // tasks thinking consumed 700-1000+ tokens out of an 8K budget, leaving
+  // only 60-100 tokens of actual JSON output (~130-180 chars, mid-string).
+  // These tests lock in the fix: thinkingBudget: 0 for long-output tasks.
+
+  it('returns thinkingBudget: 0 for image task', () => {
+    expect(buildProviderOptions('image')).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 0 } },
+    });
+  });
+
+  it('returns thinkingBudget: 0 for video task', () => {
+    expect(buildProviderOptions('video')).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 0 } },
+    });
+  });
+
+  it('returns thinkingBudget: 0 for chain task', () => {
+    expect(buildProviderOptions('chain')).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 0 } },
+    });
+  });
+
+  it('returns undefined for enhance task (reasoning stays on)', () => {
+    expect(buildProviderOptions('enhance')).toBeUndefined();
+  });
+
+  it('returns undefined for research task (reasoning stays on)', () => {
+    expect(buildProviderOptions('research')).toBeUndefined();
+  });
+
+  it('returns undefined for agent task (reasoning stays on)', () => {
+    expect(buildProviderOptions('agent')).toBeUndefined();
+  });
+
+  it('returns undefined for unknown task', () => {
+    expect(buildProviderOptions('bogus-task-name')).toBeUndefined();
+  });
+
+  it('returns undefined when task is missing', () => {
+    expect(buildProviderOptions()).toBeUndefined();
   });
 });

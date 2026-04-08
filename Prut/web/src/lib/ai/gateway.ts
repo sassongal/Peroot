@@ -61,19 +61,73 @@ export function pickDefaults(task?: string, userMax?: number, userTemp?: number)
     maxOutputTokens: number;
     temperature: number;
 } {
+    // Image/video run at a 16K ceiling as belt-and-suspenders. Even with
+    // Gemini thinking disabled (see buildProviderOptions below), complex
+    // JSON image prompts from Stable Diffusion / Gemini Image / Midjourney
+    // can approach 6K-8K tokens. A 16K ceiling removes the last truncation
+    // risk without making any run actually more expensive — real cost is
+    // whatever the model emits, capped at this ceiling only.
     const presets: Record<string, { max: number; temp: number }> = {
-        image:    { max: 8192, temp: 0.5 },
-        video:    { max: 8192, temp: 0.5 },
-        research: { max: 6144, temp: 0.6 },
-        enhance:  { max: 4096, temp: 0.7 },
-        agent:    { max: 4096, temp: 0.7 },
-        chain:    { max: 3072, temp: 0.4 },
+        image:    { max: 16384, temp: 0.5 },
+        video:    { max: 16384, temp: 0.5 },
+        research: { max: 6144,  temp: 0.6 },
+        enhance:  { max: 4096,  temp: 0.7 },
+        agent:    { max: 4096,  temp: 0.7 },
+        chain:    { max: 3072,  temp: 0.4 },
     };
     const preset = presets[task ?? 'enhance'] ?? presets.enhance;
     const requestedMax = userMax ?? preset.max;
     return {
         maxOutputTokens: Math.min(requestedMax, HARD_MAX_OUTPUT_TOKENS),
         temperature: userTemp ?? preset.temp,
+    };
+}
+
+/**
+ * Shape of the providerOptions payload we pass to the AI SDK. Typed as the
+ * exact nested object the Google provider expects so TypeScript lets us
+ * pass it directly to `streamText({ providerOptions })` without casting.
+ * Other providers silently ignore the `google` key.
+ */
+type PerootProviderOptions = {
+    google: {
+        thinkingConfig: {
+            thinkingBudget: number;
+        };
+    };
+};
+
+/**
+ * Build provider-specific options for a given task. This is where we disable
+ * the reasoning mode for tasks that need every output token for the actual
+ * response rather than internal thinking.
+ *
+ * Root cause: Gemini's thinking tokens count against maxOutputTokens. For
+ * image/video JSON tasks the reasoning was consuming 700-1000+ tokens,
+ * leaving only 60-100 tokens of actual JSON output — which cut responses
+ * at ~130-180 characters, mid-string (observed in activity_logs.details).
+ * Passing thinkingBudget: 0 via providerOptions.google turns reasoning OFF
+ * entirely so the full budget is available for actual output tokens.
+ *
+ * Non-Google providers silently ignore the `google` key in providerOptions
+ * so it's safe to pass unconditionally on the fallback chain.
+ *
+ * @internal Exported for tests only.
+ */
+export function buildProviderOptions(task?: string): PerootProviderOptions | undefined {
+    // Only tasks that produce long structured output need thinking disabled.
+    // Enhance/agent/research actually benefit from the reasoning mode, so
+    // we leave them with default thinking behavior.
+    const thinkingDisabledTasks = new Set(['image', 'video', 'chain']);
+    if (!task || !thinkingDisabledTasks.has(task)) {
+        return undefined;
+    }
+    return {
+        google: {
+            thinkingConfig: {
+                thinkingBudget: 0,
+            },
+        },
     };
 }
 
@@ -116,12 +170,14 @@ export class AIGateway {
                     logger.info(`[AIGateway] Attempting: ${config.label}...`);
 
                     const defaults = pickDefaults(params.task, params.maxOutputTokens, params.temperature);
+                    const providerOptions = buildProviderOptions(params.task);
                     const result = await streamText({
                         model: config.model,
                         system: params.system,
                         prompt: params.prompt,
                         temperature: defaults.temperature,
                         maxOutputTokens: defaults.maxOutputTokens,
+                        ...(providerOptions ? { providerOptions } : {}),
                         onFinish: async (completion) => {
                             recordSuccess(config.provider);
                             safeRelease();
@@ -186,12 +242,14 @@ export class AIGateway {
                 try {
                     logger.info(`[AIGateway] generateFull: ${config.label}...`);
                     const defaults = pickDefaults(params.task, params.maxOutputTokens, params.temperature);
+                    const providerOptions = buildProviderOptions(params.task);
                     const result = await generateText({
                         model: config.model,
                         system: params.system,
                         prompt: params.prompt,
                         temperature: defaults.temperature,
                         maxOutputTokens: defaults.maxOutputTokens,
+                        ...(providerOptions ? { providerOptions } : {}),
                     });
                     recordSuccess(config.provider);
                     safeRelease();
