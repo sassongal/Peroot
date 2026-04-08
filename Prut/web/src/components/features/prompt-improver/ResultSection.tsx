@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, Check, Copy, ExternalLink, Plus, RotateCcw, Share2, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { trackShare } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -10,7 +10,8 @@ import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
 import { ReferralShareCTA } from "@/components/features/referral/ReferralShareCTA";
 import { CapabilityMode } from "@/lib/capability-mode";
-import { getVariablePlaceholder } from "@/lib/variable-utils";
+import { getVariableLabel, getVariablePlaceholder, substituteVariables } from "@/lib/variable-utils";
+import { renderPromptWithVariables } from "@/lib/text-utils";
 import { BeforeAfterSplit } from "@/components/ui/BeforeAfterSplit";
 import { ScoreDelta } from "@/components/ui/ScoreDelta";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
@@ -59,7 +60,6 @@ interface ResultSectionProps {
 }
 
 import { useI18n } from "@/context/I18nContext";
-import { useMemo } from "react";
 
 /** Platform URLs for image/video generation tools - opens the platform so users can paste the prompt */
 const GENERATION_PLATFORM_URLS: Record<string, { name: string; url: string; color: string }> = {
@@ -113,10 +113,23 @@ export function ResultSection({
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
 
   const isInterrupted = streamPhase === 'interrupted';
-  // ... rest of logic ...
-  const displayCompletion = completion.replace(/\{([^}]+)\}/g, (match, ph) => {
-    return variableValues[ph] || match;
-  });
+
+  // Plain-text substitution: keeps copy, export, share, and WhatsApp
+  // handoffs semantically identical to the string the LLM returned,
+  // with user-filled variable values inlined. Missing values leave the
+  // `{token}` in place so the user gets an obvious hint on paste.
+  const displayCompletion = useMemo(
+    () => substituteVariables(completion, variableValues),
+    [completion, variableValues]
+  );
+
+  // Styled rendering for the "after" view: shows Hebrew labels in
+  // sky-blue chips for unfilled tokens and emerald marks for filled
+  // values. This is visual-only — it never touches copy/export flows.
+  const displayNode = useMemo(
+    () => renderPromptWithVariables(completion, variableValues),
+    [completion, variableValues]
+  );
 
   // Unified copy handler used by all copy entry-points inside this component.
   // withWatermark is determined by isPro + toggle state unless explicitly overridden.
@@ -214,6 +227,7 @@ export function ResultSection({
               <BeforeAfterSplit
                 original={originalPrompt ?? ''}
                 enhanced={displayCompletion}
+                enhancedNode={displayNode}
                 mode="tabs"
                 score={
                   completionScore

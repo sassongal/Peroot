@@ -1,6 +1,6 @@
-import { ReactNode, Children, isValidElement, cloneElement, ReactElement } from "react";
+import { ReactNode, Children, isValidElement, cloneElement, ReactElement, Fragment } from "react";
 import sanitizeHtml from "sanitize-html";
-import { VARIABLE_TOKEN_REGEX, extractVariables } from "@/lib/variable-utils";
+import { VARIABLE_TOKEN_REGEX, extractVariables, getVariableLabel } from "@/lib/variable-utils";
 
 /**
  * Back-compat re-exports. All placeholder handling now routes through
@@ -13,6 +13,92 @@ import { VARIABLE_TOKEN_REGEX, extractVariables } from "@/lib/variable-utils";
  */
 export const PLACEHOLDER_REGEX = VARIABLE_TOKEN_REGEX;
 export const extractPlaceholders = extractVariables;
+
+/**
+ * Render a prompt string into React nodes with visually distinct treatment
+ * for every `{token}` placeholder:
+ *
+ *   - Unfilled token → sky-blue chip showing the Hebrew label (from the
+ *     variable registry, see `getVariableLabel`). The user never sees raw
+ *     English snake_case in the rendered prompt.
+ *   - Filled token → emerald-tinted inline mark showing the typed value.
+ *     This gives instant visual confirmation that a variable has been
+ *     bound without the user having to scroll up to the input panel.
+ *
+ * Colors match the input-side styling in `highlightTextWithPlaceholders`
+ * (sky blue) so the prompt feels continuous from input → result. Emerald
+ * is used only for the "already filled" state, following the pattern
+ * already in use elsewhere in the app for success/bound states.
+ *
+ * The function is side-effect-free and memoization-friendly — callers
+ * should wrap the call in `useMemo(..., [text, values])`.
+ */
+export function renderPromptWithVariables(
+    text: string,
+    values: Record<string, string | undefined> = {}
+): ReactNode[] {
+    if (!text) return [];
+
+    // Clone the global regex into a local one so concurrent callers don't
+    // share `lastIndex` state. matchAll would also work but we need the
+    // per-match index for slicing gaps.
+    const regex = new RegExp(VARIABLE_TOKEN_REGEX.source, "g");
+    const parts: ReactNode[] = [];
+    let cursor = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+        const [full, rawKey] = match;
+        const start = match.index;
+
+        // Emit the plain-text gap leading up to this match.
+        if (start > cursor) {
+            parts.push(
+                <Fragment key={`txt-${cursor}`}>{text.slice(cursor, start)}</Fragment>
+            );
+        }
+
+        const key = rawKey.trim();
+        const value = values[key]?.trim();
+
+        if (value) {
+            // Filled: show the user's value prominently so they can
+            // read the prompt as it will actually run.
+            parts.push(
+                <mark
+                    key={`v-${start}-${key}`}
+                    className="rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 border border-emerald-500/30 dark:border-emerald-400/30 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 font-semibold"
+                    title={`${getVariableLabel(key)}: ${value}`}
+                >
+                    {value}
+                </mark>
+            );
+        } else {
+            // Unfilled: show the Hebrew label wrapped in curly braces
+            // so the user still recognizes it as a template slot, but
+            // reads Hebrew instead of snake_case.
+            parts.push(
+                <span
+                    key={`p-${start}-${key}`}
+                    className="inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border border-sky-500/40 dark:border-sky-400/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 font-medium whitespace-nowrap"
+                    title={key}
+                >
+                    {"{"}
+                    {getVariableLabel(key)}
+                    {"}"}
+                </span>
+            );
+        }
+
+        cursor = start + full.length;
+    }
+
+    if (cursor < text.length) {
+        parts.push(<Fragment key={`txt-${cursor}`}>{text.slice(cursor)}</Fragment>);
+    }
+
+    return parts;
+}
 
 export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
   const COMBINED_REGEX = /{[^}]+}|\[[^\]]+\]/g;

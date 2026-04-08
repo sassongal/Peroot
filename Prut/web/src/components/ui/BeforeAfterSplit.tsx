@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Check } from 'lucide-react';
 import { ScoreDelta } from './ScoreDelta';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,14 @@ type Mode = 'tabs' | 'split';
 interface BeforeAfterSplitProps {
   original: string;
   enhanced: string;
+  /**
+   * Optional pre-rendered React node for the "after" view. When provided
+   * it replaces the plain-text `enhanced` string in the display, but the
+   * string is still used for the score row, export/copy buttons, and the
+   * "before" tab fallback. Callers use this to inject styled placeholder
+   * chips and filled-value marks without losing copy/export fidelity.
+   */
+  enhancedNode?: ReactNode;
   mode?: Mode;
   score?: { before: number | null; after: number; improvements?: string[] };
   className?: string;
@@ -21,10 +29,15 @@ const PANE_BASE =
 export function BeforeAfterSplit({
   original,
   enhanced,
+  enhancedNode,
   mode = 'tabs',
   score,
   className,
 }: BeforeAfterSplitProps) {
+  // Prefer the pre-rendered node when provided (Variables-Panel-aware
+  // rendering with chips for placeholders). Otherwise fall back to the
+  // plain string, which is what existing call sites and tests expect.
+  const enhancedDisplay: ReactNode = enhancedNode ?? enhanced;
   const hasOriginal = original.trim().length > 0;
   const [activeTab, setActiveTab] = useState<'before' | 'after'>('after');
 
@@ -104,7 +117,7 @@ export function BeforeAfterSplit({
               אחרי
             </div>
             <div className={cn(PANE_BASE, 'text-base text-[var(--text-primary)]')}>
-              {enhanced}
+              {enhancedDisplay}
             </div>
           </div>
         </div>
@@ -125,7 +138,7 @@ export function BeforeAfterSplit({
                 : 'text-sm text-[var(--text-muted)]'
             )}
           >
-            {hasOriginal && activeTab === 'before' ? original : enhanced}
+            {hasOriginal && activeTab === 'before' ? original : enhancedDisplay}
           </div>
         </div>
       )}
