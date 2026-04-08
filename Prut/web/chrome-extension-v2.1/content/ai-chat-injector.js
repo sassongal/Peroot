@@ -1173,6 +1173,39 @@
   const observeTarget = document.querySelector('main') || document.body;
   observer.observe(observeTarget, { childList: true, subtree: true });
 
+  // ── URL-change detection (history.pushState / replaceState) ─────────────
+  // SPA navigations in ChatGPT/Claude/Gemini use pushState — popstate never
+  // fires, so the DOM observer is the only signal. Wrap history methods to
+  // broadcast a custom event we can listen to for a hard re-init.
+  if (!window.__perootPatchedHistory) {
+    window.__perootPatchedHistory = true;
+    const fire = () => window.dispatchEvent(new Event('peroot:locationchange'));
+    const origPush = history.pushState;
+    const origReplace = history.replaceState;
+    history.pushState = function () {
+      const r = origPush.apply(this, arguments);
+      fire();
+      return r;
+    };
+    history.replaceState = function () {
+      const r = origReplace.apply(this, arguments);
+      fire();
+      return r;
+    };
+    window.addEventListener('popstate', fire);
+  }
+  let lastUrl = location.href;
+  window.addEventListener('peroot:locationchange', () => {
+    if (location.href === lastUrl) return;
+    lastUrl = location.href;
+    // Fresh conversation → let the DOM settle, then re-inject if missing.
+    setTimeout(() => {
+      if (!document.getElementById('peroot-radial-trigger')) {
+        if (typeof tryInject === 'function') tryInject(0);
+      }
+    }, 400);
+  });
+
   // Cleanup observer on page unload to prevent memory leaks
   window.addEventListener('beforeunload', () => {
     observer.disconnect();

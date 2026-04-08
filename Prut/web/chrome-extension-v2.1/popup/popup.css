@@ -1634,10 +1634,66 @@ textarea:focus::placeholder {
 }
 
 /* ════════════════════════════════════════════
+   THEME OVERRIDE — honour options page preference
+   [data-peroot-theme="dark"]  → force dark (ignore system light)
+   [data-peroot-theme="light"] → force light (ignore system dark)
+   unset                        → follow prefers-color-scheme
+   ════════════════════════════════════════════ */
+
+/* Force-dark wins even when system is light — neutralise the media block. */
+html[data-peroot-theme="dark"] body,
+html[data-peroot-theme="dark"] textarea,
+html[data-peroot-theme="dark"] .prompt-card,
+html[data-peroot-theme="dark"] .result-section,
+html[data-peroot-theme="dark"] select,
+html[data-peroot-theme="dark"] .mode-btn,
+html[data-peroot-theme="dark"] .main-header,
+html[data-peroot-theme="dark"] .tabs,
+html[data-peroot-theme="dark"] .tab,
+html[data-peroot-theme="dark"] .settings-panel,
+html[data-peroot-theme="dark"] #login-screen {
+  background: revert !important;
+  background-image: revert !important;
+  color: revert !important;
+  border-color: revert !important;
+}
+
+/* Force-light uses the same rules as the media query below. */
+html[data-peroot-theme="light"] body {
+  background: #fafafa !important;
+  color: #1c1c1e !important;
+}
+html[data-peroot-theme="light"] textarea,
+html[data-peroot-theme="light"] .prompt-card,
+html[data-peroot-theme="light"] .result-section,
+html[data-peroot-theme="light"] select,
+html[data-peroot-theme="light"] .mode-btn {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #1c1c1e !important;
+}
+html[data-peroot-theme="light"] .main-header {
+  background: rgba(255,255,255,0.8) !important;
+  border-bottom-color: rgba(0,0,0,0.06) !important;
+}
+html[data-peroot-theme="light"] .header-title { color: #1c1c1e !important; }
+html[data-peroot-theme="light"] .tabs { background: rgba(0,0,0,0.04) !important; }
+html[data-peroot-theme="light"] .tab { color: #71717a !important; }
+html[data-peroot-theme="light"] .tab.active { background: rgba(245,158,11,0.1) !important; color: #b45309 !important; }
+html[data-peroot-theme="light"] .settings-panel {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: rgba(0,0,0,0.06) !important;
+}
+html[data-peroot-theme="light"] #login-screen { background: #fafafa !important; }
+html[data-peroot-theme="light"] .login-title { color: #1c1c1e !important; }
+html[data-peroot-theme="light"] .result-text { color: #1c1c1e !important; }
+
+/* ════════════════════════════════════════════
    LIGHT MODE — Auto-detect via system preference
+   (only applies when the user has NOT forced a theme)
    ════════════════════════════════════════════ */
 @media (prefers-color-scheme: light) {
-  body {
+  html:not([data-peroot-theme="dark"]) body {
     background: #fafafa;
     background-image:
       radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
@@ -1718,4 +1774,95 @@ textarea:focus::placeholder {
   /* Score bar */
   .score-progress { background: rgba(0,0,0,0.06) !important; }
   .score-tip { color: #a1a1aa !important; }
+}
+
+/* ════════════════════════════════════════════
+   ONBOARDING TOAST (first-run) + target-model badge
+   ════════════════════════════════════════════ */
+
+.target-model-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin-inline-start: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.target-model-badge.hidden { display: none; }
+
+.peroot-onboard-toast {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  animation: peroot-onboard-in 0.25s ease-out;
+}
+.peroot-onboard-toast.peroot-onboard-leave {
+  animation: peroot-onboard-out 0.2s ease-in forwards;
+}
+.peroot-onboard-inner {
+  background: var(--bg-base, #14141a);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 14px;
+  padding: 20px 22px;
+  max-width: 300px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(245, 158, 11, 0.1);
+}
+.peroot-onboard-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fbbf24;
+  margin-bottom: 10px;
+}
+.peroot-onboard-list {
+  margin: 0 0 14px 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--text-secondary, #a1a1aa);
+  line-height: 1.7;
+}
+.peroot-onboard-list li { margin-bottom: 6px; }
+.peroot-onboard-list kbd {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10.5px;
+  color: #fafafa;
+  font-family: monospace;
+}
+.peroot-onboard-list a {
+  color: #fbbf24;
+  text-decoration: underline;
+}
+.peroot-onboard-dismiss {
+  width: 100%;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #0b0b0d;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.peroot-onboard-dismiss:hover { filter: brightness(1.08); }
+@keyframes peroot-onboard-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes peroot-onboard-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }

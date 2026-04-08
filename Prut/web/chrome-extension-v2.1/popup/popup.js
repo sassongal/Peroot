@@ -368,7 +368,27 @@ function persistLastUsedSettings() {
   }
 }
 
+/**
+ * Apply the user's theme preference (from the options page) BEFORE paint
+ * so there is no flash of the wrong theme. Reads from chrome.storage.sync
+ * (with local fallback for compatibility).
+ */
+async function applyThemePreference() {
+  try {
+    const store = chrome.storage.sync || chrome.storage.local;
+    const { peroot_theme_pref } = await new Promise((resolve) =>
+      store.get(["peroot_theme_pref"], resolve)
+    );
+    if (peroot_theme_pref === "light" || peroot_theme_pref === "dark") {
+      document.documentElement.setAttribute("data-peroot-theme", peroot_theme_pref);
+    }
+  } catch { /* ignore */ }
+}
+// Fire-and-forget at module load for earliest possible theme application.
+applyThemePreference();
+
 document.addEventListener("DOMContentLoaded", async () => {
+  await applyThemePreference();
   const auth = await checkAuth();
 
   if (auth.authenticated) {
@@ -591,6 +611,48 @@ function onLoginSuccess() {
     detectedTargetModel = m;
     updateTargetModelBadge(m);
   }).catch(() => {});
+  // First-run onboarding — show once after the first successful login.
+  maybeShowFirstRunOnboarding();
+}
+
+/**
+ * Show a one-time onboarding toast with keyboard shortcut + options hints.
+ * Skipped after the first dismissal (stored in chrome.storage.local).
+ */
+async function maybeShowFirstRunOnboarding() {
+  try {
+    const { peroot_onboarded } = await chrome.storage.local.get("peroot_onboarded");
+    if (peroot_onboarded) return;
+
+    const toast = document.createElement("div");
+    toast.className = "peroot-onboard-toast";
+    toast.setAttribute("role", "dialog");
+    toast.setAttribute("aria-live", "polite");
+    toast.innerHTML = `
+      <div class="peroot-onboard-inner">
+        <div class="peroot-onboard-title">✦ ברוך הבא ל-Peroot</div>
+        <ul class="peroot-onboard-list">
+          <li><kbd>Alt+Shift+E</kbd> — שדרג טקסט מסומן בכל אתר</li>
+          <li><kbd>Alt+P</kbd> — פתח את התוסף בכל רגע</li>
+          <li>גש ל <a href="#" id="peroot-onboard-options">הגדרות</a> כדי לקבוע ברירות מחדל וערכת צבעים</li>
+        </ul>
+        <button class="peroot-onboard-dismiss" type="button">הבנתי</button>
+      </div>
+    `;
+    document.body.appendChild(toast);
+
+    const dismiss = () => {
+      toast.classList.add("peroot-onboard-leave");
+      setTimeout(() => toast.remove(), 250);
+      chrome.storage.local.set({ peroot_onboarded: true });
+    };
+    toast.querySelector(".peroot-onboard-dismiss").addEventListener("click", dismiss);
+    toast.querySelector("#peroot-onboard-options").addEventListener("click", (e) => {
+      e.preventDefault();
+      chrome.runtime.openOptionsPage();
+      dismiss();
+    });
+  } catch { /* ignore — non-critical */ }
 }
 
 function setLoginLoading(loading, msg) {
