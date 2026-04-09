@@ -178,7 +178,7 @@ function HomeViewChromeInner({
            {/* Did You Know banner — reserve min-height to prevent CLS */}
            {!hasCompletion && !isLoading && <div className="min-h-[48px]"><DidYouKnowBanner /></div>}
 
-           <LoadingOverlay isVisible={isLoading} />
+           <LoadingOverlay isVisible={isLoading} phase={streamPhase} />
            <StreamingProgress phase={streamPhase} />
 
            {children}
