@@ -39,6 +39,12 @@ function getRedis(): Redis | null {
 // In-memory fallback — used when Redis is unavailable
 const memoryCircuits = new Map<string, CircuitEntry>();
 
+/** @internal Test-only helper — reset in-memory state + lazy Redis handle between tests. */
+export function __resetCircuitBreakerForTest(): void {
+  memoryCircuits.clear();
+  redis = null;
+}
+
 function defaultEntry(): CircuitEntry {
   return { state: "closed", failures: 0, lastFailure: 0, lastSuccess: Date.now() };
 }
