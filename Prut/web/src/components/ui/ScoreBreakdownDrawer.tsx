@@ -92,13 +92,13 @@ export function ScoreBreakdownDrawer({
         </div>
 
         {/* Header */}
-        <div className="flex items-start justify-between p-6 pb-4 border-b border-[var(--glass-border)]">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-[var(--text-primary)]">{title}</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-black text-[var(--text-primary)]">{score.total}</span>
-              <span className="text-lg text-[var(--text-muted)]">/100</span>
-              <span className={cn('px-3 py-1 rounded-full text-xs font-bold border', levelColor)}>
+        <div className="flex items-start justify-between gap-3 p-4 md:p-6 pb-4 border-b border-[var(--glass-border)]">
+          <div className="space-y-2 min-w-0 flex-1">
+            <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] break-words">{title}</h2>
+            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+              <span className="text-3xl md:text-4xl font-black text-[var(--text-primary)]">{score.total}</span>
+              <span className="text-base md:text-lg text-[var(--text-muted)]">/100</span>
+              <span className={cn('px-2.5 md:px-3 py-1 rounded-full text-xs font-bold border', levelColor)}>
                 {score.label}
               </span>
             </div>

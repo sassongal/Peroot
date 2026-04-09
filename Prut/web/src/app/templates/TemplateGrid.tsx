@@ -79,7 +79,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
           <button
             onClick={() => setActiveCategory(null)}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap",
+              "px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium border transition-all whitespace-nowrap min-h-[36px]",
               !activeCategory
                 ? "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
                 : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5"
@@ -94,7 +94,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
                 setActiveCategory(activeCategory === id ? null : id)
               }
               className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap",
+                "px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium border transition-all whitespace-nowrap min-h-[36px]",
                 activeCategory === id
                   ? "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
                   : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5"

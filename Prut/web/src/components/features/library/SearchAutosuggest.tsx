@@ -142,7 +142,7 @@ export function SearchAutosuggest({
         <button
           type="button"
           onClick={() => { onChange(""); setShowSuggestions(false); }}
-          className="absolute left-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+          className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
           aria-label="נקה חיפוש"
         >
           <X className="w-3.5 h-3.5" />
@@ -152,7 +152,7 @@ export function SearchAutosuggest({
       {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div
-          className="absolute top-full mt-1 left-0 right-0 z-50 bg-[#111] border border-[var(--glass-border)] rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute top-full mt-1 inset-x-0 z-50 bg-[#111] border border-[var(--glass-border)] rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
           role="listbox"
           dir="rtl"
         >

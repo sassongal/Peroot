@@ -70,7 +70,7 @@ export function PromptCard({
       {/* Selection Checkbox */}
       {!isBlurred && (
         <div className={cn(
-          "absolute top-3 left-3 z-10 transition-opacity duration-200",
+          "absolute top-3 start-3 z-10 transition-opacity duration-200",
           (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         )}>
           <button onClick={(e) => { e.stopPropagation(); onToggleSelection(); }} aria-label={isSelected ? "בטל בחירה" : "בחר פריט"}>
@@ -104,17 +104,17 @@ export function PromptCard({
 
         {/* Title + meta */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm md:text-base text-slate-800 dark:text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
+          <h3 className="text-sm md:text-base text-slate-800 dark:text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
+          <div className="flex items-center gap-1.5 flex-wrap mt-1">
             <CapabilityBadge mode={prompt.capability_mode} />
             {/* Strength badge */}
-            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full border font-medium", strengthInfo.colorClass)}>
+            <span className={cn("text-[9px] md:text-[10px] px-1.5 py-0.5 rounded-full border font-medium", strengthInfo.colorClass)}>
               {strength.score}
             </span>
             {/* Variables pill */}
             {variableCount > 0 && (
               <span
-                className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium"
+                className="text-[9px] md:text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium"
                 title={prompt.variables.join(", ")}
               >
                 {variableCount} משתנים

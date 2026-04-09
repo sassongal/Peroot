@@ -1280,7 +1280,7 @@ export default function HomeClient() {
   }, []);
 
   return (
-    <div ref={wrapperRef} className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 max-w-[100vw] overflow-x-hidden" dir="rtl">
+    <div ref={wrapperRef} className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 w-full overflow-x-hidden" dir="rtl">
       <PageContent />
     </div>
   );

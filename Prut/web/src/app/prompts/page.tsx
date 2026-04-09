@@ -181,17 +181,17 @@ export default function PromptsIndexPage() {
                 </div>
 
                 {/* Category cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
                   {group.items.map(({ slug, labelHe, emoji }) => (
                     <Link
                       key={slug}
                       href={`/prompts/${slug}`}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-secondary hover:bg-white/[0.06] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
+                      className="flex flex-col items-center gap-2 p-3 md:p-4 min-h-[110px] rounded-xl border border-border bg-secondary hover:bg-white/[0.06] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
                     >
-                      <span className="text-3xl group-hover:scale-110 transition-transform duration-200">
+                      <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform duration-200">
                         {emoji}
                       </span>
-                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
+                      <span className="text-xs md:text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug break-words">
                         {labelHe}
                       </span>
                     </Link>

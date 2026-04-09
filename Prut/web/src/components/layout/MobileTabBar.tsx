@@ -33,7 +33,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
         "fixed bottom-0 inset-x-0 z-40",
         "flex md:hidden",
         "bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-border",
-        "min-h-[56px] pb-[env(safe-area-inset-bottom)]"
+        "py-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))]"
       )}
     >
       {TABS.map(({ name, label, icon: Icon }) => {

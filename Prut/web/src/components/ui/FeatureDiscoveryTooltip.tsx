@@ -55,7 +55,7 @@ export function FeatureDiscoveryTooltip({
         {/* Close button */}
         <button
           onClick={onDismiss}
-          className="absolute top-3 left-3 p-1 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+          className="absolute top-3 end-3 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
           aria-label="סגור טיפים"
         >
           <X className="w-4 h-4" />

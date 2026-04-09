@@ -65,19 +65,20 @@ export function PromptSearch() {
     <div className="w-full mb-8">
       {/* Search input */}
       <div className="relative max-w-xl">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={(e) => debouncedSearch(e.target.value)}
           placeholder="חפשו פרומפט... (למשל: מבחן מתמטיקה, תכנון שיעור)"
-          className="w-full pr-10 pl-10 py-3 rounded-xl border border-border bg-secondary text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-colors"
+          className="w-full ps-10 pe-10 py-3 rounded-xl border border-border bg-secondary text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-colors"
           dir="rtl"
         />
         {query && (
           <button
             onClick={clear}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="נקה חיפוש"
+            className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

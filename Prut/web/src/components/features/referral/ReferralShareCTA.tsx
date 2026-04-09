@@ -72,7 +72,7 @@ export function ReferralShareCTA({ isAuthenticated }: { isAuthenticated: boolean
 
   return (
     <div
-      className="fixed bottom-[72px] md:bottom-6 start-6 z-50 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="fixed bottom-[calc(56px+env(safe-area-inset-bottom)+0.5rem)] md:bottom-6 start-6 z-50 max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-500"
       dir="rtl"
     >
       <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-zinc-900/95 backdrop-blur-sm border border-amber-500/20 shadow-xl shadow-black/30">

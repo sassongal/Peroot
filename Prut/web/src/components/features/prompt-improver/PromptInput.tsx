@@ -265,7 +265,7 @@ export function PromptInput({
         </div>
       )}
 
-      <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-4 items-stretch">
+      <div className="w-full max-w-4xl mx-auto flex flex-col-reverse lg:flex-row gap-4 items-stretch">
         {variables.length > 0 && (
           <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-[var(--glass-border)] bg-[var(--glass-bg)]">
             <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest">{t.prompt_generator.variables}</div>
@@ -384,7 +384,7 @@ export function PromptInput({
               }}
               placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
               aria-label="כתוב את הפרומפט שלך"
-              className="w-full min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
+              className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-5 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   handleEnhance();
@@ -426,7 +426,7 @@ export function PromptInput({
                              {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.short ?? 'HE'}
                            </button>
                            {showLangPicker && (
-                             <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[140px]">
+                             <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
                                {VOICE_LANGUAGES.map(lang => (
                                  <button
                                    key={lang.code}
@@ -668,7 +668,7 @@ export function PromptInput({
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-[var(--glass-border)] pt-5 p-5 md:p-7 relative z-20 sticky bottom-[56px] md:static md:bottom-auto bg-slate-50/95 dark:bg-zinc-950/95 md:bg-black/5 md:dark:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-[var(--glass-border)] pt-5 p-5 md:p-7 relative z-20 bg-slate-50/95 dark:bg-zinc-950/95 md:bg-black/5 md:dark:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
                 <div className="relative group/select min-w-[140px]">

@@ -57,7 +57,7 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
           panelClass,
           mode === "inline"
             ? "w-full max-h-[75vh] flex flex-col overflow-hidden"
-            : "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[80vh] flex flex-col rounded-[32px] border border-[var(--glass-border)] bg-white/90 dark:bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
+            : "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[calc(100vh-180px)] md:max-h-[80vh] flex flex-col rounded-[32px] border border-[var(--glass-border)] bg-white/90 dark:bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
           mode !== "inline" && (isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none")
         )}
         dir="rtl"

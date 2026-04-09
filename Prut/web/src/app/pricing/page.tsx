@@ -154,7 +154,7 @@ export default function PricingPage() {
         {/* Plans */}
         <section className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Free Plan */}
-          <div className="rounded-3xl border border-border bg-card p-8 flex flex-col">
+          <div className="rounded-3xl border border-border bg-card p-6 md:p-8 flex flex-col">
             <div className="mb-8">
               <h3 className="text-xl font-bold text-foreground mb-2">{PLANS.free.nameHe}</h3>
               <div className="flex items-baseline gap-1">
@@ -182,7 +182,7 @@ export default function PricingPage() {
           </div>
 
           {/* Pro Plan */}
-          <div className="rounded-3xl border-2 border-amber-500/40 bg-linear-to-b from-amber-500/5 to-card p-8 flex flex-col relative overflow-hidden">
+          <div className="rounded-3xl border-2 border-amber-500/40 bg-linear-to-b from-amber-500/5 to-card p-6 md:p-8 flex flex-col relative overflow-hidden">
             {/* Popular badge */}
             <div className="absolute top-0 left-0 right-0 bg-linear-to-l from-amber-500 to-amber-600 text-black text-xs font-bold text-center py-1.5">
               <div className="flex items-center justify-center gap-1.5">
@@ -245,10 +245,10 @@ export default function PricingPage() {
           <h2 className="text-2xl font-bold text-foreground text-center mb-8">השוואת תכונות מפורטת</h2>
           <div className="rounded-2xl border border-border overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-3 bg-secondary border-b border-border">
-              <div className="p-4 text-sm font-semibold text-muted-foreground">תכונה</div>
-              <div className="p-4 text-sm font-semibold text-foreground text-center">חינם</div>
-              <div className="p-4 text-sm font-semibold text-amber-600 dark:text-amber-400 text-center flex items-center justify-center gap-1.5">
+            <div className="grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 bg-secondary border-b border-border">
+              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-muted-foreground">תכונה</div>
+              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-foreground text-center">חינם</div>
+              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-amber-600 dark:text-amber-400 text-center flex items-center justify-center gap-1.5">
                 <ProBadge size="md" />
                 פרו
               </div>
@@ -259,24 +259,24 @@ export default function PricingPage() {
               return (
                 <div
                   key={i}
-                  className={`grid grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-border' : ''} hover:bg-secondary transition-colors`}
+                  className={`grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-border' : ''} hover:bg-secondary transition-colors`}
                 >
-                  <div className="p-4 flex items-center gap-2.5 text-sm text-foreground">
+                  <div className="p-3 md:p-4 flex items-center gap-2 md:gap-2.5 text-xs md:text-sm text-foreground leading-snug break-words">
                     <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                    {feature.name}
+                    <span className="min-w-0">{feature.name}</span>
                   </div>
-                  <div className="p-4 flex items-center justify-center">
+                  <div className="p-3 md:p-4 flex items-center justify-center">
                     {typeof feature.free === 'string' ? (
-                      <span className="text-sm text-muted-foreground">{feature.free}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground text-center">{feature.free}</span>
                     ) : feature.free ? (
                       <Check className="w-4 h-4 text-green-400" />
                     ) : (
                       <X className="w-4 h-4 text-slate-600" />
                     )}
                   </div>
-                  <div className="p-4 flex items-center justify-center">
+                  <div className="p-3 md:p-4 flex items-center justify-center">
                     {typeof feature.pro === 'string' ? (
-                      <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">{feature.pro}</span>
+                      <span className="text-xs md:text-sm font-semibold text-amber-600 dark:text-amber-400 text-center">{feature.pro}</span>
                     ) : feature.pro ? (
                       <Check className="w-4 h-4 text-amber-400" />
                     ) : (

@@ -75,7 +75,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+          className="absolute top-4 end-4 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
           aria-label="סגור"
         >
           <X className="w-5 h-5" />

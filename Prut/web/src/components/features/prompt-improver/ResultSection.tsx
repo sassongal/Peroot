@@ -212,7 +212,7 @@ export function ResultSection({
           {onRetryStream && (
             <button
               onClick={onRetryStream}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-xs font-medium transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-xs font-medium transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               נסה שוב
@@ -304,7 +304,7 @@ export function ResultSection({
           {!isLoading && (
             <div className="px-4 py-4 border-t border-[var(--glass-border)] bg-linear-to-r from-black/[0.02] dark:from-white/2 to-transparent">
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
-                <span className="hidden sm:inline text-xs text-slate-500 ms-2">פתח ב:</span>
+                <span className="col-span-2 text-xs text-slate-500 text-center sm:inline sm:col-span-1 sm:ms-2 sm:text-start">פתח ב:</span>
 
                 {/* Target platform link - shown for image/video modes with a specific platform selected */}
                 {selectedPlatform && selectedPlatform !== 'general' && GENERATION_PLATFORM_URLS[selectedPlatform] && (() => {
@@ -505,7 +505,7 @@ export function ResultSection({
             {/* Pro watermark toggle - only visible to Pro users */}
             {isPro && (
               <div className="flex items-center justify-end gap-2 pt-1" dir="rtl">
-                <label className="flex items-center gap-2 cursor-pointer select-none group">
+                <label className="flex items-center gap-2 cursor-pointer select-none group min-h-[44px] px-2 -mx-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5">
                   <input
                     type="checkbox"
                     checked={proWatermarkEnabled}
