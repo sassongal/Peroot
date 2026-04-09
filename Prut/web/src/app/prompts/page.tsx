@@ -181,7 +181,10 @@ export default function PromptsIndexPage() {
                 </div>
 
                 {/* Category cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+                {/* On 360px iPhone SE widths, 2-col Hebrew labels wrap
+                    aggressively and overflow the card. Drop to 1-col under
+                    `sm` so the card label always fits. */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
                   {group.items.map(({ slug, labelHe, emoji }) => (
                     <Link
                       key={slug}
