@@ -618,9 +618,16 @@ ${registryList}`;
   /** Build a concise context summary for the user prompt message */
   private buildContextSummaryForUserPrompt(context: NonNullable<EngineInput['context']>): string {
       return context.map(a => {
-          if (a.type === 'image') return `[תמונה: ${a.name}]\n${(a.description || a.content).slice(0, 1500)}`;
-          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${a.content.slice(0, 1000)}`;
-          return `[${a.format?.toUpperCase() || 'קובץ'}: ${a.name}] ${a.content.slice(0, 1500)}`;
+          // New ContextBlock shape — pull from display.rawText
+          const block = a as unknown as ContextBlock;
+          if (block.display?.rawText !== undefined) {
+              const label = block.display.title || block.type;
+              return `[${label}] ${block.display.rawText.slice(0, 1500)}`;
+          }
+          // Legacy shape
+          if (a.type === 'image') return `[תמונה: ${a.name}]\n${(a.description || a.content || '').slice(0, 1500)}`;
+          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${(a.content || '').slice(0, 1000)}`;
+          return `[${a.format?.toUpperCase() || 'קובץ'}: ${a.name}] ${(a.content || '').slice(0, 1500)}`;
       }).join('\n\n');
   }
 

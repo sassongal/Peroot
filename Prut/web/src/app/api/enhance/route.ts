@@ -39,17 +39,21 @@ const RequestSchema = z.object({
   answers: z.record(z.string(), z.string()).optional(),
   iteration: z.number().int().min(0).optional(),
   target_model: z.enum(['chatgpt', 'claude', 'gemini', 'general']).default('general').optional(),
+  // Accepts both the legacy shape { type, name, content } and the new
+  // ContextBlock shape { id, type, sha256, stage, display, injected }.
+  // passthrough() lets unknown keys (display, injected, sha256, stage)
+  // flow through without stripping them.
   context: z.array(z.object({
     type: z.enum(['file', 'url', 'image']),
-    name: z.string(),
-    content: z.string(),
+    name: z.string().optional(),
+    content: z.string().optional(),
     tokenCount: z.number().optional(),
     format: z.string().optional(),
     filename: z.string().optional(),
     url: z.string().optional(),
     description: z.string().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
-  })).optional(),
+  }).passthrough()).optional(),
 });
 
 /**
@@ -294,7 +298,9 @@ export async function POST(req: Request) {
         userHistory,
         userPersonality,
         iteration,
-        context: contextAttachments,
+        // Cast to satisfy EngineInput — name/content may be absent on new ContextBlock shape;
+        // BaseEngine.buildContextSummaryForUserPrompt handles both shapes defensively.
+        context: contextAttachments as EngineInput['context'],
         targetModel: target_model || 'general',
     };
 
