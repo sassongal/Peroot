@@ -14,7 +14,9 @@ import { VideoPlatform } from "@/lib/video-platforms";
 import { cn } from "@/lib/utils";
 import { highlightTextWithPlaceholders } from "@/lib/text-utils";
 import { getVariableLabel, getVariablePlaceholder } from "@/lib/variable-utils";
-import { PromptScore } from "@/lib/engines/base-engine";
+import type { InputScore } from "@/lib/engines/scoring/input-scorer";
+import { LiveInputScorePill } from "./LiveInputScorePill";
+import { InputScoreBreakdown } from "./InputScoreBreakdown";
 import { TargetModel } from "@/lib/engines/types";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
@@ -32,8 +34,7 @@ interface PromptInputProps {
   inputVal: string;
   setInputVal: Dispatch<SetStateAction<string>>;
   handleEnhance: () => void;
-  inputScore: PromptScore | null;
-  scoreTone: { text: string; bar: string } | null;
+  liveInputScore: InputScore | null;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   selectedCapability: CapabilityMode;
@@ -123,8 +124,7 @@ export function PromptInput({
   inputVal,
   setInputVal,
   handleEnhance,
-  inputScore,
-  scoreTone,
+  liveInputScore,
   selectedCategory,
   setSelectedCategory,
   selectedCapability,
@@ -163,6 +163,7 @@ export function PromptInput({
     const [voiceLang, setVoiceLang] = useState<VoiceLang>('he-IL');
     const [showLangPicker, setShowLangPicker] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
+    const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false);
 
     // Close language picker on click outside
     useEffect(() => {
@@ -224,6 +225,11 @@ export function PromptInput({
 
   return (
     <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <InputScoreBreakdown
+        isOpen={scoreBreakdownOpen}
+        onClose={() => setScoreBreakdownOpen(false)}
+        score={liveInputScore}
+      />
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
@@ -597,40 +603,6 @@ export function PromptInput({
                    </div>
                </div>
 
-            {inputScore && scoreTone && (
-              <div className="px-6 pb-4 pt-2 border-t border-[var(--glass-border)] relative z-20 bg-black/5 dark:bg-black/20">
-                <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                  <span className="font-mono tracking-widest">{t.prompt_generator.prompt_strength}</span>
-                  <span className={cn("font-semibold", scoreTone.text)}>
-                    {inputScore.label} · {inputScore.score}%
-                  </span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
-                  <div
-                    className={cn("h-full transition-all duration-500", scoreTone.bar)}
-                    style={{ width: `${inputScore.score}%` }}
-                  />
-                </div>
-                {inputScore.usageBoost > 0 && (
-                  <div className="mt-2 text-[10px] text-[var(--text-muted)]">
-                    {t.prompt_generator.usage_boost} +{inputScore.usageBoost}
-                  </div>
-                )}
-                {inputScore.tips.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {inputScore.tips.map((tip, index) => (
-                      <span
-                        key={`${tip}-${index}`}
-                        className="text-[10px] px-2 py-1 rounded-full bg-[var(--glass-bg)] text-[var(--text-secondary)] border border-[var(--glass-border)]"
-                      >
-                        {tip}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
 
             {!inputVal.trim() && !isListening && (
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
@@ -691,6 +663,11 @@ export function PromptInput({
                   </div>
                 </div>
               </div>
+
+              <LiveInputScorePill
+                score={liveInputScore}
+                onOpenBreakdown={() => setScoreBreakdownOpen(true)}
+              />
 
               <button
                 onClick={handleEnhance}

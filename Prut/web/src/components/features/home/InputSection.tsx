@@ -13,7 +13,7 @@ import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { HistoryItem } from "@/hooks/useHistory";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
-import { PromptScore } from "@/lib/engines/base-engine";
+import type { InputScore } from "@/lib/engines/scoring/input-scorer";
 import { PromptAction } from "@/hooks/usePromptWorkflow";
 
 const ReferralBanner = dynamic(
@@ -26,8 +26,7 @@ interface InputSectionProps {
   inputVal: string;
   setInputVal: (action: SetStateAction<string>) => void;
   handleEnhance: () => void;
-  inputScore: PromptScore;
-  scoreTone: { text: string; bar: string };
+  liveInputScore: InputScore | null;
   selectedCategory: string;
   setSelectedCategory: (cat: string) => void;
   selectedCapability: CapabilityMode;
@@ -96,8 +95,7 @@ export const InputSection = memo<InputSectionProps>(({
   inputVal,
   setInputVal,
   handleEnhance,
-  inputScore,
-  scoreTone,
+  liveInputScore,
   selectedCategory,
   setSelectedCategory,
   selectedCapability,
@@ -178,8 +176,7 @@ export const InputSection = memo<InputSectionProps>(({
         inputVal={inputVal}
         setInputVal={setInputVal}
         handleEnhance={handleEnhance}
-        inputScore={inputScore}
-        scoreTone={scoreTone}
+        liveInputScore={liveInputScore}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         selectedCapability={selectedCapability}

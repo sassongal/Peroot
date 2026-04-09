@@ -63,16 +63,22 @@ const TEXT_DIMENSIONS: DimensionDef[] = [
     test: (t) => {
       const matched: string[] = [];
       const missing: string[] = [];
-      if (/אתה\s+(מומחה|יועץ|מנהל|כותב|עורך|מתכנת|מתכנן)|you\s+are\s+an?\s+(expert|specialist|consultant)/i.test(t)) {
+      // Structural role: "אתה <noun>" or "You are <noun>" at a line/sentence
+      // boundary. Accepts any 3+ char Hebrew noun or English word — not
+      // limited to a hardcoded list (previously missed "אתה אנליסט",
+      // "אתה סופר", "אתה data scientist", etc).
+      const hebrewRolePattern = /(?:^|\n|\.\s|:\s)אתה\s+([א-ת]{3,}(?:\s+[א-ת]+){0,3})/;
+      const englishRolePattern = /(?:^|\n|\.\s|:\s)you\s+are\s+(?:an?\s+)?([a-z]+(?:\s+[a-z]+){0,3})/i;
+      if (hebrewRolePattern.test(t) || englishRolePattern.test(t)) {
         matched.push('persona defined');
         // Bonus for experience/credentials
-        if (/\d+\s+(שנות|שנים|years)|מוסמך|בכיר|פרימיום/i.test(t)) {
+        if (/\d+\s+(שנות|שנים|years)|מוסמך|בכיר|פרימיום|senior|lead/i.test(t)) {
           matched.push('credentials');
           return { score: 10, matched, missing };
         }
         return { score: 7, matched, missing: ['credentials (years, certifications)'] };
       }
-      if (/מומחה|יועץ|expert|specialist/i.test(t)) {
+      if (/מומחה|יועץ|אנליסט|expert|specialist|analyst/i.test(t)) {
         return { score: 3, matched: ['role mentioned'], missing: ['clear "אתה" statement'] };
       }
       missing.push('role definition');

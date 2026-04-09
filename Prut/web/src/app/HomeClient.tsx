@@ -20,6 +20,7 @@ import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
+import { scoreInput } from "@/lib/engines/scoring/input-scorer";
 import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -353,6 +354,13 @@ function PageContent() {
     () => BaseEngine.scorePrompt(debouncedInput, ps.selectedCapability),
     [debouncedInput, ps.selectedCapability]
   );
+  // Live, mode-aware input score — drives the pill + breakdown drawer in
+  // PromptInput. Separate from `inputScore` (which is kept only for telemetry
+  // at trackEnhanceComplete and for analytic score tracking).
+  const liveInputScore = useMemo(
+    () => scoreInput(debouncedInput, ps.selectedCapability),
+    [debouncedInput, ps.selectedCapability]
+  );
   // IMPORTANT: The result-section header score must match the numbers shown
   // inside the score-breakdown drawer and the PDF export. Both of those use
   // EnhancedScorer, so compute the header score from the same source to
@@ -379,15 +387,6 @@ function PageContent() {
       usageBoost: 0,
     };
   }, [debouncedCompletion, ps.selectedCapability]);
-
-  const scoreTone =
-    inputScore.level === "high"
-      ? { text: "text-amber-400", bar: "bg-gradient-to-r from-amber-500 to-yellow-400" }
-      : inputScore.level === "medium"
-        ? { text: "text-amber-500/70", bar: "bg-gradient-to-r from-amber-600 to-amber-400" }
-        : inputScore.level === "low"
-          ? { text: "text-red-400", bar: "bg-red-500" }
-          : { text: "text-slate-500", bar: "bg-slate-600" };
 
   // Debounce placeholder extraction
   const placeholders = useMemo(() => extractPlaceholders(debouncedCompletion), [debouncedCompletion]);
@@ -1181,8 +1180,7 @@ function PageContent() {
           inputVal={ps.input}
           setInputVal={setInputVal}
           handleEnhance={handleEnhance}
-          inputScore={inputScore}
-          scoreTone={scoreTone}
+          liveInputScore={liveInputScore}
           selectedCategory={ps.selectedCategory}
           setSelectedCategory={(cat: string) => dispatch({ type: 'SET_CATEGORY', payload: cat })}
           selectedCapability={ps.selectedCapability}
