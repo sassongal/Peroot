@@ -107,11 +107,20 @@ export function useContextAttachments() {
           throw new Error(body.error || "שגיאה בחילוץ הקובץ");
         }
 
-        const data = await res.json();
+        const body = await res.json();
+        if (body.block) {
+          setAttachments((prev) => prev.map(a =>
+            a.id === id
+              ? { ...a, block: body.block, stage: body.block.stage, status: body.block.stage === 'error' ? 'error' : 'ready' }
+              : a,
+          ));
+          return;
+        }
+        // legacy fallback (can be removed once all three routes return {block})
         updateAttachment(id, {
           status: "ready",
-          extractedText: data.text,
-          tokenCount: data.tokens ?? data.tokenCount,
+          extractedText: body.text,
+          tokenCount: body.tokens ?? body.tokenCount,
         });
       } catch (err) {
         updateAttachment(id, {
@@ -158,11 +167,20 @@ export function useContextAttachments() {
           throw new Error(body.error || "שגיאה בחילוץ התוכן מהכתובת");
         }
 
-        const data = await res.json();
+        const body = await res.json();
+        if (body.block) {
+          setAttachments((prev) => prev.map(a =>
+            a.id === id
+              ? { ...a, block: body.block, stage: body.block.stage, status: body.block.stage === 'error' ? 'error' : 'ready' }
+              : a,
+          ));
+          return;
+        }
+        // legacy fallback (can be removed once all three routes return {block})
         updateAttachment(id, {
           status: "ready",
-          extractedText: data.text,
-          tokenCount: data.tokens ?? data.tokenCount,
+          extractedText: body.text,
+          tokenCount: body.tokens ?? body.tokenCount,
         });
       } catch (err) {
         updateAttachment(id, {
@@ -216,11 +234,20 @@ export function useContextAttachments() {
           throw new Error(body.error || "שגיאה בעיבוד התמונה");
         }
 
-        const data = await res.json();
+        const body = await res.json();
+        if (body.block) {
+          setAttachments((prev) => prev.map(a =>
+            a.id === id
+              ? { ...a, block: body.block, stage: body.block.stage, status: body.block.stage === 'error' ? 'error' : 'ready' }
+              : a,
+          ));
+          return;
+        }
+        // legacy fallback (can be removed once all three routes return {block})
         updateAttachment(id, {
           status: "ready",
-          extractedText: data.description ?? data.text,
-          tokenCount: data.tokens ?? data.tokenCount,
+          extractedText: body.description ?? body.text,
+          tokenCount: body.tokens ?? body.tokenCount,
         });
       } catch (err) {
         updateAttachment(id, {
@@ -242,17 +269,24 @@ export function useContextAttachments() {
 
   const getContextPayload = useCallback((): ContextPayload[] => {
     return attachments
-      .filter((a) => a.status === "ready" && a.extractedText)
-      .map((a) => ({
-        type: a.type,
-        name: a.name,
-        content: a.extractedText!,
-        tokenCount: a.tokenCount ?? 0,
-        format: a.format || undefined,
-        filename: a.filename || a.name,
-        url: a.url || (a.type === 'url' ? a.name : undefined),
-        description: a.type === 'image' ? (a.extractedText || undefined) : undefined,
-      }));
+      .filter((a) => a.status === "ready" && (a.block || a.extractedText))
+      .map((a) => {
+        // Prefer the new ContextBlock shape when available
+        if (a.block) {
+          return a.block as unknown as ContextPayload;
+        }
+        // Legacy fallback
+        return {
+          type: a.type,
+          name: a.name,
+          content: a.extractedText!,
+          tokenCount: a.tokenCount ?? 0,
+          format: a.format || undefined,
+          filename: a.filename || a.name,
+          url: a.url || (a.type === 'url' ? a.name : undefined),
+          description: a.type === 'image' ? (a.extractedText || undefined) : undefined,
+        };
+      });
   }, [attachments]);
 
   return {
