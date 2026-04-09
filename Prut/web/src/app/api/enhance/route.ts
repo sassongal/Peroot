@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
+import { summarizeAttachments } from "@/lib/engines/context-cache";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
@@ -280,6 +281,11 @@ export async function POST(req: Request) {
         }
     }
 
+    // S1: Summarize large attachments before they reach the engine.
+    // Cache-hit path is ~0ms (Redis GET); first hit pays one summarizer
+    // round-trip. Fail-safe — on any error the original content passes through.
+    const summarizedContext = await summarizeAttachments(contextAttachments);
+
     const engineInput: EngineInput = {
         prompt,
         tone,
@@ -292,7 +298,7 @@ export async function POST(req: Request) {
         userHistory,
         userPersonality,
         iteration,
-        context: contextAttachments,
+        context: summarizedContext,
         targetModel: target_model || 'general',
     };
 
