@@ -301,7 +301,20 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
   const cy = 70;
   const circumference = 2 * Math.PI * r;
 
-  let cumulativeAngle = -90;
+  // Pre-compute rotations with a reduce so the render pass is pure (no
+  // mutating accumulator mid-map — mid-render mutation breaks React 19's
+  // Strict Mode double-invoke guarantees).
+  const slicesWithRotation = slices.reduce<Array<typeof slices[number] & { rotate: number; dash: number; gap: number }>>(
+    (acc, slice) => {
+      const prevRotate = acc.length > 0 ? acc[acc.length - 1].rotate + (acc[acc.length - 1].dash / circumference) * 360 : -90;
+      const fraction = total > 0 ? slice.value / total : 0;
+      const dash = fraction * circumference;
+      const gap = circumference - dash;
+      acc.push({ ...slice, rotate: prevRotate, dash, gap });
+      return acc;
+    },
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-6 items-center h-full justify-center">
@@ -314,12 +327,8 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
             stroke="rgba(255,255,255,0.04)"
             strokeWidth="14"
           />
-          {slices.map((slice, i) => {
-            const fraction = total > 0 ? slice.value / total : 0;
-            const dash = fraction * circumference;
-            const gap = circumference - dash;
-            const rotate = cumulativeAngle;
-            cumulativeAngle += fraction * 360;
+          {slicesWithRotation.map((slice, i) => {
+            const { dash, gap, rotate } = slice;
 
             return (
               <circle

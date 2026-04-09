@@ -137,6 +137,10 @@ export class AIGateway {
      * Includes circuit breaker (skip failing providers) and concurrency limiter
      * (queue excess requests instead of overwhelming providers).
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- StreamTextResult's
+    // generic parameter requires ai SDK's ToolSet type. Using `unknown` breaks
+    // the constraint; importing ToolSet leaks provider internals into our API.
+    // `any` here is isolated to the return position and narrowed by callers.
     static async generateStream(params: GatewayParams & { task?: string; userTier?: 'free' | 'pro' | 'guest' }): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
         // Acquire a concurrency slot (waits in queue if at capacity)
         await acquireSlot();

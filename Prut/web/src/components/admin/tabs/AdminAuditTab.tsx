@@ -193,14 +193,19 @@ function DonutChart({ data }: { data: ActionsByType[] }) {
   const strokeWidth = 20;
   const circumference = 2 * Math.PI * radius;
 
-  let offset = 0;
-  const segments = top8.map((item, idx) => {
-    const pct = item.count / total;
-    const dashArray = pct * circumference;
-    const dashOffset = circumference - offset * circumference;
-    offset += pct;
-    return { ...item, dashArray, dashOffset, color: DONUT_COLORS[idx] };
-  });
+  // reduce instead of let-accumulator-in-map — keeps the computation
+  // pure so React 19 Strict Mode's double render doesn't corrupt offsets.
+  const segments = top8.reduce<Array<typeof top8[number] & { dashArray: number; dashOffset: number; color: string }>>(
+    (acc, item, idx) => {
+      const prevOffset = acc.reduce((sum, s) => sum + s.dashArray / circumference, 0);
+      const pct = item.count / total;
+      const dashArray = pct * circumference;
+      const dashOffset = circumference - prevOffset * circumference;
+      acc.push({ ...item, dashArray, dashOffset, color: DONUT_COLORS[idx] });
+      return acc;
+    },
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-6">
