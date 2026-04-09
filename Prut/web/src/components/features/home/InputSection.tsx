@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { PromptInput } from "@/components/features/prompt-improver/PromptInput";
 import { ContextChips } from "@/components/features/context/ContextChips";
+import { SupportedPlatforms } from "@/components/features/landing/SupportedPlatforms";
 import type { ContextAttachment } from "@/lib/context/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { TargetModel } from "@/lib/engines/types";
@@ -211,12 +212,15 @@ export const InputSection = memo<InputSectionProps>(({
         onRemove={onRemoveAttachment}
       />
 
+      {/* Supported Platforms marquee — showcases every engine Peroot optimizes for */}
+      <SupportedPlatforms />
+
       {/* Recently Used Prompts Strip */}
       {history.length > 0 && (
         <div className="mt-3">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-xs font-medium text-slate-500">שימשת לאחרונה</span>
+            <span className="text-xs font-medium text-slate-500">השתמשת לאחרונה</span>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {history.slice(0, 5).map((item, i) => (

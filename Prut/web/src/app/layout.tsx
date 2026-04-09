@@ -204,7 +204,7 @@ export default async function RootLayout({
                 <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
                   <GlobalContextWrapper initialUser={initialUser}>
                     <ErrorBoundary name="AppRoot">
-                      <main id="main-content" className="flex-grow">
+                      <main id="main-content" className="grow">
                         {children}
                       </main>
                     </ErrorBoundary>
