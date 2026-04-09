@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
     const dataUrl = `data:${file.type};base64,${base64}`;
 
     // Call Gemini Flash for image description
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
-      logger.error('[Describe Image] Missing GEMINI_API_KEY or GOOGLE_API_KEY');
+      logger.error('[Describe Image] Missing GOOGLE_GENERATIVE_AI_API_KEY');
       return NextResponse.json({ error: 'שירות תיאור תמונות לא זמין' }, { status: 503 });
     }
 
