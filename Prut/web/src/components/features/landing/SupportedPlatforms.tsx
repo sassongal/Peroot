@@ -11,26 +11,37 @@ import {
  * SupportedPlatforms — dual-marquee showcase of every AI engine Peroot supports.
  *
  * Design: two infinite horizontal rows running in opposite directions, with
- * edge fade-out gradients. Logos are monochrome by default and bloom to full
- * color on hover. Pure CSS animation (GPU-accelerated), respects
- * prefers-reduced-motion, and uses locally-hosted SVG logos (under
- * `public/logos/platforms/`) so there's no external runtime dependency.
+ * edge fade-out gradients. Logos are rendered as CSS masks over
+ * `--text-primary`, so they're true monochrome and auto-adapt to light/dark
+ * mode regardless of their source colors. Pure CSS animation (GPU-
+ * accelerated), respects prefers-reduced-motion, and uses locally-hosted
+ * SVG/PNG logos under `public/logos/platforms/` — zero runtime deps.
  */
 function Logo({ platform }: { platform: Platform }) {
   const common =
-    "opacity-60 grayscale transition-all duration-300 group-hover/item:opacity-100 group-hover/item:grayscale-0 group-hover/item:scale-105";
+    "opacity-60 transition-all duration-300 group-hover/item:opacity-100 group-hover/item:scale-105";
 
   if (platform.logo) {
+    // CSS mask approach: render the logo shape as a mask on a block of
+    // currentColor. This gives us true monochrome logos that auto-adapt to
+    // light/dark mode (follow --text-primary), regardless of the SVG/PNG's
+    // own internal colors. Works for both vector and raster sources because
+    // raster masks use the alpha channel.
     return (
-      // next/image doesn't optimize SVGs; plain img keeps payload minimal and avoids config
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={platform.logo}
-        alt={platform.name}
-        loading="lazy"
-        decoding="async"
-        className={`h-7 w-auto object-contain ${common}`}
-        draggable={false}
+      <span
+        role="img"
+        aria-label={platform.name}
+        className={`block h-7 w-10 bg-[var(--text-primary)] ${common}`}
+        style={{
+          WebkitMaskImage: `url(${platform.logo})`,
+          maskImage: `url(${platform.logo})`,
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+        }}
       />
     );
   }
