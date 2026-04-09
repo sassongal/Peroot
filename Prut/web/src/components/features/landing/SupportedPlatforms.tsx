@@ -13,20 +13,19 @@ import {
  * Design: two infinite horizontal rows running in opposite directions, with
  * edge fade-out gradients. Logos are monochrome by default and bloom to full
  * color on hover. Pure CSS animation (GPU-accelerated), respects
- * prefers-reduced-motion, and uses lazy-loaded external SVG logos so payload
- * stays tiny.
+ * prefers-reduced-motion, and uses locally-hosted SVG logos (under
+ * `public/logos/platforms/`) so there's no external runtime dependency.
  */
 function Logo({ platform }: { platform: Platform }) {
   const common =
     "opacity-60 grayscale transition-all duration-300 group-hover/item:opacity-100 group-hover/item:grayscale-0 group-hover/item:scale-105";
 
-  if (platform.slug) {
-    const color = platform.color ?? "currentColor";
+  if (platform.logo) {
     return (
-      // next/image would require remote host config + doesn't optimize SVGs anyway
+      // next/image doesn't optimize SVGs; plain img keeps payload minimal and avoids config
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={`https://cdn.simpleicons.org/${platform.slug}/${color}`}
+        src={platform.logo}
         alt={platform.name}
         loading="lazy"
         decoding="async"
@@ -36,7 +35,7 @@ function Logo({ platform }: { platform: Platform }) {
     );
   }
 
-  // Text-wordmark fallback for platforms without a simpleicons entry
+  // Text-wordmark fallback for platforms without a local logo file
   return (
     <span
       className={`text-base md:text-lg font-semibold tracking-tight text-[var(--text-primary)] ${common}`}
@@ -124,7 +123,7 @@ function SupportedPlatformsImpl() {
 
       <div className="flex items-center justify-center mb-3 px-4">
         <span className="text-xs font-medium text-[var(--text-muted)] tracking-wide">
-          עובד עם כל המנועים שאתם מכירים
+          לכל מנוע שפה משלו. פרוט מדבר את כולן.
         </span>
       </div>
 
