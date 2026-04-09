@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-08T02:22:37.552Z",
+  "generatedAt": "2026-04-09T11:47:15.139Z",
   "fixtureCount": 14,
-  "averageScore": 32.43,
+  "averageScore": 33,
   "entries": [
     {
       "group": "badText",
@@ -60,7 +60,7 @@
     {
       "group": "strongText",
       "name": "full RISEN Hebrew prompt",
-      "score": 77,
+      "score": 85,
       "level": "high"
     },
     {
@@ -92,7 +92,7 @@
     "badText": 5.25,
     "weakText": 19,
     "mediumText": 38,
-    "strongText": 77,
+    "strongText": 85,
     "eliteText": 85,
     "badVisual": 4.5,
     "strongVisual": 77,
