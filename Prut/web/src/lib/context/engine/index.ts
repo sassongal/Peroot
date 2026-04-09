@@ -18,7 +18,7 @@ import { buildInjectedBlock, renderInjection } from './inject';
 import { getCachedBlock, putCachedBlock } from './cache';
 
 export { renderInjection } from './inject';
-// export { selectEngineModel } from '@/lib/ai/context-router'; // restored in Task 21
+export { selectEngineModel } from '@/lib/ai/context-router';
 export type { ContextBlock, ProcessAttachmentInput } from './types';
 
 export async function processAttachment(input: ProcessAttachmentInput): Promise<ContextBlock> {
