@@ -504,52 +504,52 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-10 animate-in fade-in duration-700 select-none pb-24" dir="rtl">
+      <div className="space-y-6 md:space-y-10 animate-in fade-in duration-700 select-none pb-24 overflow-x-hidden" dir="rtl">
 
         {/* ── Back Link ── */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-600 hover:text-white transition-colors group w-fit"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-600 hover:text-white transition-colors group w-fit min-h-[44px]"
         >
           <ArrowUpRight className="w-3.5 h-3.5 rotate-180 transition-transform group-hover:-translate-x-0.5" />
           Back to App
         </Link>
 
         {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 px-10 py-10 rounded-[40px] border border-white/5">
-          <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-8 bg-zinc-950/50 px-4 py-5 md:px-10 md:py-10 rounded-2xl md:rounded-[40px] border border-white/5">
+          <div className="space-y-3 md:space-y-4 min-w-0">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 shrink-0">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-blue-500 truncate">
                 Operational Authority Level 1
               </span>
             </div>
-            <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+            <h1 className="text-3xl md:text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tight md:tracking-tighter leading-none break-words">
               Command Center
             </h1>
-            <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
+            <p className="text-zinc-500 font-medium tracking-tight text-sm md:text-lg max-w-xl">
               {t.admin.dashboard.description}
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 shrink-0 items-end">
-            <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-3 md:shrink-0 md:items-end">
+            <div className="flex flex-wrap gap-2 md:gap-3">
               {/* System status */}
-              <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+              <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 All Systems Operational
               </div>
               {/* Quick date */}
-              <div className="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5">
+              <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-2.5">
                 <Clock className="w-3.5 h-3.5" />
                 {new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
               </div>
             </div>
 
             {/* Auto-refresh controls */}
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/5">
+            <div className="flex items-center gap-1.5 md:gap-2 p-1.5 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 flex-wrap">
               <RefreshCw className="w-3.5 h-3.5 text-zinc-600 mr-1" />
               <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 ml-0.5">
                 רענון אוטומטי

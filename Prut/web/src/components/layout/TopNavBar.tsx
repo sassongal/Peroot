@@ -70,7 +70,9 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
                 key={id}
                 onClick={() => onNavigate(id)}
                 className={cn(
-                  "flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  // On mobile the MobileTabBar already provides home/library/personal —
+                  // hiding these avoids duplicating nav and freeing space for children.
+                  "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isActive
                     ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent"

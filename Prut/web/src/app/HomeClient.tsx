@@ -1063,9 +1063,11 @@ function PageContent() {
   const topNavBar = (
     <TopNavBar viewMode={viewMode} onNavigate={handleTopNavNavigate}>
       <PromptLimitIndicator creditsBalance={creditsRemaining} />
+      {/* Chains + History hidden on mobile — reachable via personal library & MobileTabBar.
+          Keeps TopNavBar under the 375px crowding threshold. */}
       <button
         onClick={handleOpenChainsFromNav}
-        className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border border-white/10 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 cursor-pointer"
+        className="hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border border-white/10 bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 cursor-pointer"
         aria-label="שרשראות"
         title="שרשראות פרומפטים"
       >
@@ -1075,7 +1077,7 @@ function PageContent() {
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
+          "hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all border backdrop-blur-md cursor-pointer",
           sidebarOpen
             ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
             : "bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10"

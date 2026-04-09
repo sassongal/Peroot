@@ -68,7 +68,7 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
         </Link>
         <Link
           href="/pricing"
-          className="text-[10px] font-bold text-amber-400 hover:text-amber-300 transition-colors px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20"
+          className="hidden sm:inline-flex text-[10px] font-bold text-amber-400 hover:text-amber-300 transition-colors px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20"
         >
           שדרג
         </Link>

@@ -180,7 +180,7 @@ export default async function RootLayout({
         <link rel="apple-touch-startup-image" href="/splash-ipad.webp" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" />
       </head>
       <body
-        className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col`}
+        className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col overflow-x-hidden`}
         suppressHydrationWarning
       >
         <DeferredWidgets />
