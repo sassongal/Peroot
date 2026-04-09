@@ -45,6 +45,18 @@ describe('gateway pickDefaults — hard clamp', () => {
     const result = pickDefaults('image', 16384);
     expect(result.maxOutputTokens).toBe(16384);
   });
+
+  it('honors a userMax override for the enhance task (Refine path)', () => {
+    // Regression: Refine requests hit the enhance task but need more than
+    // the 4096 default because the engine re-emits the full enhanced prompt
+    // plus [GENIUS_QUESTIONS] + [PROMPT_TITLE] blocks. The API route passes
+    // maxOutputTokens: 8192 for isRefinement — this test locks in that the
+    // gateway actually honors the override (and does not clamp it back to
+    // the enhance preset of 4096).
+    const result = pickDefaults('enhance', 8192);
+    expect(result.maxOutputTokens).toBe(8192);
+    expect(result.maxOutputTokens).toBeGreaterThan(4096);
+  });
 });
 
 describe('gateway pickDefaults — presets', () => {

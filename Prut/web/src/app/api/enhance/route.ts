@@ -418,10 +418,23 @@ export async function POST(req: Request) {
         : 'enhance';
     const isJsonOutput = engineOutput.outputFormat === 'json';
 
+    // Refine requests (previousResult + refinementInstruction/answers) reuse
+    // the enhance task preset (4096 tokens). That preset is tuned for a
+    // first-pass prompt rewrite, but Refine output is longer: the engine
+    // re-emits the full enhanced prompt AND a fresh [GENIUS_QUESTIONS] block
+    // AND a [PROMPT_TITLE] block, which together commonly exceed 4096 tokens
+    // and trigger finishReason='length' mid-answer. We lift the ceiling to
+    // 8192 for Refine on the text/agent tasks only — image/video already use
+    // their own 16384 preset, and standard enhance is unchanged.
+    const refinementMaxTokens = isRefinement && (resolvedTask === 'enhance')
+        ? 8192
+        : undefined;
+
     const { result, modelId } = await AIGateway.generateStream({
         system: engineOutput.systemPrompt,
         prompt: engineOutput.userPrompt,
         task: resolvedTask,
+        ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),
         userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
         onFinish: async (completion) => {
             const durationMs = Date.now() - startTime;
