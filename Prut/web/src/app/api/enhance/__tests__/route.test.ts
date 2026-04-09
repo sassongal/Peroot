@@ -1061,6 +1061,14 @@ describe("POST /api/enhance", () => {
       });
       await POST(req);
 
+      // Refine requests must lift the token ceiling above the 4096 default
+      // because the engine re-emits the enhanced prompt + [GENIUS_QUESTIONS]
+      // + [PROMPT_TITLE] blocks, which commonly exceed 4096 and trigger
+      // finishReason='length' truncation mid-answer. Regression for the
+      // Refine-output-cut-off bug.
+      expect(mockGenerateStream).toHaveBeenCalledWith(
+        expect.objectContaining({ maxOutputTokens: 8192, task: "enhance" }),
+      );
       expect(mockGenerateRefinement).toHaveBeenCalledWith(
         expect.objectContaining({
           previousResult: "previous output",

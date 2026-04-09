@@ -474,25 +474,25 @@ export async function POST(req: Request) {
         : undefined;
 
     const { result, modelId } = await AIGateway.generateStream({
-        system: engineOutput.systemPrompt,
-        prompt: engineOutput.userPrompt,
-        task: resolvedTask,
-        ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),
-        userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
-        onFinish: async (completion) => {
-            // Snapshot the stream result synchronously so the captured
-            // values stay valid inside the deferred `after()` callback.
-            const durationMs = Date.now() - startTime;
-            const textCopy = completion.text;
-            const usageCopy = completion.usage;
-            const finishReasonCopy = (completion as { finishReason?: string }).finishReason;
+      system: engineOutput.systemPrompt,
+      prompt: engineOutput.userPrompt,
+      task: resolvedTask,
+      // Refine lifts the ceiling from 4096 → 8192; everything else stays
+      // on the task preset (undefined = use pickDefaults).
+      ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),
+      userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
+      onFinish: async (completion) => {
+        const durationMs = Date.now() - startTime;
+        const textCopy = completion.text;
+        const usageCopy = completion.usage;
+        const finishReasonCopy = (completion as { finishReason?: string }).finishReason;
 
-            // All non-critical work (DB writes, telemetry, job enqueue,
-            // cache write, refund) runs AFTER the client's stream finishes.
-            // This drops p95/p99 because the function's wall-clock duration
-            // no longer includes DB latency. `after()` is the Next.js 16
-            // primitive designed for exactly this pattern.
-            after(async () => {
+        // All non-critical work (DB writes, telemetry, job enqueue,
+        // cache write, refund) runs AFTER the client's stream finishes.
+        // This drops p95/p99 because the function's wall-clock duration
+        // no longer includes DB latency. `after()` is the Next.js 16
+        // primitive designed for exactly this pattern.
+        after(async () => {
                 try {
                     // JSON validity check — applied only to engines that declared
                     // outputFormat 'json' (currently: Stable Diffusion JSON and
@@ -634,7 +634,7 @@ export async function POST(req: Request) {
                     await lock.release();
                 }
             });
-        }
+        },
     });
 
     return result.toTextStreamResponse();
