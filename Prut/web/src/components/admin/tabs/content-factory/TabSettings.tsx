@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -21,40 +22,42 @@ import { SectionTitle } from "./shared";
 // ── Tab 4: Settings ───────────────────────────────────────────────────────────
 
 export function TabSettings({ stats }: { stats: ContentFactoryStats | null }) {
-  const [cronSettings, setCronSettings] = useState<CronSettings>({
+  // Lazy-read both from localStorage on mount (no cascading setState).
+  // useLocalStorage also handles the persistence write, so the explicit
+  // saveSettings / deletePreset no longer need manual localStorage.setItem.
+  const [cronSettings, setCronSettings] = useLocalStorage<CronSettings>("cf_cron", {
     enabled: false,
     day: 1,
     hour: 9,
     draftExpiryDays: 30,
     categoryTargets: {},
   });
-  const [presets, setPresets] = useState<Preset[]>([]);
+  const [presets, setPresets] = useLocalStorage<Preset[]>("cf_presets", []);
   const [saving, setSaving] = useState(false);
 
+  // Merge newly-seen categories from stats into categoryTargets.
+  // Kept as a separate effect because it depends on async `stats` prop,
+  // not on mount-time localStorage state.
   useEffect(() => {
-    const saved = localStorage.getItem("cf_cron");
-    if (saved) { try { setCronSettings(JSON.parse(saved)); } catch { /* ignore */ } }
-    const savedPresets = localStorage.getItem("cf_presets");
-    if (savedPresets) { try { setPresets(JSON.parse(savedPresets)); } catch { /* ignore */ } }
-    if (stats?.categories) {
-      setCronSettings((prev) => {
-        const targets = { ...prev.categoryTargets };
-        for (const cat of stats.categories) { if (!(cat in targets)) targets[cat] = 20; }
-        return { ...prev, categoryTargets: targets };
-      });
-    }
-  }, [stats]);
+    if (!stats?.categories) return;
+    setCronSettings((prev) => {
+      const targets = { ...prev.categoryTargets };
+      let changed = false;
+      for (const cat of stats.categories) {
+        if (!(cat in targets)) { targets[cat] = 20; changed = true; }
+      }
+      return changed ? { ...prev, categoryTargets: targets } : prev;
+    });
+  }, [stats, setCronSettings]);
 
   const saveSettings = () => {
     setSaving(true);
-    localStorage.setItem("cf_cron", JSON.stringify(cronSettings));
+    // useLocalStorage already persisted on every update; this is just UX feedback.
     setTimeout(() => { setSaving(false); toast.success("הגדרות נשמרו"); }, 400);
   };
 
   const deletePreset = (id: string) => {
-    const updated = presets.filter((p) => p.id !== id);
-    setPresets(updated);
-    localStorage.setItem("cf_presets", JSON.stringify(updated));
+    setPresets((prev) => prev.filter((p) => p.id !== id));
     toast.success("פרסט נמחק");
   };
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback } from "react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { BookOpen, Star, Library, X, Maximize2, Minimize2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
@@ -51,19 +52,11 @@ export const SidebarDrawer = memo<SidebarDrawerProps>(({
   onBumpHistoryLastUsed,
 }) => {
   const t = useI18n();
-  const [expanded, setExpanded] = useState(false);
+  // Lazy localStorage read — eliminates the cascading-setState pattern
+  // (default → effect reads → setState → rerender) that blocks INP on
+  // mount. See src/hooks/useLocalStorage.ts for the rationale.
+  const [expanded, setExpanded] = useLocalStorage<boolean>('peroot_sidebar_expanded', false);
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
-
-  // Restore expanded state from localStorage after hydration
-  useEffect(() => {
-    const stored = localStorage.getItem('peroot_sidebar_expanded');
-    if (stored === 'true') setExpanded(true);
-  }, []);
-
-  // Persist expanded state
-  useEffect(() => {
-    localStorage.setItem('peroot_sidebar_expanded', expanded.toString());
-  }, [expanded]);
 
   const handleRestore = useCallback((item: HistoryItem) => {
     onRestore(item);

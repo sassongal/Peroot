@@ -3,6 +3,7 @@
 import { useReducer } from 'react';
 import type { Question } from '@/lib/types';
 import { CapabilityMode } from '@/lib/capability-mode';
+import { logger } from '@/lib/logger';
 
 // --- Types ---
 
@@ -163,7 +164,11 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
 
     case 'SET_CAPABILITY':
       if (typeof window !== 'undefined') {
-        try { localStorage.setItem('peroot_last_mode', action.payload); } catch {}
+        // localStorage can fail on Safari private mode or quota exhaustion.
+        // Don't silently swallow — surface the warning so we can see it in
+        // logs/Sentry if preferences stop persisting for a user cohort.
+        try { localStorage.setItem('peroot_last_mode', action.payload); }
+        catch (e) { logger.warn('[usePromptWorkflow] localStorage write failed:', e); }
       }
       return { ...state, selectedCapability: action.payload };
 

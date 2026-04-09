@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, Check, Share2, Link } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon, TelegramIcon } from "@/components/ui/AIPlatformIcons";
 
 function XIcon({ className }: { className?: string }) {
@@ -15,13 +15,14 @@ function XIcon({ className }: { className?: string }) {
 export function SharePageClient({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [pageUrl, setPageUrl] = useState('');
-  const [canShare, setCanShare] = useState(false);
-
-  useEffect(() => {
-    setPageUrl(window.location.href);
-    setCanShare(!!navigator?.share);
-  }, []);
+  // Lazy initializers — no cascading setState on mount. SSR gets empty
+  // string / false, client rehydrates synchronously on first render.
+  const [pageUrl] = useState<string>(() =>
+    typeof window !== 'undefined' ? window.location.href : ''
+  );
+  const [canShare] = useState<boolean>(() =>
+    typeof window !== 'undefined' && !!navigator?.share
+  );
 
   const handleCopyPrompt = async () => {
     await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | www.peroot.space");
