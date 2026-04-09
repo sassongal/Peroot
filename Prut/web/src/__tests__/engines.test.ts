@@ -183,9 +183,20 @@ describe('AgentEngine', () => {
     expect(result.userPrompt).toContain('בנה סוכן AI לשירות לקוחות');
   });
 
-  it('systemPrompt contains GENIUS_ANALYSIS section', () => {
+  // AgentEngine is self-contained and intentionally does NOT inherit the
+  // base [GENIUS_ANALYSIS] block (that block is calibrated for STANDARD
+  // prompt-enhancement and would leak CO-STAR / RISEN meta-text into
+  // Agent Builder output). Instead, it must emit the agent-specific
+  // framework markers and still produce [PROMPT_TITLE] / [GENIUS_QUESTIONS]
+  // for downstream parsing.
+  it('systemPrompt contains AGENT ARCHITECTURE FRAMEWORK (not base GENIUS_ANALYSIS)', () => {
     const result = engine.generate(makeInput({ mode: CapabilityMode.AGENT_BUILDER }));
-    expect(result.systemPrompt).toContain('GENIUS_ANALYSIS');
+    expect(result.systemPrompt).toContain('AGENT ARCHITECTURE FRAMEWORK');
+    expect(result.systemPrompt).toContain('[GENIUS_QUESTIONS]');
+    expect(result.systemPrompt).toContain('[PROMPT_TITLE]');
+    // Must NOT contain base STANDARD analysis markers
+    expect(result.systemPrompt).not.toContain('CO-STAR VALIDATION');
+    expect(result.systemPrompt).not.toContain('RISEN VALIDATION');
   });
 });
 

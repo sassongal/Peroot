@@ -1,7 +1,8 @@
 
-import { BaseEngine } from "./base-engine";
-import { EngineConfig, EngineInput, EngineOutput } from "./types";
+import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engine";
+import { EngineConfig, EngineInput, EngineOutput, InjectionStats } from "./types";
 import { CapabilityMode } from "../capability-mode";
+import { memoryFlags } from "../memory/injection-flags";
 import {
   getExamplesBlock,
   getMistakesBlock,
@@ -118,33 +119,190 @@ Requirements:
   }
 
   generate(input: EngineInput): EngineOutput {
-      const result = super.generate(input);
-      result.outputFormat = "markdown";
+      // Self-contained: does NOT call super.generate(). The base generate()
+      // injects a [GENIUS_ANALYSIS] block + DOCUMENT_INTELLIGENCE + CO-STAR /
+      // RISEN validation that are designed for STANDARD prompt enhancement.
+      // Those instructions directly contradict the agent template's
+      // "Output ONLY the complete system instruction" rule and were bleeding
+      // meta-text (CO-STAR, RISEN, "enhanced prompt...") into agent output.
+      // Pattern modeled on ImageEngine.generate() / VideoEngine.generate().
 
-      // Inject concept classification (LLM-level semantic understanding)
-      result.systemPrompt += getConceptClassificationBlock('text');
+      // Defensive default: empty tone produced "TONE: ." in the template.
+      const safeTone = (input.tone && input.tone.trim().length > 0)
+          ? input.tone
+          : 'מקצועי ומדויק';
 
-      // Inject skill-based few-shot examples, mistakes, and scoring criteria
+      const variables: Record<string, string> = {
+          input: escapeTemplateVars(input.prompt),
+          tone: escapeTemplateVars(safeTone),
+          category: escapeTemplateVars(input.category),
+          ...sanitizeModeParams(input.modeParams),
+      };
+
+      let finalSystem = this.buildTemplate(this.config.system_prompt_template, variables);
+
+      // Global system identity (from DB)
+      const identity = this.getSystemIdentity();
+      if (identity) {
+          finalSystem += `\n\n${identity}`;
+      }
+
+      // Model-specific adaptation hints (target LLM)
+      const modelHints = AgentEngine.getModelAdaptationHints(input.targetModel);
+      if (modelHints) {
+          finalSystem += `\n\n${modelHints}`;
+      }
+
+      // Personalization telemetry — same shape as base, so activity_logs stay consistent
+      const injectionStats: InjectionStats = {
+          personalityInjected: false,
+          historyCount: 0,
+          historyHasEnhanced: false,
+          historySource: 'none',
+          approxAddedTokens: 0,
+      };
+      const startLen = finalSystem.length;
+
+      // L2 — USER_STYLE_CONTEXT (before→after pairs or raw examples)
+      if (memoryFlags.historyEnabled && input.userHistory && input.userHistory.length > 0) {
+          const hasEnhanced = input.userHistory.some(h => h.enhanced && h.enhanced.trim().length > 0);
+          const historyBlock = input.userHistory
+              .map(h => {
+                  const before = h.prompt.slice(0, 500);
+                  if (h.enhanced && h.enhanced.trim().length > 0) {
+                      return `Title: ${h.title}\nBefore (user wrote):\n${before}\n\nAfter (Peroot enhanced):\n${h.enhanced.slice(0, 800)}`;
+                  }
+                  return `Title: ${h.title}\nPrompt:\n${before}`;
+              })
+              .join('\n\n---\n\n');
+
+          const intro = hasEnhanced
+              ? `The following are recent before→after pairs from this user's own enhancement history. Learn their preferred level of specificity, persona depth, and structural detail — then apply the same bar to the agent system instruction you design.`
+              : `The following are examples of prompts this user has saved or liked. Observe their preferred tone and structural depth; apply the same bar to the agent you design.`;
+
+          finalSystem += `\n\n[USER_STYLE_CONTEXT]\n${intro}\n\n${historyBlock}\n`;
+
+          injectionStats.historyCount = input.userHistory.length;
+          injectionStats.historyHasEnhanced = hasEnhanced;
+          injectionStats.historySource = hasEnhanced ? 'recent_history' : 'use_count';
+      }
+
+      // L3 — USER_PERSONALITY_TRAITS
+      if (memoryFlags.personalityEnabled && input.userPersonality) {
+          const { tokens, brief, format } = input.userPersonality;
+          finalSystem += `\n\n[USER_PERSONALITY_TRAITS]\n`;
+          if (tokens.length > 0) finalSystem += `- Key Style Tokens: ${tokens.join(', ')}\n`;
+          if (format) finalSystem += `- Preferred Format: ${format}\n`;
+          if (brief) finalSystem += `- Personality Profile: ${brief}\n`;
+          finalSystem += `\nApply these traits to the agent's tone calibration and output format section, without diluting the domain expertise the agent needs.\n`;
+          injectionStats.personalityInjected = true;
+      }
+
+      injectionStats.approxAddedTokens = Math.round((finalSystem.length - startLen) / 4);
+
+      // Agent-specific attached-context block — replaces base DOCUMENT_INTELLIGENCE
+      // which was phrased for "build a prompt ABOUT this document". For agents
+      // the attached material should become the agent's knowledge base.
+      const hasContext = !!(input.context && input.context.length > 0);
+      if (hasContext) {
+          const fileCount = input.context!.filter(a => a.type === 'file').length;
+          const urlCount = input.context!.filter(a => a.type === 'url').length;
+          const imageCount = input.context!.filter(a => a.type === 'image').length;
+          const attachmentSummary = [
+              fileCount > 0 ? `${fileCount} קבצים` : '',
+              urlCount > 0 ? `${urlCount} קישורים` : '',
+              imageCount > 0 ? `${imageCount} תמונות` : '',
+          ].filter(Boolean).join(', ');
+
+          finalSystem += `\n\n[AGENT_KNOWLEDGE_BASE — ${attachmentSummary}]
+המשתמש צירף חומר מקור. התייחס אליו כאל **בסיס הידע והדוגמאות של הסוכן** — לא כמסמך שצריך לסכם.
+
+כיצד לשלב את החומר בהוראת הסוכן שאתה בונה:
+1. **חלץ מומחיות**: זהה את התחום, המתודולוגיה, המושגים והפרקטיקות שעולים מהחומר — שלב אותם בסעיף 5 (ידע, מומחיות ומתודולוגיות) כידע שהסוכן שולט בו.
+2. **חלץ דוגמאות**: קח 1-2 דוגמאות קונקרטיות מהחומר וצטט אותן (או גרסה מקוצרת) בסעיף 7 (דוגמאות אינטראקציה) כ"קלט משתמש → תגובת הסוכן".
+3. **חלץ גבולות**: אם החומר מגדיר מה מותר ואסור בתחום, תרגם זאת לסעיף 6 (כיפת ברזל).
+4. **טון ואוצר מילים**: אם לחומר יש טון מקצועי מובחן, שקף אותו בסעיף 4 (פורמט פלט ותקשורת).
+5. **אל תעתיק** את החומר כמות שהוא. אל תכתוב "על פי המסמך המצורף". שלב את הידע ישירות בהוראות הסוכן כאילו הסוכן "יודע" את זה.
+6. הסוכן שנוצר חייב להיות יכול לענות על שאלות משתמש סביב הנושא של החומר בלי שיצטרך גישה לקובץ המקורי.
+
+=== תוכן החומר המצורף ===
+`;
+          for (const attachment of input.context!) {
+              if (attachment.type === 'image') {
+                  finalSystem += `━━━ 🖼️ תמונה: "${attachment.name}" ━━━\nתיאור ויזואלי:\n${attachment.description || attachment.content}\n\n`;
+              } else if (attachment.type === 'url') {
+                  finalSystem += `━━━ 🌐 URL: ${attachment.url || attachment.name} ━━━\nתוכן הדף:\n${attachment.content}\n\n`;
+              } else {
+                  finalSystem += `━━━ 📄 קובץ: "${attachment.name}" (${attachment.format || 'text'}) ━━━\nתוכן:\n${attachment.content}\n\n`;
+              }
+          }
+          finalSystem += `=== סוף חומר מצורף ===\n`;
+      }
+
+      // Concept classification + few-shot examples + mistakes + CoT
+      finalSystem += getConceptClassificationBlock('text');
+
       const examplesBlock = getExamplesBlock('text', 'agent', input.prompt, 3);
       const mistakesBlock = getMistakesBlock('text', 'agent');
       const scoringBlock = getScoringBlock('text', 'agent');
 
-      if (examplesBlock) result.systemPrompt += examplesBlock;
-      if (mistakesBlock) result.systemPrompt += mistakesBlock;
+      if (examplesBlock) finalSystem += examplesBlock;
+      if (mistakesBlock) finalSystem += mistakesBlock;
 
-      // Chain-of-Thought reasoning — agent design always benefits from
-      // reasoning about identity and Iron Dome boundaries before writing.
       const concept = input.prompt || '';
       if (concept.trim().length > 30) {
           const cotBlock = getChainOfThoughtBlock('text', 'agent', concept);
-          if (cotBlock) result.systemPrompt += cotBlock;
+          if (cotBlock) finalSystem += cotBlock;
       }
 
+      // Single consolidated internal reasoning gate — replaces the earlier
+      // split between a hidden scoring check and the base [GENIUS_ANALYSIS].
       if (scoringBlock) {
-          result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your agent system prompt passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify your agent system instruction passes this quality gate (do NOT output any of this reasoning, do NOT reference CO-STAR or RISEN — those are for standard prompt enhancement, not agent design):${scoringBlock}</internal_quality_check>`;
       }
 
-      return result;
+      // Agent-specific trailer: PROMPT_TITLE + GENIUS_QUESTIONS.
+      // The downstream parser in HomeClient / api/enhance depends on the
+      // [PROMPT_TITLE] and [GENIUS_QUESTIONS] markers, so we keep them —
+      // but the questions are focused on agent design gaps, NOT CO-STAR.
+      const contextAwareHint = hasContext
+          ? `\n\nCONTEXT-AWARE QUESTION RULES: attached knowledge base exists — focus questions on (a) agent scope given this material, (b) intended end-users, (c) gaps the material does NOT cover. Never ask "what is in the file".`
+          : '';
+
+      finalSystem += `\n\nלאחר הוראת הסוכן המלאה (וכל 9 הסעיפים), הוסף כותרת תיאורית קצרה בעברית בפורמט המדויק הבא:
+[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+
+ולאחר מכן הוסף [GENIUS_QUESTIONS] ו-2-4 שאלות הבהרה ממוקדות לעיצוב הסוכן. השאלות חייבות להתמקד ב:
+- זהות הסוכן (מי הקהל, מה תחום המומחיות המדויק, איזה טון)
+- גבולות הסוכן (מה אסור, איך להגיב למניפולציה, נושאים להפניה)
+- מקרי קצה (איך להתמודד עם בקשות עמומות, מידע חסר, בקשות מחוץ ל-scope)
+- ידע דומיין ספציפי (מתודולוגיות, כלים, מקורות סמכות רלוונטיים)
+- מנגנוני למידה (משוב, התאמה, אסקלציה)
+
+אל תשאל על CO-STAR, RISEN או מסגרות הנדסת פרומפט - השאלות צריכות לעצב את הסוכן עצמו.
+פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
+אם הוראת הסוכן כבר מכסה את כל 9 הסעיפים ביסודיות, החזר מערך ריק: [GENIUS_QUESTIONS][]${contextAwareHint}`;
+
+      const userPrompt = hasContext
+          ? `${this.buildTemplate(this.config.user_prompt_template, variables)}\n\n[חומר מצורף מהמשתמש — בסיס הידע של הסוכן]\n${this.buildAgentContextSummary(input.context!)}`
+          : this.buildTemplate(this.config.user_prompt_template, variables);
+
+      return {
+          systemPrompt: finalSystem,
+          userPrompt,
+          outputFormat: "markdown",
+          requiredFields: [],
+          injectionStats,
+      };
+  }
+
+  /** Lightweight context summary for the userPrompt message (agent mode). */
+  private buildAgentContextSummary(context: NonNullable<EngineInput['context']>): string {
+      return context.map(a => {
+          if (a.type === 'image') return `[תמונה: ${a.name}] ${(a.description || a.content).slice(0, 1000)}`;
+          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${a.content.slice(0, 800)}`;
+          return `[קובץ: ${a.name}] ${a.content.slice(0, 1200)}`;
+      }).join('\n\n');
   }
 
   generateRefinement(input: EngineInput): EngineOutput {
@@ -212,7 +370,7 @@ ${input.previousResult}
 ${answersBlock}
 ${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
 
-שלב את כל המידע החדש לתוך הוראת סוכן מעודכנת ומשודרגת בעברית. בדוק ספציפית: האם כל 8 הסעיפים מכוסים? האם כיפת הברזל מספיק חזקה? האם יש טיפול במקרי קצה ובניסיונות מניפולציה? האם הדוגמאות מועילות ומציאותיות? אלה האזורים הקריטיים לסוכן production-grade.`,
+שלב את כל המידע החדש לתוך הוראת סוכן מעודכנת ומשודרגת בעברית. בדוק ספציפית: האם כל 9 הסעיפים מכוסים? האם כיפת הברזל מספיק חזקה? האם יש טיפול במקרי קצה ובניסיונות מניפולציה? האם הדוגמאות מועילות ומציאותיות? אלה האזורים הקריטיים לסוכן production-grade.`,
 
           outputFormat: "markdown",
           requiredFields: [],
