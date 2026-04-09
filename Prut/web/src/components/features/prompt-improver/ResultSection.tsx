@@ -171,23 +171,18 @@ export function ResultSection({
   // handoffs semantically identical to the string the LLM returned,
   // with user-filled variable values inlined. Missing values leave the
   // `{token}` in place so the user gets an obvious hint on paste.
-  const displayCompletion = useMemo(
-    () => substituteVariables(completion, variableValues),
-    [completion, variableValues]
-  );
+  // React Compiler handles memoization — manual useMemo would be skipped.
+  const displayCompletion = substituteVariables(completion, variableValues);
 
   // Styled rendering for the "after" view: shows Hebrew labels in
   // sky-blue chips for unfilled tokens and emerald marks for filled
   // values. The third arg threads the hover state in so chips light up
   // when their matching input row is hovered. onHoverKey lets the chips
   // sync the highlight back to the input column.
-  const displayNode = useMemo(
-    () => renderPromptWithVariables(completion, variableValues, {
-      hoveredKey,
-      onHoverKey: setHoveredKey,
-    }),
-    [completion, variableValues, hoveredKey]
-  );
+  const displayNode = renderPromptWithVariables(completion, variableValues, {
+    hoveredKey,
+    onHoverKey: setHoveredKey,
+  });
 
   // Unified copy handler used by all copy entry-points inside this component.
   // withWatermark is determined by isPro + toggle state unless explicitly overridden.

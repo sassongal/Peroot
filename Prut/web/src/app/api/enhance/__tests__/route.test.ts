@@ -19,7 +19,7 @@ function mockQueryBuilder(
 ) {
   const builder: Record<string, unknown> = {};
   const chainMethods = [
-    "select", "eq", "in", "order", "limit",
+    "select", "eq", "in", "order", "limit", "not",
     "insert", "update", "maybeSingle", "single",
   ];
   for (const m of chainMethods) {
@@ -1302,7 +1302,9 @@ describe("POST /api/enhance", () => {
         cachedAt: Date.now(),
       });
 
-      // Track calls to `from('history').insert(...)`
+      // Track calls to `from('history').insert(...)`. The history table is
+      // ALSO read from (history recall via .select().not().eq()...), so we
+      // merge the chain-builder with the insert spy so both paths work.
       const historyInsert = vi.fn().mockReturnValue({
         then: (resolve: (v: unknown) => void) => {
           resolve({ error: null });
@@ -1311,7 +1313,9 @@ describe("POST /api/enhance", () => {
       });
       mockSupabaseFrom.mockImplementation((table: string) => {
         if (table === "history") {
-          return { insert: historyInsert };
+          const builder = mockQueryBuilder({ data: [] });
+          builder.insert = historyInsert;
+          return builder;
         }
         return mockQueryBuilder({ data: null });
       });

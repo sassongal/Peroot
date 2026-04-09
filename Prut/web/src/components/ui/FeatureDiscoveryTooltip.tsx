@@ -25,13 +25,22 @@ export function FeatureDiscoveryTooltip({
   onCtaClick,
 }: FeatureDiscoveryTooltipProps) {
   const [show, setShow] = useState(false);
+  // "Adjusting state when a prop changes" pattern (React docs).
+  // When visible flips to false we want to immediately reset the
+  // enter-animation state without bouncing through an effect — doing
+  // it in render avoids the set-state-in-effect cascade warning.
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (!visible) setShow(false);
+  }
 
   useEffect(() => {
     if (visible && tip) {
-      // Trigger animation
-      requestAnimationFrame(() => setShow(true));
-    } else {
-      setShow(false);
+      // Trigger animation on the next frame so the initial translate-y-8
+      // has a chance to paint before we transition to translate-y-0.
+      const id = requestAnimationFrame(() => setShow(true));
+      return () => cancelAnimationFrame(id);
     }
   }, [visible, tip]);
 
