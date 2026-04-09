@@ -1,8 +1,9 @@
 
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
@@ -14,6 +15,7 @@ import { logger } from "@/lib/logger";
 import { validateApiKey } from "@/lib/api-auth";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
+import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
 
@@ -60,6 +62,9 @@ export async function POST(req: Request) {
   // Declare outside try so catch block can access for credit refund
   let userId: string | undefined;
   let supabase: Awaited<ReturnType<typeof createClient>> | undefined;
+  // Declared here so catch block can release the in-flight lock on any
+  // error path, not just the happy path that reaches after().
+  let releaseInflightLock: (() => Promise<void>) | null = null;
 
   // Parse JSON before main try block so SyntaxError doesn't trigger credit refund
   let json: unknown;
@@ -210,6 +215,38 @@ export async function POST(req: Request) {
         }
     }
 
+    // 3.5 In-flight dedup — a double-click or client retry within the
+    // same 10-second window will be rejected with 409 so we don't charge
+    // two credits for one logical request. We hash prompt + mode + tone +
+    // target + attachments so only genuinely identical payloads collide.
+    // If Redis is unreachable the helper fails open — see inflight-lock.ts.
+    const contextFingerprint = contextAttachments && contextAttachments.length > 0
+        ? createHash('sha256')
+            .update(contextAttachments.map(c => `${c.type}|${c.name}|${c.content?.slice(0, 1024) ?? ''}`).join('\u0000'))
+            .digest('hex')
+        : null;
+    const lock = await acquireInflightLock({
+        userId,
+        prompt,
+        mode: capability_mode,
+        tone,
+        category,
+        targetModel: target_model || 'general',
+        isRefinement,
+        contextFingerprint,
+    });
+    if (!lock.acquired) {
+        // Refund the credit we just decremented — this request never ran.
+        if (userId) {
+            await refundCredit(userId);
+        }
+        return NextResponse.json(
+            { error: "בקשה זהה כבר בתהליך. נסה שוב בעוד רגע." },
+            { status: 409, headers: { "Retry-After": "2" } }
+        );
+    }
+    releaseInflightLock = lock.release;
+
     // 4. Engine Selection & Generation
     const engine = await getEngine(mode);
 
@@ -328,61 +365,67 @@ export async function POST(req: Request) {
                 await refundCredit(userId);
             }
 
-            // Fix #2: replicate the onFinish side effects so that cache-hit
-            // responses still show up in the user's personal history, feed
-            // the activity log audit trail, and fire achievement progress.
-            // We skip style_analysis — that one reads real token data which
-            // we do not have on a cache hit.
-            if (userId && supabase) {
-                await queryClient.from('history').insert({
-                    user_id: userId,
-                    prompt,
-                    enhanced_prompt: cached.text,
-                    tone,
-                    category,
-                    capability_mode: capability_mode || 'STANDARD',
-                    title: prompt.slice(0, 60),
-                    source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
-                    input_source: inputSource,
-                    updated_at: new Date().toISOString(),
-                }).then(({ error: histErr }) => {
-                    if (histErr) logger.warn('[Enhance:cache-hit] History insert failed:', histErr.message);
-                });
-
-                await queryClient.from('activity_logs').insert({
-                    user_id: userId,
-                    action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
-                    entity_type: 'prompt',
-                    details: {
-                        mode,
-                        model: cachedModelId,
-                        latency_ms: cacheLatencyMs,
-                        tokens: { inputTokens: 0, outputTokens: 0 },
-                        prompt_length: prompt.length,
-                        result_length: cached.text.length,
-                        tone,
-                        category,
-                        capability_mode: capability_mode || 'STANDARD',
-                        target_model: target_model || 'general',
-                        is_refinement: isRefinement,
-                        has_context: !!(contextAttachments && contextAttachments.length > 0),
-                        context_count: contextAttachments?.length || 0,
-                        iteration: iteration || 0,
-                        json_output: engineOutput.outputFormat === 'json',
-                        // Non-null marker so admins can filter cache-hit rows
-                        // in activity_logs without adding a new column.
-                        cache_hit: true,
-                    }
-                }).then(({ error: actErr }) => {
-                    if (actErr) logger.warn('[Enhance:cache-hit] Activity log insert failed:', actErr.message);
-                });
-
+            // Cache-hit side effects run AFTER the response is sent so the
+            // client gets its bytes immediately and the function duration
+            // isn't blocked on DB latency. `after()` is a first-class Next.js
+            // 16 primitive for exactly this pattern.
+            after(async () => {
                 try {
-                    await enqueueJob('achievement_check', { userId });
-                } catch (bgError) {
-                    logger.error("[EnhanceAPI:cache-hit] achievement_check enqueue failed:", bgError);
+                    if (userId && supabase) {
+                        await queryClient.from('history').insert({
+                            user_id: userId,
+                            prompt,
+                            enhanced_prompt: cached.text,
+                            tone,
+                            category,
+                            capability_mode: capability_mode || 'STANDARD',
+                            title: prompt.slice(0, 60),
+                            source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
+                            input_source: inputSource,
+                            updated_at: new Date().toISOString(),
+                        }).then(({ error: histErr }) => {
+                            if (histErr) logger.warn('[Enhance:cache-hit] History insert failed:', histErr.message);
+                        });
+
+                        await queryClient.from('activity_logs').insert({
+                            user_id: userId,
+                            action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
+                            entity_type: 'prompt',
+                            details: {
+                                mode,
+                                model: cachedModelId,
+                                latency_ms: cacheLatencyMs,
+                                tokens: { inputTokens: 0, outputTokens: 0 },
+                                prompt_length: prompt.length,
+                                result_length: cached.text.length,
+                                tone,
+                                category,
+                                capability_mode: capability_mode || 'STANDARD',
+                                target_model: target_model || 'general',
+                                is_refinement: isRefinement,
+                                has_context: !!(contextAttachments && contextAttachments.length > 0),
+                                context_count: contextAttachments?.length || 0,
+                                attachment_tokens_est: (contextAttachments || []).reduce((sum, c) => sum + (c.tokenCount || 0), 0),
+                                iteration: iteration || 0,
+                                json_output: engineOutput.outputFormat === 'json',
+                                // Non-null marker so admins can filter cache-hit rows
+                                // in activity_logs without adding a new column.
+                                cache_hit: true,
+                            }
+                        }).then(({ error: actErr }) => {
+                            if (actErr) logger.warn('[Enhance:cache-hit] Activity log insert failed:', actErr.message);
+                        });
+
+                        try {
+                            await enqueueJob('achievement_check', { userId });
+                        } catch (bgError) {
+                            logger.error("[EnhanceAPI:cache-hit] achievement_check enqueue failed:", bgError);
+                        }
+                    }
+                } finally {
+                    await lock.release();
                 }
-            }
+            });
 
             // Return the cached text as a plain text stream. We use a
             // ReadableStream rather than a new Response(text) so the client
@@ -437,156 +480,172 @@ export async function POST(req: Request) {
         ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),
         userTier: tier === 'guest' ? 'guest' : (tier === 'admin' ? 'pro' : tier),
         onFinish: async (completion) => {
+            // Snapshot the stream result synchronously so the captured
+            // values stay valid inside the deferred `after()` callback.
             const durationMs = Date.now() - startTime;
+            const textCopy = completion.text;
+            const usageCopy = completion.usage;
+            const finishReasonCopy = (completion as { finishReason?: string }).finishReason;
 
-            // JSON validity check — applied only to engines that declared
-            // outputFormat 'json' (currently: Stable Diffusion JSON and
-            // Gemini Image JSON). We strip GENIUS_QUESTIONS / PROMPT_TITLE
-            // trailing blocks before parsing because the engine appends
-            // those after the main JSON payload. If parsing still fails,
-            // we log the first 200 chars of the failing output to
-            // activity_logs so admins can monitor invalid-JSON rate. We do
-            // NOT auto-retry here: the stream has already been sent to the
-            // client, and silently retrying would double the cost while
-            // producing a response the user never sees. When we have
-            // enough data to know the failure rate, we will add a
-            // pre-stream validation path via generateFull for JSON mode.
-            let jsonValid: boolean | null = null;
-            let jsonError: string | null = null;
-            if (isJsonOutput && completion.text.length > 0) {
-                const cleaned = completion.text
-                    .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/, '')
-                    .replace(/\[GENIUS_QUESTIONS\][\s\S]*$/, '')
-                    .replace(/^```(?:json)?\s*/i, '')
-                    .replace(/\s*```\s*$/i, '')
-                    .trim();
+            // All non-critical work (DB writes, telemetry, job enqueue,
+            // cache write, refund) runs AFTER the client's stream finishes.
+            // This drops p95/p99 because the function's wall-clock duration
+            // no longer includes DB latency. `after()` is the Next.js 16
+            // primitive designed for exactly this pattern.
+            after(async () => {
                 try {
-                    JSON.parse(cleaned);
-                    jsonValid = true;
-                } catch (err) {
-                    jsonValid = false;
-                    jsonError = err instanceof Error ? err.message : String(err);
-                    logger.warn('[Enhance] Invalid JSON output', {
+                    // JSON validity check — applied only to engines that declared
+                    // outputFormat 'json' (currently: Stable Diffusion JSON and
+                    // Gemini Image JSON). We strip GENIUS_QUESTIONS / PROMPT_TITLE
+                    // trailing blocks before parsing because the engine appends
+                    // those after the main JSON payload. If parsing still fails,
+                    // we log the first 200 chars of the failing output to
+                    // activity_logs so admins can monitor invalid-JSON rate.
+                    let jsonValid: boolean | null = null;
+                    let jsonError: string | null = null;
+                    if (isJsonOutput && textCopy.length > 0) {
+                        const cleaned = textCopy
+                            .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/, '')
+                            .replace(/\[GENIUS_QUESTIONS\][\s\S]*$/, '')
+                            .replace(/^```(?:json)?\s*/i, '')
+                            .replace(/\s*```\s*$/i, '')
+                            .trim();
+                        try {
+                            JSON.parse(cleaned);
+                            jsonValid = true;
+                        } catch (err) {
+                            jsonValid = false;
+                            jsonError = err instanceof Error ? err.message : String(err);
+                            logger.warn('[Enhance] Invalid JSON output', {
+                                modelId,
+                                capability_mode,
+                                error: jsonError,
+                                sample: cleaned.slice(0, 200),
+                            });
+                        }
+                    }
+
+                    // Track API usage for cost analysis.
+                    // AI SDK v6 uses inputTokens/outputTokens (v5 was
+                    // promptTokens/completionTokens). We keep the legacy names as a
+                    // fallback so older SDK versions don't silently log zeros.
+                    const usage = usageCopy as
+                        | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
+                        | undefined;
+                    trackApiUsage({
+                        userId: userId,
                         modelId,
-                        capability_mode,
-                        error: jsonError,
-                        sample: cleaned.slice(0, 200),
+                        inputTokens: usage?.inputTokens ?? usage?.promptTokens ?? 0,
+                        outputTokens: usage?.outputTokens ?? usage?.completionTokens ?? 0,
+                        durationMs,
+                        endpoint: 'enhance',
+                        cacheHit: false,
                     });
-                }
-            }
 
-            // Track API usage for cost analysis.
-            // AI SDK v6 uses inputTokens/outputTokens (v5 was
-            // promptTokens/completionTokens). We keep the legacy names as a
-            // fallback so older SDK versions don't silently log zeros.
-            const usage = completion.usage as
-                | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
-                | undefined;
-            trackApiUsage({
-                userId: userId,
-                modelId,
-                inputTokens: usage?.inputTokens ?? usage?.promptTokens ?? 0,
-                outputTokens: usage?.outputTokens ?? usage?.completionTokens ?? 0,
-                durationMs,
-                endpoint: 'enhance',
-                cacheHit: false,
+                    // Store successful (non-empty) generations in the result cache so
+                    // future identical requests can skip the LLM entirely. Fire-and-
+                    // forget — cache failures must not break the response. We do not
+                    // cache empty or errored outputs (those will be refunded below).
+                    if (cacheKey && textCopy.length > 0 && finishReasonCopy !== 'error') {
+                        setCached(cacheKey, {
+                            text: textCopy,
+                            modelId,
+                            cachedAt: Date.now(),
+                        });
+                    }
+
+                    // Only refund on genuinely failed generations (empty output or error finish reason).
+                    // Length-based refund removed: short valid responses are legitimate and should not trigger refunds.
+                    if (userId && (textCopy.length === 0 || finishReasonCopy === 'error')) {
+                        await refundCredit(userId);
+                        logger.warn('[Enhance] Failed generation, refunding credit', { userId, length: textCopy.length, finishReason: finishReasonCopy });
+                    }
+
+                    if (userId && supabase) {
+                        // Save to history table so admin can see actual prompts
+                        await queryClient.from('history').insert({
+                            user_id: userId,
+                            prompt,
+                            enhanced_prompt: textCopy,
+                            tone,
+                            category,
+                            capability_mode: capability_mode || 'STANDARD',
+                            title: prompt.slice(0, 60),
+                            source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
+                            input_source: inputSource,
+                            updated_at: new Date().toISOString(),
+                        }).then(({ error: histErr }) => {
+                            if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
+                        });
+
+                        await queryClient.from('activity_logs').insert({
+                            user_id: userId,
+                            action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
+                            entity_type: 'prompt',
+                            details: {
+                                mode,
+                                model: modelId,
+                                latency_ms: durationMs,
+                                tokens: usageCopy,
+                                prompt_length: prompt.length,
+                                result_length: textCopy.length,
+                                tone,
+                                category,
+                                capability_mode: capability_mode || 'STANDARD',
+                                target_model: target_model || 'general',
+                                is_refinement: isRefinement,
+                                has_context: !!(contextAttachments && contextAttachments.length > 0),
+                                context_count: contextAttachments?.length || 0,
+                                attachment_tokens_est: (contextAttachments || []).reduce((sum, c) => sum + (c.tokenCount || 0), 0),
+                                iteration: iteration || 0,
+                                // JSON mode observability: lets the admin audit page
+                                // compute "invalid JSON rate" by filtering on
+                                // details->>json_valid = 'false'.
+                                json_output: isJsonOutput,
+                                json_valid: jsonValid,
+                                json_error: jsonError,
+                                // Memory injection telemetry — see InjectionStats
+                                // in src/lib/engines/types.ts. Lets us A/B-test the
+                                // L2/L3 layers by joining on these fields.
+                                injection: engineOutput.injectionStats || null,
+                            }
+                        }).then(({ error: actErr }) => {
+                            if (actErr) logger.warn('[Enhance] Activity log insert failed:', actErr.message);
+                        });
+
+                        try {
+                            const { count } = await queryClient
+                                .from('activity_logs')
+                                .select('*', { count: 'exact', head: true })
+                                .eq('user_id', userId)
+                                .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
+
+                            if (count && count % 20 === 0) {
+                                await enqueueJob('style_analysis', { userId: userId });
+                            }
+
+                            await enqueueJob('achievement_check', { userId: userId });
+
+                        } catch (bgError) {
+                            logger.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
+                        }
+                    }
+                } finally {
+                    await lock.release();
+                }
             });
-
-            // Store successful (non-empty) generations in the result cache so
-            // future identical requests can skip the LLM entirely. Fire-and-
-            // forget — cache failures must not break the response. We do not
-            // cache empty or errored outputs (those will be refunded below).
-            const finishReasonForCache = (completion as { finishReason?: string }).finishReason;
-            if (cacheKey && completion.text.length > 0 && finishReasonForCache !== 'error') {
-                setCached(cacheKey, {
-                    text: completion.text,
-                    modelId,
-                    cachedAt: Date.now(),
-                });
-            }
-
-            // Only refund on genuinely failed generations (empty output or error finish reason).
-            // Length-based refund removed: short valid responses are legitimate and should not trigger refunds.
-            const finishReason = (completion as { finishReason?: string }).finishReason;
-            if (userId && (completion.text.length === 0 || finishReason === 'error')) {
-                await refundCredit(userId);
-                logger.warn('[Enhance] Failed generation, refunding credit', { userId, length: completion.text.length, finishReason });
-            }
-
-            if (userId && supabase) {
-                // Save to history table so admin can see actual prompts
-                await queryClient.from('history').insert({
-                    user_id: userId,
-                    prompt,
-                    enhanced_prompt: completion.text,
-                    tone,
-                    category,
-                    capability_mode: capability_mode || 'STANDARD',
-                    title: prompt.slice(0, 60),
-                    source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
-                    input_source: inputSource,
-                    updated_at: new Date().toISOString(),
-                }).then(({ error: histErr }) => {
-                    if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
-                });
-
-                await queryClient.from('activity_logs').insert({
-                    user_id: userId,
-                    action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
-                    entity_type: 'prompt',
-                    details: {
-                        mode,
-                        model: modelId,
-                        latency_ms: durationMs,
-                        tokens: completion.usage,
-                        prompt_length: prompt.length,
-                        result_length: completion.text.length,
-                        tone,
-                        category,
-                        capability_mode: capability_mode || 'STANDARD',
-                        target_model: target_model || 'general',
-                        is_refinement: isRefinement,
-                        has_context: !!(contextAttachments && contextAttachments.length > 0),
-                        context_count: contextAttachments?.length || 0,
-                        iteration: iteration || 0,
-                        // JSON mode observability: lets the admin audit page
-                        // compute "invalid JSON rate" by filtering on
-                        // details->>json_valid = 'false'.
-                        json_output: isJsonOutput,
-                        json_valid: jsonValid,
-                        json_error: jsonError,
-                        // Memory injection telemetry — see InjectionStats
-                        // in src/lib/engines/types.ts. Lets us A/B-test the
-                        // L2/L3 layers by joining on these fields.
-                        injection: engineOutput.injectionStats || null,
-                    }
-                }).then(({ error: actErr }) => {
-                    if (actErr) logger.warn('[Enhance] Activity log insert failed:', actErr.message);
-                });
-
-                try {
-                    const { count } = await queryClient
-                        .from('activity_logs')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('user_id', userId)
-                        .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
-
-                    if (count && count % 20 === 0) {
-                        await enqueueJob('style_analysis', { userId: userId });
-                    }
-
-                    await enqueueJob('achievement_check', { userId: userId });
-
-                } catch (bgError) {
-                    logger.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
-                }
-            }
         }
     });
 
     return result.toTextStreamResponse();
 
   } catch (error) {
+    // Release the in-flight lock on any error path so the next retry is
+    // not blocked by a 10s stale lock. Happy path releases inside after().
+    if (releaseInflightLock) {
+      try { await releaseInflightLock(); } catch { /* best effort */ }
+    }
+
     // Handle concurrency limit (server too busy)
     if (error instanceof ConcurrencyError) {
       logger.warn("[EnhanceAPI] Concurrency limit reached:", error.message);

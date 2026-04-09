@@ -116,6 +116,33 @@ vi.mock("@/lib/admin/track-api-usage", () => ({
   trackApiUsage: (...args: unknown[]) => mockTrackApiUsage(...args),
 }));
 
+// Mock `after()` from next/server so side-effect assertions still fire.
+// In production `after()` defers the callback until the response has
+// finished streaming; in the unit-test environment there is no request
+// context and calling the real export throws. We replace it with an
+// immediate executor so tests exercise the same side-effect code path.
+vi.mock("next/server", async () => {
+  const actual = await vi.importActual<typeof import("next/server")>("next/server");
+  return {
+    ...actual,
+    after: (fn: () => unknown | Promise<unknown>) => {
+      void Promise.resolve().then(fn);
+    },
+  };
+});
+
+// Inflight-lock mock — default is "always acquire, noop release". Tests
+// that want to exercise the duplicate-in-flight 409 path can override
+// via vi.mocked(acquireInflightLock).mockResolvedValueOnce(...).
+const mockAcquireInflightLock = vi.fn(async (_input: unknown) => ({
+  acquired: true,
+  key: null as string | null,
+  release: async () => {},
+}));
+vi.mock("@/lib/ai/inflight-lock", () => ({
+  acquireInflightLock: (input: unknown) => mockAcquireInflightLock(input),
+}));
+
 // Enhance result cache — controllable per-test
 const mockBuildCacheKey = vi.fn();
 const mockGetCached = vi.fn();
