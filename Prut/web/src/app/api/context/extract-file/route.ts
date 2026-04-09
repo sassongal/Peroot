@@ -1,75 +1,59 @@
+// src/app/api/context/extract-file/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { extractTextFromFile, MAX_FILE_SIZE_MB, SUPPORTED_FILE_TYPES } from '@/lib/context/extract-file';
-import { estimateTokens } from '@/lib/context/token-counter';
-import { checkRateLimit } from '@/lib/ratelimit';
+import { processAttachment } from '@/lib/context/engine';
+import { checkExtractionLimit } from '@/lib/context/engine/extraction-rate-limit';
 import { logger } from '@/lib/logger';
+import { MAX_FILE_SIZE_MB } from '@/lib/context/engine/extract';
+import type { PlanTier } from '@/lib/context/engine/types';
 
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
-    // Auth check
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Rate limiting — use actual tier
-    const { data: fileProfile } = await supabase.from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
-    const fileTier: 'pro' | 'free' = fileProfile?.plan_tier === 'pro' ? 'pro' : 'free';
-    const limitResult = await checkRateLimit(user.id, fileTier);
-    if (!limitResult.success) {
+    const { data: profile } = await supabase
+      .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
+    const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
+
+    const rl = await checkExtractionLimit(user.id, tier);
+    if (!rl.allowed) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.', reset_at: limitResult.reset },
-        { status: 429, headers: { 'Retry-After': String(limitResult.reset) } }
+        { error: `חרגת ממכסת העיבוד היומית (${rl.limit}). נסה שוב מחר או שדרג ל-Pro.`, remaining: 0 },
+        { status: 429 },
       );
     }
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    if (!file) return NextResponse.json({ error: 'לא נבחר קובץ' }, { status: 400 });
 
-    if (!file) {
-      return NextResponse.json({ error: 'לא נבחר קובץ' }, { status: 400 });
-    }
-
-    // Validate size
-    const sizeMB = file.size / (1024 * 1024);
-    if (sizeMB > MAX_FILE_SIZE_MB) {
+    const sizeMb = file.size / (1024 * 1024);
+    if (sizeMb > MAX_FILE_SIZE_MB) {
       return NextResponse.json(
-        { error: `הקובץ גדול מדי (מקסימום ${MAX_FILE_SIZE_MB}MB)` },
-        { status: 400 }
-      );
-    }
-
-    // Validate type
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    const supportedExts = Object.values(SUPPORTED_FILE_TYPES);
-    if (!supportedExts.includes(ext) && !SUPPORTED_FILE_TYPES[file.type]) {
-      return NextResponse.json(
-        { error: `פורמט לא נתמך. פורמטים נתמכים: ${supportedExts.join(', ')}` },
-        { status: 400 }
+        { error: `הקובץ גדול מדי (מקסימום ${MAX_FILE_SIZE_MB}MB)` }, { status: 400 },
       );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await extractTextFromFile(buffer, file.name, file.type);
-
-    return NextResponse.json({
-      text: result.text,
-      tokens: estimateTokens(result.text),
-      metadata: {
-        ...result.metadata,
-        filename: file.name,
-        size_mb: Math.round(sizeMB * 100) / 100,
-      },
+    const block = await processAttachment({
+      id: crypto.randomUUID(),
+      type: 'file',
+      userId: user.id,
+      tier,
+      buffer,
+      filename: file.name,
+      mimeType: file.type,
     });
+
+    return NextResponse.json({ block });
   } catch (err) {
-    logger.error('[Context Extract File]', err);
-    return NextResponse.json(
-      { error: 'שגיאה בעיבוד הקובץ' },
-      { status: 500 }
-    );
+    logger.error('[context/extract-file]', err);
+    return NextResponse.json({ error: 'שגיאה בעיבוד הקובץ' }, { status: 500 });
   }
 }
