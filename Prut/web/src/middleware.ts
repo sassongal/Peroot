@@ -44,7 +44,8 @@ const AUTH_REQUIRED_PREFIXES = [
   '/settings',
 ]
 
-function needsAuth(pathname: string): boolean {
+/** @internal exported for unit tests — do not import from app code */
+export function needsAuth(pathname: string): boolean {
   return AUTH_REQUIRED_PREFIXES.some(prefix => pathname.startsWith(prefix))
 }
 
@@ -55,11 +56,13 @@ const CSRF_EXEMPT_PREFIXES = [
   '/api/health',     // Public health check
 ]
 
-function isStateChangingMethod(method: string): boolean {
+/** @internal exported for unit tests — do not import from app code */
+export function isStateChangingMethod(method: string): boolean {
   return !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
 }
 
-function isCsrfExempt(pathname: string, request: NextRequest): boolean {
+/** @internal exported for unit tests — do not import from app code */
+export function isCsrfExempt(pathname: string, request: NextRequest): boolean {
   // Exempt routes (webhooks use HMAC, cron uses CRON_SECRET, health is public)
   if (CSRF_EXEMPT_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
     return true
@@ -75,7 +78,8 @@ function isCsrfExempt(pathname: string, request: NextRequest): boolean {
   return false
 }
 
-function validateCsrfOrigin(request: NextRequest): NextResponse | null {
+/** @internal exported for unit tests — do not import from app code */
+export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl
   const method = request.method
 
