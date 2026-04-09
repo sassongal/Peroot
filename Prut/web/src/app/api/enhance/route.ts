@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
-import { summarizeAttachments } from "@/lib/engines/context-cache";
+import { selectEngineModel } from '@/lib/ai/context-router';
+import type { ContextBlock } from '@/lib/context/engine/types';
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
@@ -281,11 +282,6 @@ export async function POST(req: Request) {
         }
     }
 
-    // S1: Summarize large attachments before they reach the engine.
-    // Cache-hit path is ~0ms (Redis GET); first hit pays one summarizer
-    // round-trip. Fail-safe — on any error the original content passes through.
-    const summarizedContext = await summarizeAttachments(contextAttachments);
-
     const engineInput: EngineInput = {
         prompt,
         tone,
@@ -298,7 +294,7 @@ export async function POST(req: Request) {
         userHistory,
         userPersonality,
         iteration,
-        context: summarizedContext,
+        context: contextAttachments,
         targetModel: target_model || 'general',
     };
 
@@ -483,10 +479,18 @@ export async function POST(req: Request) {
            : undefined)
         : undefined;
 
+    // Only pass items that carry the new ContextBlock shape (have injected.tokenCount).
+    // Legacy-shape context payloads (old { type, name, content } format) are skipped
+    // so the router gracefully falls back to the default model.
+    const contextBlocks = (contextAttachments ?? [])
+      .filter(a => !!(a as unknown as ContextBlock).injected) as unknown as ContextBlock[];
+    const preferredModel = selectEngineModel({ blocks: contextBlocks });
+
     const { result, modelId } = await AIGateway.generateStream({
       system: engineOutput.systemPrompt,
       prompt: engineOutput.userPrompt,
       task: resolvedTask,
+      preferredModel,
       // Refine lifts the ceiling from 4096 → 8192; everything else stays
       // on the task preset (undefined = use pickDefaults).
       ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),

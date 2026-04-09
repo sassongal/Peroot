@@ -37,7 +37,6 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   compress: true,
   serverExternalPackages: [
-    'pdf-parse',
     'pdfjs-dist',
     'mammoth',
     'xlsx',
