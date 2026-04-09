@@ -1,7 +1,7 @@
 "use client";
 
 import {
-    BookOpen, Plus,
+    BookOpen, Plus, Star, Pin, LayoutTemplate,
     CheckSquare, Upload, History,
     Sparkles, Menu
 } from "lucide-react";
@@ -38,6 +38,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     displayItems,
     selectAllVisible,
     effectiveFolder,
+    folderCounts,
     setSidebarOpen,
     importFileRef,
     handleSearchChange,
@@ -45,6 +46,15 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     handleImportFile,
     setFolder,
   } = shared;
+
+  // Mobile quick tabs — surface favorites + virtual folders inline so
+  // users don't need to open the drawer. Horizontally scrollable.
+  const mobileQuickTabs = [
+    { key: "all", label: "הכל", icon: BookOpen },
+    { key: "favorites", label: "מועדפים", icon: Star },
+    { key: "pinned", label: "מוצמדים", icon: Pin },
+    { key: "templates", label: "תבניות", icon: LayoutTemplate },
+  ] as const;
 
   return (
     <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-[var(--glass-border)] bg-black/40 mb-4">
@@ -67,9 +77,10 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* Full library — hidden on mobile; surfaced as a chip in the mobile tabs row below */}
           <button
             onClick={() => setViewMode("library")}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <BookOpen className="w-4 h-4" />
             <span className="hidden lg:inline">ספרייה מלאה</span>
@@ -78,12 +89,57 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           <button
             onClick={() => setViewMode("home")}
             className="group flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 transition-all shadow-md focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none shrink-0"
+            aria-label="פרומפט חדש"
           >
             <div className="relative w-4 h-4 md:w-5 md:h-5">
               <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
               <Plus className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
             </div>
+            <span className="text-sm font-semibold text-black hidden sm:inline">חדש</span>
             <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile quick tabs — virtual folders + "full library" chip.
+          Horizontally scrollable, never wraps, hidden on md+. */}
+      <div className="md:hidden -mx-4 px-4 mb-3 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-1.5 w-max">
+          {mobileQuickTabs.map(({ key, label, icon: Icon }) => {
+            const isActive = effectiveFolder === key;
+            const count = folderCounts[key] ?? 0;
+            return (
+              <button
+                key={key}
+                onClick={() => setFolder(key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  isActive
+                    ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 border border-amber-500/40 shadow-sm shadow-amber-500/10"
+                    : "bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] border border-[var(--glass-border)] hover:text-[var(--text-primary)]"
+                )}
+                aria-pressed={isActive}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "text-[10px] tabular-nums px-1.5 py-0.5 rounded-full",
+                    isActive ? "bg-amber-500/20 text-amber-800 dark:text-amber-100" : "bg-black/10 dark:bg-white/10 text-[var(--text-muted)]"
+                  )}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          <div className="w-px h-6 bg-[var(--glass-border)] mx-1 shrink-0" />
+          <button
+            onClick={() => setViewMode("library")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
+            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+            <span>ספרייה מלאה</span>
           </button>
         </div>
       </div>

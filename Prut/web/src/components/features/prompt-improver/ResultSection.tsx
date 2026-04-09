@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Check, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, RefreshCw, Star } from "lucide-react";
+import { AlertTriangle, Check, ChevronRight, Copy, ExternalLink, HelpCircle, Plus, RotateCcw, Share2, RefreshCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PromptScore } from "@/lib/engines/base-engine";
@@ -402,8 +402,11 @@ export function ResultSection({
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={onBack}
-                  className="px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-200 hover:bg-amber-500/20 hover:border-amber-500/70 hover:text-amber-800 dark:hover:text-amber-100 shadow-sm shadow-amber-500/10 transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:outline-none"
+                  dir="rtl"
+                  aria-label={t.result_section.back_to_edit}
                 >
+                  <ChevronRight className="w-4 h-4" />
                   {t.result_section.back_to_edit}
                 </button>
                 {onReset && (
