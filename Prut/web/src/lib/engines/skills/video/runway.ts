@@ -89,19 +89,19 @@ export const skill: PlatformSkill = {
     {
       bad: 'A scene where a man walks into a bar, orders a drink, talks to someone, then leaves and drives home.',
       good: 'Medium shot: A man in a worn leather jacket pushes through a dimly lit bar door, smoke curling around him as warm amber light from vintage fixtures catches his stubbled jaw. He pauses, scanning the room. Film noir atmosphere, 50mm lens.',
-      why: 'Runway generates short clips (4-16s). Focus on a single scene and moment rather than a multi-scene narrative arc. One vivid scene beats four vague ones.',
+      why: 'Official Gen-4 outputs are 5s or 10s per clip. Focus on a single scene and moment rather than a multi-scene narrative arc. One vivid scene beats four vague ones.',
     },
   ],
   scoringCriteria: [
     'Shot size stated first (wide, medium, close-up) to anchor framing',
     'Exactly one primary camera move; at most one subtle secondary move',
     'Subject motion + camera motion + environment motion each get a phrase',
-    'Single location / moment — Gen-4 is one clip, not a storyboard unless Director Mode',
+    'Single location / moment — Gen-4 is one continuous shot per generation (5s or 10s clip)',
     '30–60 words of flowing English prose, not comma keywords',
     'No negatives: Runway ignores "no blur" style exclusions — describe positives',
     'Lens or film reference when it helps (anamorphic flare, 85mm portrait)',
     'Mood line at end (melancholic, urgent, serene)',
-    'Duration awareness: action fits ~4s unless using multi-scene Director syntax',
+    'Duration awareness: motion arc fits a 5s or 10s window — one primary action',
     'Lighting vocabulary (neon bounce, golden side light, single practical)',
   ],
   chainOfThoughtExamples: [

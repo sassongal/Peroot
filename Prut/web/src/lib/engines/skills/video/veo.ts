@@ -17,7 +17,7 @@ Music: "upbeat acoustic ukulele with light percussion, cheerful and warm."`,
     },
     {
       concept: 'רחוב שוק בבנגקוק בלילה',
-      output: `Wide shot of a bustling Bangkok night market street drenched in neon light — hot pink, electric blue, and warm gold signs reflecting off wet pavement. Vendors work woks over roaring gas flames, clouds of fragrant smoke rising past hanging paper lanterns. A young backpacker with a large olive rucksack weaves through the dense crowd, pausing at a stall where a vendor flips skewers of satay with practiced speed. Motorbikes edge through the pedestrian flow. Shallow depth of field isolates the backpacker against the chaotic tapestry of light and movement. Duration: 10s.
+      output: `Wide shot of a bustling Bangkok night market street drenched in neon light — hot pink, electric blue, and warm gold signs reflecting off wet pavement. Vendors work woks over roaring gas flames, clouds of fragrant smoke rising past hanging paper lanterns. A young backpacker with a large olive rucksack weaves through the dense crowd, pausing at a stall where a vendor flips skewers of satay with practiced speed. Motorbikes edge through the pedestrian flow. Shallow depth of field isolates the backpacker against the chaotic tapestry of light and movement. Duration: 8s.
 
 Audio:
 Dialogue: None.
@@ -28,7 +28,7 @@ Music: "lo-fi beat with Thai saw duang melody woven in, relaxed nocturnal groove
     },
     {
       concept: 'ראיון עם מדענית במעבדה',
-      output: `Medium shot of a woman in her early 50s with short grey hair and tortoiseshell glasses, wearing a white lab coat with a university crest, seated on a stool in a modern genetics laboratory. Rows of illuminated centrifuges and blue-lit gel electrophoresis stations fill the background in soft focus. She speaks directly to camera with calm authority, occasionally gesturing with her right hand, a pipette still held loosely between her fingers. Cool fluorescent overhead light mixes with the warm glow of a desk lamp beside her. Duration: 10s.
+      output: `Medium shot of a woman in her early 50s with short grey hair and tortoiseshell glasses, wearing a white lab coat with a university crest, seated on a stool in a modern genetics laboratory. Rows of illuminated centrifuges and blue-lit gel electrophoresis stations fill the background in soft focus. She speaks directly to camera with calm authority, occasionally gesturing with her right hand, a pipette still held loosely between her fingers. Cool fluorescent overhead light mixes with the warm glow of a desk lamp beside her. Duration: 8s.
 
 Audio:
 Dialogue: "What we discovered is that this particular gene sequence activates only under specific environmental stress — it's like a hidden switch the organism kept in reserve for millions of years."
@@ -72,7 +72,7 @@ Music: "warm fingerpicked acoustic guitar, unhurried and meditative, folk-Americ
     },
     {
       concept: 'ילדה מנגנת פסנתר בקונצרט',
-      output: `Wide shot of a grand concert hall with dark velvet seats, a single Steinway grand piano on a polished wooden stage. A girl around 12 with long black hair in a white recital dress walks nervously to the bench, sits, and adjusts the height. Her small hands hover above the keys. She begins to play, tentatively at first, then with growing confidence as the melody takes hold. The camera slowly pushes in to a medium close-up on her focused face, eyes following her fingers. The audience is visible in soft bokeh, utterly still. Duration: 10s.
+      output: `Wide shot of a grand concert hall with dark velvet seats, a single Steinway grand piano on a polished wooden stage. A girl around 12 with long black hair in a white recital dress walks nervously to the bench, sits, and adjusts the height. Her small hands hover above the keys. She begins to play, tentatively at first, then with growing confidence as the melody takes hold. The camera slowly pushes in to a medium close-up on her focused face, eyes following her fingers. The audience is visible in soft bokeh, utterly still. Duration: 8s.
 
 Audio:
 Dialogue: None.
@@ -116,7 +116,7 @@ Music: "warm upright bass and brushed snare jazz trio, intimate and sophisticate
     },
     {
       concept: 'סצנת מדבר בסגנון דיון',
-      output: `Wide aerial shot descending over endless sand dunes stretching to the horizon under a pale orange sky with two distant suns. A lone figure in a flowing sand-colored robe walks along a dune ridge, their footprints disappearing behind them as wind erases each step. The figure stops and kneels, pressing a gloved hand into the sand, which ripples outward as if the desert itself is alive. Far in the distance, a dark geometric structure half-buried in sand catches the light. Duration: 10s.
+      output: `Wide aerial shot descending over endless sand dunes stretching to the horizon under a pale orange sky with two distant suns. A lone figure in a flowing sand-colored robe walks along a dune ridge, their footprints disappearing behind them as wind erases each step. The figure stops and kneels, pressing a gloved hand into the sand, which ripples outward as if the desert itself is alive. Far in the distance, a dark geometric structure half-buried in sand catches the light. Duration: 8s.
 
 Audio:
 Dialogue: (voice-over, low and reverent) "The desert does not forget — it only decides what to reveal."
@@ -200,7 +200,7 @@ Music: "solo piano, Satie-like simplicity, sparse Gymnopedies-style notes with l
       reasoning:
         'Interior: fluorescent, crowd walla. Dialogue quoted. SFX: train screech, PA muffled. Music sparse or none.',
       output:
-        'Close-medium shot inside a subway car, fluorescent panels flicker subtly, commuters sway as the train banks a curve, condensation streaks the window. Duration: 10s.\n\nAudio:\nDialogue: (whispered) "We get off next stop."\nSFX: "metal screech on rails," "compressed air hiss at doors"\nAmbient: "muffled PA announcement," "distant coughs and shoe shuffles"\nMusic: "sparse piano + low strings, uneasy half-step tension."',
+        'Close-medium shot inside a subway car, fluorescent panels flicker subtly, commuters sway as the train banks a curve, condensation streaks the window. Duration: 8s.\n\nAudio:\nDialogue: (whispered) "We get off next stop."\nSFX: "metal screech on rails," "compressed air hiss at doors"\nAmbient: "muffled PA announcement," "distant coughs and shoe shuffles"\nMusic: "sparse piano + low strings, uneasy half-step tension."',
     },
   ],
   refinementExamples: [

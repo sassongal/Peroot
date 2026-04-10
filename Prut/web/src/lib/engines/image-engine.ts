@@ -35,8 +35,8 @@ CRITICAL RULES:
 11. --oref [URL] for omni reference (replaces --cref). Use with --ow 0-1000. --sref [URL] + --sw 0-1000 for style reference.
 12. --draft for 10x faster, half GPU cost iterations - ideal for exploring ideas.
 13. --personalize (--p) adapts output to user aesthetic preferences.
-14. Do NOT include --q (deprecated in v7). Do NOT include --cref (replaced by --oref in v7).
-15. Quality: --quality 1 (default), 2, or 4 for more GPU time on first grid.
+14. Quality: use --quality or --q with values 1 (default), 2, or 4 per Midjourney docs — higher uses more GPU time on the first grid.
+15. Do NOT include --cref (replaced by --oref in v7).
 16. Other supported params: --seed, --weird (0-3000), --tile, --turbo, --relax.
 17. V8 Alpha is available (--v 8) with --hd for 2K images - only suggest when user wants cutting-edge or highest resolution.
 

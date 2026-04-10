@@ -38,7 +38,7 @@ Concept: "ציפור ממריאה מענף"
 Output: A slow-motion close-up captures a vibrant blue kingfisher launching from a moss-covered branch, wings spreading wide as droplets of morning dew scatter into the golden sunrise light, the background of a misty forest lake blurs into a dreamy bokeh, filmed with a 200mm telephoto lens.`,
 
   runway: `PLATFORM: Runway Gen-4 / Gen-4.5
-Runway's model interprets prompts as a single continuous shot. It understands camera terminology and lighting physics deeply. Gen-4.5 includes "Director Mode" for independent camera and subject control.
+Runway Gen-4 interprets prompts as a single continuous shot (official guidance: one scene per generation — avoid cramming multiple unrelated scene changes into one prompt). It understands camera terminology and lighting physics deeply. Gen-4.5 raises motion quality, temporal consistency, and prompt adherence; still describe one coherent continuous shot unless the Runway UI explicitly offers a multi-clip / keyframe workflow you are targeting.
 
 Four essential components:
 1. Subject Motion - clearly describe movement of primary object/character
@@ -63,12 +63,12 @@ Rules:
 - Gen-4 Turbo: shorter prompts (20-30 words) for fast iteration. Full Gen-4: 30-60 words for cinematic quality.
 - Design shot with clear beginning and continuation point for extending clips.
 - Aspect ratios: 16:9 (cinematic), 9:16 (vertical), 1:1 (social).
-- Duration: ~4-second clips — design action to fit this window.
+- Duration: Official Gen-4 video outputs are 5 or 10 seconds per clip — design a single motion arc that fits 5s or 10s, not ~4s.
 - Sweet spot: 30-60 words. Over 80 words degrades coherence.
 - Genre-adapt: Action/Thriller = fast verbs, dynamic angles. Drama = slow movements, close-ups. Documentary = steady pans, natural light. Horror = creeping motion, low light.
 - Output in English only.
 
-Gen-4.5 Director Mode: supports multi-scene storyboarding with scene transitions. For Director Mode, structure as: Scene 1: [description] → Scene 2: [description]. Each scene 4-10 seconds.
+Gen-4.5: Prefer one uninterrupted cinematic beat per generation; if the product exposes advanced controls (e.g. keyframes / multiple segments), follow that UI’s structure — do not invent multi-scene formats that contradict Gen-4’s “single scene” prompting basics.
 
 CRITICAL — OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
@@ -85,8 +85,8 @@ EXAMPLE:
 Concept: "אישה הולכת ברחוב גשום"
 Output: Wide shot. Slow tracking shot follows a woman in a red coat walking along a rain-soaked cobblestone street at dusk. Neon shop signs reflect in puddles as she passes. Wind catches her umbrella slightly. Shallow depth of field, anamorphic lens flare from distant headlights. Moody neo-noir atmosphere.`,
 
-  kling: `PLATFORM: Kling 3.0
-Kling 3.0 is the latest version with native 4K output, multilingual audio/dialogue, Motion Brush, and multi-shot storyboarding. It excels at physics-based motion with professional-grade output.
+  kling: `PLATFORM: Kling VIDEO 3.0
+Kling VIDEO 3.0 (per Kling’s official model guide) emphasizes: native audio with multilingual dialogue and accents, multi-shot narratives, element/subject reference for consistency, native in-frame text, and flexible duration up to ~15s. It excels at physics-aware motion and expressive performance. Resolution in standard product flows is commonly 720p/1080p — do not promise “native 4K” unless the user’s app tier or export explicitly shows 4K.
 
 Six-element prompt structure:
 (Camera Movement) + (Shot Type) + (Subject + Action) + (Environment + Lighting) + (Style + Mood) + (Physics Details)
@@ -104,8 +104,8 @@ Rules:
 - Multi-shot storyboarding: Specify duration, shot size, perspective, narrative, and camera per shot.
 - Complex camera: combine dolly + tilt, tracking + zoom freely. Also: dolly zoom (vertigo), telephoto compression, shallow DOF.
 - Duration: 3s to 15s flexible. 5s for one action, 10s for action + reaction.
-- Negative prompt support (3-7 items max): Add "Negative: morphing, melting, distorted hands, extra limbs, blurry, flickering, jittery movement" at end.
-- Resolution: Native 4K output. Aspect ratios: 16:9, 9:16, 1:1.
+- Optional negative list (3-7 items max) if your pipeline supports it: "Negative: morphing, melting, distorted hands, extra limbs, blurry, flickering, jittery movement" — skip if the interface has no negative field.
+- Resolution: Match the user’s selected resolution in-app (720p/1080p common per official docs). Aspect ratios: 16:9, 9:16, 1:1 typical.
 - Camera language: Kling understands lens references (35mm, 85mm) and camera brands (ARRI, RED).
 - Native audio: Kling 3.0 supports lip-synced dialogue in multiple languages. Add dialogue lines if relevant.
 - Character consistency: Use highly distinctive visual descriptions for coherence across clips.
@@ -159,8 +159,8 @@ Rules:
 - Style: "anamorphic 2.0x lens, shallow DOF, volumetric light" NOT "cinematic look."
 - Dialogue: Keep separate from visual prose. Label speakers consistently. Limit to match clip length (4s = 1-2 exchanges; 8s+ = more).
 - Audio: Describe diegetic (story-world) sounds — "The hum of espresso machines and murmur of voices." Single atmospheric cue for silent shots.
-- Duration: 4, 8, 12, 16, or 20 seconds — specify as "Duration: Xs."
-- Resolution: 1280×720 or 720×1280 (sora-2); up to 1920×1080 (sora-2-pro).
+- Duration: Specify as "Duration: Xs" to match the OpenAI Video API \`seconds\` value for the chosen model. Official docs highlight 16s and 20s generations for full beats; shorter clips (e.g. 8s) are common in examples — always align with the API/UI enum the user has access to.
+- Resolution: 1280×720 or 720×1280 (sora-2). Use sora-2-pro for 1920×1080 or 1080×1920 exports (per OpenAI video generation docs).
 - Character references: Describe subjects with 5+ unique visual identifiers for consistency.
 - Video extension: Can extend up to 6 times, max 120s total.
 - Sora understands real-world physics — describe interactions with gravity, fluids, fabric.
@@ -197,8 +197,8 @@ Actions:
 Lighting: Cool blue ambient from the city below, warm golden rim light from the setting sun, palette: teal, amber, deep navy.
 Style: Blade Runner 2049 aesthetic, Deakins-inspired backlight, anamorphic flare.`,
 
-  veo: `PLATFORM: Google Veo 3 / Veo 3.1
-Veo 3 is Google DeepMind's video model - the ONLY platform with native audio generation (dialogue, SFX, ambient sound, music). Character consistency and physically accurate rendering are core strengths.
+  veo: `PLATFORM: Google Veo 3 / Veo 3.1 (Gemini API)
+Veo is Google DeepMind’s video model with strong synchronized audio generation (dialogue, SFX, ambience, music) when you describe sound explicitly — other platforms also offer audio, but Veo’s Gemini API workflow rewards splitting detailed visual + audio intent. Character consistency and physically plausible motion/materials are core strengths.
 
 Seven primary elements for effective prompts:
 1. Shot framing and motion - How to frame and how the camera moves
@@ -230,14 +230,14 @@ Use separate sentences to describe audio. Label clearly with "Audio:" to separat
 IMPORTANT: If you don't explicitly define the background audio, Veo will guess — and sometimes hallucinates inappropriate sounds (common issue: "live studio audience" laughter). ALWAYS specify the audio you want.
 
 Rules:
-- ALWAYS include an Audio section - this is Veo's core differentiator.
+- ALWAYS include an Audio section — in Veo this is how you steer dialogue, SFX, and ambience; vague audio requests invite wrong ambience.
 - Natural language only - no special syntax.
-- Duration: Add "Duration: Xs" (5-15 seconds supported).
-- Resolution: Veo generates up to 4K.
+- Duration: Per Gemini API docs, \`durationSeconds\` is typically "4", "6", or "8"; 1080p and 4K often require 8s and have extra constraints (e.g. reference images). Add "Duration: Xs" using values your user can actually select — do not assume 5–15s unless the UI exposes it.
+- Resolution: Veo 3.1 can output 720p, 1080p, or 4K depending on model tier (4K not available on Veo 3.1 Lite in API docs).
 - Sweet spot: 50-100 words visual + 20-40 words audio.
 - Output in English only.
 
-Veo 3.1 improvements: better temporal coherence for scenes >10s. Audio is Veo's KILLER FEATURE — always include a detailed Audio section with dialogue lines, SFX, ambient sounds, and music direction. Without explicit audio, Veo hallucinates sounds.
+Veo 3.1 (API): Adds richer audio, reference images (“ingredients”), first/last frame control, and scene extension — still keep each generation prompt focused; use extension features in-product for length. Audio discipline remains the fastest quality win.
 
 CRITICAL — OUTPUT PURITY:
 Your output MUST start directly with the prompt content. NEVER output:
@@ -371,25 +371,25 @@ Concept: {{input}}
 
 Output ONLY the ready-to-use video prompt. No meta-text, no instructions, no "create a prompt that...".`,
 
-  runway: `Generate the ACTUAL Runway Gen-4 prompt that will be DIRECTLY pasted into Runway. Lead with camera movement. Write in natural sentences, 30-60 words. One scene only. Include a cinematic reference.
+  runway: `Generate the ACTUAL Runway Gen-4 / Gen-4.5 prompt that will be DIRECTLY pasted into Runway. Lead with camera movement. Write in natural sentences, 30-60 words. One continuous scene only (5s or 10s clip — motion must fit that window). Positive phrasing only. Include a cinematic reference.
 
 Concept: {{input}}
 
 Output ONLY the ready-to-paste Runway prompt. No meta-text.`,
 
-  kling: `Generate the ACTUAL Kling 3.0 prompt that will be DIRECTLY pasted into Kling. Use the six-element structure: (Camera Movement) + (Shot Type) + (Subject + Action) + (Environment + Lighting) + (Style + Mood) + (Physics Details). Describe physics-based motion with weight, momentum, and endpoints. Include negative prompt (3-7 items). 50-200 words.
+  kling: `Generate the ACTUAL Kling VIDEO 3.0 prompt that will be DIRECTLY pasted into Kling. Use the six-element structure: (Camera Movement) + (Shot Type) + (Subject + Action) + (Environment + Lighting) + (Style + Mood) + (Physics Details). Describe physics-based motion with weight, momentum, and endpoints. Add optional Negative: line (3-7 items) only if negatives are supported in the user's flow. Up to ~15s narrative; 50-200 words.
 
 Concept: {{input}}
 
 Output ONLY the ready-to-paste Kling prompt. No meta-text.`,
 
-  sora: `Generate the ACTUAL Sora 2 prompt that will be DIRECTLY pasted into Sora. Use structured format: Scene description paragraph, then Cinematography (camera shot + mood), Actions (verb-driven beats with timing), and Dialogue (if needed). Include lens specs, 3-5 color anchors, and diegetic sound cues. 50-150 words.
+  sora: `Generate the ACTUAL Sora 2 prompt that will be DIRECTLY pasted into Sora (or API). Use structured format: Scene description paragraph, then Cinematography (camera shot + mood), Actions (verb-driven beats with timing), and Dialogue (if needed). Include lens specs, 3-5 color anchors, and diegetic sound cues. Set Duration: Xs to match OpenAI Video API allowed seconds for the model (docs emphasize 16s and 20s for longer beats; sora-2-pro for 1080p-class sizes). 50-150 words.
 
 Concept: {{input}}
 
 Output ONLY the ready-to-paste Sora prompt. No meta-text.`,
 
-  veo: `Generate the ACTUAL Google Veo 3 prompt that will be DIRECTLY pasted into Veo. Write a visual paragraph covering all 7 elements (shot framing, style, lighting, character, location, action, dialogue) PLUS a separate Audio section with dialogue/SFX/ambient/music. ALWAYS include the Audio section — Veo hallucinates inappropriate audio if you don't specify it. 50-100 words visual + 20-40 words audio. Be precise, concrete, sensory.
+  veo: `Generate the ACTUAL Google Veo 3 / 3.1 prompt that will be DIRECTLY pasted into Veo (Gemini API / app). Write a visual paragraph covering all 7 elements (shot framing, style, lighting, character, location, action, dialogue) PLUS a separate Audio section with dialogue/SFX/ambient/music. ALWAYS include the Audio section — unspecified ambience drifts. Use Duration: 4s, 6s, or 8s to match API options (1080p/4K often tied to 8s). 50-100 words visual + 20-40 words audio. Precise, concrete, sensory.
 
 Concept: {{input}}
 
