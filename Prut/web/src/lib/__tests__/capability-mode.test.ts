@@ -22,6 +22,7 @@ import {
     CapabilityMode,
     CAPABILITY_CONFIGS,
     parseCapabilityMode,
+    capabilityModeToDbMode,
 } from '../capability-mode';
 
 describe('parseCapabilityMode', () => {
@@ -47,15 +48,26 @@ describe('parseCapabilityMode', () => {
         expect(parseCapabilityMode('MAGIC_MODE')).toBe(CapabilityMode.STANDARD);
     });
 
-    it('is case-sensitive (lowercase enum string is rejected)', () => {
-        // The enum values are all-uppercase by design. A lowercase match
-        // would silently coerce typos into the wrong mode.
+    it('accepts DB lowercase snake_case aliases (prompt_engines.mode)', () => {
         expect(parseCapabilityMode('standard')).toBe(CapabilityMode.STANDARD);
-        expect(parseCapabilityMode('image_generation')).toBe(CapabilityMode.STANDARD);
+        expect(parseCapabilityMode('deep_research')).toBe(CapabilityMode.DEEP_RESEARCH);
+        expect(parseCapabilityMode('image_generation')).toBe(CapabilityMode.IMAGE_GENERATION);
+        expect(parseCapabilityMode('agent_builder')).toBe(CapabilityMode.AGENT_BUILDER);
+        expect(parseCapabilityMode('video_generation')).toBe(CapabilityMode.VIDEO_GENERATION);
     });
 
-    it('handles whitespace as unknown', () => {
+    it('trims whitespace before parsing', () => {
         expect(parseCapabilityMode('  STANDARD  ')).toBe(CapabilityMode.STANDARD);
+        expect(parseCapabilityMode('  deep_research  ')).toBe(CapabilityMode.DEEP_RESEARCH);
+    });
+});
+
+describe('capabilityModeToDbMode', () => {
+    it('round-trips with parseCapabilityMode for every mode', () => {
+        for (const mode of Object.values(CapabilityMode)) {
+            const db = capabilityModeToDbMode(mode);
+            expect(parseCapabilityMode(db)).toBe(mode);
+        }
     });
 });
 

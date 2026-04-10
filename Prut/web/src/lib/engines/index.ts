@@ -1,5 +1,5 @@
 
-import { CapabilityMode } from "../capability-mode";
+import { CapabilityMode, capabilityModeToDbMode, parseCapabilityMode } from "../capability-mode";
 import { PromptEngine, EngineConfig } from "./types";
 import { StandardEngine } from "./standard-engine";
 import { ResearchEngine } from "./research-engine";
@@ -34,12 +34,12 @@ export async function getEngine(mode: CapabilityMode): Promise<PromptEngine> {
   const { data: config } = await supabase
     .from('prompt_engines')
     .select('*')
-    .eq('mode', mode)
+    .eq('mode', capabilityModeToDbMode(mode))
     .eq('is_active', true)
     .maybeSingle();
 
   const engineConfig: EngineConfig | undefined = config ? {
-      mode: config.mode as CapabilityMode,
+      mode: parseCapabilityMode(config.mode),
       name: config.name,
       description: config.description,
       system_prompt_template: config.system_prompt_template,

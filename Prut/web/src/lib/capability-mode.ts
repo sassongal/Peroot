@@ -95,10 +95,37 @@ function isValidCapabilityMode(value: string): value is CapabilityMode {
   return Object.values(CapabilityMode).includes(value as CapabilityMode);
 }
 
+/**
+ * DB column `prompt_engines.mode` uses lowercase snake_case (e.g. deep_research).
+ * App code uses the CapabilityMode enum (e.g. DEEP_RESEARCH).
+ */
+const DB_MODE_ALIASES: Record<string, CapabilityMode> = {
+  standard: CapabilityMode.STANDARD,
+  deep_research: CapabilityMode.DEEP_RESEARCH,
+  image_generation: CapabilityMode.IMAGE_GENERATION,
+  agent_builder: CapabilityMode.AGENT_BUILDER,
+  video_generation: CapabilityMode.VIDEO_GENERATION,
+};
+
+export function capabilityModeToDbMode(mode: CapabilityMode): string {
+  return mode.toLowerCase();
+}
+
 /** Parse capability mode from string with fallback to STANDARD */
 export function parseCapabilityMode(value: string | null | undefined): CapabilityMode {
-  if (value && isValidCapabilityMode(value)) {
-    return value;
+  if (value == null || value === "") {
+    return CapabilityMode.STANDARD;
+  }
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return CapabilityMode.STANDARD;
+  }
+  if (isValidCapabilityMode(trimmed)) {
+    return trimmed;
+  }
+  const fromDb = DB_MODE_ALIASES[trimmed.toLowerCase()];
+  if (fromDb) {
+    return fromDb;
   }
   return CapabilityMode.STANDARD;
 }

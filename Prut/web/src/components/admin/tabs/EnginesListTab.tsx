@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
 
@@ -119,7 +119,7 @@ export function EnginesListTab() {
         {/* Grid of Command Modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {engines.map((engine) => {
-            const Icon = MODE_ICONS[engine.mode] || Zap;
+            const Icon = MODE_ICONS[parseCapabilityMode(engine.mode)] || Zap;
             return (
               <Link 
                 key={engine.id} 
