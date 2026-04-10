@@ -86,6 +86,17 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
       result.outputFormat = "markdown";
       result.requiredFields = ["citations", "summary"];
 
+      // Research-specific context framing: treat attachments as primary sources
+      if (input.context && input.context.length > 0) {
+          result.systemPrompt += `\n\n[RESEARCH_SOURCE_DIRECTIVE]
+החומר המצורף הוא **מקור ראשוני** למחקר — לא רקע כללי:
+1. צטט נתונים, מספרים ומסקנות ספציפיות מהמקורות בפרומפט המחקר שאתה בונה.
+2. הנח את הכלי לבצע אימות צולב (cross-verification) של טענות מהחומר מול מקורות חיצוניים.
+3. הגדר את החומר כ"מקור מוסמך" בסעיף דרישות מקורות וראיות, עם דירוג ◉ מאומת.
+4. שלב את תת-הנושאים מהחומר בפירוק MECE של שאלת המחקר.
+5. אל תסכם את החומר — שלב את תוכנו ישירות בהנחיות המתודולוגיה.`;
+      }
+
       // Inject concept classification (LLM-level semantic understanding)
       result.systemPrompt += getConceptClassificationBlock('text');
 
