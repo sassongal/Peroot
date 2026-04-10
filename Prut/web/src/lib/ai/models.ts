@@ -3,7 +3,7 @@ import { groq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { LanguageModel } from "ai";
 
-export type ModelId = 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'gemini-2.0-flash-lite' | 'llama-4-scout' | 'llama-3-70b' | 'gpt-oss-20b' | 'mistral-small' | 'mistral-nemo';
+export type ModelId = 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'llama-4-scout' | 'gpt-oss-20b' | 'mistral-small';
 
 // Server-side Google provider - no Referer header needed.
 // API key restrictions should use "None" or IP-based (not HTTP referrer)
@@ -20,7 +20,6 @@ export interface ModelConfig {
     model: LanguageModel;
     label: string;
     contextWindow: number;
-    tier: 'free' | 'pro';
 }
 
 export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
@@ -30,23 +29,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         model: google('gemini-2.5-flash'),
         label: 'Gemini 2.5 Flash (Primary)',
         contextWindow: 1000000,
-        tier: 'free'
-    },
-    'gemini-2.0-flash-lite': {
-        id: 'gemini-2.0-flash-lite',
-        provider: 'google',
-        model: google('gemini-2.0-flash-lite'),
-        label: 'Gemini 2.0 Flash Lite (Backup)',
-        contextWindow: 1000000,
-        tier: 'free'
-    },
-    'llama-3-70b': {
-        id: 'llama-3-70b',
-        provider: 'groq',
-        model: groq('llama3-70b-8192'),
-        label: 'Llama 3 70B (Groq)',
-        contextWindow: 8192,
-        tier: 'free'
     },
     'gemini-2.5-flash-lite': {
         id: 'gemini-2.5-flash-lite',
@@ -54,7 +36,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         model: google('gemini-2.5-flash-lite'),
         label: 'Gemini 2.5 Flash Lite',
         contextWindow: 1000000,
-        tier: 'free'
     },
     'llama-4-scout': {
         id: 'llama-4-scout',
@@ -62,7 +43,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         model: groq('meta-llama/llama-4-scout-17b-16e-instruct'),
         label: 'Llama 4 Scout (Groq)',
         contextWindow: 512000,
-        tier: 'free'
     },
     'gpt-oss-20b': {
         id: 'gpt-oss-20b',
@@ -70,7 +50,6 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         model: groq('openai/gpt-oss-20b'),
         label: 'GPT-OSS 20B (Groq)',
         contextWindow: 32768,
-        tier: 'free'
     },
     'mistral-small': {
         id: 'mistral-small',
@@ -78,16 +57,7 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
         model: mistralProvider('mistral-small-latest'),
         label: 'Mistral Small 3.1',
         contextWindow: 32000,
-        tier: 'free'
     },
-    'mistral-nemo': {
-        id: 'mistral-nemo',
-        provider: 'mistral',
-        model: mistralProvider('open-mistral-nemo'),
-        label: 'Mistral Nemo',
-        contextWindow: 128000,
-        tier: 'free'
-    }
 };
 
 export const FALLBACK_ORDER: ModelId[] = [
@@ -98,7 +68,7 @@ export const FALLBACK_ORDER: ModelId[] = [
     'gpt-oss-20b',              // Free on Groq
 ];
 
-export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'video' | 'chain';
+export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'video' | 'chain' | 'classify';
 
 // All models are free/low-cost — no expensive pro models in any route
 export const TASK_ROUTING: Record<string, ModelId[]> = {
@@ -108,23 +78,12 @@ export const TASK_ROUTING: Record<string, ModelId[]> = {
   image:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small'],
   video:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small'],
   chain:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
+  // Lightweight internal tasks (category suggestion, tagging). Flash Lite is
+  // the cheapest Google model and handles simple JSON classification well.
+  classify: ['gemini-2.5-flash-lite', 'mistral-small', 'llama-4-scout'],
 };
 
 export function getModelsForTask(task: string, _userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
   // All users get the same optimized low-cost model routing
   return TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
-}
-
-/**
- * Check if a specific model requires pro tier (all models are now free-tier)
- */
-export function isProModel(_modelId: ModelId): boolean {
-  return false;
-}
-
-/**
- * Get the free-tier fallback for a given model
- */
-export function getFreeFallback(modelId: ModelId): ModelId {
-  return AVAILABLE_MODELS[modelId] ? modelId : 'gemini-2.5-flash';
 }

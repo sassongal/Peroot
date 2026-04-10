@@ -9,16 +9,11 @@ import { logger } from "@/lib/logger";
  * based on equivalent commercial pricing for budgeting purposes.
  */
 const PRICING: Record<string, { input: number; output: number }> = {
-    'gemini-2.5-pro':    { input: 1.25, output: 10.00 },
-    'gemini-2.5-flash':  { input: 0.15, output: 0.60 },
-    'gemini-2.0-flash-lite':  { input: 0.075, output: 0.30 },
-    'llama-3-70b':       { input: 0.59,  output: 0.79 },
-    'deepseek-chat':     { input: 0.14,  output: 0.28 },
+    'gemini-2.5-flash':      { input: 0.15,  output: 0.60 },
     'gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
     'llama-4-scout':         { input: 0.11,  output: 0.34 },
     'gpt-oss-20b':           { input: 0.0,   output: 0.0 },
     'mistral-small':         { input: 0.10,  output: 0.30 },
-    'mistral-nemo':          { input: 0.15,  output: 0.15 },
 };
 
 function estimateCost(modelId: string, inputTokens: number, outputTokens: number): number {

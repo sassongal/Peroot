@@ -30,7 +30,7 @@ describe('gateway pickDefaults — hard clamp', () => {
   });
 
   it('clamps userMax override for every task type', () => {
-    for (const task of ['image', 'video', 'research', 'enhance', 'agent', 'chain']) {
+    for (const task of ['image', 'video', 'research', 'enhance', 'agent', 'chain', 'classify']) {
       const result = pickDefaults(task, 500_000);
       expect(result.maxOutputTokens, `task=${task}`).toBe(16384);
     }
@@ -98,6 +98,12 @@ describe('gateway pickDefaults — presets', () => {
     expect(pickDefaults('chain')).toEqual({ maxOutputTokens: 3072, temperature: 0.4 });
   });
 
+  it('classify task defaults to 256 tokens and 0.2 temp', () => {
+    // Lightweight internal task (category suggestion, tagging). Tiny JSON
+    // output, low temperature for determinism.
+    expect(pickDefaults('classify')).toEqual({ maxOutputTokens: 256, temperature: 0.2 });
+  });
+
   it('unknown task falls back to the enhance preset', () => {
     expect(pickDefaults('bogus-task-name')).toEqual({ maxOutputTokens: 8192, temperature: 0.7 });
   });
@@ -140,6 +146,12 @@ describe('gateway buildProviderOptions — disables Gemini thinking', () => {
 
   it('returns thinkingBudget: 0 for chain task', () => {
     expect(buildProviderOptions('chain')).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 0 } },
+    });
+  });
+
+  it('returns thinkingBudget: 0 for classify task', () => {
+    expect(buildProviderOptions('classify')).toEqual({
       google: { thinkingConfig: { thinkingBudget: 0 } },
     });
   });

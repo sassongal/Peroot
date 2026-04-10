@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateText } from "ai";
+import { AIGateway } from "@/lib/ai/gateway";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
-
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
-
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-});
 
 // ---------------------------------------------------------------------------
 // System prompt
@@ -78,11 +69,11 @@ export async function POST(req: NextRequest) {
     const truncated = promptText.slice(0, 1500);
 
     const suggestStart = Date.now();
-    const { text, usage } = await generateText({
-      model: google("gemini-2.5-flash-lite"),
+    const { text, modelId, usage } = await AIGateway.generateFull({
       system: SYSTEM_PROMPT,
       prompt: `Prompt text:\n${truncated}\n\nExisting categories:\n${cats.join(", ") || "(none)"}`,
       maxOutputTokens: 200,
+      task: "classify",
     });
 
     // Track usage for the cost dashboard. Fire-and-forget.
@@ -91,7 +82,7 @@ export async function POST(req: NextRequest) {
         | undefined;
     trackApiUsage({
       userId: user.id,
-      modelId: "gemini-2.5-flash-lite",
+      modelId,
       inputTokens: usageTyped?.inputTokens ?? usageTyped?.promptTokens ?? 0,
       outputTokens: usageTyped?.outputTokens ?? usageTyped?.completionTokens ?? 0,
       durationMs: Date.now() - suggestStart,
