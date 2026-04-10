@@ -403,8 +403,15 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                     <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                       <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
                     </button>
-                    <button onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
-                      <Star className={cn("w-3.5 h-3.5", isFavorite && "fill-yellow-300 text-yellow-300")} /> {isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                    <button
+                      type="button"
+                      title={favStarTitle}
+                      aria-label={favStarTitle}
+                      onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }}
+                      className="w-full flex items-start gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)] text-start"
+                    >
+                      <Star className={cn("w-3.5 h-3.5 shrink-0 mt-0.5", isFavorite && "fill-yellow-300 text-yellow-300")} />
+                      <span className="flex-1 text-right leading-snug">{favStarTitle}</span>
                     </button>
                     <button onClick={() => { toggleSelection(prompt.id); shared.setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
                       <Square className="w-3.5 h-3.5" /> בחר
