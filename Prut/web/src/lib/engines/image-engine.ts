@@ -581,6 +581,17 @@ function getPlatformKey(platform?: string, outputFormat?: string): string {
   return platform;
 }
 
+/** Repo baseline for `general` when no DB row exists — admin drift detection vs `prompt_engines`. */
+export function getShippedImageEngineBaseline(): {
+  system_prompt_template: string;
+  user_prompt_template: string;
+} {
+  return {
+    system_prompt_template: PLATFORM_PROMPTS.general,
+    user_prompt_template: PLATFORM_USER_PROMPTS.general,
+  };
+}
+
 export class ImageEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
       super(config ?? {

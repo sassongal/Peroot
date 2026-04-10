@@ -470,6 +470,17 @@ VIDEO PROMPT ARCHITECTURE - 7 mandatory layers:
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`;
 
+/** Repo baseline for `general` when no DB row exists — admin drift detection vs `prompt_engines`. */
+export function getShippedVideoEngineBaseline(): {
+  system_prompt_template: string;
+  user_prompt_template: string;
+} {
+  return {
+    system_prompt_template: DEFAULT_SYSTEM_PROMPT,
+    user_prompt_template: VIDEO_USER_PROMPTS.general,
+  };
+}
+
 export class VideoEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
     super(config ?? {

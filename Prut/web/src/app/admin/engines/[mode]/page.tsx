@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
   ArrowLeft, 
@@ -46,6 +46,11 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
   /** JSON blob for default_params.platform_overrides (image/video) */
   const [platformOverridesJson, setPlatformOverridesJson] = useState("");
   const [platformOverridesError, setPlatformOverridesError] = useState<string | null>(null);
+  /** In-repo default templates from API (one fetch per mode) */
+  const [shippedBaseline, setShippedBaseline] = useState<{
+    system_prompt_template: string;
+    user_prompt_template: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -74,6 +79,54 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
     };
     fetchConfig();
   }, [mode, router]);
+
+  useEffect(() => {
+    if (mode !== "image_generation" && mode !== "video_generation") {
+      setShippedBaseline(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          getApiPath(
+            `/api/admin/engine-shipped-baseline?mode=${encodeURIComponent(mode)}`
+          )
+        );
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          baseline?: {
+            system_prompt_template: string;
+            user_prompt_template: string;
+          };
+        };
+        const b = data.baseline;
+        if (!b || cancelled) return;
+        setShippedBaseline({
+          system_prompt_template: b.system_prompt_template,
+          user_prompt_template: b.user_prompt_template,
+        });
+      } catch {
+        if (!cancelled) setShippedBaseline(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
+
+  const baselineDrift = useMemo(() => {
+    if (!config || !shippedBaseline) return null;
+    const norm = (s: string) => s.replace(/\r\n/g, "\n").trim();
+    return {
+      system:
+        norm(config.system_prompt_template) !==
+        norm(shippedBaseline.system_prompt_template),
+      user:
+        norm(config.user_prompt_template) !==
+        norm(shippedBaseline.user_prompt_template),
+    };
+  }, [config, shippedBaseline]);
 
   const handleSave = async () => {
     if (!config) return;
@@ -253,6 +306,23 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
         parseCapabilityMode(config.mode) === CapabilityMode.VIDEO_GENERATION) && (
         <div className="p-6 rounded-[28px] border border-amber-500/20 bg-amber-500/5 text-zinc-300 text-sm leading-relaxed space-y-3" dir="rtl">
           <p className="font-bold text-amber-200/90">מנוע תמונה / וידאו</p>
+          {baselineDrift && (baselineDrift.system || baselineDrift.user) && (
+            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-cyan-100/95 text-xs leading-relaxed">
+              <span className="font-bold text-cyan-200">סטייה מברירת המחדל בקוד (גרסה ששוחררה): </span>
+              {baselineDrift.system && (
+                <span>System — שונה מה-Repo. </span>
+              )}
+              {baselineDrift.user && (
+                <span>User — שונה מה-Repo. </span>
+              )}
+              זה תקין אם עדכנת בכוונה; אם לא — השקלו לסנכרן עם <code className="text-cyan-300/90">src/lib/engines/*-engine.ts</code>.
+            </div>
+          )}
+          {baselineDrift && !baselineDrift.system && !baselineDrift.user && (
+            <p className="text-xs text-emerald-400/90 font-medium">
+              תבניות System/User תואמות לברירת המחדל הנוכחית בקוד (מצב general).
+            </p>
+          )}
           <p>
             התבניות למטה משמשות את מצב <strong>general</strong> בפרודקשן; לכל פלטפורמה ספציפית ברירת המחדל עדיין נטענת מהקוד, אלא אם כן מגדירים עקיפה ב-JSON למטה.
           </p>
