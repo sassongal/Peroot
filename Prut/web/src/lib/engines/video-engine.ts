@@ -6,6 +6,7 @@ import { VideoPlatform } from "../video-platforms";
 import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
+import type { ContextBlock } from "@/lib/context/engine/types";
 
 // ── Platform-specific system prompt overrides ──
 // Each platform has a unique prompting architecture based on official docs,
@@ -512,6 +513,30 @@ export class VideoEngine extends BaseEngine {
       }
     }
 
+    // Context attachments as cinematic reference material
+    if (input.context && input.context.length > 0) {
+        finalSystem += `\n\n[CINEMATIC_REFERENCE_MATERIAL]
+המשתמש צירף חומר מקור — השתמש בו כ-**השראה קולנועית ומגבלות ויזואליות** לפרומפט הווידאו:
+- תמונות מצורפות: נתח קומפוזיציה, תאורה, פלטת צבעים, ואווירה — ושלב בפרומפט כ-reference visuals.
+- סטוריבורד/מסמך: חלץ תיאור סצנות, תנועת מצלמה, ואלמנטים נרטיביים.
+- URLים: חלץ סגנון ויזואלי, look & feel, ו-cinematic language מהתוכן.
+- שלב את הפרטים ישירות — אל תכתוב "בהתבסס על הקובץ".
+
+`;
+        for (const attachment of input.context) {
+            const block = attachment as unknown as ContextBlock;
+            const title = block.display?.title || attachment.name || 'attachment';
+            const text = block.display?.rawText || block.display?.summary || attachment.content || attachment.description || '';
+            if (attachment.type === 'image') {
+                finalSystem += `━━━ 🖼️ Visual ref: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+            } else if (attachment.type === 'url') {
+                finalSystem += `━━━ 🌐 Source: ${attachment.url || title} ━━━\n${text.slice(0, 1000)}\n\n`;
+            } else {
+                finalSystem += `━━━ 📄 Doc: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+            }
+        }
+    }
+
     // Inject concept classification (LLM-level semantic understanding)
     finalSystem += getConceptClassificationBlock('video');
 
@@ -530,6 +555,14 @@ export class VideoEngine extends BaseEngine {
     // Inject platform-specific scoring criteria
     const scoringBlock = getScoringBlock('video', platform);
 
+    const hasContext = !!(input.context && input.context.length > 0);
+    const contextQualityRule = hasContext
+        ? '\n8. CONTEXT INTEGRATION: Reference material is attached — the prompt MUST incorporate specific visual elements (palette, mood, composition, cinematic style) from the references. Ignoring attached context is a FAILURE.'
+        : '';
+    const contextQuestionHint = hasContext
+        ? '\nCONTEXT-AWARE: reference material is attached — ask about INTENT (exact replication? mood inspiration? style guide?) not about the file contents.'
+        : '';
+
     // English cinematic GENIUS_QUESTIONS focused on the 7 video layers + platform-specific gate
     finalSystem += `\n\n<internal_quality_check hidden="true">
 Silently verify before generating (NEVER include any of this in output):
@@ -539,19 +572,32 @@ Silently verify before generating (NEVER include any of this in output):
 4. ENVIRONMENT: Is the setting, time of day, and atmosphere established?
 5. SCENE MOTION: Are environmental dynamics (wind, particles, ambient life) addressed?
 6. LIGHTING: Is the light direction, quality, color temperature, and mood defined?
-7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?${scoringBlock || ''}
+7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?${contextQualityRule}${scoringBlock || ''}
 </internal_quality_check>
 
 After the enhanced prompt, on a new line add a short descriptive Hebrew title:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
-Then add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions about cinematic aspects that would most elevate the prompt. Focus on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.
+Then add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions about cinematic aspects that would most elevate the prompt. Focus on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.${contextQuestionHint}
 Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
 If the prompt is already comprehensive across all 7 layers, return [GENIUS_QUESTIONS][]`;
 
+    // Append context summary to user prompt
+    let finalUserPrompt = userPrompt;
+    if (hasContext) {
+        const summary = input.context!.map(a => {
+            const block = a as unknown as ContextBlock;
+            const title = block.display?.title || a.name || 'attachment';
+            const text = block.display?.summary || block.display?.rawText || a.content || a.description || '';
+            if (a.type === 'image') return `[Visual ref: ${title}] ${text.slice(0, 600)}`;
+            return `[${title}] ${text.slice(0, 600)}`;
+        }).join('\n');
+        finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב אלמנטים קולנועיים מהחומר בפרומפט]\n${summary}`;
+    }
+
     return {
       systemPrompt: finalSystem,
-      userPrompt,
+      userPrompt: finalUserPrompt,
       outputFormat: "text",
       requiredFields: [],
     };
