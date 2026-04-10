@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { EmailService } from "@/lib/emails/service";
 import { logger } from "@/lib/logger";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
-import { adminCronChurnAlertEmail } from "@/lib/emails/templates/admin-alerts";
 
 /**
  * GET /api/cron/sync-subscriptions

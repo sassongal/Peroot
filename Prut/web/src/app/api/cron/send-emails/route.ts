@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { ONBOARDING_STEPS } from "@/lib/emails/onboarding-templates";
-import { isOnboardingEmailAutomationEnabled } from "@/lib/emails/automation-env";
+import {
+  isOnboardingCronFallbackEnabled,
+  isOnboardingEmailAutomationEnabled,
+} from "@/lib/emails/automation-env";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
@@ -24,9 +27,19 @@ export async function GET(request: NextRequest) {
 
   if (!isOnboardingEmailAutomationEnabled()) {
     logger.info(
-      "[Cron/Emails] Skipped — set ONBOARDING_EMAILS_ENABLED=true (welcome + cron fallback)"
+      "[Cron/Emails] Skipped — set ONBOARDING_EMAILS_ENABLED=true for signup welcome"
     );
     return NextResponse.json({ skipped: true, reason: "Onboarding emails disabled" });
+  }
+
+  if (!isOnboardingCronFallbackEnabled()) {
+    logger.info(
+      "[Cron/Emails] Skipped — ONBOARDING_CRON_FALLBACK_ENABLED is not true (callback-only onboarding; enable for stuck-sequence recovery)"
+    );
+    return NextResponse.json({
+      skipped: true,
+      reason: "Onboarding cron fallback disabled",
+    });
   }
 
   const locked = await acquireCronLock('cron:send-emails', 35);

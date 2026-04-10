@@ -14,10 +14,12 @@ import {
   BellOff,
   ShoppingBag,
   Megaphone,
+  Repeat2,
 } from "lucide-react";
 
 interface EmailAutomation {
   onboarding: boolean;
+  onboardingCronFallback: boolean;
   reengagement: boolean;
   lemonsqueezyLifecycle: boolean;
   newsletterBroadcast: boolean;
@@ -84,6 +86,7 @@ export function EmailsTab() {
       setData({
         automation: json.automation ?? {
           onboarding: false,
+          onboardingCronFallback: false,
           reengagement: false,
           lemonsqueezyLifecycle: true,
           newsletterBroadcast: false,
@@ -122,7 +125,10 @@ export function EmailsTab() {
 
   const { stats, recentUnsubscribes, automation } = data;
   const introMuted =
-    !automation.onboarding && !automation.reengagement && !automation.newsletterBroadcast;
+    !automation.onboarding &&
+    !automation.onboardingCronFallback &&
+    !automation.reengagement &&
+    !automation.newsletterBroadcast;
 
   return (
     <div className="space-y-8 px-2">
@@ -139,14 +145,19 @@ export function EmailsTab() {
           מצב משלוח מיילים
         </div>
         <p className="text-xs text-zinc-400 leading-relaxed">
-          כאן רואים מה נשלח אוטומטית מהשרת של Peroot. מיילים מ-Lemon Squeezy (חשבוניות,
-          אישורי מנוי) נשלחים מהספק ומתועדים בלוגים — לא דרך זרימת האונבורדינג.
+          ברירת המחדל: ברוכים הבאים בהרשמה (Peroot) + מיילי מנוי/churn מה־webhook של Lemon Squeezy.
+          אין ריאנגייג׳מנט ואין קרון אונבורדינג אלא אם מפעילים במפורש.
         </p>
         <div className="grid sm:grid-cols-2 gap-2">
           <AutomationPill
-            label="אונבורדינג (ברוכים הבאים)"
+            label="אונבורדינג (ברוכים הבאים בהרשמה)"
             active={automation.onboarding}
             icon={Mail}
+          />
+          <AutomationPill
+            label="קרון אונבורדינג (שחזור בלבד, כבוי)"
+            active={automation.onboardingCronFallback}
+            icon={Repeat2}
           />
           <AutomationPill
             label="ריאנגייג׳מנט (כבוי כברירת מחדל)"
@@ -168,6 +179,12 @@ export function EmailsTab() {
           <p className="text-[11px] text-amber-200/80 font-bold">
             כדי להפעיל ברוכים הבאים: הגדירו ב-Vercel{" "}
             <code className="text-amber-300/90">ONBOARDING_EMAILS_ENABLED=true</code>
+          </p>
+        )}
+        {automation.onboarding && !automation.onboardingCronFallback && (
+          <p className="text-[11px] text-zinc-500 font-bold">
+            קרון אונבורדינג כבוי (מומלץ). להפעלת שחזור רצפים תקועים:{" "}
+            <code className="text-zinc-400">ONBOARDING_CRON_FALLBACK_ENABLED=true</code>
           </p>
         )}
       </div>
