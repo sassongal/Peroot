@@ -18,7 +18,7 @@ export function ContextChips({ attachments, onRemove }: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
-    (sum, a) => sum + (a.status === "ready" ? (a.tokenCount ?? 0) : 0),
+    (sum, a) => sum + (a.status === "ready" ? (a.tokenCount ?? a.block?.injected?.tokenCount ?? 0) : 0),
     0
   );
   const isOverLimit = totalTokens > 15_000;

@@ -1,5 +1,6 @@
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
+import dns from 'node:dns/promises';
 
 export interface UrlExtractionResult {
   text: string;
@@ -21,11 +22,44 @@ export interface UrlExtractOptions {
 const MIN_USEFUL_CHARS = 200;
 const MIN_JINA_CHARS = 100;
 const DEFAULT_TIMEOUT = 12_000;
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+// Private/reserved IP ranges — block SSRF
+const BLOCKED_IP_RE =
+  /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|::1|fc00|fd|fe80)/;
+
+function assertPublicUrl(raw: string): URL {
+  const parsed = new URL(raw);
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('רק קישורי HTTP/HTTPS נתמכים');
+  }
+  // Block IPs directly in hostname
+  if (BLOCKED_IP_RE.test(parsed.hostname)) {
+    throw new Error('כתובת פנימית חסומה');
+  }
+  return parsed;
+}
+
+async function assertPublicDns(hostname: string): Promise<void> {
+  try {
+    const addresses = await dns.resolve4(hostname);
+    for (const ip of addresses) {
+      if (BLOCKED_IP_RE.test(ip)) {
+        throw new Error('כתובת פנימית חסומה');
+      }
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === 'כתובת פנימית חסומה') throw err;
+    // DNS resolution failure — let fetch handle it
+  }
+}
 
 export async function extractUrl(
   url: string,
   opts: UrlExtractOptions,
 ): Promise<UrlExtractionResult> {
+  const parsed = assertPublicUrl(url);
+  await assertPublicDns(parsed.hostname);
   const html = await fetchText(url, opts.timeoutMs ?? DEFAULT_TIMEOUT);
   const readable = readabilityParse(html, url);
 
@@ -75,7 +109,15 @@ async function fetchText(url: string, timeoutMs: number): Promise<string> {
       redirect: 'follow',
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
+    const contentLength = res.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_BYTES) {
+      throw new Error('הדף גדול מדי לעיבוד');
+    }
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > MAX_RESPONSE_BYTES) {
+      throw new Error('הדף גדול מדי לעיבוד');
+    }
+    return new TextDecoder().decode(buf);
   } finally {
     clearTimeout(t);
   }
@@ -85,7 +127,7 @@ async function fetchJina(url: string, timeoutMs: number): Promise<string> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(`https://r.jina.ai/${url}`, { signal: ctrl.signal });
+    const res = await fetch(`https://r.jina.ai/${encodeURIComponent(url)}`, { signal: ctrl.signal });
     if (!res.ok) throw new Error(`Jina ${res.status}`);
     return await res.text();
   } finally {

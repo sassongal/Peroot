@@ -54,7 +54,7 @@ export async function extractCsv(buffer: Buffer): Promise<OfficeExtractionResult
 }
 
 export async function extractXlsx(buffer: Buffer): Promise<OfficeExtractionResult> {
-  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const workbook = XLSX.read(buffer, { type: 'buffer', cellFormula: false, cellHTML: false, cellStyles: false });
   const firstSheet = workbook.SheetNames[0];
   if (!firstSheet) throw new Error('XLSX contains no sheets');
   const sheet = workbook.Sheets[firstSheet];

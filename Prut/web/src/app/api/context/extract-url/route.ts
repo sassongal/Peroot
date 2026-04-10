@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ block });
   } catch (err) {
     logger.error('[context/extract-url]', err);
-    const msg = err instanceof Error ? err.message : 'שגיאה בעיבוד הקישור';
+    // Only surface Hebrew user-facing messages; hide internal details
+    const msg = err instanceof Error && /^[\u0590-\u05FF]/.test(err.message)
+      ? err.message
+      : 'שגיאה בעיבוד הקישור';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

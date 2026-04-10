@@ -60,7 +60,8 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
     temperature: 0.2,
   });
 
-  const output = result.output as z.infer<typeof enrichSchema>;
+  const output = result.output as z.infer<typeof enrichSchema> | null;
+  if (!output) throw new Error('Enrichment returned empty output');
   return {
     title: output.title,
     documentType: output.documentType as DocumentType,

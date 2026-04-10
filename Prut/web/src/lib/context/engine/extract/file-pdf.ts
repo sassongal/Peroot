@@ -24,9 +24,11 @@ export async function extractPdf(buffer: Buffer): Promise<PdfExtractionResult> {
     ),
   ]);
 
+  const MAX_PAGES = 200;
   const pages = doc.numPages;
+  const pagesToRead = Math.min(pages, MAX_PAGES);
   const chunks: string[] = [];
-  for (let i = 1; i <= pages; i++) {
+  for (let i = 1; i <= pagesToRead; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
     const strings = content.items

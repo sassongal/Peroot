@@ -29,8 +29,11 @@ export async function putCachedBlock(
 ): Promise<void> {
   try {
     const k = key(block.sha256, tier);
-    await redis.set(k, JSON.stringify(block));
-    await redis.expire(k, TTL_SECONDS);
+    // Strip rawText to save Redis memory — it can be up to ~48KB per block
+    const { display, ...rest } = block;
+    const { rawText: _raw, ...displayRest } = display;
+    const slim = { ...rest, display: displayRest };
+    await redis.set(k, JSON.stringify(slim), { ex: TTL_SECONDS });
   } catch (err) {
     logger.warn('[context-cache] put failed', err);
   }

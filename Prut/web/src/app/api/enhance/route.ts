@@ -489,7 +489,13 @@ export async function POST(req: Request) {
     // Legacy-shape context payloads (old { type, name, content } format) are skipped
     // so the router gracefully falls back to the default model.
     const contextBlocks = (contextAttachments ?? [])
-      .filter(a => !!(a as unknown as ContextBlock).injected) as unknown as ContextBlock[];
+      .filter(a => {
+        const block = a as unknown as ContextBlock;
+        return block.injected
+          && typeof block.injected.tokenCount === 'number'
+          && block.injected.tokenCount > 0
+          && block.injected.tokenCount < 100_000;
+      }) as unknown as ContextBlock[];
     const preferredModel = selectEngineModel({ blocks: contextBlocks });
 
     const { result, modelId } = await AIGateway.generateStream({

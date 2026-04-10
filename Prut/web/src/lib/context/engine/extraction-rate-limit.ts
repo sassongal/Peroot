@@ -10,7 +10,9 @@ export interface ExtractionLimitResult {
 
 function dayKey(): string {
   const d = new Date();
-  return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${m}-${day}`;
 }
 
 export async function checkExtractionLimit(
