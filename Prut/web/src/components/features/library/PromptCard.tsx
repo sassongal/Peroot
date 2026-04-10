@@ -29,6 +29,8 @@ interface PromptCardProps {
   onCopy: () => void;
   onExportImage: () => void;
   onImageClick?: (url: string, title: string) => void;
+  /** When true, star button copy explains local-only favorites for guests. */
+  guestFavoriteHints?: boolean;
 }
 
 export function PromptCard({
@@ -48,6 +50,7 @@ export function PromptCard({
   onCopy,
   onExportImage,
   onImageClick,
+  guestFavoriteHints = false,
 }: PromptCardProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -55,6 +58,10 @@ export function PromptCard({
   const strengthInfo = getStrengthInfo(strength.score);
 
   const variableCount = prompt.variables.length;
+
+  const favStarLabel = guestFavoriteHints
+    ? (isFavorite ? "הסר ממועדפים מקומיים" : "הוסף למועדפים במכשיר זה — התחבר לסנכרון בענן")
+    : (isFavorite ? "הסר ממועדפים" : "הוסף למועדפים");
 
   return (
     <div
@@ -98,7 +105,8 @@ export function PromptCard({
             isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-[var(--text-muted)]"
           )}
           aria-pressed={isFavorite}
-          aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+          title={favStarLabel}
+          aria-label={favStarLabel}
         >
           <Star className={cn("w-4 h-4", isFavorite && "fill-yellow-400")} />
         </button>

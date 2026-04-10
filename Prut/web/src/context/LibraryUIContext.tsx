@@ -16,6 +16,9 @@ import { useFavoritesContext } from "./FavoritesContext";
 // ---------------------------------------------------------------------------
 
 export interface LibraryUIContextType {
+  /** Current auth user (from LibraryProvider); null for guests. */
+  user: User | null;
+
   // View modes
   viewMode: "home" | "library" | "personal";
   setViewMode: (mode: "home" | "library" | "personal") => void;
@@ -315,6 +318,7 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
 
   // --- Value ---
   const value = useMemo<LibraryUIContextType>(() => ({
+    user,
     viewMode, setViewMode,
     libraryView, setLibraryView,
     personalView, setPersonalView,
@@ -336,6 +340,7 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     openStyleEditor, saveStylePrompt, closeStyleEditor,
     ...dragAndDrop,
   }), [
+    user,
     viewMode, libraryView, personalView,
     libraryQuery, personalQuery,
     personalSort, librarySort,

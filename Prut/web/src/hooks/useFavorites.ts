@@ -119,7 +119,6 @@ export function useFavorites() {
       isMounted = false;
       subscription.unsubscribe();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
   useEffect(() => {
@@ -144,11 +143,18 @@ export function useFavorites() {
   );
 
   const toggleFavorite = async (itemType: FavoriteType, itemId: string): Promise<boolean> => {
-    // Return false if guest - caller should show login prompt
+    // Guest: persist to localStorage via the effect below (same shape as logged-in UX).
     if (!user) {
-      return false;
+      setFavorites((prev) => {
+        const exists = prev.some((fav) => fav.item_type === itemType && fav.item_id === itemId);
+        if (exists) {
+          return prev.filter((fav) => !(fav.item_type === itemType && fav.item_id === itemId));
+        }
+        return [...prev, { item_type: itemType, item_id: itemId }];
+      });
+      return true;
     }
-    
+
     // Compute shouldRemove before setState to avoid reading from inside setter
     const shouldRemove = favorites.some((fav) => fav.item_type === itemType && fav.item_id === itemId);
     setFavorites((prev) => {

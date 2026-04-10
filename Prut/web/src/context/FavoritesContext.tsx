@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
-import type { User } from "@supabase/supabase-js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,20 +21,14 @@ const FavoritesCtx = createContext<FavoritesContextType | undefined>(undefined);
 
 interface FavoritesProviderProps {
   children: ReactNode;
-  user: User | null;
-  showLoginRequired: (feature: string) => void;
 }
 
-export function FavoritesProvider({ children, user, showLoginRequired }: FavoritesProviderProps) {
+export function FavoritesProvider({ children }: FavoritesProviderProps) {
   const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite: toggleFavoriteBase } = useFavorites();
 
   const handleToggleFavorite = useCallback(async (itemType: "library" | "personal", itemId: string) => {
-    if (!user) {
-      showLoginRequired("הוספה למועדפים");
-      return;
-    }
     await toggleFavoriteBase(itemType, itemId);
-  }, [user, showLoginRequired, toggleFavoriteBase]);
+  }, [toggleFavoriteBase]);
 
   const value = useMemo<FavoritesContextType>(() => ({
     favoriteLibraryIds,

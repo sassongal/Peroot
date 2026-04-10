@@ -35,6 +35,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
   const { onUsePrompt, onCopyText } = viewProps;
   const ctx = useLibraryContext();
   const {
+    user,
     favoritePersonalIds,
     handleToggleFavorite,
     bumpPersonalLibraryLastUsed,
@@ -99,6 +100,9 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
   const isDragging = draggingPersonalId === prompt.id;
   const isDragOver = dragOverPersonalId === prompt.id && draggingPersonalId !== prompt.id;
   const isFavorite = favoritePersonalIds.has(prompt.id);
+  const favStarTitle = user
+    ? (isFavorite ? "הסר ממועדפים" : "הוסף למועדפים")
+    : (isFavorite ? "הסר ממועדפים מקומיים" : "הוסף למועדפים במכשיר זה — התחבר לסנכרון בענן");
   const isStyling = editingStylePromptId === prompt.id;
   const styledMarkup = getStyledPromptMarkup(prompt);
   const isSelected = selectedIds.has(prompt.id);
@@ -525,8 +529,8 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                       ? "text-amber-500 hover:bg-amber-500/10"
                       : "text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10"
                   )}
-                  title={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
-                  aria-label={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                  title={favStarTitle}
+                  aria-label={favStarTitle}
                   aria-pressed={isFavorite}
                 >
                   <Star className={cn("w-4 h-4", isFavorite && "fill-amber-500")} />
@@ -662,7 +666,13 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                 <button onClick={() => startEditingPersonalPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Pencil className="w-3 h-3" /> ערוך
                 </button>
-                <button onClick={() => handleToggleFavorite("personal", prompt.id)} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10")}>
+                <button
+                  type="button"
+                  onClick={() => handleToggleFavorite("personal", prompt.id)}
+                  title={favStarTitle}
+                  aria-label={favStarTitle}
+                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10")}
+                >
                   <Star className={cn("w-3 h-3", isFavorite && "fill-yellow-300")} /> מועדף
                 </button>
                 <button onClick={() => { const next = new Set(expandedIds); next.delete(prompt.id); setExpandedIds(next); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/10 text-red-400 text-xs hover:bg-red-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:outline-none ms-auto">

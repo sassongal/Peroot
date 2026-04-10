@@ -33,7 +33,7 @@ export function LibraryProvider({
 }) {
   return (
     <LibraryDataProvider user={user} showLoginRequired={showLoginRequired}>
-      <FavoritesProvider user={user} showLoginRequired={showLoginRequired}>
+      <FavoritesProvider>
         <LibraryUIProvider user={user}>
           {children}
         </LibraryUIProvider>
@@ -95,6 +95,7 @@ export const useLibraryContext = () => {
     deletePersonalCategory: data.deletePersonalCategory,
 
     // --- UI ---
+    user: ui.user,
     viewMode: ui.viewMode,
     setViewMode: ui.setViewMode,
     libraryView: ui.libraryView,

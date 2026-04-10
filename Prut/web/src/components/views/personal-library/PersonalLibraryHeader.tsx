@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import {
     BookOpen, Plus, Star, Pin, LayoutTemplate,
     CheckSquare, Upload, History,
-    Sparkles, Menu
+    Sparkles, Menu, Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -20,10 +21,9 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
   const { handleImportHistory, historyLength } = viewProps;
   const ctx = useLibraryContext();
   const {
+    user,
     setViewMode,
     filteredPersonalLibrary,
-    personalQuery,
-    setPersonalQuery,
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
   } = ctx;
@@ -100,6 +100,27 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           </button>
         </div>
       </div>
+
+      {!user && (
+        <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs text-[var(--text-secondary)] leading-relaxed">
+          <span className="font-medium text-amber-800 dark:text-amber-200">מצב אורח: </span>
+          הפרומפטים האישיים נשמרים במכשיר זה בלבד; פריטים ישנים עלולים להיעלם אחרי כשבוע.
+          {" "}
+          <Link href="/login" className="text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-600 dark:hover:text-amber-200">
+            התחברו
+          </Link>
+          {" "}לסנכרון בענן וגיבוי קבוע.
+        </div>
+      )}
+
+      {user && effectiveFolder === "favorites" && localSearch.trim() !== "" && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-[var(--text-muted)]">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" aria-hidden />
+          <span>
+            בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל הפרומפטים&quot;).
+          </span>
+        </div>
+      )}
 
       {/* Mobile quick tabs — virtual folders + "full library" chip.
           Horizontally scrollable, never wraps, hidden on md+. */}

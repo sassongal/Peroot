@@ -928,10 +928,6 @@ function PageContent() {
   // addPrompt to immediately toggle favorite state, so the star lights
   // up in the library the moment the user hits the star.
   const saveCompletionAsFavorite = useCallback(async () => {
-    if (!user) {
-       showLoginRequired("שמירת מועדפים");
-       return;
-    }
     if (!ps.completion.trim()) return;
     const newId = await addPrompt({
       title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
@@ -951,7 +947,7 @@ function PageContent() {
       // addPrompt returned undefined when a fuzzy duplicate was found.
       // The dedupe toast already fired — no second toast here.
     }
-  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, handleToggleFavorite, showLoginRequired]);
+  }, [ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, handleToggleFavorite]);
 
   const saveAsTemplate = useCallback(() => {
     if (!user) {

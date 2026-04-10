@@ -423,6 +423,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 key={prompt.id}
                 prompt={prompt}
                 isBlurred={isBlurred}
+                guestFavoriteHints={isGuest}
                 isFavorite={favoriteLibraryIds.has(prompt.id)}
                 isExpanded={expandedIds.has(prompt.id)}
                 popularityCount={popularityMap[prompt.id] ?? 0}
