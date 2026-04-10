@@ -47,13 +47,22 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     logger.info('[context/describe-image] processing', { filename: file.name, sizeMb: sizeMb.toFixed(2), mimeType: file.type, tier });
-    const block = await processAttachment({
-      id: crypto.randomUUID(), type: 'image', userId: user.id, tier,
-      buffer, filename: file.name, mimeType: file.type,
-    });
+    let block;
+    try {
+      block = await processAttachment({
+        id: crypto.randomUUID(), type: 'image', userId: user.id, tier,
+        buffer, filename: file.name, mimeType: file.type,
+      });
+    } catch (engineErr) {
+      const msg = engineErr instanceof Error ? engineErr.message : String(engineErr);
+      const stack = engineErr instanceof Error ? engineErr.stack : undefined;
+      logger.error('[context/describe-image] engine error', { msg, stack, filename: file.name, tier });
+      return NextResponse.json({ error: 'שגיאה בעיבוד התמונה' }, { status: 500 });
+    }
     return NextResponse.json({ block });
   } catch (err) {
-    logger.error('[context/describe-image] unhandled error', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error('[context/describe-image] unhandled error', { msg, filename: 'unknown' });
     return NextResponse.json({ error: 'שגיאה בעיבוד התמונה' }, { status: 500 });
   }
 }
