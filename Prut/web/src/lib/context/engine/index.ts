@@ -59,6 +59,7 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
       rawText = '';
     }
   } catch (err) {
+    logger.error('[context-engine] extraction failed', { type: input.type, tier: input.tier, err });
     return failedBlock(id, input, 'extract', err);
   }
 
@@ -85,7 +86,7 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
       imageMimeType,
     });
   } catch (err) {
-    logger.warn('[context-engine] enrich failed — returning warning block', err);
+    logger.error('[context-engine] enrich failed', { type: input.type, tier: input.tier, err });
     return warningBlock(id, input, sha256, rawText, sourceTitle, detectedType, extractMeta, err);
   }
 

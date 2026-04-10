@@ -275,6 +275,23 @@ export function useContextAttachments(tier: Tier = 'free') {
     [updateAttachment]
   );
 
+  const retryAttachment = useCallback(
+    async (id: string) => {
+      const att = attachmentsRef.current.find((a) => a.id === id);
+      if (!att || att.status !== 'error') return;
+
+      // Remove old entry and re-add via the appropriate method
+      setAttachments((prev) => prev.filter((a) => a.id !== id));
+
+      if (att.type === 'url' && att.name) {
+        await addUrl(att.name);
+      }
+      // For file/image we can't retry without the original File object,
+      // so we just clear the error so the user can re-attach.
+    },
+    [addUrl]
+  );
+
   const removeAttachment = useCallback((id: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   }, []);
@@ -313,6 +330,7 @@ export function useContextAttachments(tier: Tier = 'free') {
     addFile,
     addUrl,
     addImage,
+    retryAttachment,
     removeAttachment,
     clearAll,
     getContextPayload,
