@@ -89,6 +89,11 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
     return warningBlock(id, input, sha256, rawText, sourceTitle, detectedType, extractMeta, err);
   }
 
+  // For images, rawText is empty — use the enrichment summary as content
+  if (input.type === 'image' && !rawText && enriched.summary) {
+    rawText = enriched.summary;
+  }
+
   // 4. COMPRESS
   const compressed = compressToLimit(rawText, limits.perAttachment);
 

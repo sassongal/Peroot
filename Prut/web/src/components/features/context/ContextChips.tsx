@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, CheckCircle2, AlertCircle, Zap } from "lucide-react";
 import type { ContextAttachment } from "@/lib/context/types";
 import { AttachmentCard } from "./AttachmentCard";
 
@@ -30,29 +31,46 @@ export function ContextChips({ attachments, onRemove, onRetry, maxFiles = 3, tok
   const errorCount = attachments.filter(a => a.status === "error").length;
 
   return (
-    <div dir="rtl" className="flex flex-col gap-3">
+    <motion.div
+      dir="rtl"
+      className="flex flex-col gap-3"
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Attachment Cards */}
-      <div className="flex flex-col gap-2">
-        {attachments.map((a) => (
-          <AttachmentCard
-            key={a.id}
-            block={a.block}
-            stage={a.stage ?? 'uploading'}
-            title={a.name || a.url || 'attachment'}
-            onRemove={() => onRemove(a.id)}
-            onRetry={onRetry ? () => onRetry(a.id) : undefined}
-          />
-        ))}
-      </div>
+      <AnimatePresence mode="popLayout">
+        <div className="flex flex-col gap-2">
+          {attachments.map((a) => (
+            <AttachmentCard
+              key={a.id}
+              block={a.block}
+              stage={a.stage ?? 'uploading'}
+              title={a.name || a.url || 'attachment'}
+              onRemove={() => onRemove(a.id)}
+              onRetry={onRetry ? () => onRetry(a.id) : undefined}
+            />
+          ))}
+        </div>
+      </AnimatePresence>
 
       {/* Status Summary */}
-      <div className="flex items-center gap-3 text-[10px] flex-wrap">
+      <motion.div
+        className="flex items-center gap-3 text-[10px] flex-wrap"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
         {readyCount > 0 && !isOverLimit && (
-          <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            {readyCount === 1 ? "הקונטקסט נקלט" : `${readyCount} פריטים נקלטו`}
+          <motion.span
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1"
+          >
+            <Zap className="w-3 h-3" />
+            {readyCount === 1 ? "הקונטקסט מוכן" : `${readyCount} פריטים מוכנים`}
             {totalTokens > 0 && ` · ${formatTokenCount(totalTokens)} tokens`}
-          </span>
+          </motion.span>
         )}
 
         {loadingCount > 0 && (
@@ -81,7 +99,7 @@ export function ContextChips({ attachments, onRemove, onRetry, maxFiles = 3, tok
             עד {maxFiles} קבצים · קובץ עד 10MB · תמונה עד 5MB
           </span>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

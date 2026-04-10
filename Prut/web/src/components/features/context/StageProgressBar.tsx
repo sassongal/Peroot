@@ -26,37 +26,71 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
   if (stage === 'error') {
     return (
       <div data-testid="stage-error" className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
-        <X className="w-4 h-4" />
+        <motion.div
+          initial={{ scale: 0, rotate: -90 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+        >
+          <X className="w-4 h-4" />
+        </motion.div>
         <span>לא הצלחנו — נסה שוב?</span>
       </div>
     );
   }
   return (
-    <div className="flex items-center gap-2" dir="rtl">
-      {STAGES.map((s) => {
+    <div className="flex items-center gap-1.5" dir="rtl">
+      {STAGES.map((s, i) => {
         const state = pillState(stage, s.id);
         return (
-          <div
+          <motion.div
             key={s.id}
             data-testid={`stage-pill-${s.id}`}
             data-state={state}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.08, type: 'spring', stiffness: 500, damping: 25 }}
             className={[
-              'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-              state === 'complete' && 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
-              state === 'active'   && 'bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 text-white shadow-md',
+              'relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium overflow-hidden',
+              'transition-all duration-500',
+              state === 'complete' && 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+              state === 'active'   && 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/25',
               state === 'pending'  && 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500',
             ].filter(Boolean).join(' ')}
           >
-            {state === 'complete' && <Check className="w-3 h-3" />}
+            {/* Shimmer sweep on active pill */}
             {state === 'active' && (
-              <motion.span animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                animate={{ x: ['-100%', '200%'] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', repeatDelay: 0.5 }}
+              />
+            )}
+            {state === 'complete' && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+              >
+                <Check className="w-3 h-3" />
+              </motion.span>
+            )}
+            {state === 'active' && (
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
                 <Loader2 className="w-3 h-3" />
               </motion.span>
             )}
-            <span>{s.label}</span>
-          </div>
+            <span className="relative z-10">{s.label}</span>
+          </motion.div>
         );
       })}
+
+      {/* Connecting line between pills */}
+      {stage !== 'ready' && (
+        <div className="absolute inset-0 pointer-events-none" aria-hidden />
+      )}
     </div>
   );
 }
@@ -66,5 +100,4 @@ export function _stagePillTestids() {
   return STAGES.map((s) => `stage-pill-${s.id}`);
 }
 
-// Needed for getAllByTestId in tests
 StageProgressBar.displayName = 'StageProgressBar';

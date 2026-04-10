@@ -47,7 +47,7 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
         >
           <div className="flex items-start justify-between gap-4 p-5 border-b border-zinc-100 dark:border-zinc-800">
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">{d.documentType}</div>
+              <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">{d.documentType}</div>
               <h2 className="font-bold text-lg truncate text-zinc-900 dark:text-zinc-100">{d.title}</h2>
             </div>
             <div className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
 
           <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
             {onRefreshEnrich && (
-              <button onClick={onRefreshEnrich} className="text-sm text-purple-700 dark:text-purple-400 hover:underline">
+              <button onClick={onRefreshEnrich} className="text-sm text-amber-700 dark:text-amber-400 hover:underline">
                 רענן תיאור
               </button>
             )}
