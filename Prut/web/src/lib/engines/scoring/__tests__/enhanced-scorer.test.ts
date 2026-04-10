@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EnhancedScorer } from '../enhanced-scorer';
+import { scoreInput } from '../input-scorer';
 import { CapabilityMode } from '@/lib/capability-mode';
 
 /**
@@ -44,6 +45,20 @@ describe('EnhancedScorer — role detection', () => {
   it('English "You are a senior data analyst" scores full', () => {
     const dim = roleDim('You are a senior data analyst. Analyze the market trends.');
     expect(dim!.score).toBe(dim!.maxScore);
+  });
+});
+
+describe('EnhancedScorer vs scoreInput (shared dimensions)', () => {
+  it('same STANDARD text: weighted input total stays within 28 points of Enhanced total', () => {
+    const text = `אתה מומחה שיווק דיגיטלי עם 10 שנות ניסיון.
+כתוב מייל שיווקי לקהל יעד של מנהלי IT בחברות בינוניות.
+מטרה: להגדיל מכירות ב-20%.
+פורמט: רשימה של 5 נקודות, אורך 300 מילים.
+טון מקצועי וידידותי.
+אל תכלול מונחים טכניים מורכבים.`;
+    const enhanced = EnhancedScorer.score(text, CapabilityMode.STANDARD);
+    const input = scoreInput(text, CapabilityMode.STANDARD);
+    expect(Math.abs(enhanced.total - input.total)).toBeLessThanOrEqual(28);
   });
 });
 

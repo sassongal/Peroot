@@ -31,6 +31,8 @@ import { skill as standardSkill } from './text/standard';
 import { skill as researchSkill } from './text/research';
 import { skill as agentSkill } from './text/agent';
 
+import { getTextQualityGateLines } from '../scoring/prompt-dimensions';
+
 // ── Types ──
 
 export type ExampleCategory =
@@ -480,10 +482,20 @@ export function getMistakesBlock(type: 'image' | 'video' | 'text', platform: str
 
 /**
  * Get platform-specific scoring criteria for injection into quality check.
+ * Text modes prepend the canonical checklist from `prompt-dimensions` (same rubric as EnhancedScorer).
  */
 export function getScoringBlock(type: 'image' | 'video' | 'text', platform: string): string {
   const skills = type === 'image' ? IMAGE_SKILLS : type === 'video' ? VIDEO_SKILLS : TEXT_SKILLS;
   const skill = skills[platform];
+
+  if (type === 'text') {
+    const canonical = getTextQualityGateLines();
+    const extra = skill?.scoringCriteria ?? [];
+    if (canonical.length === 0 && extra.length === 0) return '';
+    const lines = [...canonical, ...extra].map((c, i) => `${i + 1}. ${c}`).join('\n');
+    return `\nUNIFIED PROMPT QUALITY CHECKLIST (matches in-app scoring dimensions):\n${lines}\n`;
+  }
+
   if (!skill?.scoringCriteria || skill.scoringCriteria.length === 0) return '';
 
   const lines = skill.scoringCriteria.map((c, i) => `${i + 1}. ${c}`).join('\n');

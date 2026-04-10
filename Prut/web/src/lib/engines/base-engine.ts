@@ -69,253 +69,6 @@ export const CATEGORY_LIST = [
   "Nonprofit",
 ] as const;
 
-// ── Scoring Dimensions ──
-// Each dimension contributes points. Raw prompts typically hit 1-2 dimensions → 20-40%.
-// Well-engineered prompts hit 5+ dimensions → 70-95%.
-
-const SCORING_DIMENSIONS: {
-  key: string;
-  maxPoints: number;
-  tip: string;
-  test: (text: string, wordCount: number) => number;
-}[] = [
-  {
-    key: "length",
-    maxPoints: 12,
-    tip: "הוסף עוד פרטים והקשר",
-    test: (_text, wc) => {
-      if (wc <= 3) return 0;
-      if (wc <= 6) return 2;
-      if (wc <= 12) return 4;
-      if (wc <= 25) return 7;
-      if (wc <= 50) return 10;
-      return 12;
-    },
-  },
-  {
-    key: "role",
-    maxPoints: 12,
-    tip: "הגדר תפקיד (למשל: ״אתה מומחה שיווק״)",
-    test: (text) => {
-      if (/אתה\s+\S+|you\s+are\s+a|act\s+as|as\s+a\s+\w+\s+(expert|specialist|coach|consultant|writer|designer)/i.test(text)) return 12;
-      if (/מומחה|מנהל|יועץ|כותב|עורך|מתכנת|expert|specialist|coach|consultant/i.test(text)) return 6;
-      return 0;
-    },
-  },
-  {
-    key: "task",
-    maxPoints: 10,
-    tip: "הגדר משימה ברורה (מה בדיוק לעשות)",
-    test: (text) => {
-      const taskVerbs = /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|compare|generate|design|develop/i;
-      if (!taskVerbs.test(text)) return 0;
-      // Bonus for specific task with object
-      if (/כתוב\s+\S+|צור\s+\S+|בנה\s+\S+|write\s+a\s+\S+|create\s+a\s+\S+/i.test(text)) return 10;
-      return 5;
-    },
-  },
-  {
-    key: "context",
-    maxPoints: 12,
-    tip: "ספק הקשר ורקע (למי? למה? מתי?)",
-    test: (text) => {
-      let pts = 0;
-      // Audience/target
-      if (/קהל יעד|לקוחות|משתמשים|audience|target|persona|עבור\s+\S+|ל\S+ים\b|גולשים|עוקבים|מנויים/i.test(text)) pts += 4;
-      // Purpose/goal
-      if (/מטרה|יעד|goal|objective|כדי\s+ל|על\s+מנת\s+ל|purpose|in\s+order\s+to|so\s+that/i.test(text)) pts += 4;
-      // Background/situation
-      if (/רקע|הקשר|מצב|context|background|situation|בגלל|מכיוון|because|since/i.test(text)) pts += 4;
-      return pts;
-    },
-  },
-  {
-    key: "specificity",
-    maxPoints: 10,
-    tip: "הוסף פרטים ספציפיים (מספרים, שמות, דוגמאות)",
-    test: (text) => {
-      let pts = 0;
-      // Numbers/quantities
-      if (/\d+/.test(text)) pts += 3;
-      // Quoted text or examples
-      if (/[""״]|למשל|לדוגמה|for\s+example|e\.g\.|such\s+as/i.test(text)) pts += 4;
-      // Named entities (proper nouns, brands, specific terms)
-      if (/[A-Z][a-z]{2,}/.test(text) || /\b[A-Z]{2,}\b/.test(text)) pts += 3;
-      return Math.min(10, pts);
-    },
-  },
-  {
-    key: "format",
-    maxPoints: 10,
-    tip: "ציין פורמט פלט (רשימה, טבלה, אורך)",
-    test: (text) => {
-      let pts = 0;
-      // Output format specification
-      if (/פורמט|מבנה|טבלה|רשימה|bullet|markdown|json|csv|html/i.test(text)) pts += 5;
-      // Length specification
-      if (/אורך|מילים|שורות|פסקאות|characters|words|sentences|paragraphs|short|long|brief|concise|קצר|ארוך|תמציתי/i.test(text)) pts += 3;
-      // Structure hints
-      if (/כותרת|סעיפים|חלקים|header|section|intro|summary|title|subtitle/i.test(text)) pts += 2;
-      return Math.min(10, pts);
-    },
-  },
-  {
-    key: "constraints",
-    maxPoints: 10,
-    tip: "הגדר מגבלות (מה לא לעשות, טון, שפה)",
-    test: (text) => {
-      let pts = 0;
-      // Negative constraints
-      if (/אל\s+ת|אסור|ללא|בלי|don'?t|avoid|never|without|do\s+not/i.test(text)) pts += 4;
-      // Tone specification
-      if (/טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|חם|professional|friendly|warm|humorous/i.test(text)) pts += 3;
-      // Language/compliance
-      if (/שפה|language|בעברית|באנגלית|in\s+hebrew|in\s+english|רגולציה|compliance/i.test(text)) pts += 3;
-      return Math.min(10, pts);
-    },
-  },
-  {
-    key: "structure",
-    maxPoints: 8,
-    tip: "ארגן את הפרומפט (פסקאות, מספור, הפרדה)",
-    test: (text) => {
-      let pts = 0;
-      // Has line breaks / sections
-      if (/\n/.test(text)) pts += 3;
-      // Has numbered/bulleted lists
-      if (/^\s*[\d•\-\*]\s*/m.test(text)) pts += 3;
-      // Has delimiters or sections
-      if (/---|===|\*\*|##|:$/m.test(text)) pts += 2;
-      return Math.min(8, pts);
-    },
-  },
-  {
-    key: "channel",
-    maxPoints: 8,
-    tip: "ציין ערוץ או פלטפורמה (מייל, אינסטגרם, בלוג)",
-    test: (text) => {
-      if (/מייל|email|landing|דף נחיתה|מודעה|ad|לינקדאין|linkedin|פייסבוק|facebook|אינסטגרם|instagram|טיקטוק|tiktok|sms|וואטסאפ|whatsapp|בלוג|blog|newsletter|ניוזלטר|אתר|website|יוטיוב|youtube|טוויטר|twitter|x\.com|פודקאסט|podcast|וובינר|webinar/i.test(text)) return 8;
-      return 0;
-    },
-  },
-  {
-    key: "examples",
-    maxPoints: 8,
-    tip: "הוסף דוגמאות לפלט הרצוי",
-    test: (text) => {
-      if (/דוגמה לפלט|output\s+example|expected\s+output|כמו\s+זה|like\s+this/i.test(text)) return 8;
-      if (/דוגמה|example|sample|template|תבנית/i.test(text)) return 4;
-      return 0;
-    },
-  },
-];
-
-// ── Visual Scoring Dimensions (IMAGE_GENERATION / VIDEO_GENERATION) ──
-// Total for IMAGE (7 dims, no motion): 10+15+15+12+15+10+10 = 87 → normalised to 100
-// Total for VIDEO (8 dims, incl. motion): 10+15+15+12+15+10+10+13 = 100
-
-const VISUAL_SCORING_DIMENSIONS: {
-  key: string;
-  maxPoints: number;
-  tip: string;
-  videoOnly?: boolean;
-  test: (text: string, wordCount: number) => number;
-}[] = [
-  {
-    key: "length",
-    maxPoints: 10,
-    tip: "הוסף עוד פרטים ותיאורים חזותיים",
-    test: (_text, wc) => {
-      if (wc <= 3) return 0;
-      if (wc <= 6) return 2;
-      if (wc <= 12) return 4;
-      if (wc <= 25) return 7;
-      if (wc <= 50) return 10;
-      return 10;
-    },
-  },
-  {
-    key: "subject",
-    maxPoints: 15,
-    tip: "תאר את הנושא המרכזי בפירוט (מראה, תנוחה, ביטוי)",
-    test: (text) => {
-      let pts = 0;
-      if (/person|woman|man|child|character|portrait|face|figure|אישה|איש|דמות|ילד|פנים/i.test(text)) pts += 5;
-      if (/wearing|dressed|hair|eyes|skin|clothes|suit|dress|לובש|שיער|עיניים|בגד/i.test(text)) pts += 5;
-      if (/car|building|landscape|forest|city|ocean|room|table|product|מכונית|בניין|נוף|יער|עיר|חדר/i.test(text)) pts += 5;
-      return Math.min(15, pts);
-    },
-  },
-  {
-    key: "style",
-    maxPoints: 15,
-    tip: "ציין סגנון אמנותי (צילום, ציור שמן, 3D, אנימה)",
-    test: (text) => {
-      let pts = 0;
-      if (/photo|realistic|illustration|painting|3d|render|anime|watercolor|digital art|concept art|צילום|ציור|איור|תלת-מימד/i.test(text)) pts += 8;
-      if (/style of|בסגנון|aesthetic|art deco|cyberpunk|minimalist|vintage|retro|modern/i.test(text)) pts += 7;
-      return Math.min(15, pts);
-    },
-  },
-  {
-    key: "composition",
-    maxPoints: 12,
-    tip: "הוסף הנחיות קומפוזיציה (זווית מצלמה, מסגור, עדשה)",
-    test: (text) => {
-      let pts = 0;
-      if (/close-up|wide shot|aerial|medium shot|full body|bird's eye|low angle|high angle|dutch|תקריב|זווית|מבט/i.test(text)) pts += 6;
-      if (/rule of thirds|centered|symmetr|diagonal|foreground|background|depth|bokeh|shallow|עומק שדה|רקע/i.test(text)) pts += 6;
-      return Math.min(12, pts);
-    },
-  },
-  {
-    key: "lighting",
-    maxPoints: 15,
-    tip: "תאר תאורה (שעת זהב, סטודיו, ניאון, כיוון האור)",
-    test: (text) => {
-      let pts = 0;
-      if (/golden hour|blue hour|sunset|sunrise|natural light|studio|neon|backlight|rim light|volumetric|שעת זהב|תאורה|אור/i.test(text)) pts += 8;
-      if (/soft|hard|dramatic|warm|cool|diffused|shadow|contrast|high key|low key|רך|חם|קר|דרמטי/i.test(text)) pts += 7;
-      return Math.min(15, pts);
-    },
-  },
-  {
-    key: "color",
-    maxPoints: 10,
-    tip: "ציין פלטת צבעים ואווירה (צבעים ספציפיים, מצב רוח)",
-    test: (text) => {
-      let pts = 0;
-      if (/color|palette|#[0-9a-f]{3,6}|red|blue|green|gold|amber|navy|crimson|emerald|צבע|אדום|כחול|ירוק|זהב/i.test(text)) pts += 5;
-      if (/mood|atmosphere|dramatic|serene|energetic|mysterious|cozy|epic|אווירה|דרמטי|רגוע|מסתורי/i.test(text)) pts += 5;
-      return Math.min(10, pts);
-    },
-  },
-  {
-    key: "quality",
-    maxPoints: 10,
-    tip: "הוסף מילות איכות (4K, masterpiece, professional, photorealistic)",
-    test: (text) => {
-      let pts = 0;
-      if (/4k|8k|hdr|ultra|high quality|detailed|sharp|professional|masterpiece|award/i.test(text)) pts += 5;
-      if (/camera|lens|f\/\d|mm\b|canon|sony|nikon|unreal|octane|v-ray|עדשה|מצלמה/i.test(text)) pts += 5;
-      return Math.min(10, pts);
-    },
-  },
-  {
-    key: "motion",
-    maxPoints: 13,
-    tip: "תאר תנועה (מצלמה, נושא, סביבה)",
-    videoOnly: true,
-    test: (text) => {
-      let pts = 0;
-      if (/dolly|pan|tilt|tracking|orbit|push-in|zoom|crane|handheld|static/i.test(text)) pts += 5;
-      if (/walk|run|turn|raise|lower|spin|jump|fly|float|drift|moves|slides/i.test(text)) pts += 4;
-      if (/wind|rain|particles|dust|smoke|waves|clouds|flow|flutter/i.test(text)) pts += 4;
-      return Math.min(13, pts);
-    },
-  },
-];
-
 export interface PromptScore {
   score: number;
   baseScore: number;
@@ -349,103 +102,57 @@ export abstract class BaseEngine implements PromptEngine {
   }
 
   /**
-   * Scores a prompt across multiple quality dimensions.
-   *
-   * When mode is IMAGE_GENERATION or VIDEO_GENERATION, visual scoring dimensions
-   * are used instead of the standard text/marketing ones.
-   *
-   * Scoring scale (total possible = 100):
-   *   - Raw simple prompts ("כתוב מייל"):         15-30%
-   *   - Basic prompts with some detail:             30-45%
-   *   - Good prompts with context & specifics:      45-65%
-   *   - Strong prompts with role, format, constraints: 65-85%
-   *   - Expert-level engineered prompts:            85-100%
-   */
-  /**
-   * Enhanced scoring — uses the new EnhancedScorer with 15 dimensions for text
-   * and 8 for visual. Returns rich breakdown with matched/missing patterns.
+   * Rich breakdown — same rubric as the improver UI (`prompt-dimensions` / `EnhancedScorer`).
    */
   public static scoreEnhanced(input: string, mode?: CapabilityMode): EnhancedScore {
     return EnhancedScorer.score(input, mode || CapabilityMode.STANDARD);
   }
 
+  /**
+   * Legacy `PromptScore` shape for telemetry and simple displays.
+   * Delegates to `EnhancedScorer` (same 0–100 scale and dimensions as result scoring).
+   */
   public static scorePrompt(input: string, mode?: CapabilityMode): PromptScore {
     const trimmed = input.trim();
-    if (!trimmed) return { score: 0, baseScore: 0, level: 'empty', label: 'חסר', tips: [], usageBoost: 0 };
-
-    const wordCount = trimmed.split(/\s+/).length;
-    const tips: string[] = [];
-    let totalScore = 0;
-
-    const isVisual = mode === CapabilityMode.IMAGE_GENERATION || mode === CapabilityMode.VIDEO_GENERATION;
-    const isVideo = mode === CapabilityMode.VIDEO_GENERATION;
-
-    if (isVisual) {
-      // For image: use first 7 dims (exclude motion), raw max = 87, normalise to 100.
-      // For video: use all 8 dims, raw max = 100.
-      const dims = isVideo
-        ? VISUAL_SCORING_DIMENSIONS
-        : VISUAL_SCORING_DIMENSIONS.filter(d => !d.videoOnly);
-      const rawMax = dims.reduce((sum, d) => sum + d.maxPoints, 0);
-
-      for (const dim of dims) {
-        const pts = dim.test(trimmed, wordCount);
-        totalScore += pts;
-        if (pts < dim.maxPoints / 2) {
-          tips.push(dim.tip);
-        }
-      }
-
-      // Normalise to 100
-      const normalised = rawMax > 0 ? Math.round((totalScore / rawMax) * 100) : 0;
-      const finalScore = Math.min(100, normalised);
-      const usageBoost = wordCount > 40 ? 3 : wordCount > 20 ? 2 : wordCount > 10 ? 1 : 0;
-
-      return {
-        score: finalScore,
-        baseScore: finalScore,
-        level: finalScore >= 65 ? 'high' : finalScore >= 35 ? 'medium' : 'low',
-        label: finalScore >= 65 ? 'חזק' : finalScore >= 35 ? 'בינוני' : 'חלש',
-        tips: tips.slice(0, 3),
-        usageBoost,
-      };
+    if (!trimmed) {
+      return { score: 0, baseScore: 0, level: 'empty', label: 'חסר', tips: [], usageBoost: 0 };
     }
 
-    // Standard text/marketing scoring
-    for (const dim of SCORING_DIMENSIONS) {
-      const pts = dim.test(trimmed, wordCount);
-      totalScore += pts;
-      // Suggest tip if dimension scored less than half its potential
-      if (pts < dim.maxPoints / 2) {
-        tips.push(dim.tip);
-      }
-    }
-
-    // CO-STAR bonus: +5 for Style/Tone/Response format keywords
-    if (/סגנון|style|טון|tone|פורמט\s*(תגובה|פלט)|response\s*format/i.test(trimmed)) {
-      totalScore += 5;
-    }
-    // RISEN bonus: +5 for End Goal/Steps/Narrowing patterns
-    if (/מטרה\s*סופית|end\s*goal|צעדים|steps|מיקוד|narrowing|תוצאה\s*רצויה|desired\s*outcome/i.test(trimmed)) {
-      totalScore += 5;
-    }
-
-    // Cap at 100
-    const finalScore = Math.min(100, totalScore);
-
-    // Show top 3 most impactful tips only
-    const limitedTips = tips.slice(0, 3);
-
-    // Determine usage boost based on word count (encourages detailed prompts)
+    const m = mode ?? CapabilityMode.STANDARD;
+    const enhanced = EnhancedScorer.score(trimmed, m);
+    const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
     const usageBoost = wordCount > 40 ? 3 : wordCount > 20 ? 2 : wordCount > 10 ? 1 : 0;
 
+    let tips = enhanced.topWeaknesses.slice(0, 3);
+    if (tips.length === 0 && enhanced.breakdown.length > 0) {
+      const weak = [...enhanced.breakdown]
+        .filter((d) => d.score < d.maxScore / 2)
+        .sort((a, b) => b.maxScore - b.score - (a.maxScore - a.score));
+      tips = weak.slice(0, 3).map((d) => d.tip);
+    }
+    if (tips.length === 0 && enhanced.breakdown.length > 0) {
+      tips = [...enhanced.breakdown]
+        .sort((a, b) => b.maxScore - b.score - (a.maxScore - a.score))
+        .slice(0, 3)
+        .map((d) => d.tip);
+    }
+
+    let level: PromptScore['level'];
+    if (enhanced.level === 'elite' || enhanced.level === 'high') {
+      level = 'high';
+    } else if (enhanced.level === 'medium') {
+      level = 'medium';
+    } else {
+      level = 'low';
+    }
+
     return {
-        score: finalScore,
-        baseScore: finalScore,
-        level: finalScore >= 70 ? 'high' : finalScore >= 40 ? 'medium' : 'low',
-        label: finalScore >= 70 ? 'חזק' : finalScore >= 40 ? 'בינוני' : 'חלש',
-        tips: limitedTips,
-        usageBoost,
+      score: enhanced.total,
+      baseScore: enhanced.total,
+      level,
+      label: enhanced.label,
+      tips,
+      usageBoost,
     };
   }
 

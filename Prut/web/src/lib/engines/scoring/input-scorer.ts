@@ -14,9 +14,54 @@
  *      internal contradictions are penalized rather than rewarded.
  *
  * Used by `HomeClient` / `PromptInput` for the Live Input Score pill.
- * `BaseEngine.scorePrompt` is kept untouched for telemetry compatibility.
+ * Dimension scores align with `prompt-dimensions` / `EnhancedScorer` where keys match.
  */
 import { CapabilityMode } from '@/lib/capability-mode';
+import {
+  parse,
+  type Parsed,
+  hasContradictions,
+  countBuzzwords,
+  hasMeasurableQuantity,
+  hasExampleBlock,
+  hasRoleStatement,
+  hasRoleMention,
+  hasTaskVerb,
+  hasTaskVerbWithObject,
+  hasOutputFormat,
+  hasLengthSpec,
+  hasNegativeConstraints,
+  hasLooseNumber,
+  hasSpecificityProperNouns,
+  hasStructure,
+  hasHedges,
+  hasBuzzwords,
+  hasSourcesRequirement,
+  hasMethodology,
+  hasConfidenceProtocol,
+  hasFalsifiability,
+  hasInfoGaps,
+  hasMECE,
+  hasToolsSpec,
+  hasBoundaries,
+  hasInputsOutputs,
+  hasPolicies,
+  hasFailureModes,
+  hasImageSubject,
+  hasImageStyle,
+  hasImageComposition,
+  hasAspectRatio,
+  hasImageLighting,
+  hasImageColor,
+  hasImageQuality,
+  hasImageNegative,
+  hasVideoMotion,
+} from './prompt-parse';
+import {
+  scoreEnhancedTextDimensions,
+  scoreEnhancedVisualDimensions,
+  type DimensionScoreChunk,
+} from './prompt-dimensions';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,349 +98,19 @@ export interface InputScore {
   mode: CapabilityMode;
 }
 
-// ---------------------------------------------------------------------------
-// Shared parsers / signal detectors
-// ---------------------------------------------------------------------------
-
-/**
- * Section types detectable via markdown headings or labeled lines.
- * Acts as a structural signal that *supplements* the existing flat-text
- * regex detectors — never replaces them. Used to catch false negatives when
- * a prompt is well-structured but uses wording that loose regex missed.
- */
-type SectionType =
-  | 'role'
-  | 'task'
-  | 'context'
-  | 'audience'
-  | 'goal'
-  | 'format'
-  | 'constraints'
-  | 'examples'
-  | 'sources'
-  | 'method'
-  | 'confidence'
-  | 'falsifiability'
-  | 'info_gaps'
-  | 'tools'
-  | 'boundaries'
-  | 'inputs_outputs'
-  | 'policies'
-  | 'failure_modes';
-
-type Parsed = {
-  text: string;
-  lower: string;
-  wordCount: number;
-  lines: string[];
-  sections: Set<SectionType>;
-};
-
-// Heading line:   "## Examples", "### דוגמאות", "# Tools"
-const HEADING_RE = /(?:^|\n)\s*#{1,6}\s+([^\n]+)/g;
-// Label line:     "תפקיד:", "Examples:", "Tools —", "מטרה –"
-const LABEL_RE = /(?:^|\n)\s*([\p{L}][\p{L}\p{Zs}_/\-]{1,40}?)\s*[:：\-–—]\s+/gu;
-
-// Keyword → section type mapping. Each value is an array of lowercase hebrew/
-// english substrings that, if present in the heading/label, mark that section.
-const SECTION_KEYWORDS: Array<[SectionType, RegExp]> = [
-  ['role', /\b(role|persona|identity)\b|תפקיד|פרסונה|זהות/i],
-  ['task', /\b(task|mission|objective)\b|משימה|מטלה|דרישה/i],
-  ['audience', /\b(audience|target|readers?)\b|קהל\s?יעד|קהל|לקוחות/i],
-  ['goal', /\b(goal|objective|purpose)\b|מטרה|יעד/i],
-  ['context', /\b(context|background|situation)\b|הקשר|רקע|סיטואציה/i],
-  ['format', /\b(format|structure|output|response\s*format|schema)\b|פורמט|מבנה\s+פלט|פלט/i],
-  ['constraints', /\b(constraints?|limits?|do\s*not|don'?ts?|restrictions?)\b|מגבלות|אילוצים|איסורים|הגבלות|כללים\s+שליליים/i],
-  ['examples', /\b(examples?|samples?|few[-\s]?shot|sample\s+output|demonstrations?)\b|דוגמה|דוגמאות|few.?shot/i],
-  ['sources', /\b(sources?|citations?|references?|bibliography)\b|מקורות|ציטוטים|ביבליוגרפיה|דרישות\s+מקור/i],
-  ['method', /\b(method(ology)?|steps?|approach|framework|protocol|procedure)\b|מתודולוגיה|שלבים|גישה|תהליך|פרוטוקול/i],
-  ['confidence', /\b(confidence|certainty|reliability\s+score)\b|ביטחון|ודאות|מהימנות/i],
-  ['falsifiability', /\b(falsifiability|counter[-\s]?examples?|disconfirmation)\b|הפרכה|ניפוץ/i],
-  ['info_gaps', /\b(info(rmation)?\s*gaps?|unknowns?|missing\s+data|open\s+questions?)\b|פערי\s?מידע|חוסרי\s?מידע/i],
-  ['tools', /\b(tools?|apis?|functions?|integrations?|capabilities)\b|כלים|יכולות|ממשקים/i],
-  ['boundaries', /\b(boundaries|scope|escalation|handoff|out\s+of\s+scope)\b|גבולות|תחום|העברה/i],
-  ['inputs_outputs', /\b(input\/output|i\/o|inputs?|outputs?|schema|signature|contract)\b|קלט\/?פלט|קלט|סכמה/i],
-  ['policies', /\b(polic(y|ies)|guidelines?|rules?|guardrails?)\b|מדיניות|הנחיות|חוקים/i],
-  ['failure_modes', /\b(failure\s*modes?|errors?|edge\s*cases?|exceptions?|retries?)\b|מצבי\s?כשל|שגיאות|מקרי\s?קצה|חריגים/i],
-];
-
-/**
- * Extract structural sections from a prompt. Detects both markdown headings
- * (`## Examples`) and labeled lines (`דוגמה:`, `Tools —`). Returns a Set of
- * detected section types. O(n) over the text; safe for live scoring.
- */
-function extractSections(text: string): Set<SectionType> {
-  const found = new Set<SectionType>();
-  if (!text) return found;
-
-  const tryMatch = (label: string) => {
-    for (const [type, re] of SECTION_KEYWORDS) {
-      if (found.has(type)) continue;
-      if (re.test(label)) found.add(type);
-    }
-  };
-
-  // Markdown headings
-  for (const m of text.matchAll(HEADING_RE)) {
-    tryMatch(m[1]);
+function buildSharedChunkMap(
+  mode: CapabilityMode,
+  p: Parsed
+): Map<string, DimensionScoreChunk> {
+  const m = new Map<string, DimensionScoreChunk>();
+  if (mode === CapabilityMode.IMAGE_GENERATION || mode === CapabilityMode.VIDEO_GENERATION) {
+    scoreEnhancedVisualDimensions(p.text, p.wordCount, mode === CapabilityMode.VIDEO_GENERATION).forEach(
+      (c) => m.set(c.key, c)
+    );
+  } else {
+    scoreEnhancedTextDimensions(p.text, p.wordCount).forEach((c) => m.set(c.key, c));
   }
-
-  // Label-colon lines (only at line start, so "דוגמה: foo" matches but
-  // mid-sentence "כמו למשל: foo" does not)
-  for (const m of text.matchAll(LABEL_RE)) {
-    tryMatch(m[1]);
-  }
-
-  return found;
-}
-
-function parse(text: string): Parsed {
-  const trimmed = text.trim();
-  return {
-    text: trimmed,
-    lower: trimmed.toLowerCase(),
-    wordCount: trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0,
-    lines: trimmed.split(/\n+/).filter((l) => l.trim().length > 0),
-    sections: extractSections(trimmed),
-  };
-}
-
-/**
- * Structural role: requires `אתה <noun>` or `you are <noun>` at the start of a
- * line/sentence, not just anywhere. "אתה יודע ש..." should NOT match.
- */
-const HEBREW_ROLE_RE = /(?:^|\n|\.\s|:\s)אתה\s+([א-ת]{3,}(?:\s+[א-ת]+){0,3})/;
-const ENGLISH_ROLE_RE = /(?:^|\n|\.\s|:\s)you\s+are\s+(?:an?\s+)?([a-z]+(?:\s+[a-z]+){0,3})/i;
-
-function hasRoleStatement(p: Parsed): boolean {
-  return HEBREW_ROLE_RE.test(p.text) || ENGLISH_ROLE_RE.test(p.text);
-}
-
-function hasRoleMention(p: Parsed): boolean {
-  if (p.sections.has('role')) return true;
-  return /מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|סופר|חוקר|מעצב|אסטרטג|יועצת|מנהלת|אדריכל|רופא|עורך[-\s]דין|expert|specialist|analyst|consultant|writer|engineer|developer|designer|researcher|strategist|marketer|advisor|adviser|manager|director|scientist|doctor|lawyer|architect|editor|teacher|coach|copywriter/i.test(
-    p.text
-  );
-}
-
-const TASK_VERBS_RE =
-  /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|חקור|בצע|הסבר|תאר|פרט|סקור|בדוק|יישם|תעד|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|analyse|compare|generate|design|research|explain|describe|list|outline|review|evaluate|assess|debug|refactor|document|test|implement|investigate|propose|recommend|optimize/i;
-
-function hasTaskVerb(p: Parsed): boolean {
-  return TASK_VERBS_RE.test(p.text);
-}
-
-function hasTaskVerbWithObject(p: Parsed): boolean {
-  return /(?:כתוב|צור|בנה|נסח|נתח|חקור|השווה|הסבר|תאר|סקור|בדוק|יישם)\s+\S{3,}/i.test(p.text) ||
-    /(?:write|create|build|analy[sz]e|research|compare|explain|describe|outline|review|evaluate|assess|refactor|implement|investigate|generate|design|draft|summari[sz]e|translate|document|test|optimi[sz]e|propose|recommend)\s+(?:an?\s+|the\s+)?\S{3,}/i.test(p.text);
-}
-
-function hasOutputFormat(p: Parsed): boolean {
-  if (p.sections.has('format')) return true;
-  return /פורמט|מבנה|טבלה|רשימה|json|csv|markdown|bullet|כותרת|סעיפים|פסקאות|format|structure|table|list/i.test(
-    p.text
-  );
-}
-
-function hasLengthSpec(p: Parsed): boolean {
-  return /\d+\s*(מילים|שורות|נקודות|פסקאות|עמודים|פריטים|words|sentences|lines|paragraphs|pages|chars|characters|tokens|bullets|items)|קצר|ארוך|מפורט|תמציתי|short|long|lengthy|detailed|verbose|brief|concise/i.test(
-    p.text
-  );
-}
-
-function hasNegativeConstraints(p: Parsed): boolean {
-  if (p.sections.has('constraints')) return true;
-  return /אל\s+ת|ללא|בלי|אסור|אין\s+ל|avoid|don['']?t|do\s+not|never|without/i.test(p.text);
-}
-
-const TASK_QTY_RE =
-  /\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|עמודים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters|tokens|pages|sections)/i;
-
-function hasMeasurableQuantity(p: Parsed): boolean {
-  return TASK_QTY_RE.test(p.text);
-}
-
-function hasLooseNumber(p: Parsed): boolean {
-  return /\d+/.test(p.text) && !TASK_QTY_RE.test(p.text);
-}
-
-function hasExampleBlock(p: Parsed): boolean {
-  // Section heading like "## דוגמאות" or "### Examples"
-  if (p.sections.has('examples')) return true;
-  // Multi-line example, quoted block, or an explicit "דוגמה:" on its own line
-  if (/["""״].{10,}["""״]/.test(p.text)) return true;
-  if (/(?:^|\n)\s*(?:דוגמה|לדוגמה|example|e\.g\.)\s*[:：]/i.test(p.text)) return true;
-  return false;
-}
-
-function hasSpecificityProperNouns(p: Parsed): boolean {
-  // Proper nouns (English caps) or quoted names
-  return /\b[A-Z][a-z]{2,}\b/.test(p.text) || /["""״].{2,}["""״]/.test(p.text);
-}
-
-function hasStructure(p: Parsed): boolean {
-  // Line breaks, bullet markers, headings
-  if (p.lines.length >= 3) return true;
-  return /(?:^|\n)\s*(?:[-*•]|\d+\.)\s+/.test(p.text);
-}
-
-const BUZZWORDS_RE =
-  /איכותי|חדשני|מעולה|מצוין|פורץ\s+דרך|מהפכני|מתקדם|ברמה\s+(?:עולמית|גבוהה)|באופן\s+מקצועי\s+ומקיף|תוכן\s+איכותי\s+ומעולה|world[-\s]?class|cutting[-\s]?edge|state[-\s]?of[-\s]?the[-\s]?art|next[-\s]?gen|premium|amazing|revolutionary|innovative|disruptive|game[-\s]?changing|best[-\s]?in[-\s]?class|top[-\s]?tier|outstanding|superior|excellent|unparalleled|seamless|robust|powerful|leading/i;
-
-// Global-flag version for counting all matches
-const BUZZWORDS_RE_G = new RegExp(BUZZWORDS_RE.source, 'ig');
-
-function hasBuzzwords(p: Parsed): boolean {
-  return BUZZWORDS_RE.test(p.text);
-}
-
-/** Count total buzzword matches for graduated penalties. */
-function countBuzzwords(p: Parsed): number {
-  const matches = p.text.match(BUZZWORDS_RE_G);
-  return matches ? matches.length : 0;
-}
-
-function hasHedges(p: Parsed): boolean {
-  return /אולי|אפשר|אם\s+אפשר|בערך|נדמה|ייתכן|maybe|perhaps|possibly|probably|might|could\s+be|somewhat|kind\s+of|sort\s+of|i\s+think|i\s+guess|it\s+seems/i.test(
-    p.text
-  );
-}
-
-// Contradiction pairs: [signalA, signalB, label]. Any prompt that hits both
-// sides of a pair is internally inconsistent. Kept in sync with
-// enhanced-scorer.ts so STANDARD scoring is consistent across both engines.
-const CONTRADICTION_PAIRS: Array<[RegExp, RegExp, string]> = [
-  // brevity + "no table" + "in a table"
-  [/(?:בלי|ללא|without|no)\s*טבלה|no\s+table/i, /בטבלה|in\s+a?\s*table|table\s+format/i, 'no-table vs in-a-table'],
-  // "no list" + "list of"
-  [/(?:בלי|ללא|no|without)\s*(?:רשימ|list|bullets)/i, /רשימה\s+של|list\s+of|bullet\s+points/i, 'no-list vs list-of'],
-  // "concise/brief" + "extensive/comprehensive/long"
-  [/\b(?:קצר|תמציתי|concise|brief)\b/i, /\b(?:ארוך|מפורט\s+מאוד|extensive|comprehensive|long)\b/i, 'concise vs long'],
-];
-
-function hasContradictions(p: Parsed): boolean {
-  // Explicit: "short" + a large word-count target (Hebrew OR English)
-  const isShort = /קצר|תמציתי|קצרצר|short|brief|concise|terse/i.test(p.text);
-  const longNumberMatch = p.text.match(/(\d{3,})\s*(מילים|words)/i);
-  if (isShort && longNumberMatch) {
-    const n = parseInt(longNumberMatch[1], 10);
-    if (n >= 500) return true;
-  }
-  // Direct contradiction: "בלי X ... חייב X" / "without X ... must X"
-  if (/ללא\s+(\w+)[\s\S]*חייב\s+\1/i.test(p.text)) return true;
-  if (/without\s+(\w+)[\s\S]*must\s+\1/i.test(p.text)) return true;
-  // Expanded pair list
-  for (const [a, b] of CONTRADICTION_PAIRS) {
-    if (a.test(p.text) && b.test(p.text)) return true;
-  }
-  return false;
-}
-
-// Research-mode signals
-function hasSourcesRequirement(p: Parsed): boolean {
-  if (p.sections.has('sources')) return true;
-  return /מקורות|צטט|ציטוט|cite|citation|url|reference|בבליוגרפי|אימות|fact.?check|verify|verification/i.test(
-    p.text
-  );
-}
-
-function hasMethodology(p: Parsed): boolean {
-  if (p.sections.has('method')) return true;
-  return /שלבים|מתודולוגיה|framework|steps|method|גישה|תהליך|protocol|procedure/i.test(p.text);
-}
-
-function hasConfidenceProtocol(p: Parsed): boolean {
-  if (p.sections.has('confidence')) return true;
-  return /confidence|ביטחון|רמת\s+ודאות|ודאות|certainty|probability|likelihood/i.test(p.text);
-}
-
-function hasFalsifiability(p: Parsed): boolean {
-  if (p.sections.has('falsifiability')) return true;
-  return /יפריך|מפריך|falsif|counter[-\s]?example|מה\s+(לא\s+)?נכון|disconfirm/i.test(p.text);
-}
-
-function hasInfoGaps(p: Parsed): boolean {
-  if (p.sections.has('info_gaps')) return true;
-  return /פערי?\s+מידע|info\s+gaps?|unknowns?|חסר\s+מידע|missing\s+data|data\s+gap/i.test(p.text);
-}
-
-function hasMECE(p: Parsed): boolean {
-  return /mece|ממצה\s+וזרה|mutually\s+exclusive|collectively\s+exhaustive/i.test(p.text);
-}
-
-// Agent-builder signals
-function hasToolsSpec(p: Parsed): boolean {
-  if (p.sections.has('tools')) return true;
-  return /כלים|tools|api|integration|function\s+calling|ממשק/i.test(p.text);
-}
-
-function hasBoundaries(p: Parsed): boolean {
-  if (p.sections.has('boundaries')) return true;
-  return /גבולות|boundary|boundaries|scope|escalat|fallback|handoff|העברה/i.test(p.text);
-}
-
-function hasInputsOutputs(p: Parsed): boolean {
-  if (p.sections.has('inputs_outputs')) return true;
-  return /קלט|פלט|inputs?|outputs?|schema|מבנה\s+תשובה|response\s+format/i.test(p.text);
-}
-
-function hasPolicies(p: Parsed): boolean {
-  if (p.sections.has('policies')) return true;
-  return /מדיניות|policy|policies|rules|חוקים|guidelines|הנחיות/i.test(p.text);
-}
-
-function hasFailureModes(p: Parsed): boolean {
-  if (p.sections.has('failure_modes')) return true;
-  return /כשל|שגיאה|failure|error|edge\s+case|מקרי\s+קצה|exception/i.test(p.text);
-}
-
-// Image/Video signals
-function hasImageSubject(p: Parsed): boolean {
-  return p.wordCount >= 3 && /\b([א-ת]{3,}|[A-Za-z]{3,})\b/.test(p.text);
-}
-
-function hasImageStyle(p: Parsed): boolean {
-  return /סגנון|מינימליסטי|ריאליסטי|אנימציה|illustration|painting|photography|render|3d|cinematic|cartoon|anime|watercolor|oil|sketch|digital\s+art|סטודיו/i.test(
-    p.text
-  );
-}
-
-function hasImageComposition(p: Parsed): boolean {
-  return /קומפוזיציה|close[-\s]?up|wide\s+shot|portrait|landscape|low\s+angle|high\s+angle|symmetry|rule\s+of\s+thirds|מסגור|מרחק|זווית/i.test(
-    p.text
-  );
-}
-
-function hasAspectRatio(p: Parsed): boolean {
-  return /\b\d{1,2}:\d{1,2}\b|aspect|יחס\s+גובה|ריבוע|פורטרט|landscape|square/i.test(p.text);
-}
-
-function hasImageLighting(p: Parsed): boolean {
-  return /תאורה|lighting|soft\s+light|hard\s+light|golden\s+hour|rim\s+light|rembrandt|ambient|rim|backlit|studio\s+light|קרני\s+שמש|שקיעה|זריחה/i.test(
-    p.text
-  );
-}
-
-function hasImageColor(p: Parsed): boolean {
-  return /צבע|גוון|פלטה|palette|monochrom|pastel|vibrant|muted|warm|cool|black\s+and\s+white|זהב|כסף|אדום|כחול|ירוק/i.test(
-    p.text
-  );
-}
-
-function hasImageQuality(p: Parsed): boolean {
-  return /4k|8k|hd|hyper[-\s]?real|ultra\s+detailed|sharp|photorealistic|high\s+detail|רזולוציה|חדות|איכות\s+גבוהה/i.test(
-    p.text
-  );
-}
-
-function hasImageNegative(p: Parsed): boolean {
-  return /ללא|בלי|avoid|no\s+\w+|negative\s+prompt|exclude/i.test(p.text);
-}
-
-function hasVideoMotion(p: Parsed): boolean {
-  return /תנועה|מצלמה\s+נעה|pan|tilt|zoom|dolly|tracking|motion|movement|flying|running|drone|סלואו\s?מושן|slow\s?motion/i.test(
-    p.text
-  );
+  return m;
 }
 
 // ---------------------------------------------------------------------------
@@ -1113,15 +828,26 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
     };
   }
 
-  // Score every dimension in the profile
+  // Score every dimension — prefer shared chunks (aligned with EnhancedScorer) when key exists
   const breakdown: InputScoreDimension[] = [];
   let totalRaw = 0;
   const strengths: string[] = [];
+  const chunkMap = buildSharedChunkMap(mode, p);
 
   for (const { key, weight } of profile) {
     const dim = DIMS[key];
     if (!dim) continue;
-    const result = dim.test(p);
+    const shared = chunkMap.get(key);
+    let result: { ratio: number; matched: string[]; missing: string[] };
+    if (shared && shared.maxPoints > 0) {
+      result = {
+        ratio: shared.score / shared.maxPoints,
+        matched: shared.matched,
+        missing: shared.missing,
+      };
+    } else {
+      result = dim.test(p);
+    }
     const score = Math.round(result.ratio * weight * 10) / 10;
     totalRaw += score;
     breakdown.push({

@@ -2,12 +2,11 @@
 
 import { useLibraryContext } from "@/context/LibraryContext";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS } from "@/lib/constants";
-import { BookOpen, Star, Search, CheckSquare, Square, Plus, Copy, FolderInput, X, Sparkles, ImageIcon, ArrowRight, Lock, ChevronDown, ChevronUp, ChevronLeft, ChevronsLeft, ChevronsRight, TrendingUp, Rocket, PenTool, Settings, Code, Sparkles as SparklesIcon } from "lucide-react";
+import { BookOpen, Star, Search, CheckSquare, Plus, FolderInput, X, Sparkles, ArrowRight, Lock, ChevronLeft, ChevronsLeft, ChevronsRight, TrendingUp, Rocket, PenTool, Settings, Code, Sparkles as SparklesIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
-import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { useState, useEffect, useMemo } from "react";
 import { exportPromptAsImage } from "@/lib/export-prompt-image";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
@@ -196,8 +195,10 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
-  // Reset to page 1 when filters change
-  useEffect(() => { setCurrentPage(1); }, [libraryQuery, libraryView, selectedCapabilityFilter, activeCollection]);
+  // Reset to page 1 when filters change (defer to satisfy react-hooks/set-state-in-effect)
+  useEffect(() => {
+    queueMicrotask(() => setCurrentPage(1));
+  }, [libraryQuery, libraryView, selectedCapabilityFilter, activeCollection]);
 
   const pagePrompts = useMemo(() => {
     const start = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
@@ -675,6 +676,8 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               <X className="w-6 h-6" />
             </button>
             <div className="max-w-4xl max-h-[85vh] w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              {/* Remote / data-URL previews — next/image domains not guaranteed */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={lightboxImage.url}
                 alt={`דוגמה: ${lightboxImage.title}`}

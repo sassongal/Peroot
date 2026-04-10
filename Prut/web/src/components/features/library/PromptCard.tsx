@@ -219,6 +219,7 @@ export function PromptCard({
               onClick={() => onImageClick?.(prompt.preview_image_url!, prompt.title)}
               className="relative w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden border border-[var(--glass-border)] group/img cursor-zoom-in"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element -- library preview URLs vary; lazy native img */}
               <img
                 src={prompt.preview_image_url}
                 alt={`דוגמה: ${prompt.title}`}

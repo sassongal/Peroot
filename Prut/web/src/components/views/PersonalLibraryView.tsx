@@ -23,8 +23,6 @@ interface PersonalLibraryViewProps {
   historyLength: number;
 }
 
-const PAGE_SIZE = 15;
-
 export function PersonalLibraryView({
     onUsePrompt,
     onCopyText,
@@ -35,13 +33,11 @@ export function PersonalLibraryView({
 
   const {
     filteredPersonalLibrary,
-    personalView,
     setPersonalView,
     personalQuery,
     setPersonalQuery,
     personalSort,
     setPersonalSort,
-    newPersonalCategory,
     setNewPersonalCategory,
     addPersonalCategory,
     personalCategories,
@@ -183,8 +179,15 @@ export function PersonalLibraryView({
 
   // ─── Effects ──────────────────────────────────────────────────────────────
 
-  useEffect(() => { setSelectedIds(new Set()); setSelectionMode(false); }, [effectiveFolder]);
-  useEffect(() => { setLocalPage(1); }, [effectiveFolder, personalQuery, selectedCapabilityFilter]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+    });
+  }, [effectiveFolder]);
+  useEffect(() => {
+    queueMicrotask(() => setLocalPage(1));
+  }, [effectiveFolder, personalQuery, selectedCapabilityFilter]);
   useEffect(() => {
     const handleClick = () => { setOpenMenuId(null); setFolderContextMenu(null); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); };
     document.addEventListener("click", handleClick);

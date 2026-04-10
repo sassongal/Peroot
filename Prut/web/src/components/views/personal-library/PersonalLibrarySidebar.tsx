@@ -33,7 +33,6 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
     effectiveFolder,
     folderCounts,
     allDisplayItems,
-    sidebarOpen,
     setSidebarOpen,
     showNewFolderInput,
     setShowNewFolderInput,

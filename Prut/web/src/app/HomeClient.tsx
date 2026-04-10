@@ -339,13 +339,16 @@ function PageContent() {
     }
   }, [ps.error, user]);
 
-  const showLoginRequired = (feature: string, message?: string) => {
-    setLoginRequiredConfig({
-      feature,
-      message: message || t.home.login_required_msg.replace('{feature}', feature)
-    });
-    setIsLoginRequiredModalOpen(true);
-  };
+  const showLoginRequired = useCallback(
+    (feature: string, message?: string) => {
+      setLoginRequiredConfig({
+        feature,
+        message: message || t.home.login_required_msg.replace("{feature}", feature),
+      });
+      setIsLoginRequiredModalOpen(true);
+    },
+    [t.home.login_required_msg]
+  );
 
   // Voice interim text — PromptInput reports it so scoring reflects what the
   // user actually sees (inputVal + interimResult) during voice recording.
@@ -359,13 +362,13 @@ function PageContent() {
   const debouncedInput = useDebouncedValue(scoringText, 300);
   const debouncedCompletion = useDebouncedValue(ps.completion, 200);
 
+  /** Telemetry + result comparison: same `EnhancedScorer` rubric as completion (via `BaseEngine.scorePrompt`). */
   const inputScore = useMemo(
     () => BaseEngine.scorePrompt(debouncedInput, ps.selectedCapability),
     [debouncedInput, ps.selectedCapability]
   );
   // Live, mode-aware input score — drives the pill + breakdown drawer in
-  // PromptInput. Separate from `inputScore` (which is kept only for telemetry
-  // at trackEnhanceComplete and for analytic score tracking).
+  // PromptInput (`scoreInput` applies mode weights on shared dimensions).
   const rawInputScore = useMemo(
     () => scoreInput(debouncedInput, ps.selectedCapability),
     [debouncedInput, ps.selectedCapability]
@@ -814,7 +817,7 @@ function PageContent() {
       logger.error("[share] Error:", error);
       toast.error("שגיאה בשיתוף");
     }
-  }, [user, ps.completion, ps.input, ps.selectedCategory, ps.selectedCapability]);
+  }, [user, ps.completion, ps.input, ps.selectedCategory, ps.selectedCapability, showLoginRequired]);
 
   // Track where user came from so they can go back
   const [previousView, setPreviousView] = useState<string | null>(null);
@@ -899,7 +902,7 @@ function PageContent() {
     });
     recordUsageSignal("save", item.enhanced);
     toast.success("נשמר לספריה האישית!");
-  }, [user, addPrompt]);
+  }, [user, addPrompt, showLoginRequired]);
 
   const saveCompletionToPersonal = useCallback(() => {
     if (!user) {
@@ -919,7 +922,7 @@ function PageContent() {
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
     toast.success("נשמר לספריה האישית!");
-  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
+  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, showLoginRequired]);
 
   // Save-and-favorite: one-tap action that saves the current completion
   // to the personal library AND marks it as a favorite. This is the
@@ -978,7 +981,7 @@ function PageContent() {
     });
     recordUsageSignal("save", ps.completion);
     toast.success(`תבנית נשמרה עם ${variables.length} משתנים!`);
-  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt]);
+  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, showLoginRequired]);
 
   const handleImportHistory = useCallback(async () => {
      if (!user) {
@@ -997,7 +1000,7 @@ function PageContent() {
      }));
      await addPrompts(itemsToAdd);
      toast.success("כל ההיסטוריה יובאה!");
-  }, [user, history, addPrompts]);
+  }, [user, history, addPrompts, showLoginRequired]);
 
   const handleOnboardingComplete = useCallback(async () => {
       try {

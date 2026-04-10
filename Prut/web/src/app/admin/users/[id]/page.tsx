@@ -181,7 +181,6 @@ export default function UserDetailPage() {
   const [historyOffset, setHistoryOffset] = useState(0);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set());
 
   // Activity load-more
@@ -206,7 +205,6 @@ export default function UserDetailPage() {
         setHistory(json.recentHistory);
         setHistoryOffset(json.recentHistory.length);
         setHistoryTotal(json.historyCount ?? json.recentHistory.length);
-        setHistoryLoaded(true);
       }
     } catch (err) {
       logger.error(err);

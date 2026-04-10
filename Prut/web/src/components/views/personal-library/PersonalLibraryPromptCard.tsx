@@ -3,18 +3,18 @@
 import {
     Star, ArrowRight, Plus, Copy, Pencil, Check, X,
     Trash2, CheckSquare, Square, Tag, Download,
-    FolderInput, Upload, Pin, History,
+    FolderInput, Pin, History,
     ChevronDown, ChevronLeft, ChevronRight, Folder,
     MoreHorizontal, Link2
 } from "lucide-react";
 import {
-    Bold, Italic, Type, Eraser, Maximize2, Minimize2, Hash, AtSign, Wand2
+    Type, Eraser, Maximize2, Minimize2, Wand2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { PersonalPrompt } from "@/lib/types";
 import { toast } from "sonner";
-import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml, stripStyleTokens } from "@/lib/text-utils";
+import { STYLE_TEXT_COLORS, STYLE_HIGHLIGHT_COLORS, toStyledHtml } from "@/lib/text-utils";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { DateBadge } from "@/components/ui/DateBadge";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
@@ -63,7 +63,6 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
     togglePin,
     deletePrompts,
     movePrompts,
-    personalCategories,
   } = ctx;
 
   const { presets, addPreset, deletePreset } = usePresets();

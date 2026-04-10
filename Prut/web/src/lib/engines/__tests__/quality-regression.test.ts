@@ -25,6 +25,7 @@ import {
   getVideoSkill,
   type PlatformSkill,
 } from '@/lib/engines/skills';
+import { getTextQualityGateLines } from '@/lib/engines/scoring/prompt-dimensions';
 
 // Skill registries (reach in directly so we can iterate every skill in one test)
 import { skill as midjourney } from '@/lib/engines/skills/image/midjourney';
@@ -326,7 +327,7 @@ describe('Engine system prompts — skill block injection', () => {
     });
     it('wraps scoring criteria in <internal_quality_check>', () => {
       expect(out.systemPrompt).toContain('<internal_quality_check');
-      expect(out.systemPrompt).toContain('PLATFORM-SPECIFIC QUALITY CHECKLIST');
+      expect(out.systemPrompt).toContain('UNIFIED PROMPT QUALITY CHECKLIST');
     });
   });
 
@@ -477,9 +478,15 @@ describe('Skill integrity — every registered skill', () => {
         expect(skill.mistakes!.length).toBeGreaterThanOrEqual(3);
       });
 
-      it('has at least 4 scoring criteria', () => {
+      it('has at least 4 scoring criteria (file + canonical lines for text modes)', () => {
         expect(skill.scoringCriteria).toBeDefined();
-        expect(skill.scoringCriteria!.length).toBeGreaterThanOrEqual(4);
+        const isText = name.startsWith('text/');
+        if (isText) {
+          const merged = getTextQualityGateLines().length + (skill.scoringCriteria?.length ?? 0);
+          expect(merged).toBeGreaterThanOrEqual(4);
+        } else {
+          expect(skill.scoringCriteria!.length).toBeGreaterThanOrEqual(4);
+        }
       });
 
       it('every example has non-empty concept and output', () => {

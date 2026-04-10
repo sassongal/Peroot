@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-09T11:47:15.139Z",
+  "generatedAt": "2026-04-10T21:51:49.911Z",
   "fixtureCount": 14,
-  "averageScore": 33,
+  "averageScore": 33.36,
   "entries": [
     {
       "group": "badText",
@@ -18,7 +18,7 @@
     {
       "group": "badText",
       "name": "two-word fragment",
-      "score": 10,
+      "score": 15,
       "level": "low"
     },
     {
@@ -89,7 +89,7 @@
     }
   ],
   "groupAverages": {
-    "badText": 5.25,
+    "badText": 6.5,
     "weakText": 19,
     "mediumText": 38,
     "strongText": 85,

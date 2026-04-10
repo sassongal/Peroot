@@ -27,7 +27,9 @@ export function SmartRefinement({
   const [customInstruction, setCustomInstruction] = useState("");
   const prevQuestionsRef = useRef<number>(0);
   const answersRef = useRef(answers);
-  answersRef.current = answers;
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   const toggleOpen = (id: number) => {
     setOpenIds((prev) =>
@@ -38,8 +40,8 @@ export function SmartRefinement({
   // Open the first question by default only when NEW questions arrive
   useEffect(() => {
     if (questions?.length > 0 && questions.length !== prevQuestionsRef.current) {
-        prevQuestionsRef.current = questions.length;
-        setOpenIds([questions[0].id]);
+      prevQuestionsRef.current = questions.length;
+      queueMicrotask(() => setOpenIds([questions[0].id]));
     }
   }, [questions]);
 

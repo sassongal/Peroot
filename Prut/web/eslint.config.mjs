@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     ".worktrees/**",
     // Generated codebase snapshot (~160K tokens)
     "repomix-output.*",
+    // Plain CSS — no ESLint processor; avoids "no matching configuration" when linting explicitly
+    "src/app/globals.css",
   ]),
 ]);
 
