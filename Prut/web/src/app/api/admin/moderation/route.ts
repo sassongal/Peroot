@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
 
     // Enrich author display names
     const authorIds = [...new Set(paginated.map((p) => p.user_id))];
-    let authorMap: Record<string, string> = {};
+    const authorMap: Record<string, string> = {};
     if (authorIds.length > 0) {
       const { data: profiles } = await supabase
         .from('profiles')

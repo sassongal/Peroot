@@ -84,14 +84,12 @@ export function usePromptLimits() {
   }, [supabase]);
 
   useEffect(() => {
-    checkUser();
+    queueMicrotask(() => {
+      void checkUser();
+    });
   }, [checkUser]);
 
-  useEffect(() => {
-    updateLimits();
-  }, [user, settings, usage, isAdmin, credits]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function updateLimits() {
+  const updateLimits = useCallback(() => {
     if (user) {
       if (isAdmin) {
         setCanUsePrompt(true);
@@ -109,7 +107,11 @@ export function usePromptLimits() {
       }
       setCanUsePrompt(usage.count < settings.max_free_prompts);
     }
-  }
+  }, [user, isAdmin, credits, settings.allow_guest_access, settings.max_free_prompts, usage.count]);
+
+  useEffect(() => {
+    queueMicrotask(() => updateLimits());
+  }, [updateLimits]);
 
   function incrementUsage() {
     if (!user) {

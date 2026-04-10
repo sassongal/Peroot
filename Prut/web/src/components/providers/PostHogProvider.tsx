@@ -47,11 +47,15 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         // Fall back to a short timeout on browsers without requestIdleCallback.
         // Also boot on first user interaction (whichever fires first) so
         // analytics are ready by the time anything meaningful happens.
-        const ric = (window as any).requestIdleCallback as
-            | ((cb: () => void, opts?: { timeout: number }) => number)
-            | undefined;
-        const idleHandle = ric
-            ? ric(boot, { timeout: 4000 })
+        type IdleWindow = Window & {
+            requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+            cancelIdleCallback?: (id: number) => void;
+        };
+        const w = window as IdleWindow;
+        const ric = w.requestIdleCallback;
+        const usedIdleCallback = typeof ric === 'function';
+        const idleHandle = usedIdleCallback
+            ? ric!.call(w, boot, { timeout: 4000 })
             : (window.setTimeout(boot, 2500) as unknown as number);
 
         const interactionEvents = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
@@ -62,8 +66,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
         return () => {
             cancelled = true;
-            if (ric && (window as any).cancelIdleCallback) {
-                (window as any).cancelIdleCallback(idleHandle);
+            if (usedIdleCallback) {
+                w.cancelIdleCallback?.(idleHandle as number);
             } else {
                 window.clearTimeout(idleHandle);
             }

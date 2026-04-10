@@ -14,7 +14,8 @@ const MIN_VISITS = 2;
 
 function isIos(): boolean {
   if (typeof navigator === "undefined") return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const w = window as Window & { MSStream?: unknown };
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !w.MSStream;
 }
 
 export function PwaInstallBanner() {
@@ -35,8 +36,10 @@ export function PwaInstallBanner() {
 
     // iOS doesn't support beforeinstallprompt — show manual instructions
     if (isIos()) {
-      setIosMode(true);
-      setShow(true);
+      queueMicrotask(() => {
+        setIosMode(true);
+        setShow(true);
+      });
       return;
     }
 

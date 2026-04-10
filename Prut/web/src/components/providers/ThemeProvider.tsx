@@ -31,9 +31,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const stored = localStorage.getItem("peroot-theme") as Theme | null;
     const resolved: Theme = stored === "light" ? "light" : "dark";
 
-    setTheme(resolved);
-    applyTheme(resolved);
-    setMounted(true);
+    queueMicrotask(() => {
+      setTheme(resolved);
+      applyTheme(resolved);
+      setMounted(true);
+    });
   }, []);
 
   const toggleTheme = useCallback(() => {

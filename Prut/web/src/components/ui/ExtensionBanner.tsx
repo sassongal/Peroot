@@ -10,11 +10,13 @@ export function ExtensionBanner() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // Check if user already dismissed the banner this session
-    if (sessionStorage.getItem("ext-banner-dismissed")) {
-      setDismissed(true);
-    }
-    setLoaded(true);
+    queueMicrotask(() => {
+      // Check if user already dismissed the banner this session
+      if (sessionStorage.getItem("ext-banner-dismissed")) {
+        setDismissed(true);
+      }
+      setLoaded(true);
+    });
   }, []);
 
   if (dismissed || !loaded) return null;

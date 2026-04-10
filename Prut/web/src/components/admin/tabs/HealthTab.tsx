@@ -500,7 +500,7 @@ export function HealthTab() {
                     {fmt(data?.apiPerformance.totalCallsLast24h ?? 0)}
                   </span>
                   <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ms-2">
-                    סה"כ קריאות
+                    סה״כ קריאות
                   </span>
                 </div>
                 <div className="w-px h-8 bg-white/5" />

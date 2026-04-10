@@ -19,7 +19,7 @@ export function ReferralBanner({ isNewUser }: { isNewUser: boolean }) {
     if (!isNewUser) return;
     // Don't show if previously dismissed
     if (localStorage.getItem(DISMISSED_KEY)) return;
-    setVisible(true);
+    queueMicrotask(() => setVisible(true));
   }, [isNewUser]);
 
   const handleDismiss = useCallback(() => {

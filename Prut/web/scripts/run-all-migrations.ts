@@ -49,16 +49,18 @@ async function run() {
             try {
                 await client.query(sql);
                 console.log(`  ✓ Success`);
-            } catch (err: any) {
+            } catch (err: unknown) {
+                const code = err && typeof err === 'object' && 'code' in err ? String((err as { code: string }).code) : '';
                 // Handle common idempotent errors gracefully
-                if (err.code === '42P07') { // relation already exists
+                if (code === '42P07') { // relation already exists
                     console.log(`  ⚠ Skipped (table already exists)`);
-                } else if (err.code === '42710') { // policy/object already exists
+                } else if (code === '42710') { // policy/object already exists
                     console.log(`  ⚠ Skipped (policy/object already exists)`);
-                } else if (err.code === '23505') { // unique violation (seed data)
+                } else if (code === '23505') { // unique violation (seed data)
                     console.log(`  ⚠ Skipped (duplicate key - data already seeded)`);
                 } else {
-                    console.error(`  ❌ Error: ${err.message}`);
+                    const msg = err instanceof Error ? err.message : String(err);
+                    console.error(`  ❌ Error: ${msg}`);
                 }
             }
         }

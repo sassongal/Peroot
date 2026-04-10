@@ -91,7 +91,7 @@ export async function GET(req: Request) {
 
     // ── Enrich with profile data ──────────────────────────────────────────────
     const uniqueUserIds = [...new Set(logs.map((l: AuditLogEntry) => l.user_id))];
-    let profileMap: Record<string, { email: string; display_name: string }> = {};
+    const profileMap: Record<string, { email: string; display_name: string }> = {};
 
     if (uniqueUserIds.length > 0) {
       const { data: profiles } = await supabase

@@ -140,7 +140,9 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
-    setIsSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition));
+    queueMicrotask(() =>
+      setIsSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition))
+    );
   }, []);
 
   return {

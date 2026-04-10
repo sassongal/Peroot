@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { createElement } from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 
@@ -8,8 +9,10 @@ afterEach(() => cleanup());
 // framer-motion uses useContext internally; mock it to avoid hook errors in jsdom
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
-    get: (_t, tag: string) => {
-      const { createElement } = require('react');
+    get: (_t, tag: string | symbol) => {
+      if (typeof tag !== 'string') {
+        return () => null;
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return ({ children, ...props }: any) => createElement(tag, props, children);
     },

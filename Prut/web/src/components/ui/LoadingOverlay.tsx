@@ -45,8 +45,10 @@ export function LoadingOverlay({
   useEffect(() => {
     if (!isVisible) return;
     const detected = detectFactLocale();
-    setLocale(detected);
-    setFactIdx(getNextFactIndex(detected));
+    queueMicrotask(() => {
+      setLocale(detected);
+      setFactIdx(getNextFactIndex(detected));
+    });
   }, [isVisible]);
 
   // Rotate facts every 4.5s while visible

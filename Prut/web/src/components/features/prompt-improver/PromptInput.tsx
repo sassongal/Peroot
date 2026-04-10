@@ -193,7 +193,7 @@ export function PromptInput({
     useEffect(() => {
       const examples = EXAMPLES_BY_MODE[selectedCapability] || EXAMPLES_BY_MODE[CapabilityMode.STANDARD];
       const shuffled = [...examples].sort(() => Math.random() - 0.5);
-      setDisplayedExamples(shuffled.slice(0, 4));
+      queueMicrotask(() => setDisplayedExamples(shuffled.slice(0, 4)));
     }, [selectedCapability]);
 
     // Voice Recorder Logic

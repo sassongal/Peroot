@@ -25,7 +25,9 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
   const [values, setValues] = useState<Record<string, string>>({});
   const [showPresets, setShowPresets] = useState(false);
 
-  useEffect(() => { setValues({}); }, [promptText]);
+  useEffect(() => {
+    queueMicrotask(() => setValues({}));
+  }, [promptText]);
   const [presetName, setPresetName] = useState("");
   const [showSavePreset, setShowSavePreset] = useState(false);
 

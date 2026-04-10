@@ -44,7 +44,10 @@ export function useChains() {
   const supabase = useMemo(() => createClient(), []);
   const userRef = useRef<User | null>(null);
   const chainsRef = useRef(chains);
-  chainsRef.current = chains;
+
+  useEffect(() => {
+    chainsRef.current = chains;
+  }, [chains]);
 
   useEffect(() => {
     let mounted = true;

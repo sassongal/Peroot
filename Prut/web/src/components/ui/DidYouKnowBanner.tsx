@@ -30,8 +30,10 @@ export function DidYouKnowBanner() {
     if (isDismissedThisSession()) return;
 
     const detectedLocale = detectFactLocale();
-    setLocale(detectedLocale);
-    setFactIndex(getNextFactIndex(detectedLocale));
+    queueMicrotask(() => {
+      setLocale(detectedLocale);
+      setFactIndex(getNextFactIndex(detectedLocale));
+    });
     // Small delay for smooth entrance
     const timer = setTimeout(() => setVisible(true), 800);
     return () => clearTimeout(timer);

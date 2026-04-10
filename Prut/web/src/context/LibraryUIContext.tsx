@@ -263,9 +263,9 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     try {
       const stored = localStorage.getItem(key);
       if (stored) {
-        setPromptStyles(JSON.parse(stored));
+        queueMicrotask(() => setPromptStyles(JSON.parse(stored)));
       } else {
-        setPromptStyles({});
+        queueMicrotask(() => setPromptStyles({}));
       }
     } catch (e) { logger.warn(e); }
   }, [user]);
@@ -278,7 +278,7 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
         if (p.prompt_style) next[p.id] = p.prompt_style;
       });
       if (Object.keys(next).length > 0) {
-        setPromptStyles(prev => ({ ...prev, ...next }));
+        queueMicrotask(() => setPromptStyles(prev => ({ ...prev, ...next })));
       }
     }
   }, [data.personalLibrary]);
