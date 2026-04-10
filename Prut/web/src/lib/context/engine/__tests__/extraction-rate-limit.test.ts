@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const counts = new Map<string, number>();
 vi.mock('@/lib/redis', () => ({
   redis: {
+    set: vi.fn(async () => 'OK'),
     incr: vi.fn(async (k: string) => {
       const n = (counts.get(k) ?? 0) + 1; counts.set(k, n); return n;
     }),

@@ -620,9 +620,10 @@ ${registryList}`;
       return context.map(a => {
           // New ContextBlock shape — pull from display.rawText
           const block = a as unknown as ContextBlock;
-          if (block.display?.rawText !== undefined) {
+          if (block.display?.rawText || block.display?.summary) {
               const label = block.display.title || block.type;
-              return `[${label}] ${block.display.rawText.slice(0, 1500)}`;
+              const text = block.display.rawText ?? block.display.summary ?? '';
+              return `[${label}] ${text.slice(0, 1500)}`;
           }
           // Legacy shape
           if (a.type === 'image') return `[תמונה: ${a.name}]\n${(a.description || a.content || '').slice(0, 1500)}`;
