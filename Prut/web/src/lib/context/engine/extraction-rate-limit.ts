@@ -37,7 +37,14 @@ export async function checkExtractionLimit(
     return { allowed, remaining: Math.max(0, limit - count), limit };
   } catch (err) {
     logger.error('[extraction-rate-limit] Redis unavailable, using in-memory fallback', err);
-    const mk = `${userId}:${dayKey()}`;
+    const today = dayKey();
+    // Prune stale day entries to prevent unbounded growth
+    if (memFallback.size > 500) {
+      for (const k of memFallback.keys()) {
+        if (!k.endsWith(today)) memFallback.delete(k);
+      }
+    }
+    const mk = `${userId}:${today}`;
     const count = (memFallback.get(mk) ?? 0) + 1;
     memFallback.set(mk, count);
     const allowed = count <= MEM_FALLBACK_LIMIT;

@@ -53,7 +53,7 @@ const RequestSchema = z.object({
     url: z.string().optional(),
     description: z.string().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
-  }).passthrough()).optional(),
+  }).passthrough()).max(15).optional(),
 });
 
 /**
