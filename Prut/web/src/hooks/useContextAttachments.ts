@@ -10,11 +10,14 @@ import { getApiPath } from "@/lib/api-path";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
-const TOKEN_LIMIT = 15_000;
 
-const MAX_FILES = 3;
-const MAX_URLS = 3;
-const MAX_IMAGES = 3;
+// Tier-specific limits (mirror server-side plans.ts)
+const TIER_LIMITS = {
+  free:  { maxFiles: 1, maxUrls: 1, maxImages: 1, tokenLimit: 8_000 },
+  pro:   { maxFiles: 5, maxUrls: 5, maxImages: 5, tokenLimit: 40_000 },
+} as const;
+
+type Tier = keyof typeof TIER_LIMITS;
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -38,7 +41,8 @@ function countByType(
   return attachments.filter((a) => a.type === type).length;
 }
 
-export function useContextAttachments() {
+export function useContextAttachments(tier: Tier = 'free') {
+  const limits = TIER_LIMITS[tier];
   const [attachments, setAttachments] = useState<ContextAttachment[]>([]);
   const attachmentsRef = useRef(attachments);
   attachmentsRef.current = attachments;
@@ -57,7 +61,7 @@ export function useContextAttachments() {
     [attachments]
   );
 
-  const isOverLimit = totalTokens > TOKEN_LIMIT;
+  const isOverLimit = totalTokens > limits.tokenLimit;
 
   const updateAttachment = useCallback(
     (id: string, updates: Partial<ContextAttachment>) => {
@@ -71,8 +75,8 @@ export function useContextAttachments() {
   const addFile = useCallback(
     async (file: File) => {
       // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "file") + pendingCounts.current.file >= MAX_FILES) {
-        throw new Error("ניתן לצרף עד 3 קבצים");
+      if (countByType(attachmentsRef.current, "file") + pendingCounts.current.file >= limits.maxFiles) {
+        throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
       }
       pendingCounts.current.file++;
       // Validate size
@@ -141,8 +145,8 @@ export function useContextAttachments() {
   const addUrl = useCallback(
     async (url: string) => {
       // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "url") + pendingCounts.current.url >= MAX_URLS) {
-        throw new Error("ניתן לצרף עד 3 כתובות URL");
+      if (countByType(attachmentsRef.current, "url") + pendingCounts.current.url >= limits.maxUrls) {
+        throw new Error(`ניתן לצרף עד ${limits.maxUrls} כתובות URL`);
       }
       pendingCounts.current.url++;
       // Validate URL format
@@ -204,8 +208,8 @@ export function useContextAttachments() {
   const addImage = useCallback(
     async (file: File) => {
       // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "image") + pendingCounts.current.image >= MAX_IMAGES) {
-        throw new Error("ניתן לצרף עד 3 תמונות");
+      if (countByType(attachmentsRef.current, "image") + pendingCounts.current.image >= limits.maxImages) {
+        throw new Error(`ניתן לצרף עד ${limits.maxImages} תמונות`);
       }
       pendingCounts.current.image++;
       // Validate size
@@ -305,6 +309,7 @@ export function useContextAttachments() {
     attachments,
     totalTokens,
     isOverLimit,
+    limits,
     addFile,
     addUrl,
     addImage,

@@ -8,6 +8,8 @@ interface ContextChipsProps {
   attachments: ContextAttachment[];
   onRemove: (id: string) => void;
   onRetry?: (id: string) => void;
+  maxFiles?: number;
+  tokenLimit?: number;
 }
 
 function formatTokenCount(count: number): string {
@@ -15,14 +17,14 @@ function formatTokenCount(count: number): string {
   return String(count);
 }
 
-export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsProps) {
+export function ContextChips({ attachments, onRemove, onRetry, maxFiles = 3, tokenLimit = 15_000 }: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
     (sum, a) => sum + (a.status === "ready" ? (a.tokenCount ?? a.block?.injected?.tokenCount ?? 0) : 0),
     0
   );
-  const isOverLimit = totalTokens > 15_000;
+  const isOverLimit = totalTokens > tokenLimit;
   const readyCount = attachments.filter(a => a.status === "ready").length;
   const loadingCount = attachments.filter(a => a.status === "loading").length;
   const errorCount = attachments.filter(a => a.status === "error").length;
@@ -69,14 +71,14 @@ export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsPro
 
         {isOverLimit && (
           <span className="text-red-400 font-bold">
-            יותר מדי context — הסירו קובץ (מקסימום 15K tokens)
+            יותר מדי context — הסירו קובץ (מקסימום {formatTokenCount(tokenLimit)} tokens)
           </span>
         )}
 
         {/* Limits hint */}
-        {attachments.length > 0 && attachments.length < 3 && (
+        {attachments.length > 0 && attachments.length < maxFiles && (
           <span className="text-[var(--text-muted)]">
-            עד 3 קבצים · קובץ עד 10MB · תמונה עד 5MB
+            עד {maxFiles} קבצים · קובץ עד 10MB · תמונה עד 5MB
           </span>
         )}
       </div>
