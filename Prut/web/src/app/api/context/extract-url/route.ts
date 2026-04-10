@@ -18,11 +18,15 @@ export async function POST(request: NextRequest) {
       .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
     const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
 
-    const rl = await checkExtractionLimit(user.id, tier);
-    if (!rl.allowed) {
-      return NextResponse.json(
-        { error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 },
-      );
+    try {
+      const rl = await checkExtractionLimit(user.id, tier);
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 },
+        );
+      }
+    } catch (rlErr) {
+      logger.error('[context/extract-url] rate limit check failed, allowing request', rlErr);
     }
 
     const { url } = await request.json();

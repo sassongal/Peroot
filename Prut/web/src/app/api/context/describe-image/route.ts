@@ -21,9 +21,14 @@ export async function POST(request: NextRequest) {
       .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
     const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
 
-    const rl = await checkExtractionLimit(user.id, tier);
-    if (!rl.allowed) {
-      return NextResponse.json({ error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 });
+    // Rate limit — allow request if Redis is unavailable
+    try {
+      const rl = await checkExtractionLimit(user.id, tier);
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 });
+      }
+    } catch (rlErr) {
+      logger.error('[context/describe-image] rate limit check failed, allowing request', rlErr);
     }
 
     const formData = await request.formData();
@@ -41,13 +46,14 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    logger.info('[context/describe-image] processing', { filename: file.name, sizeMb: sizeMb.toFixed(2), mimeType: file.type, tier });
     const block = await processAttachment({
       id: crypto.randomUUID(), type: 'image', userId: user.id, tier,
       buffer, filename: file.name, mimeType: file.type,
     });
     return NextResponse.json({ block });
   } catch (err) {
-    logger.error('[context/describe-image]', err);
+    logger.error('[context/describe-image] unhandled error', err);
     return NextResponse.json({ error: 'שגיאה בעיבוד התמונה' }, { status: 500 });
   }
 }
