@@ -132,11 +132,53 @@ Single warm spotlight with theatrical haze, deep shadows around the stage, old-w
     },
   ],
   scoringCriteria: [
-    '3-layer bracket structure is used: [Camera], [Subject], and [Motion] are all present and distinct',
-    'Timing cues at specific seconds: Motion bracket includes "at 0s," "at 1s," etc. with 0.5-1s granularity',
-    'Total duration is specified and matches the final timing marker in the Motion bracket',
-    'No layer mixing: identity/appearance details stay in [Subject], actions stay in [Motion], shot setup stays in [Camera]',
-    'Subject bracket has 5+ specific details (age, hair, clothing, accessories, environment)',
-    'Camera bracket specifies both shot size and movement type (e.g., "medium shot, slow orbit right")',
+    '[Camera] + [Subject] + [Motion] brackets — never mixed',
+    'Motion lines use at 0s / at 1s granularity aligned to total duration',
+    'Subject: 5+ anchors (age, hair, wardrobe, prop, environment)',
+    'Camera: shot size + move + speed (slow orbit, fast pan)',
+    'Motion: cause→effect chains; no teleporting between beats',
+    'Duration header matches last motion timestamp',
+    'Identity stable across brackets — same adjectives in Subject',
+    'Optional [Style] if product workflow uses fourth bracket',
+    'English inside brackets; no ambiguous pronouns across layers',
+    'Physics words for cloth, hair, liquid when they move',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'אורביט סביב דמות',
+      reasoning:
+        'Camera bracket: medium, orbit right 4s. Subject: hair, jacket, expression. Motion: second-by-second head turn, fabric reaction.',
+      output:
+        '[Camera] Medium shot, slow orbit right over 4 seconds, eye-level\n[Subject] Woman early 30s, auburn bob, charcoal wool coat with brass buttons, silver pendant catching light, standing on wet cobblestones outside a café\n[Motion] at 0s she exhales visible breath; at 1s she tucks hair behind ear; at 2s coat hem lifts in a gust; at 3s she meets camera with a half-smile; at 4s orbit completes as she turns profile',
+    },
+    {
+      concept: 'מכונית עוצרת בזמן',
+      reasoning:
+        'Motion must sync braking: tire smoke, body pitch, camera shake subtle.',
+      output:
+        '[Camera] Low wide shot, static with micro handheld drift\n[Subject] Matte black sports coupe, yellow calipers, rain-slicked asphalt, neon signage reflecting on hood\n[Motion] at 0s tires lock with brief smoke puffs; at 1s nose dives from braking; at 2s suspension settles; at 3s wipers complete a sweep; at 4s driver silhouette visible through glass',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        '[Camera] shot [Subject] man [Motion] walks',
+      afterPrompt:
+        '[Camera] Tracking shot at waist height, 35mm, matching pace alongside subject\n[Subject] Man mid-40s, salt-and-pepper beard, olive field jacket with rolled sleeves, mud on boots, holding a metal detector\n[Motion] at 0s scanning ground slowly; at 2s pauses, crouches; at 4s brushes soil with gloved hand; at 6s stands with small object pinched between fingers',
+      changes: [
+        'Exploded vague placeholders into timed motion with wardrobe + prop detail',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        '[Motion] dances',
+      afterPrompt:
+        '[Camera] Medium-wide, slow dolly back revealing full stage\n[Subject] Dancer in crimson silk, hair in tight bun, bare feet, single spotlight cone\n[Motion] at 0s arms crossed low; at 1s rapid spin with dress flare; at 3s lands in deep lunge; at 5s holds final line with trembling hands',
+      changes: [
+        'Replaced single verb with beat-timed choreography + camera reveal',
+      ],
+    },
   ],
 };

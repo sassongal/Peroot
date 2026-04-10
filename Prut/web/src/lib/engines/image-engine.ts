@@ -3,7 +3,13 @@ import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engin
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import type { ImagePlatform, ImageOutputFormat } from "../media-platforms";
-import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import {
+  getExamplesBlock,
+  getMistakesBlock,
+  getScoringBlock,
+  getChainOfThoughtBlock,
+  getRefinementExamplesBlock,
+} from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { getJsonExamplesBlock } from "./json-examples";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
@@ -689,22 +695,27 @@ export class ImageEngine extends BaseEngine {
       // Inject platform-specific scoring criteria for quality gate
       const scoringBlock = getScoringBlock('image', skillPlatformKey);
 
+      if (!isJsonMode) {
+        const cotBlock = getChainOfThoughtBlock('image', skillPlatformKey, input.prompt);
+        if (cotBlock) finalSystem += cotBlock;
+        const refineExamplesBlock = getRefinementExamplesBlock('image', skillPlatformKey, 1);
+        if (refineExamplesBlock) finalSystem += refineExamplesBlock;
+      }
+
       const hasContext = !!(input.context && input.context.length > 0);
       const contextQualityRule = hasContext
-          ? '\n4. CONTEXT INTEGRATION: Visual reference material is attached — the prompt MUST incorporate specific visual elements (colors, style, mood, composition) from the references. Ignoring attached context is a FAILURE.'
+          ? '\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate specific visual elements (colors, style, mood, composition). Ignoring attachments is a FAILURE.'
           : '';
       const contextQuestionHint = hasContext
           ? '\nCONTEXT-AWARE: reference material is attached — ask about INTENT (mood board? exact replication? loose inspiration?) not about what\'s in the files.'
           : '';
 
       if (isGeneral) {
-          // General mode gets the full GENIUS analysis + questions treatment
-          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?${contextQualityRule}${scoringBlock ? scoringBlock.replace(/\n/g, '\n') : ''}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.${contextQuestionHint}\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
+          // General mode: expanded visual GENIUS-style gate + platform checklist + questions
+          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Do you cover all seven visual layers — subject, style, composition, lighting, color mood, technical quality, negative guidance?\n2. SPECIFICITY: Replace vague words (nice, beautiful) with concrete materials, distances, time of day, and palette.\n3. ANTI-PATTERNS: No empty filler or contradictory instructions; Hebrew flows as one scene with technical terms in English where standard.\n4. ACTIONABILITY: Would this produce an excellent image on the FIRST try for the described medium?\n5. STRUCTURE: Scannable emphasis — most important visual intent appears early in the paragraph.\n6. EDGE CASES: Text-in-image, logos, or aspect constraints stated explicitly when relevant.${contextQualityRule}${scoringBlock ? scoringBlock : ''}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.${contextQuestionHint}\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
       } else {
-          // Platform-specific modes: add platform quality gate + title + questions, keep prompt clean
-          if (scoringBlock) {
-              finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this platform-specific quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
-          }
+          // Platform-specific modes: visual GENIUS checks + platform checklist + title + questions
+          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Subject, lighting, composition, palette, and platform-specific parameters are present.\n2. SPECIFICITY: Concrete nouns and materials — not vague mood labels alone.\n3. ANTI-PATTERNS: No deprecated or contradictory syntax for this platform.\n4. ACTIONABILITY: Output is paste-ready English (or JSON) with no meta-commentary.\n5. STRUCTURE: Parameters and prose ordered as this platform expects.${contextQualityRule}${scoringBlock ? `\nPLATFORM-SPECIFIC QUALITY GATE:${scoringBlock}` : ''}\n</internal_quality_check>`;
           // JSON mode is mutually exclusive with the PROMPT_TITLE/GENIUS_QUESTIONS
           // trailer: the nanobanana-json / stable-diffusion-json system prompts
           // start with "Output ONLY valid JSON. No explanations, no markdown

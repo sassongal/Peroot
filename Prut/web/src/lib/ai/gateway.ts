@@ -56,6 +56,26 @@ export interface GatewayParams {
  */
 const HARD_MAX_OUTPUT_TOKENS = 16384;
 
+/** Max output we may request + overhead — used to skip low-context fallback models. */
+const CONTEXT_BUDGET_RESERVE = HARD_MAX_OUTPUT_TOKENS + 4096;
+
+/**
+ * Drops models whose context window cannot fit estimated input plus a full
+ * max-output response (prevents silent garbage on gpt-oss-20b / Mistral when
+ * system+prompt are huge). Gemini Flash stays; narrow-window models are skipped.
+ */
+export function filterModelsForEstimatedInput(
+    models: ModelId[],
+    estimatedInputTokens: number,
+): ModelId[] {
+    const kept = models.filter((id) => {
+        const cfg = AVAILABLE_MODELS[id];
+        if (!cfg) return false;
+        return estimatedInputTokens + CONTEXT_BUDGET_RESERVE <= cfg.contextWindow;
+    });
+    return kept.length > 0 ? kept : models;
+}
+
 /**
  * @internal Exported for tests only. Treat as module-private.
  *
@@ -96,7 +116,7 @@ export function pickDefaults(task?: string, userMax?: number, userTemp?: number)
     const presets: Record<string, { max: number; temp: number }> = {
         image:    { max: 16384, temp: 0.5 },
         video:    { max: 16384, temp: 0.5 },
-        research: { max: 10240, temp: 0.6 },
+        research: { max: 16384, temp: 0.6 }, // Hebrew + citations expand tokens; was 10240
         enhance:  { max: 8192,  temp: 0.7 }, // was 4096 — Gemini thinking consumed budget
         agent:    { max: 16384, temp: 0.7 }, // was 8192 — Gemini reasoning averages 5.4K
                                              // tokens on agent (2x enhance), and output
@@ -186,9 +206,14 @@ export class AIGateway {
 
         let lastError: unknown;
         const baseModels = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
-        const models = params.preferredModel && params.preferredModel !== baseModels[0]
-            ? [params.preferredModel as ModelId, ...baseModels.filter(m => m !== params.preferredModel)]
-            : baseModels;
+        const estimatedInputTokens = Math.ceil(
+            (params.system.length + params.prompt.length) / 4,
+        );
+        const routed = filterModelsForEstimatedInput(baseModels, estimatedInputTokens);
+        const withPreferred = params.preferredModel && params.preferredModel !== routed[0]
+            ? [params.preferredModel as ModelId, ...routed.filter(m => m !== params.preferredModel)]
+            : routed;
+        const models = filterModelsForEstimatedInput(withPreferred, estimatedInputTokens);
 
         try {
             for (const modelId of models) {
@@ -267,9 +292,14 @@ export class AIGateway {
 
         let lastError: unknown;
         const baseModels2 = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
-        const models = params.preferredModel && params.preferredModel !== baseModels2[0]
-            ? [params.preferredModel as ModelId, ...baseModels2.filter(m => m !== params.preferredModel)]
-            : baseModels2;
+        const estimatedInputTokensFull = Math.ceil(
+            (params.system.length + params.prompt.length) / 4,
+        );
+        const routed2 = filterModelsForEstimatedInput(baseModels2, estimatedInputTokensFull);
+        const withPreferred2 = params.preferredModel && params.preferredModel !== routed2[0]
+            ? [params.preferredModel as ModelId, ...routed2.filter(m => m !== params.preferredModel)]
+            : routed2;
+        const models = filterModelsForEstimatedInput(withPreferred2, estimatedInputTokensFull);
 
         try {
             for (const modelId of models) {

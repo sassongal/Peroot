@@ -267,11 +267,54 @@ Style: Concert film aesthetic, Scorsese-Shine a Light energy, 35mm pushed stock 
     },
   ],
   scoringCriteria: [
-    'Structured sections present: Cinematography, Actions, Lighting, and Style are all explicitly labeled',
-    'Duration is specified (e.g., "Duration: 8s") at the beginning or end of the scene description',
-    'Characters have 5+ identifying details (hair, clothing, accessories, distinguishing marks, posture)',
-    'Actions are beat-timed with specific second markers ("in the first two seconds," "at five seconds")',
-    'Lighting section specifies source direction, color temperature, and a named color palette',
-    'At least 4 timed action beats are included in the Actions section',
+    'Duration line (e.g. Duration: 8s) anchors clip length',
+    'Sections: Cinematography, Actions, Lighting, Style — each populated',
+    '5+ concrete identity hooks per recurring character',
+    '4+ beats in Actions with second-level timing',
+    'Lighting: direction, quality, palette (named colors)',
+    'Cinematography: shot size + lens/move + mood',
+    'Style: film stock / era / reference when useful',
+    'No contradictory beats — one clear narrative arc',
+    'Actions use verbs with physical consequence (pushes, catches, stumbles)',
+    'Dialogue beats in Actions if speech matters — timed to seconds',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'סצנת משרד מתרגשת',
+      reasoning:
+        'Sora wants structure first. Pick duration. Cinematography: over-shoulder vs wide. Characters: wardrobe + tick. Actions: 4 beats with seconds. Lighting: fluorescent + window spill.',
+      output:
+        'Duration: 8s.\n\nCinematography:\nCamera shot: 35mm, over-the-shoulder from behind a woman\nMood: Tense anticipation\n\nActions:\n- In the first second she taps a pen against a contract, knuckles white\n- At three seconds a man across the table slides the document closer, sleeve revealing a vintage watch\n- At five seconds she signs with a quick flourish, breath visible\n- At seven seconds she stands, chair scraping, and exits frame left\n\nLighting: Cool overhead fluorescents mixed with warm sunset through blinds; palette: navy suit, cream paper, amber rim light.\n\nStyle: Fincher-inspired corporate thriller stillness.',
+    },
+    {
+      concept: 'מרדף רגלי בשוק',
+      reasoning:
+        'Chase: geography, obstacles, camera tracking. Beat-timed actions. Short duration if chaotic.',
+      output:
+        'Duration: 6s.\n\nCinematography:\nCamera shot: handheld 28mm at chest height\nMood: frantic energy\n\nActions:\n- First second: shoulder checks through a crowded spice aisle, baskets swinging\n- At two seconds: runner leaps over a fallen sack, cumin dust puffing\n- At four seconds: tight squeeze past a hanging fabric awning\n- At six seconds: bursts into sunlight at the market exit, breathless pause\n\nLighting: Harsh midday sun with hard shadows; palette: ochre, paprika red, white cotton.',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'Duration: 10s. A chef cooks. Kitchen. Lighting: bright.',
+      afterPrompt:
+        'Duration: 8s.\n\nCinematography:\nCamera shot: 50mm, slow push-in on hands\nMood: Controlled heat\n\nActions:\n- In the first two seconds a chef tilts a copper pan; cognac ignites in a vertical flambe\n- At four seconds blue-orange flame reflects in his eyes as he adjusts the angle\n- At six seconds steam rises into a single exhaust hood beam\n- At seven seconds he kills the heat with a confident wrist snap\n\nLighting: Warm key from overhead practical; palette: copper, steel, deep blue apron.',
+      changes: [
+        'Tightened duration; replaced vague "bright" with practical light behavior',
+        'Added timed micro-beats and camera intent',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Two people talk in a car. Night.',
+      afterPrompt:
+        'Duration: 10s.\n\nCharacters:\nDriver — woman, early 30s, auburn hair in a loose ponytail, silver hoop earrings, black leather jacket with white stitching\nPassenger — man, late 20s, stubble, grey hoodie, nervous thumb rubbing his knee\n\nCinematography:\nCamera shot: 35mm, slow lateral track outside the rain-streaked window\nMood: Intimate unease\n\nActions:\n- First three seconds: she speaks without turning, reflection in windshield\n- At five seconds: he looks down, then up at a passing neon sign\n- At eight seconds: she grips the wheel harder, knuckles pale\n\nLighting: Neon bounce on wet glass; palette: cyan, magenta, skin tones desaturated.',
+      changes: [
+        'Added identity detail + structured dialogue-free tension beats',
+      ],
+    },
   ],
 };

@@ -106,11 +106,54 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Quality boosters present: "masterpiece, best quality, highly detailed" at minimum',
-    'Negative prompt included with common exclusions (worst quality, low quality, bad anatomy, watermark)',
-    'Emphasis weights used appropriately — (subject:1.2-1.4) range, never exceeding 1.5',
-    'Sampler recommendation included (DPM++ 2M Karras preferred for most subjects)',
-    'Appropriate steps (25-40) and CFG scale (5-8) specified',
-    'LoRA references included when relevant style matching is needed (e.g., <lora:name:weight>)',
+    'Comma-separated tags with clear emphasis (word:1.2) — not long prose paragraphs',
+    'Quality tokens: masterpiece, best quality, highly detailed where appropriate',
+    'Negative prompt covers anatomy, blur, watermark, text, extra limbs',
+    'Weights stay ≤1.5 per token to avoid artifact wars',
+    'Sampler + steps + CFG in a sensible band (DPM++ 2M Karras, 25–40 steps, CFG 5–8)',
+    'clip skip noted when using certain checkpoints',
+    'LoRA syntax <lora:name:weight> when style must lock to a trained adapter',
+    'Hires fix / upscale mentioned only if workflow needs it',
+    'Subject, style, lighting, and background each get tag coverage',
+    'Recommended resolution matches model (SDXL vs 1.5) when giving JSON width/height',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'דיוקן SDXL עם רקע סטודיו',
+      reasoning:
+        'SD wants weighted tags: subject, clothing, lighting setup, lens look. Separate line for Negative prompt. Recommend realistic CFG and steps.',
+      output:
+        '(professional portrait:1.3), young woman, freckles, red hair in loose waves, soft Rembrandt lighting, dark grey seamless backdrop, 85mm lens bokeh, sharp focus on eyes, masterpiece, best quality, highly detailed skin texture\nNegative prompt: worst quality, low quality, blurry, deformed hands, extra fingers, watermark, text\nRecommended: sampler DPM++ 2M Karras, steps 30, CFG 7, clip skip 1',
+    },
+    {
+      concept: 'נוף פנטזיה עם משקלים',
+      reasoning:
+        'Emphasize sky and mountains separately; keep weights moderate. Add atmospheric tags (volumetric, mist).',
+      output:
+        '(fantasy landscape:1.25), jagged peaks, glowing aurora ribbons, moonlit glacier, mist in valley, (dramatic clouds:1.15), wide angle, epic scale, highly detailed, sharp focus\nNegative prompt: blurry, low quality, oversaturated, people, text, watermark\nRecommended: sampler DPM++ SDE Karras, steps 35, CFG 6.5',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        '(girl:1.8), anime, cute, best quality',
+      afterPrompt:
+        '(young woman:1.25), anime style, large expressive eyes, pastel pink hair in twin tails, school uniform with ribbon tie, soft cel shading, cherry blossom petals, spring daylight, masterpiece, best quality, highly detailed\nNegative prompt: worst quality, low quality, blurry, deformed, extra limbs, watermark, text',
+      changes: [
+        'Lowered destructive weights; expanded subject and scene tags',
+        'Added full negative prompt line',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'dragon, castle, epic',
+      afterPrompt:
+        '(massive dragon:1.3) perched on (stone castle tower:1.2), storm clouds with lightning forks, fire glow on scales, aerial wide angle, cinematic lighting, highly detailed scales and masonry, masterpiece, best quality\nNegative prompt: blurry, low quality, cartoon, watermark, text, modern objects',
+      changes: [
+        'Split subjects with weights; added weather and light for coherence',
+      ],
+    },
   ],
 };

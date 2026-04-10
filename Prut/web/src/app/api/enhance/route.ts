@@ -466,6 +466,7 @@ export async function POST(req: Request) {
     const resolvedTask = mode === CapabilityMode.IMAGE_GENERATION ? 'image'
         : mode === CapabilityMode.VIDEO_GENERATION ? 'video'
         : mode === CapabilityMode.DEEP_RESEARCH ? 'research'
+        : mode === CapabilityMode.AGENT_BUILDER ? 'agent'
         : 'enhance';
     const isJsonOutput = engineOutput.outputFormat === 'json';
 
@@ -475,13 +476,12 @@ export async function POST(req: Request) {
     // re-emits the full enhanced prompt AND a fresh [GENIUS_QUESTIONS] block
     // AND a [PROMPT_TITLE] block, which together commonly exceed 4096 tokens
     // and trigger finishReason='length' mid-answer. We lift the ceiling to
-    // 8192 for Refine on enhance, and to 12288 for research (whose preset is
-    // already 10240 — refinement output is measurably longer because it
-    // restates the original brief before emitting the upgraded version).
+    // 8192 for Refine on enhance/agent, and to 16384 for research (matches
+    // pickDefaults research preset; refinement restates the brief).
     // Image/video already use their own 16384 preset.
     const refinementMaxTokens = isRefinement
-        ? (resolvedTask === 'enhance' ? 8192
-           : resolvedTask === 'research' ? 12288
+        ? (resolvedTask === 'enhance' || resolvedTask === 'agent' ? 8192
+           : resolvedTask === 'research' ? 16384
            : undefined)
         : undefined;
 
@@ -567,6 +567,18 @@ export async function POST(req: Request) {
                         endpoint: 'enhance',
                         cacheHit: false,
                     });
+
+                    if (resolvedTask === 'research' && finishReasonCopy === 'length') {
+                        logger.warn(
+                            '[Enhance] Research output hit max token ceiling — possible truncation (Hebrew/long brief)',
+                            {
+                                modelId,
+                                capability_mode,
+                                outputChars: textCopy.length,
+                                finishReason: finishReasonCopy,
+                            },
+                        );
+                    }
 
                     // Store successful (non-empty) generations in the result cache so
                     // future identical requests can skip the LLM entirely. Fire-and-

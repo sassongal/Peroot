@@ -100,11 +100,54 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Narrative paragraph format — 60-150 words describing the scene like prose fiction',
-    '[aspectRatio:] tag present with appropriate ratio (16:9, 4:3, 3:4, 1:1, etc.)',
-    '[exclude:] tag included with common exclusions (watermark, blurry, deformed)',
-    'Specific details for people: approximate age, clothing, expression, action, skin tone',
-    'Lighting and atmosphere explicitly described (e.g., "afternoon sunlight filters through canopy")',
-    'Color palette or mood direction stated for consistent tone across the image',
+    '60–150 words of flowing narrative — Imagen follows prose, not SD tags',
+    '[aspectRatio:] matches delivery (social vs print vs slide)',
+    '[exclude:] lists artifact classes: watermark, blurry, deformed, text overlay when needed',
+    'People: age range, wardrobe, pose, expression, relationship to others in frame',
+    'Environment: materials, era, weather, time-of-day light color',
+    'Camera feel in words (editorial, telephoto compression) without fake --params',
+    'Multi-subject: who looks where and spatial relationships',
+    'Brand-safe: no real celebrity or trademark names — describe look-alike traits',
+    'Story beat in one paragraph — beginning/middle/end of a single moment',
+    'Palette named (warm amber, cool teal) not just "nice colors"',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'צוות בישיבת משרד',
+      reasoning:
+        'Imagen needs social geometry: how many people, where they sit, what screen shows. Light from window vs overhead. [aspectRatio] for slide. [exclude] for UI text if not wanted.',
+      output:
+        'Seven colleagues sit around a U-shaped oak table in a glass-walled conference room on the 24th floor at dusk, city lights softening outside the windows. A woman in her 40s stands at a wall-mounted display, pointing at a bar chart while others lean in with laptops open. The room has warm recessed lighting and cool spill from the screens. [aspectRatio: 16:9] [exclude: watermark, blurry, text overlay, extra limbs]',
+    },
+    {
+      concept: 'מאפה קינוח אופנתי',
+      reasoning:
+        'Food: texture, glaze, crumbs, plate material, angle. Macro distance in words. Exclude steam if not wanted.',
+      output:
+        'A glossy chocolate dome dessert on a matte black ceramic plate, mirror glaze reflecting a single strip of soft key light, gold leaf flakes on top, scattered crumbs of cocoa nib, shallow depth of field with the restaurant blurred into warm bokeh. Editorial dessert photography. [aspectRatio: 4:5] [exclude: watermark, text, plastic look, deformed fork]',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'A dog in a park, sunny day, happy, [aspectRatio: 16:9]',
+      afterPrompt:
+        'A golden retriever with a damp coat shakes off water droplets beside a wooden park bench, late afternoon sun skims across wet grass and leaves long shadows from maples, a tennis ball frozen mid-air at frame edge, families blurred in the background bokeh. Warm documentary pet photography. [aspectRatio: 16:9] [exclude: watermark, blurry, deformed legs]',
+      changes: [
+        'Specified breed behavior, light direction, and background separation',
+        'Added [exclude] for common failure modes',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Interior of a modern kitchen, white, clean',
+      afterPrompt:
+        'A bright Scandinavian kitchen with white oak cabinets, veined quartz countertop, and matte black fixtures, morning light through a side window catches steam from a kettle, a bowl of lemons on the island, shallow depth of field with dining nook soft in back. Architectural interior photography. [aspectRatio: 3:2] [exclude: watermark, text, distorted perspective]',
+      changes: [
+        'Replaced "clean" with materials, light source, and staging props',
+      ],
+    },
   ],
 };

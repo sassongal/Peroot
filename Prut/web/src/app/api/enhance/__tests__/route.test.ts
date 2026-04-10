@@ -1168,6 +1168,24 @@ describe("POST /api/enhance", () => {
       expect(getEngine).toHaveBeenCalledWith("IMAGE_GENERATION");
     });
 
+    it("passes task agent to the gateway for AGENT_BUILDER mode (pro user)", async () => {
+      setupAuthenticatedUser({ tier: "pro" });
+      setupMockStream();
+
+      const req = makeRequest({
+        prompt: "test",
+        capability_mode: "AGENT_BUILDER",
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(200);
+      expect(mockGenerateStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task: "agent",
+        }),
+      );
+    });
+
     it("returns 403 when free user requests a non-STANDARD capability mode", async () => {
       setupAuthenticatedUser({ tier: "free" });
       setupMockStream();

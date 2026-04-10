@@ -93,11 +93,53 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Physics and weight detail: describes body weight distribution, muscle engagement, and material behavior',
-    'Motion arc with clear endpoints: each action has a preparation, execution, and resolution phase',
-    'Temporal markers used: "initially," "then," "finally" or similar sequencing words guide the timeline',
-    'Prompt length is 50-200 words providing sufficient physical detail without over-stuffing',
-    'Negative prompt included: a separate line listing common artifacts to avoid (morphing, extra limbs, flickering)',
-    'Camera and lens specification grounds the visual style (shot type, focal length, reference)',
+    'Physics-first: weight transfer, momentum, material response (fabric, water, metal)',
+    'Each motion has start → peak → settle (endpoints explicit)',
+    'Camera move + lens named (35mm tracking, 85mm portrait)',
+    'Temporal spine: initially / then / finally across the clip duration',
+    '50–200 words — dense but one coherent timeline',
+    'Negative line at end for artifacts (hands, flicker, morph) — Kling supports negatives',
+    'Multi-layer depth: foreground / mid / background motion if needed',
+    'Lip-sync or dialogue format if audio-in-video is required',
+    'Speed words match emotion (explosive vs gentle)',
+    'Single primary scene — multi-shot only when storyboard syntax is intentional',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'אגרוף במהירות בסלואו מושן',
+      reasoning:
+        'Kling needs impact physics: hip rotation, shoulder whip, sweat droplets, camera speed. Mark time. Add negative for morphing fists.',
+      output:
+        'Initially: Medium shot, handheld at shoulder height — a boxer in red gloves shifts weight to his back foot, knuckles whitening. Then: He uncoils a straight right, shoulder rolling forward, sweat beads flinging into warm gym haze. Finally: The heavy bag shudders on its chain, dust puffs from the canvas. 85mm lens, slow-motion feel, harsh overhead practicals. Negative: morphing gloves, extra limbs, flicker.',
+    },
+    {
+      concept: 'מכונית חולפת בלילה',
+      reasoning:
+        'Vehicle motion: speed, reflections on wet asphalt, camera parallel tracking. Environment: rain, neon smear.',
+      output:
+        'Wide tracking shot: A matte sedan glides parallel to camera along a rain-slicked avenue, neon ribbons streaking across wet paint, tires throwing fine mist that catches magenta storefront glow. Street steam rolls at ankle height. Anamorphic flares, low shutter energy. Negative: jitter, duplicated cars, warped reflections.',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'A dancer spins, fast, stage, lights',
+      afterPrompt:
+        'Medium shot: Initially a ballerina in white gathers momentum with arms crossed tight. Then she opens into a rapid chainé turn, skirt flaring in a perfect disk under a single cold spotlight, toe shoes blurring at the edge of frame. Finally she brakes into fourth position, chest heaving. Stage haze catches the beam. Negative: extra legs, face morph, flicker.',
+      changes: [
+        'Beat structure + garment physics; specified lighting and shot size',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Dragon flies over castle',
+      afterPrompt:
+        'Aerial shot: A jade-scaled dragon banks over a fog-wreathed castle spire, wings flexing with slow power, tail trailing ember sparks into the wind. Clouds part around the tower as the camera tilts up to follow the climb, moonlight rim-lighting scales. Fantasy epic, 35mm aerial lens feel. Negative: melting wings, duplicate heads, flicker.',
+      changes: [
+        'Added scale layers, light direction, and negative artifact list',
+      ],
+    },
   ],
 };

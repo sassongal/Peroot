@@ -106,11 +106,57 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Must include --ar parameter with appropriate aspect ratio for the subject',
-    'Natural flowing prose, not comma-separated keyword lists',
-    'Prompt length between 20-40 words (excluding parameters) for optimal results',
-    'No deprecated parameters (--v, --quality, --tile) — use current v7/v8 defaults',
-    'Includes atmosphere, lighting, and emotional tone — not just subject description',
-    '--stylize (--s) value between 200-800 for controlled aesthetics',
+    'Subject is clear in the first ~10 words (v7 weights early tokens heavily)',
+    'Must include --ar with an aspect ratio that matches the composition (portrait 2:3, landscape 16:9, etc.)',
+    'Natural flowing prose — not comma-separated keyword tags or prompt stuffing',
+    'Length ~20–40 words of scene description before parameters (sweet spot for v7)',
+    'Lighting and mood are named (golden hour, Rembrandt, rim light, moody, ethereal)',
+    'No deprecated flags: --v 5.x, --quality, --tile, --cref; use --oref/--ow for references',
+    '--stylize (--s) in 200–800 unless --raw photorealism calls for lower stylization',
+    'Use --no for exclusions (text, watermark) — not "no X" sentences in the prose',
+    'Atmosphere and material detail (fabric, weather, texture) — not generic "beautiful 8k"',
+    'Parameters at end: --ar, --s, optional --chaos/--weird only when creative intent needs it',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'דיוקן מקצועי ללינקדאין',
+      reasoning:
+        '1) Subject: professional headshot → aspect ratio 3:4 or 4:5, shallow depth of field. 2) Lighting: soft key + subtle rim for separation. 3) Avoid keyword soup; one paragraph. 4) End with --ar --s; add --no text, watermark if branding matters.',
+      output:
+        'A confident executive in a navy blazer, subtle smile, soft studio key light with gentle rim separation on the jawline, neutral grey background with slight gradient, shallow depth of field, editorial LinkedIn portrait photography --ar 4:5 --s 550 --no text, watermark',
+    },
+    {
+      concept: 'נוף טבע דרמטי להדפסה',
+      reasoning:
+        '1) Establish scale (wide vs intimate). 2) Time of day + weather for mood. 3) Foreground anchor + midground + background layers. 4) --ar 16:9 or 2:1 for print landscape; --chaos low for coherent landscape.',
+      output:
+        'A storm front rolls over jagged alpine peaks at last light, sunbeams piercing through breaking clouds and igniting fresh snow on the ridgeline, wind-sculpted cornices on the ridge, foreground wildflowers bent by gusts, epic scale landscape photography --ar 16:9 --s 500 --chaos 12',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'A cat on a roof, sunset, nice view, beautiful, detailed, 8k --ar 16:9',
+      afterPrompt:
+        'A ginger tabby cat perched on a Mediterranean clay rooftop at golden hour, whiskers catching the last rays, terracotta tiles warm under its paws, coastal village tumbling toward a turquoise sea below, soft volumetric haze in the valleys --ar 16:9 --s 600 --chaos 15',
+      changes: [
+        'Replaced generic "nice/beautiful/8k" with concrete texture and palette',
+        'Specified camera mood (golden hour) and spatial layers (roof → village → sea)',
+        'Tuned --s and added modest --chaos for variation without incoherence',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Coffee shop in Paris, woman reading, cozy, cinematic --ar 3:2 --s 400',
+      afterPrompt:
+        'A woman in a wool coat reads a paperback at a small marble table beside rain-streaked café glass, warm tungsten interior light against cool blue-grey daylight outside, steam rising from a white espresso cup, intimate Parisian street photography --ar 3:2 --s 520',
+      changes: [
+        'Added specific materials (marble, glass, steam) and color contrast (warm/cool)',
+        'Removed vague "cozy/cinematic" in favor of describable light and weather',
+        'Slightly raised --s for stronger Midjourney aesthetic interpretation',
+      ],
+    },
   ],
 };

@@ -510,12 +510,13 @@ export function getVideoSkill(platform: string): PlatformSkill | undefined {
  * if the platform has no chainOfThoughtExamples defined.
  */
 export function getChainOfThoughtBlock(
-  type: 'text',
+  type: 'image' | 'video' | 'text',
   platform: string,
   concept?: string
 ): string {
-  const skills = type === 'text' ? TEXT_SKILLS : null;
-  const skill = skills?.[platform];
+  const skills =
+    type === 'image' ? IMAGE_SKILLS : type === 'video' ? VIDEO_SKILLS : TEXT_SKILLS;
+  const skill = skills[platform];
   if (!skill?.chainOfThoughtExamples || skill.chainOfThoughtExamples.length === 0) {
     return '';
   }
@@ -553,12 +554,13 @@ export function getChainOfThoughtBlock(
  * if the platform has no refinementExamples defined.
  */
 export function getRefinementExamplesBlock(
-  type: 'text',
+  type: 'image' | 'video' | 'text',
   platform: string,
   iteration: number
 ): string {
-  const skills = type === 'text' ? TEXT_SKILLS : null;
-  const skill = skills?.[platform];
+  const skills =
+    type === 'image' ? IMAGE_SKILLS : type === 'video' ? VIDEO_SKILLS : TEXT_SKILLS;
+  const skill = skills[platform];
   if (!skill?.refinementExamples || skill.refinementExamples.length === 0) {
     return '';
   }

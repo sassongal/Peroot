@@ -100,11 +100,56 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Rich descriptive prose of 50-120 words — not keyword lists',
-    '[quality: hd] tag present for high-quality output',
-    '[size:] tag with appropriate dimensions (1024x1024, 1792x1024, or 1024x1792)',
-    'Text rendering instructions specify exact wording, placement, font style, and size hierarchy when text is needed',
-    'Includes style direction phrase (e.g., "In a vivid style" or "In a natural style")',
-    'Color palette or mood explicitly described for consistent atmosphere',
+    '50–120 words of rich prose — scene, lighting, composition, palette, mood',
+    '[size: WxH] matches intent (square vs landscape vs portrait)',
+    '[quality: hd] when fine detail or typography matters',
+    'Style phrase: "In a vivid style" vs "In a natural style" per desired look',
+    'If text appears in-image: exact copy, hierarchy, placement, and font character',
+    'No Midjourney-style --flags; GPT Image uses natural language + [size]/[quality]',
+    'Spatial relationships and camera feel (wide shot, close-up, depth of field) in prose',
+    'No copyrighted names — describe appearance instead',
+    'Negative constraints in plain language ("avoid cluttered background") not --no',
+    'Ending ties narrative together (single cinematic moment, not a bullet list)',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'פוסטר אירוע עם טקסט בעברית',
+      reasoning:
+        'GPT Image renders text well — specify Hebrew copy exactly, hierarchy (headline vs sub), and contrast background. Choose [size] for poster aspect ratio. Describe materials (paper, foil) not just "poster".',
+      output:
+        'A printed event poster held at a slight angle against a dark walnut table, headline text "השקה רשמית" in bold geometric Hebrew letters across the upper third, subline "יום חמישי 18:00" in smaller clean sans-serif below, abstract gold foil shapes framing the text, soft studio light with gentle shadow. In a vivid style, crisp typography and print texture. [size: 1024x1792] [quality: hd]',
+    },
+    {
+      concept: 'מוצר לבן על רקע נקי לקטלוג',
+      reasoning:
+        'Catalog needs material truth: surface (matte ceramic, brushed aluminum), edge highlights, shadow softness. Natural style reduces HDR look. Square [size: 1024x1024] for e-commerce grids.',
+      output:
+        'A matte white ceramic pour-over dripper centered on seamless light grey cyclorama, soft three-point studio lighting with subtle contact shadow, 3/4 angle showing interior spiral ribs, minimal catalog aesthetic, razor-sharp focus edge-to-edge. In a natural style, true-to-life product photography. [size: 1024x1024] [quality: hd]',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'A nice coffee cup on a table, morning light, cozy vibe [size: 1024x1024]',
+      afterPrompt:
+        'A hand-thrown stoneware mug with an uneven glaze rim sits on a pale oak table beside an open notebook, warm side light from a tall window throws long soft shadows across wood grain, shallow depth of field, steam wisps visible against the cooler background. In a natural style, quiet morning editorial. [size: 1024x1024] [quality: hd]',
+      changes: [
+        'Replaced "nice/cozy" with concrete materials and light direction',
+        'Added spatial staging (notebook, window direction) and depth of field',
+        'Added [quality: hd] for texture credibility',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Cyberpunk street at night, neon, rain [size: 1792x1024]',
+      afterPrompt:
+        'A narrow rain-slicked alley at night reflects magenta and cyan neon from stacked kanji signage overhead, puddles mirror fragmented light, a lone figure in a hooded coat walks away from camera under a battered steel fire escape, steam vents at ankle height, anamorphic lens flare streaks across wet asphalt. In a vivid style, cinematic widescreen still. [size: 1792x1024] [quality: hd]',
+      changes: [
+        'Specified palette (magenta/cyan), weather behavior, and figure blocking',
+        'Added lens/language (anamorphic) and ground-level detail (steam, puddles)',
+      ],
+    },
   ],
 };

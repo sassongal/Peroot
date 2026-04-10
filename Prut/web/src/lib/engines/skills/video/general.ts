@@ -93,11 +93,53 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Written as a single flowing paragraph — no numbered lists, bullet points, or section headers',
-    'All 7 layers present: subject, action, environment, lighting, mood, camera/lens, and style reference',
-    'Prompt length is 30-80 words — enough detail for control without overwhelming the model',
-    'Written entirely in English — no Hebrew or other non-English text in the output',
-    'Specific lighting described: time of day, quality (soft/harsh), direction, and color temperature',
-    'Camera or lens reference included: focal length, aperture, or cinematic style anchor the visual language',
+    'Single English paragraph — no bullets or numbered beats in output',
+    'Layers: subject, action, environment, lighting, mood, camera/lens, style cue',
+    '30–80 words — one moment, one location',
+    'Lighting: time + direction + quality + palette',
+    'Camera: shot size + movement + focal length feel',
+    'Motion: who moves, how fast, what reacts (fabric, dust, water)',
+    'Style: reference director/film stock only if it clarifies look',
+    'Continuity: wardrobe and weather stable across the sentence',
+    'No platform-specific negative syntax unless target app supports it',
+    'Opening words anchor shot type (Wide shot:, Close-up:, etc.)',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'חתונה בחוץ',
+      reasoning:
+        'Establish wide geography, time (golden hour), key motion (veil, walk), camera (dolly back), audio-neutral phrasing.',
+      output:
+        'Wide shot: Slow dolly backward reveals a bride in an ivory lace train walking between rows of vineyard vines at golden hour, guests blurred as warm bokeh orbs, dust motes in slanted sunlight, long shadows stretching across gravel, handheld micro-sway for intimacy, Terrence Malick pastoral glow.',
+    },
+    {
+      concept: 'מכונית לילה',
+      reasoning:
+        'Reflective wet road, camera parallel tracking, neon smear, single sentence mood.',
+      output:
+        'Low tracking shot: A vintage coupe cruises parallel to camera along a rain-slicked boulevard, taillights smearing into long red ribbons, puddles exploding under tires, neon signage doubling in the hood paint, anamorphic flares, moody noir haze hugging the asphalt.',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'Kids playing soccer, field, sunny, fun',
+      afterPrompt:
+        'Medium-wide shot: Steadicam sweeps beside eight-year-olds chasing a scuffed soccer ball across clover-strewn grass, late afternoon sun flaring through oak branches, jerseys dark with sweat, long shadows wheeling as a kid slides for a tackle, chalk line puffing from the grass, documentary sports energy.',
+      changes: [
+        'Specified age, equipment wear, camera move, and light behavior',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Cooking in kitchen, fast cuts feeling',
+      afterPrompt:
+        'Close-up: A chef\'s wrist flicks diced shallots into a roaring pan, orange-blue flame whooshing upward, oil shimmer on stainless steel, fine steam catching a single under-cabinet LED strip, shallow depth of field isolating the flame from a blurred subway tile wall, visceral ASMR motion.',
+      changes: [
+        'Single continuous moment with materials and light instead of "fast cuts" meta',
+      ],
+    },
   ],
 };

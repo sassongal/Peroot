@@ -77,7 +77,7 @@ export function SmartRefinement({
   // When questions array is empty and component is rendered, the prompt was deemed comprehensive
   if (!questions?.length) {
     return (
-      <div className="glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+      <div className="peroot-prompt-chat-panel glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
         <div className="p-6">
           <div className="flex items-center gap-3 justify-center py-4" dir="rtl">
             <span className="text-emerald-400 text-lg">✓</span>
@@ -91,7 +91,7 @@ export function SmartRefinement({
   }
 
   return (
-    <div className="glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+    <div className="peroot-prompt-chat-panel glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
       <div className="p-6 border-b border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <div className="flex items-center justify-between" dir="rtl">
           <div>

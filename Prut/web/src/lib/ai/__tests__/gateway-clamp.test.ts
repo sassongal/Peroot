@@ -21,7 +21,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { pickDefaults, buildProviderOptions } from '../gateway';
+import { pickDefaults, buildProviderOptions, filterModelsForEstimatedInput } from '../gateway';
 
 describe('gateway pickDefaults — hard clamp', () => {
   it('clamps an egregious userMax override to 16384', () => {
@@ -68,11 +68,10 @@ describe('gateway pickDefaults — presets', () => {
     expect(pickDefaults('video')).toEqual({ maxOutputTokens: 16384, temperature: 0.5 });
   });
 
-  it('research task defaults to 10240 tokens and 0.6 temp', () => {
-    // Lifted from 6144 after Hebrew research prompts were observed getting
-    // truncated mid-output (broken section numbering, mid-word cuts, invalid
-    // [GENIUS_QUESTIONS] JSON). 10240 gives ~40% headroom.
-    expect(pickDefaults('research')).toEqual({ maxOutputTokens: 10240, temperature: 0.6 });
+  it('research task defaults to 16384 tokens and 0.6 temp', () => {
+    // Raised from 10240 → 16384: Hebrew + citations expand tokens; matches
+    // HARD_MAX so research can use full output budget without silent cuts.
+    expect(pickDefaults('research')).toEqual({ maxOutputTokens: 16384, temperature: 0.6 });
   });
 
   it('enhance task defaults to 8192 tokens and 0.7 temp', () => {
@@ -174,5 +173,25 @@ describe('gateway buildProviderOptions — disables Gemini thinking', () => {
 
   it('returns undefined when task is missing', () => {
     expect(buildProviderOptions()).toBeUndefined();
+  });
+});
+
+describe('filterModelsForEstimatedInput', () => {
+  it('keeps full chain when input is small', () => {
+    const chain = ['gemini-2.5-flash', 'gpt-oss-20b'] as const;
+    const out = filterModelsForEstimatedInput([...chain], 1000);
+    expect(out).toEqual(['gemini-2.5-flash', 'gpt-oss-20b']);
+  });
+
+  it('drops gpt-oss-20b when estimated input exceeds safe window for 32k context', () => {
+    const chain = [
+      'gemini-2.5-flash',
+      'mistral-small',
+      'gpt-oss-20b',
+    ] as const;
+    // 20480 * 4 = 81920 chars — reserve ~20k tokens for output → gpt-oss cannot fit
+    const out = filterModelsForEstimatedInput([...chain], 20480);
+    expect(out).not.toContain('gpt-oss-20b');
+    expect(out).toContain('gemini-2.5-flash');
   });
 });

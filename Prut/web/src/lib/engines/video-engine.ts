@@ -3,7 +3,13 @@ import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engin
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
 import { VideoPlatform } from "../video-platforms";
-import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
+import {
+  getExamplesBlock,
+  getMistakesBlock,
+  getScoringBlock,
+  getChainOfThoughtBlock,
+  getRefinementExamplesBlock,
+} from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
@@ -555,9 +561,14 @@ export class VideoEngine extends BaseEngine {
     // Inject platform-specific scoring criteria
     const scoringBlock = getScoringBlock('video', platform);
 
+    const cotBlock = getChainOfThoughtBlock('video', platform, input.prompt);
+    if (cotBlock) finalSystem += cotBlock;
+    const refineExamplesBlock = getRefinementExamplesBlock('video', platform, 1);
+    if (refineExamplesBlock) finalSystem += refineExamplesBlock;
+
     const hasContext = !!(input.context && input.context.length > 0);
     const contextQualityRule = hasContext
-        ? '\n8. CONTEXT INTEGRATION: Reference material is attached — the prompt MUST incorporate specific visual elements (palette, mood, composition, cinematic style) from the references. Ignoring attached context is a FAILURE.'
+        ? '\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate palette, mood, composition, and cinematic style from references. Ignoring attachments is a FAILURE.'
         : '';
     const contextQuestionHint = hasContext
         ? '\nCONTEXT-AWARE: reference material is attached — ask about INTENT (exact replication? mood inspiration? style guide?) not about the file contents.'
@@ -566,13 +577,14 @@ export class VideoEngine extends BaseEngine {
     // English cinematic GENIUS_QUESTIONS focused on the 7 video layers + platform-specific gate
     finalSystem += `\n\n<internal_quality_check hidden="true">
 Silently verify before generating (NEVER include any of this in output):
-1. CAMERA: Is the shot type, lens choice, and camera movement clearly specified?
-2. SUBJECT: Is the subject's appearance, position, and emotional state vividly described?
-3. MOTION: Is there a clear motion arc with physical detail (weight, momentum, endpoints)?
-4. ENVIRONMENT: Is the setting, time of day, and atmosphere established?
-5. SCENE MOTION: Are environmental dynamics (wind, particles, ambient life) addressed?
-6. LIGHTING: Is the light direction, quality, color temperature, and mood defined?
-7. STYLE: Is a cinematic reference, film aesthetic, or color grading specified?${contextQualityRule}${scoringBlock || ''}
+1. CAMERA: Shot type, lens feel, and primary camera move — one dominant move, not five.
+2. SUBJECT: Appearance, blocking, and intent (what they do in-frame).
+3. MOTION: Physical arc with endpoints (weight, momentum, speed words).
+4. ENVIRONMENT: Location, time, weather/atmosphere — enough to ground the clip.
+5. SCENE MOTION: Environmental dynamics (wind, water, crowd, particles) if relevant.
+6. LIGHTING: Direction, quality, color temperature, and mood.
+7. STYLE: Film reference or grading vocabulary when it tightens the look.
+8. ANTI-PATTERNS: No keyword soup; no contradictory moves; English output only.${contextQualityRule}${scoringBlock ? `\nPLATFORM-SPECIFIC QUALITY GATE:${scoringBlock}` : ''}
 </internal_quality_check>
 
 After the enhanced prompt, on a new line add a short descriptive Hebrew title:

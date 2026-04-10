@@ -105,11 +105,54 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Pure natural language — no special syntax, no weighted emphasis, no negative prompt sections',
-    'Character consistency details: specific age, clothing, expression, body language, skin tone when people are present',
-    'Scene described with spatial relationships (foreground, middle distance, background, camera angle)',
-    'Exclusions stated naturally at the end (e.g., "No watermarks, no text overlay, no deformed hands")',
-    '[aspectRatio:] tag present with appropriate ratio',
-    'Emotional or atmospheric tone explicitly described (e.g., "quiet, powerful, deeply solitary")',
+    '40–100 words of ordered English: Subject → Action → Setting → Style → Composition → Lighting → Constraints',
+    'Natural language only — no (weight:1.3) or comma-keyword stacks',
+    'People: age, wardrobe, hair, expression, pose; objects: material and condition',
+    'Spatial stack: foreground anchor, midground action, background context',
+    'Lens/camera feel in prose (wide establishing, intimate portrait distance)',
+    '[aspectRatio: X:Y] at end for delivery shape',
+    'Constraints line: no watermarks, no illegible text, no deformed hands when relevant',
+    'Mood words that are visual (somber, electric, serene) not vague "nice"',
+    'If text in-image: exact wording + placement; otherwise forbid text',
+    'Single scene beat — not a collage of unrelated ideas',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'איור ספר ילדים עם דמות חוזרת',
+      reasoning:
+        'Gemini needs consistency tokens: hair shape, outfit palette, prop. Establish camera distance and illustration medium (watercolor vs 3D). End with aspect ratio.',
+      output:
+        'A watercolor children\'s book illustration of a small round robot with copper rivets and a single teal eye, kneeling to plant a seedling in a community garden, soil on its metal fingers, children cheering in soft focus behind a fence, afternoon light with paper texture visible in washes. Whimsical but grounded. No text in frame [aspectRatio: 4:5]',
+    },
+    {
+      concept: 'מוצר טק על רקע אבסטרקט',
+      reasoning:
+        'Product hero: material truth, rim light, gradient backdrop color. Constraints for clean catalog.',
+      output:
+        'A matte black wireless earbud case hovering slightly above a seamless gradient from deep navy to charcoal, crisp studio rim light tracing the hinge edge, micro-scratches visible for realism, centered hero product shot, ultra-refined commercial look. No logos, no watermark [aspectRatio: 1:1]',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'Astronaut on Mars, cool, cinematic [aspectRatio: 16:9]',
+      afterPrompt:
+        'A lone astronaut in a dust-scuffed white suit walks toward a fractured copper cliff on Mars, fine red dust kicking in low gravity, sun a small brilliant disk in a butterscotch sky, visor reflecting the terrain, footprints trailing behind across rippled regolith. Cinematic widescreen still, desaturated except warm highlights. No text [aspectRatio: 16:9]',
+      changes: [
+        'Specified terrain, lighting, and suit condition for realism',
+        'Replaced "cool/cinematic" with describable color and scale',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Bowl of ramen, food photo',
+      afterPrompt:
+        'A ceramic bowl of tonkotsu ramen with slow-cooked chashu slices, soft egg with glossy yolk, scallion rings, and nori standing in steam, shot from 45° with a dark slate table and chopsticks resting on a holder, shallow depth of field, warm steam backlit. No watermark [aspectRatio: 4:5]',
+      changes: [
+        'Named ingredients, angle, steam behavior, and surface styling',
+      ],
+    },
   ],
 };

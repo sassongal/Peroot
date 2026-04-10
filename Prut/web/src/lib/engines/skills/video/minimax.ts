@@ -88,11 +88,53 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    '[Camera bracket] commands are present at the start with recognized Minimax camera types (Push in, Pull out, Pan, Tracking shot, Static shot, Shake)',
-    'Micro-expression vocabulary used: specific facial muscle movements (brow lifts, pupils dilate, jaw slackens, nostrils flare, lip quivers) rather than emotion labels',
-    'Sequential body choreography: each physical action connects to the next with weight transfer and momentum described',
-    'Prompt length is 40-100 words of dense physical description following the camera bracket',
-    'At least 3 distinct sequential actions are described with physical cause-and-effect relationships',
-    'Environmental lighting and mood are specified to ground the scene visually',
+    'Leading [Camera ...] bracket with a recognized move (Push in, Tracking shot, etc.)',
+    'Micro-expressions named (brow knit, jaw slacken) — not just "sad"',
+    'Three or more chained physical beats with cause→effect',
+    '40–100 words of tight choreography after the bracket',
+    'Lighting anchors time-of-day and key direction',
+    'Weight transfer on stance changes (hip, ankle, shoulder)',
+    'Props interact with hands — not floating gestures',
+    'Single scene; camera vocabulary matches scale (close vs wide)',
+    'Optional dialogue in platform-native format when lip-sync matters',
+    'No contradictory speeds (slow dolly + whip pan) without intent',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'ראיון קlose עם חרדה',
+      reasoning:
+        'Camera: Push in slowly. Face: pupils, moisture, micro jaw. Neck tension. Light: single source.',
+      output:
+        '[Push in] Extreme close-up, slow push-in over 5 seconds. A woman in her late 20s sits under a single desk lamp, cool side light carving her cheekbones. Her pupils jitter slightly reading an email; at second three her lips part with a thin inhale; at four her jaw tightens; at five a tear wells but does not fall. 85mm portrait compression, shallow depth of field, dust in the beam.',
+    },
+    {
+      concept: 'קפיצה לרימפלין',
+      reasoning:
+        'Tracking shot + athletic physics: approach foot, arm swing, landing compression.',
+      output:
+        '[Tracking shot] Low side angle following a male athlete sprinting toward a high jump bar at dusk stadium lights. He plants his outside foot, arches his back over the bar, arms whip backward, hips clear first, lands on his shoulder blade in the foam pit — sand dust plumes. 100mm lens, frozen peak motion clarity.',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        '[Pan] A guy is nervous in a room.',
+      afterPrompt:
+        '[Static shot] Medium close-up, locked tripod. A man in a wrinkled oxford shirt sits on the edge of a hotel bed, hands clasped between knees. Fluorescent ceiling light flickers once; his thumbs rub knuckles white; he swallows hard, Adam\'s apple rising; eyes dart to the door handle as a shadow passes underneath. Cool sickly palette.',
+      changes: [
+        'Chose static vs vague pan; replaced "nervous" with four micro-actions',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        '[Shake] explosion',
+      afterPrompt:
+        '[Shake] Handheld medium shot, aggressive shake on impact then settling drift. A stunt performer flies backward from a propane burst, jacket tails whipping, sparks skitter across wet concrete, camera whip-pans slightly to follow roll, smoke billows red-orange under sodium lights. Debris clatters late.',
+      changes: [
+        'Linked shake to impact physics + environmental debris timing',
+      ],
+    },
   ],
 };

@@ -93,11 +93,54 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Shot type is explicitly specified (wide shot, close-up, medium shot, etc.)',
-    'Camera movement is clear and limited to one primary move (dolly, pan, tracking, static, etc.)',
-    'Prompt focuses on a single coherent scene, not multiple scenes or locations',
-    'Prompt length is 30-60 words of descriptive, flowing prose',
-    'No negative prompt syntax (--no, "Negative:", "avoid") is used anywhere',
-    'Cinematic reference or lens specification grounds the visual style',
+    'Shot size stated first (wide, medium, close-up) to anchor framing',
+    'Exactly one primary camera move; at most one subtle secondary move',
+    'Subject motion + camera motion + environment motion each get a phrase',
+    'Single location / moment — Gen-4 is one clip, not a storyboard unless Director Mode',
+    '30–60 words of flowing English prose, not comma keywords',
+    'No negatives: Runway ignores "no blur" style exclusions — describe positives',
+    'Lens or film reference when it helps (anamorphic flare, 85mm portrait)',
+    'Mood line at end (melancholic, urgent, serene)',
+    'Duration awareness: action fits ~4s unless using multi-scene Director syntax',
+    'Lighting vocabulary (neon bounce, golden side light, single practical)',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'מרדף לילי בעיר',
+      reasoning:
+        'Runway: establish wide geography, then camera move (tracking), then vehicle motion, then environment (rain, neon). One scene. No negatives.',
+      output:
+        'Wide shot: A tracking shot races beside a black coupe sliding through a rain-slicked alley, neon kanji reflections streaking across the hood. Steam rises from a grate; the camera whips slightly as the car drifts the corner. Anamorphic lens flares, Michael Mann night palette, urgent energy.',
+    },
+    {
+      concept: 'ריקוד סולו על במה',
+      reasoning:
+        'Start medium; specify body motion endpoints; light as theatrical spotlight; camera orbit or slow dolly — not five moves.',
+      output:
+        'Medium shot: Slow dolly inward as a flamenco dancer stamps a rapid zapateado, her crimson dress flaring in a single spotlight beam, dust visible in the light. The camera gently orbits her shoulders while the background falls to black. 85mm anamorphic, theatrical intensity.',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'A bird flying over mountains, beautiful, cinematic',
+      afterPrompt:
+        'Aerial shot: The camera cranes down following a golden eagle gliding over red-rock canyon walls at sunrise, wings fully extended, mist curling through the gorge below. Long lens compression stacks distant peaks. Terrence Malick golden light, slow majestic motion.',
+      changes: [
+        'Specified shot type, species, time, and camera behavior',
+        'Removed non-actionable words in favor of motion and light',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Coffee shop, people talking, cozy',
+      afterPrompt:
+        'Medium shot: Slow tracking shot slides past marble café tables where two friends lean in across a small round table, steam rising from ceramic cups, warm tungsten practicals overhead, rain-streaked glass blurring the street into bokeh. Intimate conversational energy, 35mm lens.',
+      changes: [
+        'Grounded setting details and camera move; replaced vague mood with light behavior',
+      ],
+    },
   ],
 };

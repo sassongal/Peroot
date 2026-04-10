@@ -255,7 +255,7 @@ export default async function BlogPostPage({ params }: Props) {
                 prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
                 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
                 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4
-                prose-li:text-muted-foreground prose-li:leading-relaxed
+                prose-li:text-[var(--list-item-readable-size)] prose-li:text-muted-foreground prose-li:leading-relaxed
                 prose-strong:text-foreground
                 prose-a:text-amber-600 dark:prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
             />

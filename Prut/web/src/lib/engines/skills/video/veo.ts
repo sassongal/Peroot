@@ -176,11 +176,53 @@ Music: "solo piano, Satie-like simplicity, sparse Gymnopedies-style notes with l
     },
   ],
   scoringCriteria: [
-    'Audio section is present with all four subsections: Dialogue, SFX, Ambient, and Music',
-    'Dialogue is either exact quoted text with delivery context or explicitly "None"',
-    'SFX describes 2-3 specific sounds with quality descriptors (aggressive sizzle, muffled thud, crisp crinkle)',
-    'Ambient layer includes 2-3 environmental sound elements creating a spatial soundscape',
-    'Music specifies genre, instrument(s), tempo/mood, and emotional character',
-    'Visual paragraph is 50-100 words — detailed but not overloaded, leaving room for audio balance',
+    'Visual block ~50–100 words — balanced with Audio block',
+    'Audio has Dialogue, SFX, Ambient, Music — Dialogue exact quotes or "None"',
+    'SFX: 2–3 sounds with texture words (crisp, muffled, distant)',
+    'Ambient: spatial layers (near traffic, far birds, room tone)',
+    'Music: genre + instruments + tempo + emotional function',
+    'Duration stated when format requires it',
+    'Picture and sound emotionally aligned (horror vs cozy)',
+    'No audio overload — leave headroom for dialogue intelligibility',
+    'Visual camera + subject motion summarized before audio detail',
+    'Lip-sync lines quoted verbatim if characters speak on camera',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'שוק בוקר עם מוזיקה אתנית',
+      reasoning:
+        'Veo: visual paragraph for geography + light. Audio: dialogue often None. Layer ambient (vendors, pots) then music (instrument + mode).',
+      output:
+        'Medium-wide shot of a bustling morning market alley with terracotta pots stacked beside hanging dried herbs, steam rising from a brass samovar, sunlight slicing between awnings. Duration: 8s.\n\nAudio:\nDialogue: None\nSFX: "crisp knife on wooden board," "hissing steam release," "rustle of paper bags"\nAmbient: "distant muezzin-like vocal melisma blended with bicycle bells"\nMusic: "oud and frame drum, moderate tempo, warm Phrygian color, hopeful energy."',
+    },
+    {
+      concept: 'שיחה ברכבת תחתית',
+      reasoning:
+        'Interior: fluorescent, crowd walla. Dialogue quoted. SFX: train screech, PA muffled. Music sparse or none.',
+      output:
+        'Close-medium shot inside a subway car, fluorescent panels flicker subtly, commuters sway as the train banks a curve, condensation streaks the window. Duration: 10s.\n\nAudio:\nDialogue: (whispered) "We get off next stop."\nSFX: "metal screech on rails," "compressed air hiss at doors"\nAmbient: "muffled PA announcement," "distant coughs and shoe shuffles"\nMusic: "sparse piano + low strings, uneasy half-step tension."',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'Beach at sunset. Audio: waves.',
+      afterPrompt:
+        'Wide shot of a wind-sculpted dune at sunset, foam catching last orange light, a lone figure walks the tideline leaving footprints. Duration: 8s.\n\nAudio:\nDialogue: None\nSFX: "heavy surf collapse with rolling undertow," "crystalline water receding over shells"\nAmbient: "gulls wheeling wide, distant children\'s laughter swallowed by wind"\nMusic: "solo cello, slow rubato, bittersweet major lift on final bar."',
+      changes: [
+        'Expanded SFX/ambient; music tied to emotion; richer visual grounding',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Office argument. Loud.',
+      afterPrompt:
+        'Medium shot across a glass conference table, two executives lean in, reflections doubling their gestures, city dusk behind blinds. Duration: 6s.\n\nAudio:\nDialogue: "You buried the variance in footnote seven."\nSFX: "plastic folder slap on table," "ringing office phone ignored"\nAmbient: "low HVAC hum, muffled city traffic 12 floors below"\nMusic: "none — let dialogue drive."',
+      changes: [
+        'Specific dialogue beat; SFX tied to props; removed vague "loud"',
+      ],
+    },
   ],
 };

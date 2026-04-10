@@ -100,11 +100,54 @@ export const skill: PlatformSkill = {
     },
   ],
   scoringCriteria: [
-    'Subject described first with specific physical details before scene context',
-    'Camera and lens specifications included (e.g., "shot on Sony A7IV, 85mm f/1.4")',
-    'Hex color codes used for precise color control (e.g., #1A1A2E, #C0392B)',
-    'Prompt length between 30-80 words for optimal detail without confusion',
-    'No negative prompt language — only positive descriptions of desired elements',
-    'Film stock or color science reference when relevant (e.g., Kodak Portra 800, Fujifilm Classic Chrome)',
+    'Subject-first ordering — most important element leads the prompt',
+    '30–80 words of dense, specific description (FLUX rewards precision)',
+    'Camera + lens + aperture when photoreal (e.g., 85mm f/1.8, full-frame)',
+    'Hex codes for critical colors bound to objects (#F4E8D1 skin tone, #1B263B shadow)',
+    'Quoted in-image text if lettering must appear',
+    'No negative-prompt syntax — FLUX ignores "no X" lists',
+    'Avoid SD-style "masterpiece/best quality" spam; use real gear and light instead',
+    'Motion or material physics when relevant (wet skin, brushed metal)',
+    'Single coherent scene — not a list of unrelated keywords',
+    'Optional model variant hint (Pro/Ultra/Dev) only if product flow requires it',
+  ],
+  chainOfThoughtExamples: [
+    {
+      concept: 'מקרוב למזון עם טקסטורות',
+      reasoning:
+        'Macro food needs focal length, aperture for depth, and light direction. Lead with hero ingredient; specify steam, oil sheen, crumbs. Hex for sauce and plate.',
+      output:
+        'A fork lifting glossy pappardelle coated in #5C1A1B deep red ragu, fine Parmesan snow on the tines, shallow steam rising into soft side light, dark slate plate with #2A2A2A rim, shot on Sony A7IV, 90mm macro f/4, focus on sauce texture',
+    },
+    {
+      concept: 'דיוקן סטודיו מינימליסטי',
+      reasoning:
+        'Portrait: subject pose + wardrobe fabric + background color as hex. Key vs fill ratio in words. 50–85mm language for compression.',
+      output:
+        'A woman with slicked-back hair in a charcoal #2C2C2C wool blazer, shoulders squared to camera, soft butterfly lighting with subtle shadow under cheekbones, seamless #E8E4E1 backdrop, shot on Canon R5, 85mm f/2, crisp commercial portrait',
+    },
+  ],
+  refinementExamples: [
+    {
+      iteration: 1,
+      beforePrompt:
+        'Sports car, red, night city, cinematic, fast',
+      afterPrompt:
+        'A low wide-body sports car in #C41E3A metallic red idles under elevated train tracks at night, wet asphalt mirrors cyan storefront glow, single overhead practical casts a narrow pool of light on the hood, shot on ARRI Alexa look, 35mm lens, light rain beads on carbon fiber',
+      changes: [
+        'Added palette hooks (hex red), environment specificity, and wet-surface physics',
+        'Replaced "cinematic/fast" with describable light and lens',
+      ],
+    },
+    {
+      iteration: 2,
+      beforePrompt:
+        'Forest path, morning, peaceful, trees',
+      afterPrompt:
+        'A narrow dirt path curves through towering coastal redwoods at dawn, low fog threads between trunks, sun shafts cut through canopy haze, ferns glistening with dew in foreground, shot on Nikon Z9, 24mm f/2.8, vertical depth layers',
+      changes: [
+        'Specified time (dawn), moisture (fog/dew), and focal length for scale',
+      ],
+    },
   ],
 };

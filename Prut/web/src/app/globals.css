@@ -154,6 +154,9 @@
   --glass-border: rgba(0, 0, 0, 0.08);
   --surface-overlay: rgba(0, 0, 0, 0.5);
   --accent-text: #B45309;
+
+  /* Slightly larger list bullets for readability (~17px); see #main-content list rules */
+  --list-item-readable-size: 1.0625rem;
 }
 
 .dark {
@@ -206,6 +209,19 @@
     background-color: var(--surface-body);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
+}
+
+/* List item readability site-wide (blogs, guides, sidebars, markdown). Excludes Smart Refinement Q&A panel. */
+#main-content ul li,
+#main-content ol li {
+  font-size: var(--list-item-readable-size);
+  line-height: 1.65;
+}
+
+#main-content .peroot-prompt-chat-panel ul li,
+#main-content .peroot-prompt-chat-panel ol li {
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 :focus-visible {
@@ -901,7 +917,7 @@ a:focus-visible,
 .article-pros-box li {
   padding: 0.375rem 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--list-item-readable-size);
 }
 
 .article-pros-box li::before {
@@ -935,7 +951,7 @@ a:focus-visible,
 .article-cons-box li {
   padding: 0.375rem 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--list-item-readable-size);
 }
 
 .article-cons-box li::before {
