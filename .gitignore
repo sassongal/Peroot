@@ -24,6 +24,9 @@
 # Vercel
 **/.vercel
 
+# Git worktrees (local clone paths; not part of the app)
+.worktrees/
+
 # Misc
 .qodo/
 Prut/web/.git.bak/
