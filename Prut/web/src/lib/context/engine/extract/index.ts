@@ -1,7 +1,9 @@
-import { extractPdf } from './file-pdf';
-import { extractDocx, extractCsv, extractXlsx } from './file-office';
-import { extractText } from './file-text';
-import { extractUrl } from './url';
+/**
+ * Lazy-loaded extractors — heavy packages (pdfjs-dist, mammoth, xlsx, jsdom)
+ * are only imported when their specific extractor is invoked. This prevents
+ * cold-start crashes on Vercel where importing all packages eagerly can
+ * exceed bundle/memory limits or fail to resolve native bindings.
+ */
 import { extractImage } from './image';
 
 export const MAX_FILE_SIZE_MB = 10;
@@ -22,6 +24,7 @@ export interface FileDispatchResult {
 
 /**
  * Route a file buffer to the right extractor based on MIME type + filename.
+ * Each extractor is dynamically imported to keep cold-start lightweight.
  */
 export async function dispatchFile(
   buffer: Buffer,
@@ -30,15 +33,30 @@ export async function dispatchFile(
 ): Promise<FileDispatchResult> {
   const sizeMb = buffer.length / (1024 * 1024);
   if (sizeMb > MAX_FILE_SIZE_MB) {
-    throw new Error(`File size ${sizeMb.toFixed(1)}MB exceeds ${MAX_FILE_SIZE_MB}MB`);
+    throw new Error(`File size ${sizeMb.toFixed(1)}MB exceeds ${MAX_FILE_SIZE_MB}`);
   }
   const format = resolveFormat(mimeType, filename);
   switch (format) {
-    case 'pdf':  return extractPdf(buffer);
-    case 'docx': return extractDocx(buffer);
-    case 'txt':  return extractText(buffer);
-    case 'csv':  return extractCsv(buffer);
-    case 'xlsx': return extractXlsx(buffer);
+    case 'pdf': {
+      const { extractPdf } = await import('./file-pdf');
+      return extractPdf(buffer);
+    }
+    case 'docx': {
+      const { extractDocx } = await import('./file-office');
+      return extractDocx(buffer);
+    }
+    case 'txt': {
+      const { extractText } = await import('./file-text');
+      return extractText(buffer);
+    }
+    case 'csv': {
+      const { extractCsv } = await import('./file-office');
+      return extractCsv(buffer);
+    }
+    case 'xlsx': {
+      const { extractXlsx } = await import('./file-office');
+      return extractXlsx(buffer);
+    }
     default:
       throw new Error(`Unsupported file format: ${format}`);
   }
@@ -59,4 +77,11 @@ function resolveFormat(mimeType: string, filename: string): string {
   throw new Error(`Cannot resolve format for MIME "${mimeType}" / extension ".${ext ?? '?'}"`);
 }
 
-export { extractUrl, extractImage };
+export async function extractUrl(
+  ...args: Parameters<typeof import('./url').extractUrl>
+): Promise<Awaited<ReturnType<typeof import('./url').extractUrl>>> {
+  const { extractUrl: impl } = await import('./url');
+  return impl(...args);
+}
+
+export { extractImage };

@@ -45,19 +45,29 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const block = await processAttachment({
-      id: crypto.randomUUID(),
-      type: 'file',
-      userId: user.id,
-      tier,
-      buffer,
-      filename: file.name,
-      mimeType: file.type,
-    });
+    logger.info('[context/extract-file] processing', { filename: file.name, sizeMb: sizeMb.toFixed(2), mimeType: file.type, tier });
+    let block;
+    try {
+      block = await processAttachment({
+        id: crypto.randomUUID(),
+        type: 'file',
+        userId: user.id,
+        tier,
+        buffer,
+        filename: file.name,
+        mimeType: file.type,
+      });
+    } catch (engineErr) {
+      const msg = engineErr instanceof Error ? engineErr.message : String(engineErr);
+      const stack = engineErr instanceof Error ? engineErr.stack : undefined;
+      logger.error('[context/extract-file] engine error', { msg, stack, filename: file.name, tier });
+      return NextResponse.json({ error: 'שגיאה בעיבוד הקובץ' }, { status: 500 });
+    }
 
     return NextResponse.json({ block });
   } catch (err) {
-    logger.error('[context/extract-file]', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error('[context/extract-file] unhandled error', { msg });
     return NextResponse.json({ error: 'שגיאה בעיבוד הקובץ' }, { status: 500 });
   }
 }

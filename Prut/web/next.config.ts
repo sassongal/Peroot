@@ -41,6 +41,8 @@ const nextConfig: NextConfig = {
     'mammoth',
     'xlsx',
     '@napi-rs/canvas',
+    'jsdom',
+    '@mozilla/readability',
   ],
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'posthog-js', '@sentry/nextjs'],

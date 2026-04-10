@@ -34,16 +34,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL חסר' }, { status: 400 });
     }
 
-    const block = await processAttachment({
-      id: crypto.randomUUID(), type: 'url', userId: user.id, tier, url,
-    });
+    logger.info('[context/extract-url] processing', { url, tier });
+    let block;
+    try {
+      block = await processAttachment({
+        id: crypto.randomUUID(), type: 'url', userId: user.id, tier, url,
+      });
+    } catch (engineErr) {
+      const msg = engineErr instanceof Error ? engineErr.message : String(engineErr);
+      const stack = engineErr instanceof Error ? engineErr.stack : undefined;
+      logger.error('[context/extract-url] engine error', { msg, stack, url, tier });
+      const userMsg = engineErr instanceof Error && /^[\u0590-\u05FF]/.test(engineErr.message)
+        ? engineErr.message
+        : 'שגיאה בעיבוד הקישור';
+      return NextResponse.json({ error: userMsg }, { status: 500 });
+    }
     return NextResponse.json({ block });
   } catch (err) {
-    logger.error('[context/extract-url]', err);
-    // Only surface Hebrew user-facing messages; hide internal details
-    const msg = err instanceof Error && /^[\u0590-\u05FF]/.test(err.message)
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error('[context/extract-url] unhandled error', { msg });
+    const userMsg = err instanceof Error && /^[\u0590-\u05FF]/.test(err.message)
       ? err.message
       : 'שגיאה בעיבוד הקישור';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: userMsg }, { status: 500 });
   }
 }
