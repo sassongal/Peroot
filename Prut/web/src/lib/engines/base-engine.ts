@@ -6,6 +6,8 @@ import { getIterationInstructions } from "./refinement/iteration-guidance";
 import { getQuestionsPromptInstructions } from "./refinement/enhanced-questions";
 import { EnhancedScorer, type EnhancedScore } from "./scoring/enhanced-scorer";
 import { memoryFlags } from "../memory/injection-flags";
+import { renderInjection } from '@/lib/context/engine/inject';
+import type { ContextBlock } from '@/lib/context/engine/types';
 
 /**
  * Escape template variable patterns in user-supplied values to prevent
@@ -580,102 +582,10 @@ ${registryList}`;
      injectionStats.approxAddedTokens = Math.round((contextInjected.length - startLen) / 4);
 
      if (input.context && input.context.length > 0) {
-         const fileCount = input.context.filter(a => a.type === 'file').length;
-         const urlCount = input.context.filter(a => a.type === 'url').length;
-         const imageCount = input.context.filter(a => a.type === 'image').length;
-         const attachmentSummary = [
-             fileCount > 0 ? `${fileCount} קבצים` : '',
-             urlCount > 0 ? `${urlCount} קישורים` : '',
-             imageCount > 0 ? `${imageCount} תמונות` : '',
-         ].filter(Boolean).join(', ');
-
-         // Check if user prompt is minimal (short/vague)
-         const isMinimalPrompt = input.prompt.trim().length < 30;
-
-         contextInjected += `\n\n[ATTACHED_CONTEXT — ${attachmentSummary}]
-זהו הפיצ'ר החזק ביותר של פירוט. המשתמש צירף חומר מקור אמיתי.
-
-## שלב 0: זיהוי אוטומטי של סוג המסמך (DOCUMENT INTELLIGENCE)
-
-לפני שתתחיל לבנות את הפרומפט, בצע ניתוח אוטומטי של כל מסמך מצורף:
-
-**סווג את המסמך לאחד מ-15 הסוגים הבאים:**
-
-| סוג מסמך | סימנים מזהים | פעולות ברירת מחדל |
-|-----------|-------------|-------------------|
-| **חוזה/הסכם** | סעיפים ממוספרים, "הצדדים", "תנאים", חתימות | ניתוח סעיפים, זיהוי סיכונים, סיכום מחייב |
-| **מאמר אקדמי/מחקר** | תקציר, מתודולוגיה, ביבליוגרפיה, מסקנות | סיכום ממצאים, ביקורת מתודולוגית, שאלות מחקר |
-| **חומר לימודי/פרק** | כותרות, מושגים, תרגילים, סיכום | יצירת מבחן, שאלות הבנה, סיכום, כרטיסיות |
-| **דו"ח עסקי/פיננסי** | טבלאות, גרפים, KPIs, מסקנות, המלצות | ניתוח טרנדים, תובנות, מצגת הנהלה |
-| **קוד מקור** | functions, classes, imports, syntax | דיבוג, רפקטורינג, דוקומנטציה, code review |
-| **נתונים (CSV/Excel)** | עמודות, שורות, מספרים, headers | ניתוח סטטיסטי, ויזואליזציה, תובנות |
-| **מכתב/אימייל** | פנייה, חתימה, נושא | תשובה, שכתוב, שיפור טון, תרגום |
-| **תוכנית עבודה/פרויקט** | שלבים, תאריכים, אחראים, milestone | ניהול סיכונים, אופטימיזציה, דיווח סטטוס |
-| **מצגת/slides** | כותרות שקפים, bullets, ויזואלים | שיפור תוכן, הוספת speaker notes, סיכום |
-| **ראיון/תמלול** | שאלה-תשובה, דובר 1/2, זמנים | סיכום, ניתוח, חילוץ action items |
-| **תיאור מוצר/שירות** | פיצ'רים, יתרונות, מחיר, קהל | שיפור copy, A/B testing, landing page |
-| **רשימה/מלאי** | פריטים, כמויות, קטגוריות | ארגון, סינון, ניתוח, אופטימיזציה |
-| **טופס/שאלון** | שאלות, שדות, אפשרויות | שיפור ניסוח, ניתוח תוצאות, אוטומציה |
-| **תוכן שיווקי** | כותרות, CTA, קהל יעד, USP | שיפור conversion, A/B, SEO |
-| **אחר/מעורב** | שילוב של סוגים | ניתוח מקיף, זיהוי המרכיב הדומיננטי |
-
-**אחרי הזיהוי:**
-1. קבע את סוג המסמך (יכול להיות שילוב)
-2. זהה את השפה הדומיננטית (עברית/אנגלית/אחר)
-3. העריך את רמת המורכבות (בסיסי/בינוני/מתקדם)
-4. זהה ישויות מפתח: שמות, תאריכים, מספרים, מושגים מרכזיים
-5. הסק את הכוונה הסבירה של המשתמש (מה הוא כנראה רוצה לעשות עם המסמך)
-
-${isMinimalPrompt ? `## חשוב — פרומפט מינימלי זוהה!
-הפרומפט של המשתמש קצר/כללי ("${input.prompt.slice(0, 50)}"). זה אומר שה-CONTEXT הוא עיקר המשימה.
-עליך:
-1. לזהות מה סוג המסמך ומה הכוונה הסבירה
-2. ליצור פרומפט עשיר ומפורט מאפס — כאילו המשתמש ישב וכתב פרומפט של 200 מילים
-3. להשתמש בכל הפרטים מהקובץ: מושגים, מבנה, נתונים, שמות, תאריכים
-4. לבחור תפקיד מומחה רלוונטי למסמך (לא למשתמש)
-5. להגדיר פורמט פלט חכם שמתאים לסוג המסמך
-דוגמה: משתמש כתב "תסכם" + צירף חוזה → צור פרומפט מלא לעורך דין שמנתח חוזה, מזהה סעיפים קריטיים, מסכם התחייבויות, ומציג סיכונים בטבלה.` : ''}
-
-## שלב 1: ניתוח עומק
-- קרא את כל החומר המצורף
-- זהה: סוג מסמך, שפה, מורכבות, ישויות מפתח
-- הסק: מה המשתמש כנראה רוצה
-
-## שלב 2: שילוב אינטליגנטי
-- שלב נתונים ספציפיים מהקובץ ישירות בפרומפט (מספרים, שמות, מושגים)
-- אל תגיד "על סמך הקובץ" — שלב את התוכן עצמו
-- אם יש מבנה (פרקים, סעיפים, טבלאות) — שלב אותו
-- התאם טון: חוזה=פורמלי, שיווק=שכנועי, לימודי=מסביר
-
-## שלב 3: בניית פרומפט מותאם-מסמך
-הפרומפט המשודרג חייב לכלול:
-1. **תפקיד מומחה** שמתאים לסוג המסמך (לא גנרי!)
-   - חוזה → עורך דין מומחה | לימודי → מורה מנוסה | נתונים → אנליסט בכיר | קוד → מפתח senior
-2. **משימה ספציפית** שנגזרת מהתוכן + הכוונה
-3. **הקשר מהמסמך** — ישויות, מושגים, מבנה ספציפי (לא "המסמך מכיל...")
-4. **הוראות עיבוד** — מה לעשות עם כל חלק במסמך
-5. **פורמט פלט** חכם (טבלה לנתונים, רשימה לניתוח, מבנה לסיכום)
-6. **בדיקות איכות** שמוודאות נאמנות ל-context
-
-## מה לא לעשות
-- ❌ לא להעתיק טקסט מהקובץ כמות שהוא
-- ❌ לא "ראה קובץ מצורף" — ה-LLM שיקבל את הפרומפט לא יראה אותו
-- ❌ לא להתעלם מה-context ולייצר פרומפט גנרי
-- ❌ לא לסכם את הקובץ — לשלב אותו כ-context בפרומפט
-
-=== תוכן הקבצים המצורפים ===
-
-`;
-         for (const attachment of input.context) {
-             if (attachment.type === 'image') {
-                 contextInjected += `━━━ 🖼️ תמונה: "${attachment.name}" ━━━\nתיאור ויזואלי:\n${attachment.description || attachment.content}\n\n`;
-             } else if (attachment.type === 'url') {
-                 contextInjected += `━━━ 🌐 URL: ${attachment.url || attachment.name} ━━━\nתוכן הדף:\n${attachment.content}\n\n`;
-             } else {
-                 contextInjected += `━━━ 📄 קובץ: "${attachment.name}" (${attachment.format || 'text'}) ━━━\nתוכן:\n${attachment.content}\n\n`;
-             }
-         }
-         contextInjected += `=== סוף תוכן מצורף ===\n\nזכור: הפרומפט שתייצר חייב להתייחס ספציפית לתוכן שלמעלה. זהה את סוג המסמך, הסק את הכוונה, ובנה פרומפט שמנצל את ה-context ל-100%.\n`;
+       // New unified Context Engine injection.
+       // input.context carries ContextBlock[] produced server-side by processAttachment.
+       const rendered = renderInjection(input.context as unknown as ContextBlock[]);
+       if (rendered) contextInjected += `\n\n${rendered}\n`;
      }
 
      const hasContext = input.context && input.context.length > 0;
@@ -708,9 +618,16 @@ ${isMinimalPrompt ? `## חשוב — פרומפט מינימלי זוהה!
   /** Build a concise context summary for the user prompt message */
   private buildContextSummaryForUserPrompt(context: NonNullable<EngineInput['context']>): string {
       return context.map(a => {
-          if (a.type === 'image') return `[תמונה: ${a.name}]\n${(a.description || a.content).slice(0, 1500)}`;
-          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${a.content.slice(0, 1000)}`;
-          return `[${a.format?.toUpperCase() || 'קובץ'}: ${a.name}] ${a.content.slice(0, 1500)}`;
+          // New ContextBlock shape — pull from display.rawText
+          const block = a as unknown as ContextBlock;
+          if (block.display?.rawText !== undefined) {
+              const label = block.display.title || block.type;
+              return `[${label}] ${block.display.rawText.slice(0, 1500)}`;
+          }
+          // Legacy shape
+          if (a.type === 'image') return `[תמונה: ${a.name}]\n${(a.description || a.content || '').slice(0, 1500)}`;
+          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${(a.content || '').slice(0, 1000)}`;
+          return `[${a.format?.toUpperCase() || 'קובץ'}: ${a.name}] ${(a.content || '').slice(0, 1500)}`;
       }).join('\n\n');
   }
 

@@ -5,6 +5,8 @@
  * that are extracted, tokenized, and bundled into prompts.
  */
 
+import type { ContextBlock, ProcessingStage } from './engine/types';
+
 export type AttachmentType = 'file' | 'url' | 'image';
 
 export type AttachmentStatus = 'loading' | 'ready' | 'error';
@@ -44,6 +46,12 @@ export interface ContextAttachment {
 
   // -- Error --
   error?: string;
+
+  // -- Context Engine (new shape) --
+  /** NEW — populated from API response when routes return {block} */
+  block?: ContextBlock;
+  /** NEW — drives the progress bar in the attachment card */
+  stage?: ProcessingStage;
 }
 
 export interface ContextPayload {

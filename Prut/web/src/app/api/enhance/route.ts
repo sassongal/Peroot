@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
-import { summarizeAttachments } from "@/lib/engines/context-cache";
+import { selectEngineModel } from '@/lib/ai/context-router';
+import type { ContextBlock } from '@/lib/context/engine/types';
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
@@ -38,17 +39,21 @@ const RequestSchema = z.object({
   answers: z.record(z.string(), z.string()).optional(),
   iteration: z.number().int().min(0).optional(),
   target_model: z.enum(['chatgpt', 'claude', 'gemini', 'general']).default('general').optional(),
+  // Accepts both the legacy shape { type, name, content } and the new
+  // ContextBlock shape { id, type, sha256, stage, display, injected }.
+  // passthrough() lets unknown keys (display, injected, sha256, stage)
+  // flow through without stripping them.
   context: z.array(z.object({
     type: z.enum(['file', 'url', 'image']),
-    name: z.string(),
-    content: z.string(),
+    name: z.string().optional(),
+    content: z.string().optional(),
     tokenCount: z.number().optional(),
     format: z.string().optional(),
     filename: z.string().optional(),
     url: z.string().optional(),
     description: z.string().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
-  })).optional(),
+  }).passthrough()).optional(),
 });
 
 /**
@@ -281,11 +286,6 @@ export async function POST(req: Request) {
         }
     }
 
-    // S1: Summarize large attachments before they reach the engine.
-    // Cache-hit path is ~0ms (Redis GET); first hit pays one summarizer
-    // round-trip. Fail-safe — on any error the original content passes through.
-    const summarizedContext = await summarizeAttachments(contextAttachments);
-
     const engineInput: EngineInput = {
         prompt,
         tone,
@@ -298,7 +298,9 @@ export async function POST(req: Request) {
         userHistory,
         userPersonality,
         iteration,
-        context: summarizedContext,
+        // Cast to satisfy EngineInput — name/content may be absent on new ContextBlock shape;
+        // BaseEngine.buildContextSummaryForUserPrompt handles both shapes defensively.
+        context: contextAttachments as EngineInput['context'],
         targetModel: target_model || 'general',
     };
 
@@ -483,10 +485,24 @@ export async function POST(req: Request) {
            : undefined)
         : undefined;
 
+    // Only pass items that carry the new ContextBlock shape (have injected.tokenCount).
+    // Legacy-shape context payloads (old { type, name, content } format) are skipped
+    // so the router gracefully falls back to the default model.
+    const contextBlocks = (contextAttachments ?? [])
+      .filter(a => {
+        const block = a as unknown as ContextBlock;
+        return block.injected
+          && typeof block.injected.tokenCount === 'number'
+          && block.injected.tokenCount > 0
+          && block.injected.tokenCount < 100_000;
+      }) as unknown as ContextBlock[];
+    const preferredModel = selectEngineModel({ blocks: contextBlocks });
+
     const { result, modelId } = await AIGateway.generateStream({
       system: engineOutput.systemPrompt,
       prompt: engineOutput.userPrompt,
       task: resolvedTask,
+      preferredModel,
       // Refine lifts the ceiling from 4096 → 8192; everything else stays
       // on the task preset (undefined = use pickDefaults).
       ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),

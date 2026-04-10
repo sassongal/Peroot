@@ -14,6 +14,12 @@ export interface GatewayParams {
      * because structured or JSON output is 2-3× the token count of prose.
      */
     maxOutputTokens?: number;
+    /**
+     * Optional preferred model from the context-router. When set, this model
+     * is prepended to the task fallback chain so it is tried first. If the
+     * model is already first in the chain, no-op.
+     */
+    preferredModel?: string;
     onFinish?: (completion: { usage: unknown; text: string }) => Promise<void>;
     onStreamEnd?: () => void;
 }
@@ -178,11 +184,15 @@ export class AIGateway {
         };
 
         let lastError: unknown;
-        const models = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
+        const baseModels = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
+        const models = params.preferredModel && params.preferredModel !== baseModels[0]
+            ? [params.preferredModel as ModelId, ...baseModels.filter(m => m !== params.preferredModel)]
+            : baseModels;
 
         try {
             for (const modelId of models) {
                 const config = AVAILABLE_MODELS[modelId];
+                if (!config) continue;
 
                 // Circuit breaker: skip providers that are currently failing
                 if (!(await isProviderAvailable(config.provider))) {
@@ -255,11 +265,15 @@ export class AIGateway {
         };
 
         let lastError: unknown;
-        const models = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
+        const baseModels2 = params.task ? getModelsForTask(params.task, params.userTier) : FALLBACK_ORDER;
+        const models = params.preferredModel && params.preferredModel !== baseModels2[0]
+            ? [params.preferredModel as ModelId, ...baseModels2.filter(m => m !== params.preferredModel)]
+            : baseModels2;
 
         try {
             for (const modelId of models) {
                 const config = AVAILABLE_MODELS[modelId];
+                if (!config) continue;
                 if (!(await isProviderAvailable(config.provider))) {
                     logger.info(`[AIGateway] Skipping ${config.label} (circuit open)`);
                     continue;

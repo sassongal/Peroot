@@ -36,6 +36,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   compress: true,
+  serverExternalPackages: [
+    'pdfjs-dist',
+    'mammoth',
+    'xlsx',
+    '@napi-rs/canvas',
+  ],
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'posthog-js', '@sentry/nextjs'],
   },
