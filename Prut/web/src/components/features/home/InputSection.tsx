@@ -77,6 +77,7 @@ interface InputSectionProps {
   onRemoveAttachment: (id: string) => void;
   contextTotalTokens: number;
   contextIsOverLimit: boolean;
+  contextLimits?: { maxFiles: number; tokenLimit: number };
 
   // Target model
   targetModel: TargetModel;
@@ -134,6 +135,7 @@ export const InputSection = memo<InputSectionProps>(({
   onRemoveAttachment,
   contextTotalTokens,
   contextIsOverLimit,
+  contextLimits,
   targetModel,
   setTargetModel,
   creditsRemaining,
@@ -210,6 +212,8 @@ export const InputSection = memo<InputSectionProps>(({
       <ContextChips
         attachments={contextAttachments}
         onRemove={onRemoveAttachment}
+        maxFiles={contextLimits?.maxFiles}
+        tokenLimit={contextLimits?.tokenLimit}
       />
 
       {/* Supported Platforms marquee — showcases every engine Peroot optimizes for */}

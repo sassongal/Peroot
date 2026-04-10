@@ -99,7 +99,7 @@ function PageContent() {
   const { isPro } = useSubscription();
   const { canUsePrompt, requiredAction, incrementUsage } = usePromptLimits();
   const discovery = useFeatureDiscovery();
-  const context = useContextAttachments();
+  const context = useContextAttachments(isPro ? 'pro' : 'free');
 
   const variableValuesRef = useRef(ps.variableValues);
   variableValuesRef.current = ps.variableValues;
@@ -1218,6 +1218,7 @@ function PageContent() {
           onRemoveAttachment={context.removeAttachment}
           contextTotalTokens={context.totalTokens}
           contextIsOverLimit={context.isOverLimit}
+          contextLimits={context.limits}
           targetModel={targetModel}
           setTargetModel={handleSetTargetModel}
           creditsRemaining={creditsRemaining}

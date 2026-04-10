@@ -25,7 +25,7 @@ function pillState(current: ProcessingStage, pillId: ProcessingStage): PillState
 export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
   if (stage === 'error') {
     return (
-      <div data-testid="stage-error" className="flex items-center gap-2 text-red-600 text-sm">
+      <div data-testid="stage-error" className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
         <X className="w-4 h-4" />
         <span>לא הצלחנו — נסה שוב?</span>
       </div>
@@ -42,9 +42,9 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
             data-state={state}
             className={[
               'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-              state === 'complete' && 'bg-green-100 text-green-700',
+              state === 'complete' && 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
               state === 'active'   && 'bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 text-white shadow-md',
-              state === 'pending'  && 'bg-zinc-100 text-zinc-400',
+              state === 'pending'  && 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500',
             ].filter(Boolean).join(' ')}
           >
             {state === 'complete' && <Check className="w-3 h-3" />}
