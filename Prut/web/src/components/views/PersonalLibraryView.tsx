@@ -557,10 +557,15 @@ export function PersonalLibraryView({
       )}
 
       {/* Mobile slide-out drawer */}
-      <div className={cn(
-        "fixed top-0 right-0 h-full w-72 z-50 bg-[#0A0A0F] border-l border-[var(--glass-border)] shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto",
-        sidebarOpen ? "translate-x-0" : "translate-x-full"
-      )}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="תיקיות הספרייה האישית"
+        className={cn(
+          "fixed top-0 right-0 h-full w-72 max-w-[85vw] z-50 bg-[#0A0A0F] border-l border-[var(--glass-border)] shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
+          sidebarOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
         <PersonalLibrarySidebar shared={shared} isMobile={true} />
       </div>
 

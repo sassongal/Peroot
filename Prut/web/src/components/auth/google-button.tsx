@@ -12,10 +12,15 @@ export function GoogleButton() {
   const handleLogin = () => {
     startTransition(async () => {
       const supabase = createClient();
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const callbackUrl =
+        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") && nextParam.length <= 2048
+          ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextParam)}`
+          : `${window.location.origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
         },
       });
 

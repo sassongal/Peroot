@@ -144,79 +144,75 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
         </div>
       </div>
 
-      {/* Search + Sort + Actions row */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Search */}
+      {/* Search + Sort + Actions: full width search; on mobile toolbar scrolls horizontally */}
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
         <SearchAutosuggest
           value={localSearch}
           onChange={handleSearchChange}
           prompts={filteredPersonalLibrary}
           placeholder="חיפוש..."
-          className="flex-1 min-w-[180px]"
+          className="w-full md:flex-1 md:min-w-[180px]"
         />
 
-        {/* Sort */}
-        <select
-          value={currentSort}
-          onChange={(e) => handleSortChange(e.target.value)}
-          className="bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30"
-        >
-          <option value="recent">עודכן לאחרונה</option>
-          <option value="title">אלפביתי</option>
-          <option value="usage">בשימוש גבוה</option>
-          <option value="custom">סדר ידני</option>
-          <option value="last_used">שימוש אחרון</option>
-          <option value="performance">ביצועים</option>
-        </select>
-
-        {/* Batch mode */}
-        <button
-          onClick={() => setSelectionMode(!selectionMode)}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-            selectionMode
-              ? "bg-blue-600 border-blue-500 text-[var(--text-primary)] shadow-lg shadow-blue-900/30"
-              : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
-          )}
-          title="ניהול פריטים"
-        >
-          <CheckSquare className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">ניהול פריטים</span>
-        </button>
-
-        {/* Import */}
-        <button
-          onClick={() => importFileRef.current?.click()}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          title="ייבוא"
-        >
-          <Upload className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">ייבוא</span>
-        </button>
-        <input ref={importFileRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
-
-        {/* Import from history */}
-        <button
-          onClick={handleImportHistory}
-          disabled={historyLength === 0}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-            historyLength === 0 ? "border-[var(--glass-border)] text-slate-600 cursor-not-allowed" : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
-          )}
-        >
-          <History className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">מהיסטוריה</span>
-        </button>
-
-        {/* Select all (batch mode) */}
-        {selectionMode && (
-          <button
-            onClick={selectAllVisible}
-            className="px-3 py-2 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+        <div className="flex items-center gap-2 -mx-1 px-1 overflow-x-auto scrollbar-hide pb-0.5 md:overflow-visible md:flex-wrap md:pb-0 md:mx-0 md:px-0">
+          <select
+            value={currentSort}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="shrink-0 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px]"
           >
-            בחר הכל ({displayItems.length})
+            <option value="recent">עודכן לאחרונה</option>
+            <option value="title">אלפביתי</option>
+            <option value="usage">בשימוש גבוה</option>
+            <option value="custom">סדר ידני</option>
+            <option value="last_used">שימוש אחרון</option>
+            <option value="performance">ביצועים</option>
+          </select>
+
+          <button
+            onClick={() => setSelectionMode(!selectionMode)}
+            className={cn(
+              "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+              selectionMode
+                ? "bg-blue-600 border-blue-500 text-[var(--text-primary)] shadow-lg shadow-blue-900/30"
+                : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
+            )}
+            title="ניהול פריטים"
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">ניהול פריטים</span>
           </button>
-        )}
+
+          <button
+            onClick={() => importFileRef.current?.click()}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            title="ייבוא"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">ייבוא</span>
+          </button>
+          <input ref={importFileRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+
+          <button
+            onClick={handleImportHistory}
+            disabled={historyLength === 0}
+            className={cn(
+              "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+              historyLength === 0 ? "border-[var(--glass-border)] text-slate-600 cursor-not-allowed" : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
+            )}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">מהיסטוריה</span>
+          </button>
+
+          {selectionMode && (
+            <button
+              onClick={selectAllVisible}
+              className="shrink-0 px-3 py-2 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
+              בחר הכל ({displayItems.length})
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Active filter chips */}

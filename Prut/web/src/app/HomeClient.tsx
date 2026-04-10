@@ -36,6 +36,7 @@ import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/context/I18nContext";
 import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
+import { SiteSearchBar } from "@/components/features/search/SiteSearchBar";
 
 // Dynamic imports for route-level views
 const LibraryView = dynamic(
@@ -1148,6 +1149,7 @@ function PageContent() {
   return (
     <>
     {topNavBar}
+    <SiteSearchBar user={user} onUsePrompt={handleUsePrompt} />
     <HomeViewChrome
       viewMode={viewMode}
       onTabChange={handleMobileTabChange}

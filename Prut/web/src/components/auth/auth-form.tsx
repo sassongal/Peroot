@@ -66,7 +66,10 @@ export function AuthForm() {
           toast.error("שגיאה בהתחברות: " + error.message);
         } else {
           toast.success("התחברת בהצלחה!");
-          window.location.href = "/";
+          const nextParam = new URLSearchParams(window.location.search).get("next");
+          let dest = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+          if (dest.length > 2048) dest = "/";
+          window.location.href = dest;
         }
       } else {
         const { error } = await supabase.auth.signUp({

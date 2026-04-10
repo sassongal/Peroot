@@ -40,7 +40,7 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
   const panelClass =
     mode === "inline"
       ? "relative w-full"
-      : "fixed bottom-[calc(5rem+64px)] md:bottom-24 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6";
+      : "fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:bottom-24 md:pb-0 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6 z-[55]";
 
   const handleFeedback = () => {
      window.location.href = "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
@@ -54,9 +54,10 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
         aria-labelledby={headingId}
         aria-hidden={mode === "inline" ? false : !isOpen}
         className={cn(
+          "faq-bubble-panel",
           panelClass,
           mode === "inline"
-            ? "w-full max-h-[75vh] flex flex-col overflow-hidden"
+            ? "w-full min-h-0 max-h-[inherit] flex flex-col overflow-hidden"
             : "w-[calc(100vw-2rem)] sm:w-[380px] md:w-[440px] max-h-[calc(100vh-180px)] md:max-h-[80vh] flex flex-col rounded-[32px] border border-[var(--glass-border)] bg-white/90 dark:bg-black/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ease-out overscroll-contain",
           mode !== "inline" && (isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none")
         )}
@@ -65,8 +66,8 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md">
           <div className="flex flex-col">
-            <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">מרכז עזרה</div>
-            <h3 id={headingId} className="text-xl text-[var(--text-primary)] font-serif font-medium tracking-wide">
+            <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">מרכז עזרה</div>
+            <h3 id={headingId} className="text-lg md:text-xl text-[var(--text-primary)] font-serif font-medium tracking-wide">
               שאלות נפוצות
             </h3>
           </div>
@@ -93,7 +94,7 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="איך אפשר לעזור לך?"
                     aria-label="חיפוש שאלות נפוצות"
-                    className="w-full bg-transparent border-none py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-0 focus:outline-none"
+                    className="w-full bg-transparent border-none py-3 text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-0 focus:outline-none"
                   />
                </div>
              </div>
@@ -107,7 +108,7 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
                      setOpenIndex(0);
                    }}
                    className={cn(
-                     "px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                     "px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-[36px]",
                      activeCategory === category
                        ? "bg-slate-900 dark:bg-white text-white dark:text-black border-slate-900 dark:border-white shadow-lg shadow-black/10 dark:shadow-white/10 scale-105"
                        : "bg-[var(--glass-bg)] text-[var(--text-muted)] border-[var(--glass-border)] hover:bg-black/5 dark:hover:bg-white/10 hover:border-black/10 dark:hover:border-white/10 hover:text-[var(--text-secondary)]"
@@ -140,8 +141,8 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
                      aria-label={item.question}
                    >
                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-wider uppercase">{item.category}</span>
-                        <span className={cn("text-sm transition-colors duration-300 font-medium leading-relaxed", isItemOpen ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]")}>
+                        <span className="text-xs font-semibold text-[var(--text-muted)] tracking-wide">{item.category}</span>
+                        <span className={cn("text-base transition-colors duration-300 font-medium leading-snug", isItemOpen ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]")}>
                            {item.question}
                         </span>
                      </div>
@@ -158,7 +159,7 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
                       isItemOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                    )}>
                      <div className="overflow-hidden">
-                        <div className="px-5 pb-5 pt-0 text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--glass-border)] mt-2">
+                        <div className="px-5 pb-5 pt-0 text-base text-[var(--text-secondary)] leading-relaxed border-t border-[var(--glass-border)] mt-2">
                            <div className="h-2"></div>
                            {item.answer}
                         </div>

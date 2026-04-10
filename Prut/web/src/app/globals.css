@@ -155,8 +155,10 @@
   --surface-overlay: rgba(0, 0, 0, 0.5);
   --accent-text: #B45309;
 
-  /* Slightly larger list bullets for readability (~17px); see #main-content list rules */
-  --list-item-readable-size: 1.0625rem;
+  /* List bullets in main content (~18px with root scale); see #main-content list rules */
+  --list-item-readable-size: 1.125rem;
+  /* Subtle site-wide reading bump (body + rem-based utilities) */
+  --root-font-scale: 1.0625;
 }
 
 .dark {
@@ -204,11 +206,20 @@
 }
 
 @layer base {
+  html {
+    font-size: calc(100% * var(--root-font-scale));
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-color: var(--surface-body);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
+}
+
+/* Help / FAQ panel: neutralize root rem bump so inner copy stays “like before” while site body grows */
+.faq-bubble-panel {
+  font-size: calc(100% / var(--root-font-scale));
 }
 
 /* List item readability site-wide (blogs, guides, sidebars, markdown). Excludes Smart Refinement Q&A panel. */
