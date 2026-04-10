@@ -40,7 +40,6 @@ const nextConfig: NextConfig = {
     'pdfjs-dist',
     'mammoth',
     'xlsx',
-    '@napi-rs/canvas',
     'jsdom',
     '@mozilla/readability',
   ],

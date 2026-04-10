@@ -11,6 +11,20 @@ import {
   getRefinementExamplesBlock,
 } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
+import type { ContextBlock } from "@/lib/context/engine/types";
+
+/** Extract the best available text from an attachment (handles both legacy and ContextBlock shapes). */
+function resolveAttachmentText(a: NonNullable<EngineInput['context']>[number]): string {
+    const block = a as unknown as ContextBlock;
+    if (block.display?.rawText) return block.display.rawText;
+    if (block.display?.summary) return block.display.summary;
+    return a.content || '';
+}
+
+function resolveAttachmentTitle(a: NonNullable<EngineInput['context']>[number]): string {
+    const block = a as unknown as ContextBlock;
+    return block.display?.title || a.name || a.filename || 'attachment';
+}
 
 export class AgentEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -229,12 +243,14 @@ Requirements:
 === תוכן החומר המצורף ===
 `;
           for (const attachment of input.context!) {
+              const title = resolveAttachmentTitle(attachment);
+              const text = resolveAttachmentText(attachment);
               if (attachment.type === 'image') {
-                  finalSystem += `━━━ 🖼️ תמונה: "${attachment.name}" ━━━\nתיאור ויזואלי:\n${attachment.description || attachment.content}\n\n`;
+                  finalSystem += `━━━ 🖼️ תמונה: "${title}" ━━━\nתיאור ויזואלי:\n${attachment.description || text}\n\n`;
               } else if (attachment.type === 'url') {
-                  finalSystem += `━━━ 🌐 URL: ${attachment.url || attachment.name} ━━━\nתוכן הדף:\n${attachment.content}\n\n`;
+                  finalSystem += `━━━ 🌐 URL: ${attachment.url || title} ━━━\nתוכן הדף:\n${text}\n\n`;
               } else {
-                  finalSystem += `━━━ 📄 קובץ: "${attachment.name}" (${attachment.format || 'text'}) ━━━\nתוכן:\n${attachment.content}\n\n`;
+                  finalSystem += `━━━ 📄 קובץ: "${title}" (${attachment.format || 'text'}) ━━━\nתוכן:\n${text}\n\n`;
               }
           }
           finalSystem += `=== סוף חומר מצורף ===\n`;
@@ -318,9 +334,11 @@ OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
   /** Lightweight context summary for the userPrompt message (agent mode). */
   private buildAgentContextSummary(context: NonNullable<EngineInput['context']>): string {
       return context.map(a => {
-          if (a.type === 'image') return `[תמונה: ${a.name}] ${(a.description || a.content).slice(0, 1000)}`;
-          if (a.type === 'url') return `[URL: ${a.url || a.name}] ${a.content.slice(0, 800)}`;
-          return `[קובץ: ${a.name}] ${a.content.slice(0, 1200)}`;
+          const title = resolveAttachmentTitle(a);
+          const text = resolveAttachmentText(a);
+          if (a.type === 'image') return `[תמונה: ${title}] ${(a.description || text).slice(0, 1000)}`;
+          if (a.type === 'url') return `[URL: ${a.url || title}] ${text.slice(0, 800)}`;
+          return `[קובץ: ${title}] ${text.slice(0, 1200)}`;
       }).join('\n\n');
   }
 

@@ -1,5 +1,6 @@
 import { redis } from '@/lib/redis';
 import { getContextLimits } from '@/lib/plans';
+import { logger } from '@/lib/logger';
 import type { PlanTier } from './types';
 
 export interface ExtractionLimitResult {
@@ -17,16 +18,29 @@ function dayKey(): string {
 
 const DAY_TTL = 60 * 60 * 26; // 26h to cover timezone drift
 
+// In-memory fallback when Redis is unavailable.
+// Conservative per-instance counter — resets on cold start, so it under-counts
+// across instances but still prevents a single instance from being abused.
+const memFallback = new Map<string, number>();
+const MEM_FALLBACK_LIMIT = 5; // generous per-instance cap while Redis is down
+
 export async function checkExtractionLimit(
   userId: string,
   tier: PlanTier,
 ): Promise<ExtractionLimitResult> {
   const limit = getContextLimits(tier).extractionsPerDay;
-  const k = `extract:${userId}:${dayKey()}`;
-  // Ensure the key exists with TTL before incrementing — prevents orphaned keys
-  // if the process crashes between incr and expire.
-  await redis.set(k, 0, { ex: DAY_TTL, nx: true });
-  const count = (await redis.incr(k)) as number;
-  const allowed = count <= limit;
-  return { allowed, remaining: Math.max(0, limit - count), limit };
+  try {
+    const k = `extract:${userId}:${dayKey()}`;
+    await redis.set(k, 0, { ex: DAY_TTL, nx: true });
+    const count = (await redis.incr(k)) as number;
+    const allowed = count <= limit;
+    return { allowed, remaining: Math.max(0, limit - count), limit };
+  } catch (err) {
+    logger.error('[extraction-rate-limit] Redis unavailable, using in-memory fallback', err);
+    const mk = `${userId}:${dayKey()}`;
+    const count = (memFallback.get(mk) ?? 0) + 1;
+    memFallback.set(mk, count);
+    const allowed = count <= MEM_FALLBACK_LIMIT;
+    return { allowed, remaining: Math.max(0, MEM_FALLBACK_LIMIT - count), limit: MEM_FALLBACK_LIMIT };
+  }
 }

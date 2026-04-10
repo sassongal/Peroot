@@ -87,10 +87,6 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
         );
       })}
 
-      {/* Connecting line between pills */}
-      {stage !== 'ready' && (
-        <div className="absolute inset-0 pointer-events-none" aria-hidden />
-      )}
     </div>
   );
 }

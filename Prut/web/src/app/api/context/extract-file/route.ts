@@ -21,16 +21,12 @@ export async function POST(request: NextRequest) {
       .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
     const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
 
-    try {
-      const rl = await checkExtractionLimit(user.id, tier);
-      if (!rl.allowed) {
-        return NextResponse.json(
-          { error: `חרגת ממכסת העיבוד היומית (${rl.limit}). נסה שוב מחר או שדרג ל-Pro.`, remaining: 0 },
-          { status: 429 },
-        );
-      }
-    } catch (rlErr) {
-      logger.error('[context/extract-file] rate limit check failed, allowing request', rlErr);
+    const rl = await checkExtractionLimit(user.id, tier);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `חרגת ממכסת העיבוד היומית (${rl.limit}). נסה שוב מחר או שדרג ל-Pro.`, remaining: 0 },
+        { status: 429 },
+      );
     }
 
     const formData = await request.formData();

@@ -18,15 +18,11 @@ export async function POST(request: NextRequest) {
       .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
     const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
 
-    try {
-      const rl = await checkExtractionLimit(user.id, tier);
-      if (!rl.allowed) {
-        return NextResponse.json(
-          { error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 },
-        );
-      }
-    } catch (rlErr) {
-      logger.error('[context/extract-url] rate limit check failed, allowing request', rlErr);
+    const rl = await checkExtractionLimit(user.id, tier);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 },
+      );
     }
 
     const { url } = await request.json();
@@ -34,7 +30,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL חסר' }, { status: 400 });
     }
 
-    logger.info('[context/extract-url] processing', { url, tier });
+    // Log origin+path only — query params may contain tokens/keys
+    const safeUrl = (() => { try { const u = new URL(url); return u.origin + u.pathname; } catch { return '(invalid)'; } })();
+    logger.info('[context/extract-url] processing', { url: safeUrl, tier });
     let block;
     try {
       block = await processAttachment({
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
     } catch (engineErr) {
       const msg = engineErr instanceof Error ? engineErr.message : String(engineErr);
       const stack = engineErr instanceof Error ? engineErr.stack : undefined;
-      logger.error('[context/extract-url] engine error', { msg, stack, url, tier });
+      logger.error('[context/extract-url] engine error', { msg, stack, url: safeUrl, tier });
       const userMsg = engineErr instanceof Error && /^[\u0590-\u05FF]/.test(engineErr.message)
         ? engineErr.message
         : 'שגיאה בעיבוד הקישור';

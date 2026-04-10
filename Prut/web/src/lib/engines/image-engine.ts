@@ -7,6 +7,7 @@ import { getExamplesBlock, getMistakesBlock, getScoringBlock } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { getJsonExamplesBlock } from "./json-examples";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
+import type { ContextBlock } from "@/lib/context/engine/types";
 
 // ── Platform-specific system prompt fragments ──
 
@@ -631,6 +632,30 @@ export class ImageEngine extends BaseEngine {
           }
       }
 
+      // Context attachments as visual reference material
+      if (input.context && input.context.length > 0) {
+          finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
+המשתמש צירף חומר מקור — השתמש בו כ-**השראה ויזואלית ומגבלות עיצוביות** לפרומפט התמונה:
+- תמונות מצורפות: תאר את הסגנון, הצבעים, הקומפוזיציה, ותחושת האווירה — ושלב אותם בפרומפט.
+- קבצי מיתוג/ברנדינג: חלץ צבעים, טיפוגרפיה, לוגו, ומגבלות סגנוניות.
+- URLים: חלץ זהות ויזואלית, מראה ותחושה (look & feel) מהדף.
+- אל תתאר "על סמך הקובץ" — שלב את הפרטים הויזואליים ישירות בפרומפט.
+
+`;
+          for (const attachment of input.context) {
+              const block = attachment as unknown as ContextBlock;
+              const title = block.display?.title || attachment.name || 'attachment';
+              const text = block.display?.rawText || block.display?.summary || attachment.content || attachment.description || '';
+              if (attachment.type === 'image') {
+                  finalSystem += `━━━ 🖼️ תמונת ייחוס: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+              } else if (attachment.type === 'url') {
+                  finalSystem += `━━━ 🌐 דף ייחוס: ${attachment.url || title} ━━━\n${text.slice(0, 1000)}\n\n`;
+              } else {
+                  finalSystem += `━━━ 📄 מסמך ייחוס: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+              }
+          }
+      }
+
       // Inject concept classification (LLM-level semantic understanding)
       finalSystem += getConceptClassificationBlock('image');
 
@@ -664,9 +689,17 @@ export class ImageEngine extends BaseEngine {
       // Inject platform-specific scoring criteria for quality gate
       const scoringBlock = getScoringBlock('image', skillPlatformKey);
 
+      const hasContext = !!(input.context && input.context.length > 0);
+      const contextQualityRule = hasContext
+          ? '\n4. CONTEXT INTEGRATION: Visual reference material is attached — the prompt MUST incorporate specific visual elements (colors, style, mood, composition) from the references. Ignoring attached context is a FAILURE.'
+          : '';
+      const contextQuestionHint = hasContext
+          ? '\nCONTEXT-AWARE: reference material is attached — ask about INTENT (mood board? exact replication? loose inspiration?) not about what\'s in the files.'
+          : '';
+
       if (isGeneral) {
           // General mode gets the full GENIUS analysis + questions treatment
-          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?${scoringBlock ? scoringBlock.replace(/\n/g, '\n') : ''}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
+          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Does the prompt cover subject, style, composition, lighting, color, and technical details?\n2. SPECIFICITY: Replace every vague description with a concrete, vivid one.\n3. ACTIONABILITY: Would this prompt produce an excellent image on the FIRST try?${contextQualityRule}${scoringBlock ? scoringBlock.replace(/\n/g, '\n') : ''}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.${contextQuestionHint}\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]`;
       } else {
           // Platform-specific modes: add platform quality gate + title + questions, keep prompt clean
           if (scoringBlock) {
@@ -686,9 +719,22 @@ export class ImageEngine extends BaseEngine {
           }
       }
 
+      // Append context summary to user prompt if attachments exist
+      let finalUserPrompt = userPrompt;
+      if (hasContext) {
+          const summary = input.context!.map(a => {
+              const block = a as unknown as ContextBlock;
+              const title = block.display?.title || a.name || 'attachment';
+              const text = block.display?.summary || block.display?.rawText || a.content || a.description || '';
+              if (a.type === 'image') return `[תמונת ייחוס: ${title}] ${text.slice(0, 600)}`;
+              return `[${title}] ${text.slice(0, 600)}`;
+          }).join('\n');
+          finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב את האלמנטים הויזואליים בפרומפט]\n${summary}`;
+      }
+
       return {
           systemPrompt: finalSystem,
-          userPrompt,
+          userPrompt: finalUserPrompt,
           outputFormat: ((platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json') ? 'json' : 'text',
           requiredFields: [],
       };
