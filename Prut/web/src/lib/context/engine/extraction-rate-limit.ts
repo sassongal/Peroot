@@ -15,14 +15,18 @@ function dayKey(): string {
   return `${d.getUTCFullYear()}-${m}-${day}`;
 }
 
+const DAY_TTL = 60 * 60 * 26; // 26h to cover timezone drift
+
 export async function checkExtractionLimit(
   userId: string,
   tier: PlanTier,
 ): Promise<ExtractionLimitResult> {
   const limit = getContextLimits(tier).extractionsPerDay;
-  const key = `extract:${userId}:${dayKey()}`;
-  const count = (await redis.incr(key)) as number;
-  if (count === 1) await redis.expire(key, 60 * 60 * 26);
+  const k = `extract:${userId}:${dayKey()}`;
+  // Ensure the key exists with TTL before incrementing — prevents orphaned keys
+  // if the process crashes between incr and expire.
+  await redis.set(k, 0, { ex: DAY_TTL, nx: true });
+  const count = (await redis.incr(k)) as number;
   const allowed = count <= limit;
   return { allowed, remaining: Math.max(0, limit - count), limit };
 }

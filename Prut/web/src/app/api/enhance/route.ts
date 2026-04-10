@@ -108,7 +108,7 @@ export async function POST(req: Request) {
           ? await supabase.auth.getUser(bearerToken)
           : await supabase.auth.getUser();
       userId = user?.id;
-      if (bearerToken) useServiceClient = true;
+      if (bearerToken && userId) useServiceClient = true;
     }
 
     // Guest access: allow unauthenticated users with IP-based rate limiting

@@ -48,7 +48,7 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
               { type: 'text', text: `כותרת: ${input.title}\nנתח את התמונה:` },
               { type: 'image', image: `data:${input.imageMimeType};base64,${input.imageBase64}` },
             ]
-          : [{ type: 'text', text: `כותרת: ${input.title}\n\nתוכן:\n${input.text}` }],
+          : [{ type: 'text', text: `כותרת: ${input.title}\n\n<USER_DOCUMENT>\n${input.text}\n</USER_DOCUMENT>` }],
     },
   ];
 
