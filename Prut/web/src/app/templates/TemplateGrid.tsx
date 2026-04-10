@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Crown, Variable } from "lucide-react";
+import { Crown, Search, Variable, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LibraryPrompt } from "@/lib/types";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { setPendingPrompt } from "@/lib/pending-prompt";
+import { hebrewFuzzyMatch, hebrewMatchScore } from "@/lib/hebrew-search";
 
 interface TemplateGridProps {
   templates: LibraryPrompt[];
@@ -37,6 +38,9 @@ function groupByCategory(templates: LibraryPrompt[]) {
 export function TemplateGrid({ templates }: TemplateGridProps) {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const trimmedQuery = query.trim();
+  const isSearching = trimmedQuery.length > 0;
 
   const handleUseTemplate = (template: LibraryPrompt) => {
     setPendingPrompt({
@@ -61,18 +65,74 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
       .map(([id, count]) => ({ id, label: CATEGORY_LABELS[id] || id, count }));
   }, [templates]);
 
-  const filtered = useMemo(
-    () =>
-      activeCategory
-        ? templates.filter((t) => (t.category || "General") === activeCategory)
-        : templates,
-    [templates, activeCategory]
+  const filtered = useMemo(() => {
+    let pool = activeCategory
+      ? templates.filter((t) => (t.category || "General") === activeCategory)
+      : templates;
+
+    if (isSearching) {
+      const scored: Array<{ template: LibraryPrompt; score: number }> = [];
+      for (const t of pool) {
+        const categoryLabel = CATEGORY_LABELS[t.category] || t.category || "";
+        const haystack = `${t.title} ${t.use_case ?? ""} ${categoryLabel}`;
+        if (!hebrewFuzzyMatch(haystack, trimmedQuery)) continue;
+        // Title matches are weighted 2x — they're a stronger signal of intent.
+        const score =
+          hebrewMatchScore(t.title, trimmedQuery) * 2 +
+          hebrewMatchScore(t.use_case ?? "", trimmedQuery);
+        scored.push({ template: t, score });
+      }
+      scored.sort((a, b) => b.score - a.score);
+      pool = scored.map((s) => s.template);
+    }
+
+    return pool;
+  }, [templates, activeCategory, isSearching, trimmedQuery]);
+
+  // When searching, we render a flat ranked list — section grouping would
+  // re-shuffle results away from the relevance order computed in `filtered`.
+  const grouped = useMemo(
+    () => (isSearching ? [["__results__", filtered]] as const : groupByCategory(filtered)),
+    [filtered, isSearching]
   );
 
-  const grouped = useMemo(() => groupByCategory(filtered), [filtered]);
+  const allChipCount = isSearching ? filtered.length : templates.length;
 
   return (
     <>
+      {/* Free-text search */}
+      <div className="mb-5">
+        <div className="relative" dir="rtl">
+          <Search
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setQuery("");
+            }}
+            placeholder="חפש תבנית — כותרת, נושא או מילת מפתח"
+            aria-label="חיפוש תבניות"
+            // Hide the WebKit/Chromium native search-clear button so it
+            // doesn't visually collide with our custom <X /> clear button.
+            className="w-full min-h-[44px] pr-10 pl-10 rounded-full border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-amber-500/40 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+          />
+          {query.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="נקה חיפוש"
+              className="absolute left-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Category filter chips */}
       <div className="mb-10 -mx-4 px-4 overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-2 pb-2 min-w-max">
@@ -85,7 +145,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
                 : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5"
             )}
           >
-            הכל ({templates.length})
+            הכל ({allChipCount})
           </button>
           {categories.map(({ id, label, count }) => (
             <button
@@ -106,12 +166,28 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
         </div>
       </div>
 
+      {/* Search results header (only when searching) */}
+      {isSearching && filtered.length > 0 && (
+        <div className="flex items-center gap-3 mb-5 pb-3 border-b border-border">
+          <h2 className="text-lg md:text-xl font-serif text-foreground">
+            תוצאות חיפוש
+          </h2>
+          <span
+            className="text-xs text-muted-foreground"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {filtered.length} תוצאות עבור &quot;{trimmedQuery}&quot;
+          </span>
+        </div>
+      )}
+
       {/* Template groups */}
       <div className="space-y-12">
         {grouped.map(([category, items]) => (
           <section key={category} aria-label={CATEGORY_LABELS[category] || category}>
-            {/* Show section header only when showing all categories */}
-            {!activeCategory && (
+            {/* Show section header only when showing all categories AND not searching */}
+            {!activeCategory && !isSearching && (
               <div className="flex items-center gap-3 mb-5 pb-3 border-b border-border">
                 <h2 className="text-lg md:text-xl font-serif text-foreground">
                   {CATEGORY_LABELS[category] || category}
@@ -189,10 +265,21 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
 
         {/* Empty state */}
         {filtered.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-16" role="status" aria-live="polite">
             <p className="text-muted-foreground text-lg">
-              לא נמצאו תבניות בקטגוריה זו
+              {isSearching
+                ? `לא נמצאו תבניות עבור "${trimmedQuery}"`
+                : "לא נמצאו תבניות בקטגוריה זו"}
             </p>
+            {isSearching && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="mt-4 text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline"
+              >
+                נקה חיפוש
+              </button>
+            )}
           </div>
         )}
       </div>
