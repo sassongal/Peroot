@@ -43,15 +43,30 @@ export function GlobalContextWrapper({
     // This eliminates the extra round-trip after hydration for logged-in users.
     if (!initialUser) {
       supabase.auth.getUser().then(({ data }) => {
-        const next = data.user ?? null;
-        setUser((prev) => (prev?.id === next?.id ? prev : next));
+        // Always apply getUser() — fresh session/metadata vs id-only dedupe.
+        setUser(data.user ?? null);
       });
     }
     // Always subscribe to auth state changes so sign-in/sign-out updates live.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const next = session?.user ?? null;
-      // Avoid redundant re-renders when Supabase emits the same session/user again on mount.
-      setUser((prev) => (prev?.id === next?.id ? prev : next));
+      setUser((prev) => {
+        if (next === null) {
+          return prev === null ? prev : null;
+        }
+        if (prev === null || prev.id !== next.id) {
+          return next;
+        }
+        // Same user id: refresh state when the session/user actually changes.
+        if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+          return next;
+        }
+        // INITIAL_SESSION often duplicates SSR + getUser; skip identical id to reduce flicker.
+        if (event === "INITIAL_SESSION") {
+          return prev;
+        }
+        return next;
+      });
     });
     return () => subscription.unsubscribe();
   }, [initialUser]);
