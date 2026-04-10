@@ -6,7 +6,7 @@ import { getIterationInstructions } from "./refinement/iteration-guidance";
 import { getQuestionsPromptInstructions } from "./refinement/enhanced-questions";
 import { EnhancedScorer, type EnhancedScore } from "./scoring/enhanced-scorer";
 import { memoryFlags } from "../memory/injection-flags";
-import { renderInjection } from '@/lib/context/engine';
+import { renderInjection } from '@/lib/context/engine/inject';
 import type { ContextBlock } from '@/lib/context/engine/types';
 
 /**
