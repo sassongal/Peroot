@@ -34,16 +34,17 @@ type EnrichOutput = Pick<
   'title' | 'documentType' | 'summary' | 'keyFacts' | 'entities'
 >;
 
-const ENRICH_MODEL = 'gemini-2.5-flash-lite';
+const ENRICH_MODEL_TEXT = 'gemini-2.5-flash-lite';
+const ENRICH_MODEL_VISION = 'gemini-2.5-flash';
 
 export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
-  const system = selectEnrichPrompt(input.detectedType, input.sourceType === 'image');
+  const isImage = input.sourceType === 'image' && !!input.imageBase64;
+  const system = selectEnrichPrompt(input.detectedType, isImage);
 
   const messages: ModelMessage[] = [
     {
       role: 'user',
-      content:
-        input.sourceType === 'image' && input.imageBase64
+      content: isImage
           ? [
               { type: 'text', text: `כותרת: ${input.title}\nנתח את התמונה:` },
               { type: 'image', image: `data:${input.imageMimeType};base64,${input.imageBase64}` },
@@ -52,8 +53,9 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
     },
   ];
 
+  // Use vision-capable model for images, lightweight model for text
   const result = await generateText({
-    model: google(ENRICH_MODEL),
+    model: google(isImage ? ENRICH_MODEL_VISION : ENRICH_MODEL_TEXT),
     output: Output.object({ schema: enrichSchema }),
     system,
     messages,
