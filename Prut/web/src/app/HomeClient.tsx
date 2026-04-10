@@ -571,7 +571,7 @@ function PageContent() {
     }
 
     if (context.isOverLimit) {
-      toast.error("יש יותר מדי context — הסירו קובץ לפני שדרוג");
+      toast.error("יש יותר מדי context — הסירו קובץ לפני שיפור הפרומפט");
       return;
     }
 
@@ -1153,7 +1153,10 @@ function PageContent() {
     <HomeViewChrome
       viewMode={viewMode}
       onTabChange={handleMobileTabChange}
-      discovery={discovery}
+      discovery={{
+        ...discovery,
+        visible: discovery.visible && !showOnboarding,
+      }}
       onDiscoveryCtaClick={handleDiscoveryCtaClick}
       isLoading={ps.isLoading}
       streamPhase={ps.streamPhase}

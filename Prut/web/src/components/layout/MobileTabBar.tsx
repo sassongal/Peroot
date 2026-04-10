@@ -12,7 +12,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { name: "home",     label: "שדרוג",    icon: Home },
+  { name: "home",     label: "שפר",    icon: Home },
   { name: "library",  label: "ספרייה",   icon: Library },
   { name: "personal", label: "שלי",      icon: BookOpen },
   { name: "history",  label: "היסטוריה", icon: Clock },
@@ -51,7 +51,7 @@ export function MobileTabBar({ activeTab, onTabChange }: MobileTabBarProps) {
             )}
           >
             <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
-            <span className="text-[10px] font-medium leading-tight">{label}</span>
+            <span className="text-[11px] font-medium leading-tight">{label}</span>
           </button>
         );
       })}

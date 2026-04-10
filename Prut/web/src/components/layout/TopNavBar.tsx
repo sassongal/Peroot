@@ -2,14 +2,23 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Library, Wand2, Sun, Moon, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BookOpen, Library, Wand2, Sun, Moon, MoreHorizontal, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
+
+const MORE_NAV_LINKS: { href: string; label: string }[] = [
+  { href: "/blog", label: "בלוג" },
+  { href: "/pricing", label: "מחירים" },
+  { href: "/prompts", label: "פרומפטים" },
+  { href: "/templates", label: "תבניות" },
+  { href: "/guide", label: "מדריך" },
+];
 
 type ViewMode = "home" | "library" | "personal";
 
 const NAV_ITEMS: { id: ViewMode; label: string; Icon: LucideIcon }[] = [
-  { id: "home", label: "שדרוג", Icon: Wand2 },
+  { id: "home", label: "שפר", Icon: Wand2 },
   { id: "library", label: "ספרייה", Icon: Library },
   { id: "personal", label: "שלי", Icon: BookOpen },
 ];
@@ -22,6 +31,25 @@ interface TopNavBarProps {
 
 export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
   const { theme, toggleTheme } = useTheme();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (moreWrapRef.current?.contains(e.target as Node)) return;
+      setMoreOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMoreOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [moreOpen]);
 
   return (
     <nav
@@ -35,7 +63,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
     >
       <div className="flex items-center justify-between h-14 px-4 sm:px-6 max-w-[1920px] mx-auto">
         {/* Right: Logo + Nav links */}
-        <div className="flex items-center gap-0.5 sm:gap-2 overflow-hidden">
+        <div className="flex min-w-0 items-center gap-0.5 sm:gap-2 overflow-visible">
           <Link
             href="/"
             className="flex items-center me-1 sm:me-4 shrink-0"
@@ -119,6 +147,43 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
           >
             מדריך
           </Link>
+
+          <div className="relative shrink-0 md:hidden" ref={moreWrapRef}>
+            <button
+              type="button"
+              onClick={() => setMoreOpen((o) => !o)}
+              className={cn(
+                "flex items-center gap-1 px-2 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                moreOpen
+                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent"
+              )}
+              aria-expanded={moreOpen}
+              aria-haspopup="menu"
+              aria-label="עוד קישורים"
+            >
+              <MoreHorizontal className="w-5 h-5 shrink-0" />
+              <span className="text-xs font-medium max-[360px]:hidden">עוד</span>
+            </button>
+            {moreOpen && (
+              <div
+                role="menu"
+                className="absolute end-0 top-full z-[60] mt-1 min-w-[11rem] rounded-xl border border-[var(--border-nav)] bg-[var(--surface-nav)] py-1 shadow-lg backdrop-blur-xl"
+              >
+                {MORE_NAV_LINKS.map(({ href, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    role="menuitem"
+                    className="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Left: Controls slot */}

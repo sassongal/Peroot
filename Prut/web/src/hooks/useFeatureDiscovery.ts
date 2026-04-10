@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 
 // ─── Feature Discovery Tips ─────────────────────────────────────────────────
 
@@ -92,7 +92,27 @@ const ALL_TIPS: DiscoveryTip[] = [
 ];
 
 const STORAGE_KEY = "peroot_discovery_tips";
+const SNOOZE_UNTIL_KEY = "peroot_discovery_snooze_until";
+const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days after dismiss
 const MIN_INTERVAL = 3; // Show tips at most every 3 enhances
+
+function isSnoozed(): boolean {
+  try {
+    const raw = localStorage.getItem(SNOOZE_UNTIL_KEY);
+    if (!raw) return false;
+    return Date.now() < Number(raw);
+  } catch {
+    return false;
+  }
+}
+
+function snoozeDiscovery() {
+  try {
+    localStorage.setItem(SNOOZE_UNTIL_KEY, String(Date.now() + SNOOZE_MS));
+  } catch {
+    /* ignore */
+  }
+}
 
 interface DiscoveryState {
   seen: string[];
@@ -139,6 +159,8 @@ export function useFeatureDiscovery() {
 
   /** Call this after each successful enhance */
   const onEnhanceComplete = useCallback(() => {
+    if (isSnoozed()) return;
+
     const state = getState();
     state.enhanceCount += 1;
     saveState(state);
@@ -179,6 +201,7 @@ export function useFeatureDiscovery() {
     if (currentIndex < activeTips.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
+      snoozeDiscovery();
       setVisible(false);
       setActiveTips([]);
     }
@@ -186,6 +209,7 @@ export function useFeatureDiscovery() {
 
   /** Dismiss all tips */
   const dismiss = useCallback(() => {
+    snoozeDiscovery();
     const state = getState();
     // Mark all currently shown tips as seen
     for (const tip of activeTips) {

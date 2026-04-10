@@ -43,7 +43,8 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
       : "fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:bottom-24 md:pb-0 pb-[env(safe-area-inset-bottom)] right-4 sm:right-6 z-[55]";
 
   const handleFeedback = () => {
-     window.location.href = "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
+    window.location.href =
+      "mailto:gal@joya-tech.net?subject=משוב על Peroot&body=היי, רציתי להציע/לדווח...";
   };
 
   return (

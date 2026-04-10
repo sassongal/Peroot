@@ -98,7 +98,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <AlertCircle className="w-12 h-12 text-red-500" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">Access Denied</h1>
-          <p className="text-slate-500 font-medium">{t.auth.unexpected_error || "המזהה שלך אינו מורשה לגשת לליבת המערכת של Nexus Admin."}</p>
+          <p className="text-slate-500 font-medium">{t.auth.unexpected_error || "המזהה שלך אינו מורשה לגשת לאזור הניהול של Peroot."}</p>
           <Link href="/" className="inline-block px-8 py-3 bg-white text-black rounded-xl font-bold transition-all hover:bg-slate-200">
              {t.common.back || "חזרה לדף הבית"}
           </Link>
@@ -133,7 +133,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Command className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h1 className="text-xl font-black tracking-tighter text-white">NEXUS ADMIN</h1>
+              <h1 className="text-xl font-black tracking-tighter text-white">Peroot — ניהול</h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">v2.1 Stable</span>
@@ -209,7 +209,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="lg:me-80">
         {/* Mobile top bar with hamburger */}
         <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
-          <span className="text-sm font-black tracking-tighter text-white">NEXUS ADMIN</span>
+          <span className="text-sm font-black tracking-tighter text-white">Peroot — ניהול</span>
           <button
             className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
             onClick={() => setSidebarOpen(true)}
