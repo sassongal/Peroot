@@ -41,15 +41,23 @@ function assertPublicUrl(raw: string): URL {
 }
 
 async function assertPublicDns(hostname: string): Promise<void> {
+  const blocked = 'כתובת פנימית חסומה';
   try {
-    const addresses = await dns.resolve4(hostname);
-    for (const ip of addresses) {
+    const [v4, v6] = await Promise.allSettled([
+      dns.resolve4(hostname),
+      dns.resolve6(hostname),
+    ]);
+    const ips = [
+      ...(v4.status === 'fulfilled' ? v4.value : []),
+      ...(v6.status === 'fulfilled' ? v6.value : []),
+    ];
+    for (const ip of ips) {
       if (BLOCKED_IP_RE.test(ip)) {
-        throw new Error('כתובת פנימית חסומה');
+        throw new Error(blocked);
       }
     }
   } catch (err) {
-    if (err instanceof Error && err.message === 'כתובת פנימית חסומה') throw err;
+    if (err instanceof Error && err.message === blocked) throw err;
     // DNS resolution failure — let fetch handle it
   }
 }
@@ -60,8 +68,9 @@ export async function extractUrl(
 ): Promise<UrlExtractionResult> {
   const parsed = assertPublicUrl(url);
   await assertPublicDns(parsed.hostname);
-  const html = await fetchText(url, opts.timeoutMs ?? DEFAULT_TIMEOUT);
-  const readable = readabilityParse(html, url);
+  const normalizedUrl = parsed.href;
+  const html = await fetchText(normalizedUrl, opts.timeoutMs ?? DEFAULT_TIMEOUT);
+  const readable = readabilityParse(html, normalizedUrl);
 
   if (readable && readable.text.length >= MIN_USEFUL_CHARS) {
     return {
@@ -71,20 +80,20 @@ export async function extractUrl(
         title: readable.title,
         author: readable.author,
         publishedTime: readable.publishedTime,
-        sourceUrl: url,
+        sourceUrl: normalizedUrl,
       },
     };
   }
 
   if (opts.jinaFallback) {
-    const jina = await fetchJina(url, opts.timeoutMs ?? DEFAULT_TIMEOUT);
+    const jina = await fetchJina(normalizedUrl, opts.timeoutMs ?? DEFAULT_TIMEOUT);
     if (jina.length >= MIN_JINA_CHARS) {
       return {
         text: jina,
         metadata: {
           format: 'url',
           title: extractMarkdownTitle(jina),
-          sourceUrl: url,
+          sourceUrl: normalizedUrl,
           usedFallback: 'jina',
         },
       };
@@ -96,18 +105,43 @@ export async function extractUrl(
   );
 }
 
+const MAX_REDIRECTS = 5;
+
 async function fetchText(url: string, timeoutMs: number): Promise<string> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(url, {
-      signal: ctrl.signal,
-      headers: {
-        'user-agent': 'Mozilla/5.0 (compatible; PerootBot/1.0; +https://www.peroot.space)',
-        'accept': 'text/html,application/xhtml+xml',
-      },
-      redirect: 'follow',
-    });
+    let currentUrl = url;
+    let redirects = 0;
+    let res: Response;
+
+    // Manual redirect loop to validate each hop against SSRF blocklist
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      res = await fetch(currentUrl, {
+        signal: ctrl.signal,
+        headers: {
+          'user-agent': 'Mozilla/5.0 (compatible; PerootBot/1.0; +https://www.peroot.space)',
+          'accept': 'text/html,application/xhtml+xml',
+        },
+        redirect: 'manual',
+      });
+
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location');
+        if (!location || ++redirects > MAX_REDIRECTS) {
+          throw new Error(`Too many redirects`);
+        }
+        // Resolve relative redirects against current URL
+        const next = new URL(location, currentUrl);
+        assertPublicUrl(next.href);
+        await assertPublicDns(next.hostname);
+        currentUrl = next.href;
+        continue;
+      }
+      break;
+    }
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const contentLength = res.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_BYTES) {
@@ -127,7 +161,7 @@ async function fetchJina(url: string, timeoutMs: number): Promise<string> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(`https://r.jina.ai/${encodeURIComponent(url)}`, { signal: ctrl.signal });
+    const res = await fetch(`https://r.jina.ai/${url}`, { signal: ctrl.signal });
     if (!res.ok) throw new Error(`Jina ${res.status}`);
     return await res.text();
   } finally {

@@ -16,9 +16,6 @@ const MAX_FILES = 3;
 const MAX_URLS = 3;
 const MAX_IMAGES = 3;
 
-// Sync counters to prevent double-click races (ref is incremented before async work)
-const pendingCounts = { file: 0, url: 0, image: 0 };
-
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -46,6 +43,9 @@ export function useContextAttachments() {
   const attachmentsRef = useRef(attachments);
   attachmentsRef.current = attachments;
 
+  // Sync counters to prevent double-click races (ref scoped to this instance)
+  const pendingCounts = useRef({ file: 0, url: 0, image: 0 });
+
   const totalTokens = useMemo(
     () =>
       attachments.reduce((sum, a) => {
@@ -71,10 +71,10 @@ export function useContextAttachments() {
   const addFile = useCallback(
     async (file: File) => {
       // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "file") + pendingCounts.file >= MAX_FILES) {
+      if (countByType(attachmentsRef.current, "file") + pendingCounts.current.file >= MAX_FILES) {
         throw new Error("ניתן לצרף עד 3 קבצים");
       }
-      pendingCounts.file++;
+      pendingCounts.current.file++;
       // Validate size
       if (file.size > MAX_FILE_SIZE) {
         throw new Error("הקובץ גדול מדי (מקסימום 10MB)");
@@ -132,7 +132,7 @@ export function useContextAttachments() {
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       } finally {
-        pendingCounts.file--;
+        pendingCounts.current.file--;
       }
     },
     [updateAttachment]
@@ -141,10 +141,10 @@ export function useContextAttachments() {
   const addUrl = useCallback(
     async (url: string) => {
       // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "url") + pendingCounts.url >= MAX_URLS) {
+      if (countByType(attachmentsRef.current, "url") + pendingCounts.current.url >= MAX_URLS) {
         throw new Error("ניתן לצרף עד 3 כתובות URL");
       }
-      pendingCounts.url++;
+      pendingCounts.current.url++;
       // Validate URL format
       try {
         new URL(url);
@@ -195,7 +195,7 @@ export function useContextAttachments() {
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       } finally {
-        pendingCounts.url--;
+        pendingCounts.current.url--;
       }
     },
     [updateAttachment]
@@ -204,10 +204,10 @@ export function useContextAttachments() {
   const addImage = useCallback(
     async (file: File) => {
       // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "image") + pendingCounts.image >= MAX_IMAGES) {
+      if (countByType(attachmentsRef.current, "image") + pendingCounts.current.image >= MAX_IMAGES) {
         throw new Error("ניתן לצרף עד 3 תמונות");
       }
-      pendingCounts.image++;
+      pendingCounts.current.image++;
       // Validate size
       if (file.size > MAX_IMAGE_SIZE) {
         throw new Error("התמונה גדולה מדי (מקסימום 5MB)");
@@ -265,7 +265,7 @@ export function useContextAttachments() {
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       } finally {
-        pendingCounts.image--;
+        pendingCounts.current.image--;
       }
     },
     [updateAttachment]
