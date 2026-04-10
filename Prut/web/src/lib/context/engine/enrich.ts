@@ -34,9 +34,8 @@ type EnrichOutput = Pick<
   'title' | 'documentType' | 'summary' | 'keyFacts' | 'entities'
 >;
 
-// flash-lite is text-only; images require the vision-capable flash model
-const TEXT_MODEL = 'gemini-2.5-flash-lite';
-const VISION_MODEL = 'gemini-2.5-flash';
+const ENRICH_MODEL_TEXT = 'gemini-2.5-flash-lite';
+const ENRICH_MODEL_VISION = 'gemini-2.5-flash';
 
 export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
   const isImage = input.sourceType === 'image' && !!input.imageBase64;
@@ -54,8 +53,9 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
     },
   ];
 
+  // Use vision-capable model for images, lightweight model for text
   const result = await generateText({
-    model: google(isImage ? VISION_MODEL : TEXT_MODEL),
+    model: google(isImage ? ENRICH_MODEL_VISION : ENRICH_MODEL_TEXT),
     output: Output.object({ schema: enrichSchema }),
     system,
     messages,

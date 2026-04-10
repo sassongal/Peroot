@@ -104,6 +104,7 @@ export function pickDefaults(task?: string, userMax?: number, userTemp?: number)
                                              // + PROMPT_TITLE + GENIUS_QUESTIONS trailer.
                                              // Live test: output=8188 reasoning=5452 = hard ceiling hit.
         chain:    { max: 3072,  temp: 0.4 },
+        classify: { max: 256,   temp: 0.2 }, // tiny JSON output (category + tags)
     };
     const preset = presets[task ?? 'enhance'] ?? presets.enhance;
     const requestedMax = userMax ?? preset.max;
@@ -148,7 +149,7 @@ export function buildProviderOptions(task?: string): PerootProviderOptions | und
     // Only tasks that produce long structured output need thinking disabled.
     // Enhance/agent/research actually benefit from the reasoning mode, so
     // we leave them with default thinking behavior.
-    const thinkingDisabledTasks = new Set(['image', 'video', 'chain']);
+    const thinkingDisabledTasks = new Set(['image', 'video', 'chain', 'classify']);
     if (!task || !thinkingDisabledTasks.has(task)) {
         return undefined;
     }

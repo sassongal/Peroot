@@ -28,7 +28,7 @@ npm run format     # Prettier
 - `middleware.ts` — auth, CSRF (origin validation, exempts webhooks + Bearer), maintenance mode
 
 ## AI Gateway
-`AIGateway.generateStream()` / `generateFull()`. Fallback chain: gemini-2.5-flash → mistral-small → groq/llama → deepseek. Circuit breaker auto-skips failing providers; 5-min timeout.
+`AIGateway.generateStream()` / `generateFull()`. Fallback chain: gemini-2.5-flash → mistral-small → gemini-2.5-flash-lite → llama-4-scout → gpt-oss-20b. Task routing in `models.ts`. Circuit breaker auto-skips failing providers; `classify` task routes to Flash Lite first (lightweight internal tasks).
 
 ## DB
 Supabase Postgres, RLS-enforced isolation. Migrations in `supabase/migrations/`. Read table list directly from migrations when needed.
@@ -44,7 +44,7 @@ React Context (Library/Favorites/I18n) + React Query for server state + local st
 
 ## Env vars
 Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-AI: `GOOGLE_GENERATIVE_AI_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `MISTRAL_API_KEY`
+AI: `GOOGLE_GENERATIVE_AI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`
 Services: `REDIS_URL`, `RESEND_API_KEY`, `LEMONSQUEEZY_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`
 
 ## Deploy
