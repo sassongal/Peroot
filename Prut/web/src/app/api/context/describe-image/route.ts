@@ -21,14 +21,9 @@ export async function POST(request: NextRequest) {
       .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
     const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
 
-    // Rate limit — allow request if Redis is unavailable
-    try {
-      const rl = await checkExtractionLimit(user.id, tier);
-      if (!rl.allowed) {
-        return NextResponse.json({ error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 });
-      }
-    } catch (rlErr) {
-      logger.error('[context/describe-image] rate limit check failed, allowing request', rlErr);
+    const rl = await checkExtractionLimit(user.id, tier);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 });
     }
 
     const formData = await request.formData();
