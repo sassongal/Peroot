@@ -64,6 +64,13 @@ export function UserMenu({ user, position }: UserMenuProps) {
                     user?.identities?.[0]?.identity_data?.avatar_url ||
                     user?.identities?.[0]?.identity_data?.picture;
 
+  /** Display-only avatars: no crossOrigin — Google URLs often fail CORS when fetched as cors mode. */
+  const avatarFallbackUrl =
+    user &&
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      (metadata.full_name as string | undefined) || user.email || "U"
+    )}&background=f59e0b&color=fff&bold=true`;
+
   // TOP POSITION: For guests (login button) OR logged-in users (avatar + menu)
   if (position === "top") {
     if (!user) {
@@ -138,17 +145,13 @@ export function UserMenu({ user, position }: UserMenuProps) {
               alt="תמונת פרופיל"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
               loading="eager"
               decoding="async"
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
-                if (!img.dataset.fallback) {
-                  img.dataset.fallback = '1';
-                  img.crossOrigin = '';
-                  img.src = avatarUrl;
-                } else {
-                  img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(metadata.full_name || user.email || 'U')}&background=f59e0b&color=fff&bold=true`;
+                if (!img.dataset.fallback && avatarFallbackUrl) {
+                  img.dataset.fallback = "1";
+                  img.src = avatarFallbackUrl;
                 }
               }}
             />
@@ -183,17 +186,13 @@ export function UserMenu({ user, position }: UserMenuProps) {
                             alt="תמונת פרופיל"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
-                            crossOrigin="anonymous"
                             loading="eager"
                             decoding="async"
                             onError={(e) => {
                               const img = e.target as HTMLImageElement;
-                              if (!img.dataset.fallback) {
-                                img.dataset.fallback = '1';
-                                img.crossOrigin = '';
-                                img.src = avatarUrl;
-                              } else {
-                                img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(metadata.full_name || user.email || 'U')}&background=f59e0b&color=fff&bold=true`;
+                              if (!img.dataset.fallback && avatarFallbackUrl) {
+                                img.dataset.fallback = "1";
+                                img.src = avatarFallbackUrl;
                               }
                             }}
                           />

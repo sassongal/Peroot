@@ -12,7 +12,12 @@ npm run test:e2e   # Playwright
 npm run typecheck  # tsc
 npm run lint       # ESLint
 npm run format     # Prettier
+ANALYZE=true npm run build   # webpack bundle analyzer (browser opens)
 ```
+
+Dead-code checks: `npx knip` (unused files/exports/deps). Example removals: orphaned server modules after refactors; duplicate static assets under `public/` only.
+
+**Profiling:** “Triple load” in dev is often React Strict Mode (effects run twice) plus SSR `getUser` + client auth — compare with `next build && next start`. For Chrome DevTools MCP in Cursor, enable the server in settings and use Performance + Network on the app URL; watch duplicate `/auth/v1/user` or React commit bursts.
 
 ## Layout (`src/`)
 - `app/` — App Router pages + `api/` REST routes (`admin/` role-protected, `p/[id]/` shared prompt, `prompts/`, `blog/`, `guides/`)

@@ -36,16 +36,22 @@ export function GlobalContextWrapper({
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [loginFeature, setLoginFeature] = useState("");
 
+  // In dev, React Strict Mode may still double-invoke effects — extra auth noise is local-only.
   useEffect(() => {
     const supabase = createClient();
     // Only fetch user client-side if no server-prefetched user was provided.
     // This eliminates the extra round-trip after hydration for logged-in users.
     if (!initialUser) {
-      supabase.auth.getUser().then(({ data }) => setUser(data.user));
+      supabase.auth.getUser().then(({ data }) => {
+        const next = data.user ?? null;
+        setUser((prev) => (prev?.id === next?.id ? prev : next));
+      });
     }
     // Always subscribe to auth state changes so sign-in/sign-out updates live.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const next = session?.user ?? null;
+      // Avoid redundant re-renders when Supabase emits the same session/user again on mount.
+      setUser((prev) => (prev?.id === next?.id ? prev : next));
     });
     return () => subscription.unsubscribe();
   }, [initialUser]);

@@ -41,7 +41,6 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.42",
-    "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "diff-match-patch": "^1.0.5",
     "framer-motion": "^12.38.0",
