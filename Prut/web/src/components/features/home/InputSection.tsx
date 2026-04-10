@@ -74,6 +74,7 @@ interface InputSectionProps {
   onAddFile: (file: File) => void;
   onAddUrl: (url: string) => void;
   onAddImage: (file: File) => void;
+  onRetryAttachment?: (id: string) => void;
   onRemoveAttachment: (id: string) => void;
   contextTotalTokens: number;
   contextIsOverLimit: boolean;
@@ -132,6 +133,7 @@ export const InputSection = memo<InputSectionProps>(({
   onAddFile,
   onAddUrl,
   onAddImage,
+  onRetryAttachment,
   onRemoveAttachment,
   contextTotalTokens,
   contextIsOverLimit,
@@ -212,6 +214,7 @@ export const InputSection = memo<InputSectionProps>(({
       <ContextChips
         attachments={contextAttachments}
         onRemove={onRemoveAttachment}
+        onRetry={onRetryAttachment}
         maxFiles={contextLimits?.maxFiles}
         tokenLimit={contextLimits?.tokenLimit}
       />

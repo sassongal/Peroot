@@ -1215,6 +1215,7 @@ function PageContent() {
           onAddFile={context.addFile}
           onAddUrl={context.addUrl}
           onAddImage={context.addImage}
+          onRetryAttachment={context.retryAttachment}
           onRemoveAttachment={context.removeAttachment}
           contextTotalTokens={context.totalTokens}
           contextIsOverLimit={context.isOverLimit}

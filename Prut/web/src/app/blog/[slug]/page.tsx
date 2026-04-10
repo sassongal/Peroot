@@ -19,11 +19,15 @@ interface Props {
 
 // Pre-render all published blog posts at build time + ISR every 60 minutes
 export async function generateStaticParams() {
+  // Graceful fallback when Supabase env vars are absent (preview deploys)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    return Object.keys(HEBREW_BLOG_SLUGS).map((heSlug) => ({ slug: heSlug }));
+  }
+
   const { createClient: createSupabase } = await import("@supabase/supabase-js");
-  const supabase = createSupabase(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createSupabase(url, key);
   const { data: posts } = await supabase
     .from("blog_posts")
     .select("slug")
