@@ -4,6 +4,7 @@ import { Trash2, ArrowRight, Plus, Copy, Search, Filter, Clock, Pencil, Check, X
 import { HistoryItem } from "@/hooks/useHistory";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { DateBadge } from "@/components/ui/DateBadge";
+import { SourceBadge } from "@/components/ui/SourceBadge";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -237,10 +238,8 @@ export function HistoryPanel({
                   )}>
                     {CATEGORY_LABELS[item.category] ?? item.category}
                   </span>
-                  {item.source === "extension" && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                      Extension
-                    </span>
+                  {item.source && item.source !== "web" && (
+                    <SourceBadge source={item.source} />
                   )}
                 </div>
                 <span className="text-[10px] text-slate-500" suppressHydrationWarning>

@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { BarChart3, Globe, FlaskConical, Filter, RefreshCw } from "lucide-react";
+import { BarChart3, Globe, FlaskConical, Filter, RefreshCw, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ── Lazy-loaded tab content ───────────────────────────────────────────────────
@@ -11,10 +11,11 @@ const AnalyticsOverviewTab = lazy(() => import("@/components/admin/tabs/Analytic
 const TrafficTab            = lazy(() => import("@/components/admin/tabs/TrafficTab"));
 const ExperimentsTab        = lazy(() => import("@/components/admin/tabs/ExperimentsTab"));
 const FunnelTab             = lazy(() => import("@/components/admin/tabs/FunnelTab"));
+const ScoringAnalyticsTab   = lazy(() => import("@/components/admin/tabs/ScoringAnalyticsTab").then((m) => ({ default: m.ScoringAnalyticsTab })));
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type TabKey = "overview" | "traffic" | "features" | "funnel";
+type TabKey = "overview" | "traffic" | "features" | "funnel" | "scoring";
 
 interface TabDef {
   key: TabKey;
@@ -27,6 +28,7 @@ const TABS: TabDef[] = [
   { key: "traffic",   label: "תנועה",        icon: Globe         },
   { key: "features",  label: "פיצ'רים",      icon: FlaskConical  },
   { key: "funnel",    label: "משפך",          icon: Filter        },
+  { key: "scoring",   label: "ציונים",        icon: Target        },
 ];
 
 // ── Loading fallback ──────────────────────────────────────────────────────────
@@ -86,6 +88,7 @@ export default function AnalyticsHubPage() {
           {activeTab === "traffic"   && <TrafficTab />}
           {activeTab === "features"  && <ExperimentsTab />}
           {activeTab === "funnel"    && <FunnelTab />}
+          {activeTab === "scoring"   && <ScoringAnalyticsTab />}
         </Suspense>
       </div>
     </AdminLayout>

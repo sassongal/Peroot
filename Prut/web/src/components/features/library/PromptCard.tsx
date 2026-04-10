@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { LibraryPrompt } from "@/lib/types";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
+import { DateBadge } from "@/components/ui/DateBadge";
 import { calculatePromptStrength, getStrengthInfo } from "@/lib/prompt-strength";
 import {
   Star, Plus, Copy, BookOpen, ImageIcon,
@@ -122,6 +123,17 @@ export function PromptCard({
             )}
           </div>
           <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{prompt.use_case}</p>
+          {prompt.created_at && (
+            <DateBadge
+              entity={{
+                createdAt: prompt.created_at,
+                updatedAt: prompt.updated_at || prompt.created_at,
+                lastUsedAt: prompt.last_used_at ?? null,
+              }}
+              mode="compact"
+              className="mt-1"
+            />
+          )}
         </div>
 
         {/* Quick actions on hover (desktop) */}

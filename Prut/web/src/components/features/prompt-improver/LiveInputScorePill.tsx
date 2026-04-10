@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Sparkles, Info, TrendingUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { InputScore, InputScoreLevel } from "@/lib/engines/scoring/input-scorer";
@@ -47,26 +48,32 @@ const LEVEL_STYLES: Record<InputScoreLevel, { chip: string; ring: string; icon: 
  * cluttering the UI before the user starts typing.
  */
 export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePillProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   if (!score || score.level === "empty") return null;
 
   const style = LEVEL_STYLES[score.level];
   const topMissing = score.missingTop[0];
   const topStrength = score.strengths[0];
+  const tooltipItems = score.missingTop.slice(0, 3);
 
   return (
-    <button
-      type="button"
-      onClick={onOpenBreakdown}
-      aria-label={`ציון פרומפט: ${score.total} מתוך 100, ${score.label}. לחץ לפירוק מלא.`}
-      className={cn(
-        "group inline-flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer",
-        "text-xs md:text-sm font-semibold shrink-0 max-w-full",
-        "focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-        style.chip,
-        style.ring
-      )}
-      dir="rtl"
-    >
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onOpenBreakdown}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        aria-label={`ציון פרומפט: ${score.total} מתוך 100, ${score.label}. לחץ לפירוק מלא.`}
+        className={cn(
+          "group inline-flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer",
+          "text-xs md:text-sm font-semibold shrink-0 max-w-full",
+          "focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+          style.chip,
+          style.ring
+        )}
+        dir="rtl"
+      >
       <span className={cn("relative flex items-center justify-center", style.icon)}>
         {score.level === "elite" ? (
           <Sparkles className="w-4 h-4" />
@@ -96,6 +103,26 @@ export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePil
       )}
 
       <Info className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
-    </button>
+      </button>
+
+      {/* Desktop hover tooltip — top 3 missing items */}
+      {showTooltip && tooltipItems.length > 0 && (
+        <div
+          className="hidden md:block absolute top-full mt-2 left-0 right-0 min-w-[260px] z-50
+            bg-[var(--bg-primary)] border border-[var(--glass-border)] rounded-xl shadow-lg p-3 space-y-2"
+          dir="rtl"
+        >
+          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">מה ישפר את הציון</p>
+          {tooltipItems.map((item) => (
+            <div key={item.key} className="text-xs">
+              <span className="font-semibold text-[var(--text-primary)]">{item.title}</span>
+              {item.why && (
+                <span className="text-[var(--text-muted)]"> — {item.why.slice(0, 80)}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

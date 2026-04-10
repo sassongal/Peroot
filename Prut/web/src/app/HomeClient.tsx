@@ -346,8 +346,16 @@ function PageContent() {
     setIsLoginRequiredModalOpen(true);
   };
 
-  // Debounce scoring
-  const debouncedInput = useDebouncedValue(ps.input, 300);
+  // Voice interim text — PromptInput reports it so scoring reflects what the
+  // user actually sees (inputVal + interimResult) during voice recording.
+  const [interimText, setInterimText] = useState("");
+  const handleInterimChange = useCallback((text: string) => setInterimText(text), []);
+
+  // Debounce scoring — combine committed input + voice interim for accuracy
+  const scoringText = interimText
+    ? ps.input + (ps.input && !ps.input.endsWith(' ') ? ' ' : '') + interimText
+    : ps.input;
+  const debouncedInput = useDebouncedValue(scoringText, 300);
   const debouncedCompletion = useDebouncedValue(ps.completion, 200);
 
   const inputScore = useMemo(
@@ -357,10 +365,25 @@ function PageContent() {
   // Live, mode-aware input score — drives the pill + breakdown drawer in
   // PromptInput. Separate from `inputScore` (which is kept only for telemetry
   // at trackEnhanceComplete and for analytic score tracking).
-  const liveInputScore = useMemo(
+  const rawInputScore = useMemo(
     () => scoreInput(debouncedInput, ps.selectedCapability),
     [debouncedInput, ps.selectedCapability]
   );
+
+  // EMA smoothing: prevents jumpy scores during rapid typing. Weighted toward
+  // new value (0.7) so it converges fast but avoids single-frame spikes.
+  // Ref mutation lives in useEffect (not useMemo) to respect React's purity contract.
+  const prevScoreRef = useRef<number>(0);
+  const liveInputScore = useMemo(() => {
+    if (!rawInputScore || rawInputScore.level === 'empty') {
+      return rawInputScore;
+    }
+    const smoothed = Math.round(prevScoreRef.current * 0.3 + rawInputScore.total * 0.7);
+    return { ...rawInputScore, total: smoothed };
+  }, [rawInputScore]);
+  useEffect(() => {
+    prevScoreRef.current = liveInputScore?.total ?? 0;
+  }, [liveInputScore]);
   // IMPORTANT: The result-section header score must match the numbers shown
   // inside the score-breakdown drawer and the PDF export. Both of those use
   // EnhancedScorer, so compute the header score from the same source to
@@ -1227,6 +1250,7 @@ function PageContent() {
           user={user}
           previousView={previousView}
           onBackToLibrary={handleBackToLibrary}
+          onInterimChange={handleInterimChange}
         />
       ) : (
         /* RESULT MODE (extracted component) */

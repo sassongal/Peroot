@@ -17,6 +17,7 @@ import { getVariableLabel, getVariablePlaceholder } from "@/lib/variable-utils";
 import type { InputScore } from "@/lib/engines/scoring/input-scorer";
 import { LiveInputScorePill } from "./LiveInputScorePill";
 import { InputScoreBreakdown } from "./InputScoreBreakdown";
+import { QuickImprovementChips } from "./QuickImprovementChips";
 import { TargetModel } from "@/lib/engines/types";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
@@ -64,6 +65,8 @@ interface PromptInputProps {
   setTargetModel: (model: TargetModel) => void;
   // Credits
   creditsRemaining?: number | null;
+  // Voice interim text callback — lets parent include interim speech in scoring
+  onInterimChange?: (text: string) => void;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -151,6 +154,7 @@ export function PromptInput({
   targetModel,
   setTargetModel,
   creditsRemaining,
+  onInterimChange,
 }: PromptInputProps) {
     const t = useI18n();
     const { isPro } = useSubscription();
@@ -202,14 +206,17 @@ export function PromptInput({
                     return trimmed ? trimmed + " " + text.trim() : text.trim();
                 });
                 setInterimResult("");
+                onInterimChange?.("");
             } else {
                 // Replace interim preview (not committed to inputVal)
                 setInterimResult(text);
+                onInterimChange?.(text);
             }
         },
         onError: (err) => {
             toast.error("שגיאה בהקלטה: " + err);
             setInterimResult("");
+            onInterimChange?.("");
         },
         lang: voiceLang,
     });
@@ -229,6 +236,7 @@ export function PromptInput({
         isOpen={scoreBreakdownOpen}
         onClose={() => setScoreBreakdownOpen(false)}
         score={liveInputScore}
+        inputText={inputVal}
       />
 
       {/* Capability Mode Selector */}
@@ -667,6 +675,18 @@ export function PromptInput({
               <LiveInputScorePill
                 score={liveInputScore}
                 onOpenBreakdown={() => setScoreBreakdownOpen(true)}
+              />
+
+              <QuickImprovementChips
+                score={liveInputScore}
+                onInsert={(text) => {
+                  setInputVal((prev: string) => {
+                    const sep = prev && !prev.endsWith('\n') ? '\n' : '';
+                    return prev + sep + text;
+                  });
+                  textareaRef.current?.focus();
+                }}
+                className="px-1"
               />
 
               <button

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { X, Check, AlertCircle, Lightbulb, Sparkles, TrendingUp } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { X, Check, AlertCircle, Lightbulb, Sparkles, TrendingUp, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   InputScore,
@@ -9,11 +9,14 @@ import type {
   InputScoreLevel,
   InputScoreMissing,
 } from "@/lib/engines/scoring/input-scorer";
+import { analyzeCoverage } from "@/lib/engines/scoring/coverage-analyzer";
 
 interface InputScoreBreakdownProps {
   isOpen: boolean;
   onClose: () => void;
   score: InputScore | null;
+  /** The raw input text — used for coverage analysis when drawer is open */
+  inputText?: string;
 }
 
 /**
@@ -26,7 +29,12 @@ interface InputScoreBreakdownProps {
  * No CSS-variable glass backgrounds inside the panel body, so the drawer
  * remains legible regardless of the underlying page background.
  */
-export function InputScoreBreakdown({ isOpen, onClose, score }: InputScoreBreakdownProps) {
+export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: InputScoreBreakdownProps) {
+  // Compute coverage lazily — only when drawer is open
+  const coverage = useMemo(() => {
+    if (!isOpen || !inputText || !score) return null;
+    return analyzeCoverage(inputText, score.mode);
+  }, [isOpen, inputText, score]);
   // Escape-to-close
   useEffect(() => {
     if (!isOpen) return;
@@ -164,6 +172,36 @@ export function InputScoreBreakdown({ isOpen, onClose, score }: InputScoreBreakd
                   <MissingCard key={m.key} item={m} />
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* Coverage indicator */}
+          {coverage && coverage.totalChunks >= 2 && (
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 space-y-2">
+              <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <Layers className="w-3 h-3" />
+                כיסוי טקסט
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      coverage.coverageRatio >= 0.7 ? "bg-emerald-500" : coverage.coverageRatio >= 0.5 ? "bg-amber-500" : "bg-rose-500"
+                    )}
+                    style={{ width: `${Math.round(coverage.coverageRatio * 100)}%` }}
+                  />
+                </div>
+                <span className="text-xs font-mono text-slate-600 dark:text-slate-400 tabular-nums shrink-0">
+                  {Math.round(coverage.coverageRatio * 100)}%
+                </span>
+              </div>
+              {coverage.tip && (
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 italic flex items-start gap-1.5">
+                  <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                  {coverage.tip}
+                </p>
+              )}
             </div>
           )}
 

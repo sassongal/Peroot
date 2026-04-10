@@ -86,6 +86,8 @@ interface InputSectionProps {
 
   // Credits
   creditsRemaining?: number | null;
+  // Voice interim text callback
+  onInterimChange?: (text: string) => void;
 
   // User context
   isNewUser: boolean;
@@ -145,6 +147,7 @@ export const InputSection = memo<InputSectionProps>(({
   user,
   previousView,
   onBackToLibrary,
+  onInterimChange,
 }) => {
   // Prompt of the Day - deterministic daily pick
   const promptOfTheDay = useMemo(() => {
@@ -208,6 +211,7 @@ export const InputSection = memo<InputSectionProps>(({
         targetModel={targetModel}
         setTargetModel={setTargetModel}
         creditsRemaining={creditsRemaining}
+        onInterimChange={onInterimChange}
       />
 
       {/* Context attachment chips */}

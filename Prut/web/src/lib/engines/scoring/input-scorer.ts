@@ -39,6 +39,8 @@ export interface InputScoreMissing {
   title: string;
   why: string;
   example?: string;
+  /** Ready-to-insert template text (no meta-instructions). Used by QuickImprovementChips. */
+  insertText?: string;
 }
 
 export interface InputScore {
@@ -238,10 +240,19 @@ function hasStructure(p: Parsed): boolean {
 }
 
 const BUZZWORDS_RE =
-  /איכותי|חדשני|מעולה|מצוין|פורץ\s+דרך|מהפכני|מתקדם|ברמה\s+(?:עולמית|גבוהה)|world[-\s]?class|cutting[-\s]?edge|state[-\s]?of[-\s]?the[-\s]?art|next[-\s]?gen|premium|amazing|revolutionary|innovative|disruptive|game[-\s]?changing|best[-\s]?in[-\s]?class|top[-\s]?tier|outstanding|superior|excellent|unparalleled|seamless|robust|powerful|leading/i;
+  /איכותי|חדשני|מעולה|מצוין|פורץ\s+דרך|מהפכני|מתקדם|ברמה\s+(?:עולמית|גבוהה)|באופן\s+מקצועי\s+ומקיף|תוכן\s+איכותי\s+ומעולה|world[-\s]?class|cutting[-\s]?edge|state[-\s]?of[-\s]?the[-\s]?art|next[-\s]?gen|premium|amazing|revolutionary|innovative|disruptive|game[-\s]?changing|best[-\s]?in[-\s]?class|top[-\s]?tier|outstanding|superior|excellent|unparalleled|seamless|robust|powerful|leading/i;
+
+// Global-flag version for counting all matches
+const BUZZWORDS_RE_G = new RegExp(BUZZWORDS_RE.source, 'ig');
 
 function hasBuzzwords(p: Parsed): boolean {
   return BUZZWORDS_RE.test(p.text);
+}
+
+/** Count total buzzword matches for graduated penalties. */
+function countBuzzwords(p: Parsed): number {
+  const matches = p.text.match(BUZZWORDS_RE_G);
+  return matches ? matches.length : 0;
 }
 
 function hasHedges(p: Parsed): boolean {
@@ -540,8 +551,10 @@ const DIMS: Record<string, DimensionDef> = {
         missing.push('hedges (אולי/maybe)');
       }
       if (hasBuzzwords(p) && !hasMeasurableQuantity(p)) {
-        pts -= 0.4;
-        missing.push('buzzwords without measurable spec');
+        const buzzCount = countBuzzwords(p);
+        // Graduated penalty: more buzzwords = more deduction
+        pts -= buzzCount >= 4 ? 0.7 : buzzCount >= 2 ? 0.4 : 0.2;
+        missing.push(`buzzwords without specs (×${buzzCount})`);
       }
       return { ratio: Math.max(0, pts), matched, missing };
     },
@@ -565,6 +578,59 @@ const DIMS: Record<string, DimensionDef> = {
       hasMeasurableQuantity(p)
         ? { ratio: 1, matched: ['measurable criteria'], missing: [] }
         : { ratio: 0, matched: [], missing: ['success metric'] },
+  },
+
+  enforceability: {
+    key: 'enforceability',
+    label: 'אכיפות',
+    tip: 'העדף מגבלות שאפשר לאכוף ("bullet points", "עד 5 סעיפים") על פני בלתי אפשריות ("בדיוק 500 מילים")',
+    test: (p) => {
+      const matched: string[] = [];
+      const missing: string[] = [];
+
+      // Enforceable patterns — things LLMs can reliably follow
+      const enforceable = [
+        { re: /(?:bullet|רשימה|סעיפים|numbered|ממוספר|טבלה|table|json|csv|markdown)/i, label: 'format control' },
+        { re: /(?:עד|מקסימום|לכל\s+היותר|max(?:imum)?|up\s+to|at\s+most|no\s+more\s+than)\s+\d+/i, label: 'max limit' },
+        { re: /(?:לפחות|מינימום|minimum|at\s+least)\s+\d+/i, label: 'min limit' },
+        { re: /(?:בעברית|באנגלית|in\s+(?:hebrew|english|spanish|french|arabic))/i, label: 'language control' },
+        { re: /(?:אל\s+ת|ללא|בלי|don['']?t|do\s+not|avoid|never|without)\s+\S+/i, label: 'negative constraint' },
+      ];
+
+      // Hard-to-enforce patterns — things LLMs struggle with
+      const hardToEnforce = [
+        { re: /בדיוק\s+\d+\s+(?:מילים|words|תווים|characters)/i, label: 'exact word count' },
+        { re: /(?:100%|מלאה|full|complete|total)\s*(?:דיוק|accuracy|precision)/i, label: 'perfect accuracy' },
+        { re: /(?:אל\s+תמציא|never\s+hallucinate|don['']?t\s+make\s+up|no\s+hallucination)/i, label: 'no hallucination' },
+        { re: /(?:בדיוק|exactly)\s+\d+\s+(?:משפטים|sentences|פסקאות|paragraphs)/i, label: 'exact count' },
+      ];
+
+      let enforceableCount = 0;
+      let hardCount = 0;
+
+      for (const { re, label } of enforceable) {
+        if (re.test(p.text)) {
+          enforceableCount++;
+          matched.push(label);
+        }
+      }
+
+      for (const { re, label } of hardToEnforce) {
+        if (re.test(p.text)) {
+          hardCount++;
+          missing.push(`hard to enforce: ${label}`);
+        }
+      }
+
+      if (enforceableCount === 0 && hardCount === 0) {
+        return { ratio: 0, matched: [], missing: ['enforceable constraints'] };
+      }
+
+      // Score: enforceable constraints are good, hard-to-enforce deduct
+      const base = Math.min(1, enforceableCount * 0.3);
+      const penalty = hardCount * 0.25;
+      return { ratio: Math.max(0, Math.min(1, base - penalty)), matched, missing };
+    },
   },
 
   // ---- Research-mode dims ----
@@ -781,14 +847,15 @@ type Profile = Array<{ key: string; weight: number }>;
 
 const PROFILES: Record<CapabilityMode, Profile> = {
   [CapabilityMode.STANDARD]: [
-    { key: 'role', weight: 15 },
-    { key: 'task', weight: 15 },
+    { key: 'role', weight: 14 },
+    { key: 'task', weight: 14 },
     { key: 'context', weight: 12 },
-    { key: 'format', weight: 12 },
-    { key: 'constraints', weight: 10 },
+    { key: 'format', weight: 11 },
+    { key: 'constraints', weight: 8 },
     { key: 'specificity', weight: 10 },
     { key: 'structure', weight: 8 },
-    { key: 'clarity', weight: 8 },
+    { key: 'clarity', weight: 7 },
+    { key: 'enforceability', weight: 6 },
     { key: 'examples', weight: 6 },
     { key: 'measurability', weight: 4 },
   ],
@@ -807,11 +874,12 @@ const PROFILES: Record<CapabilityMode, Profile> = {
   [CapabilityMode.AGENT_BUILDER]: [
     { key: 'role', weight: 10 },
     { key: 'task', weight: 10 },
-    { key: 'tools', weight: 14 },
-    { key: 'boundaries', weight: 12 },
-    { key: 'inputs_outputs', weight: 14 },
+    { key: 'tools', weight: 12 },
+    { key: 'boundaries', weight: 10 },
+    { key: 'inputs_outputs', weight: 12 },
     { key: 'policies', weight: 10 },
-    { key: 'failure_modes', weight: 10 },
+    { key: 'failure_modes', weight: 8 },
+    { key: 'enforceability', weight: 8 },
     { key: 'format', weight: 10 },
     { key: 'context', weight: 6 },
     { key: 'clarity', weight: 4 },
@@ -853,6 +921,7 @@ const MODE_EXAMPLES: Partial<Record<CapabilityMode, Record<string, string>>> = {
     specificity: 'הוסף מספרים מדידים: "3 דוגמאות", "עד 250 מילים"',
     examples: 'הוסף: "דוגמה: פתיח שעובד — …"',
     measurability: 'הוסף קריטריון: "בדיוק 5 נקודות בין 30‑50 מילים כל אחת"',
+    enforceability: 'החלף "בדיוק 500 מילים" ב‑"עד 500 מילים" — מגבלה שהמודל יכול לכבד',
   },
   [CapabilityMode.DEEP_RESEARCH]: {
     research_sources:
@@ -872,6 +941,7 @@ const MODE_EXAMPLES: Partial<Record<CapabilityMode, Record<string, string>>> = {
     inputs_outputs: 'הוסף schema: "Input: {userId, query}; Output: JSON {…}"',
     policies: 'הוסף: "לעולם אל תחשוף נתונים אישיים; אל תבצע פעולות כספיות"',
     failure_modes: 'הוסף: "אם כלי נכשל — נסה פעמיים ואז החזר שגיאה מסבירה"',
+    enforceability: 'הוסף מגבלות אכיפות: "אל תחזיר יותר מ‑3 תוצאות", "JSON בלבד"',
   },
   [CapabilityMode.IMAGE_GENERATION]: {
     subject: 'תאר את הנושא המרכזי: "אישה צעירה יושבת ליד חלון קפה"',
@@ -890,6 +960,38 @@ const MODE_EXAMPLES: Partial<Record<CapabilityMode, Record<string, string>>> = {
     composition: 'הוסף: "wide establishing shot, low angle"',
     lighting: 'הוסף: "golden hour, lens flare חם"',
     aspect_ratio: 'ציין: "16:9" לסינמטוגרפיה / "9:16" לרילס',
+  },
+};
+
+// Ready-to-insert template snippets (no meta-instructions).
+// Used by QuickImprovementChips to append actual prompt text.
+const MODE_INSERTS: Partial<Record<CapabilityMode, Record<string, string>>> = {
+  [CapabilityMode.STANDARD]: {
+    role: '\nתפקיד: ',
+    task: '\nמשימה: ',
+    context: '\nקהל יעד: ',
+    format: '\nפורמט: רשימה ממוספרת, עד 200 מילים',
+    constraints: '\nמגבלות: אל תשתמש ב‑',
+    specificity: '\nדרישות: 3 דוגמאות, עד 250 מילים',
+    examples: '\nדוגמה: ',
+    measurability: '\nקריטריון הצלחה: ',
+    enforceability: '\nמגבלה: עד ',
+  },
+  [CapabilityMode.AGENT_BUILDER]: {
+    role: '\nתפקיד: אתה סוכן ',
+    tools: '\nכלים זמינים: ',
+    boundaries: '\nגבולות: אל תענה מחוץ ל‑',
+    inputs_outputs: '\nInput: { }; Output: JSON { }',
+    policies: '\nמדיניות: ',
+    failure_modes: '\nטיפול בשגיאות: אם כלי נכשל — ',
+    enforceability: '\nמגבלה: JSON בלבד, עד 3 תוצאות',
+  },
+  [CapabilityMode.IMAGE_GENERATION]: {
+    subject: '\nנושא: ',
+    style: '\nסגנון: ',
+    composition: '\nקומפוזיציה: ',
+    lighting: '\nתאורה: ',
+    negative: '\nללא: טקסט, watermark',
   },
 };
 
@@ -915,6 +1017,7 @@ const MODE_WHYS: Record<string, string> = {
   inputs_outputs: 'בלי schema השילוב תוכנתית שביר',
   policies: 'בלי מדיניות הסוכן ייחשף לסיכון',
   failure_modes: 'בלי טיפול בשגיאות הסוכן קורס בשקט',
+  enforceability: 'מגבלות לא-אכיפות ("בדיוק 500 מילים") גורמות לאכזבה; העדף מגבלות שהמודל יכול לכבד',
   subject: 'בלי נושא ברור המודל מייצר בליל ויזואלי',
   style: 'בלי סגנון הפלט נראה גנרי',
   composition: 'בלי מסגור הקומפוזיציה מקרית',
@@ -947,6 +1050,7 @@ const DIM_TITLES: Record<string, string> = {
   inputs_outputs: 'חסר schema קלט/פלט',
   policies: 'חסרה מדיניות',
   failure_modes: 'חסר טיפול בשגיאות',
+  enforceability: 'מגבלות לא אכיפות',
   subject: 'חסר נושא מרכזי',
   style: 'חסר סגנון',
   composition: 'חסרה קומפוזיציה',
@@ -1039,6 +1143,14 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
     totalRaw = Math.max(0, totalRaw - 5);
   }
 
+  // Anti-gaming: buzzword inflation penalty — heavy buzzword use with no
+  // concrete specs/examples gets a global deduction beyond the per-dimension hit
+  const buzzCount = countBuzzwords(p);
+  if (buzzCount >= 3 && !hasMeasurableQuantity(p) && !hasExampleBlock(p)) {
+    const densityPenalty = Math.min(8, buzzCount * 1.5);
+    totalRaw = Math.max(0, totalRaw - densityPenalty);
+  }
+
   // Cap at 100
   let total = Math.round(Math.max(0, Math.min(100, totalRaw)));
 
@@ -1057,6 +1169,7 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
     title: DIM_TITLES[d.key] ?? d.key,
     why: MODE_WHYS[d.key] ?? '',
     example: MODE_EXAMPLES[mode]?.[d.key],
+    insertText: MODE_INSERTS[mode]?.[d.key],
   }));
 
   // If contradictions exist, inject a contradiction warning at the top
@@ -1066,6 +1179,17 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
       title: 'סתירה פנימית',
       why: 'הפרומפט מכיל דרישות סותרות (למשל "קצר" + מאות מילים)',
       example: 'בחר כיוון אחד: "עד 100 מילים" או "500+ מילים" — לא שניהם',
+    });
+    missingTop.length = Math.min(missingTop.length, 3);
+  }
+
+  // Buzzword inflation warning — nudge toward concrete specs
+  if (buzzCount >= 3 && !hasMeasurableQuantity(p) && !hasExampleBlock(p)) {
+    missingTop.unshift({
+      key: 'buzzword_inflation',
+      title: 'ניפוח מילות באזז',
+      why: `נמצאו ${buzzCount} מילות באזז ("איכותי", "מעולה"…) בלי מפרט קונקרטי — המודל מתייחס אליהן כרעש`,
+      example: 'החלף "תוכן איכותי חדשני מקצועי" ב‑"3 פסקאות, טון רשמי, עם 2 דוגמאות מספריות"',
     });
     missingTop.length = Math.min(missingTop.length, 3);
   }
