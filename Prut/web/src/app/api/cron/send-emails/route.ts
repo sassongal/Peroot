@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { ONBOARDING_STEPS } from "@/lib/emails/onboarding-templates";
+import { isOnboardingEmailAutomationEnabled } from "@/lib/emails/automation-env";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
@@ -19,6 +20,13 @@ function verifyCronAuth(request: NextRequest): boolean {
 export async function GET(request: NextRequest) {
   if (!verifyCronAuth(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isOnboardingEmailAutomationEnabled()) {
+    logger.info(
+      "[Cron/Emails] Skipped — set ONBOARDING_EMAILS_ENABLED=true (welcome + cron fallback)"
+    );
+    return NextResponse.json({ skipped: true, reason: "Onboarding emails disabled" });
   }
 
   const locked = await acquireCronLock('cron:send-emails', 35);
@@ -70,22 +78,11 @@ export async function GET(request: NextRequest) {
       const name = userData?.user?.user_metadata?.full_name || userData?.user?.user_metadata?.name || "";
       const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?token=${seq.id}`;
 
-      // Fetch referral code for day 7 email
-      let referralCode: string | undefined;
-      if (step.id === 'onboarding_day7') {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('referral_code')
-          .eq('id', seq.user_id)
-          .maybeSingle();
-        referralCode = (profile?.referral_code as string) || undefined;
-      }
-
       try {
         await EmailService.send({
           to: email,
           subject: step.subject,
-          html: step.html(name, unsubscribeUrl, referralCode),
+          html: step.html(name, unsubscribeUrl),
           userId: seq.user_id,
           emailType: step.id,
           metadata: { sequence_id: seq.id, step: seq.current_step },

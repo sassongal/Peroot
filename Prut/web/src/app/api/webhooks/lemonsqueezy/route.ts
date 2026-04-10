@@ -4,6 +4,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from '@/lib/emails/service';
 import { logger } from "@/lib/logger";
 import { adminChurnAlertEmail } from '@/lib/emails/templates/admin-alerts';
+import { churnEmail } from '@/lib/emails/reengagement-templates';
+import { buildNewsletterUnsubscribeUrl } from '@/lib/email/newsletter-unsubscribe-signing';
 
 /**
  * POST /api/webhooks/lemonsqueezy
@@ -212,13 +214,28 @@ export async function POST(request: Request) {
 
           logger.info(`[LemonSqueezy Webhook] CHURN: User ${userId} reverted to free, credits reset to ${dailyFreeLimit}`);
 
-          // Send churn email to user
+          const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space').replace(/\/$/, '');
+          let unsubscribeUrl = `${siteUrl}/settings`;
           try {
-            const { churnEmail } = await import('@/lib/emails/reengagement-templates');
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space';
+            const { data: seqRow } = await supabase
+              .from('email_sequences')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('sequence_type', 'onboarding')
+              .maybeSingle();
+            if (seqRow?.id) {
+              unsubscribeUrl = `${siteUrl}/api/email/unsubscribe?token=${seqRow.id}`;
+            } else if (subscriptionData.customer_email) {
+              unsubscribeUrl = buildNewsletterUnsubscribeUrl(siteUrl, subscriptionData.customer_email);
+            }
+          } catch {
+            /* fallback settings */
+          }
+
+          try {
             const template = churnEmail(
               subscriptionData.customer_name || 'משתמש/ת',
-              `${siteUrl}/settings?unsubscribe=true`
+              unsubscribeUrl,
             );
             if (subscriptionData.customer_email) {
               await EmailService.send({
@@ -233,7 +250,6 @@ export async function POST(request: Request) {
             logger.error('[LemonSqueezy Webhook] Churn email error:', emailErr);
           }
 
-          // Send churn alert to admin
           try {
             const { data: adminSettings } = await supabase
               .from('site_settings')

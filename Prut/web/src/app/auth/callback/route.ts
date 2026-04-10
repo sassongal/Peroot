@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { logger } from "@/lib/logger"
+import { createServiceClient } from "@/lib/supabase/service"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -180,19 +181,47 @@ export async function GET(request: Request) {
         }
       }
 
-      // Start onboarding email sequence
+      // Start onboarding sequence and send welcome mail (service role: reliable id + send)
       try {
-        await supabase
-          .from('email_sequences')
+        const service = createServiceClient();
+        const { data: seqRow, error: seqErr } = await service
+          .from("email_sequences")
           .insert({
             user_id: data.session.user.id,
-            sequence_type: 'onboarding',
+            sequence_type: "onboarding",
             current_step: 0,
-            status: 'active',
-          });
-        logger.info('[Callback] Onboarding email sequence started');
+            status: "active",
+          })
+          .select("id")
+          .single();
+
+        if (seqErr || !seqRow?.id) {
+          logger.error("[Callback] Failed to start email sequence:", seqErr);
+        } else {
+          logger.info("[Callback] Onboarding email sequence started:", seqRow.id);
+          const email = data.session.user.email;
+          if (email) {
+            const displayName =
+              (data.session.user.user_metadata?.full_name as string | undefined) ||
+              (data.session.user.user_metadata?.name as string | undefined) ||
+              "";
+            try {
+              const { sendOnboardingWelcomeNow } = await import(
+                "@/lib/emails/onboarding-welcome-send"
+              );
+              await sendOnboardingWelcomeNow({
+                userId: data.session.user.id,
+                email,
+                displayName,
+                sequenceId: seqRow.id,
+              });
+            } catch (welcomeErr) {
+              logger.error("[Callback] Welcome email failed:", welcomeErr);
+            }
+          }
+        }
       } catch (seqErr) {
-        logger.error('[Callback] Failed to start email sequence:', seqErr);
+        logger.error("[Callback] Onboarding setup error:", seqErr);
       }
     } catch (e) {
       logger.error('[Callback] Failed to grant registration bonus:', e);

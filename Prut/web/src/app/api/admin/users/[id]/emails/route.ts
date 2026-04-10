@@ -54,10 +54,7 @@ export async function GET(
 
     // Build onboarding timeline
     const onboardingSteps = [
-      { step: 0, name: 'ברוך הבא', delay: '24 שעות', key: 'onboarding_day1' },
-      { step: 1, name: 'טיפים ראשונים', delay: '3 ימים', key: 'onboarding_day3' },
-      { step: 2, name: 'פיצ\'רים מתקדמים', delay: '7 ימים', key: 'onboarding_day7' },
-      { step: 3, name: 'סיכום ועידוד', delay: '14 ימים', key: 'onboarding_day14' },
+      { step: 0, name: 'ברוכים הבאים ל-Peroot', delay: 'מיד בהרשמה', key: 'onboarding_welcome' },
     ];
 
     const currentStep = sequence?.current_step ?? 0;

@@ -1393,6 +1393,7 @@ const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
 const TYPE_LABELS: Record<string, string> = {
   welcome: 'ברוכים הבאים',
   campaign: 'קמפיין',
+  onboarding_welcome: 'ברוכים הבאים (אונבורדינג)',
   onboarding_day1: 'אונבורדינג יום 1',
   onboarding_day3: 'אונבורדינג יום 3',
   onboarding_day7: 'אונבורדינג יום 7',
@@ -1403,6 +1404,8 @@ const TYPE_LABELS: Record<string, string> = {
   subscription_expired: 'מנוי פג תוקף',
   subscription_resumed: 'חידוש מנוי',
   subscription_payment_failed: 'תשלום נכשל',
+  churn_notification: 'הודעת ביטול מנוי',
+  admin_churn_alert: 'התראת מנהל — churn',
   transactional: 'הודעה',
 };
 

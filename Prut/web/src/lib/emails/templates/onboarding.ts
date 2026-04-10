@@ -1,4 +1,4 @@
-import { emailLayout } from './base';
+import { emailLayoutBranded, escapeHtml } from './base';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.peroot.space';
 
@@ -9,87 +9,64 @@ export interface OnboardingStep {
   html: (name: string, unsubscribeUrl: string, referralCode?: string) => string;
 }
 
+/**
+ * Single welcome mail — product policy: no multi-day onboarding drip.
+ * Cron still respects delayHours (0) for edge cases; primary send is on signup (auth callback).
+ */
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    id: 'onboarding_day1',
-    delayHours: 24,
-    subject: 'טיפ מהיר: איך להפיק יותר מ-Peroot',
-    html: (name, unsubscribeUrl) => emailLayout(`
-      <h2 style="color: #f59e0b; font-size: 22px;">היי ${name} 👋</h2>
-      <p>מקווים שנהנית מהשימוש הראשון ב-Peroot! הנה טיפ שיעזור לך לקבל תוצאות טובות יותר:</p>
+    id: 'onboarding_welcome',
+    delayHours: 0,
+    subject: 'ברוכים הבאים ל-Peroot',
+    html: (name, unsubscribeUrl) => {
+      const displayName = escapeHtml(name?.trim() || 'שם');
+      return emailLayoutBranded(`
+      <p style="margin: 0 0 8px; font-size: 15px; color: #64748b;">היי <strong style="color: #0f172a;">${displayName}</strong>,</p>
+      <h1 style="margin: 0 0 16px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">שמחים שהצטרפתם</h1>
+      <p style="margin: 0 0 20px; font-size: 15px; color: #334155;">
+        <strong>Peroot</strong> היא מערכת לניהול פרומפטים וזרימות עבודה עם בינה מלאכותית — כדי שתעבדו מהר יותר, בצורה עקבית, ועם תוצאות איכותיות יותר.
+      </p>
 
-      <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0;">
-        <p style="font-weight: bold; margin: 0 0 8px 0;">💡 טיפ: ככל שהקלט שלך מפורט יותר, התוצאה טובה יותר</p>
-        <p style="margin: 0; font-size: 14px;">במקום "כתוב מייל", נסו "כתוב מייל שיווקי לבעלי עסקים קטנים שמציע הנחה של 20% על שירות SEO"</p>
+      <div style="margin: 24px 0;">
+        <p style="margin: 0 0 12px; font-size: 13px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.06em;">מה אפשר לעשות כאן</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="padding: 14px 16px; background: #fffbeb; border-radius: 12px; border: 1px solid #fde68a;">
+              <strong style="color: #b45309;">ספריית פרומפטים</strong>
+              <p style="margin: 8px 0 0; font-size: 14px; color: #78350f;">שמרו, ארגנו ושתפו פרומפטים — לעצמכם או לצוות.</p>
+            </td>
+          </tr>
+          <tr><td style="height:10px;"></td></tr>
+          <tr>
+            <td style="padding: 14px 16px; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
+              <strong style="color: #1d4ed8;">שרשראות (chains)</strong>
+              <p style="margin: 8px 0 0; font-size: 14px; color: #1e3a8a;">חברו כמה שלבים ברצף — הפלט של אחד הופך לקלט של הבא.</p>
+            </td>
+          </tr>
+          <tr><td style="height:10px;"></td></tr>
+          <tr>
+            <td style="padding: 14px 16px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0;">
+              <strong style="color: #15803d;">מנועים שונים</strong>
+              <p style="margin: 8px 0 0; font-size: 14px; color: #14532d;">מצב סטנדרט, חקר, תמונות, סוכנים ועוד — לפי סוג המשימה.</p>
+            </td>
+          </tr>
+          <tr><td style="height:10px;"></td></tr>
+          <tr>
+            <td style="padding: 14px 16px; background: #faf5ff; border-radius: 12px; border: 1px solid #e9d5ff;">
+              <strong style="color: #7c3aed;">קרדיטים</strong>
+              <p style="margin: 8px 0 0; font-size: 14px; color: #5b21b6;">בחינם קיבלתם קרדיטים להתחיל; ב-Pro — מכסה חודשית גדולה יותר.</p>
+            </td>
+          </tr>
+        </table>
       </div>
 
-      <div style="text-align: center; margin-top: 30px;">
-        <a href="${APP_URL}" style="background: #f59e0b; color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">נסו עכשיו</a>
+      <div style="text-align: center; margin-top: 28px;">
+        <a href="${APP_URL}/prompts" style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #eab308); color: #0a0a0a; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 800; font-size: 15px;">כניסה ישירה לאפליקציה</a>
       </div>
-    `, unsubscribeUrl),
-  },
-  {
-    id: 'onboarding_day3',
-    delayHours: 72,
-    subject: 'הכרת ספריה אישית + שרשראות פרומפטים',
-    html: (name, unsubscribeUrl) => emailLayout(`
-      <h2 style="color: #f59e0b; font-size: 22px;">מה עוד אפשר לעשות ב-Peroot?</h2>
-      <p>היי ${name}, יש לנו עוד כלים שיכולים לעזור לך:</p>
-
-      <div style="margin: 20px 0;">
-        <div style="background: #f0fdf4; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-          <strong>📚 ספריה אישית</strong>
-          <p style="margin: 8px 0 0; font-size: 14px;">שמרו את הפרומפטים הכי טובים שלכם, ארגנו בקטגוריות, ושתפו עם הצוות.</p>
-        </div>
-        <div style="background: #eff6ff; border-radius: 12px; padding: 16px;">
-          <strong>🔗 שרשראות פרומפטים</strong>
-          <p style="margin: 8px 0 0; font-size: 14px;">חברו מספר פרומפטים לזרימת עבודה אוטומטית - הפלט של אחד הופך לקלט של הבא.</p>
-        </div>
-      </div>
-
-      <div style="text-align: center; margin-top: 30px;">
-        <a href="${APP_URL}" style="background: #f59e0b; color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">גלו את כל הכלים</a>
-      </div>
-    `, unsubscribeUrl),
-  },
-  {
-    id: 'onboarding_day7',
-    delayHours: 168,
-    subject: 'הזמינו חברים וקבלו קרדיטים בחינם',
-    html: (name, unsubscribeUrl, referralCode) => emailLayout(`
-      <h2 style="color: #f59e0b; font-size: 22px;">רוצים עוד קרדיטים?</h2>
-      <p>היי ${name}, ידעתם שאפשר לקבל קרדיטים בחינם?</p>
-
-      <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
-        <p style="font-size: 18px; font-weight: bold; margin: 0 0 8px 0;">הזמינו חבר ← שניכם מקבלים 5 קרדיטים</p>
-        ${referralCode ? `<p style="font-size: 14px; margin: 8px 0 0; direction: ltr;"><strong>קוד ההפניה שלכם:</strong> <code style="background: #fff; padding: 4px 12px; border-radius: 6px; font-size: 16px; letter-spacing: 2px;">${referralCode}</code></p>
-        <p style="font-size: 12px; color: #92400e; margin-top: 8px;">שתפו את הקוד עם חברים — כל מי שנרשם איתו מקבל בונוס!</p>` : `<p style="font-size: 14px; margin: 0;">היכנסו להגדרות ← הפניות כדי לקבל את קוד ההפניה שלכם</p>`}
-      </div>
-
-      <div style="text-align: center; margin-top: 30px;">
-        <a href="${APP_URL}/settings" style="background: #f59e0b; color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">לקוד ההפניה שלי</a>
-      </div>
-    `, unsubscribeUrl),
-  },
-  {
-    id: 'onboarding_day14',
-    delayHours: 336,
-    subject: 'איך אנחנו יכולים להשתפר? 📝',
-    html: (name, unsubscribeUrl) => emailLayout(`
-      <h2 style="color: #f59e0b; font-size: 22px;">רגע של פידבק? 🙏</h2>
-      <p>היי ${name}, עברו שבועיים מאז שהצטרפתם ל-Peroot ונשמח לשמוע מכם:</p>
-
-      <ul style="padding-right: 20px;">
-        <li style="margin-bottom: 8px;">מה הכי עוזר לכם?</li>
-        <li style="margin-bottom: 8px;">מה חסר?</li>
-        <li style="margin-bottom: 8px;">האם תמליצו עלינו לחבר?</li>
-      </ul>
-
-      <p>פשוט תשיבו על המייל הזה - אנחנו קוראים כל תשובה.</p>
-
-      <div style="text-align: center; margin-top: 30px;">
-        <a href="mailto:contact@peroot.space?subject=פידבק על Peroot" style="background: #f59e0b; color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">שלחו פידבק</a>
-      </div>
-    `, unsubscribeUrl),
+      <p style="margin: 20px 0 0; font-size: 13px; color: #64748b; text-align: center;">
+        נתראה בפנים — ואם משהו לא ברור, פשוט תשיבו על המייל.
+      </p>
+    `, unsubscribeUrl);
+    },
   },
 ];

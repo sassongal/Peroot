@@ -1,4 +1,4 @@
-import { escapeHtml, emailLayout } from './base';
+import { escapeHtml, emailLayoutBranded } from './base';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.peroot.space';
 
@@ -12,7 +12,7 @@ export function churnEmail(
 ): { subject: string; html: string } {
   return {
     subject: 'נשמח לראות אותך שוב ב-Peroot',
-    html: emailLayout(`
+    html: emailLayoutBranded(`
       <h2 style="color: #ef4444; font-size: 22px;">היי ${escapeHtml(name)}</h2>
       <p>קיבלנו את בקשתך לביטול מנוי ה-Pro. עצוב לנו לראות אותך עוזב/ת!</p>
       <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 20px 0;">
@@ -27,6 +27,6 @@ export function churnEmail(
       <div style="text-align: center; margin-top: 30px;">
         <a href="${APP_URL}/pricing" style="background: linear-gradient(135deg, #f59e0b, #eab308); color: #000; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold;">חזרו לשדרג</a>
       </div>
-    `, unsubscribeUrl),
+    `, unsubscribeUrl, 'הסרה מעדכוני מנוי והצעות'),
   };
 }

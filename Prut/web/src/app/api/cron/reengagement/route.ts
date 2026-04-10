@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { REENGAGEMENT_TEMPLATES } from "@/lib/emails/reengagement-templates";
+import { isReengagementEmailAutomationEnabled } from "@/lib/emails/automation-env";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
@@ -18,6 +19,13 @@ function verifyCronAuth(request: NextRequest): boolean {
 export async function GET(request: NextRequest) {
   if (!verifyCronAuth(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isReengagementEmailAutomationEnabled()) {
+    logger.info(
+      "[Cron/Reengagement] Skipped — set REENGAGEMENT_EMAILS_ENABLED=true to enable drip"
+    );
+    return NextResponse.json({ skipped: true, reason: "Reengagement emails disabled" });
   }
 
   const locked = await acquireCronLock('cron:reengagement', 35);
@@ -65,10 +73,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch profiles" }, { status: 500 });
     }
 
+    const profileRows = profiles ?? [];
     // Filter out excluded IDs in JS if we couldn't do it in the query
-    const filteredProfiles = excludeIds.length >= 1000
-      ? profiles.filter((p) => !recentlyActiveIds.has(p.id) && !unsubIds.has(p.id))
-      : profiles;
+    const filteredProfiles =
+      excludeIds.length >= 1000
+        ? profileRows.filter((p) => !recentlyActiveIds.has(p.id) && !unsubIds.has(p.id))
+        : profileRows;
 
     // Get already-sent re-engagement emails
     const { data: alreadySent } = await supabase

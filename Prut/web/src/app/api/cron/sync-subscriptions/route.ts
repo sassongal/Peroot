@@ -127,41 +127,8 @@ export async function GET(req: Request) {
           } catch { /* ledger is best-effort */ }
         }
 
-        // Send churn email + admin alert
-        try {
-          const { data: sub } = await supabase
-            .from("subscriptions")
-            .select("customer_email, customer_name")
-            .eq("user_id", userId)
-            .single();
-
-          if (sub?.customer_email) {
-            const { churnEmail } = await import("@/lib/emails/reengagement-templates");
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
-            const template = churnEmail(sub.customer_name || "משתמש/ת", `${siteUrl}/settings?unsubscribe=true`);
-            await EmailService.send({
-              to: sub.customer_email,
-              subject: template.subject,
-              html: template.html,
-              userId,
-              emailType: "churn_notification",
-            });
-          }
-
-          // Admin alert
-          const adminEmail = settings?.contact_email || "gal@joya-tech.net";
-          await EmailService.send({
-            to: adminEmail,
-            subject: `[Peroot] Churn (cron): ${sub?.customer_email || userId}`,
-            html: adminCronChurnAlertEmail({
-              customerEmail: sub?.customer_email || '',
-              userId,
-            }),
-            emailType: "admin_churn_alert",
-          });
-        } catch (emailErr) {
-          logger.error("[sync-subscriptions] Email error:", emailErr);
-        }
+        // Churn emails disabled — automated email sending is paused
+        logger.info(`[sync-subscriptions] Churn email skipped (disabled) for user ${userId}`);
 
         fixedCount++;
         logger.info(

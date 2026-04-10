@@ -3,7 +3,7 @@
 import { lazy, Suspense, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { cn } from "@/lib/utils";
-import { HeartPulse, Radio, Bell, Database, RefreshCw } from "lucide-react";
+import { HeartPulse, Radio, Bell, Database, RefreshCw, Mail } from "lucide-react";
 
 // ── Lazy-loaded tab content ───────────────────────────────────────────────────
 
@@ -11,16 +11,18 @@ const HealthTab        = lazy(() => import("@/components/admin/tabs/HealthTab").
 const RealtimeTab      = lazy(() => import("@/components/admin/tabs/RealtimeTab").then((m) => ({ default: m.RealtimeTab })));
 const NotificationsTab = lazy(() => import("@/components/admin/tabs/NotificationsTab").then((m) => ({ default: m.NotificationsTab })));
 const DatabaseTab      = lazy(() => import("@/components/admin/tabs/DatabaseTab").then((m) => ({ default: m.DatabaseTab })));
+const EmailsTab        = lazy(() => import("@/components/admin/tabs/EmailsTab").then((m) => ({ default: m.EmailsTab })));
 
 // ── Tab config ────────────────────────────────────────────────────────────────
 
-type TabId = "health" | "realtime" | "alerts" | "database";
+type TabId = "health" | "realtime" | "alerts" | "database" | "emails";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "health",   label: "בריאות",     icon: HeartPulse },
   { id: "realtime", label: "זמן אמת",    icon: Radio      },
   { id: "alerts",   label: "התראות",     icon: Bell       },
   { id: "database", label: "מסד נתונים", icon: Database   },
+  { id: "emails",   label: "מיילים",     icon: Mail       },
 ];
 
 // ── Tab loading fallback ──────────────────────────────────────────────────────
@@ -51,7 +53,7 @@ export default function OpsPage() {
             Operations
           </h1>
           <p className="text-zinc-600 font-bold text-sm tracking-wide">
-            בריאות מערכת, זמן אמת, התראות ומסד נתונים
+            בריאות מערכת, זמן אמת, התראות, מסד נתונים ומיילים
           </p>
         </div>
 
@@ -86,6 +88,7 @@ export default function OpsPage() {
           {activeTab === "realtime" && <RealtimeTab />}
           {activeTab === "alerts"   && <NotificationsTab />}
           {activeTab === "database" && <DatabaseTab />}
+          {activeTab === "emails"   && <EmailsTab />}
         </Suspense>
       </div>
     </AdminLayout>
