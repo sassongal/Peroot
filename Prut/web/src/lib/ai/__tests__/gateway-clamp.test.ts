@@ -68,16 +68,28 @@ describe('gateway pickDefaults — presets', () => {
     expect(pickDefaults('video')).toEqual({ maxOutputTokens: 16384, temperature: 0.5 });
   });
 
-  it('research task defaults to 6144 tokens and 0.6 temp', () => {
-    expect(pickDefaults('research')).toEqual({ maxOutputTokens: 6144, temperature: 0.6 });
+  it('research task defaults to 10240 tokens and 0.6 temp', () => {
+    // Lifted from 6144 after Hebrew research prompts were observed getting
+    // truncated mid-output (broken section numbering, mid-word cuts, invalid
+    // [GENIUS_QUESTIONS] JSON). 10240 gives ~40% headroom.
+    expect(pickDefaults('research')).toEqual({ maxOutputTokens: 10240, temperature: 0.6 });
   });
 
-  it('enhance task defaults to 4096 tokens and 0.7 temp', () => {
-    expect(pickDefaults('enhance')).toEqual({ maxOutputTokens: 4096, temperature: 0.7 });
+  it('enhance task defaults to 8192 tokens and 0.7 temp', () => {
+    // Lifted from 4096 after Gemini 2.5 Flash thinking tokens were
+    // observed consuming ~2500 of the budget for complex Standard prompts,
+    // leaving too little for the enhanced prompt + trailing marker blocks.
+    expect(pickDefaults('enhance')).toEqual({ maxOutputTokens: 8192, temperature: 0.7 });
   });
 
-  it('agent task defaults to 4096 tokens and 0.7 temp', () => {
-    expect(pickDefaults('agent')).toEqual({ maxOutputTokens: 4096, temperature: 0.7 });
+  it('agent task defaults to 16384 tokens and 0.7 temp', () => {
+    // Lifted 8192 → 16384 after a live test showed Gemini reasoning alone
+    // consumed 5452 tokens on the agent template (vs ~2500 for enhance).
+    // With the 9-section agent architecture + mandatory [PROMPT_TITLE] +
+    // [GENIUS_QUESTIONS] trailer the model needs 5-6K output tokens on top
+    // of reasoning, which blew past the 8192 ceiling mid-instruction and
+    // silently dropped the trailer markers. See gateway.ts comment.
+    expect(pickDefaults('agent')).toEqual({ maxOutputTokens: 16384, temperature: 0.7 });
   });
 
   it('chain task defaults to 3072 tokens and 0.4 temp', () => {
@@ -87,11 +99,11 @@ describe('gateway pickDefaults — presets', () => {
   });
 
   it('unknown task falls back to the enhance preset', () => {
-    expect(pickDefaults('bogus-task-name')).toEqual({ maxOutputTokens: 4096, temperature: 0.7 });
+    expect(pickDefaults('bogus-task-name')).toEqual({ maxOutputTokens: 8192, temperature: 0.7 });
   });
 
   it('missing task falls back to the enhance preset', () => {
-    expect(pickDefaults()).toEqual({ maxOutputTokens: 4096, temperature: 0.7 });
+    expect(pickDefaults()).toEqual({ maxOutputTokens: 8192, temperature: 0.7 });
   });
 });
 

@@ -67,12 +67,36 @@ export function pickDefaults(task?: string, userMax?: number, userTemp?: number)
     // can approach 6K-8K tokens. A 16K ceiling removes the last truncation
     // risk without making any run actually more expensive — real cost is
     // whatever the model emits, capped at this ceiling only.
+    // Token budgets were lifted across the board after a live end-to-end
+    // test (scripts/test-engines-live.ts) showed Gemini 2.5 Flash running
+    // out of output budget BEFORE reaching the trailing [PROMPT_TITLE] and
+    // [GENIUS_QUESTIONS] markers on enhance/agent/research.
+    //
+    // Root cause: Gemini's thinking tokens count against maxOutputTokens.
+    // BaseEngine composes a very long system prompt (engine template +
+    // GENIUS_ANALYSIS + classification + examples + mistakes + CoT + scoring),
+    // which triggers heavy reasoning — observed ~2500 thinking tokens for a
+    // Standard prompt. At the old 4096 ceiling that leaves only ~1500 tokens
+    // for actual output, which is enough for the enhanced prompt but NOT
+    // enough to reach the trailing marker blocks the client needs for
+    // parsing. Hebrew output also costs 2-3× more tokens per character than
+    // English, amplifying the squeeze.
+    //
+    // The fix: widen the ceiling so thinking + actual output + trailing
+    // markers all fit. We do NOT disable thinking (thinkingBudget=0) for
+    // these tasks because thinking measurably improves enhance/research
+    // quality on complex inputs — we only disable it for image/video/chain
+    // (see buildProviderOptions).
     const presets: Record<string, { max: number; temp: number }> = {
         image:    { max: 16384, temp: 0.5 },
         video:    { max: 16384, temp: 0.5 },
-        research: { max: 6144,  temp: 0.6 },
-        enhance:  { max: 4096,  temp: 0.7 },
-        agent:    { max: 4096,  temp: 0.7 },
+        research: { max: 10240, temp: 0.6 },
+        enhance:  { max: 8192,  temp: 0.7 }, // was 4096 — Gemini thinking consumed budget
+        agent:    { max: 16384, temp: 0.7 }, // was 8192 — Gemini reasoning averages 5.4K
+                                             // tokens on agent (2x enhance), and output
+                                             // needs 5-6K for the 9-section architecture
+                                             // + PROMPT_TITLE + GENIUS_QUESTIONS trailer.
+                                             // Live test: output=8188 reasoning=5452 = hard ceiling hit.
         chain:    { max: 3072,  temp: 0.4 },
     };
     const preset = presets[task ?? 'enhance'] ?? presets.enhance;

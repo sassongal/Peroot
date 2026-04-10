@@ -473,10 +473,14 @@ export async function POST(req: Request) {
     // re-emits the full enhanced prompt AND a fresh [GENIUS_QUESTIONS] block
     // AND a [PROMPT_TITLE] block, which together commonly exceed 4096 tokens
     // and trigger finishReason='length' mid-answer. We lift the ceiling to
-    // 8192 for Refine on the text/agent tasks only — image/video already use
-    // their own 16384 preset, and standard enhance is unchanged.
-    const refinementMaxTokens = isRefinement && (resolvedTask === 'enhance')
-        ? 8192
+    // 8192 for Refine on enhance, and to 12288 for research (whose preset is
+    // already 10240 — refinement output is measurably longer because it
+    // restates the original brief before emitting the upgraded version).
+    // Image/video already use their own 16384 preset.
+    const refinementMaxTokens = isRefinement
+        ? (resolvedTask === 'enhance' ? 8192
+           : resolvedTask === 'research' ? 12288
+           : undefined)
         : undefined;
 
     const { result, modelId } = await AIGateway.generateStream({
@@ -560,11 +564,23 @@ export async function POST(req: Request) {
                         });
                     }
 
-                    // Only refund on genuinely failed generations (empty output or error finish reason).
-                    // Length-based refund removed: short valid responses are legitimate and should not trigger refunds.
-                    if (userId && (textCopy.length === 0 || finishReasonCopy === 'error')) {
+                    // Refund on genuinely failed generations: empty output, error
+                    // finish reason, OR finishReason === 'length' (output was
+                    // truncated mid-stream by the token ceiling). A truncated
+                    // research/enhance output routinely breaks the [GENIUS_QUESTIONS]
+                    // JSON and cuts sections mid-word — the user should not be
+                    // charged for that. Short valid responses with finishReason
+                    // === 'stop' are legitimate and do NOT trigger a refund.
+                    const isTruncated = finishReasonCopy === 'length';
+                    if (userId && (textCopy.length === 0 || finishReasonCopy === 'error' || isTruncated)) {
                         await refundCredit(userId);
-                        logger.warn('[Enhance] Failed generation, refunding credit', { userId, length: textCopy.length, finishReason: finishReasonCopy });
+                        logger.warn('[Enhance] Failed/truncated generation, refunding credit', {
+                            userId,
+                            length: textCopy.length,
+                            finishReason: finishReasonCopy,
+                            truncated: isTruncated,
+                            task: resolvedTask,
+                        });
                     }
 
                     if (userId && supabase) {

@@ -20,10 +20,11 @@ export class AgentEngine extends BaseEngine {
           system_prompt_template: `You are an Elite AI Systems Architect - the best Meta-Prompt Engineer in the market. You specialize in designing production-grade system instructions that create powerful, reliable AI agents. Your agents outperform generic AI interactions by 10x through precise instruction engineering.
 
 CRITICAL RULES:
-1. Output ONLY the complete system instruction. No explanations, no preamble, no commentary.
+1. Output the complete system instruction followed ONLY by the two mandatory trailing marker blocks ([PROMPT_TITLE]...[/PROMPT_TITLE] and [GENIUS_QUESTIONS][...]) as defined at the end of this prompt. No other explanations, preamble, or commentary.
 2. The ENTIRE output MUST be in HEBREW - every section, instruction, and example.
 3. The system instruction must be immediately copy-pasteable into ChatGPT Custom GPT, Claude Projects, Gemini Gems, or any LLM system prompt field.
 4. The agent you design must be robust - it should handle edge cases, ambiguity, and adversarial inputs gracefully.
+5. The two trailing marker blocks ([PROMPT_TITLE] and [GENIUS_QUESTIONS]) are a NON-NEGOTIABLE part of the output contract. Omitting them will cause a parsing failure in the downstream system. Always emit them after the full 9-section agent instruction.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AGENT ARCHITECTURE FRAMEWORK - produce ALL sections:
@@ -257,22 +258,40 @@ Requirements:
 
       // Single consolidated internal reasoning gate — replaces the earlier
       // split between a hidden scoring check and the base [GENIUS_ANALYSIS].
+      // IMPORTANT: this block must come BEFORE the output-contract trailer.
+      // Earlier versions placed the trailer last, but Gemini was treating the
+      // closing </internal_quality_check> + hidden="true" as an end-of-prompt
+      // signal and ignoring the trailer entirely (observed in live tests:
+      // 10K chars of agent instruction, zero PROMPT_TITLE/GENIUS_QUESTIONS).
       if (scoringBlock) {
           finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify your agent system instruction passes this quality gate (do NOT output any of this reasoning, do NOT reference CO-STAR or RISEN — those are for standard prompt enhancement, not agent design):${scoringBlock}</internal_quality_check>`;
       }
 
       // Agent-specific trailer: PROMPT_TITLE + GENIUS_QUESTIONS.
       // The downstream parser in HomeClient / api/enhance depends on the
-      // [PROMPT_TITLE] and [GENIUS_QUESTIONS] markers, so we keep them —
-      // but the questions are focused on agent design gaps, NOT CO-STAR.
+      // [PROMPT_TITLE] and [GENIUS_QUESTIONS] markers, so they are a HARD
+      // requirement of the output contract — see CRITICAL RULE #5 at the top
+      // of the system template. The language below is intentionally strong
+      // ("חובה מוחלטת", "חלק בלתי נפרד") because the CRITICAL RULE #1 at the
+      // top ("Output ONLY the complete system instruction") was causing
+      // Gemini to treat these markers as forbidden "commentary" and drop
+      // them. Both ends of the prompt now agree: markers are mandatory.
       const contextAwareHint = hasContext
           ? `\n\nCONTEXT-AWARE QUESTION RULES: attached knowledge base exists — focus questions on (a) agent scope given this material, (b) intended end-users, (c) gaps the material does NOT cover. Never ask "what is in the file".`
           : '';
 
-      finalSystem += `\n\nלאחר הוראת הסוכן המלאה (וכל 9 הסעיפים), הוסף כותרת תיאורית קצרה בעברית בפורמט המדויק הבא:
+      finalSystem += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+מיד לאחר הוראת הסוכן המלאה (וכל 9 הסעיפים), אתה חייב להוסיף את שני הבלוקים הבאים. הם אינם "הסבר" או "פרשנות" — הם חלק מהפלט הנדרש, והמערכת downstream תיכשל בלעדיהם.
+
+בלוק 1 — כותרת תיאורית קצרה בעברית בפורמט המדויק:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
-ולאחר מכן הוסף [GENIUS_QUESTIONS] ו-2-4 שאלות הבהרה ממוקדות לעיצוב הסוכן. השאלות חייבות להתמקד ב:
+בלוק 2 — שאלות הבהרה בפורמט המדויק:
+[GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
+
+2-4 שאלות הבהרה ממוקדות לעיצוב הסוכן. השאלות חייבות להתמקד ב:
 - זהות הסוכן (מי הקהל, מה תחום המומחיות המדויק, איזה טון)
 - גבולות הסוכן (מה אסור, איך להגיב למניפולציה, נושאים להפניה)
 - מקרי קצה (איך להתמודד עם בקשות עמומות, מידע חסר, בקשות מחוץ ל-scope)
@@ -280,8 +299,8 @@ Requirements:
 - מנגנוני למידה (משוב, התאמה, אסקלציה)
 
 אל תשאל על CO-STAR, RISEN או מסגרות הנדסת פרומפט - השאלות צריכות לעצב את הסוכן עצמו.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
-אם הוראת הסוכן כבר מכסה את כל 9 הסעיפים ביסודיות, החזר מערך ריק: [GENIUS_QUESTIONS][]${contextAwareHint}`;
+אם הוראת הסוכן כבר מכסה את כל 9 הסעיפים ביסודיות, החזר מערך ריק: [GENIUS_QUESTIONS][]
+גם במקרה של מערך ריק — חובה להוציא את הבלוק [GENIUS_QUESTIONS][] ואת [PROMPT_TITLE]...[/PROMPT_TITLE]. אי-פליטת אחד מהבלוקים האלה תיחשב כישלון של הפלט.${contextAwareHint}`;
 
       const userPrompt = hasContext
           ? `${this.buildTemplate(this.config.user_prompt_template, variables)}\n\n[חומר מצורף מהמשתמש — בסיס הידע של הסוכן]\n${this.buildAgentContextSummary(input.context!)}`
