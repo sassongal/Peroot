@@ -18,7 +18,7 @@ function resolveAttachmentText(a: NonNullable<EngineInput['context']>[number]): 
     const block = a as unknown as ContextBlock;
     if (block.display?.rawText) return block.display.rawText;
     if (block.display?.summary) return block.display.summary;
-    return a.content || '';
+    return a.content || a.description || '';
 }
 
 function resolveAttachmentTitle(a: NonNullable<EngineInput['context']>[number]): string {
