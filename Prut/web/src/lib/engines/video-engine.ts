@@ -13,6 +13,7 @@ import {
 import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
+import { getPlatformOverrides } from "./platform-overrides";
 
 // ── Platform-specific system prompt overrides ──
 // Each platform has a unique prompting architecture based on official docs,
@@ -481,13 +482,13 @@ export class VideoEngine extends BaseEngine {
 
   generate(input: EngineInput): EngineOutput {
     const platform = (input.modeParams?.video_platform as VideoPlatform) || 'general';
-    const platformOverride = PLATFORM_OVERRIDES[platform] || PLATFORM_OVERRIDES.general;
+    const platformBlock = PLATFORM_OVERRIDES[platform] || PLATFORM_OVERRIDES.general;
 
     const variables: Record<string, string> = {
       input: escapeTemplateVars(input.prompt),
       tone: escapeTemplateVars(input.tone),
       category: escapeTemplateVars(input.category),
-      platform_override: platformOverride,
+      platform_override: platformBlock,
       ...sanitizeModeParams(input.modeParams),
     };
 
@@ -497,9 +498,21 @@ export class VideoEngine extends BaseEngine {
       variables.aspect_ratio_hint = '';
     }
 
-    const systemPrompt = this.buildTemplate(DEFAULT_SYSTEM_PROMPT, variables);
-    const userTemplate = VIDEO_USER_PROMPTS[platform] || VIDEO_USER_PROMPTS['general'];
-    const userPrompt = this.buildTemplate(userTemplate, variables);
+    const dbOverrides = getPlatformOverrides(
+      this.config.default_params as Record<string, unknown> | undefined
+    );
+    const po = dbOverrides?.[platform];
+
+    const systemShell =
+      po?.system_template ?? this.config.system_prompt_template;
+    const systemPrompt = this.buildTemplate(systemShell, variables);
+
+    const userShell =
+      po?.user_template ??
+      (platform === "general"
+        ? this.config.user_prompt_template
+        : VIDEO_USER_PROMPTS[platform] || VIDEO_USER_PROMPTS["general"]);
+    const userPrompt = this.buildTemplate(userShell, variables);
 
     // Text-mode userPersonality stays skipped (noise for cinematic prompts),
     // but we DO extract visual/cinematic preferences from video prompt history.

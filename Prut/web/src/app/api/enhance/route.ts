@@ -7,7 +7,7 @@ import { NextResponse, after } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
 import { selectEngineModel } from '@/lib/ai/context-router';
 import type { ContextBlock } from '@/lib/context/engine/types';
-import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, parseCapabilityMode, capabilityModeToDbMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
@@ -363,6 +363,7 @@ export async function POST(req: Request) {
                 durationMs: cacheLatencyMs,
                 endpoint: "enhance",
                 cacheHit: true,
+                engineMode: capabilityModeToDbMode(mode),
             });
 
             // Fix #3: refund the credit we decremented above. Cache hits cost
@@ -566,6 +567,7 @@ export async function POST(req: Request) {
                         durationMs,
                         endpoint: 'enhance',
                         cacheHit: false,
+                        engineMode: capabilityModeToDbMode(mode),
                     });
 
                     if (resolvedTask === 'research' && finishReasonCopy === 'length') {

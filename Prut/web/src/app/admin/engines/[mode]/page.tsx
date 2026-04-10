@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getApiPath } from "@/lib/api-path";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 
 interface EngineConfig {
   id: string;
@@ -42,6 +43,9 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
   const [testOutput, setTestOutput] = useState("");
   const [testing, setTesting] = useState(false);
   const [debugPrompts, setDebugPrompts] = useState<{ system?: string; user?: string } | null>(null);
+  /** JSON blob for default_params.platform_overrides (image/video) */
+  const [platformOverridesJson, setPlatformOverridesJson] = useState("");
+  const [platformOverridesError, setPlatformOverridesError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -58,6 +62,14 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
         return;
       }
       setConfig(data);
+      const dp = (data.default_params ?? {}) as Record<string, unknown>;
+      const po = dp.platform_overrides;
+      setPlatformOverridesJson(
+        po !== undefined && po !== null
+          ? JSON.stringify(po, null, 2)
+          : '{\n  \n}'
+      );
+      setPlatformOverridesError(null);
       setLoading(false);
     };
     fetchConfig();
@@ -69,18 +81,71 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
     const supabase = createClient();
     
     try {
+      let defaultParams: Record<string, unknown> = {
+        ...(config.default_params as Record<string, unknown> | undefined),
+      };
+      const cm = parseCapabilityMode(config.mode);
+      if (
+        cm === CapabilityMode.IMAGE_GENERATION ||
+        cm === CapabilityMode.VIDEO_GENERATION
+      ) {
+        const trimmed = platformOverridesJson.trim();
+        if (trimmed === "" || trimmed === "{}" || trimmed === "{\n  \n}") {
+          delete defaultParams.platform_overrides;
+        } else {
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(trimmed);
+          } catch {
+            setPlatformOverridesError("JSON לא תקין בעקיפות פלטפורמה");
+            setSaving(false);
+            return;
+          }
+          if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+            defaultParams = { ...defaultParams, platform_overrides: parsed };
+            setPlatformOverridesError(null);
+          } else {
+            setPlatformOverridesError("platform_overrides חייב להיות אובייקט JSON");
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
+      const updatePayload: {
+        system_prompt_template: string;
+        user_prompt_template: string;
+        description: string;
+        name: string;
+        updated_at: string;
+        default_params?: Record<string, unknown>;
+      } = {
+        system_prompt_template: config.system_prompt_template,
+        user_prompt_template: config.user_prompt_template,
+        description: config.description,
+        name: config.name,
+        updated_at: new Date().toISOString(),
+      };
+      if (
+        cm === CapabilityMode.IMAGE_GENERATION ||
+        cm === CapabilityMode.VIDEO_GENERATION
+      ) {
+        updatePayload.default_params = defaultParams;
+      }
+
       const { error } = await supabase
         .from("prompt_engines")
-        .update({
-          system_prompt_template: config.system_prompt_template,
-          user_prompt_template: config.user_prompt_template,
-          description: config.description,
-          name: config.name,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq("id", config.id);
 
       if (error) throw error;
+
+      if (
+        cm === CapabilityMode.IMAGE_GENERATION ||
+        cm === CapabilityMode.VIDEO_GENERATION
+      ) {
+        setConfig((c) => (c ? { ...c, default_params: defaultParams } : c));
+      }
 
       // Invalidate logic cache
       await fetch(getApiPath('/api/prompts/sync'), { method: 'POST' });
@@ -113,7 +178,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: testInput,
-          mode: config.mode,
+          mode: parseCapabilityMode(config.mode),
           customSystemPrompt: config.system_prompt_template,
           customUserPrompt: config.user_prompt_template
         })
@@ -152,7 +217,7 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
 
   return (
     <AdminLayout>
-    <div className="space-y-10 animate-in fade-in duration-1000 pb-20 select-none pb-40" dir="rtl">
+    <div className="space-y-10 animate-in fade-in duration-1000 select-none pb-40" dir="rtl">
       
       {/* Nexus Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 bg-zinc-950/50 p-8 rounded-[40px] border border-white/5">
@@ -183,6 +248,24 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
            </button>
         </div>
       </div>
+
+      {(parseCapabilityMode(config.mode) === CapabilityMode.IMAGE_GENERATION ||
+        parseCapabilityMode(config.mode) === CapabilityMode.VIDEO_GENERATION) && (
+        <div className="p-6 rounded-[28px] border border-amber-500/20 bg-amber-500/5 text-zinc-300 text-sm leading-relaxed space-y-3" dir="rtl">
+          <p className="font-bold text-amber-200/90">מנוע תמונה / וידאו</p>
+          <p>
+            התבניות למטה משמשות את מצב <strong>general</strong> בפרודקשן; לכל פלטפורמה ספציפית ברירת המחדל עדיין נטענת מהקוד, אלא אם כן מגדירים עקיפה ב-JSON למטה.
+          </p>
+          <ul className="list-disc list-inside text-zinc-400 text-xs space-y-1">
+            <li>
+              תמונה: <code className="text-zinc-500">src/lib/engines/image-engine.ts</code> — <code>PLATFORM_PROMPTS</code>
+            </li>
+            <li>
+              וידאו: <code className="text-zinc-500">src/lib/engines/video-engine.ts</code> — <code>PLATFORM_OVERRIDES</code>, <code>VIDEO_USER_PROMPTS</code>
+            </li>
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
         
@@ -256,6 +339,32 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
                 dir="ltr"
               />
            </div>
+
+           {(parseCapabilityMode(config.mode) === CapabilityMode.IMAGE_GENERATION ||
+             parseCapabilityMode(config.mode) === CapabilityMode.VIDEO_GENERATION) && (
+             <div className="space-y-4">
+                <div className="flex items-center gap-3 px-4">
+                   <Terminal className="w-4 h-4 text-amber-500" />
+                   <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Platform overrides (JSON)</span>
+                </div>
+                <p className="text-xs text-zinc-500 px-4 leading-relaxed" dir="rtl">
+                  מפתחות הם שם פלטפורמה (למשל <code className="text-zinc-400">midjourney</code>, <code className="text-zinc-400">runway</code>). לכל מפתח אפשר <code className="text-zinc-400">system_template</code> ו/או <code className="text-zinc-400">user_template</code> — דורסים את ברירת המחדל מהקוד לפלטפורמה זו בלבד.
+                </p>
+                {platformOverridesError && (
+                  <p className="text-red-400 text-sm px-4">{platformOverridesError}</p>
+                )}
+                <textarea
+                  value={platformOverridesJson}
+                  onChange={(e) => {
+                    setPlatformOverridesJson(e.target.value);
+                    setPlatformOverridesError(null);
+                  }}
+                  className="w-full min-h-[200px] bg-zinc-950 border border-white/5 rounded-[32px] p-8 font-mono text-xs text-zinc-400 focus:text-white focus:border-amber-500/30 outline-none resize-y transition-all duration-700"
+                  dir="ltr"
+                  spellCheck={false}
+                />
+             </div>
+           )}
         </div>
 
         {/* Intelligence Playground */}

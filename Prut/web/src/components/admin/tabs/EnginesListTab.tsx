@@ -48,6 +48,21 @@ const MODE_ICONS: Record<string, LucideIcon> = {
   [CapabilityMode.VIDEO_GENERATION]: Video,
 };
 
+/** DB mode strings from prompt_engines.mode */
+function isVisualEngineMode(mode: string): boolean {
+  const m = parseCapabilityMode(mode);
+  return (
+    m === CapabilityMode.IMAGE_GENERATION || m === CapabilityMode.VIDEO_GENERATION
+  );
+}
+
+function visualEngineFootnoteHe(mode: string): string | null {
+  if (!isVisualEngineMode(mode)) return null;
+  return (
+    "הוראות לפי פלטפורמה (Midjourney, Runway וכו׳) מוגדרות בקוד. כאן ב-DB: תבנית general + עקיפות אופציונליות ב-default_params — ראו עורך המנוע."
+  );
+}
+
 export function EnginesListTab() {
   const [engines, setEngines] = useState<EngineRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +168,11 @@ export function EnginesListTab() {
                       <p className="text-zinc-500 text-base font-medium leading-relaxed group-hover:text-zinc-400 transition-colors max-w-sm">
                         {engine.description}
                       </p>
+                      {visualEngineFootnoteHe(engine.mode) && (
+                        <p className="text-zinc-600 text-xs leading-relaxed max-w-md border border-white/5 rounded-2xl p-3 bg-zinc-900/40">
+                          {visualEngineFootnoteHe(engine.mode)}
+                        </p>
+                      )}
                    </div>
 
                    <div className="pt-10 border-t border-white/5 flex items-center justify-between">

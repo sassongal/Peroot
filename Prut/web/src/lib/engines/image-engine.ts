@@ -14,6 +14,7 @@ import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { getJsonExamplesBlock } from "./json-examples";
 import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
+import { getPlatformOverrides } from "./platform-overrides";
 
 // ── Platform-specific system prompt fragments ──
 
@@ -595,9 +596,31 @@ export class ImageEngine extends BaseEngine {
       const outputFormat = (input.modeParams?.output_format || 'text') as ImageOutputFormat;
       const platformKey = getPlatformKey(platform, outputFormat);
 
-      // Override system and user prompts based on platform
-      const systemTemplate = PLATFORM_PROMPTS[platformKey] || PLATFORM_PROMPTS['general'];
-      const userTemplate = PLATFORM_USER_PROMPTS[platformKey] || PLATFORM_USER_PROMPTS['general'];
+      const overrides = getPlatformOverrides(
+        this.config.default_params as Record<string, unknown> | undefined
+      );
+      const platformOverride = overrides?.[platformKey];
+
+      // DB general templates + optional JSON overrides per platform (see admin / engine editor)
+      let systemTemplate: string;
+      let userTemplate: string;
+      if (platformOverride?.system_template) {
+        systemTemplate = platformOverride.system_template;
+      } else if (platformKey === "general") {
+        systemTemplate = this.config.system_prompt_template;
+      } else {
+        systemTemplate =
+          PLATFORM_PROMPTS[platformKey] || PLATFORM_PROMPTS["general"];
+      }
+
+      if (platformOverride?.user_template) {
+        userTemplate = platformOverride.user_template;
+      } else if (platformKey === "general") {
+        userTemplate = this.config.user_prompt_template;
+      } else {
+        userTemplate =
+          PLATFORM_USER_PROMPTS[platformKey] || PLATFORM_USER_PROMPTS["general"];
+      }
 
       const variables: Record<string, string> = {
           input: escapeTemplateVars(input.prompt),

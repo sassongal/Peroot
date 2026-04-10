@@ -37,6 +37,8 @@ export interface ApiUsageData {
     outputTokens: number;
     durationMs: number;
     endpoint?: string;
+    /** Lowercase snake_case, aligned with prompt_engines.mode (e.g. deep_research) */
+    engineMode?: string;
     skillMetadata?: SkillMetadata;
     /**
      * True when the response was served from the Redis result cache and no
@@ -62,7 +64,7 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
         const config = AVAILABLE_MODELS[data.modelId];
         const cost = estimateCost(data.modelId, data.inputTokens, data.outputTokens);
 
-        const baseRow = {
+        const baseRow: Record<string, unknown> = {
             user_id: data.userId || null,
             provider: config?.provider || 'unknown',
             model: data.modelId,
@@ -73,6 +75,9 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
             duration_ms: data.durationMs,
             cache_hit: data.cacheHit === true,
         };
+        if (data.engineMode) {
+            baseRow.engine_mode = data.engineMode;
+        }
 
         // Always log skill metadata as structured info so it's queryable in Vercel logs.
         if (data.skillMetadata) {

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 import { getEngine, EngineInput } from '@/lib/engines';
-import { CapabilityMode } from '@/lib/capability-mode';
+import { parseCapabilityMode, capabilityModeToDbMode } from '@/lib/capability-mode';
 import { validateAdminSession, logAdminAction, parseAdminInput } from '@/lib/admin/admin-security';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -12,7 +12,8 @@ import { trackApiUsage } from '@/lib/admin/track-api-usage';
 
 const TestEngineSchema = z.object({
     prompt: z.string().min(1),
-    mode: z.nativeEnum(CapabilityMode),
+    /** Accepts CapabilityMode or DB snake_case (e.g. image_generation) */
+    mode: z.string().min(1),
     tone: z.string().optional().default('Professional'),
     category: z.string().optional().default('Test'),
     modeParams: z.record(z.string(), z.any()).optional().default({}),
@@ -45,13 +46,15 @@ export async function POST(req: Request) {
 
     const { 
         prompt, 
-        mode, 
+        mode: modeRaw, 
         tone, 
         category, 
         modeParams,
         customSystemPrompt,
         customUserPrompt 
     } = data!;
+
+    const mode = parseCapabilityMode(modeRaw);
 
     // 3. Setup Engine
     const engine = await getEngine(mode);
@@ -94,6 +97,7 @@ export async function POST(req: Request) {
         outputTokens,
         durationMs,
         endpoint: 'test-engine',
+        engineMode: capabilityModeToDbMode(mode),
     });
 
     // 5. Audit Log (Shelf) with Telemetry
