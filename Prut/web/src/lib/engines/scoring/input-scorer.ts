@@ -60,6 +60,8 @@ import {
 import {
   scoreEnhancedTextDimensions,
   scoreEnhancedVisualDimensions,
+  scoreEnhancedResearchDimensions,
+  scoreEnhancedAgentDimensions,
   detectPromptDomain,
   type DimensionScoreChunk,
   type PromptDomain,
@@ -110,6 +112,10 @@ function buildSharedChunkMap(
     scoreEnhancedVisualDimensions(p.text, p.wordCount, mode === CapabilityMode.VIDEO_GENERATION).forEach(
       (c) => m.set(c.key, c)
     );
+  } else if (mode === CapabilityMode.DEEP_RESEARCH) {
+    scoreEnhancedResearchDimensions(p.text, p.wordCount).forEach((c) => m.set(c.key, c));
+  } else if (mode === CapabilityMode.AGENT_BUILDER) {
+    scoreEnhancedAgentDimensions(p.text, p.wordCount).forEach((c) => m.set(c.key, c));
   } else {
     scoreEnhancedTextDimensions(p.text, p.wordCount).forEach((c) => m.set(c.key, c));
   }

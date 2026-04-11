@@ -7,6 +7,8 @@ import { CapabilityMode } from '../../capability-mode';
 import {
   scoreEnhancedTextDimensions,
   scoreEnhancedVisualDimensions,
+  scoreEnhancedResearchDimensions,
+  scoreEnhancedAgentDimensions,
   enhancedTotalFromChunks,
   weaknessSummaryLineHe,
   strengthSummaryLineHe,
@@ -70,6 +72,10 @@ export class EnhancedScorer {
 
     const chunks = isVisual
       ? scoreEnhancedVisualDimensions(trimmed, wordCount, isVideo)
+      : mode === CapabilityMode.DEEP_RESEARCH
+      ? scoreEnhancedResearchDimensions(trimmed, wordCount)
+      : mode === CapabilityMode.AGENT_BUILDER
+      ? scoreEnhancedAgentDimensions(trimmed, wordCount)
       : scoreEnhancedTextDimensions(trimmed, wordCount, detectedDomain);
 
     const breakdown = chunksToBreakdown(chunks);

@@ -13,6 +13,17 @@ import {
   hasTaskVerbWithObject,
   hasSpecificityProperNouns,
   hasChainOfThought,
+  hasSourcesRequirement,
+  hasMethodology,
+  hasMECE,
+  hasConfidenceProtocol,
+  hasFalsifiability,
+  hasInfoGaps,
+  hasToolsSpec,
+  hasBoundaries,
+  hasInputsOutputs,
+  hasPolicies,
+  hasFailureModes,
 } from './prompt-parse';
 
 // ---------------------------------------------------------------------------
@@ -86,6 +97,19 @@ export const DIMENSION_LABEL_HE: Record<string, string> = {
   color: 'צבע',
   quality: 'איכות טכנית',
   motion: 'תנועה',
+  // Research dimensions
+  research_sources: 'מקורות',
+  research_method: 'מתודולוגיה',
+  confidence: 'רמת ביטחון',
+  falsifiability: 'הפרכה',
+  info_gaps: 'פערי מידע',
+  // Agent dimensions
+  tools: 'כלים',
+  boundaries: 'גבולות',
+  inputs_outputs: 'קלט/פלט',
+  policies: 'מדיניות',
+  failure_modes: 'מצבי כשל',
+  enforceability: 'אכיפות',
 };
 
 /**
@@ -130,6 +154,19 @@ const TIPS: Record<string, string> = {
   safety: 'הגדר גבולות ומקרי קצה (Iron Dome)',
   measurability: 'ציין קריטריוני הצלחה מדידים (מספר פריטים, אורך מדויק)',
   framework: 'השתמש במסגרת פרומפטינג (CO-STAR, RISEN, CTCO)',
+  // Research tips
+  research_sources: 'דרוש מקורות ראשוניים, URLs, ופסילת מקורות לא-מאומתים',
+  research_method: 'הגדר מתודולוגיה (MECE, שאלות מובילות, שלבי מחקר)',
+  confidence: 'בקש דירוג ביטחון לכל טענה (גבוה/בינוני/נמוך)',
+  falsifiability: 'ציין "מה היה מפריך את הטענה"',
+  info_gaps: 'דרוש סעיף "פערי מידע" — מה לא ניתן לאמת',
+  // Agent tips
+  tools: 'פרט כלים/APIs שהסוכן רשאי לקרוא',
+  boundaries: 'הגדר מה אסור לסוכן ומתי להעביר לאנושי',
+  inputs_outputs: 'הגדר schema מדויק לקלט ולפלט',
+  policies: 'הוסף כללים/guardrails ברורים',
+  failure_modes: 'תאר כיצד הסוכן מגיב לשגיאות ומקרי קצה',
+  enforceability: 'העדף מגבלות אכיפות (bullet points, עד N סעיפים, שפה)',
 };
 
 function scoreLength(wc: number): Omit<DimensionScoreChunk, 'key' | 'tipHe'> & { key: 'length' } {
@@ -560,6 +597,26 @@ function wrap(chunk: Omit<DimensionScoreChunk, 'tipHe'>): DimensionScoreChunk {
   return { ...chunk, tipHe: TIPS[chunk.key] ?? chunk.key };
 }
 
+/**
+ * Rescale a chunk to a new maxPoints while preserving the earned ratio and
+ * all matched/missing labels.  Used by research/agent scorers to map the
+ * standard dimension functions onto mode-specific point budgets.
+ */
+function scaledChunk(
+  chunk: Omit<DimensionScoreChunk, 'tipHe'>,
+  newMax: number
+): DimensionScoreChunk {
+  const ratio = chunk.maxPoints > 0 ? chunk.score / chunk.maxPoints : 0;
+  return {
+    key: chunk.key,
+    maxPoints: newMax,
+    score: Math.round(ratio * newMax),
+    matched: chunk.matched,
+    missing: chunk.missing,
+    tipHe: TIPS[chunk.key] ?? chunk.key,
+  };
+}
+
 /** Full text scoring (15 dimensions) — single source for EnhancedScorer.
  * Pass `domain` to exclude dimensions irrelevant to the prompt type so they
  * don't artificially drag the score down.  If omitted, domain is auto-detected.
@@ -589,6 +646,166 @@ export function scoreEnhancedTextDimensions(t: string, wordCount: number, domain
   return chunks.map((c) =>
     applicable.has(c.key) ? c : { ...c, maxPoints: 0, score: 0, matched: [], missing: [] }
   );
+}
+
+/**
+ * Scoring dimensions for DEEP_RESEARCH mode (post-upgrade).
+ * Keys and weights mirror the InputScorer DEEP_RESEARCH profile so that
+ * maxPoints sum = 100 and enhancedTotalFromChunks returns the score directly.
+ */
+export function scoreEnhancedResearchDimensions(t: string, wordCount: number): DimensionScoreChunk[] {
+  const p = parse(t);
+  // research_sources (16 pts)
+  const sourcePts = hasSourcesRequirement(p) ? 10 : 0;
+  const urlPts = /url|http|אתר|official|ראשוני|primary\s+source|peer[-\s]?reviewed/i.test(t) ? 6 : 0;
+  const researchSources: DimensionScoreChunk = {
+    key: 'research_sources', maxPoints: 16, tipHe: TIPS.research_sources,
+    score: Math.min(16, sourcePts + urlPts),
+    matched: [
+      ...(sourcePts > 0 ? ['דרישת מקורות'] : []),
+      ...(urlPts > 0 ? ['URL / מקורות ראשוניים'] : []),
+    ],
+    missing: [
+      ...(sourcePts === 0 ? ['דרישת מקורות'] : []),
+      ...(urlPts === 0 ? ['URL / מקורות ראשוניים'] : []),
+    ],
+  };
+  // research_method (14 pts)
+  const methodPts = hasMethodology(p) ? 9 : 0;
+  const mecePts = hasMECE(p) ? 5 : 0;
+  const researchMethod: DimensionScoreChunk = {
+    key: 'research_method', maxPoints: 14, tipHe: TIPS.research_method,
+    score: Math.min(14, methodPts + mecePts),
+    matched: [
+      ...(methodPts > 0 ? ['מתודולוגיה'] : []),
+      ...(mecePts > 0 ? ['MECE'] : []),
+    ],
+    missing: [
+      ...(methodPts === 0 ? ['מתודולוגיה / שלבים'] : []),
+      ...(mecePts === 0 ? ['MECE / שאלות ממצות'] : []),
+    ],
+  };
+  // confidence (10 pts)
+  const confidenceScore = hasConfidenceProtocol(p) ? 10 : 0;
+  const confidence: DimensionScoreChunk = {
+    key: 'confidence', maxPoints: 10, tipHe: TIPS.confidence,
+    score: confidenceScore,
+    matched: confidenceScore > 0 ? ['סולם ביטחון'] : [],
+    missing: confidenceScore === 0 ? ['דירוג ביטחון (גבוה/בינוני/נמוך)'] : [],
+  };
+  // falsifiability (8 pts)
+  const falsScore = hasFalsifiability(p) ? 8 : 0;
+  const falsifiability: DimensionScoreChunk = {
+    key: 'falsifiability', maxPoints: 8, tipHe: TIPS.falsifiability,
+    score: falsScore,
+    matched: falsScore > 0 ? ['שאלת הפרכה'] : [],
+    missing: falsScore === 0 ? ['מה היה מפריך את הטענה'] : [],
+  };
+  // info_gaps (6 pts)
+  const gapsScore = hasInfoGaps(p) ? 6 : 0;
+  const infoGaps: DimensionScoreChunk = {
+    key: 'info_gaps', maxPoints: 6, tipHe: TIPS.info_gaps,
+    score: gapsScore,
+    matched: gapsScore > 0 ? ['פערי מידע מסומנים'] : [],
+    missing: gapsScore === 0 ? ['סעיף פערי מידע'] : [],
+  };
+  return [
+    scaledChunk(scoreTask(t), 12),
+    researchSources,
+    researchMethod,
+    confidence,
+    falsifiability,
+    scaledChunk(scoreFormat(t), 10),
+    infoGaps,
+    scaledChunk(scoreSpecificity(t, p), 8),
+    scaledChunk(scoreClarity(t), 6),
+    scaledChunk(scoreRole(t), 10),
+  ];
+}
+
+/**
+ * Scoring dimensions for AGENT_BUILDER mode (post-upgrade).
+ * Keys and weights mirror the InputScorer AGENT_BUILDER profile so that
+ * maxPoints sum = 100 and enhancedTotalFromChunks returns the score directly.
+ */
+export function scoreEnhancedAgentDimensions(t: string, wordCount: number): DimensionScoreChunk[] {
+  const p = parse(t);
+  // tools (12 pts) — graded: basic mention vs detailed API/function listing
+  const toolsBasic = hasToolsSpec(p) ? 6 : 0;
+  const toolsDetail = /api\b|function\s+call|integration|tool\s+use|יכולות|ממשק|endpoint/i.test(t) ? 6 : 0;
+  const tools: DimensionScoreChunk = {
+    key: 'tools', maxPoints: 12, tipHe: TIPS.tools,
+    score: Math.min(12, toolsBasic + toolsDetail),
+    matched: [
+      ...(toolsBasic > 0 ? ['כלים'] : []),
+      ...(toolsDetail > 0 ? ['פירוט APIs'] : []),
+    ],
+    missing: [
+      ...(toolsBasic === 0 ? ['רשימת כלים'] : []),
+      ...(toolsDetail === 0 ? ['פירוט APIs / integrations'] : []),
+    ],
+  };
+  // boundaries (10 pts)
+  const boundScore = hasBoundaries(p) ? 10 : 0;
+  const boundaries: DimensionScoreChunk = {
+    key: 'boundaries', maxPoints: 10, tipHe: TIPS.boundaries,
+    score: boundScore,
+    matched: boundScore > 0 ? ['גבולות / העברה לאנושי'] : [],
+    missing: boundScore === 0 ? ['גבולות ומה אסור לסוכן'] : [],
+  };
+  // inputs_outputs (12 pts)
+  const ioScore = hasInputsOutputs(p) ? 12 : 0;
+  const inputsOutputs: DimensionScoreChunk = {
+    key: 'inputs_outputs', maxPoints: 12, tipHe: TIPS.inputs_outputs,
+    score: ioScore,
+    matched: ioScore > 0 ? ['schema קלט/פלט'] : [],
+    missing: ioScore === 0 ? ['schema קלט/פלט'] : [],
+  };
+  // policies (10 pts)
+  const polScore = hasPolicies(p) ? 10 : 0;
+  const policies: DimensionScoreChunk = {
+    key: 'policies', maxPoints: 10, tipHe: TIPS.policies,
+    score: polScore,
+    matched: polScore > 0 ? ['מדיניות / guardrails'] : [],
+    missing: polScore === 0 ? ['כללים ומדיניות'] : [],
+  };
+  // failure_modes (8 pts)
+  const failScore = hasFailureModes(p) ? 8 : 0;
+  const failureModes: DimensionScoreChunk = {
+    key: 'failure_modes', maxPoints: 8, tipHe: TIPS.failure_modes,
+    score: failScore,
+    matched: failScore > 0 ? ['מצבי כשל'] : [],
+    missing: failScore === 0 ? ['טיפול בשגיאות ומקרי קצה'] : [],
+  };
+  // enforceability (8 pts) — same logic as InputScorer DIMS.enforceability
+  const enforceable = [
+    /(?:bullet|רשימה|סעיפים|numbered|ממוספר|טבלה|table|json|csv|markdown)/i,
+    /(?:עד|מקסימום|לכל\s+היותר|max(?:imum)?|up\s+to|at\s+most)\s+\d+/i,
+    /(?:לפחות|מינימום|minimum|at\s+least)\s+\d+/i,
+    /(?:בעברית|באנגלית|in\s+(?:hebrew|english|arabic|french))/i,
+    /(?:אל\s+ת|ללא|בלי|don['']?t|do\s+not|avoid|never|without)\s+\S+/i,
+  ];
+  const enforceCount = enforceable.filter((re) => re.test(t)).length;
+  const enforceScore = Math.min(8, enforceCount * 2);
+  const enforceability: DimensionScoreChunk = {
+    key: 'enforceability', maxPoints: 8, tipHe: TIPS.enforceability,
+    score: enforceScore,
+    matched: enforceCount > 0 ? [`${enforceCount} מגבלות אכיפות`] : [],
+    missing: enforceCount < 3 ? ['מגבלות אכיפות (פורמט, מקסימום, שפה)'] : [],
+  };
+  return [
+    scaledChunk(scoreRole(t), 10),
+    scaledChunk(scoreTask(t), 10),
+    tools,
+    boundaries,
+    inputsOutputs,
+    policies,
+    failureModes,
+    enforceability,
+    scaledChunk(scoreFormat(t), 10),
+    scaledChunk(scoreContext(t, p), 6),
+    scaledChunk(scoreClarity(t), 4),
+  ];
 }
 
 function scoreVisualLength(wc: number): DimensionScoreChunk {
@@ -656,7 +873,8 @@ function scoreVisualComposition(t: string): DimensionScoreChunk {
     matched.push('קומפוזיציה');
     pts += 4;
   } else missing.push('מסגור');
-  if (/--ar\s*\d+:\d+|aspect\s*ratio|\d+:\d+\s*(ratio|aspect)|portrait|landscape|square|vertical|horizontal|פורטרט|אופקי|אנכי|ריבועי|יחס/i.test(t)) {
+  // Broader aspect ratio: Midjourney --ar, DALL-E [size:], Flux/Imagen pixel dims, numeric ratios
+  if (/--ar\s*\d+:\d+|\[(?:aspectRatio|size|aspect)\s*[:=]\s*\S+|\d{3,4}\s*[x×]\s*\d{3,4}|aspect\s*ratio|\d+:\d+\s*(ratio|aspect)|portrait|landscape|square|vertical|horizontal|פורטרט|אופקי|אנכי|ריבועי|יחס/i.test(t)) {
     matched.push('יחס גובה־רוחב');
     pts += 4;
   } else missing.push('יחס גובה־רוחב');
@@ -718,11 +936,22 @@ function scoreVisualQuality(t: string): DimensionScoreChunk {
     matched.push('משקלים (word:n)');
     pts += 2;
   }
-  if (/(negative\s*prompt|no\s+\w+|without\s+\w+|ללא|בלי)\s*:?\s*[\w\u0590-\u05FF,\s]+/i.test(t)) {
-    matched.push('negative prompt');
+  // Graded negative prompt: 3+ distinct terms = 2pts, 1-2 terms = 1pt, none = 0
+  const negSection = t.match(/negative\s*prompt\s*:?\s*([^\n]+)/i)?.[1] ?? '';
+  const negTermCount = negSection
+    ? negSection.split(/[,،]/).filter((s) => s.trim().length > 2).length
+    : 0;
+  const hebrewNegCount = (t.match(/(?:ללא|בלי)\s+\S+/gi) ?? []).length;
+  const totalNegTerms = negTermCount + hebrewNegCount;
+  if (totalNegTerms >= 3) {
+    matched.push(`negative prompt (${totalNegTerms} terms)`);
     pts += 2;
+  } else if (totalNegTerms >= 1) {
+    matched.push('negative prompt (minimal)');
+    pts += 1;
+    missing.push('הוסף 3+ מונחים שליליים');
   } else {
-    missing.push('מה לא לרנדר');
+    missing.push('negative prompt');
   }
   return { key, maxPoints, tipHe, score: Math.min(10, pts), matched, missing };
 }

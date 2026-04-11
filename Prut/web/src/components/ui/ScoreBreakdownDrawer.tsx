@@ -220,6 +220,19 @@ function DimensionRow({ dim }: { dim: DimensionResult }) {
     color: 'צבע',
     quality: 'איכות טכנית',
     motion: 'תנועה',
+    // research
+    research_sources: 'מקורות',
+    research_method: 'מתודולוגיה',
+    confidence: 'רמת ביטחון',
+    falsifiability: 'הפרכה',
+    info_gaps: 'פערי מידע',
+    // agent
+    tools: 'כלים',
+    boundaries: 'גבולות',
+    inputs_outputs: 'קלט/פלט',
+    policies: 'מדיניות',
+    failure_modes: 'מצבי כשל',
+    enforceability: 'אכיפות',
   };
 
   return (
