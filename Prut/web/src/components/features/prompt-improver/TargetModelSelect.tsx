@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useId } from "react";
+import { useState, useRef, useEffect, useId, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Check, ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,8 @@ const OPTIONS: {
   },
 ];
 
+const MENU_MIN_WIDTH_PX = 288; // 18rem
+
 function optionByValue(v: TargetModel) {
   return OPTIONS.find((o) => o.value === v) ?? OPTIONS[0];
 }
@@ -77,6 +80,7 @@ interface TargetModelSelectProps {
 export function TargetModelSelect({ value, onChange, disabled }: TargetModelSelectProps) {
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const comboboxRef = useRef<HTMLButtonElement>(null);
   const listboxId = useId();
@@ -88,15 +92,36 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
     setHighlightedIndex(idx >= 0 ? idx : 0);
   };
 
+  const updateMenuPosition = () => {
+    const el = comboboxRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const vw = typeof window !== "undefined" ? window.innerWidth : 400;
+    const width = Math.min(Math.max(r.width, MENU_MIN_WIDTH_PX), vw - 16);
+    let left = r.left;
+    if (left + width > vw - 8) left = vw - 8 - width;
+    if (left < 8) left = 8;
+    setMenuPos({ top: r.bottom + 6, left, width });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updateMenuPosition();
+    window.addEventListener("scroll", updateMenuPosition, true);
+    window.addEventListener("resize", updateMenuPosition);
+    return () => {
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
   const commitSelection = (next: TargetModel) => {
@@ -149,12 +174,105 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
     }
   };
 
+  const canUsePortal = typeof document !== "undefined";
+  const listbox = open && canUsePortal && menuPos && (
+    <>
+      {/* Captures outside taps; stays under the menu */}
+      <div
+        role="presentation"
+        className="fixed inset-0 z-9998 touch-none bg-black/25 dark:bg-black/40"
+        aria-hidden
+        onPointerDown={(e) => {
+          e.preventDefault();
+          setOpen(false);
+        }}
+      />
+      <ul
+        id={listboxId}
+        role="listbox"
+        aria-label="בחירת מודל יעד"
+        style={{
+          top: menuPos.top,
+          left: menuPos.left,
+          width: menuPos.width,
+        }}
+        className={cn(
+          "fixed z-9999 max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl",
+          "border border-zinc-200 dark:border-zinc-700",
+          "bg-white dark:bg-zinc-950",
+          "shadow-2xl shadow-black/30 ring-1 ring-black/10 dark:ring-white/10",
+          "divide-y divide-zinc-200 dark:divide-zinc-800 animate-in fade-in zoom-in-95 duration-150"
+        )}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {OPTIONS.map((opt, idx) => {
+          const selected = opt.value === value;
+          const highlighted = open && idx === highlightedIndex;
+          return (
+            <li
+              key={opt.value}
+              id={`${listboxId}-opt-${idx}`}
+              role="option"
+              tabIndex={-1}
+              aria-selected={selected}
+              onMouseEnter={() => setHighlightedIndex(idx)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+              }}
+              onClick={() => {
+                commitSelection(opt.value);
+              }}
+              className={cn(
+                "grid w-full grid-cols-[2.25rem_1fr_1.25rem] items-center gap-2 px-3 py-3 text-start transition-colors cursor-pointer min-h-[48px]",
+                opt.rowClass,
+                selected && "bg-zinc-50 dark:bg-zinc-900/80",
+                highlighted &&
+                  "ring-2 ring-inset ring-amber-400/50 bg-amber-50/90 dark:bg-amber-950/40"
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                  "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-600/80"
+                )}
+              >
+                {opt.logoSrc ? (
+                  <Image
+                    src={opt.logoSrc}
+                    alt=""
+                    width={24}
+                    height={24}
+                    className={cn(
+                      "object-contain",
+                      opt.value === "claude" && "dark:invert"
+                    )}
+                  />
+                ) : (
+                  <Sparkles className={cn("w-5 h-5", opt.iconTint)} aria-hidden />
+                )}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {opt.labelHe}
+                </span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-zinc-500 dark:text-zinc-400">
+                  {opt.sub}
+                </span>
+              </span>
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                {selected ? (
+                  <Check className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden />
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+
   return (
-    <div
-      ref={rootRef}
-      className={cn("relative isolate", open && "z-100")}
-      dir="rtl"
-    >
+    <div ref={rootRef} className="relative" dir="rtl">
       <span id={helpDescId} className="sr-only">
         {TARGET_MODEL_HELP}
       </span>
@@ -221,83 +339,7 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
         />
       </button>
 
-      {open && (
-        <ul
-          id={listboxId}
-          role="listbox"
-          aria-label="בחירת מודל יעד"
-          className={cn(
-            "absolute end-0 top-full mt-1.5 z-110 min-w-[min(18rem,calc(100vw-2rem))] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl",
-            "border border-zinc-200 dark:border-zinc-700",
-            "bg-white dark:bg-zinc-950",
-            "shadow-2xl shadow-black/25 ring-1 ring-black/5 dark:ring-white/10",
-            "divide-y divide-zinc-200 dark:divide-zinc-800 animate-in fade-in zoom-in-95 duration-150"
-          )}
-        >
-          {OPTIONS.map((opt, idx) => {
-            const selected = opt.value === value;
-            const highlighted = open && idx === highlightedIndex;
-            return (
-              <li
-                key={opt.value}
-                id={`${listboxId}-opt-${idx}`}
-                role="option"
-                tabIndex={-1}
-                aria-selected={selected}
-                onMouseEnter={() => setHighlightedIndex(idx)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                }}
-                onClick={() => {
-                  commitSelection(opt.value);
-                }}
-                className={cn(
-                  "grid w-full grid-cols-[2.25rem_1fr_1.25rem] items-center gap-2 px-3 py-2.5 text-start transition-colors cursor-pointer",
-                  opt.rowClass,
-                  selected && "bg-zinc-50 dark:bg-zinc-900/80",
-                  highlighted &&
-                    "ring-2 ring-inset ring-amber-400/50 bg-amber-50/90 dark:bg-amber-950/40"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                    "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-600/80"
-                  )}
-                >
-                  {opt.logoSrc ? (
-                    <Image
-                      src={opt.logoSrc}
-                      alt=""
-                      width={24}
-                      height={24}
-                      className={cn(
-                        "object-contain",
-                        opt.value === "claude" && "dark:invert"
-                      )}
-                    />
-                  ) : (
-                    <Sparkles className={cn("w-5 h-5", opt.iconTint)} aria-hidden />
-                  )}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-(--text-primary)">
-                    {opt.labelHe}
-                  </span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-(--text-muted)">
-                    {opt.sub}
-                  </span>
-                </span>
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center">
-                  {selected ? (
-                    <Check className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden />
-                  ) : null}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {listbox && createPortal(listbox, document.body)}
     </div>
   );
 }
