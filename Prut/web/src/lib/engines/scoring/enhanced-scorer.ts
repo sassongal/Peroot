@@ -11,7 +11,9 @@ import {
   weaknessSummaryLineHe,
   strengthSummaryLineHe,
   DIMENSION_LABEL_HE,
+  detectPromptDomain,
   type DimensionScoreChunk,
+  type PromptDomain,
 } from './prompt-dimensions';
 
 export interface DimensionResult {
@@ -31,6 +33,7 @@ export interface EnhancedScore {
   topWeaknesses: string[];
   estimatedImpact: string;
   strengths: string[];
+  domain: PromptDomain;
 }
 
 function chunksToBreakdown(chunks: DimensionScoreChunk[]): DimensionResult[] {
@@ -45,8 +48,9 @@ function chunksToBreakdown(chunks: DimensionScoreChunk[]): DimensionResult[] {
 }
 
 export class EnhancedScorer {
-  static score(text: string, mode: CapabilityMode = CapabilityMode.STANDARD): EnhancedScore {
+  static score(text: string, mode: CapabilityMode = CapabilityMode.STANDARD, domain?: PromptDomain): EnhancedScore {
     const trimmed = (text || '').trim();
+    const detectedDomain = domain ?? detectPromptDomain(trimmed);
     if (!trimmed) {
       return {
         total: 0,
@@ -56,6 +60,7 @@ export class EnhancedScorer {
         topWeaknesses: ['הפרומפט ריק — התחל לתאר את המטרה'],
         estimatedImpact: 'הוסף משפט או שניים על מה להשיג',
         strengths: [],
+        domain: detectedDomain,
       };
     }
 
@@ -65,7 +70,7 @@ export class EnhancedScorer {
 
     const chunks = isVisual
       ? scoreEnhancedVisualDimensions(trimmed, wordCount, isVideo)
-      : scoreEnhancedTextDimensions(trimmed, wordCount);
+      : scoreEnhancedTextDimensions(trimmed, wordCount, detectedDomain);
 
     const breakdown = chunksToBreakdown(chunks);
     const total = enhancedTotalFromChunks(chunks);
@@ -122,6 +127,7 @@ export class EnhancedScorer {
       topWeaknesses,
       estimatedImpact,
       strengths,
+      domain: detectedDomain,
     };
   }
 }

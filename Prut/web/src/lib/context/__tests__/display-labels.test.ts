@@ -7,7 +7,6 @@ function baseBlock(overrides: Partial<ContextBlock> & Pick<ContextBlock, 'type'>
     id: '1',
     sha256: 'x',
     stage: 'ready',
-    type: overrides.type,
     display: {
       title: 'Title',
       documentType: 'דף אינטרנט',

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from 'react';
-import { X, Check, AlertCircle, Lightbulb, Sparkles } from 'lucide-react';
+import { X, Check, AlertCircle, Info, Lightbulb, Sparkles } from 'lucide-react';
 import type { EnhancedScore, DimensionResult } from '@/lib/engines/scoring/enhanced-scorer';
+import { PROMPT_DOMAIN_LABELS } from '@/lib/engines/scoring/prompt-dimensions';
 import { cn } from '@/lib/utils';
 
 interface ScoreBreakdownDrawerProps {
@@ -11,6 +12,8 @@ interface ScoreBreakdownDrawerProps {
   score: EnhancedScore | null;
   /** Optional title shown in the header, e.g. "ציון פרומפט התמונה". */
   title?: string;
+  /** When true, frames the weakness section as optional improvements (post-upgrade context). */
+  isPostUpgrade?: boolean;
 }
 
 /**
@@ -30,6 +33,7 @@ export function ScoreBreakdownDrawer({
   onClose,
   score,
   title = 'פירוק ציון',
+  isPostUpgrade = false,
 }: ScoreBreakdownDrawerProps) {
   // Close on Escape
   useEffect(() => {
@@ -101,6 +105,11 @@ export function ScoreBreakdownDrawer({
               <span className={cn('px-2.5 md:px-3 py-1 rounded-full text-xs font-bold border', levelColor)}>
                 {score.label}
               </span>
+              {score.domain && DOMAIN_LABELS[score.domain] && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-(--glass-bg) border border-(--glass-border) text-(--text-muted)">
+                  {DOMAIN_LABELS[score.domain]}
+                </span>
+              )}
             </div>
             {score.estimatedImpact && (
               <p className="text-xs text-(--text-muted) mt-2">{score.estimatedImpact}</p>
@@ -137,15 +146,24 @@ export function ScoreBreakdownDrawer({
             )}
             {score.topWeaknesses.length > 0 && (
               <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-500 uppercase tracking-wider">
-                  <Lightbulb className="w-3 h-3" />
-                  איך לשפר
+                <div className={cn(
+                  'flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider',
+                  isPostUpgrade ? 'text-sky-500' : 'text-amber-500'
+                )}>
+                  {isPostUpgrade ? <Info className="w-3 h-3" /> : <Lightbulb className="w-3 h-3" />}
+                  {isPostUpgrade ? 'שיפורים אפשריים נוספים' : 'איך לשפר'}
                 </div>
                 <ul className="space-y-1">
                   {score.topWeaknesses.slice(0, 3).map((w, i) => (
-                    <li key={i} className="text-xs text-amber-600 dark:text-amber-300 flex items-start gap-1.5">
-                      <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
-                      <span>{w}</span>
+                    <li key={i} className={cn(
+                      'text-xs flex items-start gap-1.5',
+                      isPostUpgrade ? 'text-sky-600 dark:text-sky-300' : 'text-amber-600 dark:text-amber-300'
+                    )}>
+                      {isPostUpgrade
+                        ? <Info className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
+                        : <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
+                      }
+                      <span>{isPostUpgrade ? `ניתן לשפר עוד: ${w}` : w}</span>
                     </li>
                   ))}
                 </ul>

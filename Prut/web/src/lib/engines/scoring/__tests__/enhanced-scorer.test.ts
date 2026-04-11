@@ -32,9 +32,9 @@ describe('EnhancedScorer — role detection', () => {
     expect(dim!.score).toBe(dim!.maxScore);
   });
 
-  it('"מומחה שיווק" alone (no "אתה") preserves legacy partial match (3/10)', () => {
+  it('"מומחה שיווק" alone (no "אתה") gets partial role credit without explicit "אתה" (4/10)', () => {
     const dim = roleDim('מומחה שיווק צריך לכתוב פוסט.');
-    expect(dim!.score).toBe(3);
+    expect(dim!.score).toBe(4);
   });
 
   it('no role at all scores 0/10', () => {

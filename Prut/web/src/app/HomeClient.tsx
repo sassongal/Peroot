@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
-import { CapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, capabilitySupportsTargetModel } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
@@ -612,7 +612,8 @@ function PageContent() {
       capability_mode: ps.selectedCapability,
       ...(currentModeParams && { mode_params: currentModeParams }),
       ...(contextPayload.length > 0 && { context: contextPayload }),
-      ...(targetModel !== 'general' && { target_model: targetModel }),
+      ...(capabilitySupportsTargetModel(ps.selectedCapability) &&
+        targetModel !== "general" && { target_model: targetModel }),
       ...(detectedLang === 'en' && { mode_params: { ...currentModeParams, input_language: 'en' } }),
     });
 
@@ -710,7 +711,8 @@ function PageContent() {
       answers: filteredAnswers,
       iteration: ps.iterationCount + 1,
       ...(contextPayloadRefine.length > 0 && { context: contextPayloadRefine }),
-      ...(targetModel !== 'general' && { target_model: targetModel }),
+      ...(capabilitySupportsTargetModel(ctx?.mode || ps.selectedCapability) &&
+        targetModel !== "general" && { target_model: targetModel }),
     });
 
     const refineResult = processStreamResult("Refine");

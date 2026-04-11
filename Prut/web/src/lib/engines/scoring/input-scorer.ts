@@ -60,7 +60,9 @@ import {
 import {
   scoreEnhancedTextDimensions,
   scoreEnhancedVisualDimensions,
+  detectPromptDomain,
   type DimensionScoreChunk,
+  type PromptDomain,
 } from './prompt-dimensions';
 
 // ---------------------------------------------------------------------------
@@ -96,6 +98,7 @@ export interface InputScore {
   missingTop: InputScoreMissing[];
   breakdown: InputScoreDimension[];
   mode: CapabilityMode;
+  domain: PromptDomain;
 }
 
 function buildSharedChunkMap(
@@ -825,6 +828,7 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
       })),
       breakdown: emptyBreakdown,
       mode,
+      domain: 'general' as PromptDomain,
     };
   }
 
@@ -930,5 +934,6 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
     missingTop,
     breakdown,
     mode,
+    domain: detectPromptDomain(text),
   };
 }

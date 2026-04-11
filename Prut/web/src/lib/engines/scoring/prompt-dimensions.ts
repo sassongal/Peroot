@@ -13,6 +13,44 @@ import {
   hasSpecificityProperNouns,
 } from './prompt-parse';
 
+// ---------------------------------------------------------------------------
+// Domain detection — used by both EnhancedScorer and InputScorer
+// ---------------------------------------------------------------------------
+
+export type PromptDomain = 'content' | 'technical' | 'creative' | 'research' | 'instruction' | 'general';
+
+export function detectPromptDomain(t: string): PromptDomain {
+  // Creative check runs BEFORE technical so "screenplay script" / "fiction story" don't mis-classify.
+  // screenplay/תסריט are creative-exclusive; "script" alone is ambiguous so excluded from creative check.
+  if (/\bstory\b|poem|fiction|creative writing|\bcharacter\b|novel|narrative|\bplot\b|\bscene\b|\bdialogue\b|screenplay|סיפור|שיר|דמות|תסריט|דיאלוג|סצנה|יצירתי/i.test(t)) return 'creative';
+  // Technical: excludes "script" (too ambiguous), relies on unambiguous dev keywords
+  if (/\bcode\b|function\b|api\b|debug\b|\berror\b|sql\b|typescript|javascript|python|\bcomponent\b|\bclass\b|method\b|endpoint|database|\bquery\b|npm\b|package\b|\bimport\b|\bexport\b|interface\b|\basync\b|\bawait\b|promise\b|\bhook\b|useState|useEffect|פונקציה|קוד|מסד נתונים/i.test(t)) return 'technical';
+  if (/blog|linkedin|instagram|facebook|email|newsletter|post\b|social|landing\s*page|\bad\b|\bads\b|campaign|copywriting|\bcontent\b|marketing|caption|תוכן|בלוג|פוסט|מייל|ניוזלטר|מודעה|שיווק|קמפיין/i.test(t)) return 'content';
+  if (/research|analysis|\bdata\b|study\b|report\b|statistics|literature|academic|survey|findings|evidence|analyze|מחקר|ניתוח|נתונים|דוח|סטטיסטיקה|אקדמי|עדויות/i.test(t)) return 'research';
+  if (/how[\s-]to|tutorial|guide\b|step[\s-]by[\s-]step|instructions|walkthrough|explain|teach|course|lesson|מדריך|שלב|הסבר|לימוד|הוראות/i.test(t)) return 'instruction';
+  return 'general';
+}
+
+/** Hebrew UI labels for each domain — shared by LiveInputScorePill and ScoreBreakdownDrawer */
+export const PROMPT_DOMAIN_LABELS: Partial<Record<PromptDomain, string>> = {
+  technical:   '💻 טכני',
+  content:     '✍️ תוכן',
+  creative:    '🎨 יצירתי',
+  research:    '🔍 מחקר',
+  instruction: '📋 הוראות',
+  // 'general' intentionally omitted — no label shown for the default domain
+};
+
+/** Domain → set of applicable dimension keys (others zeroed out in the score denominator) */
+const DOMAIN_DIMENSION_APPLICABILITY: Record<PromptDomain, Set<string>> = {
+  content:     new Set(['length','role','task','context','specificity','format','constraints','structure','channel','examples','clarity','groundedness','safety','measurability','framework']),
+  technical:   new Set(['length','role','task','context','specificity','format','constraints','structure','examples','clarity','safety','measurability','framework']),
+  creative:    new Set(['length','role','task','context','specificity','format','constraints','structure','clarity','framework']),
+  research:    new Set(['length','role','task','context','specificity','format','constraints','structure','clarity','groundedness','safety','measurability','framework']),
+  instruction: new Set(['length','role','task','context','specificity','format','constraints','structure','examples','clarity','measurability','framework']),
+  general:     new Set(['length','role','task','context','specificity','format','constraints','structure','channel','examples','clarity','groundedness','safety','measurability','framework']),
+};
+
 export type DimensionScoreChunk = {
   key: string;
   maxPoints: number;
@@ -108,16 +146,25 @@ function scoreRole(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'role
   const maxPoints = 10;
   const matched: string[] = [];
   const missing: string[] = [];
-  if (HEBREW_ROLE_RE.test(t) || ENGLISH_ROLE_RE.test(t)) {
+
+  // Extended Hebrew persona patterns produced by the enhancement LLM
+  const extendedHebrewRole = /כ-\s*\S|בתפקיד\s+\S|בהיותי\s+\S|בכושר\s+\S|בתחום\s+\S|מתמחה\s+ב/i;
+
+  if (HEBREW_ROLE_RE.test(t) || ENGLISH_ROLE_RE.test(t) || extendedHebrewRole.test(t)) {
     matched.push('פרסונה מוגדרת בפתיחה');
     if (/\d+\s+(שנות|שנים|years)|מוסמך|בכיר|פרימיום|senior|lead/i.test(t)) {
       matched.push('ניסיון / הסמכה');
       return { key, maxPoints, score: 10, matched, missing };
     }
+    // "אתה מומחה ב-X" / "אתה מתמחה ב-X" — meaningful role, give 7 not 3
+    if (/מומחה\s+ב|מתמחה\s+ב|specialist\s+in|expert\s+in/i.test(t)) {
+      matched.push('התמחות מוגדרת');
+      return { key, maxPoints, score: 8, matched, missing: ['שנות ניסיון'] };
+    }
     return { key, maxPoints, score: 7, matched, missing: ['שנות ניסיון או התמחות ספציפית'] };
   }
   if (/מומחה|יועץ|אנליסט|expert|specialist|analyst/i.test(t)) {
-    return { key, maxPoints, score: 3, matched: ['אזכור תפקיד'], missing: ['משפט "אתה …" מפורש'] };
+    return { key, maxPoints, score: 4, matched: ['אזכור תפקיד'], missing: ['משפט "אתה …" מפורש'] };
   }
   missing.push('הגדרת תפקיד');
   return { key, maxPoints, score: 0, matched, missing };
@@ -169,7 +216,7 @@ function scoreSpecificity(t: string, p: Parsed): Omit<DimensionScoreChunk, 'tipH
   const missing: string[] = [];
   let pts = 0;
   const taskQuantityRegex =
-    /\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters)/i;
+    /(\d+\s*[-–]\s*\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters))|(עד\s+\d+\s*(מילים|שורות|נקודות|words|sentences|lines|items|bullets|paragraphs))|(לפחות\s+\d+\s*(מילים|שורות|words|sentences|items))|(בין\s+\d+\s+ל[-–]?\s*\d+)|(\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters))/i;
   if (taskQuantityRegex.test(t)) {
     matched.push('task-relevant numbers (מספרים קשורים למשימה)');
     pts += 3;
@@ -231,7 +278,11 @@ function scoreConstraints(t: string, p: Parsed): Omit<DimensionScoreChunk, 'tipH
     };
   }
   let pts = 0;
-  if (/אל\s+ת|אסור|ללא|בלי|don'?t|avoid|never|without/i.test(t)) {
+  // Dedicated section header (##הנחיות / ##מגבלות) counts as strong constraints signal
+  if (/##\s*(הנחיות|מגבלות|constraints|instructions|rules|הגבלות)/i.test(t)) {
+    matched.push('כותרת מגבלות');
+    pts += 4;
+  } else if (/אל\s+ת|אסור|ללא|בלי|don'?t|avoid|never|without/i.test(t)) {
     matched.push('מגבלות שליליות');
     pts += 4;
   } else missing.push('מגבלות שליליות');
@@ -455,6 +506,10 @@ function scoreFramework(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 
   const costarMatches = (t.match(costar) || []).length;
   const risen = /role|instructions|steps|expectations|narrowing|end\s+goal/gi;
   const risenMatches = (t.match(risen) || []).length;
+
+  // Count structured ## section headers (the enhancement LLM uses these extensively)
+  const sectionHeaders = (t.match(/^##\s+\S/gm) || []).length;
+
   if (/תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה/.test(t)) {
     matched.push('אלמנטי מסגרת בעברית');
   }
@@ -465,6 +520,21 @@ function scoreFramework(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 
   if (risenMatches >= 3) {
     matched.push('חתימת RISEN');
     return { key, maxPoints, score: 7, matched, missing: [] };
+  }
+  // 4+ section headers = full structured framework
+  if (sectionHeaders >= 4) {
+    matched.push(`${sectionHeaders} כותרות מובנות`);
+    return { key, maxPoints, score: 8, matched, missing: [] };
+  }
+  // 3 headers = strong framework
+  if (sectionHeaders === 3) {
+    matched.push('מבנה סעיפים (3 כותרות)');
+    return { key, maxPoints, score: 6, matched, missing: [] };
+  }
+  // 2 headers = partial framework
+  if (sectionHeaders === 2) {
+    matched.push('מבנה חלקי (2 כותרות)');
+    return { key, maxPoints, score: 4, matched, missing: [] };
   }
   if (costarMatches >= 2 || risenMatches >= 2) {
     matched.push('מסגרת חלקית');
@@ -481,9 +551,14 @@ function wrap(chunk: Omit<DimensionScoreChunk, 'tipHe'>): DimensionScoreChunk {
   return { ...chunk, tipHe: TIPS[chunk.key] ?? chunk.key };
 }
 
-/** Full text scoring (15 dimensions) — single source for EnhancedScorer */
-export function scoreEnhancedTextDimensions(t: string, wordCount: number): DimensionScoreChunk[] {
+/** Full text scoring (15 dimensions) — single source for EnhancedScorer.
+ * Pass `domain` to exclude dimensions irrelevant to the prompt type so they
+ * don't artificially drag the score down.  If omitted, domain is auto-detected.
+ */
+export function scoreEnhancedTextDimensions(t: string, wordCount: number, domain?: PromptDomain): DimensionScoreChunk[] {
   const p = parse(t);
+  const d = domain ?? detectPromptDomain(t);
+  const applicable = DOMAIN_DIMENSION_APPLICABILITY[d];
   const chunks = [
     wrap(scoreLength(wordCount)),
     wrap(scoreRole(t)),
@@ -501,7 +576,10 @@ export function scoreEnhancedTextDimensions(t: string, wordCount: number): Dimen
     wrap(scoreMeasurability(t)),
     wrap(scoreFramework(t)),
   ];
-  return chunks;
+  // Zero out inapplicable dimensions so they don't drag the normalized score
+  return chunks.map((c) =>
+    applicable.has(c.key) ? c : { ...c, maxPoints: 0, score: 0, matched: [], missing: [] }
+  );
 }
 
 function scoreVisualLength(wc: number): DimensionScoreChunk {

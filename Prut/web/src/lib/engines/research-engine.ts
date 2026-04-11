@@ -146,9 +146,10 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
       // Pull a refinement example calibrated to the current iteration so the
       // model can see exactly how a research prompt evolves between rounds.
       const refinementBlock = getRefinementExamplesBlock('text', 'research', iteration);
+      const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
 
       return {
-          systemPrompt: `אתה אנליסט מחקר בכיר ברמת מודיעין - מומחה בבניית פרומפטי מחקר עמוק. משימתך: לשדרג את פרומפט המחקר הקיים לרמת מושלמות מתודולוגית על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}
+          systemPrompt: `אתה אנליסט מחקר בכיר ברמת מודיעין - מומחה בבניית פרומפטי מחקר עמוק. משימתך: לשדרג את פרומפט המחקר הקיים לרמת מושלמות מתודולוגית על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ''}
 
 כללי שדרוג מחקר:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.

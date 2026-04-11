@@ -200,6 +200,82 @@ describe('AgentEngine', () => {
   });
 });
 
+// ── Target model hints (BaseEngine.getModelAdaptationHints) ──
+
+describe('Target model hints', () => {
+  it('StandardEngine injects ChatGPT hints when targetModel is chatgpt', () => {
+    const engine = new StandardEngine();
+    const result = engine.generate(makeInput({ targetModel: 'chatgpt' }));
+    expect(result.systemPrompt).toContain('[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT/GPT]');
+    expect(result.systemPrompt).toContain('עיקרון יישור');
+  });
+
+  it('StandardEngine omits TARGET_MODEL_OPTIMIZATION for general', () => {
+    const engine = new StandardEngine();
+    const result = engine.generate(makeInput({ targetModel: 'general' }));
+    expect(result.systemPrompt).not.toContain('[TARGET_MODEL_OPTIMIZATION');
+  });
+
+  it('ResearchEngine injects Claude hints', () => {
+    const engine = new ResearchEngine();
+    const result = engine.generate(
+      makeInput({ mode: CapabilityMode.DEEP_RESEARCH, targetModel: 'claude' })
+    );
+    expect(result.systemPrompt).toContain('[TARGET_MODEL_OPTIMIZATION — יעד: Claude]');
+  });
+
+  it('AgentEngine injects Gemini hints', () => {
+    const engine = new AgentEngine();
+    const result = engine.generate(
+      makeInput({ mode: CapabilityMode.AGENT_BUILDER, targetModel: 'gemini' })
+    );
+    expect(result.systemPrompt).toContain('[TARGET_MODEL_OPTIMIZATION — יעד: Gemini]');
+  });
+
+  it('ImageEngine does not inject text target-model hints', () => {
+    const engine = new ImageEngine();
+    const result = engine.generate(
+      makeInput({ mode: CapabilityMode.IMAGE_GENERATION, targetModel: 'chatgpt' })
+    );
+    expect(result.systemPrompt).not.toContain('[TARGET_MODEL_OPTIMIZATION');
+  });
+
+  it('StandardEngine generateRefinement includes target model hints', () => {
+    const engine = new StandardEngine();
+    const result = engine.generateRefinement(
+      makeInput({
+        previousResult: 'פרומפט קודם לבדיקה',
+        targetModel: 'gemini',
+      })
+    );
+    expect(result.systemPrompt).toContain('[TARGET_MODEL_OPTIMIZATION — יעד: Gemini]');
+  });
+
+  it('ResearchEngine generateRefinement includes target model hints', () => {
+    const engine = new ResearchEngine();
+    const result = engine.generateRefinement(
+      makeInput({
+        mode: CapabilityMode.DEEP_RESEARCH,
+        previousResult: 'פרומפט מחקר קודם',
+        targetModel: 'claude',
+      })
+    );
+    expect(result.systemPrompt).toContain('[TARGET_MODEL_OPTIMIZATION — יעד: Claude]');
+  });
+
+  it('AgentEngine generateRefinement includes target model hints', () => {
+    const engine = new AgentEngine();
+    const result = engine.generateRefinement(
+      makeInput({
+        mode: CapabilityMode.AGENT_BUILDER,
+        previousResult: 'הוראת סוכן קודמת',
+        targetModel: 'chatgpt',
+      })
+    );
+    expect(result.systemPrompt).toContain('[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT/GPT]');
+  });
+});
+
 // ── Cross-Engine Tests ──
 
 describe('All engines - common behavior', () => {

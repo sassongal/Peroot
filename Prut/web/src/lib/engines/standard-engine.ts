@@ -137,7 +137,15 @@ The difference: specific persona, measurable length, defined structure, concrete
 
 Tone: {{tone}}. Category: {{category}}.
 
-INTERNAL PROCESS (do NOT output): Analyze the user's input for gaps in context, specificity, and structure. Infer missing details from category and tone. Fill ALL gaps proactively. The resulting prompt must score 85+ on a professional prompt quality scale.`,
+INTERNAL PROCESS (do NOT output): Analyze the user's input for gaps in context, specificity, and structure. Infer missing details from category and tone. Fill ALL gaps proactively. The resulting prompt must score 92+ on the internal quality rubric.
+
+SCORING ALIGNMENT — your output MUST be detectable by the regex-based scoring system:
+- Role: open with "אתה [תפקיד] עם [N] שנות ניסיון, מתמחה ב-[דומיין]" (or English equivalent)
+- Task: include a clear action verb + object ("כתוב / צור / נתח / בנה [X]")
+- Measurability: include a number before מילים/פסקאות/פריטים (e.g. "200-300 מילים")
+- Structure: use ## section headers (תפקיד, משימה, הקשר, פורמט פלט, הנחיות ומגבלות)
+- Constraints: include a "## הנחיות ומגבלות" section with explicit "אל ת..." negative rules
+- Format: include a "## פורמט פלט" section specifying type + length`,
           user_prompt_template: `Transform the following raw user input into a world-class structured prompt in Hebrew. Identify the intent, fill context gaps, apply the full architecture framework, and produce a prompt that will get exceptional results from any modern AI.
 
 User input: {{input}}
@@ -198,9 +206,10 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
       // Pull a refinement example calibrated to the current iteration. Round 1
       // shows expansion (raw → enhanced); round 3+ shows surgical precision.
       const refinementBlock = getRefinementExamplesBlock('text', 'standard', iteration);
+      const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
 
       return {
-          systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.${refinementBlock}
+          systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ''}
 
 כללי שדרוג:
 1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט, גם הקטן ביותר.

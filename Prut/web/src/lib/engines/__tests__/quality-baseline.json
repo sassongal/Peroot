@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-10T21:51:49.911Z",
+  "generatedAt": "2026-04-11T14:15:26.890Z",
   "fixtureCount": 14,
-  "averageScore": 33.36,
+  "averageScore": 33.93,
   "entries": [
     {
       "group": "badText",
@@ -42,8 +42,8 @@
     {
       "group": "eliteText",
       "name": "elite CO-STAR with all 15 dimensions",
-      "score": 85,
-      "level": "high"
+      "score": 93,
+      "level": "elite"
     },
     {
       "group": "mediumText",
@@ -93,7 +93,7 @@
     "weakText": 19,
     "mediumText": 38,
     "strongText": 85,
-    "eliteText": 85,
+    "eliteText": 93,
     "badVisual": 4.5,
     "strongVisual": 77,
     "strongVideo": 71

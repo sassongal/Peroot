@@ -75,6 +75,14 @@ export function trackFeatureUse(feature: string) {
     trackEvent('feature_use', { feature });
 }
 
+/** Track target model selection in prompt improver (text modes) */
+export function trackTargetModelSelect(targetModel: string, previousModel?: string) {
+    trackEvent('target_model_select', {
+        target_model: targetModel,
+        previous_model: previousModel ?? null,
+    });
+}
+
 /** Track chain run */
 export function trackChainRun(chainId: string, stepCount: number) {
     trackEvent('chain_run', { chain_id: chainId, step_count: stepCount });

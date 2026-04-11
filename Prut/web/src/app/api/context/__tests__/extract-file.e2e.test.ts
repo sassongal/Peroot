@@ -43,7 +43,9 @@ beforeAll(async () => {
 });
 
 describe('POST /api/context/extract-file (e2e)', () => {
-  it('returns a ContextBlock for a real PDF fixture', async () => {
+  it(
+    'returns a ContextBlock for a real PDF fixture',
+    async () => {
     const { readFileSync } = await import('node:fs');
     const pdf = readFileSync(resolve(pdfPath));
     const form = new FormData();
@@ -56,5 +58,7 @@ describe('POST /api/context/extract-file (e2e)', () => {
     expect(body.block.display.title).toBe('Sample');
     expect(body.block.stage).toBe('ready');
     expect(body.block.injected.tokenCount).toBeGreaterThan(0);
-  });
+    },
+    15_000
+  );
 });

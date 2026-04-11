@@ -364,9 +364,10 @@ OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
       // Pull a refinement example calibrated to the current iteration so the
       // model can see exactly how an agent prompt evolves between rounds.
       const refinementBlock = getRefinementExamplesBlock('text', 'agent', iteration);
+      const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
 
       return {
-          systemPrompt: `אתה מהנדס מטה-פרומפטים ברמה העילאית - מומחה בבניית הוראות מערכת לסוכני AI ברמה production-grade. משימתך: לשדרג את הוראת הסוכן הקיימת לרמת מושלמות על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}
+          systemPrompt: `אתה מהנדס מטה-פרומפטים ברמה העילאית - מומחה בבניית הוראות מערכת לסוכני AI ברמה production-grade. משימתך: לשדרג את הוראת הסוכן הקיימת לרמת מושלמות על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ''}
 
 כללי שדרוג הוראת סוכן:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.

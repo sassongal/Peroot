@@ -648,6 +648,7 @@ export function ResultSection({
         isOpen={breakdownScore !== null}
         onClose={() => setBreakdownScore(null)}
         score={breakdownScore}
+        isPostUpgrade
         title={capabilityMode === CapabilityMode.IMAGE_GENERATION
           ? 'ציון פרומפט התמונה'
           : capabilityMode === CapabilityMode.VIDEO_GENERATION

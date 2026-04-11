@@ -111,7 +111,19 @@ export function capabilityModeToDbMode(mode: CapabilityMode): string {
   return mode.toLowerCase();
 }
 
-/** Parse capability mode from string with fallback to STANDARD */
+/** Modes where the client may send `target_model` and engines inject ChatGPT/Claude/Gemini structure hints — not image/video pipelines. */
+const CAPABILITIES_WITH_TARGET_MODEL = new Set<CapabilityMode>([
+  CapabilityMode.STANDARD,
+  CapabilityMode.DEEP_RESEARCH,
+  CapabilityMode.AGENT_BUILDER,
+]);
+
+/** Whether this capability shows the target-model control and passes hints through to engines. */
+export function capabilitySupportsTargetModel(mode: CapabilityMode): boolean {
+  return CAPABILITIES_WITH_TARGET_MODEL.has(mode);
+}
+
+/** Parse capability mode from user/API/DB strings with fallback to STANDARD. Accepts enum values and snake_case DB aliases. */
 export function parseCapabilityMode(value: string | null | undefined): CapabilityMode {
   if (value == null || value === "") {
     return CapabilityMode.STANDARD;

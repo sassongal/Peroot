@@ -5,7 +5,7 @@ import { Wand2, Mic, MicOff, Paperclip, Globe, ImageIcon, Zap } from "lucide-rea
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 
 import { CATEGORY_OPTIONS } from "@/lib/constants";
-import { CapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, capabilitySupportsTargetModel } from "@/lib/capability-mode";
 import { CapabilitySelector } from "@/components/ui/CapabilitySelector";
 import { ImagePlatformSelector } from "./ImagePlatformSelector";
 import { VideoPlatformSelector } from "./VideoPlatformSelector";
@@ -18,18 +18,12 @@ import type { InputScore } from "@/lib/engines/scoring/input-scorer";
 import { LiveInputScorePill } from "./LiveInputScorePill";
 import { InputScoreBreakdown } from "./InputScoreBreakdown";
 import { QuickImprovementChips } from "./QuickImprovementChips";
-import { TargetModel } from "@/lib/engines/types";
+import type { TargetModel } from "@/lib/engines/types";
+import { TargetModelSelect } from "@/components/features/prompt-improver/TargetModelSelect";
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import Link from "next/link";
-
-const TARGET_MODEL_OPTIONS: { value: TargetModel; label: string }[] = [
-  { value: 'general', label: 'כללי' },
-  { value: 'chatgpt', label: 'ChatGPT' },
-  { value: 'claude', label: 'Claude' },
-  { value: 'gemini', label: 'Gemini' },
-];
 
 interface PromptInputProps {
   inputVal: string;
@@ -469,22 +463,14 @@ export function PromptInput({
                    </div>
 
                    {/* Left side (RTL): Context attachment icons + model selector */}
-                   <div className="flex items-center gap-1">
-                     {/* Target model selector */}
-                     <select
-                       value={targetModel}
-                       onChange={(e) => setTargetModel(e.target.value as TargetModel)}
-                       className="px-2 py-1.5 rounded-lg text-[11px] bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer appearance-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
-                       title="מודל יעד"
-                       aria-label="בחר מודל יעד לאופטימיזציה"
-                       disabled={isLoading}
-                     >
-                       {TARGET_MODEL_OPTIONS.map(opt => (
-                         <option key={opt.value} value={opt.value} className="bg-white dark:bg-zinc-900">
-                           {opt.label}
-                         </option>
-                       ))}
-                     </select>
+                   <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                     {capabilitySupportsTargetModel(selectedCapability) && (
+                       <TargetModelSelect
+                         value={targetModel}
+                         onChange={setTargetModel}
+                         disabled={isLoading}
+                       />
+                     )}
 
                      {/* File upload */}
                      {onAddFile && (

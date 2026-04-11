@@ -191,32 +191,35 @@ ${registryList}`;
   }
 
   /**
-   * Returns model-specific optimization hints for the target LLM.
-   * These guide the prompt structure to maximize effectiveness on each model.
+   * Short, Hebrew-first hints so the enhancer shapes the final prompt for where the user
+   * will run it. Kept to 3 bullets + one alignment line to limit token noise vs [GENIUS_ANALYSIS].
+   * Does not switch the provider — only steers structure.
    */
   protected static getModelAdaptationHints(targetModel?: TargetModel): string | null {
+    const alignment = `עיקרון יישור: הרמזים למטה משלימים את כללי Peroot בלבד. אם נוצרת סתירה — עדיפות לדרישות [GENIUS_ANALYSIS], לפלט בעברית, ולמבנה שהמסלול כבר מחייב. אל תשכפל הנחיות מבנה שכבר מכוסות שם; הוסף רק מה שמותאם במיוחד למודל היעד.`;
+
     switch (targetModel) {
       case 'chatgpt':
-        return `[TARGET_MODEL_OPTIMIZATION — ChatGPT/GPT]
-- השתמש בפתיחת "You are..." לתפקיד המומחה
-- השתמש בפורמט Markdown מלא: כותרות ##, בולטים, **הדגשות**, קוד
-- הוסף טריגר Chain-of-Thought: "חשוב צעד אחר צעד לפני שתענה"
-- העדף רשימות ממוספרות ונקודות (bullets) לפלט מובנה
-- הוסף "Important:" לפני הנחיות קריטיות`;
+        return `[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT/GPT]
+${alignment}
+
+- פתח בתפקיד מומחה מפורש (סגנון "You are…") והמשך ב-Markdown: כותרות ##, בולטים, **הדגשות**, בלוק קוד כשצריך.
+- במשימות מורכבות הוסף שלב חשיבה קצר לפני ההנחיה הסופית (שרשרת צעדים פנימית — לא חובה להדפיס אותה בפלט של המשתמש).
+- סמן הנחיות קריטיות במפורש (למשל שורת «חשוב:» או Important: לפני מגבלה).`;
       case 'claude':
-        return `[TARGET_MODEL_OPTIMIZATION — Claude]
-- עטוף הנחיות מרכזיות בתגיות XML: <task>, <context>, <constraints>, <output_format>
-- הוסף בלוק <thinking> לניתוח פנימי לפני תשובה
-- ספק הקשר מפורט ורקע עשיר — Claude מצטיין עם context ארוך
-- השתמש ב-"חשוב:" או "קריטי:" לפני הנחיות שאסור לפספס
-- מבנה ברור עם הפרדה ויזואלית בין סקשנים`;
+        return `[TARGET_MODEL_OPTIMIZATION — יעד: Claude]
+${alignment}
+
+- עטוף את ליבת המשימה בתגיות XML עם שמות באנגלית ותוכן בעברית: <task>, <context>, <constraints>, <output_format> (ניתן להוסיף <thinking> לניתוח פנימי אם זה משפר את הפרומפט).
+- העדף הקשר מפורט ורקע ארוך על פני רשימת הוראות דקה; הפרד ויזואלית בין סקשנים.
+- הדגש מגבלות עם «חשוב:» או «קריטי:» לפני סעיפים שאסור לפספס.`;
       case 'gemini':
-        return `[TARGET_MODEL_OPTIMIZATION — Gemini]
-- השתמש בכותרות מובנות ברורות עם ## לכל סקשן
-- העדף רשימות ממוספרות על פני בולטים לצעדים
-- הגדר מגבלות מפורשות ובלתי-דו-משמעיות (constraints)
-- הוסף דוגמאות מספריות ולוגיות כאשר רלוונטי
-- סיים עם "Output Requirements:" שמסכם את כל דרישות הפלט`;
+        return `[TARGET_MODEL_OPTIMIZATION — יעד: Gemini]
+${alignment}
+
+- השתמש בכותרות ## ברורות לכל חלק; לצעדי ביצוע העדף רשימה ממוספרת על פני בולטים חופשיים.
+- הגדר מגבלות מפורשות (אורך, פורמט, מה לא לכלול) — בלי דו-משמעות.
+- סיים בקטע קצר «דרישות פלט:» שמסכם בבולטים מה המודל ביעד חייב להחזיר.`;
       default:
         return null;
     }
