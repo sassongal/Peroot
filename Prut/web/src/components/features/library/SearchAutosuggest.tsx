@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useId } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hebrewFuzzyMatch, hebrewMatchScore } from "@/lib/hebrew-search";
@@ -33,6 +33,7 @@ export function SearchAutosuggest({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const listboxId = useId();
 
   // Debounce query for suggestions
   useEffect(() => {
@@ -55,7 +56,7 @@ export function SearchAutosuggest({
       .sort((a, b) => hebrewMatchScore(b[1], q) - hebrewMatchScore(a[1], q))
       .slice(0, 3);
 
-    matchedCategories.forEach(([key, label]) => {
+    matchedCategories.forEach(([, label]) => {
       items.push({ type: "category", label, value: label });
     });
 
@@ -78,6 +79,8 @@ export function SearchAutosuggest({
 
     return items;
   })();
+
+  const listOpen = showSuggestions && suggestions.length > 0;
 
   // Close on outside click
   useEffect(() => {
@@ -141,8 +144,10 @@ export function SearchAutosuggest({
           "focus:outline-none focus:border-(--glass-border) focus:ring-1 focus:ring-amber-500/30",
         )}
         role="combobox"
-        aria-expanded={showSuggestions && suggestions.length > 0}
+        aria-expanded={listOpen}
+        aria-controls={listOpen ? listboxId : undefined}
         aria-autocomplete="list"
+        aria-haspopup="listbox"
       />
       {value && (
         <button
@@ -156,8 +161,9 @@ export function SearchAutosuggest({
       )}
 
       {/* Suggestions dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
+      {listOpen && (
         <div
+          id={listboxId}
           className="absolute top-full mt-1 inset-x-0 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
           role="listbox"
           dir="rtl"
@@ -168,7 +174,7 @@ export function SearchAutosuggest({
               <div className="px-3 py-1.5 text-[10px] font-medium text-(--text-muted) uppercase tracking-wider">
                 קטגוריות
               </div>
-              {suggestions.filter(s => s.type === "category").map((item, i) => {
+              {suggestions.filter(s => s.type === "category").map((item) => {
                 const globalIdx = suggestions.indexOf(item);
                 return (
                   <button
