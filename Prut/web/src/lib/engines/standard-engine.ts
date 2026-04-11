@@ -139,7 +139,8 @@ Tone: {{tone}}. Category: {{category}}.
 
 INTERNAL PROCESS (do NOT output): Analyze the user's input for gaps in context, specificity, and structure. Infer missing details from category and tone. Fill ALL gaps proactively. The resulting prompt must score 92+ on the internal quality rubric.
 
-SCORING ALIGNMENT — your output MUST be detectable by the regex-based scoring system:
+SCORING ALIGNMENT — applies to MEDIUM and COMPLEX prompts only (user input >8 words). For SIMPLE tasks, inline constraints naturally without ## sections.
+For MEDIUM/COMPLEX your output MUST be detectable by the regex-based scoring system:
 - Role: open with "אתה [תפקיד] עם [N] שנות ניסיון, מתמחה ב-[דומיין]" (or English equivalent)
 - Task: include a clear action verb + object ("כתוב / צור / נתח / בנה [X]")
 - Measurability: include a number before מילים/פסקאות/פריטים (e.g. "200-300 מילים")

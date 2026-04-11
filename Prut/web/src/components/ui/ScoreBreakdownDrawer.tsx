@@ -105,9 +105,9 @@ export function ScoreBreakdownDrawer({
               <span className={cn('px-2.5 md:px-3 py-1 rounded-full text-xs font-bold border', levelColor)}>
                 {score.label}
               </span>
-              {score.domain && DOMAIN_LABELS[score.domain] && (
+              {score.domain && PROMPT_DOMAIN_LABELS[score.domain] && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-(--glass-bg) border border-(--glass-border) text-(--text-muted)">
-                  {DOMAIN_LABELS[score.domain]}
+                  {PROMPT_DOMAIN_LABELS[score.domain]}
                 </span>
               )}
             </div>

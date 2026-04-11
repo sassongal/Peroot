@@ -828,7 +828,7 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
       })),
       breakdown: emptyBreakdown,
       mode,
-      domain: 'general' as PromptDomain,
+      domain: 'general',
     };
   }
 

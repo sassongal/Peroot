@@ -4,14 +4,7 @@ import { useState } from "react";
 import { Sparkles, Info, TrendingUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { InputScore, InputScoreLevel } from "@/lib/engines/scoring/input-scorer";
-
-const DOMAIN_LABELS: Record<string, string> = {
-  technical: '💻 טכני',
-  content: '✍️ תוכן',
-  creative: '🎨 יצירתי',
-  research: '🔍 מחקר',
-  instruction: '📋 הוראות',
-};
+import { PROMPT_DOMAIN_LABELS } from "@/lib/engines/scoring/prompt-dimensions";
 
 interface LiveInputScorePillProps {
   score: InputScore | null;
@@ -96,9 +89,9 @@ export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePil
         <span className="font-black tabular-nums text-sm md:text-base">{score.total}</span>
         <span className="opacity-70 text-[10px] md:text-xs">/100</span>
         <span className="opacity-80">· {score.label}</span>
-        {score.domain && DOMAIN_LABELS[score.domain] && (
+        {score.domain && PROMPT_DOMAIN_LABELS[score.domain] && (
           <span className="hidden md:inline opacity-60 text-[10px] border-s border-current/20 ps-1.5">
-            {DOMAIN_LABELS[score.domain]}
+            {PROMPT_DOMAIN_LABELS[score.domain]}
           </span>
         )}
       </span>
