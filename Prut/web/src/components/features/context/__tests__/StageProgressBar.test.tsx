@@ -38,4 +38,15 @@ describe('StageProgressBar', () => {
     render(<StageProgressBar stage="error" />);
     expect(screen.getByTestId('stage-error')).toBeInTheDocument();
   });
+  it('marks all pills complete when stage=ready (no infinite spinner on last pill)', () => {
+    render(<StageProgressBar stage="ready" />);
+    expect(screen.getByTestId('stage-pill-uploading')).toHaveAttribute('data-state', 'complete');
+    expect(screen.getByTestId('stage-pill-extracting')).toHaveAttribute('data-state', 'complete');
+    expect(screen.getByTestId('stage-pill-enriching')).toHaveAttribute('data-state', 'complete');
+    expect(screen.getByTestId('stage-pill-ready')).toHaveAttribute('data-state', 'complete');
+  });
+  it('shows warning state when stage=warning', () => {
+    render(<StageProgressBar stage="warning" />);
+    expect(screen.getByTestId('stage-warning')).toBeInTheDocument();
+  });
 });

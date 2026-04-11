@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Check, Loader2, X } from 'lucide-react';
+import { AlertTriangle, Check, Loader2, X } from 'lucide-react';
 import type { ProcessingStage } from '@/lib/context/engine/types';
 
 const STAGES: Array<{ id: ProcessingStage; label: string }> = [
@@ -17,12 +17,26 @@ function pillState(current: ProcessingStage, pillId: ProcessingStage): PillState
   const ci = order.indexOf(current);
   const pi = order.indexOf(pillId);
   if (ci === -1 || pi === -1) return 'pending';
+  // When fully done, the last pill should show a check — not an infinite spinner.
+  if (current === 'ready' && pillId === 'ready') return 'complete';
   if (pi < ci) return 'complete';
   if (pi === ci) return 'active';
   return 'pending';
 }
 
 export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
+  if (stage === 'warning') {
+    return (
+      <div
+        data-testid="stage-warning"
+        className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs"
+        dir="rtl"
+      >
+        <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden />
+        <span>קונטקסט בסיסי — העשרה מלאה לא הושלמה</span>
+      </div>
+    );
+  }
   if (stage === 'error') {
     return (
       <div data-testid="stage-error" className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">

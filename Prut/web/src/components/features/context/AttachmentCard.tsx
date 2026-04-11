@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FileText, Globe, Image as ImageIcon, X, Sparkles } from 'lucide-react';
 import { StageProgressBar } from './StageProgressBar';
 import { AttachmentDetailsDrawer } from './AttachmentDetailsDrawer';
+import { formatContextAttachmentSubtitle } from '@/lib/context/display-labels';
 import type { ContextBlock, ProcessingStage } from '@/lib/context/engine/types';
 
 interface Props {
@@ -22,6 +23,7 @@ const ICON: Record<ContextBlock['type'] | 'file', React.ComponentType<{ classNam
 
 export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props) {
   const [open, setOpen] = useState(false);
+  const attachmentSubtitle = block ? formatContextAttachmentSubtitle(block) : null;
   const Icon = ICON[block?.type ?? 'file'];
   const canOpen = stage === 'ready' || stage === 'warning';
   const isError = stage === 'error';
@@ -91,9 +93,9 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
 
         <div className="flex-1 min-w-0 relative z-10">
           <div className="font-medium text-sm truncate">{block?.display.title ?? title}</div>
-          {block && (
-            <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-              {block.display.documentType} · {block.injected.tokenCount} טוקנים
+          {attachmentSubtitle && (
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate" title={attachmentSubtitle}>
+              {attachmentSubtitle}
             </div>
           )}
           <div className="mt-2"><StageProgressBar stage={stage} /></div>

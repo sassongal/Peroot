@@ -227,7 +227,8 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
       >
         <div className="flex justify-end px-4 sm:px-6 max-w-[1920px] mx-auto pb-2 pt-1.5">
           <div className="relative w-full max-w-[min(100%,20rem)]">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden />
+            {/* Icon on physical left (end of RTL line) so it does not cover the first letters */}
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none z-10" aria-hidden />
             <input
               ref={inputRef}
               type="search"
@@ -235,7 +236,7 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
               aria-expanded={open}
               aria-controls="site-search-results"
               aria-label="חיפוש באתר"
-              placeholder="חיפוש — בלוג, פרומפטים, מדריך… (⌘K)"
+              placeholder="חיפוש — בלוג, פרומפטים, מדריך…"
               title="חיפוש גלובלי. קיצור: ⌘K או Ctrl+K"
               value={query}
               onChange={(e) => {
@@ -247,8 +248,10 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
               }}
               className={cn(
                 "w-full rounded-lg border border-white/10 bg-white/5 dark:bg-black/30",
-                "py-2 ps-3 pe-9 text-sm text-slate-800 dark:text-slate-200",
-                "placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[40px]"
+                "py-2 text-sm text-slate-800 dark:text-slate-200",
+                // RTL: pe = room for icon on left; ps = room for clear on right when typing
+                query ? "ps-10 pe-10" : "ps-3 pe-10",
+                "placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[44px]"
               )}
             />
             {query && (
@@ -258,7 +261,7 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
                   setQuery("");
                   setOpen(false);
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-500 hover:text-slate-200 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-slate-200 cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
                 aria-label="נקה חיפוש"
               >
                 <X className="w-4 h-4" />

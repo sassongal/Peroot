@@ -133,7 +133,13 @@ export function SearchAutosuggest({
         onFocus={() => value.trim().length >= 2 && setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2.5 pe-10 ps-8 text-base md:text-sm text-(--text-primary) placeholder:text-slate-600 focus:outline-none focus:border-(--glass-border)"
+        className={cn(
+          "w-full min-h-[44px] bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2.5 pe-10 ps-11",
+          "text-base md:text-sm text-zinc-900 dark:text-zinc-100",
+          "caret-amber-600 dark:caret-amber-400",
+          "placeholder:text-slate-600 dark:placeholder:text-slate-400",
+          "focus:outline-none focus:border-(--glass-border) focus:ring-1 focus:ring-amber-500/30",
+        )}
         role="combobox"
         aria-expanded={showSuggestions && suggestions.length > 0}
         aria-autocomplete="list"
