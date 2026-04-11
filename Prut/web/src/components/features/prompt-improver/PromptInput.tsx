@@ -400,8 +400,8 @@ export function PromptInput({
               }}
             />
 
-            {/* Voice + Context Icons row */}
-               <div className="flex items-center justify-between px-6 pt-2 relative z-20">
+            {/* Voice + Context Icons row — z-40 so TargetModelSelect dropdown stacks above footer (z-20) and enhance CTA */}
+               <div className="flex items-center justify-between px-6 pt-2 relative z-40">
                    {/* Right side (RTL): Voice + Language */}
                    <div className="flex items-center gap-1.5">
                      {isSupported && (

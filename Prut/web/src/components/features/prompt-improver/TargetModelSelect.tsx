@@ -150,7 +150,11 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
   };
 
   return (
-    <div ref={rootRef} className="relative" dir="rtl">
+    <div
+      ref={rootRef}
+      className={cn("relative isolate", open && "z-100")}
+      dir="rtl"
+    >
       <span id={helpDescId} className="sr-only">
         {TARGET_MODEL_HELP}
       </span>
@@ -191,7 +195,10 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
               alt=""
               width={22}
               height={22}
-              className="object-contain"
+              className={cn(
+                "object-contain",
+                current.value === "claude" && "dark:invert"
+              )}
             />
           ) : (
             <Sparkles className={cn("w-[18px] h-[18px]", current.iconTint)} aria-hidden />
@@ -220,9 +227,11 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
           role="listbox"
           aria-label="בחירת מודל יעד"
           className={cn(
-            "absolute end-0 top-full mt-1.5 z-50 min-w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-(--glass-border)",
-            "bg-white/98 dark:bg-zinc-950/98 backdrop-blur-xl shadow-2xl shadow-black/20",
-            "overflow-hidden divide-y divide-zinc-200/60 dark:divide-zinc-800/80 animate-in fade-in zoom-in-95 duration-150"
+            "absolute end-0 top-full mt-1.5 z-110 min-w-[min(18rem,calc(100vw-2rem))] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl",
+            "border border-zinc-200 dark:border-zinc-700",
+            "bg-white dark:bg-zinc-950",
+            "shadow-2xl shadow-black/25 ring-1 ring-black/5 dark:ring-white/10",
+            "divide-y divide-zinc-200 dark:divide-zinc-800 animate-in fade-in zoom-in-95 duration-150"
           )}
         >
           {OPTIONS.map((opt, idx) => {
@@ -243,17 +252,17 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
                   commitSelection(opt.value);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 text-start transition-colors cursor-pointer",
+                  "grid w-full grid-cols-[2.25rem_1fr_1.25rem] items-center gap-2 px-3 py-2.5 text-start transition-colors cursor-pointer",
                   opt.rowClass,
-                  selected && "bg-black/4 dark:bg-white/6",
+                  selected && "bg-zinc-50 dark:bg-zinc-900/80",
                   highlighted &&
-                    "ring-2 ring-inset ring-amber-400/50 bg-amber-500/5 dark:bg-amber-500/10"
+                    "ring-2 ring-inset ring-amber-400/50 bg-amber-50/90 dark:bg-amber-950/40"
                 )}
               >
                 <span
                   className={cn(
-                    "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center",
-                    "bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10"
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                    "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-600/80"
                   )}
                 >
                   {opt.logoSrc ? (
@@ -262,23 +271,28 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
                       alt=""
                       width={24}
                       height={24}
-                      className="object-contain"
+                      className={cn(
+                        "object-contain",
+                        opt.value === "claude" && "dark:invert"
+                      )}
                     />
                   ) : (
                     <Sparkles className={cn("w-5 h-5", opt.iconTint)} aria-hidden />
                   )}
                 </span>
-                <span className="flex-1 min-w-0">
+                <span className="min-w-0">
                   <span className="block text-sm font-semibold text-(--text-primary)">
                     {opt.labelHe}
                   </span>
-                  <span className="block text-[11px] text-(--text-muted) mt-0.5 leading-snug">
+                  <span className="mt-0.5 block text-[11px] leading-snug text-(--text-muted)">
                     {opt.sub}
                   </span>
                 </span>
-                {selected && (
-                  <Check className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-                )}
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                  {selected ? (
+                    <Check className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden />
+                  ) : null}
+                </span>
               </li>
             );
           })}
