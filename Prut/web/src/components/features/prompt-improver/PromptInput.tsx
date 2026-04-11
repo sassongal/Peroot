@@ -373,32 +373,36 @@ export function PromptInput({
               }
             }
           }}>
-          <div className="bg-white/60 dark:bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
-             <div
-              aria-hidden
-              className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-(--text-primary) font-sans leading-relaxed whitespace-pre-wrap wrap-break-word pointer-events-none z-0 overflow-hidden"
-              dir="rtl"
-             >
-              {highlightedContent}
-             </div>
-            <textarea
-              ref={textareaRef}
-              dir="rtl"
-              value={displayValue}
-              onChange={(e) => {
-                 // Committing interim result if typing happens
-                 setInputVal(e.target.value);
-                 setInterimResult("");
-              }}
-              placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
-              aria-label="כתוב את הפרומפט שלך"
-              className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-5 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  handleEnhance();
-                }
-              }}
-            />
+          <div className="bg-white/60 dark:bg-black/40 rounded-xl flex flex-col gap-4 relative">
+            {/* Scroll wrapper: long prompts used to clip (overflow-hidden on layers). */}
+            <div className="max-h-[min(75vh,36rem)] overflow-y-auto min-h-0 rounded-t-xl overscroll-contain">
+              <div className="relative min-h-[120px] md:min-h-[160px]">
+                <div
+                  aria-hidden
+                  className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-(--text-primary) font-sans leading-relaxed whitespace-pre-wrap wrap-break-word pointer-events-none z-0"
+                  dir="rtl"
+                >
+                  {highlightedContent}
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  dir="rtl"
+                  value={displayValue}
+                  onChange={(e) => {
+                    setInputVal(e.target.value);
+                    setInterimResult("");
+                  }}
+                  placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
+                  aria-label="כתוב את הפרומפט שלך"
+                  className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans block overflow-y-auto"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      handleEnhance();
+                    }
+                  }}
+                />
+              </div>
+            </div>
 
             {/* Voice + Context Icons row — z-40 so TargetModelSelect dropdown stacks above footer (z-20) and enhance CTA */}
                <div className="flex items-center justify-between px-6 pt-2 relative z-40">

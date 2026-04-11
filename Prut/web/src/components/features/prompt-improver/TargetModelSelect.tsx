@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useId, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useId, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Check, ChevronDown, Sparkles } from "lucide-react";
@@ -92,7 +92,7 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
     setHighlightedIndex(idx >= 0 ? idx : 0);
   };
 
-  const updateMenuPosition = () => {
+  const updateMenuPosition = useCallback(() => {
     const el = comboboxRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -102,7 +102,7 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
     if (left + width > vw - 8) left = vw - 8 - width;
     if (left < 8) left = 8;
     setMenuPos({ top: r.bottom + 6, left, width });
-  };
+  }, []);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -113,7 +113,7 @@ export function TargetModelSelect({ value, onChange, disabled }: TargetModelSele
       window.removeEventListener("scroll", updateMenuPosition, true);
       window.removeEventListener("resize", updateMenuPosition);
     };
-  }, [open]);
+  }, [open, updateMenuPosition]);
 
   useEffect(() => {
     if (!open) return;

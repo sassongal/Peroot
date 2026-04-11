@@ -412,11 +412,11 @@ export function ResultSection({
                 {onReset && (
                   <button
                     onClick={onReset}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-(--glass-border) transition-colors cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-sky-500/45 bg-sky-500/10 text-sky-800 dark:text-sky-100 hover:bg-sky-500/18 hover:border-sky-500/65 shadow-sm shadow-sky-500/10 transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-sky-400/55 focus-visible:outline-none"
                     title="לאפס ולהתחיל מחדש"
                     dir="rtl"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-4 h-4" />
                     לאפס
                   </button>
                 )}

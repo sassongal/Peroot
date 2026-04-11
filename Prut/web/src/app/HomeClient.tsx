@@ -17,6 +17,10 @@ import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
+import {
+  splitCompletionAndQuestions,
+  stripGeniusQuestionsForDisplay,
+} from "@/lib/prompt-stream/split-genius-completion";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
@@ -184,14 +188,7 @@ function PageContent() {
 
       // Derive a safe display string from the raw buffer. We only HIDE
       // trailing auxiliary blocks; we never truncate the canonical buffer.
-      let displayText = acc.rawText;
-
-      // Hide from the first `[GENIUS_QUESTIONS]` marker onward during
-      // streaming. (Final split uses lastIndexOf — see processStreamResult.)
-      const firstGeniusIdx = displayText.indexOf("[GENIUS_QUESTIONS]");
-      if (firstGeniusIdx !== -1) {
-        displayText = displayText.slice(0, firstGeniusIdx);
-      }
+      let displayText = stripGeniusQuestionsForDisplay(acc.rawText);
 
       // Strip <thinking> blocks — both fully-closed and unclosed trailing.
       displayText = displayText
@@ -455,19 +452,13 @@ function PageContent() {
       return { text: '', title: null };
     }
 
-    // Split body/questions at the LAST `[GENIUS_QUESTIONS]` marker. Using
-    // lastIndexOf protects us from earlier accidental occurrences (e.g.
-    // the model echoing the marker in an example or thinking block).
-    const GENIUS_MARKER = "[GENIUS_QUESTIONS]";
-    const lastGeniusIdx = acc.rawText.lastIndexOf(GENIUS_MARKER);
-    let body = lastGeniusIdx !== -1
-      ? acc.rawText.slice(0, lastGeniusIdx)
-      : acc.rawText;
-    const questionsPart = lastGeniusIdx !== -1
-      ? acc.rawText.slice(lastGeniusIdx + GENIUS_MARKER.length)
-      : '';
+    // Split at last newline-boundary `[GENIUS_QUESTIONS]` (avoids false positives
+    // when the literal appears inside the prompt body). See split-genius-completion.
+    const split = splitCompletionAndQuestions(acc.rawText);
+    let body = split.body;
+    const questionsPart = split.questionsPart;
 
-    if (lastGeniusIdx !== -1) {
+    if (questionsPart.trim()) {
       try {
         let jsonStr = questionsPart.trim();
         if (jsonStr.startsWith("```json")) jsonStr = jsonStr.replace(/^```json\s*/, "").replace(/```\s*$/, "");

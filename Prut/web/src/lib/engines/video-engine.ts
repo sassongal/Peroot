@@ -616,7 +616,9 @@ After the enhanced prompt, on a new line add a short descriptive Hebrew title:
 
 Then add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions about cinematic aspects that would most elevate the prompt. Focus on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.${contextQuestionHint}
 Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
-If the prompt is already comprehensive across all 7 layers, return [GENIUS_QUESTIONS][]`;
+If the prompt is already comprehensive across all 7 layers, return [GENIUS_QUESTIONS][]
+
+CRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the English video prompt body. Title and follow-up blocks must appear only on new lines after the full prompt.`;
 
     // Append context summary to user prompt
     let finalUserPrompt = userPrompt;

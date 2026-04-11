@@ -60,6 +60,35 @@ describe("platform prompt accuracy (source guardrails)", () => {
     const f = src("lib", "engines", "skills", "video", "veo.ts");
     expect(f).not.toMatch(/Duration:\s*10s/);
   });
+
+  it("image-engine.ts: FLUX.2 block stresses subject-first and hex binding", () => {
+    const f = src("lib", "engines", "image-engine.ts");
+    expect(f).toMatch(/FLUX\.2/);
+    expect(f).toMatch(/hex|#/i);
+    expect(f).toMatch(/Subject|subject-first|word order/i);
+  });
+
+  it("image-engine.ts: Imagen 4 narrative guidance present", () => {
+    const f = src("lib", "engines", "image-engine.ts");
+    expect(f).toMatch(/Imagen 4|Google Imagen/);
+    expect(f).toMatch(/480/);
+  });
+
+  it("skills/image/flux.ts: examples bind hex colors to objects", () => {
+    const f = src("lib", "engines", "skills", "image", "flux.ts");
+    expect(f).toMatch(/#\w{6}/);
+  });
+
+  it("skills/video/kling.ts: examples include Negative: line", () => {
+    const f = src("lib", "engines", "skills", "video", "kling.ts");
+    expect(f).toMatch(/Negative:/);
+  });
+
+  it("skills/video/higgsfield.ts: uses labeled directive blocks for timing", () => {
+    const f = src("lib", "engines", "skills", "video", "higgsfield.ts");
+    expect(f).toMatch(/\[Camera:/);
+    expect(f).toMatch(/\[Motion:/);
+  });
 });
 
 describe("shipped engine baselines (admin drift API)", () => {

@@ -27,6 +27,7 @@ import { SettingsReferralSection } from "@/components/settings/SettingsReferralS
 import { SettingsBillingSection } from "@/components/settings/SettingsBillingSection";
 import { SettingsDataSection } from "@/components/settings/SettingsDataSection";
 import { SettingsDangerSection } from "@/components/settings/SettingsDangerSection";
+import { resolveAvatarUrl, avatarFallbackUrl as uiAvatarsFallback } from "@/lib/user-avatar";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -203,13 +204,7 @@ export default function SettingsPage() {
   }
 
   const metadata = user.user_metadata || {};
-  const avatarUrl =
-    metadata.avatar_url ||
-    metadata.picture ||
-    metadata.avatar ||
-    metadata.image ||
-    user.identities?.[0]?.identity_data?.avatar_url ||
-    user.identities?.[0]?.identity_data?.picture;
+  const avatarUrl = resolveAvatarUrl(user);
 
   const handleClearHistory = async () => {
     setIsClearingHistory(true);
@@ -399,6 +394,7 @@ export default function SettingsPage() {
               <SettingsProfileSection
                 user={user}
                 avatarUrl={avatarUrl}
+                avatarFallbackUrl={uiAvatarsFallback(user)}
                 displayName={displayName}
                 setDisplayName={setDisplayName}
                 onSaveDisplayName={handleSaveDisplayName}

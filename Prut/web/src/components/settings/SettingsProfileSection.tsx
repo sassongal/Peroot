@@ -18,6 +18,8 @@ import type { CreditsState } from "./settings-types";
 interface SettingsProfileSectionProps {
   user: User;
   avatarUrl: string | undefined;
+  /** When OAuth avatar URL fails to load (403, expired Google URL, etc.) */
+  avatarFallbackUrl?: string;
   displayName: string;
   setDisplayName: (v: string) => void;
   onSaveDisplayName: () => void;
@@ -32,6 +34,7 @@ interface SettingsProfileSectionProps {
 export function SettingsProfileSection({
   user,
   avatarUrl,
+  avatarFallbackUrl,
   displayName,
   setDisplayName,
   onSaveDisplayName,
@@ -63,6 +66,15 @@ export function SettingsProfileSection({
               decoding="async"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (!img.dataset.fallback && avatarFallbackUrl) {
+                  img.dataset.fallback = "1";
+                  img.src = avatarFallbackUrl;
+                } else {
+                  img.onerror = null;
+                }
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white">

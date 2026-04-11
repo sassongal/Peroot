@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import Image from "next/image";
 import { getAssetPath } from "@/lib/asset-path";
+import { avatarFallbackUrl as uiAvatarsFallback, resolveAvatarUrl } from "@/lib/user-avatar";
 
 interface UserMenuProps {
   user: User | null;
@@ -57,19 +58,9 @@ export function UserMenu({ user, position }: UserMenuProps) {
   if (!mounted) return null;
 
   const metadata = user?.user_metadata || {};
-  const avatarUrl = metadata.avatar_url ||
-                    metadata.picture ||
-                    metadata.avatar ||
-                    metadata.image ||
-                    user?.identities?.[0]?.identity_data?.avatar_url ||
-                    user?.identities?.[0]?.identity_data?.picture;
-
-  /** Display-only avatars: no crossOrigin — Google URLs often fail CORS when fetched as cors mode. */
-  const avatarFallbackUrl =
-    user &&
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      (metadata.full_name as string | undefined) || user.email || "U"
-    )}&background=f59e0b&color=fff&bold=true`;
+  const avatarUrl = user ? resolveAvatarUrl(user) : undefined;
+  /** Display-only generated avatar when OAuth URL fails to load (403/blocked). */
+  const fallbackGenerated = user ? uiAvatarsFallback(user) : undefined;
 
   // TOP POSITION: For guests (login button) OR logged-in users (avatar + menu)
   if (position === "top") {
@@ -149,9 +140,11 @@ export function UserMenu({ user, position }: UserMenuProps) {
               decoding="async"
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
-                if (!img.dataset.fallback && avatarFallbackUrl) {
+                if (!img.dataset.fallback && fallbackGenerated) {
                   img.dataset.fallback = "1";
-                  img.src = avatarFallbackUrl;
+                  img.src = fallbackGenerated;
+                } else {
+                  img.onerror = null;
                 }
               }}
             />
@@ -190,9 +183,11 @@ export function UserMenu({ user, position }: UserMenuProps) {
                             decoding="async"
                             onError={(e) => {
                               const img = e.target as HTMLImageElement;
-                              if (!img.dataset.fallback && avatarFallbackUrl) {
+                              if (!img.dataset.fallback && fallbackGenerated) {
                                 img.dataset.fallback = "1";
-                                img.src = avatarFallbackUrl;
+                                img.src = fallbackGenerated;
+                              } else {
+                                img.onerror = null;
                               }
                             }}
                           />
