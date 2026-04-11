@@ -103,7 +103,7 @@ export function hasRoleMention(p: Parsed): boolean {
 
 /** Unified task verbs — keep in sync with prompt-dimensions task scoring */
 export const TASK_VERBS_RE =
-  /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|חקור|בצע|הסבר|תאר|פרט|סקור|בדוק|יישם|תעד|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|analyse|compare|generate|design|research|explain|describe|list|outline|review|evaluate|assess|debug|refactor|document|test|implement|investigate|propose|recommend|optimize/i;
+  /כתוב|צור|בנה|נסח|הכן|תכנן|ערוך|סכם|תרגם|נתח|השווה|חקור|בצע|הסבר|תאר|פרט|סקור|בדוק|יישם|תעד|הפק|חבר|פרסם|הצע|המלץ|הנחה|פתח|שפר|write|create|build|draft|prepare|plan|edit|summarize|translate|analyze|analyse|compare|generate|design|research|explain|describe|list|outline|review|evaluate|assess|debug|refactor|document|test|implement|investigate|propose|recommend|optimize/i;
 
 export function hasTaskVerb(p: Parsed): boolean {
   return TASK_VERBS_RE.test(p.text);
@@ -111,7 +111,9 @@ export function hasTaskVerb(p: Parsed): boolean {
 
 export function hasTaskVerbWithObject(p: Parsed): boolean {
   return (
-    /(?:כתוב|צור|בנה|נסח|נתח|חקור|השווה|הסבר|תאר|סקור|בדוק|יישם)\s+\S{3,}/i.test(p.text) ||
+    // Hebrew: verb + optional particle (את/ל/ב/של/עבור) + object (2+ chars)
+    // "כתוב את המאמר", "צור לי רשימה", "בנה עבור הקהל" all match
+    /(?:כתוב|צור|בנה|נסח|נתח|חקור|השווה|הסבר|תאר|סקור|בדוק|יישם|הפק|חבר|פרסם|הצע|המלץ)\s+(?:(?:את|של|עבור|ל|מ)\s+)?\S{2,}/i.test(p.text) ||
     /(?:write|create|build|analy[sz]e|research|compare|explain|describe|outline|review|evaluate|assess|refactor|implement|investigate|generate|design|draft|summari[sz]e|translate|document|test|optimi[sz]e|propose|recommend)\s+(?:an?\s+|the\s+)?\S{3,}/i.test(
       p.text
     )
@@ -134,8 +136,12 @@ export function hasNegativeConstraints(p: Parsed): boolean {
   return /אל\s+ת|ללא|בלי|אסור|אין\s+ל|avoid|don['']?t|do\s+not|never|without/i.test(p.text);
 }
 
+const HEBREW_NUMBER_WORDS = /(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|חמש(?:ה)?|שש(?:ה)?|שבע(?:ה)?|שמונ(?:ה|ה)?|תשע(?:ה)?|עשר(?:ה)?|עשרים|שלושים|ארבעים|חמישים|שישים|שבעים|שמונים|תשעים|מאה|מאתיים)/i;
+
 export const TASK_QTY_RE =
-  /\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|עמודים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters|tokens|pages|sections)/i;
+  /(?:\d+|(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|חמש(?:ה)?|שש(?:ה)?|שבע(?:ה)?|שמונ(?:ה)?|תשע(?:ה)?|עשר(?:ה)?|עשרים|שלושים|ארבעים|חמישים|שישים|שבעים|שמונים|תשעים|מאה))\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|עמודים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters|tokens|pages|sections)/i;
+
+export { HEBREW_NUMBER_WORDS };
 
 export function hasMeasurableQuantity(p: Parsed): boolean {
   return TASK_QTY_RE.test(p.text);
@@ -304,6 +310,11 @@ export function hasImageQuality(p: Parsed): boolean {
 
 export function hasImageNegative(p: Parsed): boolean {
   return /ללא|בלי|avoid|no\s+\w+|negative\s+prompt|exclude/i.test(p.text);
+}
+
+/** Chain-of-thought / step-by-step reasoning instructions */
+export function hasChainOfThought(p: Parsed): boolean {
+  return /(?:let'?s\s+)?think\s+step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|step[\s-]by[\s-]step\s+(?:reasoning|thinking|analysis)|think\s+through|reason\s+through|שלב\s+אחר\s+שלב|נחשוב\s+שלב|תחשוב\s+שלב|צעד\s+אחר\s+צעד|פרק\s+לשלבים|נתח\s+שלב/i.test(p.text);
 }
 
 export function hasVideoMotion(p: Parsed): boolean {

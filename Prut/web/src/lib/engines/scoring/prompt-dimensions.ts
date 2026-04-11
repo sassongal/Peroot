@@ -7,10 +7,12 @@ import {
   parse,
   type Parsed,
   TASK_VERBS_RE,
+  TASK_QTY_RE,
   HEBREW_ROLE_RE,
   ENGLISH_ROLE_RE,
   hasTaskVerbWithObject,
   hasSpecificityProperNouns,
+  hasChainOfThought,
 } from './prompt-parse';
 
 // ---------------------------------------------------------------------------
@@ -150,7 +152,11 @@ function scoreRole(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'role
   // Extended Hebrew persona patterns produced by the enhancement LLM
   const extendedHebrewRole = /כ-\s*\S|בתפקיד\s+\S|בהיותי\s+\S|בכושר\s+\S|בתחום\s+\S|מתמחה\s+ב/i;
 
-  if (HEBREW_ROLE_RE.test(t) || ENGLISH_ROLE_RE.test(t) || extendedHebrewRole.test(t)) {
+  // English "You are" guard: require a role-like noun to avoid "You are a table/book/example"
+  const ENGLISH_ROLE_NOUN_RE = /\b(expert|specialist|analyst|consultant|writer|developer|engineer|designer|researcher|strategist|marketer|advisor|manager|director|coach|teacher|architect|editor|copywriter|journalist|scientist|doctor|lawyer|therapist|professor|instructor|tutor|mentor|trainer|senior|junior|lead|principal|assistant|professional|practitioner|reviewer|auditor|planner|programmer|coder)\b/i;
+  const englishRoleMatches = ENGLISH_ROLE_RE.test(t) && ENGLISH_ROLE_NOUN_RE.test(t);
+
+  if (HEBREW_ROLE_RE.test(t) || englishRoleMatches || extendedHebrewRole.test(t)) {
     matched.push('פרסונה מוגדרת בפתיחה');
     if (/\d+\s+(שנות|שנים|years)|מוסמך|בכיר|פרימיום|senior|lead/i.test(t)) {
       matched.push('ניסיון / הסמכה');
@@ -179,7 +185,7 @@ function scoreTask(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'task
   }
   const matched = ['פועל פעולה'];
   if (
-    /כתוב\s+\S+|צור\s+\S+|בנה\s+\S+|write\s+a\s+\S+|create\s+a\s+\S+/i.test(t) ||
+    /(?:כתוב|צור|בנה|נסח|הפק|חבר|פרסם)\s+(?:(?:את|ל|עבור)\s+)?\S+|write\s+a\s+\S+|create\s+a\s+\S+/i.test(t) ||
     hasTaskVerbWithObject(p)
   ) {
     matched.push('אובייקט משימה');
@@ -194,7 +200,7 @@ function scoreContext(t: string, p: Parsed): Omit<DimensionScoreChunk, 'tipHe'> 
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/קהל יעד|לקוחות|משתמשים|audience|target|persona|עבור/i.test(t)) {
+  if (/קהל יעד|לקוחות|משתמשים|audience|target|persona|עבור|בשביל|מיועד\s+ל|פונה\s+ל|מדבר\s+אל|written\s+for|intended\s+for/i.test(t)) {
     matched.push('קהל יעד');
     pts += 4;
   } else missing.push('קהל יעד');
@@ -215,9 +221,11 @@ function scoreSpecificity(t: string, p: Parsed): Omit<DimensionScoreChunk, 'tipH
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
+  // Extended quantity regex: covers ranges, "up to", "at least", "between ... and", and Hebrew number words.
+  // TASK_QTY_RE (from prompt-parse) handles digits + Hebrew number words; we augment for range patterns.
   const taskQuantityRegex =
-    /(\d+\s*[-–]\s*\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters))|(עד\s+\d+\s*(מילים|שורות|נקודות|words|sentences|lines|items|bullets|paragraphs))|(לפחות\s+\d+\s*(מילים|שורות|words|sentences|items))|(בין\s+\d+\s+ל[-–]?\s*\d+)|(\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters))/i;
-  if (taskQuantityRegex.test(t)) {
+    /(\d+\s*[-–]\s*\d+\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters))|(עד\s+\d+\s*(מילים|שורות|נקודות|words|sentences|lines|items|bullets|paragraphs))|(לפחות\s+\d+\s*(מילים|שורות|words|sentences|items))|(בין\s+\d+\s+ל[-–]?\s*\d+)/i;
+  if (taskQuantityRegex.test(t) || TASK_QTY_RE.test(t)) {
     matched.push('task-relevant numbers (מספרים קשורים למשימה)');
     pts += 3;
   } else if (/\d+/.test(t)) {
@@ -412,7 +420,7 @@ function scoreGroundedness(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { ke
     matched.push('דרישת מקורות');
     pts += 3;
   } else missing.push('דרישת מקור / ציטוט');
-  if (/אם לא בטוח|אל תמציא|don'?t\s+fabricate|if\s+unsure|אינני בטוח|i\s+don'?t\s+know|הסתמך על/i.test(t)) {
+  if (/אם לא בטוח|אל תמציא|don'?t\s+fabricate|if\s+unsure|אינני בטוח|i\s+don'?t\s+know|הסתמך על|admit\s+(?:when\s+)?uncertain|say\s+(?:you\s+)?don'?t\s+know|הודה\s+שאינ|acknowledge\s+(?:when\s+)?uncertain/i.test(t)) {
     matched.push('רשות לאי-ודאות');
     pts += 3;
   } else missing.push('רשות לאי-ודאות');
@@ -473,7 +481,8 @@ function scoreMeasurability(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { k
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/\d+\s*(פריטים|נקודות|שורות|פסקאות|bullets|items|sentences|paragraphs|points)/i.test(t)) {
+  // Catch both digit and Hebrew number words (עשר פריטים, שלוש פסקאות, etc.)
+  if (TASK_QTY_RE.test(t) || /\d+\s*(פריטים|נקודות|שורות|פסקאות|bullets|items|sentences|paragraphs|points)/i.test(t)) {
     matched.push('כמות מדידה');
     pts += 3;
   } else missing.push('קריטריון כמותי');
@@ -488,7 +497,7 @@ function scoreMeasurability(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { k
   return { key, maxPoints, score: Math.min(6, pts), matched, missing };
 }
 
-function scoreFramework(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'framework' } {
+function scoreFramework(t: string, p?: Parsed): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'framework' } {
   const key = 'framework';
   const maxPoints = 8;
   const matched: string[] = [];
@@ -503,6 +512,11 @@ function scoreFramework(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 
 
   if (/תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה/.test(t)) {
     matched.push('אלמנטי מסגרת בעברית');
+  }
+  // Chain-of-thought / structured reasoning instructions — bonus signal
+  const cotDetected = p ? hasChainOfThought(p) : /(?:let'?s\s+)?think\s+step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|שלב\s+אחר\s+שלב|נחשוב\s+שלב|צעד\s+אחר\s+צעד/i.test(t);
+  if (cotDetected) {
+    matched.push('הנחיית Chain-of-Thought');
   }
   if (costarMatches >= 4) {
     matched.push('חתימת CO-STAR');
@@ -533,6 +547,10 @@ function scoreFramework(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 
   }
   if (matched.some((m) => m.includes('עברית'))) {
     return { key, maxPoints, score: 3, matched, missing: [] };
+  }
+  // Chain-of-thought alone = minimal framework signal (structured reasoning approach)
+  if (matched.some((m) => m.includes('Chain-of-Thought'))) {
+    return { key, maxPoints, score: 2, matched, missing: ['מסגרת מובנית (CO-STAR / RISEN / כותרות)'] };
   }
   missing.push('מסגרת מובנית (CO-STAR / RISEN / כותרות עבריות)');
   return { key, maxPoints, score: 0, matched, missing };
@@ -565,7 +583,7 @@ export function scoreEnhancedTextDimensions(t: string, wordCount: number, domain
     wrap(scoreGroundedness(t)),
     wrap(scoreSafety(t)),
     wrap(scoreMeasurability(t)),
-    wrap(scoreFramework(t)),
+    wrap(scoreFramework(t, p)),
   ];
   // Zero out inapplicable dimensions so they don't drag the normalized score
   return chunks.map((c) =>
