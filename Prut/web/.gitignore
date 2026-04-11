@@ -56,7 +56,10 @@ tools/crewai-ui-audit/
 
 # tooling / AI config
 .claude/
-.planning/
+# Local planning scratch; codebase map under .planning/codebase/ is tracked
+.planning/**
+!.planning/codebase/
+!.planning/codebase/**
 .superpowers/
 .gitnexus/
 repomix-output.*
