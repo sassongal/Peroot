@@ -8,8 +8,8 @@
 
 - Google Gemini — `@ai-sdk/google` — `GOOGLE_GENERATIVE_AI_API_KEY` — `src/lib/ai/models.ts`, `src/lib/ai/gateway.ts`
 - Groq — `@ai-sdk/groq` — `GROQ_API_KEY`
-- Mistral — `@ai-sdk/mistral` — `MISTRAL_API_KEY` (used when present; ensure prod env documents it)
-- **Note:** `.env.example` lists `DEEPSEEK_API_KEY` and CSP includes DeepSeek; provider wiring in `models.ts` may not expose DeepSeek as a first-class route (verify if legacy)
+- Mistral — `@ai-sdk/mistral` — **`MISTRAL_API_KEY`** — required for `mistral-small` in the fallback chain (`src/lib/ai/models.ts`, `src/lib/ai/gateway.ts` skips Mistral if key missing)
+- **DeepSeek:** not wired in `src/lib/ai/models.ts`. `DEEPSEEK_API_KEY` in `.env.example` / CSP `connect-src` for `api.deepseek.com` are **legacy or reserved** — safe to remove from env template if unused, or keep only if you plan to add a provider.
 
 **Payments / subscriptions:**
 

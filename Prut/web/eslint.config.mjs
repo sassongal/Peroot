@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     "repomix-output.*",
     // Plain CSS — no ESLint processor; avoids "no matching configuration" when linting explicitly
     "src/app/globals.css",
+    // Separate Chrome extension tree (plain JS, not the Next app)
+    "chrome-extension-v2.1/**",
   ]),
 ]);
 

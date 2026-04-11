@@ -1,6 +1,7 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-04-11
+**Analysis Date:** 2026-04-11  
+**Supply chain note (2026-04-11):** `npm audit fix` + Next **16.2.3** applied; remaining high is **`xlsx`** only (no upstream fix). See `IMPROVEMENT_BACKLOG.md` progress snapshot.
 
 ## Tech Debt
 
@@ -28,15 +29,15 @@
 **Knip / dead-code signal:**
 
 - Issue: Knip reports unused files, unlisted dependencies, and many unused exports (77 exports, 85 types, 3 unused files).
-- Evidence: `npx knip` (2026-04-11) — e.g. unused files `public/sw.js`, `scripts/canonicalize-tailwind-classes.mjs`, `scripts/test-engines-live.ts`; unlisted `postcss` / `dotenv`; large unused-export surface in `PlatformIcons.tsx`, `analytics.ts`, engines, etc.
+- Evidence: `npx knip` (2026-04-11) — e.g. scripts `scripts/canonicalize-tailwind-classes.mjs`, `scripts/test-engines-live.ts` flagged unused; **`public/sw.js` is a false positive** (registered in `src/components/providers/ServiceWorkerRegistration.tsx`). `postcss` / `dotenv` / `knip` are now declared in `package.json` — move tooling packages to **devDependencies** when cleaning the manifest.
 - Impact: Noise in reviews; some exports are library API vs truly dead code — triage required.
 - Fix approach: Add missing deps to `package.json` or adjust knip config; remove or scope exports; delete obsolete scripts after confirmation.
 
 **Tooling metadata:**
 
-- Issue: `postcss` used by `postcss.config.mjs` but not listed as a direct dependency; `dotenv` used in `scripts/run-all-migrations.ts` but not declared; `tsx` / `repomix` used in scripts but knip flags as unlisted binaries.
-- Files: `postcss.config.mjs`, `scripts/run-all-migrations.ts`, `package.json`
-- Fix approach: Add explicit `dependencies`/`devDependencies` for reproducible installs.
+- Issue: `tsx` / `repomix` invoked via `npx` in scripts — knip may still flag as unlisted binaries; optional to add as devDependencies for lockfile clarity.
+- Files: `package.json`
+- Fix approach: Declare or document; keep `postcss` / `dotenv` / `knip` in **devDependencies** (not production `dependencies`).
 
 ## Known Bugs
 
@@ -46,10 +47,10 @@ No separate ticket list was validated in this pass. **None blocking** typecheck 
 
 **Dependency vulnerabilities (npm audit):**
 
-- Risk: Transitive packages with known CVEs; direct `xlsx` reported with **no fix** for a ReDoS advisory (SheetJS).
-- Evidence: `npm audit` (2026-04-11) — **16 vulnerabilities** (3 low, 4 moderate, 9 high); summary suggests `npm audit fix` where possible; some issues need manual review or dependency replacement.
-- Current mitigation: Routine `npm audit` in CI; serverExternalPackages for heavy parsers in `next.config.ts`
-- Recommendations: Run `npm audit fix`; for `xlsx`, evaluate alternatives or isolate usage (trusted files only); review `dompurify` / `sanitize-html` chain for HTML paths
+- Risk: Direct `xlsx` (SheetJS) — advisories including ReDoS / prototype pollution; **no fix available** in npm advisory DB as of 2026-04-11.
+- Evidence: After `npm audit fix` and Next **16.2.3**, `npm audit` typically shows **1 high** (`xlsx` only).
+- Current mitigation: `xlsx` used only in server-side office extraction (`src/lib/context/engine/extract/file-office.ts`), not in browser; file size/char caps limit abuse surface.
+- Recommendations: Prefer trusted uploads only; long-term replace SheetJS or vendor a patched fork; review `sanitize-html` for HTML paths
 
 **Middleware CSRF and Bearer bypass:**
 
@@ -137,8 +138,8 @@ Not assessed as product gaps — use product roadmap. Technical gap: **admin API
 
 **ESLint:**
 
-- `npm run lint` — **0 errors**, **66 warnings** (unused vars, unused eslint-disable, react-hooks exhaustive-deps in `useContextAttachments.ts`, chrome extension JS files)
-- Files: spread across `src/` and `chrome-extension-v2.1/` — prioritize fixing `src/` warnings or narrowing eslint scope for extension
+- `npm run lint` — **0 errors**, **~48 warnings** in `src/` (2026-04-11 after ignoring `chrome-extension-v2.1/**` and partial cleanup)
+- Files: mostly unused vars and redundant eslint-disable directives — see `IMPROVEMENT_BACKLOG.md` P2-4
 
 **TypeScript:**
 

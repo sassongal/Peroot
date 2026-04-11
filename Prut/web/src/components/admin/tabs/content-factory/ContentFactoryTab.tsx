@@ -47,9 +47,7 @@ export function ContentFactoryTab() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawMap: Record<string, any> = {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const b of data.pendingBlogs ?? []) rawMap[b.id] = { ...b, _type: "blog" };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const p of data.pendingPrompts ?? []) rawMap[p.id] = { ...p, _type: "prompt" };
       setRawPendingData(rawMap);
 

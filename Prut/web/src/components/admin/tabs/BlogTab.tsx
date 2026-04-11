@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -22,12 +22,7 @@ export function BlogTab() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function loadPosts() {
+  const loadPosts = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(getApiPath("/api/admin/blog"));
@@ -38,7 +33,11 @@ export function BlogTab() {
       toast.error("שגיאה בטעינת מאמרים");
     }
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    void loadPosts();
+  }, [loadPosts]);
 
   async function deletePost(id: string) {
     if (!confirm("למחוק את המאמר?")) return;

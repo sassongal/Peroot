@@ -1,5 +1,7 @@
 import mammoth from 'mammoth';
 import Papa from 'papaparse';
+// xlsx (SheetJS): server-only; untrusted spreadsheets are parsed only after upload
+// limits in the extract pipeline. npm audit may report issues with no upstream fix — monitor releases.
 import * as XLSX from 'xlsx';
 
 export interface OfficeExtractionResult {

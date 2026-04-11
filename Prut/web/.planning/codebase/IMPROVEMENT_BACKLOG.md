@@ -1,9 +1,36 @@
 # Improvement Backlog
 
 **Analysis Date:** 2026-04-11  
+**Last progress update:** 2026-04-11 (implementation session)
+
 **Sources:** Explore agents, `npm audit`, `npx knip`, `npm run typecheck`, `npm run lint`, manual review of `next.config.ts` and middleware.
 
 Priorities are **technical** (stability, security hygiene, maintainability). Product priorities may reorder this list.
+
+---
+
+## Progress snapshot (2026-04-11)
+
+**Completed in implementation session:**
+
+- **P0-1 / P0-3:** `package.json` — `engines.node >=20`, `"knip": "knip"` script; **`postcss`**, **`dotenv`**, **`knip`** in **devDependencies** (not production deps); `npm install` refreshed lockfile.
+- **P0-2:** Comment above `xlsx` import in [`src/lib/context/engine/extract/file-office.ts`](../../src/lib/context/engine/extract/file-office.ts) (server-only, audit caveat).
+- **P1-3:** [`useContextAttachments.ts`](../../src/hooks/useContextAttachments.ts) — dependency arrays include `limits.maxFiles` / `maxUrls` / `maxImages`.
+- **P1-4:** [`.env.example`](../../.env.example) — `MISTRAL_API_KEY` documented; `DEEPSEEK` commented as optional/legacy.
+- **P2-4 (partial):** Removed redundant eslint-disable lines in [`ContentFactoryTab.tsx`](../../src/components/admin/tabs/content-factory/ContentFactoryTab.tsx); [`BlogTab.tsx`](../../src/components/admin/tabs/BlogTab.tsx) uses `useCallback` + `useEffect` deps (no disable).
+- **P2-5:** [`circuit-breaker.ts`](../../src/lib/ai/circuit-breaker.ts) uses `logger.info` instead of `console.log`.
+- **P3-1:** [`.nvmrc`](../../.nvmrc) → `22` (aligns with `engines`).
+- **P3-3:** [`eslint.config.mjs`](../../eslint.config.mjs) ignores `chrome-extension-v2.1/**` — lint warnings dropped (e.g. ~48 in `src/` scope vs ~66 before).
+
+**Verification:** `npm run typecheck` passes; `npm run lint` exit 0; `vitest run src/lib/ai/__tests__/circuit-breaker.test.ts` passes.
+
+**Remaining audit:** `npm audit` — **1 high** (`xlsx`, no upstream fix). Long-term: replace SheetJS or vendor patch.
+
+**Still open (larger work):**
+
+- P1-1, P1-2, P2-1, P2-2, P2-6, P3-2, P3-4 — refactors, knip triage, admin tests, bundle reviews.
+- P2-4 — ~48 ESLint warnings remain in `src/` (unused vars, etc.).
+- P2-3 — scripts `canonicalize-tailwind-classes.mjs` / `test-engines-live.ts` still need triage; **`public/sw.js`** kept (service worker registration).
 
 ---
 
@@ -34,7 +61,7 @@ Priorities are **technical** (stability, security hygiene, maintainability). Pro
 |----|---------|----------|---------------|--------|
 | P2-1 | **Very large UI/state files** | `src/app/HomeClient.tsx`, `src/hooks/useLibrary.ts`, admin user page | Split by feature hooks and presentational components | Large |
 | P2-2 | **Knip unused exports** (77+) and **unused types** (85+) | `npx knip` | Triage: remove dead code, or mark intentional API with knip ignore rules; trim `PlatformIcons.tsx` exports if unused | Medium |
-| P2-3 | **Knip unused files** | `public/sw.js`, `scripts/canonicalize-tailwind-classes.mjs`, `scripts/test-engines-live.ts` | Delete if obsolete or wire into build; document if PWA SW is intentional | Small |
+| P2-3 | **Knip unused files** | `public/sw.js`, `scripts/canonicalize-tailwind-classes.mjs`, `scripts/test-engines-live.ts` | **`sw.js`:** used by `ServiceWorkerRegistration` — keep. **Scripts:** delete if obsolete or wire into build; document if PWA SW is intentional | Small |
 | P2-4 | **ESLint 66 warnings** (mostly unused vars) | `npm run lint` | Fix or prefix `_` consistently; remove unused eslint-disable in `ContentFactoryTab.tsx`, `BlogTab.tsx` | Medium |
 | P2-5 | **Circuit breaker `console` vs logger** | `src/lib/ai/circuit-breaker.ts` | Use `src/lib/logger.ts` | Small |
 | P2-6 | **JSON-LD duplication** | Multiple `page.tsx` | Shared SEO helpers (see CONCERNS) | Medium |
@@ -56,11 +83,11 @@ Priorities are **technical** (stability, security hygiene, maintainability). Pro
 
 | Area | Current | Recommendation |
 |------|---------|----------------|
-| Next / eslint-config-next | 16.1.4 (pinned) | Stay on patch/minor upgrades together; read Next release notes |
-| `@next/bundle-analyzer` | ^16.1.6 | Align with `next` version when bumping |
+| Next / eslint-config-next | **16.2.3** (upgraded) | Stay on patch/minor upgrades together; read Next release notes |
+| `@next/bundle-analyzer` | **16.2.3** | Align with `next` version when bumping |
 | Transitive security fixes | npm audit | Periodic `npm audit fix` + lockfile commit |
 | Vercel CLI (local dev) | Hooks note 50.25.4 → 50.44.0 | `npm i -g vercel@latest` (developer machines) |
-| knip | Not in package.json | Add `knip` as devDependency + script for repeatable CI checks |
+| knip | **6.4.0** in devDependencies | Run `npm run knip` in CI or locally |
 
 ---
 

@@ -139,7 +139,7 @@ export function useContextAttachments(tier: Tier = 'free') {
         pendingCounts.current.file--;
       }
     },
-    [updateAttachment]
+    [updateAttachment, limits.maxFiles]
   );
 
   const addUrl = useCallback(
@@ -202,7 +202,7 @@ export function useContextAttachments(tier: Tier = 'free') {
         pendingCounts.current.url--;
       }
     },
-    [updateAttachment]
+    [updateAttachment, limits.maxUrls]
   );
 
   const addImage = useCallback(
@@ -272,7 +272,7 @@ export function useContextAttachments(tier: Tier = 'free') {
         pendingCounts.current.image--;
       }
     },
-    [updateAttachment]
+    [updateAttachment, limits.maxImages]
   );
 
   const retryAttachment = useCallback(

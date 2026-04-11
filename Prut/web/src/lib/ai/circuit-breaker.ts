@@ -11,6 +11,8 @@
 
 import { Redis } from "@upstash/redis";
 
+import { logger } from "@/lib/logger";
+
 type CircuitState = "closed" | "open" | "half_open";
 
 interface CircuitEntry {
@@ -99,7 +101,7 @@ export async function isProviderAvailable(provider: string): Promise<boolean> {
     if (Date.now() - entry.lastFailure >= RECOVERY_TIME_MS) {
       entry.state = "half_open";
       writeEntry(provider, entry);
-      console.log(`[CircuitBreaker] ${provider}: OPEN -> HALF_OPEN (testing)`);
+      logger.info(`[CircuitBreaker] ${provider}: OPEN -> HALF_OPEN (testing)`);
       return true; // allow one test request
     }
     return false; // still failing, skip
@@ -149,7 +151,7 @@ export async function recordFailure(provider: string): Promise<void> {
       const result = await r.eval(script, [key], [Date.now().toString(), FAILURE_THRESHOLD.toString(), REDIS_TTL_S.toString()]) as string;
       const entry = JSON.parse(result) as CircuitEntry;
       if (entry.state === "open") {
-        console.log(`[CircuitBreaker] ${provider}: -> OPEN (${entry.failures} failures)`);
+        logger.info(`[CircuitBreaker] ${provider}: -> OPEN (${entry.failures} failures)`);
       }
       return;
     }
@@ -163,10 +165,10 @@ export async function recordFailure(provider: string): Promise<void> {
   entry.lastFailure = Date.now();
   if (entry.state === "half_open") {
     entry.state = "open";
-    console.log(`[CircuitBreaker] ${provider}: HALF_OPEN -> OPEN (still failing)`);
+    logger.info(`[CircuitBreaker] ${provider}: HALF_OPEN -> OPEN (still failing)`);
   } else if (entry.failures >= FAILURE_THRESHOLD) {
     entry.state = "open";
-    console.log(`[CircuitBreaker] ${provider}: CLOSED -> OPEN (${entry.failures} failures)`);
+    logger.info(`[CircuitBreaker] ${provider}: CLOSED -> OPEN (${entry.failures} failures)`);
   }
 }
 
