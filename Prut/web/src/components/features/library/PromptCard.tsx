@@ -66,8 +66,8 @@ export function PromptCard({
   return (
     <div
       className={cn(
-        "rounded-xl md:rounded-2xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 transition-colors relative group",
-        !isBlurred && "hover:bg-white/[0.04]",
+        "rounded-xl md:rounded-2xl border border-(--glass-border) bg-black/5 dark:bg-black/30 transition-colors relative group",
+        !isBlurred && "hover:bg-white/4",
         !isBlurred && (isSelected || selectionMode) && "ring-2 ring-amber-500/50 bg-amber-500/5",
         isBlurred && "blur-sm pointer-events-none select-none"
       )}
@@ -84,7 +84,7 @@ export function PromptCard({
           <button onClick={(e) => { e.stopPropagation(); onToggleSelection(); }} aria-label={isSelected ? "בטל בחירה" : "בחר פריט"}>
             {isSelected
               ? <CheckSquare className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-500/20" />
-              : <Square className="w-5 h-5 text-[var(--text-muted)] hover:text-[var(--text-secondary)]" />}
+              : <Square className="w-5 h-5 text-(--text-muted) hover:text-(--text-secondary)" />}
           </button>
         </div>
       )}
@@ -102,7 +102,7 @@ export function PromptCard({
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           className={cn(
             "shrink-0 p-1.5 rounded-full transition-colors",
-            isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-[var(--text-muted)]"
+            isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-(--text-muted)"
           )}
           aria-pressed={isFavorite}
           title={favStarLabel}
@@ -130,7 +130,7 @@ export function PromptCard({
               </span>
             )}
           </div>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{prompt.use_case}</p>
+          <p className="text-xs text-(--text-muted) mt-0.5 truncate">{prompt.use_case}</p>
           {prompt.created_at && (
             <DateBadge
               entity={{
@@ -153,7 +153,7 @@ export function PromptCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onCopy(); }}
-            className="p-1.5 rounded-md hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            className="p-1.5 rounded-md hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors"
             title="העתק"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -161,7 +161,7 @@ export function PromptCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onUsePrompt(); }}
-            className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] font-medium text-[var(--text-primary)] transition-colors"
+            className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] font-medium text-(--text-primary) transition-colors"
           >
             השתמש
           </button>
@@ -169,7 +169,7 @@ export function PromptCard({
 
         {/* Right side: category + popularity + expand icon */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="hidden md:inline text-[10px] px-2 py-0.5 rounded-full border border-[var(--glass-border)] text-[var(--text-muted)]">
+          <span className="hidden md:inline text-[10px] px-2 py-0.5 rounded-full border border-(--glass-border) text-(--text-muted)">
             {categoryLabel}
           </span>
           {popularityCount > 0 && (
@@ -178,8 +178,8 @@ export function PromptCard({
             </span>
           )}
           {isExpanded
-            ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
-            : <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
+            ? <ChevronUp className="w-4 h-4 text-(--text-muted)" />
+            : <ChevronDown className="w-4 h-4 text-(--text-muted)" />
           }
         </div>
       </button>
@@ -189,7 +189,7 @@ export function PromptCard({
         <div className="flex items-center gap-1 px-3 pb-2 md:hidden" dir="rtl">
           <button
             onClick={onCopy}
-            className="flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:bg-white/10 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] rounded-lg border border-(--glass-border) text-(--text-muted) text-xs hover:bg-white/10 transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             העתק
@@ -206,9 +206,9 @@ export function PromptCard({
 
       {/* Expanded Content */}
       {isExpanded && !isBlurred && (
-        <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 border-t border-[var(--glass-border)]">
+        <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 border-t border-(--glass-border)">
           {/* Prompt text */}
-          <div className="text-xs md:text-sm text-[var(--text-secondary)] leading-relaxed mt-3 whitespace-pre-wrap max-h-48 overflow-y-auto" dir="rtl">
+          <div className="text-xs md:text-sm text-(--text-secondary) leading-relaxed mt-3 whitespace-pre-wrap max-h-48 overflow-y-auto" dir="rtl">
             {prompt.prompt}
           </div>
 
@@ -217,7 +217,7 @@ export function PromptCard({
             <button
               type="button"
               onClick={() => onImageClick?.(prompt.preview_image_url!, prompt.title)}
-              className="relative w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden border border-[var(--glass-border)] group/img cursor-zoom-in"
+              className="relative w-full max-w-sm aspect-4/3 rounded-xl overflow-hidden border border-(--glass-border) group/img cursor-zoom-in"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- library preview URLs vary; lazy native img */}
               <img
@@ -238,7 +238,7 @@ export function PromptCard({
               {prompt.variables.map((variable) => (
                 <span
                   key={variable}
-                  className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)]"
+                  className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-(--glass-bg) border border-(--glass-border) text-(--text-secondary)"
                 >
                   {variable}
                 </span>
@@ -257,7 +257,7 @@ export function PromptCard({
             </button>
             <button
               onClick={onSaveToPersonal}
-              className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
+              className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
               title="שמור לספריה אישית"
             >
               <BookOpen className="w-4 h-4" />
@@ -265,7 +265,7 @@ export function PromptCard({
             </button>
             <button
               onClick={onCopy}
-              className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
+              className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
               title="העתק"
             >
               <Copy className="w-4 h-4" />
@@ -273,7 +273,7 @@ export function PromptCard({
             </button>
             <button
               onClick={onExportImage}
-              className="shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
+              className="shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
               title="ייצא כתמונה"
             >
               <ImageIcon className="w-4 h-4" />

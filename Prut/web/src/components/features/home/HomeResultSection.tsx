@@ -10,11 +10,11 @@ import type { CapabilityMode } from "@/lib/capability-mode";
 
 const ResultSection = dynamic(
   () => import("@/components/features/prompt-improver/ResultSection").then(mod => mod.ResultSection),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-(--glass-bg) h-64" /> }
 );
 const SmartRefinement = dynamic(
   () => import("@/components/features/prompt-improver/SmartRefinement").then(mod => mod.SmartRefinement),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-32" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-(--glass-bg) h-32" /> }
 );
 
 export interface HomeResultSectionProps {

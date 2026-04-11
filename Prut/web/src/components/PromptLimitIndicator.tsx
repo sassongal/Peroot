@@ -62,8 +62,8 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
           }`}
         >
           <Coins className={`w-4 h-4 ${isLow ? "text-red-400" : "text-amber-400"}`} />
-          <span className="text-xs font-medium text-[var(--text-primary)]">
-            {displayCredits} <span className="text-[var(--text-muted)] font-normal hidden md:inline">קרדיטים</span>
+          <span className="text-xs font-medium text-(--text-primary)">
+            {displayCredits} <span className="text-(--text-muted) font-normal hidden md:inline">קרדיטים</span>
           </span>
         </Link>
         <Link
@@ -85,9 +85,9 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
       }`}
     >
       <Sparkles className={`w-4 h-4 ${remainingPrompts <= 1 ? "text-red-400" : "text-blue-400"}`} />
-      <span className="text-xs font-medium text-[var(--text-primary)]">
+      <span className="text-xs font-medium text-(--text-primary)">
         {remainingPrompts}/{totalAllowed}
-        <span className="text-[var(--text-muted)] font-normal hidden md:inline"> {settings.allow_guest_access ? "פרומפטים היום" : "נדרשת הרשמה"}</span>
+        <span className="text-(--text-muted) font-normal hidden md:inline"> {settings.allow_guest_access ? "פרומפטים היום" : "נדרשת הרשמה"}</span>
       </span>
     </Link>
   );

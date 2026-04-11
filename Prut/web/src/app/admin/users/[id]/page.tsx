@@ -465,7 +465,7 @@ export default function UserDetailPage() {
           <button
             onClick={fetchDetail}
             disabled={loading}
-            className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-600 hover:text-white transition-all active:scale-95"
+            className="p-3 rounded-2xl bg-white/3 border border-white/5 text-zinc-600 hover:text-white transition-all active:scale-95"
           >
             <RefreshCw className="w-5 h-5" />
           </button>
@@ -669,7 +669,7 @@ export default function UserDetailPage() {
                             {topCategories.slice(0, 5).map(([cat, count]) => (
                               <div
                                 key={cat}
-                                className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-white/[0.02] border border-white/5"
+                                className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-white/2 border border-white/5"
                               >
                                 <span className="text-xs font-bold text-zinc-400 truncate">
                                   {cat}
@@ -693,7 +693,7 @@ export default function UserDetailPage() {
                             {topTones.slice(0, 6).map(([tone, count]) => (
                               <div
                                 key={tone}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/2 border border-white/5"
                               >
                                 <span className="text-[10px] font-bold text-zinc-400">
                                   {tone}
@@ -717,7 +717,7 @@ export default function UserDetailPage() {
                             {topModes.slice(0, 6).map(([mode, count]) => (
                               <div
                                 key={mode}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/2 border border-white/5"
                               >
                                 <span className="text-[10px] font-bold text-zinc-400">
                                   {mode}
@@ -747,7 +747,7 @@ export default function UserDetailPage() {
                   ) : (
                     <div className="divide-y divide-white/5">
                       {recentActivity.slice(0, activityVisible).map((log) => (
-                        <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-white/[0.02] transition-all">
+                        <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-white/2 transition-all">
                           <div className="mt-0.5 p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
                             <Activity className="w-3.5 h-3.5 text-zinc-600" />
                           </div>
@@ -773,7 +773,7 @@ export default function UserDetailPage() {
                 {activityVisible < recentActivity.length && (
                   <button
                     onClick={() => setActivityVisible((v) => v + 10)}
-                    className="w-full py-4 rounded-2xl bg-white/[0.03] border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-2xl bg-white/3 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2"
                   >
                     <ChevronDown className="w-4 h-4" />
                     Load More
@@ -801,7 +801,7 @@ export default function UserDetailPage() {
                       return (
                         <div
                           key={p.id}
-                          className="px-8 py-5 hover:bg-white/[0.02] transition-all"
+                          className="px-8 py-5 hover:bg-white/2 transition-all"
                         >
                           <div className="flex items-center gap-5">
                             <div className="p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
@@ -895,7 +895,7 @@ export default function UserDetailPage() {
                                 item.id
                               )
                             }
-                            className="w-full px-7 py-5 flex items-start gap-4 hover:bg-white/[0.02] transition-all text-right"
+                            className="w-full px-7 py-5 flex items-start gap-4 hover:bg-white/2 transition-all text-right"
                           >
                             <div className="p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0 mt-0.5">
                               <Sparkles className="w-3.5 h-3.5 text-zinc-600" />
@@ -1013,7 +1013,7 @@ export default function UserDetailPage() {
                   <button
                     onClick={loadMoreHistory}
                     disabled={loadingHistory}
-                    className="w-full py-4 rounded-2xl bg-white/[0.03] border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-4 rounded-2xl bg-white/3 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {loadingHistory ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1050,7 +1050,7 @@ export default function UserDetailPage() {
                           referral_bonus: "Referral Bonus",
                         };
                         return (
-                          <div key={entry.id} className="px-8 py-4 flex items-center gap-5 hover:bg-white/[0.02] transition-all">
+                          <div key={entry.id} className="px-8 py-4 flex items-center gap-5 hover:bg-white/2 transition-all">
                             <div className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-black border",
                               isPositive
@@ -1532,7 +1532,7 @@ function EmailsTab({ userId }: { userId: string }) {
                 <div
                   key={email.id}
                   className={cn(
-                    "flex items-center gap-4 px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-white/[0.02] transition-all",
+                    "flex items-center gap-4 px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-white/2 transition-all",
                     isFailed && "opacity-60 border-red-500/10"
                   )}
                 >

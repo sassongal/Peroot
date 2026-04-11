@@ -36,7 +36,7 @@ export function ImagePlatformSelector({
 
   return (
     <div className="flex flex-col gap-2" dir="rtl">
-      <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest px-1">פלטפורמת תמונה</div>
+      <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">פלטפורמת תמונה</div>
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
         {IMAGE_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
@@ -53,7 +53,7 @@ export function ImagePlatformSelector({
                 "hover:scale-[1.02] active:scale-[0.98]",
                 isSelected
                   ? "border-purple-500/50 bg-purple-500/10 text-purple-700 dark:text-purple-300"
-                  : "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] hover:border-purple-500/30 hover:bg-purple-500/5",
+                  : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-purple-500/30 hover:bg-purple-500/5",
                 disabled && "opacity-50 cursor-not-allowed"
               )}
               aria-pressed={isSelected}
@@ -77,8 +77,8 @@ export function ImagePlatformSelector({
       {/* JSON/Text toggle for platforms that support it */}
       {selectedConfig?.supportsJson && (
         <div className="flex items-center gap-2 px-1">
-          <span className="text-[11px] text-[var(--text-muted)]">פורמט פלט:</span>
-          <div className="flex rounded-md border border-[var(--glass-border)] overflow-hidden">
+          <span className="text-[11px] text-(--text-muted)">פורמט פלט:</span>
+          <div className="flex rounded-md border border-(--glass-border) overflow-hidden">
             <button
               type="button"
               disabled={disabled}
@@ -87,7 +87,7 @@ export function ImagePlatformSelector({
                 "px-2.5 py-1 text-[11px] font-medium transition-colors",
                 outputFormat === 'text'
                   ? "bg-purple-500/20 text-purple-700 dark:text-purple-300"
-                  : "text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/5"
+                  : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5"
               )}
             >
               רגיל
@@ -100,7 +100,7 @@ export function ImagePlatformSelector({
                 "px-2.5 py-1 text-[11px] font-medium transition-colors",
                 outputFormat === 'json'
                   ? "bg-purple-500/20 text-purple-700 dark:text-purple-300"
-                  : "text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/5"
+                  : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5"
               )}
             >
               JSON
@@ -112,8 +112,8 @@ export function ImagePlatformSelector({
       {/* Aspect Ratio selector */}
       {onAspectRatioChange && (
         <div className="flex items-center gap-2 px-1">
-          <span className="text-[11px] text-[var(--text-muted)]">יחס תמונה:</span>
-          <div className="flex rounded-md border border-[var(--glass-border)] overflow-hidden">
+          <span className="text-[11px] text-(--text-muted)">יחס תמונה:</span>
+          <div className="flex rounded-md border border-(--glass-border) overflow-hidden">
             {ASPECT_RATIO_OPTIONS.map((option) => (
               <button
                 key={option.value}

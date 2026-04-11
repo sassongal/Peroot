@@ -128,7 +128,7 @@ export default function SettingsPage() {
         {/* Header with Command Look */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-white to-slate-500 bg-clip-text text-transparent tracking-tighter">
+            <h1 className="text-5xl font-black bg-linear-to-r from-white to-slate-500 bg-clip-text text-transparent tracking-tighter">
               System Configuration
             </h1>
             <p className="text-slate-400 font-medium tracking-wide">ניהול פרמטרים גלובליים, עיצוב ומודל עסקי</p>

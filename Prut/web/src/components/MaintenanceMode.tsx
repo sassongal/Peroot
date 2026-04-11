@@ -27,7 +27,7 @@ export function MaintenancePage() {
         {/* Icon */}
         <div className="flex justify-center mb-8">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 opacity-20 blur-2xl absolute inset-0" />
+            <div className="w-32 h-32 rounded-full bg-linear-to-br from-blue-500 to-purple-600 opacity-20 blur-2xl absolute inset-0" />
             <div className="relative w-32 h-32 rounded-full border-4 border-white/10 flex items-center justify-center">
               <svg className="w-16 h-16 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />

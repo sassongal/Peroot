@@ -230,7 +230,7 @@ export default function UsersPage() {
                 Identity Access Management
               </span>
             </div>
-            <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+            <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
               Nexus Users
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -249,7 +249,7 @@ export default function UsersPage() {
             </button>
             <button
               onClick={exportUsers}
-              className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3"
+              className="px-6 py-3 rounded-2xl bg-white/3 border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3"
             >
               <Download className="w-4 h-4" />
               Export Users
@@ -377,7 +377,7 @@ export default function UsersPage() {
                   filteredUsers.map((user) => (
                     <tr
                       key={user.id}
-                      className="group hover:bg-white/[0.02] transition-all duration-500 overflow-hidden relative cursor-pointer"
+                      className="group hover:bg-white/2 transition-all duration-500 overflow-hidden relative cursor-pointer"
                     >
                       {/* Identity */}
                       <td className="px-10 py-7">

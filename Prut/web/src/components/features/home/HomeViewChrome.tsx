@@ -10,7 +10,7 @@ import { MobileTabBar } from "@/components/layout/MobileTabBar";
 
 const FAQBubble = dynamic(
   () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-[var(--glass-bg)] w-12 h-12" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-(--glass-bg) w-12 h-12" /> }
 );
 const FeatureDiscoveryTooltip = dynamic(
   () => import("@/components/ui/FeatureDiscoveryTooltip").then(mod => mod.FeatureDiscoveryTooltip),
@@ -120,7 +120,7 @@ function HomeViewChromeInner({
   return (
     <main className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/[0.12] dark:from-amber-500/8 via-red-500/[0.04] dark:via-yellow-500/4 to-transparent blur-3xl -z-10" style={{ contain: 'layout style' }} />
+      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/12 dark:from-amber-500/8 via-red-500/4 dark:via-yellow-500/4 to-transparent blur-3xl -z-10" style={{ contain: 'layout style' }} />
 
       {/* FAQ: floating bubble on desktop only */}
       <div className="hidden md:block fixed bottom-6 right-6 z-50">
@@ -170,7 +170,7 @@ function HomeViewChromeInner({
 
            <button
              onClick={onOpenWhatIsThis}
-             className="text-xs md:text-sm text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
+             className="text-xs md:text-sm text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
            >
              מה עושים פה?
            </button>

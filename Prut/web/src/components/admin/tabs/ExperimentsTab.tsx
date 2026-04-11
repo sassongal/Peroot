@@ -78,7 +78,7 @@ function TrendIcon({ rate }: { rate: number }) {
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-lg bg-white/[0.04]", className)} />;
+  return <div className={cn("animate-pulse rounded-lg bg-white/4", className)} />;
 }
 
 type AccentColor = "blue" | "purple" | "emerald" | "amber" | "rose" | "cyan";
@@ -119,7 +119,7 @@ function FeatureAdoptionTracker({ features, loading }: { features: FeatureAdopti
 
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-blue-600/3 to-transparent pointer-events-none" />
       <div className="relative flex items-center gap-4">
         <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-blue-400">
           <BarChart3 className="w-5 h-5" />
@@ -153,7 +153,7 @@ function FeatureAdoptionTracker({ features, loading }: { features: FeatureAdopti
           {features.map((feature, i) => (
             <div
               key={feature.action}
-              className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors group/row"
+              className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors group/row"
             >
               <span className="text-[10px] font-black text-zinc-700 w-5 tabular-nums">{i + 1}</span>
               <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -173,7 +173,7 @@ function FeatureAdoptionTracker({ features, loading }: { features: FeatureAdopti
               </span>
               <div className="w-28 h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-700"
+                  className="h-full rounded-full bg-linear-to-r from-blue-600 to-blue-400 transition-all duration-700"
                   style={{ width: `${(feature.adoptionRate / max) * 100}%` }}
                 />
               </div>
@@ -190,7 +190,7 @@ function SegmentComparison({ breakdown, summary, loading }: {
 }) {
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-purple-600/3 to-transparent pointer-events-none" />
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-purple-400">
@@ -220,7 +220,7 @@ function SegmentComparison({ breakdown, summary, loading }: {
         </div>
       ) : (
         <>
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+          <div className="p-6 rounded-2xl bg-white/2 border border-white/5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">Avg Activity Per User (30d)</span>
               <span className={cn(
@@ -236,7 +236,7 @@ function SegmentComparison({ breakdown, summary, loading }: {
                 <span className="text-[10px] font-black text-blue-400 w-8">Pro</span>
                 <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
+                    className="h-full bg-linear-to-r from-blue-600 to-blue-400 rounded-full"
                     style={{ width: `${Math.min((summary.proAvgActivity / Math.max(summary.proAvgActivity, summary.freeAvgActivity, 1)) * 100, 100)}%` }}
                   />
                 </div>
@@ -247,7 +247,7 @@ function SegmentComparison({ breakdown, summary, loading }: {
                 <span className="text-[10px] font-black text-zinc-500 w-8">Free</span>
                 <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-zinc-600 to-zinc-500 rounded-full"
+                    className="h-full bg-linear-to-r from-zinc-600 to-zinc-500 rounded-full"
                     style={{ width: `${Math.min((summary.freeAvgActivity / Math.max(summary.proAvgActivity, summary.freeAvgActivity, 1)) * 100, 100)}%` }}
                   />
                 </div>
@@ -268,7 +268,7 @@ function SegmentComparison({ breakdown, summary, loading }: {
               return (
                 <div
                   key={item.action}
-                  className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors"
                 >
                   <span className="flex-1 text-sm font-bold text-zinc-300 truncate">{formatAction(item.action)}</span>
                   <span className="w-20 text-center text-sm font-black text-blue-400 tabular-nums">{item.proRate}%</span>
@@ -292,7 +292,7 @@ function SegmentComparison({ breakdown, summary, loading }: {
 function PostHogSection({ connected }: { connected: boolean }) {
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-600/[0.04] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-amber-600/4 to-transparent pointer-events-none" />
 
       <div className="relative flex items-center gap-4">
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
@@ -323,7 +323,7 @@ function PostHogSection({ connected }: { connected: boolean }) {
         </div>
       ) : (
         <div className="relative space-y-4">
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+          <div className="p-6 rounded-2xl bg-white/2 border border-white/5 space-y-4">
             <div className="flex items-center gap-3">
               <Key className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="text-sm font-black text-white">Connect PostHog Server API Key to view live experiments</span>
@@ -517,7 +517,7 @@ export default function ExperimentsTab() {
 
           <div className="space-y-2">
             {data.experimentFeatures.map((f) => (
-              <div key={f.action} className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors">
+              <div key={f.action} className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors">
                 <Circle className="w-2 h-2 text-cyan-500 shrink-0" />
                 <span className="flex-1 text-sm font-bold text-zinc-300">{formatAction(f.action)}</span>
                 <span className="text-sm font-black text-white tabular-nums">{f.distinctUsers} users</span>

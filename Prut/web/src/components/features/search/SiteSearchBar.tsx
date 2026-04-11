@@ -270,14 +270,14 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
 
       {open && (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-[var(--surface-body)]/98 backdrop-blur-md md:pt-14"
+          className="fixed inset-0 z-60 flex flex-col bg-(--surface-body)/98 backdrop-blur-md md:pt-14"
           role="dialog"
           aria-modal="true"
           aria-label="תוצאות חיפוש"
           dir="rtl"
         >
           <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10 shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
-            <h2 id="site-search-title" className="text-sm font-semibold text-[var(--text-primary)]">
+            <h2 id="site-search-title" className="text-sm font-semibold text-(--text-primary)">
               תוצאות חיפוש
             </h2>
             <button
@@ -334,11 +334,11 @@ export function SiteSearchBar({ user, onUsePrompt }: SiteSearchBarProps) {
                       {hit.isFavorite ? " · מועדף" : ""}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-[var(--text-primary)] leading-snug break-words">
+                  <p className="text-sm font-medium text-(--text-primary) leading-snug wrap-break-word">
                     <HighlightMatch text={hit.title} needle={debounced} />
                   </p>
                   {hit.subtitle && (
-                    <p className="text-xs text-slate-500 line-clamp-2 break-words">
+                    <p className="text-xs text-slate-500 line-clamp-2 wrap-break-word">
                       <HighlightMatch text={hit.subtitle} needle={debounced} />
                     </p>
                   )}

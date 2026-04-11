@@ -97,7 +97,7 @@ function Skeleton({ className, style }: { className?: string; style?: React.CSSP
     <div
       style={style}
       className={cn(
-        "animate-pulse rounded-lg bg-white/[0.04]",
+        "animate-pulse rounded-lg bg-white/4",
         className
       )}
     />
@@ -535,7 +535,7 @@ export default function AdminDashboardPage() {
                 Operational Authority Level 1
               </span>
             </div>
-            <h1 className="text-3xl md:text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tight md:tracking-tighter leading-none break-words">
+            <h1 className="text-3xl md:text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tight md:tracking-tighter leading-none wrap-break-word">
               Command Center
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-sm md:text-lg max-w-xl">
@@ -546,19 +546,19 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col gap-3 md:shrink-0 md:items-end">
             <div className="flex flex-wrap gap-2 md:gap-3">
               {/* System status */}
-              <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3">
+              <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/3 border border-white/5 text-emerald-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 All Systems Operational
               </div>
               {/* Quick date */}
-              <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-2.5">
+              <div className="px-3 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/3 border border-white/5 text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-2.5">
                 <Clock className="w-3.5 h-3.5" />
                 {new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
               </div>
             </div>
 
             {/* Auto-refresh controls */}
-            <div className="flex items-center gap-1.5 md:gap-2 p-1.5 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 flex-wrap">
+            <div className="flex items-center gap-1.5 md:gap-2 p-1.5 rounded-xl md:rounded-2xl bg-white/3 border border-white/5 flex-wrap">
               <RefreshCw className="w-3.5 h-3.5 text-zinc-600 mr-1" />
               <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 ml-0.5">
                 רענון אוטומטי
@@ -646,7 +646,7 @@ export default function AdminDashboardPage() {
 
           {/* Cost vs Growth bar chart */}
           <div className="xl:col-span-2 p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-br from-blue-600/3 to-transparent pointer-events-none" />
             <div className="relative">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
@@ -673,7 +673,7 @@ export default function AdminDashboardPage() {
 
           {/* Cost breakdown donut */}
           <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-br from-purple-600/3 to-transparent pointer-events-none" />
             <div className="relative h-full flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-purple-400">
@@ -760,7 +760,7 @@ export default function AdminDashboardPage() {
                 data.recentSignups.slice(0, 10).map((user) => (
                   <div
                     key={user.id}
-                    className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors group/row cursor-default"
+                    className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors group/row cursor-default"
                   >
                     {/* Avatar */}
                     <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-white/5 flex items-center justify-center shrink-0 text-[10px] font-black text-zinc-400 group-hover/row:border-white/10 transition-colors">
@@ -817,7 +817,7 @@ export default function AdminDashboardPage() {
                   return (
                     <div
                       key={event.id}
-                      className="flex items-start gap-3 px-4 py-3 rounded-2xl hover:bg-white/[0.03] transition-colors group/ev cursor-default"
+                      className="flex items-start gap-3 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors group/ev cursor-default"
                     >
                       {/* Action dot */}
                       <div className="w-1.5 h-1.5 rounded-full bg-current mt-1.5 shrink-0 opacity-60"

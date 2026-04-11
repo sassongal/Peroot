@@ -65,7 +65,7 @@ export function ScoreBreakdownDrawer({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-[100] flex items-end md:items-center md:justify-end"
+      className="fixed inset-0 z-100 flex items-end md:items-center md:justify-end"
       dir="rtl"
     >
       {/* Backdrop */}
@@ -78,7 +78,7 @@ export function ScoreBreakdownDrawer({
       {/* Panel */}
       <div
         className={cn(
-          'relative bg-[var(--glass-bg)] border border-[var(--glass-border)]',
+          'relative bg-(--glass-bg) border border-(--glass-border)',
           'w-full md:w-[480px] md:max-w-[90vw] md:h-full',
           'max-h-[90vh] md:max-h-none overflow-hidden',
           'rounded-t-[28px] md:rounded-t-none md:rounded-l-[28px]',
@@ -88,28 +88,28 @@ export function ScoreBreakdownDrawer({
       >
         {/* Mobile grab handle */}
         <div className="md:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-[var(--text-muted)]/30" />
+          <div className="w-10 h-1 rounded-full bg-(--text-muted)/30" />
         </div>
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 p-4 md:p-6 pb-4 border-b border-[var(--glass-border)]">
+        <div className="flex items-start justify-between gap-3 p-4 md:p-6 pb-4 border-b border-(--glass-border)">
           <div className="space-y-2 min-w-0 flex-1">
-            <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] break-words">{title}</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-(--text-primary) wrap-break-word">{title}</h2>
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-              <span className="text-3xl md:text-4xl font-black text-[var(--text-primary)]">{score.total}</span>
-              <span className="text-base md:text-lg text-[var(--text-muted)]">/100</span>
+              <span className="text-3xl md:text-4xl font-black text-(--text-primary)">{score.total}</span>
+              <span className="text-base md:text-lg text-(--text-muted)">/100</span>
               <span className={cn('px-2.5 md:px-3 py-1 rounded-full text-xs font-bold border', levelColor)}>
                 {score.label}
               </span>
             </div>
             {score.estimatedImpact && (
-              <p className="text-xs text-[var(--text-muted)] mt-2">{score.estimatedImpact}</p>
+              <p className="text-xs text-(--text-muted) mt-2">{score.estimatedImpact}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="סגור"
           >
             <X className="w-5 h-5" />
@@ -118,7 +118,7 @@ export function ScoreBreakdownDrawer({
 
         {/* Strengths + weaknesses summary */}
         {(score.strengths.length > 0 || score.topWeaknesses.length > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-6 py-4 border-b border-[var(--glass-border)]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-6 py-4 border-b border-(--glass-border)">
             {score.strengths.length > 0 && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-black text-emerald-500 uppercase tracking-wider">
@@ -156,7 +156,7 @@ export function ScoreBreakdownDrawer({
 
         {/* Per-dimension breakdown (scrollable) */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-wider">
+          <div className="text-[10px] font-black text-(--text-muted) uppercase tracking-wider">
             פירוק לפי קריטריון
           </div>
           {score.breakdown.map((dim) => (
@@ -207,10 +207,10 @@ function DimensionRow({ dim }: { dim: DimensionResult }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-[var(--text-primary)]">
+        <span className="text-sm font-semibold text-(--text-primary)">
           {label[dim.dimension] ?? dim.dimension}
         </span>
-        <span className="text-xs font-mono text-[var(--text-muted)]">
+        <span className="text-xs font-mono text-(--text-muted)">
           {dim.score}/{dim.maxScore}
         </span>
       </div>
@@ -246,7 +246,7 @@ function DimensionRow({ dim }: { dim: DimensionResult }) {
         </div>
       )}
       {dim.tip && dim.score < dim.maxScore && (
-        <div className="text-[11px] text-[var(--text-muted)] italic flex items-start gap-1.5">
+        <div className="text-[11px] text-(--text-muted) italic flex items-start gap-1.5">
           <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-500/60" aria-hidden="true" />
           {dim.tip}
         </div>

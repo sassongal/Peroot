@@ -343,7 +343,7 @@ export default function RevenueTab() {
               Revenue Intelligence Layer
             </span>
           </div>
-          <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Revenue Analytics
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -470,7 +470,7 @@ export default function RevenueTab() {
                     return (
                       <div
                         key={m.month}
-                        className="flex flex-col items-center gap-2 group flex-1 min-w-[2.5rem]"
+                        className="flex flex-col items-center gap-2 group flex-1 min-w-10"
                         title={`${m.label}: ${m.activeSubs} active subs, ${m.newSubs} new`}
                       >
                         <span className="text-[9px] font-black text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity tabular-nums">
@@ -611,7 +611,7 @@ export default function RevenueTab() {
                       <div
                         key={sub.id}
                         className={cn(
-                          "px-8 py-5 flex items-center gap-4 hover:bg-white/[0.02] transition-all",
+                          "px-8 py-5 flex items-center gap-4 hover:bg-white/2 transition-all",
                           isChurned && "opacity-60"
                         )}
                       >
@@ -680,7 +680,7 @@ export default function RevenueTab() {
                     return (
                       <div
                         key={ev.id}
-                        className="flex items-center justify-between gap-4 px-8 py-5 hover:bg-white/[0.02] transition-all duration-300 group"
+                        className="flex items-center justify-between gap-4 px-8 py-5 hover:bg-white/2 transition-all duration-300 group"
                       >
                         <div className="flex items-center gap-4">
                           <span

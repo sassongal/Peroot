@@ -217,10 +217,10 @@ export function ResultSection({
       )}
 
       {/* Header Card */}
-      <div className="glass-card p-6 rounded-xl border-[var(--glass-border)] flex items-start justify-between group">
+      <div className="glass-card p-6 rounded-xl border-(--glass-border) flex items-start justify-between group">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-serif text-[var(--text-primary)] mb-1">{t.result_section.title}</h2>
-          <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+          <h2 className="text-2xl font-serif text-(--text-primary) mb-1">{t.result_section.title}</h2>
+          <div className="flex items-center gap-3 text-xs text-(--text-muted)">
             <span>{t.result_section.ready}</span>
           </div>
         </div>
@@ -236,16 +236,16 @@ export function ResultSection({
       {/* 5.6 RTL: use flex-col lg:flex-row for variable panel stacking */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Result Area */}
-        <div className={cn("glass-card rounded-xl border-[var(--glass-border)] bg-white/60 dark:bg-black/40 overflow-hidden group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
+        <div className={cn("glass-card rounded-xl border-(--glass-border) bg-white/60 dark:bg-black/40 overflow-hidden group flex flex-col", placeholders.length > 0 ? "lg:flex-1" : "w-full")}>
 
           {/* Content area - loading skeleton OR shared BeforeAfterSplit */}
           {isLoading && !completion ? (
             <div className="p-8 space-y-4 animate-pulse" dir="rtl">
-              <div className="h-4 bg-[var(--glass-border)] rounded w-3/4" />
-              <div className="h-4 bg-[var(--glass-border)] rounded w-full" />
-              <div className="h-4 bg-[var(--glass-border)] rounded w-5/6" />
-              <div className="h-4 bg-[var(--glass-border)] rounded w-2/3" />
-              <div className="h-4 bg-[var(--glass-border)] rounded w-4/5" />
+              <div className="h-4 bg-(--glass-border) rounded w-3/4" />
+              <div className="h-4 bg-(--glass-border) rounded w-full" />
+              <div className="h-4 bg-(--glass-border) rounded w-5/6" />
+              <div className="h-4 bg-(--glass-border) rounded w-2/3" />
+              <div className="h-4 bg-(--glass-border) rounded w-4/5" />
             </div>
           ) : (
             <div className="p-4 flex-1">
@@ -278,7 +278,7 @@ export function ResultSection({
                 />
                 <button
                   onClick={() => handleCopy(displayCompletion)}
-                  className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-(--text-primary) transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title={t.result_section.copy_tooltip}
                   aria-label="העתק פרומפט"
                 >
@@ -297,7 +297,7 @@ export function ResultSection({
           {/* AI Platform Quick-Launch Bar */}
           {/* 5.2 Mobile: grid-cols-2 on mobile, flex on sm+ */}
           {!isLoading && (
-            <div className="px-4 py-4 border-t border-[var(--glass-border)] bg-linear-to-r from-black/[0.02] dark:from-white/2 to-transparent">
+            <div className="px-4 py-4 border-t border-(--glass-border) bg-linear-to-r from-black/2 dark:from-white/2 to-transparent">
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center" dir="rtl">
                 <span className="col-span-2 text-xs text-slate-500 text-center sm:inline sm:col-span-1 sm:ms-2 sm:text-start">פתח ב:</span>
 
@@ -331,7 +331,7 @@ export function ResultSection({
                     window.open("https://chat.openai.com/", "_blank");
                     toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-[var(--text-secondary)] hover:text-[#10a37f] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-(--text-secondary) hover:text-[#10a37f] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-ChatGPT"
                 >
                   <ChatGPTIcon className="w-4 h-4" />
@@ -344,7 +344,7 @@ export function ResultSection({
                     window.open("https://claude.ai/new", "_blank");
                     toast.success(`${t.toasts.copied} - Claude נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-[var(--text-secondary)] hover:text-[#d97706] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-(--text-secondary) hover:text-[#d97706] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-Claude"
                 >
                   <ClaudeIcon className="w-4 h-4" />
@@ -357,7 +357,7 @@ export function ResultSection({
                     window.open("https://gemini.google.com/", "_blank");
                     toast.success(`${t.toasts.copied} - Gemini נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-[var(--text-secondary)] hover:text-[#4285f4] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-(--text-secondary) hover:text-[#4285f4] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="העתק והפתח ב-Gemini"
                 >
                   <GeminiIcon className="w-4 h-4" />
@@ -369,7 +369,7 @@ export function ResultSection({
                     const text = encodeURIComponent(displayCompletion + "\n\n- נוצר עם Peroot | www.peroot.space");
                     window.open(`https://wa.me/?text=${text}`, "_blank");
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-[var(--text-secondary)] hover:text-[#25d366] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-(--text-secondary) hover:text-[#25d366] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                   title="שתף בוואטסאפ"
                 >
                   <WhatsAppIcon className="w-4 h-4" />
@@ -380,7 +380,7 @@ export function ResultSection({
             </div>
           )}
 
-          <div className="p-4 bg-[var(--glass-bg)] border-t border-[var(--glass-border)] mt-auto space-y-3">
+          <div className="p-4 bg-(--glass-bg) border-t border-(--glass-border) mt-auto space-y-3">
             {/*
               Action bar — two wrapping groups on one wrap-enabled row.
 
@@ -412,7 +412,7 @@ export function ResultSection({
                 {onReset && (
                   <button
                     onClick={onReset}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-[var(--glass-border)] transition-colors cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-(--glass-border) transition-colors cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                     title="לאפס ולהתחיל מחדש"
                     dir="rtl"
                   >
@@ -423,7 +423,7 @@ export function ResultSection({
                 {onResetToOriginal && (iterationCount ?? 0) > 0 && (
                   <button
                     onClick={onResetToOriginal}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                     title="חזור לפרומפט המקורי שלך"
                     dir="rtl"
                   >
@@ -436,7 +436,7 @@ export function ResultSection({
                 {onShare && (
                   <button
                     onClick={onShare}
-                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                     title="שתף"
                     aria-label="שתף"
                   >
@@ -446,7 +446,7 @@ export function ResultSection({
                 )}
                 <button
                   onClick={onSave}
-                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-[var(--glass-bg)] transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
                   title={t.result_section.save}
                   aria-label={t.result_section.save}
                 >
@@ -510,7 +510,7 @@ export function ResultSection({
                     onChange={(e) => setProWatermarkEnabled(e.target.checked)}
                     className="w-3.5 h-3.5 accent-amber-400 cursor-pointer"
                   />
-                  <span className="text-[10px] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+                  <span className="text-[10px] text-(--text-muted) group-hover:text-(--text-secondary) transition-colors">
                     העתק עם מיתוג Peroot
                   </span>
                 </label>
@@ -538,25 +538,25 @@ export function ResultSection({
             color. Pre-filled hints from prior prompts use the brand
             amber so they stand out as "history, not mandatory". */}
         {placeholders.length > 0 && (
-          <div className="glass-card p-5 rounded-xl border-[var(--glass-border)] bg-[var(--glass-bg)] flex flex-col gap-4 h-fit lg:w-72">
-            <div className="flex items-start gap-2 pb-3 border-b border-[var(--glass-border)]">
+          <div className="glass-card p-5 rounded-xl border-(--glass-border) bg-(--glass-bg) flex flex-col gap-4 h-fit lg:w-72">
+            <div className="flex items-start gap-2 pb-3 border-b border-(--glass-border)">
                <div className="bg-sky-500/20 text-sky-700 dark:text-sky-300 p-1.5 rounded-md mt-0.5">
                  <Plus className="w-4 h-4" />
                </div>
                <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-1.5">
-                   <span className="text-sm font-semibold text-[var(--text-primary)]">
+                   <span className="text-sm font-semibold text-(--text-primary)">
                      {t.result_section.variables_title}
                    </span>
                    <span
-                     className="cursor-help text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                     className="cursor-help text-(--text-muted) hover:text-(--text-secondary) transition-colors"
                      title="כל שדה מחליף את החלון הצבוע המתאים בתוך הפרומפט. הפרומפט מתעדכן בזמן אמת. אפשר לדלג על שדות — הם יישארו כפלייסהולדר עד שתמלא אותם."
                      aria-label="הסבר על משתנים"
                    >
                      <HelpCircle className="w-3.5 h-3.5" />
                    </span>
                  </div>
-                 <p className="text-[10px] text-[var(--text-muted)] mt-0.5 leading-relaxed">
+                 <p className="text-[10px] text-(--text-muted) mt-0.5 leading-relaxed">
                    מלא את השדות והפרומפט יתעדכן בזמן אמת
                  </p>
                </div>
@@ -586,7 +586,7 @@ export function ResultSection({
                  >
                     <label className="text-xs font-medium ms-1 flex items-center justify-between gap-2" dir="rtl">
                       <span
-                        className="text-[var(--text-primary)] truncate"
+                        className="text-(--text-primary) truncate"
                         title={ph}
                       >
                         {label}
@@ -606,12 +606,12 @@ export function ResultSection({
                       placeholder={exampleHint}
                       aria-label={label}
                       className={cn(
-                        "w-full border rounded-lg py-2.5 px-3 text-sm text-[var(--text-primary)] focus:outline-none transition-all placeholder:text-[var(--text-muted)]",
+                        "w-full border rounded-lg py-2.5 px-3 text-sm text-(--text-primary) focus:outline-none transition-all placeholder:text-(--text-muted)",
                         isFilled
-                          ? "bg-emerald-500/[0.04] dark:bg-emerald-400/[0.04] border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60"
+                          ? "bg-emerald-500/4 dark:bg-emerald-400/4 border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60"
                           : isPreFilled
-                            ? "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-500/20 focus:border-amber-500/50"
-                            : "bg-black/5 dark:bg-black/40 border-[var(--glass-border)] focus:border-sky-500/50",
+                            ? "bg-amber-500/5 dark:bg-amber-500/3 border-amber-500/20 focus:border-amber-500/50"
+                            : "bg-black/5 dark:bg-black/40 border-(--glass-border) focus:border-sky-500/50",
                         isHovered && (isFilled
                           ? "ring-2 ring-emerald-500/40 dark:ring-emerald-400/40"
                           : "ring-2 ring-sky-500/40 dark:ring-sky-400/40")
@@ -625,7 +625,7 @@ export function ResultSection({
                 user will encounter. Mirrors the same tokens used in the
                 rendered prompt so the legend doubles as a key for
                 reading the highlighted output. */}
-            <div className="flex items-center justify-around pt-3 mt-1 border-t border-[var(--glass-border)] text-[10px] text-[var(--text-muted)]" aria-label="מקרא מצבים">
+            <div className="flex items-center justify-around pt-3 mt-1 border-t border-(--glass-border) text-[10px] text-(--text-muted)" aria-label="מקרא מצבים">
               <div className="flex items-center gap-1.5" title="משתנה שעדיין לא מולא — מופיע כתווית כחולה בפרומפט">
                 <span className="w-2.5 h-2.5 rounded-sm bg-sky-500/15 border border-sky-500/50" aria-hidden="true" />
                 <span>ריק</span>

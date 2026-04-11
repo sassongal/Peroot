@@ -155,7 +155,7 @@ export function ScoringAnalyticsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <RefreshCw className="w-6 h-6 animate-spin text-[var(--text-muted)]" />
+        <RefreshCw className="w-6 h-6 animate-spin text-(--text-muted)" />
       </div>
     );
   }
@@ -165,7 +165,7 @@ export function ScoringAnalyticsTab() {
       <div className="text-center py-20 text-red-400">
         <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
         <p>{error || "אין נתונים"}</p>
-        <button onClick={fetchData} className="mt-3 text-sm underline text-[var(--text-muted)]">נסה שוב</button>
+        <button onClick={fetchData} className="mt-3 text-sm underline text-(--text-muted)">נסה שוב</button>
       </div>
     );
   }
@@ -176,11 +176,11 @@ export function ScoringAnalyticsTab() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-amber-500" />
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">ניתוח ציונים</h2>
+          <h2 className="text-lg font-bold text-(--text-primary)">ניתוח ציונים</h2>
         </div>
         <button
           onClick={fetchData}
-          className="p-2 rounded-lg hover:bg-white/10 text-[var(--text-muted)] transition-colors"
+          className="p-2 rounded-lg hover:bg-white/10 text-(--text-muted) transition-colors"
           title="רענן"
         >
           <RefreshCw className="w-4 h-4" />
@@ -203,12 +203,12 @@ export function ScoringAnalyticsTab() {
             const pct = (count / maxCount) * 100;
             return (
               <div key={level} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] text-[var(--text-muted)]">{count}</span>
+                <span className="text-[10px] text-(--text-muted)">{count}</span>
                 <div
                   className={cn("w-full rounded-t-md transition-all", LEVEL_COLORS[level] || "bg-slate-500/20")}
                   style={{ height: `${Math.max(pct, 4)}%` }}
                 />
-                <span className="text-[9px] text-[var(--text-muted)]">{LEVEL_LABELS[level] || level}</span>
+                <span className="text-[9px] text-(--text-muted)">{LEVEL_LABELS[level] || level}</span>
               </div>
             );
           })}
@@ -218,12 +218,12 @@ export function ScoringAnalyticsTab() {
       {/* Most Missing Dimensions */}
       <Section title="ממדים חסרים הכי נפוצים">
         {topMissing.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">אין נתונים</p>
+          <p className="text-sm text-(--text-muted)">אין נתונים</p>
         ) : (
           <div className="space-y-2">
             {topMissing.map(({ title, count }) => (
               <div key={title} className="flex items-center justify-between">
-                <span className="text-sm text-[var(--text-secondary)]">{title}</span>
+                <span className="text-sm text-(--text-secondary)">{title}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-2 bg-white/5 rounded-full overflow-hidden">
                     <div
@@ -231,7 +231,7 @@ export function ScoringAnalyticsTab() {
                       style={{ width: `${(count / (data.recentSample?.length || 1)) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-[var(--text-muted)] w-8 text-left">{count}</span>
+                  <span className="text-xs text-(--text-muted) w-8 text-left">{count}</span>
                 </div>
               </div>
             ))}
@@ -255,7 +255,7 @@ export function ScoringAnalyticsTab() {
       {/* Daily chart */}
       <Section title="שיפורים יומיים (30 יום)">
         {data.daily.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">אין נתונים</p>
+          <p className="text-sm text-(--text-muted)">אין נתונים</p>
         ) : (
           <div className="flex items-end gap-[2px] h-20">
             {data.daily.map(({ date, count }) => {
@@ -280,20 +280,20 @@ export function ScoringAnalyticsTab() {
 
 function KpiCard({ icon: Icon, label, value }: { icon: typeof Layers; label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 p-3 space-y-1">
-      <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+    <div className="rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-3 space-y-1">
+      <div className="flex items-center gap-1.5 text-(--text-muted)">
         <Icon className="w-3.5 h-3.5" />
         <span className="text-[10px] uppercase tracking-wider">{label}</span>
       </div>
-      <p className="text-xl font-bold text-[var(--text-primary)]">{value}</p>
+      <p className="text-xl font-bold text-(--text-primary)">{value}</p>
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 p-4 space-y-3">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
+    <div className="rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-4 space-y-3">
+      <h3 className="text-sm font-semibold text-(--text-primary)">{title}</h3>
       {children}
     </div>
   );
@@ -306,10 +306,10 @@ function BreakdownList({ items, labels }: { items: CountEntry[]; labels: Record<
     <div className="space-y-1.5">
       {sorted.map(({ value, count }) => (
         <div key={value} className="flex items-center justify-between text-xs">
-          <span className="text-[var(--text-secondary)]">{labels[value] || value}</span>
+          <span className="text-(--text-secondary)">{labels[value] || value}</span>
           <div className="flex items-center gap-2">
-            <span className="text-[var(--text-muted)]">{Math.round((count / total) * 100)}%</span>
-            <span className="text-[var(--text-muted)] w-6 text-left">{count}</span>
+            <span className="text-(--text-muted)">{Math.round((count / total) * 100)}%</span>
+            <span className="text-(--text-muted) w-6 text-left">{count}</span>
           </div>
         </div>
       ))}

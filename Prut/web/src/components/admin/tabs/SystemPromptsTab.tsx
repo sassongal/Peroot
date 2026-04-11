@@ -197,13 +197,13 @@ export function SystemPromptsTab() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[32px] border border-white/5">
           <div className="space-y-2">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent tracking-tighter">
+            <h1 className="text-5xl font-black bg-linear-to-r from-white to-zinc-500 bg-clip-text text-transparent tracking-tighter">
                System Prompts
             </h1>
             <p className="text-zinc-500 font-medium tracking-wide">{t.admin.prompts.title_desc}</p>
           </div>
           <div className="flex gap-4">
-             <Link href="/admin/engines" className="px-6 py-3 bg-white/[0.03] border border-white/5 text-blue-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-3 rounded-2xl hover:bg-white/5 transition-all">
+             <Link href="/admin/engines" className="px-6 py-3 bg-white/3 border border-white/5 text-blue-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-3 rounded-2xl hover:bg-white/5 transition-all">
                 <Cpu className="w-4 h-4" />
                 Logic Engines
              </Link>
@@ -233,7 +233,7 @@ export function SystemPromptsTab() {
               </div>
               <button 
                 onClick={loadPrompts}
-                className="p-5 bg-zinc-950 border border-white/5 rounded-[24px] hover:bg-white/[0.03] transition-all active:scale-95 group"
+                className="p-5 bg-zinc-950 border border-white/5 rounded-[24px] hover:bg-white/3 transition-all active:scale-95 group"
               >
                  <RefreshCw className={cn("w-6 h-6 text-zinc-600 group-hover:text-white", loading && "animate-spin")} />
               </button>
@@ -281,7 +281,7 @@ export function SystemPromptsTab() {
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="flex items-center gap-2 px-8 py-3 bg-white/[0.03] border border-white/5 text-zinc-500 hover:text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all"
+                            className="flex items-center gap-2 px-8 py-3 bg-white/3 border border-white/5 text-zinc-500 hover:text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all"
                           >
                             <X className="w-4 h-4" />
                             {t.admin.prompts.cancel}
@@ -309,7 +309,7 @@ export function SystemPromptsTab() {
                                 "flex items-center gap-2 px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5",
                                 openVersions[prompt.id] 
                                     ? "bg-blue-600 text-white shadow-3xl shadow-blue-600/20" 
-                                    : "bg-white/[0.03] text-zinc-500 hover:text-white"
+                                    : "bg-white/3 text-zinc-500 hover:text-white"
                             )}
                           >
                             <HistoryIcon className="w-4 h-4" />
@@ -328,7 +328,7 @@ export function SystemPromptsTab() {
                           className="w-full h-[600px] bg-zinc-950 border border-white/5 rounded-[32px] p-10 text-base font-mono text-emerald-500/90 resize-none focus:outline-none focus:border-blue-500/30 leading-relaxed shadow-inner"
                           dir="ltr"
                         />
-                        <div className="absolute top-6 right-8 text-[9px] font-black text-zinc-700 bg-white/[0.02] px-3 py-1.5 rounded-full border border-white/5">
+                        <div className="absolute top-6 right-8 text-[9px] font-black text-zinc-700 bg-white/2 px-3 py-1.5 rounded-full border border-white/5">
                             LIVE LOGIC EDITOR
                         </div>
                     </div>
@@ -337,7 +337,7 @@ export function SystemPromptsTab() {
                         <pre className="bg-zinc-950/80 rounded-[30px] p-10 text-xs font-mono text-zinc-500 overflow-x-auto whitespace-pre-wrap max-h-80 overflow-y-auto leading-relaxed custom-scrollbar">
                           {prompt.prompt}
                         </pre>
-                        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none rounded-b-[32px]" />
+                        <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-zinc-950 to-transparent pointer-events-none rounded-b-[32px]" />
                     </div>
                   )}
 
@@ -357,7 +357,7 @@ export function SystemPromptsTab() {
                         {versions[prompt.id]?.map((version) => (
                           <div
                             key={version.id}
-                            className="flex items-center justify-between bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 rounded-[24px] p-6 transition-all group/version"
+                            className="flex items-center justify-between bg-white/2 hover:bg-white/4 border border-white/5 rounded-[24px] p-6 transition-all group/version"
                           >
                             <div className="flex items-center gap-8">
                                 <div className="text-lg font-black text-zinc-700 w-12">v{version.version}</div>

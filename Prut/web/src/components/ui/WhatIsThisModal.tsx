@@ -41,7 +41,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 z-80 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -75,7 +75,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 end-4 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+          className="absolute top-4 end-4 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors cursor-pointer"
           aria-label="סגור"
         >
           <X className="w-5 h-5" />
@@ -85,8 +85,8 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
         <div className="overflow-y-auto overscroll-contain px-5 pb-6 pt-2 md:p-6 space-y-4">
           {/* Header */}
           <div className="text-center space-y-1.5">
-            <h2 className="text-xl font-serif font-bold text-[var(--text-primary)]">מה עושים פה?</h2>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+            <h2 className="text-xl font-serif font-bold text-(--text-primary)">מה עושים פה?</h2>
+            <p className="text-sm text-(--text-muted) leading-relaxed">
               <span className="text-amber-600 dark:text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
           </div>
@@ -94,13 +94,13 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           {/* 5 Modes */}
           <div className="space-y-1.5">
             {MODES.map(({ icon: Icon, title, desc, color, bg }) => (
-              <div key={title} className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
+              <div key={title} className="flex items-center gap-3 p-2.5 rounded-xl bg-(--glass-bg) border border-(--glass-border)">
                 <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
                   <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{title}</p>
-                  <p className="text-xs text-[var(--text-muted)] truncate">{desc}</p>
+                  <p className="text-sm font-bold text-(--text-primary) leading-tight">{title}</p>
+                  <p className="text-xs text-(--text-muted) truncate">{desc}</p>
                 </div>
               </div>
             ))}
@@ -110,7 +110,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           <div className="flex flex-col gap-2 pt-0.5">
             <button
               onClick={onClose}
-              className="w-full px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 rounded-2xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
               בואו ננסה!
@@ -118,7 +118,7 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
             <Link
               href="/features"
               onClick={onClose}
-              className="w-full px-6 py-2.5 rounded-2xl border border-[var(--glass-border)] text-[var(--text-muted)] text-sm font-medium hover:bg-[var(--glass-bg)] transition-colors flex items-center justify-center gap-2"
+              className="w-full px-6 py-2.5 rounded-2xl border border-(--glass-border) text-(--text-muted) text-sm font-medium hover:bg-(--glass-bg) transition-colors flex items-center justify-center gap-2"
             >
               כל היכולות שלנו
               <ArrowLeft className="w-3.5 h-3.5" />

@@ -95,7 +95,7 @@ function MetricCard({
   suffix?: string;
 }) {
   return (
-    <div className="flex flex-col gap-0.5 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+    <div className="flex flex-col gap-0.5 px-3 py-2 rounded-xl bg-white/2 border border-white/5">
       <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider">{label}</span>
       <div className="flex items-baseline gap-1.5">
         <span className="text-lg font-black text-white tabular-nums">
@@ -169,7 +169,7 @@ function StatusBadge({ status }: { status: ServiceStatus }) {
 
 function FeatureTag({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/[0.06] text-zinc-500">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-white/4 border border-white/6 text-zinc-500">
       {label}
     </span>
   );
@@ -200,7 +200,7 @@ function ActionButton({
     "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 shrink-0 cursor-pointer",
     variant === "primary"
       ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-      : "bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+      : "bg-white/4 hover:bg-white/8 border border-white/8 text-zinc-300 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
   );
 
   const content = (
@@ -352,12 +352,12 @@ function IntegrationCard({
       {extra}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 pt-1 border-t border-white/[0.04]">
+      <div className="flex flex-wrap gap-2 pt-1 border-t border-white/4">
         {actions}
       </div>
 
       {/* Setup */}
-      {setup && <div className="border-t border-white/[0.04] pt-3">{setup}</div>}
+      {setup && <div className="border-t border-white/4 pt-3">{setup}</div>}
     </div>
   );
 }

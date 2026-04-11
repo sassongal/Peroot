@@ -75,7 +75,7 @@ export function PwaInstallBanner() {
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="max-w-md mx-auto flex items-center gap-3 p-4 rounded-2xl border border-amber-500/30 bg-background/95 backdrop-blur-md shadow-lg">
-        <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/20 flex items-center justify-center">
+        <div className="w-10 h-10 shrink-0 rounded-xl bg-linear-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/20 flex items-center justify-center">
           {iosMode ? (
             <Share className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           ) : (
@@ -95,7 +95,7 @@ export function PwaInstallBanner() {
         {!iosMode && (
           <button
             onClick={handleInstall}
-            className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-sm font-bold hover:scale-[1.03] transition-transform"
+            className="shrink-0 px-4 py-2 rounded-xl bg-linear-to-r from-amber-500 to-yellow-500 text-black text-sm font-bold hover:scale-[1.03] transition-transform"
           >
             התקן
           </button>

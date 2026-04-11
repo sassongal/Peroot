@@ -235,7 +235,7 @@ export function TabCreation({
           <button
             onClick={generateBlog}
             disabled={generatingBlog}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-gradient-to-l from-amber-600 to-amber-500 text-white font-black text-sm uppercase tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-amber-600/20"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-linear-to-l from-amber-600 to-amber-500 text-white font-black text-sm uppercase tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-amber-600/20"
           >
             {generatingBlog ? (
               <><RefreshCw className="w-4 h-4 animate-spin" />מייצר תוכן...</>
@@ -268,7 +268,7 @@ export function TabCreation({
           <button
             onClick={generatePrompts}
             disabled={generatingPrompts}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-gradient-to-l from-amber-600 to-amber-500 text-white font-black text-sm uppercase tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-amber-600/20"
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-linear-to-l from-amber-600 to-amber-500 text-white font-black text-sm uppercase tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-amber-600/20"
           >
             {generatingPrompts ? (
               <><RefreshCw className="w-4 h-4 animate-spin" />מייצר תוכן...</>

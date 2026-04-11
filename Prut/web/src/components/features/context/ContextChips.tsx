@@ -95,7 +95,7 @@ export function ContextChips({ attachments, onRemove, onRetry, maxFiles = 3, tok
 
         {/* Limits hint */}
         {attachments.length > 0 && attachments.length < maxFiles && (
-          <span className="text-[var(--text-muted)]">
+          <span className="text-(--text-muted)">
             עד {maxFiles} קבצים · קובץ עד 10MB · תמונה עד 5MB
           </span>
         )}

@@ -153,7 +153,7 @@ export function ActivityFeedTab() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-white to-slate-500 bg-clip-text text-transparent tracking-tighter">
+            <h1 className="text-5xl font-black bg-linear-to-r from-white to-slate-500 bg-clip-text text-transparent tracking-tighter">
                Activity Audit
             </h1>
             <p className="text-slate-400 font-medium tracking-wide">ניטור מלא של כל הטרנזקציות ומעשי המנהלים במערכת</p>
@@ -222,7 +222,7 @@ export function ActivityFeedTab() {
                 "px-5 py-2.5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border",
                 adminOnly
                   ? "bg-amber-500/15 border-amber-500/30 text-amber-400 shadow-lg shadow-amber-500/10"
-                  : "bg-white/[0.03] border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                  : "bg-white/3 border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/5"
               )}
             >
               <ShieldAlert className="w-4 h-4" />
@@ -251,7 +251,7 @@ export function ActivityFeedTab() {
                 const isAdminAction = ADMIN_ACTIONS.includes(log.action.toLowerCase()) || log.details?.is_admin === true;
 
                 return (
-                  <div key={log.id} className="group p-6 hover:bg-white/[0.03] transition-all duration-300">
+                  <div key={log.id} className="group p-6 hover:bg-white/3 transition-all duration-300">
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
                       <div className={cn("p-4 rounded-[22px] border transition-transform group-hover:scale-110", colorClasses)}>
                         <Icon className="w-6 h-6" />

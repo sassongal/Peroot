@@ -112,7 +112,7 @@ export default async function SharedPromptPage({ params }: Props) {
         </Link>
 
         <div className="glass-card rounded-xl border border-white/10 overflow-hidden">
-          <div className="p-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
+          <div className="p-4 bg-white/2 border-b border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-400 bg-white/5 px-3 py-1 rounded-full">
                 {prompt.category}

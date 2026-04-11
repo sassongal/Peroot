@@ -59,9 +59,9 @@ export function DidYouKnowBanner() {
       )}
       dir={locale === "en" ? "ltr" : "rtl"}
     >
-      <div className="relative flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15 group">
+      <div className="relative flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/6 border border-amber-500/15 group">
         {/* Icon */}
-        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 mt-0.5">
+        <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 mt-0.5">
           <Lightbulb className="w-4 h-4 text-amber-400" />
         </div>
 
@@ -70,7 +70,7 @@ export function DidYouKnowBanner() {
           <span className="text-[11px] font-bold text-amber-400 tracking-wide">
             {label}
           </span>
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-0.5">
+          <p className="text-sm text-(--text-secondary) leading-relaxed mt-0.5">
             {facts[factIndex]}
           </p>
         </div>
@@ -78,7 +78,7 @@ export function DidYouKnowBanner() {
         {/* Close */}
         <button
           onClick={dismiss}
-          className="flex-shrink-0 p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100"
+          className="shrink-0 p-1 rounded-lg text-(--text-muted) hover:text-(--text-secondary) hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100"
           aria-label={locale === "en" ? "Close" : "סגור"}
         >
           <X className="w-3.5 h-3.5" />

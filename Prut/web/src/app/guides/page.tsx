@@ -56,7 +56,7 @@ function PlatformCardComponent({ card }: { card: PlatformCard }) {
   return (
     <Link
       href={`/guides/${card.slug}`}
-      className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-opacity-60 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg"
+      className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-(--glass-border) bg-(--glass-bg) hover:border-opacity-60 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg"
       style={{
         "--card-color": card.color,
         borderColor: `${card.color}15`,
@@ -71,7 +71,7 @@ function PlatformCardComponent({ card }: { card: PlatformCard }) {
       <div className="flex items-center gap-3">
         <span className="text-2xl">{card.icon}</span>
         <div>
-          <h3 className="font-bold text-foreground group-hover:text-[var(--card-color)] transition-colors" style={{ "--card-color": card.color } as React.CSSProperties}>
+          <h3 className="font-bold text-foreground group-hover:text-(--card-color) transition-colors" style={{ "--card-color": card.color } as React.CSSProperties}>
             {card.title}
           </h3>
           <span className="text-xs text-muted-foreground">{card.platform}</span>
@@ -154,7 +154,7 @@ export default function GuidesPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-l from-amber-500/90 to-orange-500/90 text-white font-bold text-sm hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-l from-amber-500/90 to-orange-500/90 text-white font-bold text-sm hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
             >
               נסה עכשיו בחינם
             </Link>

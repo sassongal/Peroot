@@ -170,14 +170,14 @@ export function TabContent() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.03]">
+          <tbody className="divide-y divide-white/3">
             {loading && items.length === 0 ? (
               <tr><td colSpan={7} className="px-5 py-16 text-center"><RefreshCw className="w-8 h-8 animate-spin text-zinc-700 mx-auto" /></td></tr>
             ) : items.length === 0 ? (
               <tr><td colSpan={7} className="px-5 py-16 text-center text-zinc-700 font-black uppercase tracking-widest text-[9px]">אין תוצאות</td></tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id} className={cn("hover:bg-white/[0.02] transition-colors", selected.has(item.id) && "bg-white/[0.03]")}>
+                <tr key={item.id} className={cn("hover:bg-white/2 transition-colors", selected.has(item.id) && "bg-white/3")}>
                   <td className="px-5 py-3.5">
                     <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} className="w-4 h-4 rounded bg-zinc-900 border border-white/10 accent-amber-500" />
                   </td>

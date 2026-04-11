@@ -185,8 +185,8 @@ export function ChainPreview({
                 className={cn(
                   "border rounded-xl transition-all",
                   isEditing
-                    ? "border-amber-500/40 bg-amber-500/[0.03]"
-                    : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]",
+                    ? "border-amber-500/40 bg-amber-500/3"
+                    : "border-white/10 bg-white/2 hover:bg-white/4",
                   dragIndex === idx && "opacity-50 border-amber-500/30"
                 )}
                 draggable={!isEditing}

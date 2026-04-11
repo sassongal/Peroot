@@ -46,13 +46,13 @@ const TABS: TabConfig[] = [
 function TabSkeleton() {
   return (
     <div className="flex flex-col gap-6 py-12 px-2 animate-pulse" dir="rtl">
-      <div className="h-10 w-64 rounded-2xl bg-white/[0.04]" />
+      <div className="h-10 w-64 rounded-2xl bg-white/4" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-32 rounded-3xl bg-white/[0.03]" />
+          <div key={i} className="h-32 rounded-3xl bg-white/3" />
         ))}
       </div>
-      <div className="h-64 rounded-3xl bg-white/[0.03]" />
+      <div className="h-64 rounded-3xl bg-white/3" />
     </div>
   );
 }

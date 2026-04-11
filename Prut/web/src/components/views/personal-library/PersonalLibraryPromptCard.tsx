@@ -144,11 +144,11 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
       onDrop={(event) => handlePersonalDrop(event, prompt)}
       className={cn(
         "group rounded-xl border transition-all duration-200",
-        "border-white/8 bg-white/[0.025] hover:bg-white/[0.04]",
+        "border-white/8 bg-white/2.5 hover:bg-white/4",
         isDragging && "opacity-50 scale-[0.98]",
         isDragOver && "border-amber-500/40 bg-amber-500/5",
-        isSelected && "border-blue-500/40 bg-blue-500/[0.06]",
-        isExpanded && "border-white/15 bg-white/[0.04]"
+        isSelected && "border-blue-500/40 bg-blue-500/6",
+        isExpanded && "border-white/15 bg-white/4"
       )}
     >
       {/* Collapsed Row */}
@@ -174,7 +174,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
         >
           {isSelected
             ? <CheckSquare className="w-4 h-4 text-blue-400" />
-            : <Square className="w-4 h-4 text-[var(--text-muted)]" />}
+            : <Square className="w-4 h-4 text-(--text-muted)" />}
         </button>
 
         {/* Pin indicator */}
@@ -190,7 +190,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
         {/* Title + Template badge + (mobile) DateBadge */}
         <div className="flex-1 min-w-0" dir="rtl">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-[var(--text-primary)] font-medium truncate">
+            <span className="text-sm text-(--text-primary) font-medium truncate">
               {prompt.title}
             </span>
             {prompt.is_template && (
@@ -201,7 +201,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
           </div>
           {/* Mobile-only meta line — dates + category always visible on small screens.
               Desktop uses the inline md:flex row below. */}
-          <div className="flex md:hidden items-center gap-2 text-[10px] text-[var(--text-muted)] mt-0.5">
+          <div className="flex md:hidden items-center gap-2 text-[10px] text-(--text-muted) mt-0.5">
             <DateBadge mode="compact" entity={entity} />
             <span className="opacity-50">·</span>
             <span className="truncate">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
@@ -215,9 +215,9 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
         </div>
 
         {/* Meta: use count + category + date (desktop) */}
-        <span className="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)] shrink-0">
+        <span className="hidden md:flex items-center gap-2 text-xs text-(--text-muted) shrink-0">
           {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
-          <span className="px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+          <span className="px-1.5 py-0.5 rounded bg-(--glass-bg) text-(--text-muted)">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
           <DateBadge mode="compact" entity={entity} />
         </span>
 
@@ -231,7 +231,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
             onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }}
             title="העתק"
             aria-label="העתק פרומפט"
-            className="p-2 md:p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
+            className="p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
           >
             <Copy className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
@@ -239,7 +239,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
             onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onUsePrompt(prompt); }}
             title="השתמש"
             aria-label="השתמש בפרומפט"
-            className="p-2 md:p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
+            className="p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
           >
             <ArrowRight className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
@@ -248,13 +248,13 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
               onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : prompt.id); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
               title="עוד"
               aria-label="פעולות נוספות"
-              className="p-2 md:p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
+              className="p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
             >
               <MoreHorizontal className="w-4 h-4 md:w-3.5 md:h-3.5" />
             </button>
             {isMenuOpen && (
               <div
-                className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-[var(--glass-border)] rounded-xl shadow-2xl py-1 min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-150"
+                className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-150"
                 onClick={(e) => e.stopPropagation()}
               >
                 {showMoveSubMenu ? (
@@ -262,11 +262,11 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                     {/* Sub-menu header / back button */}
                     <button
                       onClick={() => { setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-muted)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-muted) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
                     >
                       <ChevronRight className="w-3.5 h-3.5" /> העבר לתיקייה
                     </button>
-                    <div className="h-px bg-[var(--glass-bg)] my-1" />
+                    <div className="h-px bg-(--glass-bg) my-1" />
                     {/* Folder list */}
                     {allPersonalCategories.map((cat) => {
                       const isCurrent = (prompt.personal_category || PERSONAL_DEFAULT_CATEGORY) === cat;
@@ -284,7 +284,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                           }}
                           className={cn(
                             "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-black/5 dark:bg-white/10",
-                            isCurrent ? "text-amber-600 dark:text-amber-400 cursor-default" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            isCurrent ? "text-amber-600 dark:text-amber-400 cursor-default" : "text-(--text-secondary) hover:text-(--text-primary)"
                           )}
                         >
                           <Folder className="w-3.5 h-3.5 shrink-0" />
@@ -293,7 +293,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                         </button>
                       );
                     })}
-                    <div className="h-px bg-[var(--glass-bg)] my-1" />
+                    <div className="h-px bg-(--glass-bg) my-1" />
                     {/* New folder inline creation */}
                     {showNewMoveInlineInput ? (
                       <div className="px-3 py-2 flex flex-col gap-1.5">
@@ -325,7 +325,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                             }
                           }}
                           placeholder="שם תיקייה חדשה"
-                          className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-lg px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-black/15 dark:border-white/30"
+                          className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-lg px-2 py-1 text-xs text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-black/15 dark:border-white/30"
                         />
                         <div className="flex gap-1">
                           <button
@@ -345,13 +345,13 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                               setShowNewMoveInlineInput(false);
                               setNewMoveInlineName("");
                             }}
-                            className="flex-1 flex items-center justify-center gap-1 py-1 bg-black/5 dark:bg-white/10 rounded text-xs text-[var(--text-primary)] hover:bg-white/20"
+                            className="flex-1 flex items-center justify-center gap-1 py-1 bg-black/5 dark:bg-white/10 rounded text-xs text-(--text-primary) hover:bg-white/20"
                           >
                             <Check className="w-3 h-3" /> צור
                           </button>
                           <button
                             onClick={() => { setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
-                            className="flex-1 flex items-center justify-center gap-1 py-1 border border-[var(--glass-border)] rounded text-xs text-[var(--text-muted)] hover:bg-black/5 dark:bg-white/10"
+                            className="flex-1 flex items-center justify-center gap-1 py-1 border border-(--glass-border) rounded text-xs text-(--text-muted) hover:bg-black/5 dark:bg-white/10"
                           >
                             <X className="w-3 h-3" /> ביטול
                           </button>
@@ -360,7 +360,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                     ) : (
                       <button
                         onClick={() => setShowNewMoveInlineInput(true)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
                       >
                         <Plus className="w-3.5 h-3.5" /> תיקייה חדשה
                       </button>
@@ -369,37 +369,37 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                 ) : (
                   <>
                     {/* Group 1: Actions */}
-                    <button onClick={() => { onUsePrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { onUsePrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <ArrowRight className="w-3.5 h-3.5" /> השתמש
                     </button>
-                    <button onClick={() => { onCopyText(prompt.prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { onCopyText(prompt.prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Copy className="w-3.5 h-3.5" /> העתק
                     </button>
-                    <button onClick={() => { onCopyText(prompt.prompt); toast.success("קישור הועתק!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { onCopyText(prompt.prompt); toast.success("קישור הועתק!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Link2 className="w-3.5 h-3.5" /> שתף
                     </button>
-                    <div className="h-px bg-[var(--glass-bg)] my-1" />
+                    <div className="h-px bg-(--glass-bg) my-1" />
                     {/* Group 2: Edit */}
-                    <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { startEditingPersonalPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Pencil className="w-3.5 h-3.5" /> ערוך
                     </button>
-                    <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { openStyleEditor(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Wand2 className="w-3.5 h-3.5" /> עיצוב
                     </button>
-                    <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Plus className="w-3.5 h-3.5" /> שכפל
                     </button>
-                    <div className="h-px bg-[var(--glass-bg)] my-1" />
+                    <div className="h-px bg-(--glass-bg) my-1" />
                     {/* Group 3: Organize */}
                     <button
                       onClick={() => { setShowMoveSubMenu(true); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
                     >
                       <FolderInput className="w-3.5 h-3.5" />
                       <span className="flex-1 text-right">העבר לתיקייה</span>
-                      <ChevronLeft className="w-3 h-3 text-[var(--text-muted)]" />
+                      <ChevronLeft className="w-3 h-3 text-(--text-muted)" />
                     </button>
-                    <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { togglePin(prompt.id); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Pin className="w-3.5 h-3.5" /> {prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
                     </button>
                     <button
@@ -407,17 +407,17 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                       title={favStarTitle}
                       aria-label={favStarTitle}
                       onClick={() => { handleToggleFavorite("personal", prompt.id); setOpenMenuId(null); }}
-                      className="w-full flex items-start gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)] text-start"
+                      className="w-full flex items-start gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary) text-start"
                     >
                       <Star className={cn("w-3.5 h-3.5 shrink-0 mt-0.5", isFavorite && "fill-yellow-300 text-yellow-300")} />
                       <span className="flex-1 text-right leading-snug">{favStarTitle}</span>
                     </button>
-                    <button onClick={() => { toggleSelection(prompt.id); shared.setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { toggleSelection(prompt.id); shared.setSelectionMode(true); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <Square className="w-3.5 h-3.5" /> בחר
                     </button>
-                    <div className="h-px bg-[var(--glass-bg)] my-1" />
+                    <div className="h-px bg-(--glass-bg) my-1" />
                     {/* Group 4: Info */}
-                    <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]">
+                    <button onClick={() => { setVersionHistoryPrompt(prompt); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)">
                       <History className="w-3.5 h-3.5" /> גרסאות
                     </button>
                     <button
@@ -432,11 +432,11 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                         toast.success("יצוא הושלם");
                         setOpenMenuId(null);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10 hover:text-[var(--text-primary)]"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
                     >
                       <Download className="w-3.5 h-3.5" /> ייצוא
                     </button>
-                    <div className="h-px bg-[var(--glass-bg)] my-1" />
+                    <div className="h-px bg-(--glass-bg) my-1" />
                     {/* Group 5: Danger */}
                     <button
                       onClick={async () => {
@@ -460,7 +460,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
 
         {/* Expand chevron */}
         <ChevronDown className={cn(
-          "w-4 h-4 text-[var(--text-muted)] shrink-0 transition-transform duration-200",
+          "w-4 h-4 text-(--text-muted) shrink-0 transition-transform duration-200",
           isExpanded && "rotate-180"
         )} />
       </div>
@@ -476,21 +476,21 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                 dir="rtl"
                 value={editingTitle}
                 onChange={(e) => setEditingTitle(e.target.value)}
-                className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30"
+                className="w-full bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-3 text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30"
                 placeholder="כותרת לפרומפט"
               />
               <textarea
                 dir="rtl"
                 value={editingUseCase}
                 onChange={(e) => setEditingUseCase(e.target.value)}
-                className="w-full h-16 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-secondary)] focus:outline-none focus:border-black/15 dark:border-white/30 resize-none"
+                className="w-full h-16 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-3 text-sm text-(--text-secondary) focus:outline-none focus:border-black/15 dark:border-white/30 resize-none"
                 placeholder="תיאור קצר"
               />
               <div className="flex items-center gap-2">
                 <button onClick={saveEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-xs rounded-lg font-medium hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Check className="w-3.5 h-3.5" /> שמור
                 </button>
-                <button onClick={cancelEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--glass-border)] text-[var(--text-muted)] text-xs rounded-lg hover:bg-[var(--glass-bg)] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={cancelEditingPersonalPrompt} className="flex items-center gap-1.5 px-3 py-1.5 border border-(--glass-border) text-(--text-muted) text-xs rounded-lg hover:bg-(--glass-bg) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <X className="w-3.5 h-3.5" /> ביטול
                 </button>
               </div>
@@ -500,7 +500,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
               {/* Prompt text */}
               <SafeHtml
                 html={toStyledHtml(styledMarkup)}
-                className="text-sm text-[var(--text-secondary)] leading-relaxed rounded-lg bg-black/5 dark:bg-black/20 p-3 border border-[var(--glass-border)]"
+                className="text-sm text-(--text-secondary) leading-relaxed rounded-lg bg-black/5 dark:bg-black/20 p-3 border border-(--glass-border)"
                 dir="rtl"
               />
 
@@ -508,7 +508,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
               {prompt.tags && prompt.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {prompt.tags.map(tag => (
-                    <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-white/8 text-[var(--text-secondary)] border border-white/8">
+                    <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-white/8 text-(--text-secondary) border border-white/8">
                       <Tag className="w-2.5 h-2.5 me-1 opacity-50" />
                       {tag}
                     </span>
@@ -520,12 +520,12 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                   the Star at the top of the card is the single source
                   of sentiment now). */}
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                <div className="flex items-center gap-2 text-(--text-muted)">
                   {prompt.use_count > 0
                     ? <span className="text-emerald-400/80">שומש {prompt.use_count} פעמים</span>
                     : <span className="text-blue-400/80">חדש</span>
                   }
-                  <span className="hidden md:inline text-[var(--text-muted)]">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
+                  <span className="hidden md:inline text-(--text-muted)">{prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}</span>
                 </div>
                 <button
                   onClick={() => handleToggleFavorite('personal', prompt.id)}
@@ -533,7 +533,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                     "p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                     isFavorite
                       ? "text-amber-500 hover:bg-amber-500/10"
-                      : "text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10"
+                      : "text-(--text-muted) hover:text-amber-500 hover:bg-amber-500/10"
                   )}
                   title={favStarTitle}
                   aria-label={favStarTitle}
@@ -562,7 +562,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                   )}
                   <div
                     className={cn(
-                      "rounded-xl border border-amber-500/20 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
+                      "rounded-xl border border-amber-500/20 bg-linear-to-b from-black/60 to-black/40 backdrop-blur-sm relative z-20 transition-all duration-300",
                       styleEditorExpanded ? "fixed inset-4 z-50 overflow-auto p-6" : "p-4"
                     )}
                     onKeyDown={(e) => { if (e.key === 'Escape' && styleEditorExpanded) setStyleEditorExpanded(false); }}
@@ -570,40 +570,40 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <Wand2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">עורך עיצוב</span>
+                        <span className="text-sm font-semibold text-(--text-primary)">עורך עיצוב</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setStyleEditorExpanded(!styleEditorExpanded)} className="p-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={styleEditorExpanded ? "מזער" : "הגדל"}>
+                        <button onClick={() => setStyleEditorExpanded(!styleEditorExpanded)} className="p-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={styleEditorExpanded ? "מזער" : "הגדל"}>
                           {styleEditorExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                         </button>
-                        <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="p-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                        <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="p-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
+                        <span className="text-[10px] text-(--text-muted) uppercase tracking-wider me-2 shrink-0">צבע טקסט</span>
                         {Object.keys(STYLE_TEXT_COLORS).map((color) => (
-                          <button key={`text-${color}`} onClick={() => applyStyleToken("c", color)} className="w-7 h-7 rounded-lg border border-[var(--glass-border)] hover:border-black/15 dark:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={color}>
+                          <button key={`text-${color}`} onClick={() => applyStyleToken("c", color)} className="w-7 h-7 rounded-lg border border-(--glass-border) hover:border-black/15 dark:border-white/30 hover:scale-110 transition-all flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none" title={color}>
                             <span className={cn("font-bold text-sm", STYLE_TEXT_COLORS[color])}>A</span>
                           </button>
                         ))}
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider me-2 shrink-0">היילייט</span>
+                        <span className="text-[10px] text-(--text-muted) uppercase tracking-wider me-2 shrink-0">היילייט</span>
                         {Object.keys(STYLE_HIGHLIGHT_COLORS).map((color) => (
-                          <button key={`hl-${color}`} onClick={() => applyStyleToken("hl", color)} className={cn("h-7 px-2 rounded-lg border border-[var(--glass-border)] hover:border-black/15 dark:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", STYLE_HIGHLIGHT_COLORS[color])}>
+                          <button key={`hl-${color}`} onClick={() => applyStyleToken("hl", color)} className={cn("h-7 px-2 rounded-lg border border-(--glass-border) hover:border-black/15 dark:border-white/30 hover:scale-105 transition-all text-xs font-medium focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", STYLE_HIGHLIGHT_COLORS[color])}>
                             HL
                           </button>
                         ))}
                         <div className="w-px h-5 bg-black/5 dark:bg-white/10 mx-1" />
-                        <button onClick={clearStyleTokens} className="h-7 px-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                        <button onClick={clearStyleTokens} className="h-7 px-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                           <Eraser className="w-3 h-3" /><span className="text-xs">נקה</span>
                         </button>
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider me-2 shrink-0">משתנים</span>
+                        <span className="text-[10px] text-(--text-muted) uppercase tracking-wider me-2 shrink-0">משתנים</span>
                         {quickInserts.map((qi) => {
                           const Icon = qi.icon;
                           return (
@@ -614,7 +614,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                         })}
                       </div>
                     </div>
-                    <div className="text-[10px] text-[var(--text-muted)] mb-2 flex items-center gap-1">
+                    <div className="text-[10px] text-(--text-muted) mb-2 flex items-center gap-1">
                       <Type className="w-3 h-3" />
                       <span>סמנ/י טקסט ולחצ/י על צבע או היילייט כדי לעצב</span>
                     </div>
@@ -623,13 +623,13 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                       dir="rtl"
                       value={styleDraft}
                       onChange={(e) => setStyleDraft(e.target.value)}
-                      className={cn("w-full bg-black/40 border border-[var(--glass-border)] rounded-xl p-4 text-sm text-[var(--text-primary)] leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors", styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y")}
+                      className={cn("w-full bg-black/40 border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-primary) leading-relaxed focus:outline-none focus:border-amber-500/30 transition-colors", styleEditorExpanded ? "h-[50vh] resize-y" : "h-32 resize-y")}
                       placeholder="הטקסט של הפרומפט..."
                     />
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-[10px] text-slate-600">{styleDraft.length} תווים</span>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:bg-[var(--glass-bg)] text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                        <button onClick={() => { closeStyleEditor(); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-muted) hover:bg-(--glass-bg) text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                           סגור
                         </button>
                         <button onClick={() => { saveStylePrompt(prompt.id); setStyleEditorExpanded(false); }} className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
@@ -642,11 +642,11 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
               )}
 
               {/* Full action buttons row */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[var(--glass-border)]">
+              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-(--glass-border)">
                 <button onClick={() => { bumpPersonalLibraryLastUsed?.(prompt.id); onUsePrompt(prompt); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-slate-200 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Plus className="w-3 h-3" /> השתמש
                 </button>
-                <button onClick={() => { bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={() => { bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Copy className="w-3 h-3" /> העתק
                 </button>
                 {/* Anchor 3 — Export to PDF. The personal library row is its
@@ -658,18 +658,18 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                   original={prompt.prompt}
                   enhanced={prompt.prompt}
                   createdAt={typeof prompt.created_at === 'number' ? new Date(prompt.created_at).toISOString() : (prompt.created_at as string | undefined)}
-                  className="!p-1.5 !min-h-0 !min-w-0 !w-7 !h-7"
+                  className="p-1.5! min-h-0! min-w-0! w-7! h-7!"
                 />
-                <button onClick={() => openStyleEditor(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={() => openStyleEditor(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Wand2 className="w-3 h-3" /> עיצוב
                 </button>
-                <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={async () => { await duplicatePrompt(prompt); toast.success("פרומפט שוכפל!"); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Plus className="w-3 h-3" /> שכפל
                 </button>
-                <button onClick={() => setVersionHistoryPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={() => setVersionHistoryPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <History className="w-3 h-3" /> גרסאות
                 </button>
-                <button onClick={() => startEditingPersonalPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+                <button onClick={() => startEditingPersonalPrompt(prompt)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
                   <Pencil className="w-3 h-3" /> ערוך
                 </button>
                 <button
@@ -677,7 +677,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
                   onClick={() => handleToggleFavorite("personal", prompt.id)}
                   title={favStarTitle}
                   aria-label={favStarTitle}
-                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-black/5 dark:bg-white/10")}
+                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none", isFavorite ? "border-yellow-300/30 text-yellow-300 bg-yellow-300/5" : "border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:bg-white/10")}
                 >
                   <Star className={cn("w-3 h-3", isFavorite && "fill-yellow-300")} /> מועדף
                 </button>

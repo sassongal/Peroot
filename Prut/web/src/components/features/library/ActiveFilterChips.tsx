@@ -34,7 +34,7 @@ export function ActiveFilterChips({
 
   return (
     <div className={cn("flex items-center gap-1.5 flex-wrap", className)} dir="rtl">
-      <span className="text-[10px] text-[var(--text-muted)] shrink-0">פילטרים:</span>
+      <span className="text-[10px] text-(--text-muted) shrink-0">פילטרים:</span>
 
       {searchQuery?.trim() && (
         <Chip label={`חיפוש: ${searchQuery.trim()}`} onRemove={onClearSearch} />

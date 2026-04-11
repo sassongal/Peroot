@@ -71,7 +71,7 @@ function MarqueeRow({
   return (
     <div className="group/track relative overflow-hidden" dir="ltr">
       <div
-        className="flex w-max items-center gap-10 md:gap-14 marquee-track group-hover/track:[animation-play-state:paused]"
+        className="flex w-max items-center gap-10 md:gap-14 marquee-track group-hover/track:paused"
         style={{
           animationName: direction === "left" ? "peroot-marquee-left" : "peroot-marquee-right",
           animationDuration: `${durationSeconds}s`,
@@ -133,7 +133,7 @@ function SupportedPlatformsImpl() {
       `}</style>
 
       <div className="flex items-center justify-center mb-3 px-4">
-        <span className="text-xs font-medium text-[var(--text-muted)] tracking-wide">
+        <span className="text-xs font-medium text-(--text-muted) tracking-wide">
           לכל מנוע שפה משלו. פרוט מדבר את כולן.
         </span>
       </div>

@@ -116,7 +116,7 @@ export function TabSettings({ stats }: { stats: ContentFactoryStats | null }) {
         <button
           onClick={saveSettings}
           disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-l from-amber-600 to-amber-500 text-white font-black text-[11px] uppercase tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all active:scale-95 disabled:opacity-60 shadow-lg shadow-amber-600/20"
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-linear-to-l from-amber-600 to-amber-500 text-white font-black text-[11px] uppercase tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all active:scale-95 disabled:opacity-60 shadow-lg shadow-amber-600/20"
         >
           {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? "שומר..." : "שמור הגדרות"}
@@ -141,7 +141,7 @@ export function TabSettings({ stats }: { stats: ContentFactoryStats | null }) {
                       {isLow && <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
                       <span className="text-sm font-bold text-zinc-300 truncate">{cat.name}</span>
                     </div>
-                    <div className="flex-1 h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-white/4 rounded-full overflow-hidden">
                       <div
                         className={cn("h-full rounded-full transition-all duration-700", CATEGORY_COLORS[i % CATEGORY_COLORS.length])}
                         style={{ width: `${Math.max(pct, 2)}%` }}

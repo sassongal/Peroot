@@ -217,7 +217,7 @@ function PromptCard({
       {/* Prompt text */}
       <div
         className={cn(
-          "text-sm text-zinc-300 font-medium leading-relaxed bg-white/[0.02] rounded-2xl p-5 border border-white/5",
+          "text-sm text-zinc-300 font-medium leading-relaxed bg-white/2 rounded-2xl p-5 border border-white/5",
           !expanded && isLong && "line-clamp-3"
         )}
       >
@@ -412,7 +412,7 @@ export default function ModerationPage() {
                 Content Moderation Layer
               </span>
             </div>
-            <h1 className="text-5xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+            <h1 className="text-5xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
               Moderation Queue
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-base max-w-xl">

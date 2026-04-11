@@ -101,7 +101,7 @@ function MetricCard({ label, value, icon: Icon, color, delta, sub }: {
     amber: "from-amber-600/10 to-amber-900/5 text-amber-400 border-amber-500/10",
   };
   return (
-    <div className={cn("p-5 rounded-2xl border bg-gradient-to-br transition-all duration-500 group cursor-default", colors[color])}>
+    <div className={cn("p-5 rounded-2xl border bg-linear-to-br transition-all duration-500 group cursor-default", colors[color])}>
       <div className="flex justify-between items-start mb-4">
         <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
           <Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -368,7 +368,7 @@ export default function AnalyticsOverviewTab() {
                           "w-full rounded-t-md transition-all duration-500",
                           isLast
                             ? "bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                            : "bg-gradient-to-t from-blue-600 to-blue-400 group-hover:from-blue-400 group-hover:to-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                            : "bg-linear-to-t from-blue-600 to-blue-400 group-hover:from-blue-400 group-hover:to-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                         )}
                         style={{ height: `${(day.count / maxVal) * 100}%`, minHeight: "3px" }}
                       />
@@ -417,7 +417,7 @@ export default function AnalyticsOverviewTab() {
                   </div>
                   <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-purple-600 to-indigo-400 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                      className="h-full bg-linear-to-r from-purple-600 to-indigo-400 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)]"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -462,7 +462,7 @@ export default function AnalyticsOverviewTab() {
             const dropoff = i > 0 && prevValue > 0 ? Math.round((currentValue / prevValue) * 100) : null;
             return (
               <div key={i} className="flex-1 flex items-center gap-2">
-                <div className={cn("flex-1 p-5 rounded-2xl border bg-gradient-to-b text-center", step.color)}>
+                <div className={cn("flex-1 p-5 rounded-2xl border bg-linear-to-b text-center", step.color)}>
                   <div className="text-2xl font-black text-white tabular-nums">{typeof step.value === "number" ? fmtNum(step.value) : step.value}</div>
                   <div className="text-[10px] font-bold text-zinc-400 mt-1">{step.label}</div>
                   {dropoff !== null && (

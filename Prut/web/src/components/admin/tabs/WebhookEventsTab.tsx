@@ -57,8 +57,8 @@ export default function WebhookEventsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">Webhook Events</h2>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
+          <h2 className="text-2xl font-bold text-(--text-primary)">Webhook Events</h2>
+          <p className="text-sm text-(--text-muted) mt-1">
             מעקב אחר אירועי webhook נכנסים מ-LemonSqueezy ושירותי תשלום אחרים
           </p>
         </div>
@@ -82,7 +82,7 @@ export default function WebhookEventsTab() {
               "px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
               statusFilter === f
                 ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                : "text-[var(--text-muted)] border-white/10 hover:text-[var(--text-primary)]"
+                : "text-(--text-muted) border-white/10 hover:text-(--text-primary)"
             )}
           >
             {f === "all" ? "הכל" : f === "processed" ? "עובד" : "נכשל"}
@@ -105,22 +105,22 @@ export default function WebhookEventsTab() {
         <table className="w-full text-sm">
           <thead className="bg-white/5">
             <tr>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">סטטוס</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">שם אירוע</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">תאריך</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">שגיאה</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">סטטוס</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">שם אירוע</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">תאריך</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">שגיאה</th>
             </tr>
           </thead>
           <tbody>
             {loading && events.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-[var(--text-muted)]">
+                <td colSpan={4} className="px-4 py-12 text-center text-(--text-muted)">
                   טוען...
                 </td>
               </tr>
             ) : events.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-[var(--text-muted)]">
+                <td colSpan={4} className="px-4 py-12 text-center text-(--text-muted)">
                   אין אירועים בחלון הזמן הזה
                 </td>
               </tr>
@@ -132,7 +132,7 @@ export default function WebhookEventsTab() {
                     key={evt.id}
                     className={cn(
                       "border-t border-white/5",
-                      isFailed && "bg-red-500/[0.03]"
+                      isFailed && "bg-red-500/3"
                     )}
                   >
                     <td className="px-4 py-3">
@@ -148,10 +148,10 @@ export default function WebhookEventsTab() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[var(--text-primary)]">
+                    <td className="px-4 py-3 font-mono text-xs text-(--text-primary)">
                       {evt.event_name}
                     </td>
-                    <td className="px-4 py-3 text-xs text-[var(--text-muted)]">
+                    <td className="px-4 py-3 text-xs text-(--text-muted)">
                       {new Date(evt.created_at).toLocaleString("he-IL")}
                     </td>
                     <td className="px-4 py-3 text-xs text-red-300/80 max-w-md truncate" title={evt.processing_error ?? ""}>
@@ -165,7 +165,7 @@ export default function WebhookEventsTab() {
         </table>
       </div>
 
-      <div className="text-xs text-[var(--text-muted)] text-center">
+      <div className="text-xs text-(--text-muted) text-center">
         מציג עד 100 אירועים אחרונים. ל-debug עמוק, חפש לפי <code>event_name</code> ב-Supabase.
       </div>
     </div>

@@ -76,7 +76,7 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
       role="dialog"
       aria-modal="true"
       aria-label="פירוק ציון לייב"
-      className="fixed inset-0 z-[100] flex items-end md:items-center md:justify-end"
+      className="fixed inset-0 z-100 flex items-end md:items-center md:justify-end"
       dir="rtl"
     >
       {/* Backdrop */}

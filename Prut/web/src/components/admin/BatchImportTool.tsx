@@ -108,7 +108,7 @@ export function BatchImportTool({ onComplete }: { onComplete: () => void }) {
                     </button>
                     <button 
                         onClick={() => { setJsonInput(""); setStatus('idle'); }}
-                        className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-600 hover:text-white transition-all"
+                        className="p-4 rounded-2xl bg-white/3 border border-white/5 text-zinc-600 hover:text-white transition-all"
                     >
                         <X className="w-5 h-5" />
                     </button>

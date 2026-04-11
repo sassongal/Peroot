@@ -168,7 +168,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
             {moreOpen && (
               <div
                 role="menu"
-                className="absolute end-0 top-full z-[60] mt-1 min-w-[11rem] rounded-xl border border-[var(--border-nav)] bg-[var(--surface-nav)] py-1 shadow-lg backdrop-blur-xl"
+                className="absolute end-0 top-full z-60 mt-1 min-w-44 rounded-xl border border-(--border-nav) bg-(--surface-nav) py-1 shadow-lg backdrop-blur-xl"
               >
                 {MORE_NAV_LINKS.map(({ href, label }) => (
                   <Link

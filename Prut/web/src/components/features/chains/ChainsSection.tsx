@@ -88,8 +88,8 @@ export function ChainsSection({
         showHelp ? "max-h-[500px] opacity-100 mt-3" : "max-h-0 opacity-0"
       )}
     >
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl p-4 text-sm text-[var(--text-muted)] space-y-2" dir="rtl">
-        <p className="font-medium text-[var(--text-secondary)]">איך עובדות שרשראות פרומפטים?</p>
+      <div className="bg-(--glass-bg) border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-muted) space-y-2" dir="rtl">
+        <p className="font-medium text-(--text-secondary)">איך עובדות שרשראות פרומפטים?</p>
         <ul className="space-y-1.5 list-disc list-inside text-xs leading-relaxed">
           <li>שרשרת היא סדרה של פרומפטים שרצים אחד אחרי השני</li>
           <li>התוצאה של כל שלב יכולה לשמש כקלט אוטומטי לשלב הבא</li>
@@ -104,7 +104,7 @@ export function ChainsSection({
             &quot;מחקר שוק &lt;br&gt;→ סיכום ל-5 נקודות &lt;br&gt;→ פוסט לינקדאין&quot; — הפלט של השלב הראשון נזרק אוטומטית לשני, ואז לשלישי.
           </p>
         </div>
-        <div className="text-[10px] text-[var(--text-muted)]/80 pt-1.5 border-t border-[var(--glass-border)] mt-2">
+        <div className="text-[10px] text-(--text-muted)/80 pt-1.5 border-t border-(--glass-border) mt-2">
           <strong>מה נשמר:</strong> הכותרת, התיאור, כל השלבים עם המשתנים, וסדר השלבים. הפלטים שאתם מדביקים בזמן הריצה נשמרים רק באותו session (לא עולים לשרת).
         </div>
       </div>
@@ -113,27 +113,27 @@ export function ChainsSection({
 
   if (chains.length === 0 && !showBuilder) {
     return (
-      <div className="border border-dashed border-[var(--glass-border)] rounded-2xl p-8 text-center">
+      <div className="border border-dashed border-(--glass-border) rounded-2xl p-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Link2 className="w-8 h-8 text-amber-400/50" />
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-amber-400 hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-(--text-muted) hover:text-amber-400 hover:bg-(--glass-bg) transition-colors cursor-pointer"
             aria-label="עזרה על שרשראות"
             title="מה זה שרשראות?"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
         </div>
-        <h4 className="text-base font-medium text-[var(--text-secondary)] mb-2">שרשראות פרומפטים</h4>
-        <p className="text-sm text-[var(--text-muted)] mb-4">
+        <h4 className="text-base font-medium text-(--text-secondary) mb-2">שרשראות פרומפטים</h4>
+        <p className="text-sm text-(--text-muted) mb-4">
           בנה תהליכים מרובי שלבים - שלב אחד מוביל לבא
         </p>
         {helpContent}
         <div className="flex items-center gap-3 justify-center">
           <button
             onClick={() => setShowAutoBuilder(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-black text-sm font-semibold hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-l from-amber-500 to-orange-500 text-black text-sm font-semibold hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
           >
             <Wand2 className="w-4 h-4" />
             בנה שרשרת אוטומטית
@@ -163,15 +163,15 @@ export function ChainsSection({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Link2 className="w-4 h-4 text-amber-400" />
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">שרשראות</h3>
-          <span className="text-xs text-[var(--text-muted)] bg-[var(--glass-bg)] px-2 py-0.5 rounded-full">
+          <h3 className="text-lg font-semibold text-(--text-primary)">שרשראות</h3>
+          <span className="text-xs text-(--text-muted) bg-(--glass-bg) px-2 py-0.5 rounded-full">
             {chains.length}
           </span>
           <button
             onClick={() => setShowHelp(!showHelp)}
             className={cn(
               "p-1 rounded-lg transition-colors cursor-pointer",
-              showHelp ? "text-amber-400 bg-amber-500/10" : "text-[var(--text-muted)] hover:text-amber-400 hover:bg-[var(--glass-bg)]"
+              showHelp ? "text-amber-400 bg-amber-500/10" : "text-(--text-muted) hover:text-amber-400 hover:bg-(--glass-bg)"
             )}
             aria-label="עזרה על שרשראות"
             title="מה זה שרשראות?"
@@ -182,7 +182,7 @@ export function ChainsSection({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAutoBuilder(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-l from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 text-xs hover:from-amber-500/30 hover:to-orange-500/30 transition-all font-semibold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-linear-to-l from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 text-xs hover:from-amber-500/30 hover:to-orange-500/30 transition-all font-semibold"
           >
             <Wand2 className="w-3.5 h-3.5" />
             בנייה אוטומטית
@@ -208,8 +208,8 @@ export function ChainsSection({
           <div
             key={chain.id}
             className={cn(
-              "group border border-[var(--glass-border)] rounded-xl p-4 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg)] transition-colors",
-              chain.is_pinned && "border-amber-500/20 bg-amber-500/[0.02]"
+              "group border border-(--glass-border) rounded-xl p-4 bg-(--glass-bg) hover:bg-(--glass-bg) transition-colors",
+              chain.is_pinned && "border-amber-500/20 bg-amber-500/2"
             )}
           >
             <div className="flex items-start justify-between gap-2 mb-2">
@@ -218,12 +218,12 @@ export function ChainsSection({
                   {chain.is_pinned && (
                     <Pin className="w-3 h-3 text-amber-400 fill-amber-400" />
                   )}
-                  <h4 className="text-sm font-medium text-[var(--text-secondary)] truncate">
+                  <h4 className="text-sm font-medium text-(--text-secondary) truncate">
                     {chain.title}
                   </h4>
                 </div>
                 {chain.description && (
-                  <p className="text-xs text-[var(--text-muted)] truncate">{chain.description}</p>
+                  <p className="text-xs text-(--text-muted) truncate">{chain.description}</p>
                 )}
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -233,7 +233,7 @@ export function ChainsSection({
                     "p-1.5 rounded-lg transition-colors",
                     chain.is_pinned
                       ? "text-amber-400"
-                      : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                      : "text-(--text-muted) hover:text-(--text-secondary)"
                   )}
                   title={chain.is_pinned ? "בטל הצמדה" : "הצמד"}
                 >
@@ -241,7 +241,7 @@ export function ChainsSection({
                 </button>
                 <button
                   onClick={() => handleEdit(chain)}
-                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                  className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-secondary) transition-colors"
                   title="ערוך"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -249,7 +249,7 @@ export function ChainsSection({
                 {onDuplicateChain && (
                   <button
                     onClick={async () => { await onDuplicateChain(chain); }}
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                    className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-secondary) transition-colors"
                     title="שכפל"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -262,7 +262,7 @@ export function ChainsSection({
                       navigator.clipboard.writeText(json);
                       toast.success("שרשרת הועתקה ללוח");
                     }}
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                    className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-secondary) transition-colors"
                     title="ייצוא"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -270,7 +270,7 @@ export function ChainsSection({
                 )}
                 <button
                   onClick={() => onDeleteChain(chain.id)}
-                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-400 transition-colors"
+                  className="p-1.5 rounded-lg text-(--text-muted) hover:text-red-400 transition-colors"
                   title="מחק"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -282,7 +282,7 @@ export function ChainsSection({
             <div className="flex items-center gap-1.5 mb-3 flex-wrap">
               {chain.steps.map((step, i) => (
                 <div key={step.id} className="flex items-center gap-1">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-[var(--text-muted)] border border-[var(--glass-border)] truncate max-w-[100px]">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-(--glass-bg) text-(--text-muted) border border-(--glass-border) truncate max-w-[100px]">
                     {step.title}
                   </span>
                   {i < chain.steps.length - 1 && (
@@ -303,7 +303,7 @@ export function ChainsSection({
               </span>
               <button
                 onClick={() => handleRun(chain)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--glass-bg)] hover:bg-[var(--glass-bg)] text-[var(--text-secondary)] text-xs transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-(--glass-bg) hover:bg-(--glass-bg) text-(--text-secondary) text-xs transition-colors"
               >
                 <Play className="w-3 h-3" />
                 הפעל

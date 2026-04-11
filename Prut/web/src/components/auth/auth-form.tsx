@@ -161,7 +161,7 @@ export function AuthForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-gradient-to-l from-amber-500 to-amber-600 text-black font-bold py-2.5 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(217,119,6,0.2)] active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(217,119,6,0.3)] cursor-pointer"
+            className="w-full bg-linear-to-l from-amber-500 to-amber-600 text-black font-bold py-2.5 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(217,119,6,0.2)] active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(217,119,6,0.3)] cursor-pointer"
           >
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -206,7 +206,7 @@ export function AuthForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/[0.06]" />
+            <span className="w-full border-t border-white/6" />
           </div>
           <div className="relative flex justify-center">
             <span className="bg-[#0a0a0a] px-3 text-[10px] text-white/20 uppercase tracking-[0.15em]">
@@ -276,7 +276,7 @@ export function AuthForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-gradient-to-l from-amber-500 to-amber-600 text-black font-bold py-2.5 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(217,119,6,0.2)] active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(217,119,6,0.3)] cursor-pointer !mt-4"
+            className="w-full bg-linear-to-l from-amber-500 to-amber-600 text-black font-bold py-2.5 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(217,119,6,0.2)] active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(217,119,6,0.3)] cursor-pointer mt-4!"
           >
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />

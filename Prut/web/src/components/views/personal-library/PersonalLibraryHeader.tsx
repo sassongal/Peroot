@@ -57,20 +57,20 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
   ] as const;
 
   return (
-    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-[var(--glass-border)] bg-black/40 mb-4">
+    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) bg-black/40 mb-4">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="md:hidden p-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             aria-label="פתח תפריט"
           >
             <Menu className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-xl md:text-3xl font-serif text-[var(--text-primary)]">ספריה אישית</h2>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+            <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספריה אישית</h2>
+            <p className="text-xs text-(--text-muted) mt-0.5">
               {usedTotalCount} פרומפטים · {activeFolderLabel}
             </p>
           </div>
@@ -80,7 +80,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           {/* Full library — hidden on mobile; surfaced as a chip in the mobile tabs row below */}
           <button
             onClick={() => setViewMode("library")}
-            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-(--glass-border) text-(--text-secondary) hover:bg-(--glass-bg) hover:text-(--text-primary) transition-colors text-sm focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <BookOpen className="w-4 h-4" />
             <span className="hidden lg:inline">ספרייה מלאה</span>
@@ -102,7 +102,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
       </div>
 
       {!user && (
-        <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs text-[var(--text-secondary)] leading-relaxed">
+        <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs text-(--text-secondary) leading-relaxed">
           <span className="font-medium text-amber-800 dark:text-amber-200">מצב אורח: </span>
           הפרומפטים האישיים נשמרים במכשיר זה בלבד; פריטים ישנים עלולים להיעלם אחרי כשבוע.
           {" "}
@@ -114,7 +114,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
       )}
 
       {user && effectiveFolder === "favorites" && localSearch.trim() !== "" && (
-        <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-[var(--text-muted)]">
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-(--text-muted)">
           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" aria-hidden />
           <span>
             בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל הפרומפטים&quot;).
@@ -137,7 +137,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
                   "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isActive
                     ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 border border-amber-500/40 shadow-sm shadow-amber-500/10"
-                    : "bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] border border-[var(--glass-border)] hover:text-[var(--text-primary)]"
+                    : "bg-black/5 dark:bg-white/5 text-(--text-secondary) border border-(--glass-border) hover:text-(--text-primary)"
                 )}
                 aria-pressed={isActive}
               >
@@ -146,7 +146,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
                 {count > 0 && (
                   <span className={cn(
                     "text-[10px] tabular-nums px-1.5 py-0.5 rounded-full",
-                    isActive ? "bg-amber-500/20 text-amber-800 dark:text-amber-100" : "bg-black/10 dark:bg-white/10 text-[var(--text-muted)]"
+                    isActive ? "bg-amber-500/20 text-amber-800 dark:text-amber-100" : "bg-black/10 dark:bg-white/10 text-(--text-muted)"
                   )}>
                     {count}
                   </span>
@@ -154,10 +154,10 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
               </button>
             );
           })}
-          <div className="w-px h-6 bg-[var(--glass-border)] mx-1 shrink-0" />
+          <div className="w-px h-6 bg-(--glass-border) mx-1 shrink-0" />
           <button
             onClick={() => setViewMode("library")}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap bg-black/5 dark:bg-white/5 text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
           >
             <BookOpen className="w-3.5 h-3.5 shrink-0" />
             <span>ספרייה מלאה</span>
@@ -179,7 +179,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           <select
             value={currentSort}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="shrink-0 bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2 px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px]"
+            className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-3 text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px]"
           >
             <option value="recent">עודכן לאחרונה</option>
             <option value="title">אלפביתי</option>
@@ -194,8 +194,8 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             className={cn(
               "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
               selectionMode
-                ? "bg-blue-600 border-blue-500 text-[var(--text-primary)] shadow-lg shadow-blue-900/30"
-                : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
+                ? "bg-blue-600 border-blue-500 text-(--text-primary) shadow-lg shadow-blue-900/30"
+                : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)"
             )}
             title="ניהול פריטים"
           >
@@ -205,7 +205,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
 
           <button
             onClick={() => importFileRef.current?.click()}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] text-xs hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-(--glass-border) text-(--text-muted) text-xs hover:text-(--text-primary) hover:bg-(--glass-bg) transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             title="ייבוא"
           >
             <Upload className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             disabled={historyLength === 0}
             className={cn(
               "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-              historyLength === 0 ? "border-[var(--glass-border)] text-slate-600 cursor-not-allowed" : "border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]"
+              historyLength === 0 ? "border-(--glass-border) text-slate-600 cursor-not-allowed" : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)"
             )}
           >
             <History className="w-3.5 h-3.5" />
@@ -228,7 +228,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           {selectionMode && (
             <button
               onClick={selectAllVisible}
-              className="shrink-0 px-3 py-2 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              className="shrink-0 px-3 py-2 rounded-lg text-xs text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) hover:bg-(--glass-bg) transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               בחר הכל ({displayItems.length})
             </button>

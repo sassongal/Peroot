@@ -241,7 +241,7 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
+        <div className="text-xs text-(--text-muted) uppercase tracking-widest mb-2 px-1">{t.prompt_generator.capability_mode}</div>
         <CapabilitySelector
           value={selectedCapability}
           onChange={setSelectedCapability}
@@ -281,9 +281,9 @@ export function PromptInput({
 
       <div className="w-full max-w-4xl mx-auto flex flex-col-reverse lg:flex-row gap-4 items-stretch">
         {variables.length > 0 && (
-          <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-[var(--glass-border)] bg-[var(--glass-bg)]">
-            <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest">{t.prompt_generator.variables}</div>
-            <p className="text-[11px] text-[var(--text-muted)] mt-2">
+          <div className="w-full lg:w-72 glass-card p-4 rounded-2xl border-(--glass-border) bg-(--glass-bg)">
+            <div className="text-xs text-(--text-muted) uppercase tracking-widest">{t.prompt_generator.variables}</div>
+            <p className="text-[11px] text-(--text-muted) mt-2">
               {t.prompt_generator.variables_hint}
             </p>
             <div className="mt-4 space-y-3">
@@ -295,7 +295,7 @@ export function PromptInput({
                   <div key={`${variable}-${index}`} className="space-y-2">
                     <label
                       htmlFor={inputId}
-                      className="text-xs font-semibold flex items-center gap-1 text-[var(--text-primary)]"
+                      className="text-xs font-semibold flex items-center gap-1 text-(--text-primary)"
                       title={variable}
                     >
                       <span>{label}</span>
@@ -312,10 +312,10 @@ export function PromptInput({
                       }
                       aria-label={label}
                       className={cn(
-                        "w-full border rounded-lg py-2.5 px-3 text-base md:text-sm text-[var(--text-primary)] focus-visible:outline-none focus:outline-none transition-colors",
+                        "w-full border rounded-lg py-2.5 px-3 text-base md:text-sm text-(--text-primary) focus-visible:outline-none focus:outline-none transition-colors",
                         isEmpty
                           ? "bg-black/5 dark:bg-black/30 border-sky-500/40 focus:border-sky-500/60 focus-visible:ring-2 focus-visible:ring-sky-500/30"
-                          : "bg-emerald-500/[0.04] dark:bg-emerald-400/[0.04] border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60 focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+                          : "bg-emerald-500/4 dark:bg-emerald-400/4 border-emerald-500/40 dark:border-emerald-400/40 focus:border-emerald-500/60 focus-visible:ring-2 focus-visible:ring-emerald-500/30"
                       )}
                       placeholder={getVariablePlaceholder(variable)}
                     />
@@ -345,8 +345,8 @@ export function PromptInput({
             })()}
             {inputVal.trim() && (
               <div className="mt-4 space-y-2">
-                <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest">{t.prompt_generator.live_view}</div>
-                <div className="rounded-xl border border-[var(--glass-border)] bg-black/5 dark:bg-black/30 p-4 text-base md:text-lg text-[var(--text-primary)] leading-relaxed min-h-[100px]">
+                <div className="text-xs text-(--text-muted) uppercase tracking-widest">{t.prompt_generator.live_view}</div>
+                <div className="rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-4 text-base md:text-lg text-(--text-primary) leading-relaxed min-h-[100px]">
                   {highlightedContent}
                 </div>
               </div>
@@ -356,7 +356,7 @@ export function PromptInput({
 
         <div
           className={cn(
-            "flex-1 glass-card p-1 rounded-2xl border-[var(--glass-border)] bg-gradient-to-br from-black/[0.03] dark:from-white/[0.08] to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300",
+            "flex-1 glass-card p-1 rounded-2xl border-(--glass-border) bg-linear-to-br from-black/3 dark:from-white/8 to-transparent shadow-2xl shadow-amber-900/10 group focus-within:border-amber-500/30 transition-colors duration-300",
             isDragOver && "border-blue-500/50 bg-blue-500/5 ring-2 ring-blue-500/20"
           )}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
@@ -382,7 +382,7 @@ export function PromptInput({
           <div className="bg-white/60 dark:bg-black/40 rounded-xl overflow-hidden flex flex-col gap-4 relative">
              <div
               aria-hidden
-              className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-[var(--text-primary)] font-sans leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-0 overflow-hidden"
+              className="absolute inset-0 p-6 md:p-8 text-base md:text-lg lg:text-xl text-(--text-primary) font-sans leading-relaxed whitespace-pre-wrap wrap-break-word pointer-events-none z-0 overflow-hidden"
               dir="rtl"
              >
               {highlightedContent}
@@ -398,7 +398,7 @@ export function PromptInput({
               }}
               placeholder={PLACEHOLDERS_BY_MODE[selectedCapability] || t.prompt_generator.placeholder}
               aria-label="כתוב את הפרומפט שלך"
-              className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-5 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
+              className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-5 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   handleEnhance();
@@ -418,7 +418,7 @@ export function PromptInput({
                              "p-2.5 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300 backdrop-blur-md shadow-lg flex items-center justify-center group/mic",
                              isListening
                                ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse"
-                               : "bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10"
+                               : "bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10"
                            )}
                            title={isListening ? "עצור הקלטה" : "הקלט קולית"}
                            aria-label={isListening ? "עצור הקלטה" : "הקלט קולית"}
@@ -433,14 +433,14 @@ export function PromptInput({
                          <div className="relative" data-lang-picker>
                            <button
                              onClick={() => setShowLangPicker(prev => !prev)}
-                             className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
+                             className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
                              title="שפת הקלטה"
                              aria-label="בחר שפת הקלטה"
                            >
                              {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.short ?? 'HE'}
                            </button>
                            {showLangPicker && (
-                             <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
+                             <div className="absolute bottom-full end-0 mb-1.5 bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) rounded-xl shadow-xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 min-w-[120px] md:min-w-[140px] max-w-[calc(100vw-2rem)]">
                                {VOICE_LANGUAGES.map(lang => (
                                  <button
                                    key={lang.code}
@@ -449,7 +449,7 @@ export function PromptInput({
                                      "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors cursor-pointer",
                                      voiceLang === lang.code
                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                                       : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/5"
+                                       : "text-(--text-secondary) hover:bg-black/5 dark:hover:bg-white/5"
                                    )}
                                  >
                                    <span className="font-mono font-bold text-[10px]">{lang.short}</span>
@@ -474,7 +474,7 @@ export function PromptInput({
                      <select
                        value={targetModel}
                        onChange={(e) => setTargetModel(e.target.value as TargetModel)}
-                       className="px-2 py-1.5 rounded-lg text-[11px] bg-black/5 dark:bg-black/30 text-[var(--text-muted)] border border-[var(--glass-border)] hover:text-[var(--text-primary)] hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer appearance-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+                       className="px-2 py-1.5 rounded-lg text-[11px] bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer appearance-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
                        title="מודל יעד"
                        aria-label="בחר מודל יעד לאופטימיזציה"
                        disabled={isLoading}
@@ -511,7 +511,7 @@ export function PromptInput({
                            onClick={() => fileInputRef.current?.click()}
                            className={cn(
                              "p-2 rounded-lg transition-colors cursor-pointer",
-                             "text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-500/10"
+                             "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10"
                            )}
                            title="צרף קובץ (PDF, Word, Excel, CSV, TXT)"
                            aria-label="צרף קובץ"
@@ -531,7 +531,7 @@ export function PromptInput({
                              "p-2 rounded-lg transition-colors cursor-pointer",
                              showUrlInput
                                ? "text-amber-400 bg-amber-500/10"
-                               : "text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-500/10"
+                               : "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10"
                            )}
                            title="צרף קישור URL"
                            aria-label="צרף קישור"
@@ -559,7 +559,7 @@ export function PromptInput({
                                  if (e.key === 'Escape') setShowUrlInput(false);
                                }}
                                placeholder="הדביקו כתובת URL ולחצו Enter"
-                               className="w-64 px-3 py-2 rounded-xl text-xs bg-white/95 dark:bg-zinc-900/95 border border-[var(--glass-border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] shadow-xl backdrop-blur-md focus:outline-none focus:border-amber-500/50"
+                               className="w-64 px-3 py-2 rounded-xl text-xs bg-white/95 dark:bg-zinc-900/95 border border-(--glass-border) text-(--text-primary) placeholder:text-(--text-muted) shadow-xl backdrop-blur-md focus:outline-none focus:border-amber-500/50"
                                dir="ltr"
                                autoFocus
                              />
@@ -593,7 +593,7 @@ export function PromptInput({
                            onClick={() => imageInputRef.current?.click()}
                            className={cn(
                              "p-2 rounded-lg transition-colors cursor-pointer",
-                             "text-[var(--text-muted)] hover:text-amber-400 hover:bg-amber-500/10"
+                             "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10"
                            )}
                            title="צרף תמונה"
                            aria-label="צרף תמונה"
@@ -614,14 +614,14 @@ export function PromptInput({
 
             {!inputVal.trim() && !isListening && (
               <div className="px-6 pb-4 relative z-20 animate-in fade-in duration-300">
-                <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest mb-3 text-start" dir="rtl">נסו לדוגמה:</div>
+                <div className="text-xs text-(--text-muted) uppercase tracking-widest mb-3 text-start" dir="rtl">נסו לדוגמה:</div>
                 <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
                   {displayedExamples.map((example, i) => (
                     <button
                       key={i}
                       onClick={() => setInputVal(example)}
                       aria-label={`השתמש בדוגמה: ${example}`}
-                      className="px-3 py-2.5 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] text-xs text-[var(--text-muted)] hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                      className="px-3 py-2.5 rounded-full border border-(--glass-border) bg-(--glass-bg) text-xs text-(--text-muted) hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-300 hover:border-amber-500/20 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     >
                       {example}
                     </button>
@@ -648,23 +648,23 @@ export function PromptInput({
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-[var(--glass-border)] pt-5 p-5 md:p-7 relative z-20 bg-slate-50/95 dark:bg-zinc-950/95 md:bg-black/5 md:dark:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-t border-(--glass-border) pt-5 p-5 md:p-7 relative z-20 bg-slate-50/95 dark:bg-zinc-950/95 md:bg-black/5 md:dark:bg-black/20 backdrop-blur-xl md:backdrop-blur-none">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
+                <span className="text-xs font-semibold text-(--text-muted) uppercase tracking-widest shrink-0">{t.prompt_generator.category}</span>
                 <div className="relative group/select min-w-[140px]">
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full ps-10 pe-4 py-2 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:border-black/20 dark:hover:border-white/30 hover:bg-black/[0.06] dark:hover:bg-white/[0.05] appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
+                    className="w-full ps-10 pe-4 py-2 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-(--glass-border) bg-(--glass-bg) text-(--text-primary) hover:border-black/20 dark:hover:border-white/30 hover:bg-black/6 dark:hover:bg-white/5 appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
                     aria-label="בחר קטגוריה"
                   >
                     {CATEGORY_OPTIONS.map(cat => (
-                      <option key={cat.id} value={cat.id} className="bg-white dark:bg-zinc-900 text-[var(--text-primary)]">
+                      <option key={cat.id} value={cat.id} className="bg-white dark:bg-zinc-900 text-(--text-primary)">
                         {cat.label}
                       </option>
                     ))}
                   </select>
-                  <div className="absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]">
+                  <div className="absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none text-(--text-muted)">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -696,7 +696,7 @@ export function PromptInput({
                   "group relative rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg overflow-hidden cursor-pointer",
                   "px-8 py-4 min-w-[160px]",
                   isLoading || !inputVal.trim()
-                    ? "bg-[var(--glass-bg)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--glass-border)]"
+                    ? "bg-(--glass-bg) text-(--text-muted) cursor-not-allowed border border-(--glass-border)"
                     : "accent-gradient text-black hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(245,158,11,0.3)] border border-amber-400/50 active:scale-[0.97]"
                 )}
               >
@@ -715,14 +715,14 @@ export function PromptInput({
                   )}
                 </span>
                 {!isLoading && inputVal.trim() && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
                 )}
               </button>
               {creditsRemaining != null && creditsRemaining >= 0 && (
                 <span className={cn(
                   "text-[10px] font-bold px-2 py-1 rounded-lg border",
                   creditsRemaining > 2
-                    ? "text-[var(--text-muted)] border-[var(--glass-border)] bg-[var(--glass-bg)]"
+                    ? "text-(--text-muted) border-(--glass-border) bg-(--glass-bg)"
                     : creditsRemaining > 0
                       ? "text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/5"
                       : "text-red-400 border-red-500/20 bg-red-500/5"

@@ -73,14 +73,14 @@ export function LoadingOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-white/80 dark:bg-black/85 backdrop-blur-md animate-in fade-in duration-300 overscroll-contain"
+      className="fixed inset-0 z-100 flex items-center justify-center px-4 bg-white/80 dark:bg-black/85 backdrop-blur-md animate-in fade-in duration-300 overscroll-contain"
       style={{ minHeight: "100dvh" }}
       dir={isHe ? "rtl" : "ltr"}
       aria-live="polite"
       aria-busy="true"
       role="status"
     >
-      <div className="relative flex flex-col items-center gap-6 px-6 sm:px-10 py-10 sm:py-12 rounded-3xl bg-white/95 dark:bg-black/85 border border-[var(--glass-border)] shadow-2xl max-w-md w-full text-center">
+      <div className="relative flex flex-col items-center gap-6 px-6 sm:px-10 py-10 sm:py-12 rounded-3xl bg-white/95 dark:bg-black/85 border border-(--glass-border) shadow-2xl max-w-md w-full text-center">
 
         {/* Animated loading visual */}
         <div className="relative w-32 h-32 flex items-center justify-center">
@@ -155,10 +155,10 @@ export function LoadingOverlay({
 
         {/* Message block */}
         <div className="relative z-10 flex flex-col gap-2">
-          <h3 className="text-xl sm:text-2xl font-serif text-[var(--text-primary)] font-bold tracking-wide">
+          <h3 className="text-xl sm:text-2xl font-serif text-(--text-primary) font-bold tracking-wide">
             {headline}
           </h3>
-          <p className="text-sm text-[var(--text-muted)]">{subtitle}</p>
+          <p className="text-sm text-(--text-muted)">{subtitle}</p>
           {/* Animated progress dots */}
           <div className="flex items-center justify-center gap-1.5 mt-1">
             {[0, 1, 2, 3, 4].map((i) => (
@@ -173,10 +173,10 @@ export function LoadingOverlay({
 
         {/* Rotating Peroot fact — gives the user something to read */}
         <div
-          className="w-full border-t border-[var(--glass-border)] pt-5 min-h-[96px] flex items-start gap-3"
+          className="w-full border-t border-(--glass-border) pt-5 min-h-[96px] flex items-start gap-3"
           aria-live="off"
         >
-          <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 mt-0.5">
+          <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 mt-0.5">
             <Lightbulb className="w-4 h-4 text-amber-400" />
           </div>
           <div className="flex-1 min-w-0 text-start">
@@ -186,7 +186,7 @@ export function LoadingOverlay({
             {currentFact && (
               <p
                 key={factIdx}
-                className="text-sm text-[var(--text-secondary)] leading-relaxed mt-1 animate-in fade-in slide-in-from-bottom-1 duration-500"
+                className="text-sm text-(--text-secondary) leading-relaxed mt-1 animate-in fade-in slide-in-from-bottom-1 duration-500"
               >
                 {currentFact}
               </p>

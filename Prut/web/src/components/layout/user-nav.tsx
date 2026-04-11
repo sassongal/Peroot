@@ -104,8 +104,8 @@ export function UserMenu({ user, position }: UserMenuProps) {
           </button>
           {isOpen && !user && (
             <>
-              <div className="fixed inset-0 z-[100]" onClick={() => setIsOpen(false)} />
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl shadow-2xl overflow-hidden z-[101] animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="fixed inset-0 z-100" onClick={() => setIsOpen(false)} />
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-(--glass-border) rounded-2xl shadow-2xl overflow-hidden z-101 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-2 space-y-1">
                   <Link
                     href="/login"
@@ -137,7 +137,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
           aria-label="תפריט משתמש"
           aria-haspopup="true"
           aria-expanded={isOpen}
-          className="w-11 h-11 rounded-full bg-[var(--glass-bg)] hover:bg-black/10 dark:hover:bg-white/10 border border-[var(--glass-border)] flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none cursor-pointer"
+          className="w-11 h-11 rounded-full bg-(--glass-bg) hover:bg-black/10 dark:hover:bg-white/10 border border-(--glass-border) flex items-center justify-center transition-all overflow-hidden shadow-2xl relative active:scale-95 hover:ring-2 hover:ring-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none cursor-pointer"
         >
           {avatarUrl ? (
             <img
@@ -156,7 +156,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
               }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white font-bold bg-gradient-to-br from-amber-500 to-red-500">
+            <div className="w-full h-full flex items-center justify-center text-white font-bold bg-linear-to-br from-amber-500 to-red-500">
               {user.email?.[0].toUpperCase()}
             </div>
           )}
@@ -166,20 +166,20 @@ export function UserMenu({ user, position }: UserMenuProps) {
           <>
             {/* Backdrop to close menu */}
             <div
-              className="fixed inset-0 z-[100]"
+              className="fixed inset-0 z-100"
               onClick={() => setIsOpen(false)}
             />
             {/* Dropdown menu */}
             <div
               onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
-              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl shadow-2xl overflow-hidden z-[101] animate-in fade-in slide-in-from-top-2 duration-200">
-               <div className="p-4 border-b border-[var(--glass-border)] flex flex-col gap-3 bg-[var(--glass-bg)]">
+              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-(--glass-border) rounded-2xl shadow-2xl overflow-hidden z-101 animate-in fade-in slide-in-from-top-2 duration-200">
+               <div className="p-4 border-b border-(--glass-border) flex flex-col gap-3 bg-(--glass-bg)">
                    {/* Embedded Logo in Menu */}
-                   <div className="flex justify-center pb-2 border-b border-[var(--glass-border)]">
+                   <div className="flex justify-center pb-2 border-b border-(--glass-border)">
                         <Image src={getAssetPath("/logo.svg")} alt="לוגו פרוט" width={80} height={20} className="h-5 w-auto opacity-70" />
                    </div>
                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-red-500 overflow-hidden shrink-0 border border-[var(--glass-border)]">
+                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-amber-500 to-red-500 overflow-hidden shrink-0 border border-(--glass-border)">
                         {avatarUrl ? (
                           <img
                             src={avatarUrl}
@@ -203,7 +203,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-[var(--text-primary)] truncate" title={metadata.full_name || user.email?.split('@')[0]}>
+                        <p className="text-sm font-bold text-(--text-primary) truncate" title={metadata.full_name || user.email?.split('@')[0]}>
                             {metadata.full_name || user.email?.split('@')[0]}
                         </p>
                         <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
@@ -232,12 +232,12 @@ export function UserMenu({ user, position }: UserMenuProps) {
                   <Link
                     href="/settings"
                     onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] rounded-xl transition-colors text-right"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-(--text-secondary) hover:bg-(--glass-bg) rounded-xl transition-colors text-right"
                   >
                       <Settings className="w-4 h-4" />
                       <span>{t.auth.account_settings}</span>
                   </Link>
-                  <div className="border-t border-[var(--glass-border)] my-1" />
+                  <div className="border-t border-(--glass-border) my-1" />
                   <button
                     onClick={() => { setIsOpen(false); handleSignOut(); }}
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors text-right"
@@ -260,10 +260,10 @@ export function UserMenu({ user, position }: UserMenuProps) {
       <div className="flex items-center animate-in slide-in-from-left-4 duration-500">
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2.5 group px-4 py-2 hover:bg-[var(--glass-bg)] rounded-xl transition-all border border-transparent hover:border-[var(--glass-border)]"
+          className="flex items-center gap-2.5 group px-4 py-2 hover:bg-(--glass-bg) rounded-xl transition-all border border-transparent hover:border-(--glass-border)"
         >
           <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
-          <span className="text-sm font-semibold text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">{t.auth.logout}</span>
+          <span className="text-sm font-semibold text-(--text-muted) group-hover:text-(--text-primary) transition-colors">{t.auth.logout}</span>
         </button>
       </div>
     );

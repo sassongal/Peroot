@@ -277,7 +277,7 @@ function BarChart({ data }: { data: ActionsByDay[] }) {
         <div key={i} className="flex-1 flex flex-col items-center gap-2 group min-w-0">
           <div className="w-full relative flex items-end" style={{ height: "140px" }}>
             <div
-              className="w-full bg-gradient-to-t from-purple-700 to-purple-500 rounded-t-lg transition-all duration-700 group-hover:from-purple-500 group-hover:to-white group-hover:shadow-[0_0_16px_rgba(168,85,247,0.4)]"
+              className="w-full bg-linear-to-t from-purple-700 to-purple-500 rounded-t-lg transition-all duration-700 group-hover:from-purple-500 group-hover:to-white group-hover:shadow-[0_0_16px_rgba(168,85,247,0.4)]"
               style={{
                 height: `${(day.count / maxVal) * 100}%`,
                 minHeight: day.count > 0 ? "4px" : "0",
@@ -374,7 +374,7 @@ export function AdminAuditTab() {
                 Security Intelligence Layer
               </span>
             </div>
-            <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+            <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
               Admin Audit
             </h1>
             <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -386,7 +386,7 @@ export function AdminAuditTab() {
             <button
               onClick={exportCSV}
               disabled={!data?.logs?.length}
-              className="px-5 py-3 bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-2 rounded-2xl disabled:opacity-40"
+              className="px-5 py-3 bg-white/3 border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-2 rounded-2xl disabled:opacity-40"
             >
               <Download className="w-4 h-4" />
               CSV
@@ -569,7 +569,7 @@ export function AdminAuditTab() {
                     </div>
                     <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-700"
+                        className="h-full bg-linear-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-700"
                         style={{ width: `${(admin.count / maxCount) * 100}%` }}
                       />
                     </div>
@@ -648,8 +648,8 @@ export function AdminAuditTab() {
                             className={cn(
                               "group transition-all duration-300",
                               isExpanded
-                                ? "bg-white/[0.03]"
-                                : "hover:bg-white/[0.02]",
+                                ? "bg-white/3"
+                                : "hover:bg-white/2",
                               hasDetails && "cursor-pointer"
                             )}
                             onClick={() =>
@@ -720,7 +720,7 @@ export function AdminAuditTab() {
 
                           {/* Expanded details row */}
                           {isExpanded && hasDetails && (
-                            <tr key={`${log.id}-details`} className="bg-white/[0.015]">
+                            <tr key={`${log.id}-details`} className="bg-white/1.5">
                               <td colSpan={5} className="px-8 py-5">
                                 <pre className="text-[10px] font-mono text-zinc-500 bg-black/30 rounded-2xl p-4 border border-white/5 overflow-x-auto whitespace-pre-wrap break-all max-h-48">
                                   {JSON.stringify(log.details, null, 2)}

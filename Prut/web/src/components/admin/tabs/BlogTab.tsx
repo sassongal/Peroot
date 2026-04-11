@@ -106,7 +106,7 @@ export function BlogTab() {
         {posts.map((post) => (
           <div
             key={post.id}
-            className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/2 hover:bg-white/4 transition-colors"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">

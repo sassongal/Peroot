@@ -54,7 +54,7 @@ export default function AnalyticsHubPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent tracking-tighter">
+            <h1 className="text-4xl md:text-5xl font-black bg-linear-to-r from-white to-zinc-500 bg-clip-text text-transparent tracking-tighter">
               Analytics Hub
             </h1>
             <p className="text-zinc-400 font-medium tracking-wide text-sm">

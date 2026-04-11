@@ -56,7 +56,7 @@ export function ChainPresetsGallery({ onSaveChain }: ChainPresetsGalleryProps) {
           <button
             key={preset.chain_id}
             onClick={() => setSelectedPreset({ ...preset })}
-            className="text-start p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-amber-500/20 transition-all group"
+            className="text-start p-3 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 hover:border-amber-500/20 transition-all group"
             dir="rtl"
           >
             <div className="flex items-start justify-between gap-2">

@@ -91,7 +91,7 @@ function scoreLabel(score: number) {
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-lg bg-white/[0.04]", className)} />;
+  return <div className={cn("animate-pulse rounded-lg bg-white/4", className)} />;
 }
 
 function PageSkeleton() {
@@ -199,7 +199,7 @@ function ContentCalendar({ weeklyData }: { weeklyData: WeeklyDataPoint[] }) {
 
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-emerald-600/3 to-transparent pointer-events-none" />
 
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -277,7 +277,7 @@ const CHECKLIST_ICONS: Record<string, React.ElementType> = {
 function SEOChecklist({ checklist }: { checklist: ChecklistItem[] }) {
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-purple-600/3 to-transparent pointer-events-none" />
       <div className="relative flex items-center gap-4">
         <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
           <CheckCircle2 className="w-5 h-5" />
@@ -298,7 +298,7 @@ function SEOChecklist({ checklist }: { checklist: ChecklistItem[] }) {
                 "flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all",
                 item.status
                   ? "bg-emerald-500/5 border-emerald-500/10 hover:border-emerald-500/20"
-                  : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                  : "bg-white/2 border-white/5 hover:border-white/10"
               )}
             >
               <div className={cn("p-2 rounded-xl border shrink-0", item.status ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-zinc-900 border-white/5 text-zinc-600")}>
@@ -331,7 +331,7 @@ function SEOChecklist({ checklist }: { checklist: ChecklistItem[] }) {
 function GSCSection({ connected, siteUrl }: { connected: boolean; siteUrl: string | null }) {
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/[0.04] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-blue-600/4 to-transparent pointer-events-none" />
       <div className="relative flex items-center gap-4">
         <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
           <Search className="w-5 h-5" />
@@ -346,7 +346,7 @@ function GSCSection({ connected, siteUrl }: { connected: boolean; siteUrl: strin
       </div>
 
       {connected ? (
-        <div className="relative p-8 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center gap-4">
+        <div className="relative p-8 rounded-2xl bg-white/2 border border-white/5 flex flex-col items-center gap-4">
           <Search className="w-10 h-10 text-blue-400/30" />
           <div className="text-center space-y-1">
             <p className="text-sm font-black text-white">Search Console data will appear here</p>
@@ -365,7 +365,7 @@ function GSCSection({ connected, siteUrl }: { connected: boolean; siteUrl: strin
         </div>
       ) : (
         <div className="relative space-y-4">
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+          <div className="p-6 rounded-2xl bg-white/2 border border-white/5 space-y-4">
             <p className="text-xs text-zinc-500 leading-relaxed">
               כדי לחבר את Google Search Console ולצפות בנתוני SEO בזמן אמת, הוסף את משתני הסביבה הבאים:
             </p>
@@ -424,7 +424,7 @@ function QuickActions() {
             target={external ? "_blank" : undefined}
             rel={external ? "noopener noreferrer" : undefined}
             className={cn(
-              "group flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/[0.02] border border-white/5 transition-all",
+              "group flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/2 border border-white/5 transition-all",
               `hover:border-${accent}-500/20 hover:bg-${accent}-500/5`
             )}
           >
@@ -514,7 +514,7 @@ export function SeoConsoleTab() {
             </div>
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Smart SEO Dashboard</span>
           </div>
-          <h2 className="text-5xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h2 className="text-5xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             SEO Console
           </h2>
           <p className="text-zinc-500 font-medium tracking-tight text-lg">מדדי SEO, ניתוח תוכן וחיבור ל-Google Search Console</p>
@@ -534,7 +534,7 @@ export function SeoConsoleTab() {
         <div className="lg:col-span-1 p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col items-center justify-center gap-6 relative overflow-hidden">
           <div
             className={cn(
-              "absolute inset-0 bg-gradient-to-br to-transparent pointer-events-none opacity-30",
+              "absolute inset-0 bg-linear-to-br to-transparent pointer-events-none opacity-30",
               data.seoHealthScore >= 80 ? "from-emerald-600/20" : data.seoHealthScore >= 50 ? "from-amber-600/20" : "from-rose-600/20"
             )}
           />
@@ -542,7 +542,7 @@ export function SeoConsoleTab() {
           <HealthScoreRing score={data.seoHealthScore} passed={data.passedChecks} total={data.totalChecks} />
           <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
             <div
-              className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-1000", scoreGradient(data.seoHealthScore))}
+              className={cn("h-full rounded-full bg-linear-to-r transition-all duration-1000", scoreGradient(data.seoHealthScore))}
               style={{ width: `${data.seoHealthScore}%` }}
             />
           </div>

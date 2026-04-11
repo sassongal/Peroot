@@ -57,7 +57,7 @@ export function TextDiff({
       {segments.map(({ op, text, key }) => {
         if (op === DiffMatchPatch.DIFF_EQUAL) {
           return (
-            <span key={key} className="text-[var(--text-primary)]">
+            <span key={key} className="text-(--text-primary)">
               {text}
             </span>
           );

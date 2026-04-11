@@ -123,7 +123,7 @@ export function AutoChainBuilder({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center">
               <Wand2 className="w-5 h-5 text-amber-400" />
             </div>
             <div>
@@ -191,7 +191,7 @@ export function AutoChainBuilder({
               "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all",
               isGenerating
                 ? "bg-amber-500/10 border border-amber-500/20 text-amber-300 cursor-wait"
-                : "bg-gradient-to-l from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                : "bg-linear-to-l from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
             {isGenerating ? (

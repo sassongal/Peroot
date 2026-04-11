@@ -70,7 +70,7 @@ export const BlogHeroImage = memo(function BlogHeroImage({ title, category, exce
 
   return (
     <div
-      className="relative w-full aspect-[1200/630] overflow-hidden rounded-xl select-none"
+      className="relative w-full aspect-1200/630 overflow-hidden rounded-xl select-none"
       role="img"
       aria-label={`תמונת כותרת למאמר: ${title}`}
     >

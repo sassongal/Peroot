@@ -189,12 +189,12 @@ export default function PromptsIndexPage() {
                     <Link
                       key={slug}
                       href={`/prompts/${slug}`}
-                      className="flex flex-col items-center gap-2 p-3 md:p-4 min-h-[110px] rounded-xl border border-border bg-secondary hover:bg-white/[0.06] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
+                      className="flex flex-col items-center gap-2 p-3 md:p-4 min-h-[110px] rounded-xl border border-border bg-secondary hover:bg-white/6 hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.06)] transition-all text-center group"
                     >
                       <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform duration-200">
                         {emoji}
                       </span>
-                      <span className="text-xs md:text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug break-words">
+                      <span className="text-xs md:text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug wrap-break-word">
                         {labelHe}
                       </span>
                     </Link>
@@ -212,7 +212,7 @@ export default function PromptsIndexPage() {
 
           {/* CTA */}
           <section
-            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-gradient-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
+            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-linear-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
             aria-label="קריאה לפעולה"
           >
             <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-3">

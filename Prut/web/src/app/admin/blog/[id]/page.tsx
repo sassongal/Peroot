@@ -245,7 +245,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
         {/* Sidebar */}
         <div className="space-y-4">
           {/* Status */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2">
               <Globe className="w-3.5 h-3.5" />
               פרסום
@@ -261,7 +261,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Slug */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <label className="block text-xs font-bold text-slate-400">Slug</label>
             <input
               type="text"
@@ -274,7 +274,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Category */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <label className="block text-xs font-bold text-slate-400">קטגוריה</label>
             <input
               type="text"
@@ -286,7 +286,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Tags */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <label className="block text-xs font-bold text-slate-400">תגיות (מופרדות בפסיק)</label>
             <input
               type="text"
@@ -298,7 +298,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Read Time */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <label className="block text-xs font-bold text-slate-400">זמן קריאה</label>
             <input
               type="text"
@@ -310,7 +310,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Thumbnail URL */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <label className="block text-xs font-bold text-slate-400">תמונה ראשית (URL)</label>
             <input
               type="text"
@@ -323,7 +323,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* SEO */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3">
+          <div className="p-4 rounded-xl border border-white/10 bg-white/2 space-y-3">
             <h3 className="text-xs font-bold text-slate-400">SEO</h3>
             <div>
               <label className="block text-[10px] text-slate-500 mb-1">Meta Title</label>

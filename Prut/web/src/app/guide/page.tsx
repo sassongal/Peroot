@@ -365,7 +365,7 @@ function SectionHeading({ id, children }: { id: string; children: React.ReactNod
       className="text-2xl md:text-3xl font-serif text-foreground mb-2 scroll-mt-24"
     >
       {children}
-      <span className="block mt-2 h-0.5 w-14 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full" />
+      <span className="block mt-2 h-0.5 w-14 bg-linear-to-r from-amber-500 to-yellow-400 rounded-full" />
     </h2>
   );
 }
@@ -612,7 +612,7 @@ export default function GuidePage() {
               {GOLDEN_RULES.map((rule, i) => {
                 const Icon = rule.icon;
                 return (
-                  <GlassCard key={i} className="p-6 md:p-8 bg-gradient-to-br from-amber-500/[0.03] to-transparent">
+                  <GlassCard key={i} className="p-6 md:p-8 bg-linear-to-br from-amber-500/3 to-transparent">
                     <div className="flex items-start gap-4 mb-4">
                       <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
                         <Icon className="w-5 h-5 text-amber-400" />
@@ -640,7 +640,7 @@ export default function GuidePage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {ADVANCED_TECHNIQUES.map((tech, i) => (
-                  <GlassCard key={i} className="p-6 space-y-4 bg-gradient-to-br from-blue-500/[0.03] to-transparent">
+                  <GlassCard key={i} className="p-6 space-y-4 bg-linear-to-br from-blue-500/3 to-transparent">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                         <tech.icon className="w-5 h-5 text-blue-400" />
@@ -668,7 +668,7 @@ export default function GuidePage() {
                 איך — סגנון, תאורה, קומפוזיציה ופרטים טכניים.
               </p>
               {IMAGE_VIDEO_TIPS.map((tip, i) => (
-                <GlassCard key={i} className="p-6 md:p-8 bg-gradient-to-br from-purple-500/[0.04] to-transparent">
+                <GlassCard key={i} className="p-6 md:p-8 bg-linear-to-br from-purple-500/4 to-transparent">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                       {i < 2 ? (
@@ -694,7 +694,7 @@ export default function GuidePage() {
                 סוכני AI הם מודלים שפועלים באופן אוטונומי לפי הנחיות שכתבתם. בין אם זה Custom GPT,
                 Claude Project או סוכן מותאם אישית — כתיבת System Prompt טובה היא הבסיס לסוכן שעובד.
               </p>
-              <GlassCard className="p-6 md:p-8 space-y-6 bg-gradient-to-br from-emerald-500/[0.03] to-transparent">
+              <GlassCard className="p-6 md:p-8 space-y-6 bg-linear-to-br from-emerald-500/3 to-transparent">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                     <Bot className="w-5 h-5 text-emerald-400" />
@@ -738,7 +738,7 @@ export default function GuidePage() {
                 מצב Deep Research (זמין ב-Gemini, ChatGPT Pro ו-Perplexity) מבצע מחקר אוטונומי — גולש
                 באינטרנט, מצלב מקורות ויוצר דו&quot;ח מקיף. המפתח הוא פרומפט מובנה שמגדיר היקף ופורמט.
               </p>
-              <GlassCard className="p-6 md:p-8 space-y-6 bg-gradient-to-br from-cyan-500/[0.03] to-transparent">
+              <GlassCard className="p-6 md:p-8 space-y-6 bg-linear-to-br from-cyan-500/3 to-transparent">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
                     <Search className="w-5 h-5 text-cyan-400" />
@@ -777,7 +777,7 @@ export default function GuidePage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {PLATFORMS.map((platform) => (
-                  <GlassCard key={platform.name} className={`p-6 bg-gradient-to-br ${platform.color}`}>
+                  <GlassCard key={platform.name} className={`p-6 bg-linear-to-br ${platform.color}`}>
                     <div className="flex items-center gap-2 mb-4">
                       <span className={`w-2.5 h-2.5 rounded-full ${platform.dot}`} />
                       <h3 className="font-serif text-foreground text-lg">{platform.name}</h3>
@@ -805,7 +805,7 @@ export default function GuidePage() {
                 {TIPS_2026.map((tip, i) => {
                   const Icon = tip.icon;
                   return (
-                    <GlassCard key={i} className="p-5 bg-gradient-to-br from-amber-500/[0.03] to-transparent">
+                    <GlassCard key={i} className="p-5 bg-linear-to-br from-amber-500/3 to-transparent">
                       <div className="flex items-start gap-3">
                         <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
                           <Icon className="w-4 h-4 text-amber-400" />
@@ -847,7 +847,7 @@ export default function GuidePage() {
             {/* ── CTA ───────────────────────────────────────────────────────── */}
             <section className="mt-20 mb-8">
               <GlassCard className="p-8 md:p-12 text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-br from-amber-500/5 to-yellow-500/5 pointer-events-none" />
                 <div className="relative z-10 space-y-5">
                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
                     <Zap className="w-3.5 h-3.5" />

@@ -51,7 +51,7 @@ export function ReferralBanner({ isNewUser }: { isNewUser: boolean }) {
 
   return (
     <div
-      className="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 animate-in fade-in slide-in-from-top-4 duration-500"
+      className="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-linear-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 animate-in fade-in slide-in-from-top-4 duration-500"
       dir="rtl"
     >
       <Gift className="w-5 h-5 shrink-0 text-amber-400" />

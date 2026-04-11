@@ -44,7 +44,7 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
           'transition-colors duration-300',
           isError ? 'border-red-400/60 bg-red-50 dark:border-red-500/40 dark:bg-red-950/30' :
           stage === 'warning' ? 'border-amber-400/60 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-950/30' :
-          isReady ? 'border-amber-300/50 bg-gradient-to-l from-amber-50/80 to-white dark:border-amber-500/20 dark:from-amber-950/20 dark:to-zinc-900 hover:border-amber-400 dark:hover:border-amber-500/40 hover:shadow-md hover:shadow-amber-500/10' :
+          isReady ? 'border-amber-300/50 bg-linear-to-l from-amber-50/80 to-white dark:border-amber-500/20 dark:from-amber-950/20 dark:to-zinc-900 hover:border-amber-400 dark:hover:border-amber-500/40 hover:shadow-md hover:shadow-amber-500/10' :
           'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60',
           block?.display.metadata.truncated && 'ring-2 ring-amber-200/60 dark:ring-amber-500/30',
         ].filter(Boolean).join(' ')}
@@ -52,7 +52,7 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
         {/* Processing shimmer overlay */}
         {isProcessing && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/[0.07] to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-amber-500/[0.07] to-transparent"
             animate={{ x: ['-100%', '200%'] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           />

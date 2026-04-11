@@ -49,7 +49,7 @@ export default function OpsPage() {
 
         {/* ── Page header ── */}
         <div className="px-2 pt-2 space-y-1">
-          <h1 className="text-4xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-4xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Operations
           </h1>
           <p className="text-zinc-600 font-bold text-sm tracking-wide">
@@ -71,7 +71,7 @@ export default function OpsPage() {
                     "font-black text-[10px] uppercase tracking-widest",
                     isActive
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                      : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
+                      : "text-zinc-500 hover:text-zinc-300 hover:bg-white/3"
                   )}
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />

@@ -437,7 +437,7 @@ export default function CostsTab() {
               Financial Intelligence Layer
             </span>
           </div>
-          <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Cost Analysis
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -461,7 +461,7 @@ export default function CostsTab() {
               );
             }}
             disabled={!data || sortedByProvider.length === 0}
-            className="px-6 py-3 bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3 rounded-2xl disabled:opacity-40"
+            className="px-6 py-3 bg-white/3 border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all flex items-center gap-3 rounded-2xl disabled:opacity-40"
           >
             <Download className="w-4 h-4" />
             ייצוא CSV
@@ -630,7 +630,7 @@ export default function CostsTab() {
                   sortedByProvider.map((row, i) => (
                     <tr
                       key={`${row.provider}-${row.model}-${i}`}
-                      className="group hover:bg-white/[0.02] transition-all duration-300"
+                      className="group hover:bg-white/2 transition-all duration-300"
                     >
                       <td className="px-8 py-5">
                         <span className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-wider">
@@ -739,7 +739,7 @@ export default function CostsTab() {
                 );
               }}
               disabled={manualEntries.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 hover:text-zinc-200 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/3 border border-white/5 text-zinc-500 hover:text-zinc-200 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
             >
               <Download className="w-3.5 h-3.5" />
               ייצוא CSV
@@ -882,7 +882,7 @@ export default function CostsTab() {
                   manualEntries.map((entry) => (
                     <tr
                       key={entry.id}
-                      className="group hover:bg-white/[0.02] transition-all duration-300"
+                      className="group hover:bg-white/2 transition-all duration-300"
                     >
                       <td className="px-8 py-5">
                         <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-wider">
@@ -940,7 +940,7 @@ export default function CostsTab() {
                 return (
                   <div
                     key={m.month}
-                    className="flex flex-col items-center gap-2 group flex-1 min-w-[3rem]"
+                    className="flex flex-col items-center gap-2 group flex-1 min-w-12"
                     title={`${m.month}: LLM $${m.llmCost.toFixed(4)} + Infra $${m.manualCost.toFixed(4)} = $${total.toFixed(4)}`}
                   >
                     <div

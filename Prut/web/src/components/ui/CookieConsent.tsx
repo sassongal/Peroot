@@ -39,7 +39,7 @@ export function CookieConsent() {
   return (
     <div
       className={cn(
-        "fixed bottom-[60px] md:bottom-0 left-0 right-0 z-[90] p-4 animate-in slide-in-from-bottom-4 duration-500",
+        "fixed bottom-[60px] md:bottom-0 left-0 right-0 z-90 p-4 animate-in slide-in-from-bottom-4 duration-500",
       )}
       dir="rtl"
       role="dialog"

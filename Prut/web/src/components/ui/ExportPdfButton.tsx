@@ -74,7 +74,7 @@ export function ExportPdfButton({
       onClick={handleClick}
       disabled={disabled || busy || !enhanced}
       className={cn(
-        'p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-[var(--text-primary)] transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed',
+        'p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-(--text-primary) transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed',
         className
       )}
       title="הורד כ-PDF"

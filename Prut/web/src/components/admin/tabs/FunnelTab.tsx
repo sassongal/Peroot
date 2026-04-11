@@ -296,12 +296,12 @@ export default function FunnelTab() {
                       <div className="text-[10px] text-zinc-600 font-bold">{stage.labelHe}</div>
                     </div>
 
-                    <div className="flex-1 relative h-10 bg-white/[0.03] rounded-xl overflow-hidden">
+                    <div className="flex-1 relative h-10 bg-white/3 rounded-xl overflow-hidden">
                       <div
-                        className={cn("h-full rounded-xl bg-gradient-to-r transition-all duration-1000 shadow-lg", g.from, g.to, g.glow)}
+                        className={cn("h-full rounded-xl bg-linear-to-r transition-all duration-1000 shadow-lg", g.from, g.to, g.glow)}
                         style={{ width: `${widthPct}%`, minWidth: stage.count > 0 ? "2rem" : "0" }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl" />
+                      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl" />
                     </div>
 
                     <div className="w-24 text-right shrink-0">
@@ -343,7 +343,7 @@ export default function FunnelTab() {
                   const dropped = prev.count - stage.count;
                   const val = parseFloat(pct);
                   return (
-                    <tr key={stage.key} className="group hover:bg-white/[0.02] transition-all duration-300">
+                    <tr key={stage.key} className="group hover:bg-white/2 transition-all duration-300">
                       <td className="px-8 py-5">
                         <span className={cn("px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider", BAR_GRADIENTS[prev.color]?.badge ?? "")}>
                           {prev.label}

@@ -16,11 +16,11 @@ export default function LoginPage() {
     >
       {/* Layered background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/[0.06] blur-[160px] rounded-full" />
-        <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-orange-600/[0.04] blur-[120px] rounded-full" />
-        <div className="absolute top-[40%] left-[-10%] w-[300px] h-[300px] bg-slate-500/[0.03] blur-[100px] rounded-full" />
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/6 blur-[160px] rounded-full" />
+        <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-orange-600/4 blur-[120px] rounded-full" />
+        <div className="absolute top-[40%] left-[-10%] w-[300px] h-[300px] bg-slate-500/3 blur-[100px] rounded-full" />
         <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "url('/noise.svg')" }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+        <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/60" />
       </div>
 
       <div className="relative z-10 w-full max-w-[420px]">
@@ -37,7 +37,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.05] to-white/[0.02] backdrop-blur-2xl p-7 shadow-[0_16px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] animate-in fade-in slide-in-from-bottom-3 duration-700">
+        <div className="rounded-2xl border border-white/6 bg-linear-to-b from-white/5 to-white/2 backdrop-blur-2xl p-7 shadow-[0_16px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] animate-in fade-in slide-in-from-bottom-3 duration-700">
           <AuthForm />
         </div>
 

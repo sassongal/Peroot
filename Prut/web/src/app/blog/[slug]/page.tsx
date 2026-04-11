@@ -250,14 +250,7 @@ export default async function BlogPostPage({ params }: Props) {
 
             <SafeHtml
               html={enrichedContent}
-              className="prose dark:prose-invert prose-amber max-w-none
-                prose-headings:font-serif prose-headings:text-foreground
-                prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-                prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4
-                prose-li:text-[var(--list-item-readable-size)] prose-li:text-muted-foreground prose-li:leading-relaxed
-                prose-strong:text-foreground
-                prose-a:text-amber-600 dark:prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
+              className="prose dark:prose-invert prose-amber max-w-none prose-headings:font-serif prose-headings:text-foreground prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4 prose-li:text-[var(--list-item-readable-size)] prose-li:text-muted-foreground prose-li:leading-relaxed prose-strong:text-foreground prose-a:text-amber-600 dark:prose-a:text-amber-400 prose-a:no-underline hover:prose-a:underline"
             />
 
             {/* Share buttons — below content */}
@@ -266,14 +259,14 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
 
             {/* Newsletter signup */}
-            <div className="mt-8 p-6 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
+            <div className="mt-8 p-6 rounded-2xl border border-amber-500/20 bg-linear-to-br from-amber-500/5 to-transparent">
               <p className="text-lg font-serif text-foreground mb-3">נהנית מהתוכן? הצטרף לניוזלטר שלנו</p>
               <NewsletterSignup />
             </div>
 
             {/* Author Bio */}
             <div className="mt-12 p-6 rounded-2xl border border-border bg-secondary flex items-start gap-4" dir="rtl">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
                 <span className="text-lg font-bold text-amber-600 dark:text-amber-400">G</span>
               </div>
               <div>
@@ -294,14 +287,14 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
 
             {/* Gradient CTA */}
-            <div className="mt-12 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-8 text-center space-y-4">
+            <div className="mt-12 rounded-2xl bg-linear-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-8 text-center space-y-4">
               <h3 className="text-2xl font-serif text-foreground">רוצים לשדרג את הפרומפטים שלכם?</h3>
               <p className="text-muted-foreground max-w-lg mx-auto">
                 Peroot משדרג כל פרומפט לרמה מקצועית - בעברית, בחינם, תוך שניות.
               </p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold hover:scale-[1.03] transition-transform"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold hover:scale-[1.03] transition-transform"
               >
                 <Sparkles className="w-5 h-5" />
                 נסו עכשיו בחינם

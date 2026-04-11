@@ -53,7 +53,7 @@ export function BeforeAfterSplit({
         <div className="flex items-center gap-3 flex-wrap">
           <ScoreDelta before={score.before} after={score.after} />
           {score.improvements && score.improvements.length > 0 && (
-            <ul className="flex flex-col gap-1 text-xs text-[var(--text-muted)]">
+            <ul className="flex flex-col gap-1 text-xs text-(--text-muted)">
               {score.improvements.slice(0, 3).map((line, i) => (
                 <li key={i} className="flex items-center gap-1.5">
                   <Check className="w-3 h-3 text-emerald-500" aria-hidden="true" />
@@ -80,7 +80,7 @@ export function BeforeAfterSplit({
               'px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors',
               activeTab === 'after'
                 ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40'
-                : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'
+                : 'text-(--text-secondary) border-transparent hover:text-(--text-primary)'
             )}
           >
             אחרי
@@ -92,8 +92,8 @@ export function BeforeAfterSplit({
             className={cn(
               'px-2 py-1 rounded-full text-[11px] font-normal border transition-colors',
               activeTab === 'before'
-                ? 'text-[var(--text-secondary)] border-[var(--glass-border)]'
-                : 'text-[var(--text-muted)] border-transparent opacity-70 hover:opacity-100'
+                ? 'text-(--text-secondary) border-(--glass-border)'
+                : 'text-(--text-muted) border-transparent opacity-70 hover:opacity-100'
             )}
           >
             לפני
@@ -109,36 +109,36 @@ export function BeforeAfterSplit({
           )}
         >
           {hasOriginal && (
-            <div className="rounded-lg bg-[var(--glass-bg)]/40 opacity-60">
-              <div className="px-3 pt-2 text-[9px] font-normal uppercase tracking-wider text-[var(--text-muted)]">
+            <div className="rounded-lg bg-(--glass-bg)/40 opacity-60">
+              <div className="px-3 pt-2 text-[9px] font-normal uppercase tracking-wider text-(--text-muted)">
                 לפני
               </div>
-              <div className={cn(PANE_BASE, 'text-xs text-[var(--text-muted)]')}>
+              <div className={cn(PANE_BASE, 'text-xs text-(--text-muted)')}>
                 {original}
               </div>
             </div>
           )}
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.04] shadow-sm">
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/4 shadow-sm">
             <div className="px-4 pt-3 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
               אחרי
             </div>
-            <div className={cn(PANE_BASE, 'text-base text-[var(--text-primary)]')}>
+            <div className={cn(PANE_BASE, 'text-base text-(--text-primary)')}>
               {enhancedDisplay}
             </div>
           </div>
         </div>
       ) : mode === 'diff' && hasOriginal ? (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.04] shadow-sm">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/4 shadow-sm">
           <div className="px-4 pt-3 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center justify-between">
             <span>השוואה</span>
-            <span className="text-[9px] font-normal text-[var(--text-muted)]">
+            <span className="text-[9px] font-normal text-(--text-muted)">
               <span className="text-emerald-500">ירוק</span> = נוסף · <span className="text-red-500">אדום</span> = הוסר
             </span>
           </div>
           <div className={cn(PANE_BASE)}>
             <Suspense
               fallback={
-                <div className="text-sm text-[var(--text-muted)]">טוען השוואה…</div>
+                <div className="text-sm text-(--text-muted)">טוען השוואה…</div>
               }
             >
               <TextDiff before={original} after={enhanced} />
@@ -150,16 +150,16 @@ export function BeforeAfterSplit({
           className={cn(
             'rounded-xl transition-all',
             activeTab === 'after'
-              ? 'border border-amber-500/30 bg-amber-500/[0.04] shadow-sm'
-              : 'border border-[var(--glass-border)] bg-[var(--glass-bg)]/40 opacity-70'
+              ? 'border border-amber-500/30 bg-amber-500/4 shadow-sm'
+              : 'border border-(--glass-border) bg-(--glass-bg)/40 opacity-70'
           )}
         >
           <div
             className={cn(
               PANE_BASE,
               activeTab === 'after'
-                ? 'text-base text-[var(--text-primary)]'
-                : 'text-sm text-[var(--text-muted)]'
+                ? 'text-base text-(--text-primary)'
+                : 'text-sm text-(--text-muted)'
             )}
           >
             {hasOriginal && activeTab === 'before' ? original : enhancedDisplay}

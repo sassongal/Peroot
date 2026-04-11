@@ -252,7 +252,7 @@ export function EmailCampaignsTab() {
             </div>
             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Email Campaign Engine</span>
           </div>
-          <h2 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h2 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Email Campaigns
           </h2>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -545,7 +545,7 @@ export function EmailCampaignsTab() {
                 return (
                   <div
                     key={c.id}
-                    className="grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/[0.02] transition-all duration-300 group"
+                    className="grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/2 transition-all duration-300 group"
                   >
                     <div className="col-span-4 font-bold text-zinc-300 text-sm truncate">{subjectText}</div>
                     <div className="col-span-2 flex justify-center">
@@ -724,7 +724,7 @@ function GlobalEmailLogs() {
         <button
           onClick={fetchLogs}
           disabled={loading}
-          className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-zinc-600 hover:text-white transition-all"
+          className="p-2 rounded-xl bg-white/3 border border-white/5 text-zinc-600 hover:text-white transition-all"
         >
           <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
         </button>
@@ -770,7 +770,7 @@ function GlobalEmailLogs() {
         ) : (
           <div className="divide-y divide-white/5">
             {logs.map((log) => (
-              <div key={log.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-all text-sm">
+              <div key={log.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/2 transition-all text-sm">
                 <span className={cn("px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shrink-0", statusColor(log.status))}>
                   {log.status}
                 </span>
@@ -797,7 +797,7 @@ function GlobalEmailLogs() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-zinc-500 text-xs font-bold disabled:opacity-30 hover:text-white transition-all"
+            className="px-4 py-2 rounded-xl bg-white/3 border border-white/5 text-zinc-500 text-xs font-bold disabled:opacity-30 hover:text-white transition-all"
           >
             הקודם
           </button>
@@ -807,7 +807,7 @@ function GlobalEmailLogs() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-zinc-500 text-xs font-bold disabled:opacity-30 hover:text-white transition-all"
+            className="px-4 py-2 rounded-xl bg-white/3 border border-white/5 text-zinc-500 text-xs font-bold disabled:opacity-30 hover:text-white transition-all"
           >
             הבא
           </button>

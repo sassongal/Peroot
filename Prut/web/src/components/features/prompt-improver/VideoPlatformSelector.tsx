@@ -29,7 +29,7 @@ export function VideoPlatformSelector({
 }: VideoPlatformSelectorProps) {
   return (
     <div className="flex flex-col gap-2" dir="rtl">
-      <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest px-1">פלטפורמת וידאו</div>
+      <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">פלטפורמת וידאו</div>
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
         {VIDEO_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
@@ -46,7 +46,7 @@ export function VideoPlatformSelector({
                 "hover:scale-[1.02] active:scale-[0.98]",
                 isSelected
                   ? "border-rose-500/50 bg-rose-500/10 text-rose-700 dark:text-rose-300"
-                  : "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] hover:border-rose-500/30 hover:bg-rose-500/5",
+                  : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-rose-500/30 hover:bg-rose-500/5",
                 disabled && "opacity-50 cursor-not-allowed"
               )}
               aria-pressed={isSelected}
@@ -70,8 +70,8 @@ export function VideoPlatformSelector({
       {/* Aspect Ratio selector */}
       {onAspectRatioChange && (
         <div className="flex items-center gap-2 px-1">
-          <span className="text-[11px] text-[var(--text-muted)]">יחס תמונה:</span>
-          <div className="flex rounded-md border border-[var(--glass-border)] overflow-hidden">
+          <span className="text-[11px] text-(--text-muted)">יחס תמונה:</span>
+          <div className="flex rounded-md border border-(--glass-border) overflow-hidden">
             {ASPECT_RATIO_OPTIONS.map((option) => (
               <button
                 key={option.value}
@@ -82,7 +82,7 @@ export function VideoPlatformSelector({
                   "px-2.5 py-1 text-[11px] font-medium transition-colors",
                   aspectRatio === option.value
                     ? "bg-rose-500/20 text-rose-700 dark:text-rose-300"
-                    : "text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/5"
+                    : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5"
                 )}
               >
                 {option.label}

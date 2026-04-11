@@ -150,7 +150,7 @@ function CircularGauge({ score }: { score: number }) {
         width="192"
         height="192"
         viewBox="0 0 192 192"
-        className="-rotate-[135deg]"
+        className="-rotate-135"
       >
         {/* Track */}
         <circle
@@ -390,7 +390,7 @@ export function HealthTab() {
               System Intelligence Layer
             </span>
           </div>
-          <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             System Health
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -721,7 +721,7 @@ export function HealthTab() {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-white/4">
               {loading && !data ? (
                 <tr>
                   <td colSpan={4} className="px-8 py-16 text-center">
@@ -735,7 +735,7 @@ export function HealthTab() {
                   return (
                     <tr
                       key={key}
-                      className="group hover:bg-white/[0.02] transition-colors"
+                      className="group hover:bg-white/2 transition-colors"
                     >
                       <td className="px-8 py-5">
                         <span className="text-sm font-bold text-zinc-300">

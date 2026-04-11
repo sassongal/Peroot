@@ -212,7 +212,7 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
   const Icon = cap.icon;
   return (
     <div
-      className={`group relative rounded-2xl border ${cap.borderColor} bg-gradient-to-b ${cap.gradient} p-6 md:p-8 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-black/20`}
+      className={`group relative rounded-2xl border ${cap.borderColor} bg-linear-to-b ${cap.gradient} p-6 md:p-8 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-black/20`}
     >
       {/* Number badge */}
       <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground">
@@ -442,7 +442,7 @@ export default function FeaturesPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
             >
               <Sparkles className="w-5 h-5" />
               בואו ננסה!

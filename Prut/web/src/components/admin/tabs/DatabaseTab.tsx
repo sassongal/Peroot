@@ -75,7 +75,7 @@ function ResourceBar({
       </div>
       <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
         <div
-          className={cn("h-full transition-all duration-[3000ms]", colors[color])}
+          className={cn("h-full transition-all duration-3000", colors[color])}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -184,7 +184,7 @@ export function DatabaseTab() {
               Critical Infrastructure Access
             </span>
           </div>
-          <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Infra Matrix
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -194,7 +194,7 @@ export function DatabaseTab() {
         </div>
 
         <div className="flex gap-4">
-          <div className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+          <div className="px-6 py-3 rounded-2xl bg-white/3 border border-white/5 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Connectivity: Optimal
           </div>

@@ -238,14 +238,14 @@ export const InputSection = memo<InputSectionProps>(({
               <button
                 key={i}
                 onClick={() => { onRestore(item); }}
-                className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all cursor-pointer text-start group"
+                className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-black/6 dark:hover:bg-white/6 transition-all cursor-pointer text-start group"
                 dir="rtl"
               >
-                <p className="text-sm text-[var(--text-secondary)] font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
-                <p className="text-xs text-[var(--text-muted)] mt-1 truncate" title={item.original}>{item.original.slice(0, 60)}</p>
+                <p className="text-sm text-(--text-secondary) font-medium truncate" title={item.title || item.original}>{item.title || item.original.slice(0, 40)}</p>
+                <p className="text-xs text-(--text-muted) mt-1 truncate" title={item.original}>{item.original.slice(0, 60)}</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--glass-bg)] text-[var(--text-muted)] border border-[var(--glass-border)]">{item.category || 'כללי'}</span>
-                  <span className="text-xs text-[var(--text-muted)]">{item.tone || ''}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-(--glass-bg) text-(--text-muted) border border-(--glass-border)">{item.category || 'כללי'}</span>
+                  <span className="text-xs text-(--text-muted)">{item.tone || ''}</span>
                 </div>
               </button>
             ))}
@@ -276,20 +276,20 @@ export const InputSection = memo<InputSectionProps>(({
                   onUsePrompt(prompt);
                   incrementUseCount(prompt.id);
                 }}
-                className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/[0.04] dark:bg-amber-500/[0.02] hover:bg-amber-500/[0.08] dark:hover:bg-amber-500/[0.06] transition-all cursor-pointer text-start group"
+                className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/4 dark:bg-amber-500/2 hover:bg-amber-500/8 dark:hover:bg-amber-500/6 transition-all cursor-pointer text-start group"
                 dir="rtl"
               >
                 <div className="flex items-center gap-2 mb-1">
                   {prompt.is_pinned && (
                     <span className="text-amber-400 text-[10px]">&#128204;</span>
                   )}
-                  <p className="text-sm text-[var(--text-secondary)] font-medium truncate flex-1" title={prompt.title}>{prompt.title}</p>
+                  <p className="text-sm text-(--text-secondary) font-medium truncate flex-1" title={prompt.title}>{prompt.title}</p>
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-1 truncate" title={prompt.use_case}>{prompt.use_case}</p>
+                <p className="text-xs text-(--text-muted) mt-1 truncate" title={prompt.use_case}>{prompt.use_case}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10">{prompt.personal_category || 'כללי'}</span>
                   {prompt.use_count > 0 && (
-                    <span className="text-xs text-[var(--text-muted)]">x{prompt.use_count}</span>
+                    <span className="text-xs text-(--text-muted)">x{prompt.use_count}</span>
                   )}
                 </div>
               </button>
@@ -304,7 +304,7 @@ export const InputSection = memo<InputSectionProps>(({
           {/* Surprise Me Button */}
           <button
             onClick={onSurpriseMe}
-            className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm transition-all cursor-pointer group"
+            className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-black/6 dark:hover:bg-white/6 text-(--text-muted) hover:text-(--text-primary) text-sm transition-all cursor-pointer group"
           >
             <Shuffle className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
             <span>הפתע אותי - פרומפט אקראי מהספריה</span>
@@ -312,14 +312,14 @@ export const InputSection = memo<InputSectionProps>(({
 
           {/* Prompt of the Day */}
           {promptOfTheDay && (
-            <div className="glass-card rounded-xl border-[var(--glass-border)] bg-gradient-to-l from-amber-500/[0.06] dark:from-amber-500/[0.04] to-transparent overflow-hidden">
-              <div className="px-5 py-3 border-b border-[var(--glass-border)] flex items-center gap-2">
+            <div className="glass-card rounded-xl border-(--glass-border) bg-linear-to-l from-amber-500/6 dark:from-amber-500/4 to-transparent overflow-hidden">
+              <div className="px-5 py-3 border-b border-(--glass-border) flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 <span className="text-xs font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider">פרומפט היום</span>
               </div>
               <div className="p-5 flex flex-col gap-3">
-                <h3 className="text-base font-semibold text-[var(--text-primary)]" dir="rtl">{promptOfTheDay.title}</h3>
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
+                <h3 className="text-base font-semibold text-(--text-primary)" dir="rtl">{promptOfTheDay.title}</h3>
+                <p className="text-sm text-(--text-muted) leading-relaxed line-clamp-2" dir="rtl">{promptOfTheDay.use_case}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <button
                     onClick={() => {
@@ -332,7 +332,7 @@ export const InputSection = memo<InputSectionProps>(({
                   </button>
                   <button
                     onClick={onNavLibrary}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] text-xs transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg) text-xs transition-colors cursor-pointer"
                   >
                     עוד פרומפטים מהספריה
                   </button>

@@ -53,14 +53,14 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
               'relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium overflow-hidden',
               'transition-all duration-500',
               state === 'complete' && 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-              state === 'active'   && 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/25',
+              state === 'active'   && 'bg-linear-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/25',
               state === 'pending'  && 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500',
             ].filter(Boolean).join(' ')}
           >
             {/* Shimmer sweep on active pill */}
             {state === 'active' && (
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
                 animate={{ x: ['-100%', '200%'] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', repeatDelay: 0.5 }}
               />

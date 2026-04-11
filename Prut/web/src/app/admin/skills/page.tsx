@@ -265,7 +265,7 @@ export default function SkillsPage() {
 
           {/* Skill detail */}
           {selectedSkill && (
-            <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6 space-y-4">
+            <div className="rounded-xl bg-white/2 border border-white/10 p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
                   <h2 className="text-xl font-black text-white">{selectedSkill.name}</h2>
@@ -315,7 +315,7 @@ export default function SkillsPage() {
                         onClick={() => setExpandedExample(isExpanded ? null : i)}
                         className="w-full text-right p-3 flex items-start gap-2"
                       >
-                        {isExpanded ? <ChevronDown className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" /> : <ChevronRight className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />}
+                        {isExpanded ? <ChevronDown className="w-4 h-4 text-white/40 mt-0.5 shrink-0" /> : <ChevronRight className="w-4 h-4 text-white/40 mt-0.5 shrink-0" />}
                         <div className="flex-1 text-right">
                           <div className="text-xs font-bold text-white/80">דוגמה {i + 1}: {ex.concept}</div>
                           {ex.category && (
@@ -354,7 +354,7 @@ export default function SkillsPage() {
 
                 {section === 'scoring' && selectedSkill.skill.scoringCriteria?.map((c, i) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs font-bold">
+                    <div className="shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs font-bold">
                       {i + 1}
                     </div>
                     <div className="text-xs text-white/80">{c}</div>
@@ -389,7 +389,7 @@ interface AnalyticsSectionProps {
 function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps) {
   if (!analytics || analytics.totalSelections === 0) {
     return (
-      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-12 text-center">
+      <div className="rounded-xl bg-white/2 border border-white/10 p-12 text-center">
         <BarChart3 className="w-10 h-10 text-white/20 mx-auto mb-4" />
         <div className="text-white/60 text-sm font-bold mb-1">אין עדיין נתוני אנליטיקה</div>
         <div className="text-white/40 text-xs max-w-md mx-auto">
@@ -434,7 +434,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top categories with bar chart */}
-        <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
+        <div className="rounded-xl bg-white/2 border border-white/10 p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
               <TrendingUp className="w-3.5 h-3.5" />
@@ -455,7 +455,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
                     </div>
                     <div className="h-2 rounded-full bg-white/5 overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-l from-emerald-400 to-emerald-600 rounded-full transition-all"
+                        className="h-full bg-linear-to-l from-emerald-400 to-emerald-600 rounded-full transition-all"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -467,7 +467,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
         </div>
 
         {/* Top platforms */}
-        <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
+        <div className="rounded-xl bg-white/2 border border-white/10 p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
               <BarChart3 className="w-3.5 h-3.5" />
@@ -488,7 +488,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
                     </div>
                     <div className="h-2 rounded-full bg-white/5 overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-l from-purple-400 to-purple-600 rounded-full transition-all"
+                        className="h-full bg-linear-to-l from-purple-400 to-purple-600 rounded-full transition-all"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -514,7 +514,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
                     </div>
                     <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-l from-amber-400 to-amber-600 rounded-full"
+                        className="h-full bg-linear-to-l from-amber-400 to-amber-600 rounded-full"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -527,7 +527,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
       </div>
 
       {/* Recent selections timeline */}
-      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
+      <div className="rounded-xl bg-white/2 border border-white/10 p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
             <Activity className="w-3.5 h-3.5" />
@@ -544,7 +544,7 @@ function AnalyticsSection({ analytics, recentSelections }: AnalyticsSectionProps
                 key={`${sel.timestamp}-${i}`}
                 className="rounded-lg bg-black/30 border border-white/5 p-3 flex items-start gap-3"
               >
-                <div className="flex-shrink-0 text-[10px] text-white/40 font-mono w-24 pt-0.5">
+                <div className="shrink-0 text-[10px] text-white/40 font-mono w-24 pt-0.5">
                   {formatTimestamp(sel.timestamp)}
                 </div>
                 <div className="flex-1 min-w-0">

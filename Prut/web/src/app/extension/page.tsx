@@ -194,7 +194,7 @@ export default function ExtensionPage() {
                 </div>
               </div>
               {/* Glow */}
-              <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
+              <div className="absolute -inset-px rounded-2xl bg-linear-to-b from-amber-500/10 to-transparent pointer-events-none" />
             </div>
           </section>
 
@@ -213,7 +213,7 @@ export default function ExtensionPage() {
                 return (
                   <div
                     key={s.step}
-                    className={`relative rounded-2xl border ${s.border} bg-gradient-to-b ${s.bg}/30 to-transparent p-6 text-center space-y-4`}
+                    className={`relative rounded-2xl border ${s.border} bg-linear-to-b ${s.bg}/30 to-transparent p-6 text-center space-y-4`}
                   >
                     {/* Step number */}
                     <div className="absolute top-4 left-4 w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground">
@@ -251,7 +251,7 @@ export default function ExtensionPage() {
                 return (
                   <div
                     key={f.title}
-                    className={`rounded-2xl border ${f.border} bg-gradient-to-b ${f.gradient} p-6 space-y-4 hover:scale-[1.01] transition-transform`}
+                    className={`rounded-2xl border ${f.border} bg-linear-to-b ${f.gradient} p-6 space-y-4 hover:scale-[1.01] transition-transform`}
                   >
                     <div
                       className={`w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center ${f.color}`}
@@ -286,7 +286,7 @@ export default function ExtensionPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
               <Link
                 href="/?notify=extension"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
               >
                 <Chrome className="w-5 h-5" />
                 עדכנו אותי

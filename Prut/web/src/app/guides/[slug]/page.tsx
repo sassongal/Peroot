@@ -312,7 +312,7 @@ export default async function GuidePage({
             </p>
             <Link
               href={`/?mode=${guide.category === "image" ? "IMAGE_GENERATION" : "VIDEO_GENERATION"}`}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-l from-amber-500/90 to-orange-500/90 text-white font-bold text-sm hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-l from-amber-500/90 to-orange-500/90 text-white font-bold text-sm hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
             >
               נסה עכשיו ב-Peroot
               <ExternalLink className="w-4 h-4" />

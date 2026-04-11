@@ -50,7 +50,7 @@ export default function FinancePage() {
 
         {/* ── Page Header ──────────────────────────────────────────────── */}
         <div className="space-y-2 px-2">
-          <h1 className="text-5xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-5xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Finance Center
           </h1>
           <p className="text-zinc-500 font-bold text-sm tracking-tight">

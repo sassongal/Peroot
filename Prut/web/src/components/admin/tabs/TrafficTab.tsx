@@ -185,7 +185,7 @@ const DEVICE_ICON: Record<string, LucideIcon> = {
 // ── Skeleton ───────────────────────────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-lg bg-white/[0.04]", className)} />;
+  return <div className={cn("animate-pulse rounded-lg bg-white/4", className)} />;
 }
 
 // ── Delta Badge ───────────────────────────────────────────────────────────────
@@ -436,7 +436,7 @@ export default function TrafficTab() {
         </div>
 
         <div className="flex flex-col gap-3 shrink-0 items-end">
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.03] border border-white/5">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/3 border border-white/5">
             {([7, 14, 28, 90] as RangeOption[]).map((opt) => (
               <button key={opt} onClick={() => setRange(opt)} className={cn(
                 "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
@@ -454,7 +454,7 @@ export default function TrafficTab() {
       </div>
 
       {/* Inner Tab Navigation */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.02] border border-white/5 w-fit">
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-white/2 border border-white/5 w-fit">
         {innerTabs.map((t) => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} className={cn(
             "px-4 py-2 rounded-lg text-xs font-bold transition-all",
@@ -483,7 +483,7 @@ export default function TrafficTab() {
           </div>
 
           <SectionCard title="נפח פעילות יומי" subtitle="Daily traffic" icon={BarChart3} color="blue">
-            <div className="flex items-center justify-end gap-1 p-1 rounded-lg bg-white/[0.03] border border-white/5 w-fit ms-auto">
+            <div className="flex items-center justify-end gap-1 p-1 rounded-lg bg-white/3 border border-white/5 w-fit ms-auto">
               {(["pageViews", "sessions", "activeUsers"] as const).map((m) => (
                 <button key={m} onClick={() => setChartMetric(m)} className={cn(
                   "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all",
@@ -526,7 +526,7 @@ export default function TrafficTab() {
                         </div>
                       </div>
                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-linear-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
@@ -544,7 +544,7 @@ export default function TrafficTab() {
                   { label: "Avg Time", className: "w-16 text-left" },
                 ]} />
                 {data.sourceMedium.map((sm, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors group/row">
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors group/row">
                     <span className="flex-1 text-sm font-bold text-zinc-400 truncate group-hover/row:text-white transition-colors" dir="ltr">
                       {sm.source} / {sm.medium}
                     </span>
@@ -569,7 +569,7 @@ export default function TrafficTab() {
                 { label: "Avg Time", className: "w-16 text-left" },
               ]} />
               {data.landingPages.map((lp, i) => (
-                <div key={lp.path} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors group/row">
+                <div key={lp.path} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors group/row">
                   <span className="text-[10px] font-black text-zinc-700 w-5 tabular-nums">{i + 1}</span>
                   <span className="flex-1 text-sm font-bold text-zinc-400 truncate font-mono group-hover/row:text-white transition-colors" dir="ltr">{lp.path || "/"}</span>
                   <span className="w-16 text-xs font-black text-white tabular-nums text-left">{fmtNum(lp.sessions)}</span>
@@ -586,7 +586,7 @@ export default function TrafficTab() {
               {data.countries.map((c, i) => {
                 const pct = Math.round((c.sessions / (data.countries[0]?.sessions || 1)) * 100);
                 return (
-                  <div key={c.country} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors">
+                  <div key={c.country} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors">
                     <span className="text-[10px] font-black text-zinc-700 w-4 tabular-nums">{i + 1}</span>
                     <span className="text-sm font-bold text-zinc-300 flex-1">{c.country}</span>
                     <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden">
@@ -616,7 +616,7 @@ export default function TrafficTab() {
                 { label: "Avg Time", className: "w-16 text-left" },
               ]} />
               {data.topPages.map((page, i) => (
-                <div key={page.path} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors group/row">
+                <div key={page.path} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors group/row">
                   <span className="text-[10px] font-black text-zinc-700 w-5 tabular-nums">{i + 1}</span>
                   <span className="flex-1 text-sm font-bold text-zinc-400 truncate font-mono group-hover/row:text-white transition-colors" dir="ltr">{page.path}</span>
                   <span className="w-16 text-xs font-black text-white tabular-nums text-left">{fmtNum(page.pageViews)}</span>
@@ -634,7 +634,7 @@ export default function TrafficTab() {
                 const maxCount = data.events[0]?.count || 1;
                 const pct = Math.round((evt.count / maxCount) * 100);
                 return (
-                  <div key={evt.name} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors group/row cursor-default">
+                  <div key={evt.name} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors group/row cursor-default">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-bold text-zinc-400 group-hover/row:text-white transition-colors truncate font-mono" dir="ltr">{evt.name}</div>
                       <div className="h-1 mt-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -686,7 +686,7 @@ export default function TrafficTab() {
                           </div>
                         </div>
                         <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} />
+                          <div className="h-full bg-linear-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     </div>
@@ -701,7 +701,7 @@ export default function TrafficTab() {
                   const totalBrowserSessions = data.browsers.reduce((s, br) => s + br.sessions, 0) || 1;
                   const pct = Math.round((b.sessions / totalBrowserSessions) * 100);
                   return (
-                    <div key={b.browser} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors cursor-default">
+                    <div key={b.browser} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors cursor-default">
                       <span className="text-[10px] font-black text-zinc-700 w-4 tabular-nums">{i + 1}</span>
                       <span className="text-sm font-bold text-zinc-300 flex-1">{b.browser}</span>
                       <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden">
@@ -721,7 +721,7 @@ export default function TrafficTab() {
               {data.countries.map((c, i) => {
                 const pct = Math.round((c.sessions / (data.countries[0]?.sessions || 1)) * 100);
                 return (
-                  <div key={c.country} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors">
+                  <div key={c.country} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/3 transition-colors">
                     <span className="text-[10px] font-black text-zinc-700 w-4 tabular-nums">{i + 1}</span>
                     <span className="text-sm font-bold text-zinc-300 flex-1">{c.country}</span>
                     <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden">

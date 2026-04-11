@@ -30,7 +30,7 @@ export function SourceBadge({ source, className }: SourceBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px]",
-        "text-[var(--text-muted)] bg-[var(--glass-bg)] border border-[var(--glass-border)]",
+        "text-(--text-muted) bg-(--glass-bg) border border-(--glass-border)",
         className
       )}
       title={`מקור: ${config.label}`}

@@ -29,7 +29,7 @@ function StatItem({
   color: string;
 }) {
   return (
-    <div className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-3xl flex items-center gap-4 transition-all hover:bg-white/5">
+    <div className="px-6 py-4 bg-white/2 border border-white/5 rounded-3xl flex items-center gap-4 transition-all hover:bg-white/5">
       <Icon className={cn("w-5 h-5", color)} />
       <div className="flex flex-col">
         <span className="text-[9px] font-black text-zinc-600 tracking-tighter uppercase">{label}</span>
@@ -81,7 +81,7 @@ export function LibraryTab() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[48px] border border-white/5 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="space-y-2">
-          <h2 className="text-5xl font-black bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent tracking-tighter uppercase">
+          <h2 className="text-5xl font-black bg-linear-to-r from-white to-zinc-400 bg-clip-text text-transparent tracking-tighter uppercase">
             Public Repository
           </h2>
           <p className="text-zinc-500 font-medium tracking-wide">ניהול ספריה ציבורית, ייבוא נתונים רוחבי וארכיטקטורת קטגוריות</p>

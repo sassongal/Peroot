@@ -64,18 +64,18 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
       <div
-        className="bg-[#111] border border-[var(--glass-border)] rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
+        className="bg-[#111] border border-(--glass-border) rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--glass-border)]">
+        <div className="flex items-center justify-between p-4 border-b border-(--glass-border)">
           <div>
-            <h3 className="text-lg font-bold text-[var(--text-primary)]">היסטוריית גרסאות</h3>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">{promptTitle}</p>
+            <h3 className="text-lg font-bold text-(--text-primary)">היסטוריית גרסאות</h3>
+            <p className="text-xs text-(--text-muted) mt-0.5">{promptTitle}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--glass-bg)] text-[var(--text-muted)] transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-(--glass-bg) text-(--text-muted) transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -83,11 +83,11 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <div className="flex items-center justify-center py-12 text-[var(--text-muted)]">
+            <div className="flex items-center justify-center py-12 text-(--text-muted)">
               <div className="animate-pulse">טוען גרסאות...</div>
             </div>
           ) : versions.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">
+            <div className="text-center py-12 text-(--text-muted)">
               <p>אין גרסאות קודמות עדיין</p>
               <p className="text-xs mt-1">גרסאות נשמרות אוטומטית בכל עריכה</p>
             </div>
@@ -101,7 +101,7 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
                       "w-full text-start p-3 rounded-xl border transition-all cursor-pointer",
                       selectedVersion?.id === version.id
                         ? "bg-amber-500/10 border-amber-500/30"
-                        : "bg-[var(--glass-bg)] border-[var(--glass-border)] hover:bg-[var(--glass-bg)]"
+                        : "bg-(--glass-bg) border-(--glass-border) hover:bg-(--glass-bg)"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -110,10 +110,10 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
                           v{version.version_number}
                         </span>
                         {version.title && (
-                          <span className="text-sm text-[var(--text-secondary)] truncate max-w-[200px]">{version.title}</span>
+                          <span className="text-sm text-(--text-secondary) truncate max-w-[200px]">{version.title}</span>
                         )}
                       </div>
-                      <span className="text-[10px] text-[var(--text-muted)]">
+                      <span className="text-[10px] text-(--text-muted)">
                         {new Date(version.created_at).toLocaleString("he-IL", {
                           day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
                         })}
@@ -123,8 +123,8 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
 
                   {/* Expanded version content */}
                   {selectedVersion?.id === version.id && (
-                    <div className="mt-2 p-3 rounded-xl bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] animate-in slide-in-from-top-2 duration-200">
-                      <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto" dir="rtl">
+                    <div className="mt-2 p-3 rounded-xl bg-black/5 dark:bg-black/30 border border-(--glass-border) animate-in slide-in-from-top-2 duration-200">
+                      <pre className="text-sm text-(--text-secondary) whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto" dir="rtl">
                         {version.content}
                       </pre>
                       <div className="flex justify-end mt-3">

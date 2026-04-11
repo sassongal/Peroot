@@ -285,7 +285,7 @@ export default async function CategoryPage({ params }: Props) {
 
           {/* CTA section */}
           <section
-            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-gradient-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
+            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-linear-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
             aria-label="קריאה לפעולה"
           >
             <p className="text-sm text-amber-600/70 dark:text-amber-400/70 font-medium mb-2">Peroot - מחולל פרומפטים בעברית</p>
@@ -323,7 +323,7 @@ export default async function CategoryPage({ params }: Props) {
                   <Link
                     key={catSlug}
                     href={`/prompts/${catSlug}`}
-                    className="flex flex-col items-center gap-2 p-3 min-h-[44px] rounded-xl border border-border bg-secondary hover:bg-white/[0.06] hover:border-white/20 transition-colors text-center group"
+                    className="flex flex-col items-center gap-2 p-3 min-h-[44px] rounded-xl border border-border bg-secondary hover:bg-white/6 hover:border-white/20 transition-colors text-center group"
                   >
                     <span className="text-2xl">{catData.emoji}</span>
                     <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors leading-snug">

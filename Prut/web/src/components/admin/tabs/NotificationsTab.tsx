@@ -450,7 +450,7 @@ export function NotificationsTab() {
               Anomaly Detection Layer
             </span>
           </div>
-          <h1 className="text-5xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-5xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Notification Center
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-base max-w-xl">

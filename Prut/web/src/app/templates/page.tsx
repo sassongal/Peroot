@@ -171,7 +171,7 @@ export default async function TemplatesPage() {
 
           {/* CTA */}
           <section
-            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-gradient-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
+            className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-linear-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
             aria-label="קריאה לפעולה"
           >
             <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-3">

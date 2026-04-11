@@ -178,7 +178,7 @@ export function ChainBuilder({
               )}
               <div
                 className={cn(
-                  "border border-white/10 rounded-xl p-4 bg-white/[0.02] hover:bg-white/[0.04] transition-colors",
+                  "border border-white/10 rounded-xl p-4 bg-white/2 hover:bg-white/4 transition-colors",
                   dragIndex === index && "opacity-50 border-amber-500/30"
                 )}
                 draggable

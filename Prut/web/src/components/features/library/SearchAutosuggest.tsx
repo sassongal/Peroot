@@ -120,7 +120,7 @@ export function SearchAutosuggest({
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
       <input
         ref={inputRef}
         dir="rtl"
@@ -133,7 +133,7 @@ export function SearchAutosuggest({
         onFocus={() => value.trim().length >= 2 && setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full bg-black/5 dark:bg-black/30 border border-[var(--glass-border)] rounded-lg py-2.5 pe-10 ps-8 text-base md:text-sm text-[var(--text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-[var(--glass-border)]"
+        className="w-full bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2.5 pe-10 ps-8 text-base md:text-sm text-(--text-primary) placeholder:text-slate-600 focus:outline-none focus:border-(--glass-border)"
         role="combobox"
         aria-expanded={showSuggestions && suggestions.length > 0}
         aria-autocomplete="list"
@@ -142,7 +142,7 @@ export function SearchAutosuggest({
         <button
           type="button"
           onClick={() => { onChange(""); setShowSuggestions(false); }}
-          className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+          className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors"
           aria-label="נקה חיפוש"
         >
           <X className="w-3.5 h-3.5" />
@@ -152,14 +152,14 @@ export function SearchAutosuggest({
       {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div
-          className="absolute top-full mt-1 inset-x-0 z-50 bg-[#111] border border-[var(--glass-border)] rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute top-full mt-1 inset-x-0 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
           role="listbox"
           dir="rtl"
         >
           {/* Category section */}
           {suggestions.some(s => s.type === "category") && (
             <>
-              <div className="px-3 py-1.5 text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
+              <div className="px-3 py-1.5 text-[10px] font-medium text-(--text-muted) uppercase tracking-wider">
                 קטגוריות
               </div>
               {suggestions.filter(s => s.type === "category").map((item, i) => {
@@ -171,7 +171,7 @@ export function SearchAutosuggest({
                     onMouseEnter={() => setActiveIndex(globalIdx)}
                     className={cn(
                       "w-full text-right px-3 py-2 text-sm transition-colors",
-                      globalIdx === activeIndex ? "bg-white/10 text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:bg-white/5"
+                      globalIdx === activeIndex ? "bg-white/10 text-(--text-primary)" : "text-(--text-secondary) hover:bg-white/5"
                     )}
                     role="option"
                     aria-selected={globalIdx === activeIndex}
@@ -187,8 +187,8 @@ export function SearchAutosuggest({
           {suggestions.some(s => s.type === "prompt") && (
             <>
               <div className={cn(
-                "px-3 py-1.5 text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider",
-                suggestions.some(s => s.type === "category") && "border-t border-[var(--glass-border)]"
+                "px-3 py-1.5 text-[10px] font-medium text-(--text-muted) uppercase tracking-wider",
+                suggestions.some(s => s.type === "category") && "border-t border-(--glass-border)"
               )}>
                 פרומפטים
               </div>
@@ -201,7 +201,7 @@ export function SearchAutosuggest({
                     onMouseEnter={() => setActiveIndex(globalIdx)}
                     className={cn(
                       "w-full text-right px-3 py-2 text-sm transition-colors truncate",
-                      globalIdx === activeIndex ? "bg-white/10 text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:bg-white/5"
+                      globalIdx === activeIndex ? "bg-white/10 text-(--text-primary)" : "text-(--text-secondary) hover:bg-white/5"
                     )}
                     role="option"
                     aria-selected={globalIdx === activeIndex}

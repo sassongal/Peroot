@@ -30,12 +30,12 @@ export function TabPerformance({ stats }: { stats: ContentFactoryStats | null })
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-white/3">
               {!stats?.topPrompts || stats.topPrompts.length === 0 ? (
                 <tr><td colSpan={5} className="px-6 py-12 text-center text-zinc-700 font-black uppercase tracking-widest text-[9px]">אין נתונים זמינים</td></tr>
               ) : (
                 stats.topPrompts.map((p, i) => (
-                  <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
+                  <tr key={p.id} className="hover:bg-white/2 transition-colors group">
                     <td className="px-6 py-4 text-[11px] font-black text-zinc-600">{i + 1}</td>
                     <td className="px-6 py-4 text-sm font-bold text-white max-w-xs truncate">{p.title}</td>
                     <td className="px-6 py-4"><span className="text-[9px] font-black px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">{p.category}</span></td>
@@ -61,12 +61,12 @@ export function TabPerformance({ stats }: { stats: ContentFactoryStats | null })
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-white/3">
               {!stats?.topBlogPosts || stats.topBlogPosts.length === 0 ? (
                 <tr><td colSpan={4} className="px-6 py-12 text-center text-zinc-700 font-black uppercase tracking-widest text-[9px]">אין נתונים זמינים</td></tr>
               ) : (
                 stats.topBlogPosts.map((p, i) => (
-                  <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                  <tr key={p.id} className="hover:bg-white/2 transition-colors">
                     <td className="px-6 py-4 text-[11px] font-black text-zinc-600">{i + 1}</td>
                     <td className="px-6 py-4 text-sm font-bold text-white max-w-xs truncate">{p.title}</td>
                     <td className="px-6 py-4">
@@ -106,7 +106,7 @@ export function TabPerformance({ stats }: { stats: ContentFactoryStats | null })
                       {cat.count}{cat.target > 0 && <span className="text-zinc-700"> / {cat.target}</span>}
                     </span>
                   </div>
-                  <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className="h-2 bg-white/4 rounded-full overflow-hidden">
                     <div
                       className={cn("h-full rounded-full transition-all duration-700", CATEGORY_COLORS[i % CATEGORY_COLORS.length], isLow && "opacity-50")}
                       style={{ width: `${Math.max(pct, 2)}%` }}

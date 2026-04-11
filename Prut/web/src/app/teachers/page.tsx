@@ -195,7 +195,7 @@ export default function TeachersPage() {
             <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground leading-tight">
               פרומפטים מקצועיים למורים
               <br />
-              <span className="bg-gradient-to-l from-amber-400 to-[#E17100] bg-clip-text text-transparent">
+              <span className="bg-linear-to-l from-amber-400 to-[#E17100] bg-clip-text text-transparent">
                 — בעברית
               </span>
             </h1>
@@ -210,7 +210,7 @@ export default function TeachersPage() {
             <div className="pt-2">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-[#E17100] text-black font-bold text-lg transition-all hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-linear-to-r from-amber-500 to-[#E17100] text-black font-bold text-lg transition-all hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-amber-500/20"
               >
                 <Sparkles className="w-5 h-5" />
                 התחילו בחינם
@@ -296,7 +296,7 @@ export default function TeachersPage() {
               </div>
 
               {/* After */}
-              <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent p-6 space-y-3">
+              <div className="rounded-2xl border border-amber-500/20 bg-linear-to-b from-amber-500/5 to-transparent p-6 space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-amber-600 dark:text-amber-400">
                   <span className="w-2 h-2 rounded-full bg-amber-400" />
                   מה שפירוט מייצר
@@ -348,7 +348,7 @@ export default function TeachersPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-[#E17100] text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-linear-to-r from-amber-500 to-[#E17100] text-black font-bold transition-all hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-amber-500/20"
               >
                 <GraduationCap className="w-5 h-5" />
                 כניסה לפירוט

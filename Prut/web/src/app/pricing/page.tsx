@@ -261,7 +261,7 @@ export default function PricingPage() {
                   key={i}
                   className={`grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-border' : ''} hover:bg-secondary transition-colors`}
                 >
-                  <div className="p-3 md:p-4 flex items-center gap-2 md:gap-2.5 text-xs md:text-sm text-foreground leading-snug break-words">
+                  <div className="p-3 md:p-4 flex items-center gap-2 md:gap-2.5 text-xs md:text-sm text-foreground leading-snug wrap-break-word">
                     <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span className="min-w-0">{feature.name}</span>
                   </div>

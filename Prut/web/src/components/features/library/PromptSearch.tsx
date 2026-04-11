@@ -117,7 +117,7 @@ export function PromptSearch() {
                   href={`/prompts/${categorySlug}`}
                   className={cn(
                     "flex flex-col gap-1.5 p-3 rounded-xl border border-border bg-secondary",
-                    "hover:bg-white/[0.06] hover:border-amber-500/30 transition-all group"
+                    "hover:bg-white/6 hover:border-amber-500/30 transition-all group"
                   )}
                 >
                   <div className="flex items-center gap-2">

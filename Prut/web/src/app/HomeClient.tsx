@@ -41,11 +41,11 @@ import { SiteSearchBar } from "@/components/features/search/SiteSearchBar";
 // Dynamic imports for route-level views
 const LibraryView = dynamic(
   () => import("@/components/views/LibraryView").then(mod => mod.LibraryView),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-(--glass-bg) h-96" /> }
 );
 const PersonalLibraryView = dynamic(
   () => import("@/components/views/PersonalLibraryView").then(mod => mod.PersonalLibraryView),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-96" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-(--glass-bg) h-96" /> }
 );
 
 // Extracted components — InputSection + HomeViewChrome are above the fold,
@@ -63,7 +63,7 @@ const MobileFaqPanel = dynamic(
 );
 const HomeResultSection = dynamic(
   () => import("@/components/features/home/HomeResultSection").then(m => m.HomeResultSection),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" /> }
+  { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-(--glass-bg) h-64" /> }
 );
 
 // Constants
@@ -1310,7 +1310,7 @@ export default function HomeClient() {
   }, []);
 
   return (
-    <div ref={wrapperRef} className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-[var(--surface-body)] text-[var(--text-primary)] selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 w-full overflow-x-hidden" dir="rtl">
+    <div ref={wrapperRef} className="relative min-h-[calc(100vh-1rem)] flex flex-col items-center p-4 bg-(--surface-body) text-(--text-primary) selection:bg-amber-500/30 font-sans pb-10 pt-2 px-4 md:px-6 w-full overflow-x-hidden" dir="rtl">
       <PageContent />
     </div>
   );

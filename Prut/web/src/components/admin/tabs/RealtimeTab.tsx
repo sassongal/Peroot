@@ -268,7 +268,7 @@ export function RealtimeTab() {
               Live Intelligence Layer
             </span>
           </div>
-          <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+          <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Real-Time Activity
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -302,7 +302,7 @@ export function RealtimeTab() {
               "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border",
               paused
                 ? "bg-emerald-600 text-white border-transparent hover:bg-emerald-500 shadow-2xl shadow-emerald-600/20"
-                : "bg-white/[0.03] border-white/5 text-zinc-400 hover:text-white"
+                : "bg-white/3 border-white/5 text-zinc-400 hover:text-white"
             )}
           >
             {paused ? (
@@ -430,7 +430,7 @@ export function RealtimeTab() {
                 </span>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.03] max-h-[600px] overflow-y-auto custom-scrollbar">
+              <div className="divide-y divide-white/3 max-h-[600px] overflow-y-auto custom-scrollbar">
                 {(data?.feed ?? []).map((event) => {
                   const colors = actionColor(event.action);
                   const isNew = newIds.has(event.id);
@@ -440,7 +440,7 @@ export function RealtimeTab() {
                       className={cn(
                         "flex items-start gap-4 px-6 py-4 transition-all duration-500",
                         isNew &&
-                          "bg-white/[0.04] animate-in slide-in-from-top-1 fade-in"
+                          "bg-white/4 animate-in slide-in-from-top-1 fade-in"
                       )}
                     >
                       {/* Action dot */}

@@ -129,7 +129,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Header Section */}
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-4 group cursor-default">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-2xl shadow-blue-500/20 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-2xl shadow-blue-500/20 group-hover:scale-110 transition-transform">
               <Command className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
@@ -166,7 +166,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   "group flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 relative overflow-hidden",
                   isActive
                     ? "bg-blue-600 text-white shadow-3xl shadow-blue-600/20"
-                    : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03]"
+                    : "text-zinc-500 hover:text-zinc-200 hover:bg-white/3"
                 )}
               >
                 <div className="flex items-center gap-4 relative z-10">

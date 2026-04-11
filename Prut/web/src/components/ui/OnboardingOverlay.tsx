@@ -125,13 +125,13 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-white/60 dark:bg-black/80 backdrop-blur-xl animate-in fade-in duration-500 overscroll-contain overflow-y-auto" onKeyDown={(e) => { if (e.key === "Escape") handleSkip(); }}>
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-white/60 dark:bg-black/80 backdrop-blur-xl animate-in fade-in duration-500 overscroll-contain overflow-y-auto" onKeyDown={(e) => { if (e.key === "Escape") handleSkip(); }}>
             <div
                 ref={trapRef}
                 role="dialog"
                 aria-modal="true"
                 aria-label="מסך הכרות"
-                className="w-full max-w-lg glass-card rounded-[40px] border-[var(--glass-border)] bg-white/95 dark:bg-zinc-950/90 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-700"
+                className="w-full max-w-lg glass-card rounded-[40px] border-(--glass-border) bg-white/95 dark:bg-zinc-950/90 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-700"
                 dir="rtl"
             >
                 {/* Background decoration */}
@@ -144,7 +144,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                 <div className="absolute top-6 left-6 z-20">
                     <button
                         onClick={handleSkip}
-                        className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors px-4 py-2.5 min-h-[44px] flex items-center rounded-lg hover:bg-[var(--glass-bg)] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                        className="text-xs text-(--text-muted) hover:text-(--text-secondary) transition-colors px-4 py-2.5 min-h-[44px] flex items-center rounded-lg hover:bg-(--glass-bg) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                     >
                         דלג
                     </button>
@@ -158,7 +158,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                             className={cn(
                                 "h-1.5 rounded-full transition-all duration-500",
                                 i + 1 === step
-                                    ? "w-8 bg-gradient-to-r from-amber-400 to-yellow-500"
+                                    ? "w-8 bg-linear-to-r from-amber-400 to-yellow-500"
                                     : "w-1.5 bg-black/10 dark:bg-white/10"
                             )}
                         />
@@ -171,14 +171,14 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                     {/* Step 1: Welcome */}
                     {step === 1 && (
                         <div className="text-center space-y-8 animate-in slide-in-from-right-4 duration-500">
-                            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 mx-auto shadow-2xl shadow-amber-500/10">
+                            <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 mx-auto shadow-2xl shadow-amber-500/10">
                                 <Rocket className="w-12 h-12 text-amber-400" />
                             </div>
                             <div className="space-y-4">
-                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--text-primary)] tracking-tight">
+                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-(--text-primary) tracking-tight">
                                     ברוך הבא ל-Peroot!
                                 </h2>
-                                <p className="text-lg text-[var(--text-muted)] max-w-md mx-auto leading-relaxed">
+                                <p className="text-lg text-(--text-muted) max-w-md mx-auto leading-relaxed">
                                     Peroot משדרג את הפרומפטים שלך באמצעות AI מתקדם - הפוך כל רעיון גולמי לפרומפט מקצועי ומפורט בשניות.
                                 </p>
                             </div>
@@ -189,7 +189,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                                     { icon: Bot, label: "בניית סוכנים" },
                                 ].map(({ icon: Icon, label }) => (
                                     <div key={label} className="flex flex-col items-center gap-2">
-                                        <div className="w-10 h-10 rounded-2xl bg-[var(--glass-bg)] border border-[var(--glass-border)] flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-2xl bg-(--glass-bg) border border-(--glass-border) flex items-center justify-center">
                                             <Icon className="w-5 h-5 text-amber-400" />
                                         </div>
                                         <span className="text-xs text-slate-500">{label}</span>
@@ -203,7 +203,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                     {step === 2 && (
                         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                             <div className="text-center">
-                                <h2 className="text-3xl font-serif font-bold text-[var(--text-primary)] mb-2">
+                                <h2 className="text-3xl font-serif font-bold text-(--text-primary) mb-2">
                                     בחר מצב פרומפט
                                 </h2>
                                 <p className="text-slate-400 text-sm leading-relaxed">
@@ -257,10 +257,10 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                                 <CheckCircle2 className="w-12 h-12 text-emerald-400" />
                             </div>
                             <div className="space-y-4">
-                                <h2 className="text-4xl font-serif font-bold text-[var(--text-primary)] tracking-tight">
+                                <h2 className="text-4xl font-serif font-bold text-(--text-primary) tracking-tight">
                                     מוכן להתחיל!
                                 </h2>
-                                <p className="text-lg text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
+                                <p className="text-lg text-(--text-muted) max-w-sm mx-auto leading-relaxed">
                                     כתוב פרומפט או בחר מהספרייה ותן ל-AI לעשות את הקסם
                                 </p>
                             </div>
@@ -278,7 +278,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                         {step > 1 && (
                             <button
                                 onClick={handleBack}
-                                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-all text-sm font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg) transition-all text-sm font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                             >
                                 <ArrowLeft className="w-4 h-4 rtl-flip" />
                                 הקודם
@@ -291,8 +291,8 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                         className={cn(
                             "flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-bold transition-all shadow-xl active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:outline-none",
                             step === TOTAL_STEPS
-                                ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-900/20 hover:scale-[1.03] focus-visible:ring-emerald-500"
-                                : "bg-gradient-to-r from-amber-500 to-yellow-500 shadow-amber-900/20 hover:scale-[1.03] focus-visible:ring-amber-500"
+                                ? "bg-linear-to-r from-emerald-500 to-green-500 shadow-emerald-900/20 hover:scale-[1.03] focus-visible:ring-emerald-500"
+                                : "bg-linear-to-r from-amber-500 to-yellow-500 shadow-amber-900/20 hover:scale-[1.03] focus-visible:ring-amber-500"
                         )}
                     >
                         <span>{step === TOTAL_STEPS ? "התחל עכשיו" : "הבא"}</span>

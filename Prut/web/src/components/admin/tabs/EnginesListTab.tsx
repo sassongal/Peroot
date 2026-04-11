@@ -112,7 +112,7 @@ export function EnginesListTab() {
                 </div>
                 <span className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em]">Core Orchestration</span>
              </div>
-             <h1 className="text-6xl font-black bg-gradient-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
+             <h1 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
                 Nexus Engines
              </h1>
              <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
@@ -123,7 +123,7 @@ export function EnginesListTab() {
           <div className="flex gap-4">
              <button
                 onClick={() => router.push('/admin/activity')}
-                className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all active:scale-95 flex items-center gap-3"
+                className="px-6 py-3 rounded-2xl bg-white/3 border border-white/5 text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all active:scale-95 flex items-center gap-3"
              >
                 <HistoryIcon className="w-4 h-4" />
                 Global History
@@ -141,7 +141,7 @@ export function EnginesListTab() {
                 href={`/admin/engines/${engine.mode}`}
                 className="group relative overflow-hidden rounded-[40px] border border-white/5 bg-zinc-950 p-1 transition-all duration-700 hover:scale-[1.02] hover:shadow-3xl hover:border-white/10"
               >
-                <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 
                 <div className="relative p-10 rounded-[38px] bg-zinc-950 flex flex-col gap-10 h-full">
                    <div className="flex justify-between items-start">

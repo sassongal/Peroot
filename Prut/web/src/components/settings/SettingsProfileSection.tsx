@@ -52,7 +52,7 @@ export function SettingsProfileSection({
       </header>
 
       <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 overflow-hidden border-2 border-white/20">
+        <div className="w-16 h-16 rounded-full bg-linear-to-br from-amber-500 to-yellow-600 overflow-hidden border-2 border-white/20">
           {avatarUrl ? (
             <img
               src={avatarUrl}

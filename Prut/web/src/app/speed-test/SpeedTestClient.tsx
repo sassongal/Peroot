@@ -52,10 +52,10 @@ function MetricRow({ label, value, score }: { label: string; value: string; scor
     score >= 0.5 ? "text-amber-500" : "text-red-500";
 
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-[var(--glass-border)]">
+    <div className="flex items-center justify-between py-2.5 border-b border-(--glass-border)">
       <div className="flex items-center gap-2">
         <StatusIcon className={`w-4 h-4 ${statusColor}`} />
-        <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+        <span className="text-sm text-(--text-secondary)">{label}</span>
       </div>
       <span className="text-sm font-mono font-medium">{value}</span>
     </div>
@@ -112,13 +112,13 @@ export function SpeedTestClient() {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://example.com"
-          className="flex-1 px-4 py-3 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#E17100]/50 font-mono text-sm"
+          className="flex-1 px-4 py-3 rounded-xl bg-(--glass-bg) border border-(--glass-border) text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-[#E17100]/50 font-mono text-sm"
           onKeyDown={(e) => e.key === "Enter" && !loading && runTest()}
         />
         <div className="flex gap-2">
           <button
             onClick={() => setStrategy(strategy === "mobile" ? "desktop" : "mobile")}
-            className="px-4 py-3 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] text-sm hover:bg-[var(--glass-bg-hover)] transition-colors"
+            className="px-4 py-3 rounded-xl bg-(--glass-bg) border border-(--glass-border) text-sm hover:bg-(--glass-bg-hover) transition-colors"
             title={`החלף ל-${strategy === "mobile" ? "Desktop" : "Mobile"}`}
           >
             {strategy === "mobile" ? "Mobile" : "Desktop"}
@@ -149,7 +149,7 @@ export function SpeedTestClient() {
 
       {/* Loading */}
       {loading && (
-        <div className="flex flex-col items-center justify-center py-16 gap-4 text-[var(--text-muted)]">
+        <div className="flex flex-col items-center justify-center py-16 gap-4 text-(--text-muted)">
           <Loader2 className="w-10 h-10 animate-spin text-[#E17100]" />
           <p>מריץ בדיקת מהירות... (עד 90 שניות)</p>
         </div>
@@ -167,7 +167,7 @@ export function SpeedTestClient() {
           </div>
 
           {/* Core Web Vitals */}
-          <div className="p-5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
+          <div className="p-5 rounded-xl bg-(--glass-bg) border border-(--glass-border)">
             <h2 className="text-lg font-semibold mb-3">Core Web Vitals</h2>
             {Object.entries(metricLabels).map(([key, label]) => (
               <MetricRow
@@ -181,7 +181,7 @@ export function SpeedTestClient() {
 
           {/* Opportunities */}
           {result.opportunities.length > 0 && (
-            <div className="p-5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
+            <div className="p-5 rounded-xl bg-(--glass-bg) border border-(--glass-border)">
               <h2 className="text-lg font-semibold mb-3">הזדמנויות לשיפור</h2>
               <div className="space-y-3">
                 {result.opportunities.map((opp, i) => (
@@ -200,7 +200,7 @@ export function SpeedTestClient() {
           )}
 
           {/* Meta */}
-          <p className="text-xs text-[var(--text-muted)] text-center">
+          <p className="text-xs text-(--text-muted) text-center">
             {result.strategy === "mobile" ? "Mobile" : "Desktop"} &middot; {new Date(result.fetchTime).toLocaleString("he-IL")}
           </p>
         </div>
