@@ -357,54 +357,45 @@ function scoreExamples(t: string, p: Parsed): Omit<DimensionScoreChunk, 'tipHe'>
   return { key, maxPoints, score: 0, matched: [], missing: ['few-shot / דוגמה'] };
 }
 
-function scoreClarity(t: string): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'clarity' } {
+function scoreClarity(t: string, domain?: PromptDomain): Omit<DimensionScoreChunk, 'tipHe'> & { key: 'clarity' } {
   const key = 'clarity';
   const maxPoints = 8;
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 8;
+
+  // Creative prompts: hedge words are often narrative content ("אולי הגיבור..."),
+  // not instruction hedging — apply only half penalty and skip buzzword check entirely
+  // since persona descriptors ("סופר מצוין מקצועי") are structurally required.
+  const isCreative = domain === 'creative';
+
   const hedges = ['אולי', 'נסה ל', 'ייתכן', 'אפשר', 'maybe', 'perhaps', 'try to', 'somewhat', 'kind of', 'sort of'];
   const hedgeCount = hedges.filter((h) => new RegExp(h, 'i').test(t)).length;
   if (hedgeCount > 0) {
-    pts -= Math.min(6, hedgeCount * 2);
+    // Creative: hedge words are likely content, not hedging — halve the penalty
+    const penalty = isCreative ? Math.min(3, hedgeCount) : Math.min(6, hedgeCount * 2);
+    pts -= penalty;
     missing.push(`${hedgeCount} מילות hedge`);
   }
-  const buzzwords = [
-    'מקצועי',
-    'מקיף',
-    'איכותי',
-    'מצוין',
-    'יוצא דופן',
-    'ברמה הגבוהה',
-    'מתקדם',
-    'חדשני',
-    'מעולה',
-    'מהמובילים',
-    'ברמה עולמית',
-    'world-class',
-    'premium',
-    'expert',
-    'best-in-class',
-    'cutting-edge',
-    'state-of-the-art',
-    'top-tier',
-    'high-quality',
-    'excellent',
-    'outstanding',
-    'superior',
-    'advanced',
-    'comprehensive',
-    'professional',
-    'innovative',
-    'revolutionary',
-    'unique',
-  ];
-  const buzzwordHits = buzzwords.filter((b) => new RegExp(b, 'i').test(t)).length;
-  const hasConcreteSpec = /\d+\s*(מילים|שורות|נקודות|words|lines|items|points|bullets|sentences)/i.test(t);
-  if (buzzwordHits >= 3 && !hasConcreteSpec) {
-    pts -= 5;
-    missing.push(`buzzword inflation (${buzzwordHits}) — no measurable spec / ניפוח באזז בלי מפרט מדיד`);
+
+  if (!isCreative) {
+    // Buzzword inflation check is only meaningful for task/instruction prompts.
+    // In creative prompts the LLM legitimately uses quality descriptors in the persona.
+    const buzzwords = [
+      'מקצועי', 'מקיף', 'איכותי', 'מצוין', 'יוצא דופן', 'ברמה הגבוהה', 'מתקדם',
+      'חדשני', 'מעולה', 'מהמובילים', 'ברמה עולמית', 'world-class', 'premium', 'expert',
+      'best-in-class', 'cutting-edge', 'state-of-the-art', 'top-tier', 'high-quality',
+      'excellent', 'outstanding', 'superior', 'advanced', 'comprehensive',
+      'professional', 'innovative', 'revolutionary', 'unique',
+    ];
+    const buzzwordHits = buzzwords.filter((b) => new RegExp(b, 'i').test(t)).length;
+    const hasConcreteSpec = /\d+\s*(מילים|שורות|בתים|עמודות|נקודות|פסקאות|words|lines|stanzas|items|points|bullets|sentences)/i.test(t);
+    if (buzzwordHits >= 3 && !hasConcreteSpec) {
+      pts -= 5;
+      missing.push(`buzzword inflation (${buzzwordHits}) — no measurable spec / ניפוח באזז בלי מפרט מדיד`);
+    }
   }
+
   if (/^(כתוב|צור|בנה|נסח|write|create|build|generate)\s/im.test(t)) {
     matched.push('פתיחה בציווי חד');
   }
@@ -570,7 +561,7 @@ export function scoreEnhancedTextDimensions(t: string, wordCount: number, domain
     wrap(scoreStructure(t)),
     wrap(scoreChannel(t)),
     wrap(scoreExamples(t, p)),
-    wrap(scoreClarity(t)),
+    wrap(scoreClarity(t, d)),
     wrap(scoreGroundedness(t)),
     wrap(scoreSafety(t)),
     wrap(scoreMeasurability(t)),
