@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -17,10 +17,7 @@ const CategorySchema = z.object({
  * 
  * Lists all categories (Admin View)
  */
-export async function GET() {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
-
+export const GET = withAdmin(async (_req, supabase) => {
     try {
         const { data } = await supabase
             .from('library_categories')
@@ -31,17 +28,14 @@ export async function GET() {
     } catch {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-}
+});
 
 /**
  * POST /api/admin/library/categories
  * 
  * Create or update a category
  */
-export async function POST(req: Request) {
-    const { error, supabase, user } = await validateAdminSession();
-    if (error || !supabase || !user) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
-
+export const POST = withAdmin(async (req, supabase) => {
     try {
         const body = await req.json();
         const parseResult = CategorySchema.safeParse(body);
@@ -62,4 +56,4 @@ export async function POST(req: Request) {
         logger.error('[Admin Category] Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-}
+});

@@ -29,7 +29,7 @@ export async function GET() {
                 'Vercel-CDN-Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
             }
         });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

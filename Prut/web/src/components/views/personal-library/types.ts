@@ -1,5 +1,4 @@
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
-import { CapabilityMode } from "@/lib/capability-mode";
 import React from "react";
 
 // ─── Props passed from the top-level PersonalLibraryView to every child ────

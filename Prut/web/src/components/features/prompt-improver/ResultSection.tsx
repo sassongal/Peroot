@@ -16,6 +16,8 @@ import { ScoreDelta } from "@/components/ui/ScoreDelta";
 import { ScoreBreakdownDrawer } from "@/components/ui/ScoreBreakdownDrawer";
 import { EnhancedScorer, type EnhancedScore } from "@/lib/engines/scoring/enhanced-scorer";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
+import { QUICK_REFINE_ACTIONS } from "@/lib/constants";
+import { trackFeatureUse } from "@/lib/analytics";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -53,6 +55,8 @@ interface ResultSectionProps {
   preFilledKeys?: string[];
   onVariableChange?: (key: string, value: string) => void;
   onImproveAgain?: () => void;
+  /** Preset refinement instructions (דלתות מהירות) — runs true refine, not re-enhance from scratch */
+  onQuickRefine?: (instruction: string) => void;
   onRetryStream?: () => void;
   onResetToOriginal?: () => void;
   iterationCount?: number;
@@ -104,6 +108,7 @@ export function ResultSection({
   preFilledKeys = [],
   onVariableChange,
   onImproveAgain,
+  onQuickRefine,
   onRetryStream,
   onResetToOriginal,
   iterationCount,
@@ -278,9 +283,10 @@ export function ResultSection({
                 />
                 <button
                   onClick={() => handleCopy(displayCompletion)}
-                  className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-(--text-primary) transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  disabled={isLoading}
+                  className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-(--text-primary) transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   title={t.result_section.copy_tooltip}
-                  aria-label="העתק פרומפט"
+                  aria-label={copied ? "הועתק" : "העתק פרומפט"}
                 >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
@@ -499,6 +505,29 @@ export function ResultSection({
                 </button>
               </div>
             </div>
+
+            {onQuickRefine && completion.trim() && !isLoading && (
+              <div className="flex flex-col gap-2 pt-1" dir="rtl">
+                <span className="text-[10px] font-medium text-(--text-muted)">
+                  דלתות מהירות — שיפור על בסיס התוצאה:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_REFINE_ACTIONS.map((action) => (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={() => {
+                        trackFeatureUse(`quick_refine_${action.id}`);
+                        onQuickRefine(action.instruction);
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-200 hover:bg-amber-500/15 transition-colors cursor-pointer min-h-[36px]"
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Pro watermark toggle - only visible to Pro users */}
             {isPro && (

@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -31,10 +31,7 @@ const BatchImportSchema = z.array(PromptSchema);
  * 
  * Batch import/update public library prompts
  */
-export async function POST(req: Request) {
-    const { error, supabase, user } = await validateAdminSession();
-    if (error || !supabase || !user) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
-
+export const POST = withAdmin(async (req, supabase, user) => {
     try {
         const body = await req.json();
         const parseResult = BatchImportSchema.safeParse(body);
@@ -92,4 +89,4 @@ export async function POST(req: Request) {
         logger.error('[Batch Import] Critical Error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-}
+});

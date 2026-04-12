@@ -3,11 +3,10 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import {
-    BookOpen, Star, Plus, Search,
+    BookOpen, Star, Search, Filter,
     ChevronDown, ChevronLeft, ChevronRight, Link2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { GlowingEdgeCard } from "@/components/ui/GlowingEdgeCard";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
@@ -233,12 +232,13 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
 
         {/* Empty states */}
         {!isLoading && displayItems.length === 0 && (localSearch.trim() || personalQuery.trim()) && (
-          <div className="text-center py-12 rounded-xl border border-white/8 bg-(--glass-bg)" dir="rtl">
-            <Search className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-            <p className="text-(--text-muted) text-sm">לא נמצאו תוצאות עבור &quot;{localSearch || personalQuery}&quot;</p>
+          <div className="mx-2 text-center py-12 rounded-xl border border-white/8 bg-(--glass-bg)" dir="rtl">
+            <Search className="w-8 h-8 text-slate-500 mx-auto mb-3" />
+            <p className="text-(--text-muted) text-sm font-medium">אין תוצאות לחיפוש</p>
+            <p className="text-(--text-muted) text-xs mt-1 opacity-70">&quot;{localSearch || personalQuery}&quot;</p>
             <button
               onClick={() => { handleSearchChange(""); setPersonalQuery(""); }}
-              className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:text-amber-300 transition-colors"
+              className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:text-amber-300 transition-colors cursor-pointer"
             >
               נקה חיפוש
             </button>
@@ -246,16 +246,17 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
         )}
 
         {!isLoading && displayItems.length === 0 && !localSearch.trim() && !personalQuery.trim() && selectedCapabilityFilter && (
-          <div className="text-center py-10 rounded-xl border border-white/8 bg-(--glass-bg)" dir="rtl">
-            <p className="text-(--text-muted) text-sm">אין פרומפטים במצב זה</p>
-            <button onClick={() => setSelectedCapabilityFilter(null)} className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:text-amber-300 transition-colors">
-              הצג הכל
+          <div className="mx-2 text-center py-10 rounded-xl border border-amber-500/15 bg-amber-500/4" dir="rtl">
+            <Filter className="w-6 h-6 text-amber-500/50 mx-auto mb-2" />
+            <p className="text-(--text-muted) text-sm font-medium">אין פרומפטים עם הפילטר הנוכחי</p>
+            <button onClick={() => setSelectedCapabilityFilter(null)} className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:text-amber-300 transition-colors cursor-pointer">
+              הסר פילטר
             </button>
           </div>
         )}
 
         {!isLoading && displayItems.length === 0 && !localSearch.trim() && !personalQuery.trim() && !selectedCapabilityFilter && (
-          <div className="flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-white/8 bg-(--glass-bg) px-8 animate-in fade-in duration-500" dir="rtl">
+          <div className="mx-2 flex flex-col items-center gap-4 text-center py-16 rounded-xl border border-white/8 bg-(--glass-bg) px-8 animate-in fade-in duration-500" dir="rtl">
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
               <BookOpen className="w-8 h-8 text-amber-500/50" />
             </div>

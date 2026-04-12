@@ -154,7 +154,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
       {/* Collapsed Row */}
       <div
         className={cn(
-          "flex items-center gap-2 px-3 cursor-pointer select-none",
+          "flex items-center gap-2 px-3 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
           isExpanded ? "py-3 border-b border-white/8" : "py-2.5"
         )}
         onClick={toggleExpand}
@@ -170,7 +170,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
             "shrink-0 transition-opacity",
             (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-60"
           )}
-          aria-label="בחר"
+          aria-label={`בחר את הפרומפט "${prompt.title}"`}
         >
           {isSelected
             ? <CheckSquare className="w-4 h-4 text-blue-400" />
@@ -231,7 +231,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
             onClick={(e) => { e.stopPropagation(); bumpPersonalLibraryLastUsed?.(prompt.id); onCopyText(prompt.prompt); }}
             title="העתק"
             aria-label="העתק פרומפט"
-            className="p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
+            className="p-2 md:p-1.5 rounded-lg bg-amber-500/5 text-amber-500 dark:text-amber-400 hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center cursor-pointer"
           >
             <Copy className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
@@ -500,7 +500,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
               {/* Prompt text */}
               <SafeHtml
                 html={toStyledHtml(styledMarkup)}
-                className="text-sm text-(--text-secondary) leading-relaxed rounded-lg bg-black/5 dark:bg-black/20 p-3 border border-(--glass-border)"
+                className="text-sm text-(--text-primary) leading-relaxed rounded-lg bg-black/5 dark:bg-black/20 p-3 border border-(--glass-border)"
                 dir="rtl"
               />
 

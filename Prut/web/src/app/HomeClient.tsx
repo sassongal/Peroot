@@ -5,10 +5,10 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 
-import { trackPromptEnhance, trackEnhanceComplete, trackPromptCopy, identifyUser } from "@/lib/analytics";
+import { identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
-import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
-import { CapabilityMode, capabilitySupportsTargetModel } from "@/lib/capability-mode";
+import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
+import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
@@ -17,10 +17,7 @@ import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
-import {
-  splitCompletionAndQuestions,
-  stripGeniusQuestionsForDisplay,
-} from "@/lib/prompt-stream/split-genius-completion";
+import { stripGeniusQuestionsForDisplay } from "@/lib/prompt-stream/split-genius-completion";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
@@ -41,6 +38,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/context/I18nContext";
 import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
 import { SiteSearchBar } from "@/components/features/search/SiteSearchBar";
+import { useResultActions } from "@/hooks/useResultActions";
+import { usePromptEnhance } from "@/hooks/usePromptEnhance";
 
 // Dynamic imports for route-level views
 const LibraryView = dynamic(
@@ -69,18 +68,6 @@ const HomeResultSection = dynamic(
   () => import("@/components/features/home/HomeResultSection").then(m => m.HomeResultSection),
   { ssr: false, loading: () => <div className="animate-pulse rounded-xl bg-(--glass-bg) h-64" /> }
 );
-
-// Constants
-
-const getPromptKey = (text: string) => {
-  const normalized = text.trim().slice(0, 500);
-  if (!normalized) return "empty";
-  let hash = 0;
-  for (let i = 0; i < normalized.length; i += 1) {
-    hash = (hash * 31 + normalized.charCodeAt(i)) | 0;
-  }
-  return `${Math.abs(hash)}:${normalized.length}`;
-};
 
 function PageContent() {
   const t = useI18n();
@@ -429,302 +416,58 @@ function PageContent() {
     dispatch({ type: 'SET_INPUT', payload: next });
   };
 
-  const recordUsageSignal = (type: "copy" | "save" | "refine" | "enhance", text: string) => {
-    const target = text.trim();
-    if (!target) return;
-    const key = getPromptKey(target);
-    void fetch(getApiPath("/api/prompt-usage"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt_key: key,
-        event_type: type,
-        prompt_length: target.length,
-      }),
-    }).catch(() => {});
-  };
+  const {
+    handleCopyText,
+    handleShare,
+    saveCompletionToPersonal,
+    saveCompletionAsFavorite,
+    saveAsTemplate,
+    addPersonalPromptFromHistory,
+    handleImportHistory,
+  } = useResultActions({
+    ps,
+    dispatch,
+    user,
+    isPro,
+    addPrompt,
+    addPrompts,
+    handleToggleFavorite,
+    history,
+    showLoginRequired,
+  });
 
-  const processStreamResult = (label: string) => {
-    const acc = streamAccRef.current;
-
-    // Guard: skip saving partial/interrupted results.
-    if (acc.rawText.length < 20) {
-      return { text: '', title: null };
-    }
-
-    // Split at last newline-boundary `[GENIUS_QUESTIONS]` (avoids false positives
-    // when the literal appears inside the prompt body). See split-genius-completion.
-    const split = splitCompletionAndQuestions(acc.rawText);
-    let body = split.body;
-    const questionsPart = split.questionsPart;
-
-    if (questionsPart.trim()) {
-      try {
-        let jsonStr = questionsPart.trim();
-        if (jsonStr.startsWith("```json")) jsonStr = jsonStr.replace(/^```json\s*/, "").replace(/```\s*$/, "");
-        if (jsonStr.startsWith("```")) jsonStr = jsonStr.replace(/^```\s*/, "").replace(/```\s*$/, "");
-        const parsed = jsonStr ? JSON.parse(jsonStr) : [];
-        const questions = Array.isArray(parsed) ? parsed : parsed.questions || [];
-        dispatch({ type: 'SET_QUESTIONS', payload: questions });
-      } catch (e) {
-        logger.warn(`[${label}] Questions parse failed, attempting recovery`, e);
-        const arrayMatch = questionsPart.match(/\[[\s\S]*\]/);
-        if (arrayMatch) {
-          try {
-            dispatch({ type: 'SET_QUESTIONS', payload: JSON.parse(arrayMatch[0]) });
-          } catch {
-            dispatch({ type: 'SET_QUESTIONS', payload: [] });
-          }
-        } else {
-          dispatch({ type: 'SET_QUESTIONS', payload: [] });
-        }
-      }
-    } else {
-      dispatch({ type: 'SET_QUESTIONS', payload: [] });
-    }
-
-    // Strip AI thinking/reasoning tags and their content.
-    body = body.replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, '').trim();
-
-    // Extract [PROMPT_TITLE]…[/PROMPT_TITLE] with dotall-safe regex (the
-    // title may contain newlines when the model wraps it weirdly).
-    const titleMatch = body.match(/\[PROMPT_TITLE\]([\s\S]*?)\[\/PROMPT_TITLE\]/);
-    const generatedTitle = titleMatch ? titleMatch[1].trim() : null;
-    body = body.replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]\n?/g, '').trim();
-
-    // Defensive cleanup: if an earlier, accidental `[GENIUS_QUESTIONS]`
-    // leaked into the body (lastIndexOf guarded the split, but the body
-    // may still contain the literal marker string), strip it so copy /
-    // save / display never show the raw delimiter.
-    body = body.replace(/\[GENIUS_QUESTIONS\]/g, '').trim();
-
-    // Persist the cleaned body back to the ref so any downstream reader
-    // (copy, save, refine) sees the canonical final text, not the raw
-    // buffer with markers and thinking blocks still in it.
-    acc.rawText = body;
-
-    dispatch({ type: 'SET_COMPLETION', payload: body });
-
-    const extracted = extractPlaceholders(body);
-    const newVars = { ...variableValuesRef.current };
-    extracted.forEach(ph => { if (!(ph in newVars)) newVars[ph] = ""; });
-    dispatch({ type: 'SET_VARIABLE_VALUES', payload: newVars });
-
-    // Fetch saved variable values for auto-fill (authenticated users only)
-    if (extracted.length > 0 && user) {
-      const emptyKeys = extracted.filter(ph => !newVars[ph]);
-      if (emptyKeys.length > 0) {
-        fetch(getApiPath(`/api/user-variables?keys=${emptyKeys.join(",")}`))
-          .then(res => res.ok ? res.json() : null)
-          .then(data => {
-            if (!data?.variables) return;
-            const merged = { ...variableValuesRef.current };
-            const filled: string[] = [];
-            for (const [key, value] of Object.entries(data.variables as Record<string, string>)) {
-              if (key in merged && !merged[key] && value) {
-                merged[key] = value;
-                filled.push(key);
-              }
-            }
-            if (filled.length > 0) {
-              dispatch({ type: 'SET_VARIABLE_VALUES', payload: merged });
-              dispatch({ type: 'SET_PREFILLED_KEYS', payload: filled });
-            }
-          })
-          .catch(() => {}); // non-critical
-      }
-    }
-
-    return { text: body, title: generatedTitle };
-  };
-
-  const enhanceCooldownRef = useRef(false);
-
-  // Surprise Me - random prompt
-  const handleSurpriseMe = () => {
-    if (!filteredLibrary || filteredLibrary.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * filteredLibrary.length);
-    const randomPrompt = filteredLibrary[randomIndex];
-    dispatch({ type: 'SET_INPUT', payload: randomPrompt.prompt });
-    toast.success(`"${randomPrompt.title}" נטען!`);
-  };
-
-  const handleEnhance = useCallback(async () => {
-    if (!ps.input.trim() || ps.isLoading || enhanceCooldownRef.current) return;
-
-    enhanceCooldownRef.current = true;
-    setTimeout(() => { enhanceCooldownRef.current = false; }, 500);
-
-    if (!canUsePrompt) {
-      if (requiredAction === 'login') {
-        showLoginRequired("יצירת פרומפט", "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!");
-      } else if (requiredAction === 'upgrade') {
-        setShowUpgradeNudge(true);
-      }
-      return;
-    }
-
-    if (context.isOverLimit) {
-      toast.error("יש יותר מדי context — הסירו קובץ לפני שיפור הפרומפט");
-      return;
-    }
-
-    const currentModeParams: Record<string, string> | undefined =
-      ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
-        ? { image_platform: imagePlatform, output_format: imageOutputFormat, ...(imageAspectRatio && { aspect_ratio: imageAspectRatio }) }
-        : ps.selectedCapability === CapabilityMode.VIDEO_GENERATION
-          ? { video_platform: videoPlatform, ...(videoAspectRatio && { aspect_ratio: videoAspectRatio }) }
-          : undefined;
-
-    dispatch({ type: 'START_STREAM' });
-    dispatch({ type: 'SET_QUESTIONS', payload: [] });
-    dispatch({ type: 'SET_GENERATION_CONTEXT', payload: {
-      mode: ps.selectedCapability,
-      modeParams: currentModeParams,
-      category: ps.selectedCategory,
-      tone: ps.selectedTone,
-    }});
-    streamAccRef.current = { rawText: "" };
-
-    const enhanceStart = Date.now();
-    trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
-
-    const contextPayload = context.getContextPayload();
-
-    // Auto-detect input language (Hebrew vs English)
-    const hebrewChars = (ps.input.match(/[\u0590-\u05FF]/g) || []).length;
-    const totalChars = ps.input.replace(/\s/g, '').length;
-    const detectedLang = totalChars > 0 && hebrewChars / totalChars < 0.3 ? 'en' : 'he';
-
-    await startStream(getApiPath("/api/enhance"), {
-      prompt: ps.input,
-      tone: ps.selectedTone,
-      category: ps.selectedCategory,
-      capability_mode: ps.selectedCapability,
-      ...(currentModeParams && { mode_params: currentModeParams }),
-      ...(contextPayload.length > 0 && { context: contextPayload }),
-      ...(capabilitySupportsTargetModel(ps.selectedCapability) &&
-        targetModel !== "general" && { target_model: targetModel }),
-      ...(detectedLang === 'en' && { mode_params: { ...currentModeParams, input_language: 'en' } }),
-    });
-
-    const result = processStreamResult("Enhance");
-    if (result.text) {
-      trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
-      recordUsageSignal("enhance", result.text);
-      if (ps.selectedCapability === CapabilityMode.DEEP_RESEARCH) markFeatureUsed("peroot_used_research");
-      if (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION) markFeatureUsed("peroot_used_image");
-      dispatch({ type: 'SET_DETECTED_CATEGORY', payload: ps.selectedCategory });
-
-      addToHistory({
-        original: ps.input,
-        enhanced: result.text,
-        tone: ps.selectedTone,
-        category: ps.selectedCategory,
-        title: result.title || ps.input.slice(0, 40) + (ps.input.length > 40 ? "..." : ""),
-      });
-
-      if (user && creditsRemaining !== null) {
-        const newCredits = Math.max(0, creditsRemaining - 1);
-        setCreditsRemaining(newCredits);
-        if (newCredits === 0) {
-          toast("הקרדיטים נגמרו — הם מתחדשים כל יום בשעה 14:00", { duration: 8000 });
-        }
-      }
-      if (!user) {
-        incrementUsage();
-      }
-
-      toast.success(t.prompt_generator.success_toast);
-      discovery.onEnhanceComplete();
-
-      // Pro preview nudge: after 3rd enhance for free users (once per session)
-      if (user && creditsRemaining !== null && creditsRemaining <= 0) {
-        // Already handled by UpgradeNudge
-      } else if (user && !sessionStorage.getItem('pro_nudge_shown')) {
-        const enhanceCount = parseInt(sessionStorage.getItem('session_enhance_count') || '0') + 1;
-        sessionStorage.setItem('session_enhance_count', String(enhanceCount));
-        if (enhanceCount === 3) {
-          sessionStorage.setItem('pro_nudge_shown', '1');
-          setTimeout(() => {
-            toast("משתמשי Pro מקבלים מודלים מתקדמים לתוצאות טובות יותר", {
-              action: { label: "לשדרוג", onClick: () => window.location.href = "/pricing" },
-              duration: 6000,
-            });
-          }, 2000);
-        }
-      }
-
-      // Clear attachments after successful enhance to prevent stale context on next prompt
-      if (context.attachments.length > 0) {
-        context.clearAll();
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ps.input, ps.isLoading, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, canUsePrompt, requiredAction, user, creditsRemaining, dispatch, startStream, inputScore.score, imagePlatform, imageOutputFormat, imageAspectRatio, videoPlatform, videoAspectRatio, targetModel, addToHistory, incrementUsage, t, discovery.onEnhanceComplete]);
-
-  const handleRefine = useCallback(async (instruction: string) => {
-    if (ps.isLoading) return;
-    const hasAnswers = Object.values(ps.questionAnswers).some(a => a.trim());
-    if ((!instruction.trim() && !hasAnswers) || !ps.completion) return;
-
-    const currentCompletion = ps.completion;
-
-    dispatch({ type: 'SET_PREVIOUS_SCORE', payload: completionScore.score });
-    dispatch({ type: 'START_STREAM' });
-    streamAccRef.current = { rawText: "" };
-
-    const answerParts = ps.questions
-      .filter(q => ps.questionAnswers[String(q.id)]?.trim())
-      .map(q => `שאלה: ${q.question}\nתשובה: ${ps.questionAnswers[String(q.id)]}`);
-
-    const combinedInstruction = [
-      ...answerParts,
-      instruction.trim() ? `הוראה נוספת: ${instruction}` : "",
-    ].filter(Boolean).join("\n\n");
-
-    const filteredAnswers: Record<string, string> = {};
-    for (const [k, v] of Object.entries(ps.questionAnswers)) {
-      if (v.trim()) filteredAnswers[k] = v;
-    }
-
-    const ctx = ps.generationContext;
-
-    const contextPayloadRefine = context.getContextPayload();
-    await startStream(getApiPath("/api/enhance"), {
-      prompt: ps.input,
-      tone: ctx?.tone || ps.selectedTone,
-      category: ctx?.category || ps.selectedCategory,
-      capability_mode: ctx?.mode || ps.selectedCapability,
-      ...(ctx?.modeParams && { mode_params: ctx.modeParams }),
-      previousResult: currentCompletion,
-      refinementInstruction: combinedInstruction,
-      answers: filteredAnswers,
-      iteration: ps.iterationCount + 1,
-      ...(contextPayloadRefine.length > 0 && { context: contextPayloadRefine }),
-      ...(capabilitySupportsTargetModel(ctx?.mode || ps.selectedCapability) &&
-        targetModel !== "general" && { target_model: targetModel }),
-    });
-
-    const refineResult = processStreamResult("Refine");
-    if (refineResult.text) {
-      recordUsageSignal("refine", refineResult.text);
-      dispatch({ type: 'INCREMENT_ITERATION' });
-      toast.success("הפרומפט עודכן!");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ps.isLoading, ps.completion, ps.questions, ps.questionAnswers, ps.selectedCapability, ps.selectedCategory, ps.selectedTone, ps.input, ps.generationContext, completionScore.score, targetModel, dispatch, startStream]);
-
-  const handleCopyText = useCallback(async (text: string, withWatermark?: boolean) => {
-    const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
-    const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
-    await navigator.clipboard.writeText(finalText);
-    dispatch({ type: 'SET_COPIED', payload: true });
-    setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
-    recordUsageSignal("copy", text);
-    trackPromptCopy('result');
-    toast.success("הועתק ללוח");
-  }, [isPro, dispatch]);
+  const {
+    handleEnhance,
+    handleRefine,
+    handleSurpriseMe,
+  } = usePromptEnhance({
+    ps,
+    dispatch,
+    streamAccRef,
+    variableValuesRef,
+    startStream,
+    user,
+    canUsePrompt,
+    requiredAction,
+    creditsRemaining,
+    setCreditsRemaining,
+    setShowUpgradeNudge,
+    showLoginRequired,
+    context,
+    inputScore,
+    completionScore,
+    imagePlatform,
+    imageOutputFormat,
+    imageAspectRatio,
+    videoPlatform,
+    videoAspectRatio,
+    targetModel,
+    addToHistory,
+    incrementUsage,
+    t,
+    discovery,
+    filteredLibrary,
+  });
 
   // Keep refs in sync for keyboard shortcut handler
   handleCopyTextRef.current = handleCopyText;
@@ -780,37 +523,6 @@ function PageContent() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [dispatch, setViewMode, setSidebarOpen]);
-
-  const handleShare = useCallback(async () => {
-    if (!user) {
-      showLoginRequired("שיתוף פרומפטים");
-      return;
-    }
-    if (!ps.completion.trim()) return;
-
-    try {
-      const res = await fetch(getApiPath("/api/share"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: ps.completion,
-          original_input: ps.input,
-          category: ps.selectedCategory,
-          capability_mode: ps.selectedCapability,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Share failed");
-      const { id } = await res.json();
-      const shareUrl = `${window.location.origin}/p/${id}`;
-      await navigator.clipboard.writeText(shareUrl);
-      markFeatureUsed("peroot_used_share");
-      toast.success("קישור שיתוף נוצר");
-    } catch (error) {
-      logger.error("[share] Error:", error);
-      toast.error("שגיאה בשיתוף");
-    }
-  }, [user, ps.completion, ps.input, ps.selectedCategory, ps.selectedCapability, showLoginRequired]);
 
   // Track where user came from so they can go back
   const [previousView, setPreviousView] = useState<string | null>(null);
@@ -878,122 +590,6 @@ function PageContent() {
     dispatch({ type: 'SET_QUESTIONS', payload: [] });
     toast.success("הפרומפט שוחזר");
   }, [dispatch]);
-
-  const addPersonalPromptFromHistory = useCallback((item: HistoryItem) => {
-    if (!user) {
-      showLoginRequired("שמירת פרומפטים");
-      return;
-    }
-    addPrompt({
-      title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
-      prompt: item.enhanced,
-      category: item.category,
-      personal_category: PERSONAL_DEFAULT_CATEGORY,
-      capability_mode: CapabilityMode.STANDARD,
-      use_case: "נשמר מהיסטוריה",
-      source: "manual"
-    });
-    recordUsageSignal("save", item.enhanced);
-    toast.success("נשמר לספריה האישית!");
-  }, [user, addPrompt, showLoginRequired]);
-
-  const saveCompletionToPersonal = useCallback(() => {
-    if (!user) {
-       showLoginRequired("שמירת פרומפטים");
-       return;
-    }
-    if (!ps.completion.trim()) return;
-    addPrompt({
-      title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
-      prompt: ps.completion,
-      category: ps.detectedCategory || ps.selectedCategory,
-      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
-      capability_mode: ps.selectedCapability,
-      use_case: "נשמר מהתוצאה",
-      source: "manual"
-    });
-    recordUsageSignal("save", ps.completion);
-    markFeatureUsed("peroot_used_personal_library");
-    toast.success("נשמר לספריה האישית!");
-  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, showLoginRequired]);
-
-  // Save-and-favorite: one-tap action that saves the current completion
-  // to the personal library AND marks it as a favorite. This is the
-  // star-icon replacement for the old thumbs-up — the "keeper" signal
-  // users asked for on the result card. Uses the id returned by
-  // addPrompt to immediately toggle favorite state, so the star lights
-  // up in the library the moment the user hits the star.
-  const saveCompletionAsFavorite = useCallback(async () => {
-    if (!ps.completion.trim()) return;
-    const newId = await addPrompt({
-      title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
-      prompt: ps.completion,
-      category: ps.detectedCategory || ps.selectedCategory,
-      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
-      capability_mode: ps.selectedCapability,
-      use_case: "נשמר מהתוצאה",
-      source: "manual"
-    });
-    recordUsageSignal("save", ps.completion);
-    markFeatureUsed("peroot_used_personal_library");
-    if (newId) {
-      await handleToggleFavorite("personal", newId);
-      toast.success("נשמר ונוסף למועדפים ⭐");
-    } else {
-      // addPrompt returned undefined when a fuzzy duplicate was found.
-      // The dedupe toast already fired — no second toast here.
-    }
-  }, [ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, handleToggleFavorite]);
-
-  const saveAsTemplate = useCallback(() => {
-    if (!user) {
-       showLoginRequired("שמירת תבניות");
-       return;
-    }
-    if (!ps.completion.trim()) return;
-
-    // Extract {variable} placeholders from the enhanced prompt
-    const varMatches = ps.completion.match(/\{([a-z_]+)\}/gi) || [];
-    const variables = [...new Set(varMatches.map(v => v.replace(/[{}]/g, '')))];
-
-    if (variables.length === 0) {
-      toast.error("הפרומפט לא מכיל משתנים {variable} — הוסיפו משתנים כדי ליצור תבנית");
-      return;
-    }
-
-    addPrompt({
-      title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
-      prompt: ps.completion,
-      category: ps.detectedCategory || ps.selectedCategory,
-      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
-      capability_mode: ps.selectedCapability,
-      use_case: "תבנית לשימוש חוזר",
-      source: "manual",
-      is_template: true,
-      template_variables: variables,
-    });
-    recordUsageSignal("save", ps.completion);
-    toast.success(`תבנית נשמרה עם ${variables.length} משתנים!`);
-  }, [user, ps.completion, ps.input, ps.detectedCategory, ps.selectedCategory, ps.selectedCapability, addPrompt, showLoginRequired]);
-
-  const handleImportHistory = useCallback(async () => {
-     if (!user) {
-       showLoginRequired("שמירת פרומפטים");
-       return;
-     }
-     const itemsToAdd = history.map(item => ({
-       title: item.original.slice(0, 30) + (item.original.length > 30 ? "..." : ""),
-       prompt: item.enhanced,
-       category: item.category,
-       personal_category: PERSONAL_DEFAULT_CATEGORY,
-       capability_mode: CapabilityMode.STANDARD,
-       use_case: "נשמר מהיסטוריה",
-       source: "manual" as const,
-       tags: [] as string[]
-     }));
-     await addPrompts(itemsToAdd);
-     toast.success("כל ההיסטוריה יובאה!");
-  }, [user, history, addPrompts, showLoginRequired]);
 
   const handleOnboardingComplete = useCallback(async () => {
       try {
@@ -1271,6 +867,9 @@ function PageContent() {
           preFilledKeys={ps.preFilledKeys}
           onVariableChange={handleVariableChange}
           onImproveAgain={handleImproveAgain}
+          onQuickRefine={(instruction) => {
+            void handleRefine(instruction);
+          }}
           onRetryStream={handleEnhance}
           onResetToOriginal={() => dispatch({ type: 'RESET_TO_ORIGINAL' })}
           originalPrompt={ps.originalInput || ps.input}

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { VIDEO_PLATFORMS, VideoPlatform } from "@/lib/video-platforms";
+import { VIDEO_PLATFORMS, VideoPlatform, getVideoPlatform } from "@/lib/video-platforms";
 import { VIDEO_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
 
 const ASPECT_RATIO_OPTIONS = [
@@ -27,9 +27,15 @@ export function VideoPlatformSelector({
   onAspectRatioChange,
   disabled,
 }: VideoPlatformSelectorProps) {
+  const selectedMeta = getVideoPlatform(selectedPlatform);
   return (
     <div className="flex flex-col gap-2" dir="rtl">
       <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">פלטפורמת וידאו</div>
+      {selectedMeta && (
+        <p className="text-[10px] text-(--text-muted) px-1 leading-snug hidden sm:block">
+          {selectedMeta.description}
+        </p>
+      )}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
         {VIDEO_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
