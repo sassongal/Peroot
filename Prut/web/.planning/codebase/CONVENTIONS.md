@@ -50,6 +50,19 @@
 
 - External packages first, then `@/…` internal imports; type-only imports with `import type` where used
 
+## Admin API Auth
+
+**Single pattern: `withAdmin` from `@/lib/api-middleware`**
+
+```ts
+export const GET = withAdmin(async (req, supabase, user) => { ... });
+export const POST = withAdmin(async (req, supabase, user) => { ... });
+```
+
+- `withAdmin` calls `validateAdminSession()` internally and returns 401/403 on failure
+- Handler receives typed `(req, supabase, user)` — no manual auth boilerplate
+- `validateAdminSession` remains in `admin-security.ts` for `withAdmin` only; do not import it directly in routes
+
 ## Error Handling
 
 **API routes:**

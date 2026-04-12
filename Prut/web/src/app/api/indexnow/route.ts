@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
@@ -13,12 +12,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
  * Body: { urls?: string[] }
  * If no URLs provided, submits all published blog posts + static pages.
  */
-export async function POST(req: NextRequest) {
-  const { error: authError } = await validateAdminSession();
-  if (authError) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export const POST = withAdmin(async (req, supabase) => {
   if (!INDEXNOW_KEY) {
     return NextResponse.json({ error: "INDEXNOW_KEY not configured" }, { status: 500 });
   }
@@ -27,7 +21,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     let urls: string[] = body.urls || [];
 
-    // If no specific URLs, submit all key pages
     if (urls.length === 0) {
       const staticUrls = [
         SITE_URL,
@@ -36,13 +29,12 @@ export async function POST(req: NextRequest) {
         `${SITE_URL}/contact`,
       ];
 
-      const supabase = await createClient();
       const { data: posts } = await supabase
         .from("blog_posts")
         .select("slug")
         .eq("status", "published");
 
-      const blogUrls = (posts ?? []).map((p) => `${SITE_URL}/blog/${p.slug}`);
+      const blogUrls = (posts ?? []).map((p: { slug: string }) => `${SITE_URL}/blog/${p.slug}`);
       urls = [...staticUrls, ...blogUrls];
     }
 
@@ -68,4 +60,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
