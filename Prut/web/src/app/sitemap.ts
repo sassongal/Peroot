@@ -49,14 +49,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  // ALL published blog posts (no limit)
+  // ALL published blog posts + ALL individual library prompt pages
   try {
     const supabase = await createClient();
-    const { data: posts } = await supabase
-      .from('blog_posts')
-      .select('slug, updated_at')
-      .eq('status', 'published')
-      .order('published_at', { ascending: false });
+    const [{ data: posts }, { data: libraryPrompts }] = await Promise.all([
+      supabase
+        .from('blog_posts')
+        .select('slug, updated_at')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false }),
+      supabase
+        .from('public_library_prompts')
+        .select('id, category_id')
+        .eq('is_active', true),
+    ]);
 
     const blogEntries: MetadataRoute.Sitemap = (posts ?? []).map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
@@ -65,7 +71,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    return [...staticPages, ...promptsPages, ...blogEntries];
+    // Build a reverse map: category_id (lowercase) → slug
+    const categoryIdToSlug = Object.fromEntries(
+      Object.entries(CATEGORY_SLUG_MAP).map(([slug, data]) => [data.id.toLowerCase(), slug])
+    );
+
+    const promptEntries: MetadataRoute.Sitemap = (libraryPrompts ?? [])
+      .filter((p) => p.category_id && categoryIdToSlug[p.category_id.toLowerCase()])
+      .map((p) => ({
+        url: `${baseUrl}/prompts/${categoryIdToSlug[p.category_id!.toLowerCase()]}/${p.id}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      }));
+
+    return [...staticPages, ...promptsPages, ...blogEntries, ...promptEntries];
   } catch {
     return [...staticPages, ...promptsPages];
   }

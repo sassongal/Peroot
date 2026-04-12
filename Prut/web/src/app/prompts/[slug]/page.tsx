@@ -200,9 +200,11 @@ export default async function CategoryPage({ params }: Props) {
                   >
                     {/* Title + use_case */}
                     <div>
-                      <h2 className="text-base md:text-lg font-semibold text-foreground leading-snug line-clamp-2">
-                        {prompt.title}
-                      </h2>
+                      <Link href={`/prompts/${slug}/${prompt.id}`}>
+                        <h2 className="text-base md:text-lg font-semibold text-foreground leading-snug line-clamp-2 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                          {prompt.title}
+                        </h2>
+                      </Link>
                       {prompt.use_case && (
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {prompt.use_case}
@@ -277,6 +279,12 @@ export default async function CategoryPage({ params }: Props) {
                         prompt={prompt.prompt}
                         category={slug}
                       />
+                      <Link
+                        href={`/prompts/${slug}/${prompt.id}`}
+                        className="mr-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        פרטים ←
+                      </Link>
                     </div>
                   </article>
                 ))}
