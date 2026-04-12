@@ -75,10 +75,14 @@ export const getCategoryLabel = (key: string): string => {
 export const PERSONAL_DEFAULT_CATEGORY = "כללי";
 export const PROMPT_LIBRARY_COUNT = "540+";
 
-export const QUICK_ACTIONS = [
-  { label: "קצר יותר", instruction: "קצר יותר. שמור על המבנה והדגשים המרכזיים." },
-  { label: "יותר אסרטיבי", instruction: "יותר אסרטיבי, ישיר וממוקד תוצאה." },
-  { label: "יותר פרקטי", instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות." },
+/**
+ * One-click refinement presets (FAQ / marketing: "דלתות מהירות" after שדרוג).
+ * Wired to `/api/enhance` refinement via `refinementInstruction` + `previousResult`.
+ */
+export const QUICK_REFINE_ACTIONS: readonly { id: string; label: string; instruction: string }[] = [
+  { id: "shorter", label: "קצר יותר", instruction: "קצר יותר. שמור על המבנה והדגשים המרכזיים." },
+  { id: "assertive", label: "יותר אסרטיבי", instruction: "יותר אסרטיבי, ישיר וממוקד תוצאה." },
+  { id: "practical", label: "יותר פרקטי", instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות." },
 ];
 
 export interface PromptCollection {
