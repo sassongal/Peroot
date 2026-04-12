@@ -116,7 +116,7 @@ export const DIMENSION_LABEL_HE: Record<string, string> = {
  * Checklist lines for engine quality gate (aligned with text dimensions).
  * Used by getTextQualityGateLines / skills.
  */
-export const TEXT_QUALITY_GATE_LINES_HE: string[] = [
+const TEXT_QUALITY_GATE_LINES_HE: string[] = [
   'אורך: מספיק פרטים — לא משפט בודד',
   'תפקיד: משפט "אתה …" / You are … עם התמחות או ניסיון',
   'משימה: פועל פעולה + אובייקט ברור',
@@ -1001,7 +1001,7 @@ export function enhancedTotalFromChunks(chunks: DimensionScoreChunk[]): number {
 }
 
 /** Ratio 0..1 for a dimension key — used by InputScorer when keys align with enhanced text dims */
-export function scoreRatioForEnhancedTextKey(key: string, t: string, wc: number): number | null {
+function scoreRatioForEnhancedTextKey(key: string, t: string, wc: number): number | null {
   const chunks = scoreEnhancedTextDimensions(t, wc);
   const c = chunks.find((x) => x.key === key);
   if (!c) return null;

@@ -17,8 +17,6 @@ import { compressToLimit } from './compress';
 import { buildInjectedBlock } from './inject';
 import { getCachedBlock, putCachedBlock } from './cache';
 
-export { renderInjection } from './inject';
-export { selectEngineModel } from '@/lib/ai/context-router';
 export type { ContextBlock, ProcessAttachmentInput } from './types';
 
 export async function processAttachment(input: ProcessAttachmentInput): Promise<ContextBlock> {

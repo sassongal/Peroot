@@ -4,7 +4,7 @@ import { useRef } from "react";
 import type { HTMLAttributes, PointerEvent } from "react";
 import { cn } from "@/lib/utils";
 
-export interface GlowingEdgeCardProps extends HTMLAttributes<HTMLDivElement> {
+interface GlowingEdgeCardProps extends HTMLAttributes<HTMLDivElement> {
   contentClassName?: string;
 }
 

@@ -22,7 +22,7 @@ function estimateCost(modelId: string, inputTokens: number, outputTokens: number
     return (inputTokens * pricing.input + outputTokens * pricing.output) / 1_000_000;
 }
 
-export interface SkillMetadata {
+interface SkillMetadata {
     type?: 'image' | 'video' | 'text';
     platform?: string;
     examplesSelected?: string[]; // Category names of selected examples
@@ -30,7 +30,7 @@ export interface SkillMetadata {
     hasScoring?: boolean;
 }
 
-export interface ApiUsageData {
+interface ApiUsageData {
     userId?: string;
     modelId: ModelId;
     inputTokens: number;

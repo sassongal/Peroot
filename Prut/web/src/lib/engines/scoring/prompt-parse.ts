@@ -54,7 +54,7 @@ const SECTION_KEYWORDS: Array<[SectionType, RegExp]> = [
   ['failure_modes', /\b(failure\s*modes?|errors?|edge\s*cases?|exceptions?|retries?)\b|מצבי\s?כשל|שגיאות|מקרי\s?קצה|חריגים/i],
 ];
 
-export function extractSections(text: string): Set<SectionType> {
+function extractSections(text: string): Set<SectionType> {
   const found = new Set<SectionType>();
   if (!text) return found;
 
@@ -141,7 +141,7 @@ const HEBREW_NUMBER_WORDS = /(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|ח
 export const TASK_QTY_RE =
   /(?:\d+|(?:שת[יי]ם?|שלוש(?:ה)?|ארבע(?:ה)?|חמש(?:ה)?|שש(?:ה)?|שבע(?:ה)?|שמונ(?:ה)?|תשע(?:ה)?|עשר(?:ה)?|עשרים|שלושים|ארבעים|חמישים|שישים|שבעים|שמונים|תשעים|מאה))\s*(מילים|שורות|נקודות|פסקאות|סעיפים|דקות|שניות|פריטים|עמודים|words|sentences|lines|points|bullets|paragraphs|items|steps|minutes|seconds|chars|characters|tokens|pages|sections)/i;
 
-export { HEBREW_NUMBER_WORDS };
+// HEBREW_NUMBER_WORDS is internal only
 
 export function hasMeasurableQuantity(p: Parsed): boolean {
   return TASK_QTY_RE.test(p.text);
@@ -191,7 +191,7 @@ export function hasHedges(p: Parsed): boolean {
  * Structural contradictions (table/list). Brevity vs length is handled in
  * prompt-dimensions safety scoring to avoid false positives with "מפורט".
  */
-export const CONTRADICTION_PAIRS: Array<[RegExp, RegExp, string]> = [
+const CONTRADICTION_PAIRS: Array<[RegExp, RegExp, string]> = [
   [/(?:בלי|ללא|without|no)\s*טבלה|no\s+table/i, /בטבלה|in\s+a?\s*table|table\s+format/i, 'no-table vs in-a-table'],
   [/(?:בלי|ללא|no|without)\s*(?:רשימ|list|bullets)/i, /רשימה\s+של|list\s+of|bullet\s+points/i, 'no-list vs list-of'],
 ];

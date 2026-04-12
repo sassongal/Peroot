@@ -12,7 +12,7 @@
 
 import type { PromptChain } from '@/hooks/useChains';
 
-export interface SharedChainPayload {
+interface SharedChainPayload {
   title: string;
   description?: string;
   steps: PromptChain['steps'];

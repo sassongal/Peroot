@@ -15,7 +15,7 @@ import { useFavoritesContext } from "./FavoritesContext";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface LibraryUIContextType {
+interface LibraryUIContextType {
   /** Current auth user (from LibraryProvider); null for guests. */
   user: User | null;
 

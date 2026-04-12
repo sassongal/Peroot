@@ -3,7 +3,7 @@ import { getContextLimits } from '@/lib/plans';
 import { logger } from '@/lib/logger';
 import type { PlanTier } from './types';
 
-export interface ExtractionLimitResult {
+interface ExtractionLimitResult {
   allowed: boolean;
   remaining: number;
   limit: number;

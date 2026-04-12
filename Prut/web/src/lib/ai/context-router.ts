@@ -3,7 +3,7 @@ import type { ContextBlock } from '@/lib/context/engine/types';
 
 export const SMALL_CONTEXT_THRESHOLD = 2_000;
 
-export type CheapModel = 'gemini-2.5-flash-lite' | 'gemini-2.5-flash';
+type CheapModel = 'gemini-2.5-flash-lite' | 'gemini-2.5-flash';
 
 export function selectEngineModel(opts: { blocks: ContextBlock[] }): CheapModel {
   const totalTokens = opts.blocks.reduce((s, b) => s + b.injected.tokenCount, 0);

@@ -2,7 +2,7 @@
  * Optional per-platform prompt overrides stored in prompt_engines.default_params.platform_overrides.
  * Shape: { [platformKey]: { system_template?: string, user_template?: string } }
  */
-export type PlatformOverrideEntry = {
+type PlatformOverrideEntry = {
   system_template?: string;
   user_template?: string;
 };

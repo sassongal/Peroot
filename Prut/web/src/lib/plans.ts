@@ -1,6 +1,6 @@
 import type { PlanTier } from '@/lib/context/engine/types';
 
-export interface ContextPlanLimits {
+interface ContextPlanLimits {
   perAttachment: number;
   total: number;
   maxFiles: number;

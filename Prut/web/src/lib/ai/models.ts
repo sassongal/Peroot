@@ -14,7 +14,7 @@ const google = createGoogleGenerativeAI({
 
 const mistralProvider = createMistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-export interface ModelConfig {
+interface ModelConfig {
     id: ModelId;
     provider: 'google' | 'groq' | 'mistral';
     model: LanguageModel;
@@ -68,7 +68,7 @@ export const FALLBACK_ORDER: ModelId[] = [
     'gpt-oss-20b',              // Free on Groq
 ];
 
-export type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'video' | 'chain' | 'classify';
+type TaskType = 'enhance' | 'research' | 'agent' | 'image' | 'video' | 'chain' | 'classify';
 
 // All models are free/low-cost — no expensive pro models in any route
 export const TASK_ROUTING: Record<string, ModelId[]> = {

@@ -82,7 +82,7 @@ export async function findDuplicate(
   return findBestDuplicateMatch(title, existingTitles, threshold);
 }
 
-export type DedupDecision =
+type DedupDecision =
   | { ok: true }
   | { ok: false; similar: string; score: number };
 

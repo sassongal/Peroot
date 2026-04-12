@@ -4,7 +4,7 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 
-export interface SiteSettings {
+interface SiteSettings {
   id: string;
   site_name: string;
   site_description: string;

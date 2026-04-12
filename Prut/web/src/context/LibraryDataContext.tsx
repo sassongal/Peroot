@@ -14,7 +14,7 @@ import { logger } from "@/lib/logger";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface LibraryDataContextType {
+interface LibraryDataContextType {
   // Library prompts (public/shared)
   libraryPrompts: LibraryPrompt[];
   isLibraryFetching: boolean;

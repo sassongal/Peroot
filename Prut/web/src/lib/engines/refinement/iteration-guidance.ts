@@ -11,9 +11,9 @@
  * Tier 5 — Convergence: Near-optimal, only critical tweaks
  */
 
-export type IterationTier = 'expansion' | 'gap-filling' | 'surgical' | 'polish' | 'convergence';
+type IterationTier = 'expansion' | 'gap-filling' | 'surgical' | 'polish' | 'convergence';
 
-export interface IterationGuidance {
+interface IterationGuidance {
   tier: IterationTier;
   iteration: number;
   label: string;           // Hebrew + English
@@ -85,7 +85,7 @@ const TIER_DEFINITIONS: Record<IterationTier, Omit<IterationGuidance, 'iteration
 /**
  * Get iteration guidance based on the round number and mode.
  */
-export function getIterationGuidance(iteration: number): IterationGuidance {
+function getIterationGuidance(iteration: number): IterationGuidance {
   let tier: IterationTier;
   if (iteration <= 1) tier = 'expansion';
   else if (iteration === 2) tier = 'gap-filling';

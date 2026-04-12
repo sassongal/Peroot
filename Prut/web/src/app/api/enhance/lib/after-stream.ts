@@ -5,7 +5,7 @@ import type { ActivityLogDetails } from "./activity-log";
 
 type QueryClient = ReturnType<typeof createServiceClient>;
 
-export interface SaveEnhanceResultsParams {
+interface SaveEnhanceResultsParams {
   queryClient: QueryClient;
   userId: string;
   prompt: string;

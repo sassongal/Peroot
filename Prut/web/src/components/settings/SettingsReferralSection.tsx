@@ -3,7 +3,7 @@
 import { Check, Copy, Gift, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 
-export interface ReferralInfo {
+interface ReferralInfo {
   code: string;
   uses: number;
   maxUses: number;

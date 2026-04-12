@@ -14,7 +14,7 @@
 
 const KEY = "peroot_pending_prompt";
 
-export interface PendingPrompt {
+interface PendingPrompt {
   id?: string;
   title?: string;
   prompt: string;

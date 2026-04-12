@@ -16,7 +16,7 @@ import { scoreInput, type InputScore } from './input-scorer';
 // Types
 // ---------------------------------------------------------------------------
 
-export interface CoverageChunk {
+interface CoverageChunk {
   /** Start index in original text */
   start: number;
   /** End index in original text */
@@ -29,7 +29,7 @@ export interface CoverageChunk {
   covered: boolean;
 }
 
-export interface CoverageResult {
+interface CoverageResult {
   /** All detected chunks */
   chunks: CoverageChunk[];
   /** Coverage ratio: covered chunks / total chunks (0-1) */

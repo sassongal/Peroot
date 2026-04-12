@@ -47,13 +47,13 @@ export function formatRelativeHe(iso: string | null | undefined): string {
   return `לפני ${years} שנים`;
 }
 
-export interface TriStateInput {
+interface TriStateInput {
   createdAt: string | null | undefined;
   updatedAt: string | null | undefined;
   lastUsedAt: string | null | undefined;
 }
 
-export interface TriStateOutput {
+interface TriStateOutput {
   created: string;
   updated: string | null;
   lastUsed: string | null;

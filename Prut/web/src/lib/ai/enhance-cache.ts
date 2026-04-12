@@ -26,7 +26,7 @@ export const ENGINE_VERSION = "v2-2026-04-07";
 const CACHE_PREFIX = `peroot:enhance:${ENGINE_VERSION}`;
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 hour
 
-export interface EnhanceCacheKeyInput {
+interface EnhanceCacheKeyInput {
     prompt: string;
     mode?: string;
     tone?: string;
@@ -131,7 +131,7 @@ function cacheEnabled(): boolean {
     return process.env.ENHANCE_CACHE_ENABLED !== "false";
 }
 
-export interface CachedEnhanceResult {
+interface CachedEnhanceResult {
     text: string;
     modelId: string;
     /**

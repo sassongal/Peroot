@@ -5,7 +5,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-export interface ExportPdfButtonProps {
+interface ExportPdfButtonProps {
   title: string;
   original: string;
   enhanced: string;

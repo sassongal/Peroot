@@ -36,7 +36,7 @@ const GUIDE_SLUG_TO_SKILL: Record<string, { type: 'image' | 'video'; platform: s
 /**
  * Get the skill associated with a guide slug.
  */
-export function getSkillForGuideSlug(slug: string): PlatformSkill | undefined {
+function getSkillForGuideSlug(slug: string): PlatformSkill | undefined {
   const mapping = GUIDE_SLUG_TO_SKILL[slug];
   if (!mapping) return undefined;
   return mapping.type === 'image' ? getImageSkill(mapping.platform) : getVideoSkill(mapping.platform);
@@ -45,7 +45,7 @@ export function getSkillForGuideSlug(slug: string): PlatformSkill | undefined {
 /**
  * Convert skill examples into the guide example format.
  */
-export function skillExamplesToGuideExamples(examples: SkillExample[]): Array<{
+function skillExamplesToGuideExamples(examples: SkillExample[]): Array<{
   concept: string;
   prompt: string;
   explanation: string;
@@ -62,7 +62,7 @@ export function skillExamplesToGuideExamples(examples: SkillExample[]): Array<{
 /**
  * Convert skill mistakes to guide mistake format (they're already identical).
  */
-export function skillMistakesToGuideMistakes(mistakes: SkillMistake[]): Array<{
+function skillMistakesToGuideMistakes(mistakes: SkillMistake[]): Array<{
   bad: string;
   good: string;
   why: string;

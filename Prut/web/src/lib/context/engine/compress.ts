@@ -1,6 +1,6 @@
 import { estimateTokens, trimToTokenLimit } from '@/lib/context/token-counter';
 
-export interface CompressResult {
+interface CompressResult {
   text: string;
   truncated: boolean;
   originalTokenCount: number;

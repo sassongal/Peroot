@@ -2,7 +2,7 @@
  * Image extraction is a pass-through: the ENRICH stage does the real work
  * via Gemini vision. We only normalize bytes → base64 data URL here.
  */
-export interface ImageExtractionResult {
+interface ImageExtractionResult {
   base64: string;
   dataUrl: string;
   metadata: {

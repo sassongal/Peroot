@@ -33,7 +33,7 @@ interface HeartbeatPayload {
   success: boolean;
 }
 
-export interface CronJobHealth {
+interface CronJobHealth {
   jobName: string;
   lastRun: number | null;
   isHealthy: boolean;

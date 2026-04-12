@@ -85,7 +85,7 @@ export const QUICK_REFINE_ACTIONS: readonly { id: string; label: string; instruc
   { id: "practical", label: "יותר פרקטי", instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות." },
 ];
 
-export interface PromptCollection {
+interface PromptCollection {
   id: string;
   title: string;
   description: string;

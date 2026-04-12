@@ -67,7 +67,7 @@ export interface ContextPayload {
   metadata?: Record<string, unknown>;
 }
 
-export interface ExtractionResult {
+interface ExtractionResult {
   text: string;
   metadata: Record<string, unknown>;
 }

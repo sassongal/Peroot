@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 
 import { MAX_FILE_SIZE_MB } from './index';
 
-export interface OfficeExtractionResult {
+interface OfficeExtractionResult {
   text: string;
   metadata: {
     format: 'docx' | 'xlsx' | 'csv';

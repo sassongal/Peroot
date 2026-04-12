@@ -314,7 +314,7 @@ function selectRelevantExamples(
 
 // ── Selection Tracking (in-memory analytics) ──
 
-export interface SkillSelection {
+interface SkillSelection {
   type: string;
   platform: string;
   concept: string;
@@ -334,7 +334,7 @@ const MAX_SELECTIONS = 1000;
  * server (gated on `typeof window === 'undefined'`) so client bundles
  * never pull in the service Supabase client.
  */
-export function recordSelection(
+function recordSelection(
   type: string,
   platform: string,
   concept: string,

@@ -29,7 +29,7 @@ export const extractPlaceholders = extractVariables;
  * The function is side-effect-free and memoization-friendly — callers
  * should wrap the call in `useMemo(..., [text, values])`.
  */
-export interface RenderPromptOptions {
+interface RenderPromptOptions {
     /**
      * The variable key currently hovered in the Variables Panel input
      * column. When set, the matching chip/mark in the rendered prompt

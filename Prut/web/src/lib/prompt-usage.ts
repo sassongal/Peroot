@@ -5,7 +5,7 @@ import { getApiPath } from "@/lib/api-path";
  * Normalises whitespace and caps at 500 chars so hashes are consistent
  * across minor formatting differences.
  */
-export function getPromptKey(text: string): string {
+function getPromptKey(text: string): string {
   const normalized = text.trim().slice(0, 500);
   if (!normalized) return "empty";
   let hash = 0;

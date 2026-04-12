@@ -1,6 +1,6 @@
 import { escapeHtml } from "@/lib/emails/templates/base";
 
-export type UnsubscribeSuccessKind = "sequence" | "newsletter";
+type UnsubscribeSuccessKind = "sequence" | "newsletter";
 
 export function unsubscribeSuccessHtml(appUrl: string, kind: UnsubscribeSuccessKind): string {
   const safeUrl = escapeHtml(appUrl.replace(/\/$/, ""));

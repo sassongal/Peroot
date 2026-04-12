@@ -15,7 +15,7 @@
  * - strongVisual: visual prompts that should score > 70
  */
 
-export interface PromptFixture {
+interface PromptFixture {
   name: string;
   prompt: string;
   /** Expected lower bound (inclusive) */

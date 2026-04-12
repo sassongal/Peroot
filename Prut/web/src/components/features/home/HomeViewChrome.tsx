@@ -46,7 +46,7 @@ const UpgradeNudge = dynamic(
 );
 
 /** Subset of useFeatureDiscovery() return value needed for rendering */
-export interface FeatureDiscoveryRenderProps {
+interface FeatureDiscoveryRenderProps {
   visible: boolean;
   currentTip: DiscoveryTip | null;
   currentIndex: number;
@@ -55,7 +55,7 @@ export interface FeatureDiscoveryRenderProps {
   dismiss: () => void;
 }
 
-export interface HomeViewChromeProps {
+interface HomeViewChromeProps {
   // View / navigation
   viewMode: string;
   onTabChange: (tab: string) => void;

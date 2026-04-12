@@ -106,9 +106,9 @@ export const rateLimiters = {
   }),
 };
 
-export type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro' | 'speedTest' | 'siteSearchGuest' | 'siteSearchUser';
+type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro' | 'speedTest' | 'siteSearchGuest' | 'siteSearchUser';
 
-export interface RateLimitResult {
+interface RateLimitResult {
   success: boolean;
   limit: number;
   remaining: number;

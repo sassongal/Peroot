@@ -3,7 +3,7 @@
  * No side effects, no I/O — safe to unit-test directly.
  */
 
-export const ACTIVE_STATUSES = ["active", "on_trial", "past_due", "paid"] as const;
+const ACTIVE_STATUSES = ["active", "on_trial", "past_due", "paid"] as const;
 
 export interface LsEventAttributes {
   customer_id: string | number;

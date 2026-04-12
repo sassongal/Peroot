@@ -2,7 +2,7 @@ import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import dns from 'node:dns/promises';
 
-export interface UrlExtractionResult {
+interface UrlExtractionResult {
   text: string;
   metadata: {
     format: 'url';
@@ -14,7 +14,7 @@ export interface UrlExtractionResult {
   };
 }
 
-export interface UrlExtractOptions {
+interface UrlExtractOptions {
   jinaFallback: boolean;
   timeoutMs?: number;
 }

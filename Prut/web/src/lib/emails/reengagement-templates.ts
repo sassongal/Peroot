@@ -4,5 +4,5 @@
  * `@/lib/emails/templates` over time.
  */
 export { REENGAGEMENT_TEMPLATES } from './templates/reengagement';
-export type { ReengagementTemplate } from './templates/reengagement';
+// ReengagementTemplate is internal — import directly from ./templates/reengagement if needed
 export { churnEmail } from './templates/churn';

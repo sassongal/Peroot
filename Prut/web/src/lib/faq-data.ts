@@ -1,4 +1,4 @@
-export type FAQItem = {
+type FAQItem = {
   question: string;
   answer: string;
   category: string;

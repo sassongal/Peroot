@@ -21,7 +21,7 @@
  * at load time via the assertion in __tests__/json-examples.test.ts.
  */
 
-export interface JsonExample {
+interface JsonExample {
   /** Short Hebrew description of the concept — shown to the LLM as context. */
   concept: string;
   /** Valid JSON string that matches the platform's schema. */

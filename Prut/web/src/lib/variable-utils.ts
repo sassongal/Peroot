@@ -11,7 +11,7 @@
  * inconsistencies.
  */
 
-export interface VariableDefinition {
+interface VariableDefinition {
   key: string;       // snake_case English name used inside {}
   label: string;     // Hebrew description for UI display
   example: string;   // Hebrew example value

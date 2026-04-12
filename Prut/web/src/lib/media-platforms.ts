@@ -1,7 +1,7 @@
 export type ImagePlatform = 'general' | 'midjourney' | 'dalle' | 'flux' | 'stable-diffusion' | 'imagen' | 'nanobanana';
 export type ImageOutputFormat = 'text' | 'json';
 
-export interface ImagePlatformConfig {
+interface ImagePlatformConfig {
   id: ImagePlatform;
   name: string;
   nameHe: string;

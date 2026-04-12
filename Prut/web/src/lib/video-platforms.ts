@@ -1,6 +1,6 @@
 export type VideoPlatform = 'general' | 'runway' | 'kling' | 'sora' | 'veo' | 'higgsfield' | 'minimax';
 
-export interface VideoPlatformConfig {
+interface VideoPlatformConfig {
   id: VideoPlatform;
   name: string;
   nameHe: string;

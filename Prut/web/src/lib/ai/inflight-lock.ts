@@ -31,7 +31,7 @@ import { logger } from "@/lib/logger";
 const LOCK_PREFIX = "peroot:enhance:inflight";
 const DEFAULT_TTL_MS = 10_000;
 
-export interface InflightLockInput {
+interface InflightLockInput {
     userId?: string;
     prompt: string;
     mode?: string;
@@ -48,7 +48,7 @@ export interface InflightLockInput {
     contextFingerprint?: string | null;
 }
 
-export interface AcquiredLock {
+interface AcquiredLock {
     acquired: boolean;
     key: string | null;
     /** Always safe to call — noop if lock was never acquired or Redis is down. */

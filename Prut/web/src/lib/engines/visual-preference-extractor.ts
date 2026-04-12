@@ -6,7 +6,7 @@
  * color palettes, and platform parameters that appear frequently.
  */
 
-export interface VisualPreferences {
+interface VisualPreferences {
   preferredStyles?: string[];
   preferredAspectRatios?: string[];
   preferredColorTones?: string[];

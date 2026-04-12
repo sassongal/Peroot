@@ -1,6 +1,6 @@
 import { CapabilityMode } from './capability-mode';
 
-export type PromptUsage = {
+type PromptUsage = {
   copies?: number;
   saves?: number;
   refinements?: number;
@@ -79,7 +79,7 @@ export type LibraryPrompt = {
   last_used_at?: string | null;
 };
 
-export interface Achievement {
+interface Achievement {
   id: string;
   name_he: string;
   description_he: string;
@@ -88,7 +88,7 @@ export interface Achievement {
   points: number;
 }
 
-export interface UserAchievement {
+interface UserAchievement {
   user_id: string;
   achievement_id: string;
   unlocked_at: string;

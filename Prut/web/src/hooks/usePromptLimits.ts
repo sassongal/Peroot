@@ -16,7 +16,7 @@ function getIsraelDateString(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 }
 
-export interface PromptLimitsShape {
+interface PromptLimitsShape {
   remaining: number;
   total: number | null;
   tierLabel: string;

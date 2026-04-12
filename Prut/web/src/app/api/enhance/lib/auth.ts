@@ -10,7 +10,7 @@ interface AuthClient {
   };
 }
 
-export interface AuthResult {
+interface AuthResult {
   userId: string | undefined;
   bearerToken: string | undefined;
   /** true when a Bearer token (extension JWT) or API key was used — signals that the

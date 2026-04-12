@@ -1,6 +1,6 @@
 import type he from '@/i18n/dictionaries/he.json';
 
-export type Locale = 'he' | 'en';
+type Locale = 'he' | 'en';
 
 const dictionaries = {
   he: () => import('@/i18n/dictionaries/he.json').then((module) => module.default),

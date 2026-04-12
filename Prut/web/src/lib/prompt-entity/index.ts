@@ -1,8 +1,5 @@
 export type {
   PromptEntity,
-  PromptScoreSnapshot,
-  PromptSource,
-  PromptVisibility,
 } from './types';
 
 export {

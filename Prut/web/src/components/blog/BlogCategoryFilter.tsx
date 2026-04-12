@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Calendar } from "lucide-react";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
 
-export interface BlogPost {
+interface BlogPost {
   slug: string;
   title: string;
   excerpt: string | null;

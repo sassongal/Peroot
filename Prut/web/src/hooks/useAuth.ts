@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-export type PlanTier = 'guest' | 'free' | 'pro' | 'admin';
+type PlanTier = 'guest' | 'free' | 'pro' | 'admin';
 
 interface AuthState {
   user: User | null;

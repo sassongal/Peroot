@@ -8,7 +8,7 @@ import { extractImage } from './image';
 
 export const MAX_FILE_SIZE_MB = 10;
 
-export const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
+const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
   pdf: 'pdf',
   docx: 'docx',
   txt: 'txt',
@@ -17,7 +17,7 @@ export const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
   xls: 'xlsx',
 };
 
-export interface FileDispatchResult {
+interface FileDispatchResult {
   text: string;
   metadata: Record<string, unknown> & { format: string };
 }

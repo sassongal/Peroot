@@ -15,7 +15,7 @@ import { logger } from "@/lib/logger";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface CreditCheckResult {
+interface CreditCheckResult {
   allowed: boolean;
   remaining: number;
   error?: string;

@@ -25,7 +25,7 @@ const google = createGoogleGenerativeAI({
 // Types — Blog
 // ---------------------------------------------------------------------------
 
-export interface BlogGenerationParams {
+interface BlogGenerationParams {
   topic?: string;
   template?: 'guide' | 'listicle' | 'comparison' | 'faq';
   existingTitles: string[];
@@ -33,7 +33,7 @@ export interface BlogGenerationParams {
   existingPromptTitles: string[]; // used for internal linking suggestions
 }
 
-export interface GeneratedBlogPost {
+interface GeneratedBlogPost {
   title: string;
   englishTitle: string;
   content: string; // full HTML body (no wrapping <article> or <div>)
@@ -49,7 +49,7 @@ export interface GeneratedBlogPost {
 // Types — Prompts
 // ---------------------------------------------------------------------------
 
-export interface PromptGenerationParams {
+interface PromptGenerationParams {
   topic?: string;
   category?: string;
   existingTitles: string[];
@@ -57,7 +57,7 @@ export interface PromptGenerationParams {
   count?: number;
 }
 
-export interface GeneratedPrompt {
+interface GeneratedPrompt {
   title: string;
   prompt: string;
   use_case: string;

@@ -20,7 +20,7 @@ const enrichSchema = z.object({
     .max(20),
 });
 
-export interface EnrichInput {
+interface EnrichInput {
   text: string;
   detectedType: DocumentType;
   sourceType: 'file' | 'url' | 'image';

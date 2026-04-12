@@ -4,7 +4,7 @@ import { isProviderAvailable, recordSuccess, recordFailure } from "./circuit-bre
 import { acquireSlot, releaseSlot } from "./concurrency";
 import { logger } from "@/lib/logger";
 
-export interface GatewayParams {
+interface GatewayParams {
     system: string;
     prompt: string;
     temperature?: number;

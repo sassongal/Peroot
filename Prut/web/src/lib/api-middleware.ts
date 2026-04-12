@@ -16,7 +16,7 @@ import { logger } from "@/lib/logger";
  *   });
  */
 
-export type AdminHandler<TContext = unknown> = (
+type AdminHandler<TContext = unknown> = (
   req: NextRequest,
   supabase: SupabaseClient,
   user: User,

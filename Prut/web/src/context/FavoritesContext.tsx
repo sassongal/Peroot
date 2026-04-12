@@ -7,7 +7,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface FavoritesContextType {
+interface FavoritesContextType {
   favoriteLibraryIds: Set<string>;
   favoritePersonalIds: Set<string>;
   handleToggleFavorite: (type: "library" | "personal", itemId: string) => Promise<void>;

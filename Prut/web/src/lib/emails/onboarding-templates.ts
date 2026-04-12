@@ -4,4 +4,4 @@
  * `@/lib/emails/templates` over time.
  */
 export { ONBOARDING_STEPS } from './templates/onboarding';
-export type { OnboardingStep } from './templates/onboarding';
+// OnboardingStep is internal — import directly from ./templates/onboarding if needed
