@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -66,8 +65,6 @@ export async function generateStaticParams({
   const categoryData = CATEGORY_SLUG_MAP[params.slug];
   if (!categoryData) return [];
 
-  // Must use service client here — createClient() calls cookies() which has no
-  // request context during build-time static generation, causing silent failure.
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("public_library_prompts")
@@ -84,7 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, id } = await params;
   const categoryData = CATEGORY_SLUG_MAP[slug];
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data: prompt } = await supabase
     .from("public_library_prompts")
     .select("title, use_case, prompt")
@@ -126,7 +123,8 @@ export default async function PromptPage({ params }: Props) {
   const categoryData = CATEGORY_SLUG_MAP[slug];
   if (!categoryData) notFound();
 
-  const supabase = await createClient();
+  // Public data — use service client (no cookies needed, safe for ISR pre-rendering)
+  const supabase = createServiceClient();
 
   const [{ data: prompt, error }, { data: related }] = await Promise.all([
     supabase
