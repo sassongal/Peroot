@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 import { escapePostgrestValue } from "@/lib/sanitize";
 import { findSimilarPrompts } from "@/lib/prompt-similarity";
+import { applyGuestFiltersAndSort } from "@/lib/library/sort";
 
 const STORAGE_KEY = 'peroot_personal_library';
 const CATEGORIES_KEY = 'peroot_personal_categories';
@@ -332,61 +333,15 @@ export function useLibrary() {
       capabilityFilter: string | null;
     }
   ) => {
-    let filtered = [...allItems];
-
-    // Handle virtual folders for guests
-    if (opts.activeFolder === 'pinned') {
-      filtered = filtered.filter(p => p.is_pinned);
-    } else if (opts.activeFolder === 'templates') {
-      filtered = filtered.filter(p => p.is_template === true);
-    } else if (opts.activeFolder === 'favorites') {
-      // Guest favorites handled via localStorage Set in PersonalLibraryView
-      // This is a no-op here; filtering happens in the view component
-    } else if (opts.activeFolder && opts.activeFolder !== 'all') {
-      filtered = filtered.filter(p => p.personal_category === opts.activeFolder);
-    }
-    // "all" (null) → no filter
-    if (opts.capabilityFilter) {
-      filtered = filtered.filter(p => p.capability_mode === opts.capabilityFilter);
-    }
-    if (opts.searchQuery) {
-      const q = opts.searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(q) ||
-        p.prompt.toLowerCase().includes(q) ||
-        (p.use_case ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    switch (opts.sortBy) {
-      case 'title':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'usage':
-        filtered.sort((a, b) => (b.use_count ?? 0) - (a.use_count ?? 0));
-        break;
-      case 'custom':
-        filtered.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
-        break;
-      case 'last_used':
-        filtered.sort((a, b) => {
-          const aT = typeof a.last_used_at === 'number' ? a.last_used_at : (a.last_used_at ? new Date(a.last_used_at).getTime() : 0);
-          const bT = typeof b.last_used_at === 'number' ? b.last_used_at : (b.last_used_at ? new Date(b.last_used_at).getTime() : 0);
-          return bT - aT;
-        });
-        break;
-      case 'performance':
-      default:
-        filtered.sort((a, b) => {
-          const aT = typeof a.updated_at === 'number' ? a.updated_at : new Date(a.updated_at).getTime();
-          const bT = typeof b.updated_at === 'number' ? b.updated_at : new Date(b.updated_at).getTime();
-          return bT - aT;
-        });
-        break;
-    }
-
-    // Pinned to top
-    filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+    const filtered = applyGuestFiltersAndSort(
+      allItems,
+      {
+        activeFolder: opts.activeFolder,
+        searchQuery: opts.searchQuery,
+        capabilityFilter: opts.capabilityFilter,
+      },
+      { sortBy: opts.sortBy }
+    );
 
     setTotalCount(filtered.length);
 
