@@ -8,8 +8,7 @@ import { identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
-import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
-import { VideoPlatform } from "@/lib/video-platforms";
+import { useHomeMediaState } from "@/hooks/useHomeMediaState";
 import { UserMenu } from "@/components/layout/user-nav";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
@@ -18,7 +17,6 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { escapeRegExp } from "@/lib/text-utils";
 import { stripGeniusQuestionsForDisplay } from "@/lib/prompt-stream/split-genius-completion";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
-import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
@@ -131,22 +129,20 @@ function PageContent() {
     };
   }, []);
 
-  const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
-  const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
-  const [imageAspectRatio, setImageAspectRatio] = useState("");
-  const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>('general');
-  const [videoAspectRatio, setVideoAspectRatio] = useState("");
-  const [targetModel, setTargetModel] = useState<TargetModel>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('peroot_target_model') as TargetModel) || 'general';
-    }
-    return 'general';
-  });
-
-  const handleSetTargetModel = useCallback((model: TargetModel) => {
-    setTargetModel(model);
-    localStorage.setItem('peroot_target_model', model);
-  }, []);
+  const {
+    imagePlatform,
+    setImagePlatform,
+    imageOutputFormat,
+    setImageOutputFormat,
+    imageAspectRatio,
+    setImageAspectRatio,
+    videoPlatform,
+    setVideoPlatform,
+    videoAspectRatio,
+    setVideoAspectRatio,
+    targetModel,
+    handleSetTargetModel,
+  } = useHomeMediaState({ selectedCapability: ps.selectedCapability });
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
