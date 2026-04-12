@@ -13,6 +13,21 @@ import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { BlogTOC } from "@/components/blog/BlogTOC";
 import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
+
+// Maps blog post category (Hebrew) to the most relevant prompt library slug
+const BLOG_CATEGORY_TO_PROMPT_SLUG: Record<string, string> = {
+  "שיווק": "marketing",
+  "תוכן": "creative",
+  "תמונות": "images",
+  "קוד ופיתוח": "dev",
+  "חינוך": "teachers",
+  "מדריכים": "general",
+  "פרילנסרים": "general",
+  "טעויות נפוצות": "general",
+  "השוואות": "general",
+  "סקירות": "general",
+};
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -281,11 +296,24 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
 
             {/* Related links */}
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <CrossLinkCard href="/prompts" title="תבניות פרומפטים קשורות" description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום`} />
-              <CrossLinkCard href="/guide" title="המדריך המלא לפרומפטים בעברית" description="5 עקרונות זהב וטכניקות מתקדמות" />
-              <CrossLinkCard href="/features" title="כל הכלים של Peroot" description="תמונות, סרטונים, מחקר וסוכני AI" />
-            </div>
+            {(() => {
+              const promptSlug = BLOG_CATEGORY_TO_PROMPT_SLUG[post.category] ?? null;
+              const categoryData = promptSlug ? CATEGORY_SLUG_MAP[promptSlug] : null;
+              const promptHref = categoryData ? `/prompts/${promptSlug}` : "/prompts";
+              const promptTitle = categoryData
+                ? `${categoryData.emoji} פרומפטים ל${categoryData.labelHe.replace(/^פרומפטים /, "")}`
+                : "תבניות פרומפטים קשורות";
+              const promptDesc = categoryData
+                ? categoryData.descriptionHe
+                : `${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום`;
+              return (
+                <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <CrossLinkCard href={promptHref} title={promptTitle} description={promptDesc} />
+                  <CrossLinkCard href="/guide" title="המדריך המלא לפרומפטים בעברית" description="5 עקרונות זהב וטכניקות מתקדמות" />
+                  <CrossLinkCard href="/features" title="כל הכלים של Peroot" description="תמונות, סרטונים, מחקר וסוכני AI" />
+                </div>
+              );
+            })()}
 
             {/* Gradient CTA */}
             <div className="mt-12 rounded-2xl bg-linear-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-8 text-center space-y-4">

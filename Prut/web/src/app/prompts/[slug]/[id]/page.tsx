@@ -12,6 +12,10 @@ import { UsePromptButton } from "../UsePromptButton";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
+function buildOgImageUrl(title: string, subtitle: string, categoryLabel: string): string {
+  return `${SITE_URL}/api/og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(subtitle.slice(0, 100))}&category=${encodeURIComponent(categoryLabel)}`;
+}
+
 interface Props {
   params: Promise<{ slug: string; id: string }>;
 }
@@ -94,6 +98,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ""
   ).slice(0, 160);
   const canonicalUrl = `/prompts/${slug}/${id}`;
+  const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
 
   return {
     title,
@@ -106,8 +111,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Peroot",
       locale: "he_IL",
       type: "article",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: prompt.title }],
     },
-    twitter: { card: "summary", title, description },
+    twitter: { card: "summary_large_image", title, description, images: [ogImage] },
     robots: { index: true, follow: true },
   };
 }
