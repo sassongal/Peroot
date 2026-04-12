@@ -72,6 +72,7 @@ interface InputSectionProps {
   // Context attachments
   contextAttachments: ContextAttachment[];
   onAddFile: (file: File) => void;
+  onAddFiles?: (files: File[]) => Promise<void>;
   onAddUrl: (url: string) => void;
   onAddImage: (file: File) => void;
   onRetryAttachment?: (id: string) => void;
@@ -133,6 +134,7 @@ export const InputSection = memo<InputSectionProps>(({
   dispatch,
   contextAttachments,
   onAddFile,
+  onAddFiles,
   onAddUrl,
   onAddImage,
   onRetryAttachment,
@@ -205,6 +207,7 @@ export const InputSection = memo<InputSectionProps>(({
         videoAspectRatio={videoAspectRatio}
         setVideoAspectRatio={setVideoAspectRatio}
         onAddFile={onAddFile}
+        onAddFiles={onAddFiles}
         onAddUrl={onAddUrl}
         onAddImage={onAddImage}
         hasAttachments={contextAttachments.length > 0}

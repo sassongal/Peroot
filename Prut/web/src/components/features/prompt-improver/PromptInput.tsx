@@ -51,6 +51,7 @@ interface PromptInputProps {
   setVideoAspectRatio: (ratio: string) => void;
   // Context attachments
   onAddFile?: (file: File) => void;
+  onAddFiles?: (files: File[]) => Promise<void>;
   onAddUrl?: (url: string) => void;
   onAddImage?: (file: File) => void;
   hasAttachments?: boolean;
@@ -142,6 +143,7 @@ export function PromptInput({
   videoAspectRatio,
   setVideoAspectRatio,
   onAddFile,
+  onAddFiles,
   onAddUrl,
   onAddImage,
   hasAttachments,
@@ -358,18 +360,26 @@ export function PromptInput({
           onDrop={(e) => {
             e.preventDefault();
             setIsDragOver(false);
-            const files = Array.from(e.dataTransfer.files);
-            for (const file of files) {
-              try {
-                if (file.type.startsWith('image/')) {
-                  onAddImage?.(file);
-                  toast.success(`"${file.name}" נוספה`);
-                } else {
-                  onAddFile?.(file);
-                  toast.success(`"${file.name}" נוסף`);
-                }
-              } catch (err) {
-                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ");
+            const dropped = Array.from(e.dataTransfer.files);
+            const imageFiles = dropped.filter((f) => f.type.startsWith('image/'));
+            const docFiles = dropped.filter((f) => !f.type.startsWith('image/'));
+
+            for (const img of imageFiles) {
+              try { onAddImage?.(img); toast.success(`"${img.name}" נוספה`); }
+              catch (err) { toast.error(err instanceof Error ? err.message : "שגיאה בהוספת תמונה"); }
+            }
+
+            if (docFiles.length === 0) return;
+            if (docFiles.length > 1 && onAddFiles) {
+              onAddFiles(docFiles).then(() => {
+                toast.success(`${docFiles.length} קבצים נוספו`);
+              }).catch((err: unknown) => {
+                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קבצים");
+              });
+            } else {
+              for (const file of docFiles) {
+                try { onAddFile?.(file); toast.success(`"${file.name}" נוסף`); }
+                catch (err) { toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ"); }
               }
             }
           }}>

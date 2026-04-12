@@ -829,6 +829,7 @@ function PageContent() {
           dispatch={dispatch}
           contextAttachments={context.attachments}
           onAddFile={context.addFile}
+          onAddFiles={context.addFiles}
           onAddUrl={context.addUrl}
           onAddImage={context.addImage}
           onRetryAttachment={context.retryAttachment}
