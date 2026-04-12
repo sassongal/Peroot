@@ -38,6 +38,7 @@ export interface HomeResultSectionProps {
   preFilledKeys: string[];
   onVariableChange: (key: string, val: string) => void;
   onImproveAgain: () => void;
+  onQuickRefine?: (instruction: string) => void;
   onRetryStream: () => void;
   onResetToOriginal: () => void;
   originalPrompt: string;
@@ -74,6 +75,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(({
   preFilledKeys,
   onVariableChange,
   onImproveAgain,
+  onQuickRefine,
   onRetryStream,
   onResetToOriginal,
   originalPrompt,
@@ -111,6 +113,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(({
               preFilledKeys={preFilledKeys}
               onVariableChange={onVariableChange}
               onImproveAgain={onImproveAgain}
+              onQuickRefine={onQuickRefine}
               onRetryStream={onRetryStream}
               onResetToOriginal={onResetToOriginal}
               iterationCount={iterationCount}
