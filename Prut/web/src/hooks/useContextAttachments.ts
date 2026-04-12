@@ -5,7 +5,9 @@ import type {
   ContextAttachment,
   ContextPayload,
   AttachmentType,
+  AttachmentStatus,
 } from "@/lib/context/types";
+import type { ProcessingStage } from "@/lib/context/engine/types";
 import { getApiPath } from "@/lib/api-path";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -140,6 +142,77 @@ export function useContextAttachments(tier: Tier = 'free') {
       }
     },
     [updateAttachment, limits.maxFiles]
+  );
+
+  const addFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
+      // Validate count atomically (pendingCounts prevents races)
+      const currentCount = countByType(attachmentsRef.current, "file") + pendingCounts.current.file;
+      if (currentCount + files.length > limits.maxFiles) {
+        throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
+      }
+      pendingCounts.current.file += files.length;
+
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) throw new Error(`הקובץ ${file.name} גדול מדי (מקסימום 10MB)`);
+        if (!ACCEPTED_FILE_TYPES.includes(file.type)) throw new Error(`פורמט קובץ לא נתמך: ${file.name}`);
+      }
+
+      const ids = files.map(() => generateId());
+      setAttachments((prev) => [
+        ...prev,
+        ...files.map((file, i) => ({
+          id: ids[i],
+          type: "file" as AttachmentType,
+          name: file.name,
+          filename: file.name,
+          format: file.name.split('.').pop()?.toLowerCase(),
+          size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
+          status: "loading" as const,
+        })),
+      ]);
+
+      try {
+        const formData = new FormData();
+        for (const file of files) formData.append("files", file);
+        const res = await fetch(getApiPath("/api/context/extract-files"), {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || "שגיאה בחילוץ הקבצים");
+        }
+        const body = await res.json();
+        const blocks: unknown[] = body.blocks ?? [];
+        setAttachments((prev) =>
+          prev.map((a) => {
+            const idx = ids.indexOf(a.id);
+            if (idx === -1) return a;
+            const block = blocks[idx] as { stage?: string } | undefined;
+            if (!block) return { ...a, status: "error" as const, error: "שגיאה בעיבוד" } as ContextAttachment;
+            return {
+              ...a,
+              block: block as ContextAttachment['block'],
+              stage: block.stage as ProcessingStage | undefined,
+              status: (block.stage === "error" ? "error" : "ready") as AttachmentStatus,
+            } as ContextAttachment;
+          })
+        );
+      } catch (err) {
+        setAttachments((prev) =>
+          prev.map((a) =>
+            ids.includes(a.id)
+              ? { ...a, status: "error" as const, error: err instanceof Error ? err.message : "שגיאה לא צפויה" }
+              : a
+          )
+        );
+      } finally {
+        pendingCounts.current.file -= files.length;
+      }
+    },
+    [limits.maxFiles]
   );
 
   const addUrl = useCallback(
@@ -328,6 +401,7 @@ export function useContextAttachments(tier: Tier = 'free') {
     isOverLimit,
     limits,
     addFile,
+    addFiles,
     addUrl,
     addImage,
     retryAttachment,
