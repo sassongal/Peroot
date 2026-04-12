@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_SLUG_MAP, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbSchema, promptCollectionSchema } from "@/lib/schema";
+import { breadcrumbSchema, promptCollectionSchema, howToSchema, faqSchema } from "@/lib/schema";
+import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { CopyButton } from "./CopyButton";
 import { UsePromptButton } from "./UsePromptButton";
 
@@ -109,6 +110,7 @@ export default async function CategoryPage({ params }: Props) {
   const allCategorySlugs = Object.entries(CATEGORY_SLUG_MAP);
 
   const pageUrl = `${SITE_URL}/prompts/${slug}`;
+  const content = CATEGORY_CONTENT[slug];
 
   return (
     <>
@@ -128,6 +130,22 @@ export default async function CategoryPage({ params }: Props) {
           itemCount: prompts.length,
         })}
       />
+      {content && (
+        <>
+          <JsonLd
+            data={howToSchema({
+              name: `איך לכתוב פרומפטים ל${categoryData.labelHe}`,
+              description: categoryData.descriptionHe,
+              steps: content.tips.map((t) => ({ name: t.title, text: t.body })),
+            })}
+          />
+          <JsonLd
+            data={faqSchema(
+              content.faqs.map((f) => ({ question: f.q, answer: f.a }))
+            )}
+          />
+        </>
+      )}
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
         <div className="max-w-6xl mx-auto px-4 py-8 md:py-14">
@@ -160,6 +178,14 @@ export default async function CategoryPage({ params }: Props) {
               <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-3">
                 {prompts.length} פרומפטים זמינים
               </p>
+            )}
+            {/* Editorial intro */}
+            {content && (
+              <div className="mt-6 max-w-3xl text-sm md:text-base text-muted-foreground leading-relaxed space-y-3">
+                {content.intro.split("\n\n").map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
             )}
           </header>
 
@@ -272,6 +298,56 @@ export default async function CategoryPage({ params }: Props) {
                 לכל הקטגוריות
               </Link>
             </div>
+          )}
+
+          {/* Tips section */}
+          {content && content.tips.length > 0 && (
+            <section className="mt-14 md:mt-16" aria-label="טיפים לכתיבת פרומפטים">
+              <h2 className="text-xl md:text-2xl font-serif text-foreground mb-6">
+                איך לכתוב פרומפטים טובים יותר ל{categoryData.labelHe}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {content.tips.map((tip, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl border border-border bg-card p-5 flex gap-4"
+                  >
+                    <span className="shrink-0 w-7 h-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center mt-0.5">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground mb-1">{tip.title}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{tip.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* FAQ section */}
+          {content && content.faqs.length > 0 && (
+            <section className="mt-14 md:mt-16 max-w-3xl" aria-label="שאלות נפוצות">
+              <h2 className="text-xl md:text-2xl font-serif text-foreground mb-6">
+                שאלות נפוצות על {categoryData.labelHe}
+              </h2>
+              <div className="space-y-3">
+                {content.faqs.map((faq, i) => (
+                  <details
+                    key={i}
+                    className="group rounded-xl border border-border bg-card"
+                  >
+                    <summary className="flex items-center justify-between p-4 cursor-pointer list-none text-sm font-medium text-foreground">
+                      {faq.q}
+                      <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground group-open:rotate-180 transition-transform ms-2" />
+                    </summary>
+                    <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed">
+                      {faq.a}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
           )}
 
           {/* CTA section */}
