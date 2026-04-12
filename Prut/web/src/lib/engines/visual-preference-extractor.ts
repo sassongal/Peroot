@@ -57,7 +57,7 @@ export function extractVisualPreferences(
     if (ratio) arCounts.set(ratio, (arCounts.get(ratio) || 0) + 1);
   });
   const topAr = Array.from(arCounts.entries())
-    .filter(([_, count]) => count >= 2)
+    .filter(([, count]) => count >= 2)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([ar]) => ar);

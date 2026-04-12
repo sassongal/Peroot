@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import {
   MessageSquare,
@@ -271,16 +272,11 @@ function CapabilityCard({ cap, index }: { cap: CapabilityData; index: number }) 
 export default function FeaturesPage() {
   return (
     <>
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(
-          breadcrumbSchema([
-            { name: "דף הבית", url: "/" },
-            { name: "תכונות", url: "/features" },
-          ])
-        ),
-      }}
+    <JsonLd
+      data={breadcrumbSchema([
+        { name: "דף הבית", url: "/" },
+        { name: "תכונות", url: "/features" },
+      ])}
     />
     <main
       className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, permanentRedirect } from "next/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { articleSchema, breadcrumbSchema, faqSchema, howToSchema } from "@/lib/schema";
 import { HEBREW_BLOG_SLUGS, ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
@@ -307,53 +308,33 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            articleSchema({
-              title: post.title,
-              excerpt: post.meta_description || post.excerpt || "",
-              slug: post.slug,
-              published_at: post.published_at,
-              author: post.author || "Gal Sasson",
-              thumbnail_url: ogImageUrl,
-            })
-          ),
-        }}
+      <JsonLd
+        data={articleSchema({
+          title: post.title,
+          excerpt: post.meta_description || post.excerpt || "",
+          slug: post.slug,
+          published_at: post.published_at,
+          author: post.author || "Gal Sasson",
+          thumbnail_url: ogImageUrl,
+        })}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "בלוג", url: "/blog" },
-              { name: post.title, url: `/blog/${post.slug}` },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "בלוג", url: "/blog" },
+          { name: post.title, url: `/blog/${post.slug}` },
+        ])}
       />
       {/* FAQ schema for Q&A category posts */}
       {post.category === "שאלות ותשובות" && (() => {
         const pairs = extractFaqPairs(post.content ?? "");
-        return pairs.length > 0 ? (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(pairs)) }}
-          />
-        ) : null;
+        return pairs.length > 0 ? <JsonLd data={faqSchema(pairs)} /> : null;
       })()}
       {/* HowTo schema for guide category posts */}
       {post.category === "מדריכים" && (() => {
         const steps = extractHowToSteps(post.content ?? "");
         return steps.length > 0 ? (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(howToSchema({ name: post.title, steps })),
-            }}
-          />
+          <JsonLd data={howToSchema({ name: post.title, steps })} />
         ) : null;
       })()}
     </main>

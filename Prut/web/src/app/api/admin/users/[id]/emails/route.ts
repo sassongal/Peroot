@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -10,19 +10,13 @@ import { logger } from '@/lib/logger';
  * - email_sequences (onboarding progress)
  * - Fallback: webhook_events for historical LemonSqueezy emails
  */
-export async function GET(
-  _req: NextRequest,
+export const GET = withAdmin(async (
+  _req,
+  supabase,
+  _user,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { error, user: adminUser, supabase } = await validateAdminSession();
-    if (error || !adminUser || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { id } = await params;
 
     const [
@@ -162,4 +156,4 @@ export async function GET(
     logger.error('[Admin User Emails] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

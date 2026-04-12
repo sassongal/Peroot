@@ -4,7 +4,7 @@
  */
 import { hebrewFuzzyMatch } from "@/lib/hebrew-search";
 
-export const GUIDE_SEARCH_INDEX: Array<{
+const GUIDE_SEARCH_INDEX: Array<{
   id: string;
   label: string;
   keywords?: string[];

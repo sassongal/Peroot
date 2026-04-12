@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot, RotateCcw, ExternalLink, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { buildChainShareUrl } from "@/lib/chains/share-url";
 import { toast } from "sonner";
+import { trackChainRun } from "@/lib/analytics";
 
 const MODE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   text: FileText,
@@ -25,6 +26,16 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
+  const chainCompleteTracked = useRef(false);
+
+  const allCompleted =
+    chain.steps.length > 0 && completedSteps.size === chain.steps.length;
+  useEffect(() => {
+    if (allCompleted && !chainCompleteTracked.current) {
+      chainCompleteTracked.current = true;
+      trackChainRun(chain.id, chain.steps.length);
+    }
+  }, [allCompleted, chain.id, chain.steps.length]);
 
   const step = chain.steps[currentStep];
   if (!step) return null;
@@ -52,6 +63,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
     setCurrentStep(0);
     setCompletedSteps(new Set());
     setStepOutputs({});
+    chainCompleteTracked.current = false;
     toast.success("השרשרת אופסה");
   };
 
@@ -152,7 +164,6 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
 
   const resolvedPrompt = getResolvedPrompt(currentStep);
   const ModeIcon = step.mode ? MODE_ICONS[step.mode] || FileText : FileText;
-  const allCompleted = completedSteps.size === chain.steps.length;
 
   return (
     <div

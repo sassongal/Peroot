@@ -900,8 +900,7 @@ export function useLibrary() {
       .rpc('bump_prompt_last_used', { p_table: 'personal_library', p_id: id })
       .then(({ error }) => {
         if (error) {
-          // eslint-disable-next-line no-console
-          console.warn('[useLibrary] bump_prompt_last_used failed:', error.message);
+          logger.warn('[useLibrary] bump_prompt_last_used failed:', error.message);
         }
       });
   };

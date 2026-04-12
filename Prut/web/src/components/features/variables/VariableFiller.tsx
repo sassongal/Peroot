@@ -11,6 +11,7 @@ import {
   getVariablePlaceholder,
   substituteVariables,
 } from "@/lib/variable-utils";
+import { getPlaceholderSuggestions } from "@/lib/text-utils";
 
 interface VariableFillerProps {
   promptText: string;
@@ -104,26 +105,43 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
         {variables.map(v => {
           const label = getVariableLabel(v);
           const isFilled = (values[v] ?? "").trim().length > 0;
+          const quickSuggestions = getPlaceholderSuggestions(v);
           return (
-            <div key={v} className="flex items-center gap-3">
-              <label
-                className="text-xs text-(--text-secondary) w-28 shrink-0 truncate font-medium"
-                title={v}
-              >
-                {label}
-              </label>
-              <input
-                value={values[v] || ""}
-                onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
-                placeholder={getVariablePlaceholder(v)}
-                aria-label={label}
-                className={cn(
-                  "flex-1 rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-slate-600 focus:outline-none transition-colors border",
-                  isFilled
-                    ? "bg-emerald-500/4 border-emerald-500/40 focus:border-emerald-500/60"
-                    : "bg-black/5 dark:bg-black/30 border-(--glass-border) focus:border-sky-500/50"
-                )}
-              />
+            <div key={v} className="space-y-1.5">
+              <div className="flex items-center gap-3">
+                <label
+                  className="text-xs text-(--text-secondary) w-28 shrink-0 truncate font-medium"
+                  title={v}
+                >
+                  {label}
+                </label>
+                <input
+                  value={values[v] || ""}
+                  onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
+                  placeholder={getVariablePlaceholder(v)}
+                  aria-label={label}
+                  className={cn(
+                    "flex-1 rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-slate-600 focus:outline-none transition-colors border",
+                    isFilled
+                      ? "bg-emerald-500/4 border-emerald-500/40 focus:border-emerald-500/60"
+                      : "bg-black/5 dark:bg-black/30 border-(--glass-border) focus:border-sky-500/50"
+                  )}
+                />
+              </div>
+              {quickSuggestions.length > 0 && (
+                <div className="flex flex-wrap gap-1 justify-end pe-0 sm:pe-0">
+                  {quickSuggestions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setValues((prev) => ({ ...prev, [v]: s }))}
+                      className="text-[10px] px-2 py-0.5 rounded-md border border-sky-500/20 bg-sky-500/5 text-sky-700 dark:text-sky-300 hover:bg-sky-500/15 transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}

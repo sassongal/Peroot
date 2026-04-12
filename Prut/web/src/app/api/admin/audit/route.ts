@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 export interface AuditLogEntry {
@@ -46,16 +46,7 @@ export interface AuditResponse {
   generatedAt: string;
 }
 
-export async function GET(req: Request) {
-  try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
+export const GET = withAdmin(async (req, supabase, _user) => {
     const { searchParams } = new URL(req.url);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
@@ -182,8 +173,4 @@ export async function GET(req: Request) {
       topAdmins,
       generatedAt: new Date().toISOString(),
     } satisfies AuditResponse);
-  } catch (err) {
-    logger.error('[Admin Audit] Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});

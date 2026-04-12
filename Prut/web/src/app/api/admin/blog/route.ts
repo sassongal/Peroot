@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { pingGoogle } from "@/lib/google-ping";
 import { z } from "zod";
@@ -26,12 +26,8 @@ const BlogPostDeleteSchema = z.object({
 });
 
 // GET - list all posts (including drafts) for admin
-export async function GET() {
+export const GET = withAdmin(async (_req, supabase) => {
   try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase)
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-
     const { data, error: dbError } = await supabase
       .from("blog_posts")
       .select("*")
@@ -46,15 +42,11 @@ export async function GET() {
     logger.error("[admin/blog] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});
 
 // POST - create new post
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req, supabase) => {
   try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase)
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-
     const raw = await req.json();
     const parsed = BlogPostSchema.safeParse(raw);
     if (!parsed.success) {
@@ -75,15 +67,11 @@ export async function POST(req: NextRequest) {
     logger.error("[admin/blog] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});
 
 // PUT - update existing post
-export async function PUT(req: NextRequest) {
+export const PUT = withAdmin(async (req, supabase) => {
   try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase)
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-
     const body = await req.json();
     const parsed = BlogPostUpdateSchema.safeParse(body);
     if (!parsed.success) {
@@ -117,15 +105,11 @@ export async function PUT(req: NextRequest) {
     logger.error("[admin/blog] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});
 
 // DELETE - delete a post
-export async function DELETE(req: NextRequest) {
+export const DELETE = withAdmin(async (req, supabase) => {
   try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase)
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-
     const body = await req.json();
     const parsed = BlogPostDeleteSchema.safeParse(body);
     if (!parsed.success) {
@@ -146,4 +130,4 @@ export async function DELETE(req: NextRequest) {
     logger.error("[admin/blog] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

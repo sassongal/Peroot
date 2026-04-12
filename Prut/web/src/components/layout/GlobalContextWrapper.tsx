@@ -1,6 +1,6 @@
 "use client";
 
-import { LibraryProvider, useLibraryContext } from "@/context/LibraryContext";
+import { LibraryProvider } from "@/context/LibraryContext";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { useState, useEffect } from "react";
 import { ExtensionBanner } from "@/components/ui/ExtensionBanner";
@@ -14,8 +14,6 @@ const Toaster = dynamic(
 );
 
 function InnerWrapper({ children }: { children: React.ReactNode }) {
-  const { viewMode } = useLibraryContext();
-
   return (
     <>
       <ExtensionBanner />

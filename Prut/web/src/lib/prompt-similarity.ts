@@ -32,7 +32,7 @@ function tokenize(text: string): Set<string> {
  * Compute Jaccard similarity between two texts based on word overlap.
  * Returns a value between 0 (no overlap) and 1 (identical word sets).
  */
-export function jaccardSimilarity(textA: string, textB: string): number {
+function jaccardSimilarity(textA: string, textB: string): number {
   const setA = tokenize(textA);
   const setB = tokenize(textB);
 

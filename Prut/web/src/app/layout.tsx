@@ -5,6 +5,7 @@ import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { createClient } from "@/lib/supabase/server";
@@ -187,14 +188,8 @@ export default async function RootLayout({
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
           </a>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema()) }}
-          />
+          <JsonLd data={organizationSchema()} />
+          <JsonLd data={webSiteSchema()} />
           <ThemeProvider>
             <QueryProvider>
               <I18nProvider dictionary={dictionary} lang={locale}>

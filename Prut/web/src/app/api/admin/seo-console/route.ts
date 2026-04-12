@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -11,16 +11,8 @@ import { logger } from '@/lib/logger';
  *  - Content calendar (weekly breakdown last 12 weeks)
  *  - GSC connection status via env var
  */
-export async function GET() {
+export const GET = withAdmin(async (_req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const now = new Date();
     const twelveWeeksAgo = new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -238,4 +230,4 @@ export async function GET() {
     logger.error('[Admin SEO Console] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

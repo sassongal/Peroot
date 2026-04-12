@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  validateAdminSession,
   logAdminAction,
   parseAdminInput,
 } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { adminAdjustCredits } from '@/lib/services/credit-service';
 import { logger } from '@/lib/logger';
 
@@ -28,19 +28,13 @@ const adminActionSchema = z.object({
  * style personality, achievement count, prompt count, total API cost,
  * and recent activity.
  */
-export async function GET(
-  _req: NextRequest,
+export const GET = withAdmin(async (
+  _req,
+  supabase,
+  _user,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { error, user: adminUser, supabase } = await validateAdminSession();
-    if (error || !adminUser || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { id } = await params;
 
     // Validate UUID format
@@ -161,7 +155,7 @@ export async function GET(
     logger.error('[Admin User Detail GET] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/admin/users/[id]
@@ -169,19 +163,13 @@ export async function GET(
  * Performs an admin action on the target user.
  * Body: { action, value? }
  */
-export async function POST(
-  req: NextRequest,
+export const POST = withAdmin(async (
+  req,
+  supabase,
+  adminUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { error, user: adminUser, supabase } = await validateAdminSession();
-    if (error || !adminUser || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { id } = await params;
 
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
@@ -317,4 +305,4 @@ export async function POST(
     logger.error('[Admin User Detail POST] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

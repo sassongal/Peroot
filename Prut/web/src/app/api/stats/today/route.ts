@@ -28,10 +28,6 @@ function getTodayResetUTC(): string {
   const israelDay = getIsraelDay();
   // Set to 6:00 AM on that day in Israel time
   israelDay.setHours(6, 0, 0, 0);
-  // Convert back to UTC by parsing as Israel timezone
-  const utcStr = new Date(
-    israelDay.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" })
-  ).toISOString();
   // More reliable: compute offset manually
   const israelOffset = new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" });
   const israelDate = new Date(israelOffset);

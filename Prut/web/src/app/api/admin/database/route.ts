@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 
 const BACKUP_TABLES = [
@@ -26,15 +26,8 @@ const STATS_TABLES = [
  * stats  - returns row counts and health status
  * backup - returns full table dumps for all key tables
  */
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req, supabase) => {
   try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase)
-      return NextResponse.json(
-        { error: error || "Forbidden" },
-        { status: error === "Unauthorized" ? 401 : 403 }
-      );
-
     const action = req.nextUrl.searchParams.get("action") || "stats";
 
     if (action === "stats") {
@@ -119,4 +112,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

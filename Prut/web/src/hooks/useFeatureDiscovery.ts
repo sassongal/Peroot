@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { trackFeatureUse } from "@/lib/analytics";
 
 // ─── Feature Discovery Tips ─────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ export function markFeatureUsed(key: string) {
   try {
     localStorage.setItem(key, "true");
   } catch { /* ignore */ }
+  trackFeatureUse(key);
 }
 
 function isFeatureUsed(key: string): boolean {

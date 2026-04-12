@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { pricingSchema, breadcrumbSchema, faqSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
@@ -23,35 +24,22 @@ export const metadata: Metadata = {
 export default function PricingLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema()) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "תוכניות ומחירים", url: "/pricing" },
-            ])
-          ),
-        }}
+      <JsonLd data={pricingSchema()} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "תוכניות ומחירים", url: "/pricing" },
+        ])}
       />
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            faqSchema([
-              { question: "כמה עולה Peroot?", answer: "Peroot מציע תוכנית חינמית עם 2 קרדיטים ביום, ותוכנית Pro במחיר השקה - רק 3.99 שקלים בחודש במקום 9.99 שקלים, עם 150 קרדיטים. מחיר ההשקה תקף עד 1 במאי 2026. יש יום ניסיון במתנה ל-Pro." },
-              { question: "מה ההבדל בין חינם ל-Pro?", answer: "התוכנית החינמית כוללת 2 קרדיטים ביום ומודלים בסיסיים. Pro כוללת 150 קרדיטים בחודש, מודלים פרימיום, שיפור איטרטיבי, וספריה אישית ללא הגבלה." },
-              { question: "איך מערכת הקרדיטים עובדת?", answer: "כל שדרוג פרומפט עולה קרדיט אחד. בחינם מקבלים 2 קרדיטים שמתחדשים כל יום ב-14:00. ב-Pro מקבלים 150 קרדיטים שמתחדשים בתחילת כל חודש חיוב." },
-              { question: "אפשר לבטל את המנוי?", answer: "כן, ביטול מנוי Pro הוא מיידי ללא דמי ביטול. המנוי נשאר פעיל עד סוף תקופת החיוב הנוכחית." },
-              { question: "האם יש ניסיון חינם?", answer: "כן, תוכנית Pro כוללת יום ניסיון במתנה. ללא צורך בכרטיס אשראי לתוכנית החינמית." },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={faqSchema([
+          { question: "כמה עולה Peroot?", answer: "Peroot מציע תוכנית חינמית עם 2 קרדיטים ביום, ותוכנית Pro במחיר השקה - רק 3.99 שקלים בחודש במקום 9.99 שקלים, עם 150 קרדיטים. מחיר ההשקה תקף עד 1 במאי 2026. יש יום ניסיון במתנה ל-Pro." },
+          { question: "מה ההבדל בין חינם ל-Pro?", answer: "התוכנית החינמית כוללת 2 קרדיטים ביום ומודלים בסיסיים. Pro כוללת 150 קרדיטים בחודש, מודלים פרימיום, שיפור איטרטיבי, וספריה אישית ללא הגבלה." },
+          { question: "איך מערכת הקרדיטים עובדת?", answer: "כל שדרוג פרומפט עולה קרדיט אחד. בחינם מקבלים 2 קרדיטים שמתחדשים כל יום ב-14:00. ב-Pro מקבלים 150 קרדיטים שמתחדשים בתחילת כל חודש חיוב." },
+          { question: "אפשר לבטל את המנוי?", answer: "כן, ביטול מנוי Pro הוא מיידי ללא דמי ביטול. המנוי נשאר פעיל עד סוף תקופת החיוב הנוכחית." },
+          { question: "האם יש ניסיון חינם?", answer: "כן, תוכנית Pro כוללת יום ניסיון במתנה. ללא צורך בכרטיס אשראי לתוכנית החינמית." },
+        ])}
       />
 
       {/* Server-rendered pricing content for AI crawlers */}

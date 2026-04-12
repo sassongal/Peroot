@@ -16,7 +16,6 @@ import {
   PieChart,
   Globe,
   Eye,
-  Timer,
   MousePointerClick,
   LucideIcon,
 } from "lucide-react";

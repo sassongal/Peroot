@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PageHeading } from "@/components/ui/PageHeading";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
@@ -91,16 +92,11 @@ function PlatformCardComponent({ card }: { card: PlatformCard }) {
 export default function GuidesPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "מדריכי פרומפטים", url: "/guides" },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "מדריכי פרומפטים", url: "/guides" },
+        ])}
       />
 
       <div className="p-6 md:p-12 lg:p-20">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABELS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, faqSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
@@ -74,41 +75,28 @@ export default async function TemplatesPage() {
   return (
     <>
       {/* Structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "תבניות פרומפטים", url: "/templates" },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "תבניות פרומפטים", url: "/templates" },
+        ])}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema(FAQ_ITEMS)),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            name: "תבניות פרומפטים מוכנות בעברית",
-            description:
-              "עשרות תבניות פרומפטים מוכנות לשימוש עם משתנים להתאמה אישית.",
-            url: `${SITE_URL}/templates`,
-            inLanguage: "he",
-            numberOfItems: templates.length,
-            publisher: {
-              "@type": "Organization",
-              name: "Peroot",
-              url: SITE_URL,
-            },
-          }),
+      <JsonLd data={faqSchema(FAQ_ITEMS)} />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "תבניות פרומפטים מוכנות בעברית",
+          description:
+            "עשרות תבניות פרומפטים מוכנות לשימוש עם משתנים להתאמה אישית.",
+          url: `${SITE_URL}/templates`,
+          inLanguage: "he",
+          numberOfItems: templates.length,
+          publisher: {
+            "@type": "Organization",
+            name: "Peroot",
+            url: SITE_URL,
+          },
         }}
       />
 

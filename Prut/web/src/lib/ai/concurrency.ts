@@ -55,13 +55,6 @@ export function releaseSlot(): void {
   }
 }
 
-/**
- * Get current concurrency stats (for monitoring/admin).
- */
-export function getConcurrencyStats() {
-  return { active, queued: queue.length, maxConcurrent: MAX_CONCURRENT, maxQueue: MAX_QUEUE };
-}
-
 export class ConcurrencyError extends Error {
   constructor(message: string) {
     super(message);

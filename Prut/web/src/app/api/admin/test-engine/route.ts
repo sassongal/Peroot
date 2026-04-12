@@ -4,7 +4,8 @@ import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 import { getEngine, EngineInput } from '@/lib/engines';
 import { parseCapabilityMode, capabilityModeToDbMode } from '@/lib/capability-mode';
-import { validateAdminSession, logAdminAction, parseAdminInput } from '@/lib/admin/admin-security';
+import { logAdminAction, parseAdminInput } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/ratelimit';
@@ -26,15 +27,9 @@ const TestEngineSchema = z.object({
  * 
  * Secure endpoint for admins to test engine prompts with Zod validation and Audit Logging.
  */
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req, _supabase, user) => {
   try {
-    // 1. Validate Session
-    const { error: authError, user, supabase } = await validateAdminSession();
-    if (authError || !user || !supabase) {
-        return NextResponse.json({ error: authError }, { status: authError === 'Unauthorized' ? 401 : 403 });
-    }
-
-    // 2. Rate limit
+    // 1. Rate limit
     const rateLimit = await checkRateLimit(user.id, 'adminTestEngine');
     if (!rateLimit.success) {
         return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
@@ -121,4 +116,4 @@ export async function POST(req: Request) {
     logger.error('[Engine Test] Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-}
+});

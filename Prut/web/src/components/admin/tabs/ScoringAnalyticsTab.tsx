@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";

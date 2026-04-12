@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 export const maxDuration = 30; // Allow up to 30s for GA4 API calls
@@ -34,16 +34,8 @@ function dimStr(row: GA4Row | undefined, idx: number): string {
   return row?.dimensionValues?.[idx]?.value || '';
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request) => {
   try {
-    const { error, user } = await validateAdminSession();
-    if (error || !user) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     if (!GA_PROPERTY_ID) {
       return NextResponse.json({ error: 'GA4_PROPERTY_ID not configured' }, { status: 500 });
     }
@@ -387,4 +379,4 @@ export async function GET(request: NextRequest) {
     const message = err instanceof Error ? err.message : 'Failed to fetch Google Analytics data';
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

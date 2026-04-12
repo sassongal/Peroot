@@ -13,7 +13,7 @@
 
 **Payments / subscriptions:**
 
-- LemonSqueezy — `@lemonsqueezy/lemonsqueezy.js` — `src/lib/lemonsqueezy.ts` (`configureLemonSqueezy` / setup)
+- LemonSqueezy — REST API (`fetch` to `api.lemonsqueezy.com`) — `src/app/api/checkout/route.ts`; plan copy / constants — `src/lib/lemonsqueezy.ts` (`PLANS` only; no JS SDK in app code)
 - Checkout HTTP — `src/app/api/checkout/route.ts`
 - Webhook — `src/app/api/webhooks/lemonsqueezy/route.ts` (HMAC verification, idempotency)
 

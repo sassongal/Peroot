@@ -33,7 +33,7 @@ export interface VariableDefinition {
 export const VARIABLE_TOKEN_REGEX =
   /\{([A-Za-z_\u0590-\u05FF][A-Za-z0-9_\u0590-\u05FF\- ]{0,39})\}/g;
 
-export const VARIABLE_REGISTRY: Record<string, VariableDefinition[]> = {
+const VARIABLE_REGISTRY: Record<string, VariableDefinition[]> = {
   core: [
     { key: "brand_name", label: "שם המותג", example: "Peroot" },
     { key: "company_name", label: "שם החברה", example: "סטארט-אפ טכנולוגי" },
@@ -85,7 +85,7 @@ export const VARIABLE_REGISTRY: Record<string, VariableDefinition[]> = {
 };
 
 // Build VARIABLE_EXAMPLES from registry so they stay in sync
-export const VARIABLE_EXAMPLES: Record<string, string> = {
+const VARIABLE_EXAMPLES: Record<string, string> = {
   // Backward-compat aliases for old variable names used in existing prompts
   name: "לירן שמעוני",
   company: "סטארט-אפ טכנולוגי",

@@ -16,10 +16,11 @@ import { logger } from "@/lib/logger";
  *   });
  */
 
-export type AdminHandler = (
+export type AdminHandler<TContext = unknown> = (
   req: NextRequest,
   supabase: SupabaseClient,
-  user: User
+  user: User,
+  context: TContext
 ) => Promise<NextResponse>;
 
 /**
@@ -28,9 +29,10 @@ export type AdminHandler = (
  * - Calls validateAdminSession() and returns 401/403 on failure.
  * - Catches unhandled errors and returns a generic 500 response.
  * - Passes the authenticated supabase client and user to the handler.
+ * - Forwards the route context (e.g. { params }) as the fourth argument.
  */
-export function withAdmin(handler: AdminHandler) {
-  return async (req: NextRequest) => {
+export function withAdmin<TContext = unknown>(handler: AdminHandler<TContext>) {
+  return async (req: NextRequest, context: TContext) => {
     try {
       const { error, supabase, user } = await validateAdminSession();
 
@@ -41,7 +43,7 @@ export function withAdmin(handler: AdminHandler) {
         );
       }
 
-      return await handler(req, supabase, user);
+      return await handler(req, supabase, user, context);
     } catch (err) {
       logger.error("[withAdmin] Unhandled error:", err);
       return NextResponse.json(

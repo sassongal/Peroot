@@ -9,7 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * Sanitize a string into a valid URL slug.
  * Supports both Hebrew and English slugs.
  */
-export function sanitizeSlug(input: string, locale: 'he' | 'en' = 'en'): string {
+function sanitizeSlug(input: string, locale: 'he' | 'en' = 'en'): string {
   let slug = input.trim().toLowerCase();
 
   if (locale === 'en') {
@@ -78,7 +78,7 @@ function transliterateHebrew(text: string): string {
 /**
  * Check if a slug already exists in the database.
  */
-export async function isSlugUnique(
+async function isSlugUnique(
   supabase: SupabaseClient,
   slug: string,
   table: 'blog_posts' | 'public_library_prompts',

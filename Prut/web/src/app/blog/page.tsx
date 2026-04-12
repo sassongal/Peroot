@@ -7,6 +7,7 @@ import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { BlogCategoryFilter } from "@/components/blog/BlogCategoryFilter";
 
@@ -42,16 +43,11 @@ export default async function BlogPage() {
 
   return (
     <>
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(
-          breadcrumbSchema([
-            { name: "דף הבית", url: "/" },
-            { name: "בלוג", url: "/blog" },
-          ])
-        ),
-      }}
+    <JsonLd
+      data={breadcrumbSchema([
+        { name: "דף הבית", url: "/" },
+        { name: "בלוג", url: "/blog" },
+      ])}
     />
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8" dir="rtl">
       <div className="max-w-3xl mx-auto">

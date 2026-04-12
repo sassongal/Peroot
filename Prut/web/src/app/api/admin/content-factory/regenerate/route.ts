@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
@@ -20,13 +20,8 @@ const RegenerateSchema = z.object({
  * Fetches the original item's topic/category for context,
  * deletes the old draft, then generates and inserts a fresh one.
  */
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req, supabase, _user) => {
   try {
-    const { error, supabase, user } = await validateAdminSession();
-    if (error || !supabase || !user) {
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-    }
-
     const body = await req.json();
     const parsed = RegenerateSchema.safeParse(body);
     if (!parsed.success) {
@@ -339,4 +334,4 @@ export async function POST(req: NextRequest) {
     logger.error("[admin/content-factory/regenerate] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

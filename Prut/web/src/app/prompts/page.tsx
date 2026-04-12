@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
@@ -101,34 +102,26 @@ export default function PromptsIndexPage() {
   return (
     <>
       {/* Structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "ספריית פרומפטים", url: "/prompts" },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "ספריית פרומפטים", url: "/prompts" },
+        ])}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            name: "ספריית פרומפטים בעברית",
-            description:
-              "מאות פרומפטים מקצועיים בעברית לכל תחום: שיווק, מכירות, פיתוח, עיצוב ועוד.",
-            url: `${SITE_URL}/prompts`,
-            inLanguage: "he",
-            publisher: {
-              "@type": "Organization",
-              name: "Peroot",
-              url: SITE_URL,
-            },
-          }),
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "ספריית פרומפטים בעברית",
+          description:
+            "מאות פרומפטים מקצועיים בעברית לכל תחום: שיווק, מכירות, פיתוח, עיצוב ועוד.",
+          url: `${SITE_URL}/prompts`,
+          inLanguage: "he",
+          publisher: {
+            "@type": "Organization",
+            name: "Peroot",
+            url: SITE_URL,
+          },
         }}
       />
 

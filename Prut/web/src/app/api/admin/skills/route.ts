@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { withAdmin } from "@/lib/api-middleware";
 import {
   getImageSkill,
   getVideoSkill,
@@ -39,17 +39,8 @@ interface SkillSummary {
  * Skills are source-controlled (git), not DB-backed — this endpoint reflects
  * the current state of compiled skill files on the server.
  */
-export async function GET() {
+export const GET = withAdmin(async () => {
   try {
-    const { error } = await validateAdminSession();
-    if (error) {
-      logger.warn("[admin/skills] Unauthorized access attempt");
-      return NextResponse.json(
-        { error: error || "Forbidden" },
-        { status: error === "Unauthorized" ? 401 : 403 }
-      );
-    }
-
     const skills: SkillSummary[] = [];
 
     // Load image skills
@@ -126,4 +117,4 @@ export async function GET() {
     logger.error("[admin/skills] Failed to load skills:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

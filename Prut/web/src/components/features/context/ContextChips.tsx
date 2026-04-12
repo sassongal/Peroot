@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, CheckCircle2, AlertCircle, Zap } from "lucide-react";
+import { Loader2, AlertCircle, Zap } from "lucide-react";
 import type { ContextAttachment } from "@/lib/context/types";
 import { AttachmentCard } from "./AttachmentCard";
 

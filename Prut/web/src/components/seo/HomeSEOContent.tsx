@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { FAQ_ITEMS } from "@/lib/faq-data";
 import { softwareAppSchema, faqSchema } from "@/lib/schema";
 
@@ -19,18 +20,10 @@ export function HomeSEOContent() {
   return (
     <>
       {/* Structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema()) }}
-      />
+      <JsonLd data={softwareAppSchema()} />
       {/* webSiteSchema is already rendered in the root layout — no duplicate needed */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            faqSchema(topFAQs.map((f) => ({ question: f.question, answer: f.answer })))
-          ),
-        }}
+      <JsonLd
+        data={faqSchema(topFAQs.map((f) => ({ question: f.question, answer: f.answer })))}
       />
 
       {/* Visible server-rendered hero — hidden after client hydration via CSS */}

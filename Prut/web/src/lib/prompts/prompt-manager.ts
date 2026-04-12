@@ -13,7 +13,7 @@ import { promptCache } from './prompt-cache';
 import { FALLBACK_PROMPTS } from './prompt-fallbacks';
 import { logger } from "@/lib/logger";
 
-export class PromptManager {
+class PromptManager {
   private static instance: PromptManager;
   
   private constructor() {}

@@ -39,7 +39,7 @@ export const analytics = posthog;
 
 // ─── Typed Event Helpers ──────────────────────────────────────────────────────
 
-export function trackEvent(event: string, properties?: Record<string, unknown>) {
+function trackEvent(event: string, properties?: Record<string, unknown>) {
     if (typeof window !== 'undefined' && analytics) {
         analytics.capture(event, properties);
     }
@@ -60,19 +60,24 @@ export function trackPromptCopy(source: 'result' | 'library' | 'personal') {
     trackEvent('prompt_copy', { source });
 }
 
-/** Track library prompt usage */
+/** Public library prompt — user chose “use in Peroot” from the library */
 export function trackLibraryUse(promptId: string, promptTitle: string) {
     trackEvent('library_prompt_use', { prompt_id: promptId, prompt_title: promptTitle });
 }
 
-/** Track user signup */
+/** Email/password signup form submitted successfully (verification email sent) */
 export function trackSignUp(method: string) {
     trackEvent('user_signup', { method });
 }
 
-/** Track feature usage */
+/** Product feature first-use / discovery markers (`peroot_used_*` keys, etc.) */
 export function trackFeatureUse(feature: string) {
     trackEvent('feature_use', { feature });
+}
+
+/** User ran a prompt chain (completed all steps) */
+export function trackChainRun(chainId: string, stepCount: number) {
+    trackEvent('chain_run', { chain_id: chainId, step_count: stepCount });
 }
 
 /** Track target model selection in prompt improver (text modes) */
@@ -81,11 +86,6 @@ export function trackTargetModelSelect(targetModel: string, previousModel?: stri
         target_model: targetModel,
         previous_model: previousModel ?? null,
     });
-}
-
-/** Track chain run */
-export function trackChainRun(chainId: string, stepCount: number) {
-    trackEvent('chain_run', { chain_id: chainId, step_count: stepCount });
 }
 
 /** Track social share button click */

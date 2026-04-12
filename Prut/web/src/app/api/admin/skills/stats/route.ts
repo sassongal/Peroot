@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -13,16 +13,8 @@ import { logger } from '@/lib/logger';
  *   days  optional, default 7 — sliding window in days
  */
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req, supabase) => {
     try {
-        const { error, user, supabase } = await validateAdminSession();
-        if (error || !user || !supabase) {
-            return NextResponse.json(
-                { error: error || 'Forbidden' },
-                { status: error === 'Unauthorized' ? 401 : 403 }
-            );
-        }
-
         const { searchParams } = new URL(req.url);
         const daysRaw = parseInt(searchParams.get('days') || '7', 10);
         const days = Math.max(1, Math.min(90, isNaN(daysRaw) ? 7 : daysRaw));
@@ -77,4 +69,4 @@ export async function GET(req: NextRequest) {
         logger.error('[admin/skills/stats] unexpected error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-}
+});

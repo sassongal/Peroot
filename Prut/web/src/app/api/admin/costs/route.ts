@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -13,16 +13,8 @@ import { logger } from '@/lib/logger';
  * Returns cost summary, breakdown by provider/model, top users by cost,
  * and a 12-month rolling cost trend.
  */
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const now = new Date();
     const defaultFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -166,4 +158,4 @@ export async function GET(req: NextRequest) {
     logger.error('[Admin Costs] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

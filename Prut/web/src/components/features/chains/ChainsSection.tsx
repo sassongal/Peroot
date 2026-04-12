@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, ChevronDown, Copy, Download, Upload, Wand2 } from "lucide-react";
+import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, Copy, Download, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { PersonalPrompt } from "@/lib/types";
@@ -40,7 +40,6 @@ export function ChainsSection({
   onUseStep,
   onDuplicateChain,
   onExportChain,
-  onImportChain,
 }: ChainsSectionProps) {
   const [showBuilder, setShowBuilder] = useState(false);
   const [showAutoBuilder, setShowAutoBuilder] = useState(false);

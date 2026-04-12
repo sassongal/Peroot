@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -24,13 +24,8 @@ const DeletePresetSchema = z.object({
  *
  * Returns all content-factory presets ordered by creation date.
  */
-export async function GET() {
+export const GET = withAdmin(async (_req, supabase) => {
   try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase) {
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-    }
-
     const { data, error: dbError } = await supabase
       .from("content_factory_presets")
       .select("*")
@@ -46,7 +41,7 @@ export async function GET() {
     logger.error("[admin/content-factory/presets] GET unexpected error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/admin/content-factory/presets
@@ -54,13 +49,8 @@ export async function GET() {
  * Create a new content-factory preset.
  * Body: { name, type, config: { topic?, category?, template? } }
  */
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req, supabase, user) => {
   try {
-    const { error, supabase, user } = await validateAdminSession();
-    if (error || !supabase || !user) {
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-    }
-
     const body = await req.json();
     const parsed = CreatePresetSchema.safeParse(body);
     if (!parsed.success) {
@@ -97,7 +87,7 @@ export async function POST(req: NextRequest) {
     logger.error("[admin/content-factory/presets] POST unexpected error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE /api/admin/content-factory/presets
@@ -105,13 +95,8 @@ export async function POST(req: NextRequest) {
  * Delete a preset by id.
  * Body: { id }
  */
-export async function DELETE(req: NextRequest) {
+export const DELETE = withAdmin(async (req, supabase, user) => {
   try {
-    const { error, supabase, user } = await validateAdminSession();
-    if (error || !supabase || !user) {
-      return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-    }
-
     const body = await req.json();
     const parsed = DeletePresetSchema.safeParse(body);
     if (!parsed.success) {
@@ -140,4 +125,4 @@ export async function DELETE(req: NextRequest) {
     logger.error("[admin/content-factory/presets] DELETE unexpected error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

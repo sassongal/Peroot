@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  validateAdminSession,
   logAdminAction,
   parseAdminInput,
 } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 const manualCostSchema = z.object({
@@ -22,16 +22,8 @@ const manualCostSchema = z.object({
  * Returns all manual cost entries, optionally filtered by billing_period.
  * Query param: billing_period (e.g. "2026-03")
  */
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const billingPeriod = searchParams.get('billing_period');
 
@@ -56,7 +48,7 @@ export async function GET(req: NextRequest) {
     logger.error('[Admin Manual Costs GET] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/admin/costs/manual
@@ -64,16 +56,8 @@ export async function GET(req: NextRequest) {
  * Creates or updates a manual cost entry for a given service_name + billing_period.
  * Body: { service_name, amount_usd, billing_period, notes? }
  */
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req, supabase, user) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { data: body, error: parseError } = await parseAdminInput(req, manualCostSchema);
     if (parseError) return parseError;
     if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
@@ -134,4 +118,4 @@ export async function POST(req: NextRequest) {
     logger.error('[Admin Manual Costs POST] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

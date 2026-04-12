@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { withAdmin } from '@/lib/api-middleware';
-import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/health

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { withAdmin } from "@/lib/api-middleware";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { getShippedImageEngineBaseline } from "@/lib/engines/image-engine";
 import { getShippedVideoEngineBaseline } from "@/lib/engines/video-engine";
@@ -9,15 +9,7 @@ import { getShippedVideoEngineBaseline } from "@/lib/engines/video-engine";
  * GET /api/admin/engine-shipped-baseline?mode=video_generation|image_generation
  * Returns in-repo default templates for drift comparison with `prompt_engines`.
  */
-export async function GET(req: Request) {
-  const { error: authError } = await validateAdminSession();
-  if (authError) {
-    return NextResponse.json(
-      { error: authError },
-      { status: authError === "Unauthorized" ? 401 : 403 }
-    );
-  }
-
+export const GET = withAdmin(async (req) => {
   const { searchParams } = new URL(req.url);
   const modeRaw = searchParams.get("mode");
   if (!modeRaw?.trim()) {
@@ -36,4 +28,4 @@ export async function GET(req: Request) {
     { error: "Only video_generation and image_generation have shipped baselines here" },
     { status: 400 }
   );
-}
+});

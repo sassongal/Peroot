@@ -18,7 +18,7 @@ export async function GET() {
         return NextResponse.json(data || [], {
             headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
         });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

@@ -116,7 +116,6 @@ async function fetchText(url: string, timeoutMs: number): Promise<string> {
     let res: Response;
 
     // Manual redirect loop to validate each hop against SSRF blocklist
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       res = await fetch(currentUrl, {
         signal: ctrl.signal,

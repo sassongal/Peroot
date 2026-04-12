@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Play, Save, ChevronDown, ChevronUp, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 import { CHAIN_PRESETS } from "@/lib/chain-presets";
 import type { GeneratedChain } from "@/lib/chain-types";
 import type { ChainStep } from "@/hooks/useChains";

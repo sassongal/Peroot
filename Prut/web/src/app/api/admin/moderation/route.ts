@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession, logAdminAction } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
+import { logAdminAction } from '@/lib/admin/admin-security';
 import { logger } from '@/lib/logger';
 
 /**
@@ -25,16 +26,7 @@ import { logger } from '@/lib/logger';
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
+export const GET = withAdmin(async (req, supabase, _user) => {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
@@ -65,8 +57,6 @@ export async function GET(req: NextRequest) {
     const publicPrompts = allPublicPrompts ?? [];
 
     // ── 2. Fetch all moderation activity logs ──────────────────────────────
-    const promptIds = publicPrompts.map((p) => p.id);
-
     // Also fetch removed-prompt IDs (is_public was set to false via moderation)
     const { data: removedLogs } = await supabase
       .from('activity_logs')
@@ -176,24 +166,11 @@ export async function GET(req: NextRequest) {
         removedThisMonth: removedThisMonth ?? 0,
       },
     });
-  } catch (err) {
-    logger.error('[Admin Moderation] GET error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});
 
 // ─── POST ────────────────────────────────────────────────────────────────────
 
-export async function POST(req: NextRequest) {
-  try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
+export const POST = withAdmin(async (req, supabase, user) => {
     const body = await req.json();
     const { action, prompt_id } = body as { action: string; prompt_id: string };
 
@@ -244,8 +221,4 @@ export async function POST(req: NextRequest) {
     logger.info(`[Admin Moderation] ${action} on prompt ${prompt_id} by admin ${user.id}`);
 
     return NextResponse.json({ success: true, prompt_id, action, status: statusLabel });
-  } catch (err) {
-    logger.error('[Admin Moderation] POST error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});

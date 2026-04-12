@@ -1,18 +1,13 @@
-import { ReactNode, Children, isValidElement, cloneElement, ReactElement, Fragment } from "react";
+import { ReactNode, Fragment } from "react";
 import sanitizeHtml from "sanitize-html";
 import { cn } from "@/lib/utils";
 import { VARIABLE_TOKEN_REGEX, extractVariables, getVariableLabel } from "@/lib/variable-utils";
 
 /**
- * Back-compat re-exports. All placeholder handling now routes through
- * `@/lib/variable-utils` which owns the canonical regex, extractor,
- * Hebrew-label lookup, and substitution logic. These aliases exist so
- * legacy callers (`renderStyledPrompt`, `toStyledHtml`,
- * `highlightTextWithPlaceholders`) keep working without churn.
- *
- * New code should import directly from `@/lib/variable-utils`.
+ * Placeholder rendering uses `VARIABLE_TOKEN_REGEX` from `@/lib/variable-utils`.
+ * `extractPlaceholders` is an alias for `extractVariables` for older imports.
  */
-export const PLACEHOLDER_REGEX = VARIABLE_TOKEN_REGEX;
+const PLACEHOLDER_REGEX = VARIABLE_TOKEN_REGEX;
 export const extractPlaceholders = extractVariables;
 
 /**
@@ -212,42 +207,7 @@ export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
   return parts;
 };
 
-export const highlightPlaceholders = (children: ReactNode): ReactNode =>
-  Children.map(children, (child) => {
-    if (typeof child === "string") return highlightTextWithPlaceholders(child);
-    if (isValidElement(child)) {
-      const nodeType = child.type;
-      if (typeof nodeType === "string" && (nodeType === "code" || nodeType === "pre")) {
-        return child;
-      }
-      const elementChild = child as ReactElement<{ children?: ReactNode }>;
-      if (elementChild.props?.children) {
-        return cloneElement(elementChild, {
-          ...elementChild.props,
-          children: highlightPlaceholders(elementChild.props.children),
-        });
-      }
-    }
-    return child;
-  });
-
-const PLACEHOLDER_SUGGESTIONS: Array<{ pattern: RegExp; suggestions: string[] }> = [
-  { pattern: /קהל|audience|persona/i, suggestions: ["מנהלי שיווק B2B", "בעלי עסקים קטנים", "סטודנטים"] },
-  { pattern: /מטרה|goal|objective|יעד/i, suggestions: ["להגדיל הרשמות", "לשכנע לרכישה", "להסביר תהליך"] },
-  { pattern: /פורמט|format|מבנה|output/i, suggestions: ["רשימה של 5 נקודות", "טבלה קצרה", "פסקה אחת"] },
-  { pattern: /טון|tone|סגנון|style/i, suggestions: ["אסרטיבי", "ידידותי", "מקצועי"] },
-  { pattern: /ערוץ|channel|פלטפורמה|platform/i, suggestions: ["לינקדאין", "מייל", "וואטסאפ"] },
-  { pattern: /זמן|timeline|תאריך|דדליין/i, suggestions: ["שבועיים", "עד יום חמישי", "סוף החודש"] },
-  { pattern: /תקציב|budget/i, suggestions: ["₪2,000", "₪10,000", "גמיש"] },
-];
-
-export const getPlaceholderSuggestions = (placeholder: string): string[] => {
-  const normalized = placeholder.toLowerCase();
-  const match = PLACEHOLDER_SUGGESTIONS.find((p) => p.pattern.test(normalized));
-  return match ? match.suggestions : [];
-};
-
-export const STYLE_TOKEN_REGEX = /\[\[(\/?)(c|hl)(?::([a-z]+))?\]\]/g;
+const STYLE_TOKEN_REGEX = /\[\[(\/?)(c|hl)(?::([a-z]+))?\]\]/g;
 
 export const STYLE_TEXT_COLORS: Record<string, string> = {
   red: "text-red-300",
@@ -269,7 +229,25 @@ export const STYLE_HIGHLIGHT_COLORS: Record<string, string> = {
 export const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-export const escapeHtml = (value: string) =>
+/** Pattern-based example values for variable names (personal library filler, etc.). */
+const PLACEHOLDER_SUGGESTIONS: Array<{ pattern: RegExp; suggestions: string[] }> = [
+  { pattern: /קהל|audience|persona/i, suggestions: ["מנהלי שיווק B2B", "בעלי עסקים קטנים", "סטודנטים"] },
+  { pattern: /מטרה|goal|objective|יעד/i, suggestions: ["להגדיל הרשמות", "לשכנע לרכישה", "להסביר תהליך"] },
+  { pattern: /פורמט|format|מבנה|output/i, suggestions: ["רשימה של 5 נקודות", "טבלה קצרה", "פסקה אחת"] },
+  { pattern: /טון|tone|סגנון|style/i, suggestions: ["אסרטיבי", "ידידותי", "מקצועי"] },
+  { pattern: /ערוץ|channel|פלטפורמה|platform/i, suggestions: ["לינקדאין", "מייל", "וואטסאפ"] },
+  { pattern: /זמן|timeline|תאריך|דדליין/i, suggestions: ["שבועיים", "עד יום חמישי", "סוף החודש"] },
+  { pattern: /תקציב|budget/i, suggestions: ["₪2,000", "₪10,000", "גמיש"] },
+];
+
+/** Suggested example strings for a `{variable}` name — used by VariableFiller quick chips. */
+export function getPlaceholderSuggestions(placeholder: string): string[] {
+  const normalized = placeholder.toLowerCase();
+  const match = PLACEHOLDER_SUGGESTIONS.find((p) => p.pattern.test(normalized));
+  return match ? match.suggestions : [];
+}
+
+const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export const stripStyleTokens = (value: string) =>
@@ -298,40 +276,3 @@ export const toStyledHtml = (value: string) => {
     allowedAttributes: { span: ['class'] },
   });
 };
-
-// Styled prompt rendering for the ResultSection with yellow headers and blue variables
-export const renderStyledPrompt = (value: string): string => {
-  // Step 1: Escape all HTML entities first
-  let html = escapeHtml(value);
-
-  // Step 2: Apply style replacements on escaped content
-  // Section headers [כותרת] - safe because $1 is already escaped
-  html = html.replace(
-    /\[([^\]]+)\]/g,
-    '<span class="text-amber-500 font-black text-lg tracking-tight bg-amber-500/5 px-2 py-0.5 rounded-lg border border-amber-500/20">[$1]</span>'
-  );
-
-  // Variables {variable_name} - safe because $1 is already escaped
-  html = html.replace(
-    /\{([^}]+)\}/g,
-    '<span class="text-sky-400 font-semibold bg-sky-900/30 px-1.5 py-0.5 rounded border border-sky-400/30 whitespace-nowrap shadow-[0_0_15px_rgba(56,189,248,0.1)]">{$1}</span>'
-  );
-
-  // Bullet points
-  html = html.replace(
-    /^[•\-]\s*/gm,
-    '<span class="text-purple-400 mr-2">•</span>'
-  );
-
-  // Line breaks
-  html = html
-    .replace(/\n\n/g, '</p><p class="mt-4">')
-    .replace(/\n/g, '<br />');
-
-  // Step 3: Final sanitization as safety net
-  return sanitizeHtml(`<p>${html}</p>`, {
-    allowedTags: ['p', 'span', 'br'],
-    allowedAttributes: { span: ['class'], p: ['class'] },
-  });
-};
-

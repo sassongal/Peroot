@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { setPendingPrompt } from "@/lib/pending-prompt";
+import { trackLibraryUse } from "@/lib/analytics";
 
 interface UsePromptButtonProps {
   id: string;
@@ -15,6 +16,7 @@ export function UsePromptButton({ id, title, prompt, category }: UsePromptButton
   const router = useRouter();
 
   const handleClick = () => {
+    trackLibraryUse(id, title);
     setPendingPrompt({
       id,
       title,

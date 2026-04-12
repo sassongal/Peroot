@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -9,13 +9,7 @@ import { logger } from '@/lib/logger';
  * Since Supabase automatically syncs auth.users to profiles via triggers,
  * we don't need admin API access
  */
-export async function POST() {
-  try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-        return NextResponse.json({ error: error || 'Forbidden' }, { status: error === 'Unauthorized' ? 401 : 403 });
-    }
-
+export const POST = withAdmin(async (_req, supabase, _user) => {
     // Count profiles (automatically synced from auth.users via triggers)
     const { count, error: dbError } = await supabase
       .from('profiles')
@@ -31,9 +25,5 @@ export async function POST() {
       synced: count || 0,
       message: 'Users are automatically synced via Supabase triggers'
     });
-  } catch (error) {
-    logger.error('[Sync Users] Error:', error);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
-  }
-}
+});
 

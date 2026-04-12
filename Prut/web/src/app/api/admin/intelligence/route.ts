@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -8,10 +8,7 @@ import { logger } from '@/lib/logger';
  * 
  * Aggregates user style data and intelligence metrics for admin view
  */
-export async function GET() {
-    const { error, supabase, user: adminUser } = await validateAdminSession();
-    if (error || !supabase || !adminUser) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
-
+export const GET = withAdmin(async (_req, supabase) => {
     try {
         // 1. Fetch all style tokens to calculate popularity
         const { data: personalities } = await supabase
@@ -66,4 +63,4 @@ export async function GET() {
         logger.error('[Admin Intelligence] Error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-}
+});

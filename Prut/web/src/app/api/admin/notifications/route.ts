@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -69,19 +69,8 @@ function daysAgoISO(n: number) {
   return d.toISOString();
 }
 
-export async function GET(req: NextRequest) {
-  // Suppress unused warning - req is required by Next.js route signature
-  void req;
-
+export const GET = withAdmin(async (_req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const now = new Date().toISOString();
     const { start: todayStart, end: todayEnd } = todayRange();
     const sevenDaysAgo = daysAgoISO(7);
@@ -459,4 +448,4 @@ export async function GET(req: NextRequest) {
     logger.error('[Admin Notifications] GET error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

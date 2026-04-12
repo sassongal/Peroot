@@ -49,7 +49,7 @@ No separate ticket list was validated in this pass. **None blocking** typecheck 
 
 - Risk: Direct `xlsx` (SheetJS) — advisories including ReDoS / prototype pollution; **no fix available** in npm advisory DB as of 2026-04-11.
 - Evidence: After `npm audit fix` and Next **16.2.3**, `npm audit` typically shows **1 high** (`xlsx` only).
-- Current mitigation: `xlsx` used only in server-side office extraction (`src/lib/context/engine/extract/file-office.ts`), not in browser; file size/char caps limit abuse surface.
+- Current mitigation: `xlsx` used only in server-side office extraction (`src/lib/context/engine/extract/file-office.ts`), not in browser; buffer size matches `dispatchFile` limit, `sheetRows` caps parse work, `MAX_CHARS` trims output.
 - Recommendations: Prefer trusted uploads only; long-term replace SheetJS or vendor a patched fork; review `sanitize-html` for HTML paths
 
 **Middleware CSRF and Bearer bypass:**

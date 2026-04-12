@@ -7,7 +7,7 @@ import React from "react";
 // ---------------------------------------------------------------------------
 
 /** Runway - stylized "R" with a diagonal runway stripe cutting through it */
-export const RunwayIcon: React.FC<{ className?: string }> = ({ className }) => (
+const RunwayIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -47,7 +47,7 @@ export const RunwayIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Kling - bold "K" with film-frame accents near strokes */
-export const KlingIcon: React.FC<{ className?: string }> = ({ className }) => (
+const KlingIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -73,7 +73,7 @@ export const KlingIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Sora - circle with an eye-like iris inside */
-export const SoraIcon: React.FC<{ className?: string }> = ({ className }) => (
+const SoraIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -103,7 +103,7 @@ export const SoraIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Veo - play triangle with a sparkle at top-right */
-export const VeoIcon: React.FC<{ className?: string }> = ({ className }) => (
+const VeoIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -123,7 +123,7 @@ export const VeoIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Higgsfield - bold "H" with 3 small particle dots orbiting it */
-export const HiggsFieldIcon: React.FC<{ className?: string }> = ({ className }) => (
+const HiggsFieldIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -145,7 +145,7 @@ export const HiggsFieldIcon: React.FC<{ className?: string }> = ({ className }) 
 );
 
 /** Minimax - bold "M" with a subtle wave underneath */
-export const MinimaxIcon: React.FC<{ className?: string }> = ({ className }) => (
+const MinimaxIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -179,7 +179,7 @@ export const MinimaxIcon: React.FC<{ className?: string }> = ({ className }) => 
 // ---------------------------------------------------------------------------
 
 /** Midjourney - sailboat silhouette, minimal and elegant */
-export const MidjourneyIcon: React.FC<{ className?: string }> = ({ className }) => (
+const MidjourneyIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -205,7 +205,7 @@ export const MidjourneyIcon: React.FC<{ className?: string }> = ({ className }) 
 );
 
 /** DALL-E - square frame with an eye symbol inside */
-export const DallEIcon: React.FC<{ className?: string }> = ({ className }) => (
+const DallEIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -230,7 +230,7 @@ export const DallEIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Flux - lightning bolt / flowing energy shape */
-export const FluxIcon: React.FC<{ className?: string }> = ({ className }) => (
+const FluxIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -247,7 +247,7 @@ export const FluxIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Stable Diffusion - butterfly shape (two wing pairs meeting at center) */
-export const StableDiffusionIcon: React.FC<{ className?: string }> = ({ className }) => (
+const StableDiffusionIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -283,7 +283,7 @@ export const StableDiffusionIcon: React.FC<{ className?: string }> = ({ classNam
 );
 
 /** Imagen - diamond/prism shape with 3 refracted light lines */
-export const ImagenIcon: React.FC<{ className?: string }> = ({ className }) => (
+const ImagenIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -301,7 +301,7 @@ export const ImagenIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /** Nano Banana / Gemini Image - four-pointed star sparkle */
-export const NanoBananaIcon: React.FC<{ className?: string }> = ({ className }) => (
+const NanoBananaIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"

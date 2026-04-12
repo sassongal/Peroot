@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
-import { findDuplicate } from "@/lib/content-factory/dedup";
+import { filterDuplicates } from "@/lib/content-factory/dedup";
 import { checkHebrewQuality } from "@/lib/content-factory/qa";
 
 export const maxDuration = 120;
@@ -20,12 +20,7 @@ const GeneratePromptsSchema = z.object({
  * Each prompt is dedup-checked before insertion.
  * Inserts into public_library_prompts with is_active=false.
  */
-export async function POST(req: NextRequest) {
-  const { error, supabase, user } = await validateAdminSession();
-  if (error || !supabase || !user) {
-    return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-  }
-
+export const POST = withAdmin(async (req, supabase, user) => {
   let logId: string | null = null;
 
   try {
@@ -85,18 +80,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "AI returned no prompts" }, { status: 500 });
     }
 
-    // 4. Dedup-check each prompt and insert unique ones
+    // 4. Dedup-check batch (one DB read + within-batch uniqueness) and insert
     const inserted = [];
     const skipped = [];
 
-    for (const prompt of generatedPrompts) {
-      const duplicate = await findDuplicate(supabase, prompt.title, "public_library_prompts");
+    const { decisions } = await filterDuplicates(
+      supabase,
+      generatedPrompts.map((p) => p.title),
+      "public_library_prompts",
+    );
 
-      if (duplicate) {
+    for (let i = 0; i < generatedPrompts.length; i++) {
+      const prompt = generatedPrompts[i];
+      const decision = decisions[i];
+      if (!decision.ok) {
         logger.warn(
-          `[admin/content-factory/generate-prompts] Skipping duplicate: "${prompt.title}" similar to "${duplicate.existingTitle}" (score: ${duplicate.score})`
+          `[admin/content-factory/generate-prompts] Skipping duplicate: "${prompt.title}" similar to "${decision.similar}" (score: ${decision.score})`,
         );
-        skipped.push({ title: prompt.title, reason: `Similar to: "${duplicate.existingTitle}"` });
+        skipped.push({ title: prompt.title, reason: `Similar to: "${decision.similar}"` });
         continue;
       }
 
@@ -195,4 +196,4 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

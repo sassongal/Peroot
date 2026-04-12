@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Rocket, Globe, Sparkles, Users, ExternalLink } from "lucide-react";
 import { PageHeading } from "@/components/ui/PageHeading";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
@@ -24,16 +25,11 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "אודות", url: "/about" },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "אודות", url: "/about" },
+        ])}
       />
       <main
         className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 lg:p-24"

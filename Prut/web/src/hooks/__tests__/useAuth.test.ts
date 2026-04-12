@@ -9,7 +9,7 @@ vi.mock('@/lib/supabase/client', () => ({
     auth: {
       getUser: async () => ({ data: { user: null } }),
       signOut: async () => ({}),
-      onAuthStateChange: (_cb: (event: string, session: unknown) => void) => ({
+      onAuthStateChange: () => ({
         data: { subscription: { unsubscribe: () => {} } },
       }),
     },

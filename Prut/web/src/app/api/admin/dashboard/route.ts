@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -7,16 +7,7 @@ import { logger } from '@/lib/logger';
  *
  * Returns aggregated KPI data for the admin dashboard.
  */
-export async function GET() {
-  try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
+export const GET = withAdmin(async (_req, supabase, _user) => {
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -187,8 +178,4 @@ export async function GET() {
       monthlyTrend,
       generatedAt: new Date().toISOString(),
     });
-  } catch (err) {
-    logger.error('[Admin Dashboard] Error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});

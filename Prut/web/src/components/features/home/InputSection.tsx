@@ -151,6 +151,8 @@ export const InputSection = memo<InputSectionProps>(({
   onBackToLibrary,
   onInterimChange,
 }) => {
+  void contextTotalTokens;
+  void contextIsOverLimit;
   // Prompt of the Day - deterministic daily pick
   const promptOfTheDay = useMemo(() => {
     if (!libraryPrompts || libraryPrompts.length === 0) return null;

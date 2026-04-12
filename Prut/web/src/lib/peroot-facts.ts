@@ -7,7 +7,7 @@
 
 export type FactLocale = "he" | "en";
 
-export const FACTS_HE: readonly string[] = [
+const FACTS_HE: readonly string[] = [
   "פרומפט מובנה עם הקשר ברור משפר את דיוק התשובה של AI ב-40% בממוצע.",
   "הוספת דוגמה אחת בלבד לפרומפט (One-Shot) יכולה לשפר את איכות הפלט ביותר מ-50%.",
   "פירוט מנתח את הפרומפט שלך ומוסיף אוטומטית מבנה, הקשר ופורמט — בלי שתצטרכו לחשוב על זה.",
@@ -30,7 +30,7 @@ export const FACTS_HE: readonly string[] = [
   "פרומפט טוב שווה יותר מ-10 ניסיונות עם פרומפט גרוע — וזה בדיוק מה שפירוט עושה.",
 ] as const;
 
-export const FACTS_EN: readonly string[] = [
+const FACTS_EN: readonly string[] = [
   "A structured prompt with clear context improves AI answer accuracy by ~40% on average.",
   "Adding just one example (One-Shot) to your prompt can boost output quality by over 50%.",
   "Peroot analyzes your prompt and automatically adds structure, context, and format — so you don't have to.",

@@ -138,7 +138,7 @@ export class EnhancedScorer {
   }
 }
 
-export function generateImprovementPlan(score: EnhancedScore, _text: string): string[] {
+export function generateImprovementPlan(score: EnhancedScore): string[] {
   const suggestions: string[] = [];
   const sortedByGap = [...score.breakdown]
     .map((d) => ({ ...d, gap: d.maxScore - d.score, pct: d.maxScore > 0 ? d.score / d.maxScore : 0 }))

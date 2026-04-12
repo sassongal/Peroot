@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 
 /**
@@ -7,15 +7,7 @@ import { logger } from "@/lib/logger";
  *
  * Returns all prompt engines and aggregated api_usage_logs metrics.
  */
-export async function GET() {
-  try {
-    const { error, supabase } = await validateAdminSession();
-    if (error || !supabase)
-      return NextResponse.json(
-        { error: error || "Forbidden" },
-        { status: error === "Unauthorized" ? 401 : 403 }
-      );
-
+export const GET = withAdmin(async (_req, supabase, _user) => {
     // Fetch engines + usage logs in parallel
     const [{ data: engines, error: enginesError }, { data: usageLogs }] =
       await Promise.all([
@@ -80,11 +72,4 @@ export async function GET() {
       engineMetrics,
       pipeline: { computeLoadPct, tokenVelocityPct },
     });
-  } catch (err) {
-    logger.error("[admin/engines] Error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+});

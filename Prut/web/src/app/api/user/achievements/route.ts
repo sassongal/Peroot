@@ -22,7 +22,7 @@ export async function GET() {
             .eq('user_id', user.id);
         
         return NextResponse.json(data || []);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

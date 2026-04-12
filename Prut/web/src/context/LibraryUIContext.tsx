@@ -112,7 +112,7 @@ interface LibraryUIProviderProps {
 export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
   // Consume sibling contexts
   const data = useLibraryData();
-  const { favoriteLibraryIds, favoritePersonalIds } = useFavoritesContext();
+  const { favoriteLibraryIds } = useFavoritesContext();
 
   // --- View / Filter / Sort State ---
   const [viewMode, setViewMode] = useState<"home" | "library" | "personal">("home");

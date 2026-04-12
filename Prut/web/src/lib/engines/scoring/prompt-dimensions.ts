@@ -654,6 +654,7 @@ export function scoreEnhancedTextDimensions(t: string, wordCount: number, domain
  * maxPoints sum = 100 and enhancedTotalFromChunks returns the score directly.
  */
 export function scoreEnhancedResearchDimensions(t: string, wordCount: number): DimensionScoreChunk[] {
+  void wordCount;
   const p = parse(t);
   // research_sources (16 pts)
   const sourcePts = hasSourcesRequirement(p) ? 10 : 0;
@@ -729,6 +730,7 @@ export function scoreEnhancedResearchDimensions(t: string, wordCount: number): D
  * maxPoints sum = 100 and enhancedTotalFromChunks returns the score directly.
  */
 export function scoreEnhancedAgentDimensions(t: string, wordCount: number): DimensionScoreChunk[] {
+  void wordCount;
   const p = parse(t);
   // tools (12 pts) — graded: basic mention vs detailed API/function listing
   const toolsBasic = hasToolsSpec(p) ? 6 : 0;

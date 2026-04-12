@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Copy } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_SLUG_MAP, CATEGORY_ID_TO_SLUG, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
+import { CATEGORY_SLUG_MAP, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
 import { CATEGORY_LABELS } from "@/lib/constants";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCollectionSchema } from "@/lib/schema";
 import { CopyButton } from "./CopyButton";
 import { UsePromptButton } from "./UsePromptButton";
@@ -112,30 +113,20 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <>
       {/* Structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "ספריית פרומפטים", url: "/prompts" },
-              { name: categoryData.labelHe, url: `/prompts/${slug}` },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "ספריית פרומפטים", url: "/prompts" },
+          { name: categoryData.labelHe, url: `/prompts/${slug}` },
+        ])}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            promptCollectionSchema({
-              name: categoryData.labelHe,
-              description: categoryData.descriptionHe,
-              url: pageUrl,
-              itemCount: prompts.length,
-            })
-          ),
-        }}
+      <JsonLd
+        data={promptCollectionSchema({
+          name: categoryData.labelHe,
+          description: categoryData.descriptionHe,
+          url: pageUrl,
+          itemCount: prompts.length,
+        })}
       />
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">

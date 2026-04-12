@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -8,19 +8,13 @@ import { logger } from '@/lib/logger';
  * Returns user's saved prompts (personal_library) and generation history.
  * Supports: ?tab=prompts|history, ?limit=, ?offset=
  */
-export async function GET(
-  req: NextRequest,
+export const GET = withAdmin(async (
+  req,
+  supabase,
+  _user,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { error, user: adminUser, supabase } = await validateAdminSession();
-    if (error || !adminUser || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { id } = await params;
     const tab = req.nextUrl.searchParams.get('tab') || 'prompts';
     const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50') || 50, 200);
@@ -73,4 +67,4 @@ export async function GET(
     logger.error('[Admin User Prompts] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

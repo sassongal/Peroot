@@ -4,7 +4,7 @@ import { ResearchEngine } from '@/lib/engines/research-engine';
 import { ImageEngine } from '@/lib/engines/image-engine';
 import { AgentEngine } from '@/lib/engines/agent-engine';
 import { CapabilityMode } from '@/lib/capability-mode';
-import { EngineInput, EngineOutput } from '@/lib/engines/types';
+import { EngineInput } from '@/lib/engines/types';
 
 // ── Helpers ──
 

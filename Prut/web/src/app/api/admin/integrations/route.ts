@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 
 export const maxDuration = 30;
@@ -8,12 +8,7 @@ export const maxDuration = 30;
  * GET /api/admin/integrations
  * Aggregates live status + metrics from all connected services.
  */
-export async function GET() {
-  const { error: authError, supabase } = await validateAdminSession();
-  if (authError) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withAdmin(async (_req, supabase) => {
   const results: Record<string, unknown> = {};
 
   // ── 1. GA4 Quick Stats (last 7 days) ─────────────────────────────────
@@ -212,4 +207,4 @@ export async function GET() {
     ...results,
     fetchedAt: new Date().toISOString(),
   });
-}
+});

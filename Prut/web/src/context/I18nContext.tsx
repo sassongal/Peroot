@@ -45,7 +45,7 @@ export function I18nProvider({
 
   useEffect(() => {
     async function loadOverrides() {
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('translations')
             .select('key, value')
             .eq('lang', lang);

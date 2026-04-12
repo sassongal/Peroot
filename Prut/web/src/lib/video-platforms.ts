@@ -19,5 +19,5 @@ export const VIDEO_PLATFORMS: VideoPlatformConfig[] = [
 ];
 
 export function getVideoPlatform(id: VideoPlatform): VideoPlatformConfig | undefined {
-  return VIDEO_PLATFORMS.find(p => p.id === id);
+  return VIDEO_PLATFORMS.find((p) => p.id === id);
 }

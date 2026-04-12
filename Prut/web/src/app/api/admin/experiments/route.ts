@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -10,16 +10,8 @@ import { logger } from '@/lib/logger';
  *  - Compares pro vs free user engagement segments
  *  - Returns feature adoption rates based on last 30 days of activity
  */
-export async function GET() {
+export const GET = withAdmin(async (_req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -202,4 +194,4 @@ export async function GET() {
     logger.error('[Admin Experiments] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

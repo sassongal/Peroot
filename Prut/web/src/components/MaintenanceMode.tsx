@@ -1,22 +1,6 @@
 "use client";
 
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-
-export function MaintenanceMode() {
-  const { settings, loading } = useSiteSettings();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && settings.maintenance_mode) {
-      // Redirect to maintenance page
-      router.push('/maintenance');
-    }
-  }, [settings.maintenance_mode, loading, router]);
-
-  return null;
-}
 
 export function MaintenancePage() {
   const { settings } = useSiteSettings();

@@ -10,12 +10,6 @@
  *   - Mixed text: weighted average based on RTL character ratio
  */
 
-/** Maximum tokens allowed for a single attachment */
-export const MAX_TOKENS_PER_ATTACHMENT = 5000;
-
-/** Maximum total tokens across all attachments in one prompt */
-export const MAX_TOTAL_TOKENS = 15000;
-
 // Unicode ranges for RTL scripts (Hebrew, Arabic, and related)
 const RTL_REGEX = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/g;
 
@@ -43,52 +37,49 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Trim text to fit within a token limit, cutting at the last sentence boundary.
+ * Trim text to a token budget (RTL-aware char budget), preferring sentence
+ * boundaries. Used by context compression and anywhere we must cap text
+ * while staying consistent with `estimateTokens`.
  *
- * @param text - The input text to trim
- * @param maxTokens - Maximum number of tokens allowed
- * @returns Object with the (possibly trimmed) text and a flag indicating if trimming occurred
+ * @param appendTrimMarker - When true (default), appends a visible marker so
+ *   user-facing snippets show that truncation occurred. Pass false for
+ *   internal context injection (e.g. `compressToLimit`).
  */
 export function trimToTokenLimit(
   text: string,
-  maxTokens: number
+  maxTokens: number,
+  appendTrimMarker = true
 ): { text: string; trimmed: boolean } {
-  if (!text) return { text: '', trimmed: false };
+  if (!text) return { text: "", trimmed: false };
 
   const currentTokens = estimateTokens(text);
-
   if (currentTokens <= maxTokens) {
     return { text, trimmed: false };
   }
 
-  // Estimate the character limit based on the same heuristic
   const rtlMatches = text.match(RTL_REGEX);
   const rtlCharCount = rtlMatches ? rtlMatches.length : 0;
   const rtlRatio = text.length > 0 ? rtlCharCount / text.length : 0;
   const charsPerToken = 2 * rtlRatio + 4 * (1 - rtlRatio);
   const charLimit = Math.floor(maxTokens * charsPerToken);
 
-  // Cut the text to the character limit
   let trimmed = text.slice(0, charLimit);
 
-  // Try to cut at the last sentence boundary (., !, ?, or newline)
   const lastSentenceEnd = Math.max(
-    trimmed.lastIndexOf('. '),
-    trimmed.lastIndexOf('.\n'),
-    trimmed.lastIndexOf('! '),
-    trimmed.lastIndexOf('!\n'),
-    trimmed.lastIndexOf('? '),
-    trimmed.lastIndexOf('?\n'),
-    trimmed.lastIndexOf('\n\n')
+    trimmed.lastIndexOf(". "),
+    trimmed.lastIndexOf(".\n"),
+    trimmed.lastIndexOf("! "),
+    trimmed.lastIndexOf("!\n"),
+    trimmed.lastIndexOf("? "),
+    trimmed.lastIndexOf("?\n"),
+    trimmed.lastIndexOf("\n\n")
   );
 
-  // Only use the sentence boundary if it preserves at least 60% of the content
   if (lastSentenceEnd > charLimit * 0.6) {
     trimmed = trimmed.slice(0, lastSentenceEnd + 1);
   }
 
-  return {
-    text: trimmed.trimEnd() + '\n\n[...content trimmed...]',
-    trimmed: true,
-  };
+  const body = trimmed.trimEnd();
+  const out = appendTrimMarker ? `${body}\n\n[...content trimmed...]` : body;
+  return { text: out, trimmed: true };
 }

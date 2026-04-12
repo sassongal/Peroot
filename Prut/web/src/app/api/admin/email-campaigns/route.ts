@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { EmailService } from '@/lib/emails/service';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/ratelimit';
@@ -14,16 +14,8 @@ type Segment = 'all' | 'pro' | 'free' | 'inactive';
  * Returns recent email campaign events from activity_logs,
  * plus per-segment user counts for the composer UI.
  */
-export async function GET() {
+export const GET = withAdmin(async (_req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     // Recent campaigns logged to activity_logs
     const { data: campaigns, error: campaignsError } = await supabase
       .from('activity_logs')
@@ -110,7 +102,7 @@ export async function GET() {
     logger.error('[Email Campaigns GET] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/admin/email-campaigns
@@ -120,16 +112,8 @@ export async function GET() {
  * Fetches recipient emails based on segment, sends via Resend,
  * logs result to activity_logs, returns success/failure counts.
  */
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req, supabase, user) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     // Rate limit
     const rateLimit = await checkRateLimit(user.id, 'adminEmailCampaign');
     if (!rateLimit.success) {
@@ -367,4 +351,4 @@ export async function POST(req: NextRequest) {
     logger.error('[Email Campaigns POST] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
-}
+});

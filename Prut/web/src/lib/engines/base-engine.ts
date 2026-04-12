@@ -3,7 +3,6 @@ import { EngineConfig, EngineInput, EngineOutput, PromptEngine, TargetModel, Inj
 import { CapabilityMode } from "../capability-mode";
 import { getRegistryInstructionBlock } from "../variable-utils";
 import { getIterationInstructions } from "./refinement/iteration-guidance";
-import { getQuestionsPromptInstructions } from "./refinement/enhanced-questions";
 import { EnhancedScorer, type EnhancedScore } from "./scoring/enhanced-scorer";
 import { memoryFlags } from "../memory/injection-flags";
 import { renderInjection } from '@/lib/context/engine/inject';
@@ -42,32 +41,6 @@ export function sanitizeModeParams(
   }
   return sanitized;
 }
-
-// Helper for scoring logic moved from prompt-engine.ts
-export const CATEGORY_LIST = [
-  "General",
-  "Marketing",
-  "Sales",
-  "Social",
-  "CustomerSupport",
-  "Product",
-  "Operations",
-  "HR",
-  "Dev",
-  "Education",
-  "Legal",
-  "Creative",
-  "Finance",
-  "Healthcare",
-  "Ecommerce",
-  "RealEstate",
-  "Strategy",
-  "Design",
-  "Data",
-  "Automation",
-  "Community",
-  "Nonprofit",
-] as const;
 
 export interface PromptScore {
   score: number;

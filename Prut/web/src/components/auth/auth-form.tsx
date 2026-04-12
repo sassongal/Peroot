@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Mail, Lock, User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { GoogleButton } from "./google-button";
+import { trackSignUp } from "@/lib/analytics";
 
 type Mode = "login" | "signup" | "reset";
 
@@ -85,6 +86,7 @@ export function AuthForm() {
         if (error) {
           toast.error("שגיאה בהרשמה: " + error.message);
         } else {
+          trackSignUp("email");
           setShowEmailSent(true);
         }
       }

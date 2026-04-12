@@ -268,7 +268,3 @@ class LRUCache {
 }
 
 export const promptCache = new LRUCache();
-
-export function getCacheKey(capability: string, input: string): string {
-  return `${capability}:${input.trim().toLowerCase()}`;
-}

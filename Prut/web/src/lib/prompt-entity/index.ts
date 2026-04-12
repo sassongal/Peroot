@@ -10,5 +10,4 @@ export {
   fromSharedPromptRow,
   fromPersonalLibraryRow,
   fromAiPromptRow,
-  fromPublicLibraryRow,
 } from './adapters';

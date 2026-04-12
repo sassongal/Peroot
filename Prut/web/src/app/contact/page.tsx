@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Mail, Clock, MessageSquare } from "lucide-react";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { ContactForm } from "@/components/ui/ContactForm";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
@@ -27,16 +28,11 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "צור קשר", url: "/contact" },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "צור קשר", url: "/contact" },
+        ])}
       />
       <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 lg:p-24" dir="rtl">
         <div className="max-w-2xl mx-auto space-y-8">

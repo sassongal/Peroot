@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Clock, Calendar, ExternalLink } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, articleSchema, faqSchema, howToSchema } from "@/lib/schema";
 import { IMAGE_GUIDES } from "../_data/image-guides";
 import type { Guide } from "../_data/image-guides";
@@ -81,52 +82,28 @@ export default async function GuidePage({
   return (
     <>
       {/* Schema markup */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "מדריכי פרומפטים", url: "/guides" },
-              { name: guide.title, url: `/guides/${guide.slug}` },
-            ])
-          ),
-        }}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "מדריכי פרומפטים", url: "/guides" },
+          { name: guide.title, url: `/guides/${guide.slug}` },
+        ])}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            articleSchema({
-              title: guide.title,
-              excerpt: guide.metaDescription,
-              published_at: guide.lastUpdated,
-              author: "Gal Sasson",
-              slug: `guides/${guide.slug}`,
-            })
-          ),
-        }}
+      <JsonLd
+        data={articleSchema({
+          title: guide.title,
+          excerpt: guide.metaDescription,
+          published_at: guide.lastUpdated,
+          author: "Gal Sasson",
+          slug: `guides/${guide.slug}`,
+        })}
       />
-      {guide.faq.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(
-              faqSchema(guide.faq)
-            ),
-          }}
-        />
-      )}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            howToSchema({
-              name: `איך לכתוב פרומפט מושלם ל-${guide.platform}`,
-              steps: howToSteps,
-            })
-          ),
-        }}
+      {guide.faq.length > 0 && <JsonLd data={faqSchema(guide.faq)} />}
+      <JsonLd
+        data={howToSchema({
+          name: `איך לכתוב פרומפט מושלם ל-${guide.platform}`,
+          steps: howToSteps,
+        })}
       />
 
       <article className="p-6 md:p-12 lg:p-20">

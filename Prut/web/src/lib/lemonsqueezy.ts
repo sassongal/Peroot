@@ -1,19 +1,3 @@
-import { lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
-
-let isConfigured = false;
-
-export function configureLemonSqueezy() {
-  if (isConfigured) return;
-
-  const apiKey = process.env.LEMONSQUEEZY_API_KEY;
-  if (!apiKey) {
-    throw new Error('Missing LEMONSQUEEZY_API_KEY environment variable');
-  }
-
-  lemonSqueezySetup({ apiKey });
-  isConfigured = true;
-}
-
 export const PLANS = {
   free: {
     name: 'Free',

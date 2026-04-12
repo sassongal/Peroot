@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { MAX_FILE_SIZE_MB } from '../../extract/index';
 import { extractCsv, extractXlsx, extractDocx } from '../../extract/file-office';
 
 describe('extractCsv', () => {
@@ -21,6 +22,11 @@ describe('extractXlsx', () => {
     const r = await extractXlsx(buf);
     expect(r.text).toContain('h1');
     expect(r.metadata.rows).toBe(1);
+  });
+
+  it('rejects buffers over max file size', async () => {
+    const oversized = Buffer.alloc(MAX_FILE_SIZE_MB * 1024 * 1024 + 1);
+    await expect(extractXlsx(oversized)).rejects.toThrow(/exceeds/);
   });
 });
 

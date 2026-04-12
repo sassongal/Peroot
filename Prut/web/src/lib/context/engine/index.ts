@@ -14,7 +14,7 @@ import { dispatchFile, extractUrl, extractImage } from './extract';
 import { computeSha256, detectDocumentType } from './classify';
 import { enrichContent } from './enrich';
 import { compressToLimit } from './compress';
-import { buildInjectedBlock, renderInjection } from './inject';
+import { buildInjectedBlock } from './inject';
 import { getCachedBlock, putCachedBlock } from './cache';
 
 export { renderInjection } from './inject';

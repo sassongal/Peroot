@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateBlogPost, getGenerationContext } from "@/lib/content-factory/generate";
@@ -22,12 +22,7 @@ const GenerateBlogSchema = z.object({
  * Logs the generation attempt in content_generation_log.
  * Performs dedup check before inserting into blog_posts.
  */
-export async function POST(req: NextRequest) {
-  const { error, supabase, user } = await validateAdminSession();
-  if (error || !supabase || !user) {
-    return NextResponse.json({ error: error || "Forbidden" }, { status: 403 });
-  }
-
+export const POST = withAdmin(async (req, supabase, user) => {
   let logId: string | null = null;
 
   try {
@@ -195,4 +190,4 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
-}
+});

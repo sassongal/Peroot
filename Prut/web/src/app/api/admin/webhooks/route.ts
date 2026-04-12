@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { NextResponse } from 'next/server';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -20,16 +20,7 @@ import { logger } from '@/lib/logger';
 const MAX_LIMIT = 500;
 const DEFAULT_LIMIT = 100;
 
-export async function GET(req: NextRequest) {
-    try {
-        const { error, user, supabase } = await validateAdminSession();
-        if (error || !user || !supabase) {
-            return NextResponse.json(
-                { error: error || 'Forbidden' },
-                { status: error === 'Unauthorized' ? 401 : 403 }
-            );
-        }
-
+export const GET = withAdmin(async (req, supabase, _user) => {
         const { searchParams } = new URL(req.url);
         const limitRaw = parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT), 10);
         const limit = Math.min(MAX_LIMIT, Math.max(1, isNaN(limitRaw) ? DEFAULT_LIMIT : limitRaw));
@@ -59,8 +50,4 @@ export async function GET(req: NextRequest) {
             limit,
             status,
         });
-    } catch (err) {
-        logger.error('[admin/webhooks] unexpected error:', err);
-        return NextResponse.json({ error: 'Internal error' }, { status: 500 });
-    }
-}
+});

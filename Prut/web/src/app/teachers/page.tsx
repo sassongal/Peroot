@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import {
   GraduationCap,
@@ -148,17 +149,14 @@ export default function TeachersPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            webPageSchema,
-            breadcrumbSchema([
-              { name: "דף הבית", url: "/" },
-              { name: "למורים", url: "/teachers" },
-            ]),
+      <JsonLd
+        data={[
+          webPageSchema,
+          breadcrumbSchema([
+            { name: "דף הבית", url: "/" },
+            { name: "למורים", url: "/teachers" },
           ]),
-        }}
+        ]}
       />
 
       <div

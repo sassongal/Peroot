@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractPlaceholders } from "@/lib/text-utils";
+import { extractPlaceholders, getPlaceholderSuggestions } from "@/lib/text-utils";
 
 describe("extractPlaceholders", () => {
     it("extracts simple single-word placeholders", () => {
@@ -64,5 +64,16 @@ describe("extractPlaceholders", () => {
     it("rejects placeholder candidates that contain quotes or control characters", () => {
         expect(extractPlaceholders('{ "not_a_placeholder": "value" }')).toEqual([]);
         expect(extractPlaceholders("{with\nnewline}")).toEqual([]);
+    });
+});
+
+describe("getPlaceholderSuggestions", () => {
+    it("returns suggestions when variable name matches a pattern", () => {
+        expect(getPlaceholderSuggestions("target_audience").length).toBeGreaterThan(0);
+        expect(getPlaceholderSuggestions("tone_style").length).toBeGreaterThan(0);
+    });
+
+    it("returns empty array when no pattern matches", () => {
+        expect(getPlaceholderSuggestions("xyz_unknown_token")).toEqual([]);
     });
 });

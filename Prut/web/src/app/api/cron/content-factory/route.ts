@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
 import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
-import { findDuplicate } from "@/lib/content-factory/dedup";
+import { findDuplicate, filterDuplicates } from "@/lib/content-factory/dedup";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
 
 export const maxDuration = 120;
@@ -179,10 +179,19 @@ export async function GET(request: NextRequest) {
 
       const insertedTitles: string[] = [];
 
-      for (const promptData of generatedPrompts) {
-        const duplicate = await findDuplicate(supabase, promptData.title, "public_library_prompts");
-        if (duplicate) {
-          logger.warn(`[Cron/ContentFactory] Prompt duplicate skipped: "${promptData.title}"`);
+      const { decisions } = await filterDuplicates(
+        supabase,
+        generatedPrompts.map((p) => p.title),
+        "public_library_prompts",
+      );
+
+      for (let i = 0; i < generatedPrompts.length; i++) {
+        const promptData = generatedPrompts[i];
+        const decision = decisions[i];
+        if (!decision.ok) {
+          logger.warn(
+            `[Cron/ContentFactory] Prompt duplicate skipped: "${promptData.title}" (similar to "${decision.similar}")`,
+          );
           continue;
         }
 

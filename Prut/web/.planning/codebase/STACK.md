@@ -64,7 +64,7 @@
 - `zod` (^4.3.6) — request validation at API boundaries
 - `@sentry/nextjs` — errors/performance — `next.config.ts` wrap, `sentry.*.config.ts`
 - `posthog-js` — product analytics — `src/lib/analytics.ts`, `src/components/providers/PostHogProvider.tsx`
-- `@lemonsqueezy/lemonsqueezy.js` — billing — `src/lib/lemonsqueezy.ts`
+- LemonSqueezy billing — REST (`src/app/api/checkout/route.ts`, webhook) + `PLANS` in `src/lib/lemonsqueezy.ts` (no `@lemonsqueezy/lemonsqueezy.js` SDK dependency)
 - `resend` — email — `src/lib/emails/service.ts`
 
 **Infrastructure / UI:**

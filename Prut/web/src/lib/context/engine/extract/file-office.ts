@@ -1,8 +1,10 @@
 import mammoth from 'mammoth';
 import Papa from 'papaparse';
-// xlsx (SheetJS): server-only; untrusted spreadsheets are parsed only after upload
-// limits in the extract pipeline. npm audit may report issues with no upstream fix — monitor releases.
+// xlsx (SheetJS): server-only; npm audit may report issues with no upstream fix — monitor releases.
+// Mitigations: same max buffer as `dispatchFile` in `./index`, `sheetRows` cap on parse work, `MAX_CHARS` on output.
 import * as XLSX from 'xlsx';
+
+import { MAX_FILE_SIZE_MB } from './index';
 
 export interface OfficeExtractionResult {
   text: string;
@@ -17,6 +19,8 @@ export interface OfficeExtractionResult {
 }
 
 const MAX_CHARS = 20_000;
+/** Limits SheetJS parse work per sheet (ReDoS / huge-row abuse); output still capped by MAX_CHARS. */
+const MAX_XLSX_READ_ROWS = 5000;
 
 export async function extractDocx(buffer: Buffer): Promise<OfficeExtractionResult> {
   const result = await mammoth.extractRawText({ buffer });
@@ -56,7 +60,17 @@ export async function extractCsv(buffer: Buffer): Promise<OfficeExtractionResult
 }
 
 export async function extractXlsx(buffer: Buffer): Promise<OfficeExtractionResult> {
-  const workbook = XLSX.read(buffer, { type: 'buffer', cellFormula: false, cellHTML: false, cellStyles: false });
+  const maxBytes = MAX_FILE_SIZE_MB * 1024 * 1024;
+  if (buffer.length > maxBytes) {
+    throw new Error(`Spreadsheet exceeds ${MAX_FILE_SIZE_MB}MB`);
+  }
+  const workbook = XLSX.read(buffer, {
+    type: 'buffer',
+    cellFormula: false,
+    cellHTML: false,
+    cellStyles: false,
+    sheetRows: MAX_XLSX_READ_ROWS,
+  });
   const firstSheet = workbook.SheetNames[0];
   if (!firstSheet) throw new Error('XLSX contains no sheets');
   const sheet = workbook.Sheets[firstSheet];

@@ -8,6 +8,8 @@ import { logger } from "@/lib/logger";
 import { BeforeAfterSplit } from '@/components/ui/BeforeAfterSplit';
 import { DateBadge } from '@/components/ui/DateBadge';
 import { fromSharedPromptRow } from '@/lib/prompt-entity';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { promptCreativeWorkSchema } from '@/lib/schema';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -87,19 +89,13 @@ export default async function SharedPromptPage({ params }: Props) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CreativeWork",
-            name: `פרומפט - ${prompt.category}`,
-            description: prompt.prompt?.slice(0, 160),
-            url: `${siteUrl}/p/${id}`,
-            inLanguage: "he",
-            creator: { "@type": "Organization", name: "Peroot", url: siteUrl },
-          }),
-        }}
+      <JsonLd
+        data={promptCreativeWorkSchema({
+          title: `פרומפט - ${prompt.category}`,
+          description: prompt.prompt?.slice(0, 160) ?? '',
+          category: prompt.category,
+          url: `${siteUrl}/p/${id}`,
+        })}
       />
       <div className="min-h-screen bg-black text-slate-200 p-4 md:p-8" dir="rtl">
       <div className="max-w-3xl mx-auto">

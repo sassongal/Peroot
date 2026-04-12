@@ -79,7 +79,6 @@ import {
   refundCredit,
   adminAdjustCredits,
   logCreditChange,
-  type CreditCheckResult,
 } from '../credit-service';
 
 // ---------------------------------------------------------------------------

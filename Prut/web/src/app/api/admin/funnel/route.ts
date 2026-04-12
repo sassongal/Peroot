@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 export interface FunnelStage {
@@ -30,16 +30,8 @@ function getStartDate(range: string): Date | null {
   }
 }
 
-export async function GET(req: Request) {
+export const GET = withAdmin(async (req, supabase) => {
   try {
-    const { error, user, supabase } = await validateAdminSession();
-    if (error || !user || !supabase) {
-      return NextResponse.json(
-        { error: error || 'Forbidden' },
-        { status: error === 'Unauthorized' ? 401 : 403 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const range = searchParams.get('range') || 'all';
     const startDate = getStartDate(range);
@@ -184,4 +176,4 @@ export async function GET(req: Request) {
     logger.error('[Admin Funnel] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

@@ -8,7 +8,7 @@ function secret(): string | undefined {
 }
 
 /** HMAC-SHA256 hex for newsletter one-click unsubscribe links. */
-export function signNewsletterUnsubscribeEmail(email: string): string {
+function signNewsletterUnsubscribeEmail(email: string): string {
   const key = secret();
   if (!key) return "";
   const normalized = email.trim().toLowerCase();

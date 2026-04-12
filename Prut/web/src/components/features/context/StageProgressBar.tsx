@@ -105,9 +105,4 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
   );
 }
 
-// test stable export
-export function _stagePillTestids() {
-  return STAGES.map((s) => `stage-pill-${s.id}`);
-}
-
 StageProgressBar.displayName = 'StageProgressBar';

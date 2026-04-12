@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateAdminSession } from '@/lib/admin/admin-security';
+import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 /**
@@ -25,16 +25,8 @@ const KNOWN_LLM_ENDPOINTS = [
     'test-engine',
 ] as const;
 
-export async function GET() {
+export const GET = withAdmin(async (_req, supabase) => {
     try {
-        const { error, user, supabase } = await validateAdminSession();
-        if (error || !user || !supabase) {
-            return NextResponse.json(
-                { error: error || 'Forbidden' },
-                { status: error === 'Unauthorized' ? 401 : 403 }
-            );
-        }
-
         const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
         // For each known endpoint, grab the most recent row in the last 24h.
@@ -114,4 +106,4 @@ export async function GET() {
         logger.error('[costs/coverage] unexpected error:', err);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-}
+});

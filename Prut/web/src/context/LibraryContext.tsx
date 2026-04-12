@@ -6,16 +6,6 @@ import { LibraryDataProvider, useLibraryData } from "./LibraryDataContext";
 import { LibraryUIProvider, useLibraryUI } from "./LibraryUIContext";
 import { FavoritesProvider, useFavoritesContext } from "./FavoritesContext";
 
-// Re-export sub-context hooks for gradual migration
-export { useLibraryData } from "./LibraryDataContext";
-export { useLibraryUI } from "./LibraryUIContext";
-export { useFavoritesContext } from "./FavoritesContext";
-
-// Re-export types for consumers that imported them from here
-export type { LibraryDataContextType } from "./LibraryDataContext";
-export type { LibraryUIContextType } from "./LibraryUIContext";
-export type { FavoritesContextType } from "./FavoritesContext";
-
 // ---------------------------------------------------------------------------
 // Composition Provider — renders all 3 sub-providers in the correct order.
 // LibraryUIProvider must be nested inside LibraryDataProvider and

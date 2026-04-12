@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 
-export async function DELETE(_request: Request) {
+export async function DELETE() {
   const supabase = await createClient();
   const {
     data: { user },

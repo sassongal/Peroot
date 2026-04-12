@@ -31,7 +31,8 @@ export async function putCachedBlock(
     const k = key(block.sha256, tier);
     // Strip rawText to save Redis memory — it can be up to ~48KB per block
     const { display, ...rest } = block;
-    const { rawText: _raw, ...displayRest } = display;
+    const { rawText, ...displayRest } = display;
+    void rawText;
     const slim = { ...rest, display: displayRest };
     await redis.set(k, JSON.stringify(slim), { ex: TTL_SECONDS });
   } catch (err) {

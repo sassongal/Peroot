@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["public/sw.js"],
+  "ignoreBinaries": ["repomix"],
+  "ignoreDependencies": ["@tailwindcss/node"],
+  "ignoreIssues": {
+    "src/lib/maintenance.ts": ["exports"],
+    "src/lib/emails/templates/index.ts": ["exports", "types"]
+  }
+}

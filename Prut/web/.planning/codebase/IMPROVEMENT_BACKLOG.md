@@ -1,11 +1,15 @@
 # Improvement Backlog
 
 **Analysis Date:** 2026-04-11  
-**Last progress update:** 2026-04-11 (implementation session)
+**Last progress update:** 2026-04-12 (`xlsx` hardening + content-factory batch dedup)
 
 **Sources:** Explore agents, `npm audit`, `npx knip`, `npm run typecheck`, `npm run lint`, manual review of `next.config.ts` and middleware.
 
 Priorities are **technical** (stability, security hygiene, maintainability). Product priorities may reorder this list.
+
+**Working rule (knip / dead code):** Prefer wiring, tests, or narrowing exports before deleting; do not remove modules flagged by knip without confirming with the team — ship behavior first.
+
+- **Content Factory (2026-04-12):** [`filterDuplicates`](../../src/lib/content-factory/dedup.ts) — single DB read per batch + **within-batch** title dedup (`decisions[]` aligned to input order); wired in [`generate-prompts/route.ts`](../../src/app/api/admin/content-factory/generate-prompts/route.ts) and [`cron/content-factory/route.ts`](../../src/app/api/cron/content-factory/route.ts); tests in [`dedup.test.ts`](../../src/lib/content-factory/__tests__/dedup.test.ts).
 
 ---
 
@@ -14,11 +18,18 @@ Priorities are **technical** (stability, security hygiene, maintainability). Pro
 **Completed in implementation session:**
 
 - **P0-1 / P0-3:** `package.json` — `engines.node >=20`, `"knip": "knip"` script; **`postcss`**, **`dotenv`**, **`knip`** in **devDependencies** (not production deps); `npm install` refreshed lockfile.
-- **P0-2:** Comment above `xlsx` import in [`src/lib/context/engine/extract/file-office.ts`](../../src/lib/context/engine/extract/file-office.ts) (server-only, audit caveat).
+- **P0-2:** [`file-office.ts`](../../src/lib/context/engine/extract/file-office.ts) — `xlsx` server-only; comment + **`sheetRows`** cap, buffer guard vs [`MAX_FILE_SIZE_MB`](../../src/lib/context/engine/extract/index.ts), [`MAX_CHARS`](../../src/lib/context/engine/extract/file-office.ts) on output; oversized-buffer test in [`file-office.test.ts`](../../src/lib/context/engine/__tests__/extract/file-office.test.ts).
 - **P1-3:** [`useContextAttachments.ts`](../../src/hooks/useContextAttachments.ts) — dependency arrays include `limits.maxFiles` / `maxUrls` / `maxImages`.
 - **P1-4:** [`.env.example`](../../.env.example) — `MISTRAL_API_KEY` documented; `DEEPSEEK` commented as optional/legacy.
-- **P2-4 (partial):** Removed redundant eslint-disable lines in [`ContentFactoryTab.tsx`](../../src/components/admin/tabs/content-factory/ContentFactoryTab.tsx); [`BlogTab.tsx`](../../src/components/admin/tabs/BlogTab.tsx) uses `useCallback` + `useEffect` deps (no disable).
+- **P2-4:** ESLint warning burn-down in `src/` — `npm run lint` reports **no warnings** (unused vars, test mocks, revenue KPI locals, etc.).
 - **P2-5:** [`circuit-breaker.ts`](../../src/lib/ai/circuit-breaker.ts) uses `logger.info` instead of `console.log`.
+- **P2-3 (partial):** [`package.json`](../../package.json) — `tailwind:canonicalize`, `test:engines-live`; `db:migrate` uses local **`tsx`**; dead module `src/lib/engines/refinement/enhanced-questions.ts` removed (nothing imported it). [`knip.json`](../../knip.json) — `entry` for `public/sw.js`, `ignoreBinaries` / `ignoreDependencies` for dev-tool noise. **`tsx`** added to **devDependencies**.
+- **P2-6:** [`JsonLd`](../../src/components/seo/JsonLd.tsx) — shared JSON-LD `<script>` wrapper; app pages use `<JsonLd data={...} />` instead of duplicating `dangerouslySetInnerHTML` + `JSON.stringify` (schema builders remain in [`schema.ts`](../../src/lib/schema.ts)).
+- **P2-2 (partial):** Knip **unused exports** reduced **~76 → ~17** (ongoing triage). Earlier: PlatformIcons / LibraryContext / MaintenanceMode / `_stagePillTestids`; removed dead [`getCacheKey`](../../src/hooks/usePromptWorkflow.ts); internalized [`trackEvent`](../../src/lib/analytics.ts); removed unused [`getConcurrencyStats`](../../src/lib/ai/concurrency.ts); removed dead [`configureLemonSqueezy`](../../src/lib/lemonsqueezy.ts) + **`@lemonsqueezy/lemonsqueezy.js`** (checkout uses REST `fetch`); [`jaccardSimilarity`](../../src/lib/prompt-similarity.ts) file-private; dropped [`fromPublicLibraryRow`](../../src/lib/prompt-entity/index.ts) barrel re-export; [`knip.json`](../../knip.json) `ignoreIssues` for [`maintenance.ts`](../../src/lib/maintenance.ts) and [`emails/templates/index.ts`](../../src/lib/emails/templates/index.ts). Docs: [`INTEGRATIONS.md`](../../.planning/codebase/INTEGRATIONS.md), [`STACK.md`](../../.planning/codebase/STACK.md) LemonSqueezy notes updated.
+- **Analytics (product):** Restored PostHog helpers in [`analytics.ts`](../../src/lib/analytics.ts) (`trackLibraryUse`, `trackSignUp`, `trackFeatureUse`, `trackChainRun`) and wired: [`UsePromptButton`](../../src/app/prompts/[slug]/UsePromptButton.tsx), [`auth-form`](../../src/components/auth/auth-form.tsx), [`markFeatureUsed`](../../src/hooks/useFeatureDiscovery.ts), [`ChainRunner`](../../src/components/features/chains/ChainRunner.tsx).
+- **P2-2 (earlier session):** Unexported internal-only [`FACTS_HE` / `FACTS_EN`](../../src/lib/peroot-facts.ts); file-private [`GUIDE_SEARCH_INDEX`](../../src/lib/site-search/guide-index.ts); removed dead [`getVideoPlatform`](../../src/lib/video-platforms.ts); shared prompt page JSON-LD via [`promptCreativeWorkSchema`](../../src/lib/schema.ts) on [`p/[id]/page.tsx`](../../src/app/p/[id]/page.tsx).
+- **Product wiring:** [`QUICK_REFINE_ACTIONS`](../../src/lib/constants.ts) — preset "דלתות מהירות" after שדרוג; [`ResultSection`](../../src/components/features/prompt-improver/ResultSection.tsx) `onQuickRefine` → [`handleRefine`](../../src/app/HomeClient.tsx) (true refinement, not `שפר שוב` re-enhance). PostHog: `trackFeatureUse('quick_refine_*')`.
+- **P2-2 (this session):** File-private helpers in [`dedup.ts`](../../src/lib/content-factory/dedup.ts) / [`slug-utils.ts`](../../src/lib/content-factory/slug-utils.ts); [`token-counter.ts`](../../src/lib/context/token-counter.ts) — removed unused `MAX_*` constants, dead [`trimToTokenLimit`](../../src/lib/context/token-counter.ts); file-private [`signNewsletterUnsubscribeEmail`](../../src/lib/email/newsletter-unsubscribe-signing.ts); removed unused [`CATEGORY_LIST`](../../src/lib/engines/base-engine.ts); non-export [`PromptManager`](../../src/lib/prompts/prompt-manager.ts) class; file-private [`VARIABLE_REGISTRY` / `VARIABLE_EXAMPLES`](../../src/lib/variable-utils.ts); [`text-utils.tsx`](../../src/lib/text-utils.tsx) — dropped unused `highlightPlaceholders` / suggestions / `renderStyledPrompt`, trimmed imports.
 - **P3-1:** [`.nvmrc`](../../.nvmrc) → `22` (aligns with `engines`).
 - **P3-3:** [`eslint.config.mjs`](../../eslint.config.mjs) ignores `chrome-extension-v2.1/**` — lint warnings dropped (e.g. ~48 in `src/` scope vs ~66 before).
 
@@ -28,9 +39,9 @@ Priorities are **technical** (stability, security hygiene, maintainability). Pro
 
 **Still open (larger work):**
 
-- P1-1, P1-2, P2-1, P2-2, P2-6, P3-2, P3-4 — refactors, knip triage, admin tests, bundle reviews.
-- P2-4 — ~48 ESLint warnings remain in `src/` (unused vars, etc.).
-- P2-3 — scripts `canonicalize-tailwind-classes.mjs` / `test-engines-live.ts` still need triage; **`public/sw.js`** kept (service worker registration).
+- P1-1, P1-2, P2-1, P2-2, P3-2, P3-4 — refactors, knip unused-export triage, admin tests, bundle reviews.
+- P2-2 — knip still reports **unused exports** (~17) and **unused exported types** (~79); remaining exports are mostly context/engine barrels, email template helpers, and engine scoring internals.
+- P2-3 — **`public/sw.js`** kept; canonicalize / engines-live scripts are **wired** — run `npm run tailwind:canonicalize` / `npm run test:engines-live` as needed (live test needs API keys).
 
 ---
 
@@ -38,8 +49,8 @@ Priorities are **technical** (stability, security hygiene, maintainability). Pro
 
 | ID | Finding | Evidence | Suggested fix | Effort |
 |----|---------|----------|---------------|--------|
-| P0-1 | **npm audit** reports **16** vulnerabilities (incl. high transitive) | `npm audit` (2026-04-11) | Run `npm audit fix`; re-run audit; for remaining, trace top-level consumers and upgrade or replace | Small–medium |
-| P0-2 | **xlsx** direct dependency: advisory **no fix available** (ReDoS) | `npm audit` tail output | Ensure parsing only runs on trusted/admin uploads; consider `sheetjs-style` alternatives or server-only isolation | Medium |
+| P0-1 | **npm audit** — after `npm audit fix` typically **1 high** (transitive noise cleared) | `npm audit` (2026-04-11+) | Re-run after upgrades; trace any new findings to top-level consumers | Small |
+| P0-2 | **xlsx** direct dependency: advisory **no fix available** (ReDoS / prototype pollution) | `npm audit` | Server-only parse in [`file-office.ts`](../../src/lib/context/engine/extract/file-office.ts) with buffer cap, `sheetRows`, `MAX_CHARS`; prefer trusted uploads; long-term replace SheetJS or vendor patch | Medium |
 | P0-3 | **Unlisted runtime deps** (`postcss`, `dotenv`) | `npx knip` unlisted dependencies | Add `postcss` and `dotenv` to `package.json` (dev/prod as appropriate) | Small |
 
 ---
@@ -60,11 +71,11 @@ Priorities are **technical** (stability, security hygiene, maintainability). Pro
 | ID | Finding | Evidence | Suggested fix | Effort |
 |----|---------|----------|---------------|--------|
 | P2-1 | **Very large UI/state files** | `src/app/HomeClient.tsx`, `src/hooks/useLibrary.ts`, admin user page | Split by feature hooks and presentational components | Large |
-| P2-2 | **Knip unused exports** (77+) and **unused types** (85+) | `npx knip` | Triage: remove dead code, or mark intentional API with knip ignore rules; trim `PlatformIcons.tsx` exports if unused | Medium |
+| P2-2 | **Knip unused exports** (~17) and **unused types** (~79) | `npx knip` | Continue triage: `ignoreIssues` for barrels, or unexport engine/context/email helpers used only in-package | Medium |
 | P2-3 | **Knip unused files** | `public/sw.js`, `scripts/canonicalize-tailwind-classes.mjs`, `scripts/test-engines-live.ts` | **`sw.js`:** used by `ServiceWorkerRegistration` — keep. **Scripts:** delete if obsolete or wire into build; document if PWA SW is intentional | Small |
-| P2-4 | **ESLint 66 warnings** (mostly unused vars) | `npm run lint` | Fix or prefix `_` consistently; remove unused eslint-disable in `ContentFactoryTab.tsx`, `BlogTab.tsx` | Medium |
+| P2-4 | **ESLint warnings in `src/`** | `npm run lint` | Addressed in burn-down session (2026-04-11); keep clean in CI | Medium |
 | P2-5 | **Circuit breaker `console` vs logger** | `src/lib/ai/circuit-breaker.ts` | Use `src/lib/logger.ts` | Small |
-| P2-6 | **JSON-LD duplication** | Multiple `page.tsx` | Shared SEO helpers (see CONCERNS) | Medium |
+| P2-6 | **JSON-LD duplication** | Multiple `page.tsx` | **`JsonLd`** component + existing `schema.ts` builders (2026-04-11) | Medium |
 
 ---
 

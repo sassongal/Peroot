@@ -83,7 +83,8 @@ export const TASK_ROUTING: Record<string, ModelId[]> = {
   classify: ['gemini-2.5-flash-lite', 'mistral-small', 'llama-4-scout'],
 };
 
-export function getModelsForTask(task: string, _userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
-  // All users get the same optimized low-cost model routing
+export function getModelsForTask(task: string, userTier?: 'free' | 'pro' | 'guest'): ModelId[] {
+  // All users get the same optimized low-cost model routing (userTier reserved for future tier-based routing)
+  void userTier;
   return TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
 }
