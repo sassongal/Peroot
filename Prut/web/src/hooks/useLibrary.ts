@@ -10,73 +10,11 @@ import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 import { escapePostgrestValue } from "@/lib/sanitize";
 import { findSimilarPrompts } from "@/lib/prompt-similarity";
+import { applyGuestFiltersAndSort } from "@/lib/library/sort";
+import { rowToPrompt, getOrderKey, getCategoriesKey, readOrderMap, persistOrderMap } from "@/lib/library/row-mapper";
 
 const STORAGE_KEY = 'peroot_personal_library';
-const CATEGORIES_KEY = 'peroot_personal_categories';
-const ORDER_KEY = 'peroot_personal_order';
 const DEFAULT_PAGE_SIZE = 15;
-
-const getOrderKey = (userId?: string | null) =>
-  userId ? `${ORDER_KEY}_${userId}` : ORDER_KEY;
-
-const getCategoriesKey = (userId?: string | null) =>
-  userId ? `${CATEGORIES_KEY}_${userId}` : CATEGORIES_KEY;
-
-const readOrderMap = (userId?: string | null): Record<string, number> => {
-  const key = getOrderKey(userId);
-  const raw = localStorage.getItem(key);
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as Record<string, number>;
-    }
-  } catch (error) {
-    logger.warn("Failed to parse personal order map", error);
-  }
-  return {};
-};
-
-const persistOrderMap = (userId: string | null, items: PersonalPrompt[]) => {
-  const key = getOrderKey(userId);
-  const next: Record<string, number> = {};
-  items.forEach((item, index) => {
-    next[item.id] = typeof item.sort_index === "number" ? item.sort_index : index;
-  });
-  localStorage.setItem(key, JSON.stringify(next));
-};
-
-/** Map a raw Supabase row to a PersonalPrompt, applying the orderMap for sort_index.
- *  Priority: localStorage orderMap > DB sort_index > positional index */
-function rowToPrompt(row: Record<string, unknown>, index: number, orderMap: Record<string, number>): PersonalPrompt {
-  const id = row.id as string;
-  const dbSortIndex = typeof row.sort_index === "number" ? row.sort_index : undefined;
-  return {
-    id,
-    title: row.title as string,
-    prompt: row.prompt as string,
-    prompt_style: (row.prompt_style as string | undefined) ?? undefined,
-    category: (row.category as string) ?? "",
-    personal_category: (row.personal_category as string | null) ?? null,
-    use_case: row.use_case as string,
-    source: row.source as PersonalPrompt['source'],
-    use_count: (row.use_count as number) ?? 0,
-    capability_mode: (row.capability_mode as CapabilityMode) ?? CapabilityMode.STANDARD,
-    tags: (row.tags as string[]) ?? [],
-    created_at: row.created_at ? new Date(row.created_at as string).getTime() : Date.now(),
-    updated_at: row.updated_at
-      ? new Date(row.updated_at as string).getTime()
-      : row.created_at
-        ? new Date(row.created_at as string).getTime()
-        : Date.now(),
-    last_used_at: row.last_used_at ? new Date(row.last_used_at as string).getTime() : null,
-    is_pinned: (row.is_pinned as boolean) ?? false,
-    is_template: (row.is_template as boolean) ?? false,
-    success_count: (row.success_count as number) ?? 0,
-    fail_count: (row.fail_count as number) ?? 0,
-    sort_index: typeof orderMap[id] === "number" ? orderMap[id] : dbSortIndex ?? index,
-  };
-}
 
 export function useLibrary() {
   // Current page items (server users) or sliced local items (guests)
@@ -332,61 +270,15 @@ export function useLibrary() {
       capabilityFilter: string | null;
     }
   ) => {
-    let filtered = [...allItems];
-
-    // Handle virtual folders for guests
-    if (opts.activeFolder === 'pinned') {
-      filtered = filtered.filter(p => p.is_pinned);
-    } else if (opts.activeFolder === 'templates') {
-      filtered = filtered.filter(p => p.is_template === true);
-    } else if (opts.activeFolder === 'favorites') {
-      // Guest favorites handled via localStorage Set in PersonalLibraryView
-      // This is a no-op here; filtering happens in the view component
-    } else if (opts.activeFolder && opts.activeFolder !== 'all') {
-      filtered = filtered.filter(p => p.personal_category === opts.activeFolder);
-    }
-    // "all" (null) → no filter
-    if (opts.capabilityFilter) {
-      filtered = filtered.filter(p => p.capability_mode === opts.capabilityFilter);
-    }
-    if (opts.searchQuery) {
-      const q = opts.searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(q) ||
-        p.prompt.toLowerCase().includes(q) ||
-        (p.use_case ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    switch (opts.sortBy) {
-      case 'title':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'usage':
-        filtered.sort((a, b) => (b.use_count ?? 0) - (a.use_count ?? 0));
-        break;
-      case 'custom':
-        filtered.sort((a, b) => (a.sort_index ?? 0) - (b.sort_index ?? 0));
-        break;
-      case 'last_used':
-        filtered.sort((a, b) => {
-          const aT = typeof a.last_used_at === 'number' ? a.last_used_at : (a.last_used_at ? new Date(a.last_used_at).getTime() : 0);
-          const bT = typeof b.last_used_at === 'number' ? b.last_used_at : (b.last_used_at ? new Date(b.last_used_at).getTime() : 0);
-          return bT - aT;
-        });
-        break;
-      case 'performance':
-      default:
-        filtered.sort((a, b) => {
-          const aT = typeof a.updated_at === 'number' ? a.updated_at : new Date(a.updated_at).getTime();
-          const bT = typeof b.updated_at === 'number' ? b.updated_at : new Date(b.updated_at).getTime();
-          return bT - aT;
-        });
-        break;
-    }
-
-    // Pinned to top
-    filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+    const filtered = applyGuestFiltersAndSort(
+      allItems,
+      {
+        activeFolder: opts.activeFolder,
+        searchQuery: opts.searchQuery,
+        capabilityFilter: opts.capabilityFilter,
+      },
+      { sortBy: opts.sortBy }
+    );
 
     setTotalCount(filtered.length);
 
@@ -534,7 +426,7 @@ export function useLibrary() {
               } else {
                 localStorage.removeItem(STORAGE_KEY);
                 localStorage.removeItem(getCategoriesKey(null));
-                localStorage.removeItem(ORDER_KEY);
+                localStorage.removeItem(getOrderKey(null));
               }
             }
           } catch (e) {

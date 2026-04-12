@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from 'sonner';
 
@@ -9,20 +8,15 @@ import { identifyUser } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
-import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
-import { VideoPlatform } from "@/lib/video-platforms";
+import { useHomeMediaState } from "@/hooks/useHomeMediaState";
 import { UserMenu } from "@/components/layout/user-nav";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
-import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
+import { escapeRegExp } from "@/lib/text-utils";
 import { stripGeniusQuestionsForDisplay } from "@/lib/prompt-stream/split-genius-completion";
 import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
-import { BaseEngine } from "@/lib/engines/base-engine";
-import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
-import { scoreInput } from "@/lib/engines/scoring/input-scorer";
-import { TargetModel } from "@/lib/engines/types";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
@@ -40,6 +34,7 @@ import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
 import { SiteSearchBar } from "@/components/features/search/SiteSearchBar";
 import { useResultActions } from "@/hooks/useResultActions";
 import { usePromptEnhance } from "@/hooks/usePromptEnhance";
+import { useHomeScoring } from "@/hooks/useHomeScoring";
 
 // Dynamic imports for route-level views
 const LibraryView = dynamic(
@@ -93,6 +88,19 @@ function PageContent() {
   const discovery = useFeatureDiscovery();
   const context = useContextAttachments(isPro ? 'pro' : 'free');
 
+  const {
+    inputScore,
+    liveInputScore,
+    completionScore,
+    placeholders,
+    inputVariables,
+    handleInterimChange,
+  } = useHomeScoring({
+    input: ps.input,
+    completion: ps.completion,
+    selectedCapability: ps.selectedCapability,
+  });
+
   const variableValuesRef = useRef(ps.variableValues);
   variableValuesRef.current = ps.variableValues;
 
@@ -121,22 +129,20 @@ function PageContent() {
     };
   }, []);
 
-  const [imagePlatform, setImagePlatform] = useState<ImagePlatform>('general');
-  const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>('text');
-  const [imageAspectRatio, setImageAspectRatio] = useState("");
-  const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>('general');
-  const [videoAspectRatio, setVideoAspectRatio] = useState("");
-  const [targetModel, setTargetModel] = useState<TargetModel>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('peroot_target_model') as TargetModel) || 'general';
-    }
-    return 'general';
-  });
-
-  const handleSetTargetModel = useCallback((model: TargetModel) => {
-    setTargetModel(model);
-    localStorage.setItem('peroot_target_model', model);
-  }, []);
+  const {
+    imagePlatform,
+    setImagePlatform,
+    imageOutputFormat,
+    setImageOutputFormat,
+    imageAspectRatio,
+    setImageAspectRatio,
+    videoPlatform,
+    setVideoPlatform,
+    videoAspectRatio,
+    setVideoAspectRatio,
+    targetModel,
+    handleSetTargetModel,
+  } = useHomeMediaState({ selectedCapability: ps.selectedCapability });
 
   const inputRef = useRef(ps.input);
   inputRef.current = ps.input;
@@ -334,74 +340,6 @@ function PageContent() {
     [t.home.login_required_msg]
   );
 
-  // Voice interim text — PromptInput reports it so scoring reflects what the
-  // user actually sees (inputVal + interimResult) during voice recording.
-  const [interimText, setInterimText] = useState("");
-  const handleInterimChange = useCallback((text: string) => setInterimText(text), []);
-
-  // Debounce scoring — combine committed input + voice interim for accuracy
-  const scoringText = interimText
-    ? ps.input + (ps.input && !ps.input.endsWith(' ') ? ' ' : '') + interimText
-    : ps.input;
-  const debouncedInput = useDebouncedValue(scoringText, 300);
-  const debouncedCompletion = useDebouncedValue(ps.completion, 200);
-
-  /** Telemetry + result comparison: same `EnhancedScorer` rubric as completion (via `BaseEngine.scorePrompt`). */
-  const inputScore = useMemo(
-    () => BaseEngine.scorePrompt(debouncedInput, ps.selectedCapability),
-    [debouncedInput, ps.selectedCapability]
-  );
-  // Live, mode-aware input score — drives the pill + breakdown drawer in
-  // PromptInput (`scoreInput` applies mode weights on shared dimensions).
-  const rawInputScore = useMemo(
-    () => scoreInput(debouncedInput, ps.selectedCapability),
-    [debouncedInput, ps.selectedCapability]
-  );
-
-  // EMA smoothing: prevents jumpy scores during rapid typing. Weighted toward
-  // new value (0.7) so it converges fast but avoids single-frame spikes.
-  // Ref mutation lives in useEffect (not useMemo) to respect React's purity contract.
-  const prevScoreRef = useRef<number>(0);
-  const liveInputScore = useMemo(() => {
-    if (!rawInputScore || rawInputScore.level === 'empty') {
-      return rawInputScore;
-    }
-    const smoothed = Math.round(prevScoreRef.current * 0.3 + rawInputScore.total * 0.7);
-    return { ...rawInputScore, total: smoothed };
-  }, [rawInputScore]);
-  useEffect(() => {
-    prevScoreRef.current = liveInputScore?.total ?? 0;
-  }, [liveInputScore]);
-  // IMPORTANT: The result-section header score must match the numbers shown
-  // inside the score-breakdown drawer and the PDF export. Both of those use
-  // EnhancedScorer, so compute the header score from the same source to
-  // avoid a silent mismatch (e.g. header says 100 but the drawer breakdown
-  // sums to a different total). We synthesize a PromptScore-shaped object
-  // so ResultSection continues to work unchanged.
-  const completionScore = useMemo(() => {
-    const trimmed = debouncedCompletion.trim();
-    if (!trimmed) {
-      return { score: 0, baseScore: 0, level: 'empty' as const, label: 'חסר', tips: [], usageBoost: 0 };
-    }
-    const enhanced = EnhancedScorer.score(debouncedCompletion, ps.selectedCapability);
-    const level: 'low' | 'medium' | 'high' = enhanced.total >= 70
-      ? 'high'
-      : enhanced.total >= 40
-        ? 'medium'
-        : 'low';
-    return {
-      score: enhanced.total,
-      baseScore: enhanced.total,
-      level,
-      label: enhanced.label,
-      tips: enhanced.topWeaknesses.slice(0, 3),
-      usageBoost: 0,
-    };
-  }, [debouncedCompletion, ps.selectedCapability]);
-
-  // Debounce placeholder extraction
-  const placeholders = useMemo(() => extractPlaceholders(debouncedCompletion), [debouncedCompletion]);
-  const inputVariables = useMemo(() => extractPlaceholders(debouncedInput), [debouncedInput]);
 
   const applyVariablesToPrompt = () => {
     if (inputVariables.length === 0) return;
