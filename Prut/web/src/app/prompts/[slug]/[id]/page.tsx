@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCreativeWorkSchema } from "@/lib/schema";
@@ -65,7 +66,9 @@ export async function generateStaticParams({
   const categoryData = CATEGORY_SLUG_MAP[params.slug];
   if (!categoryData) return [];
 
-  const supabase = await createClient();
+  // Must use service client here — createClient() calls cookies() which has no
+  // request context during build-time static generation, causing silent failure.
+  const supabase = createServiceClient();
   const { data } = await supabase
     .from("public_library_prompts")
     .select("id")
