@@ -129,7 +129,8 @@ export async function GET(req: Request) {
 
         try {
           const adminEmail = settings?.contact_email || "gal@joya-tech.net";
-          const { data: authData } = await supabase.auth.admin.getUserById(userId);
+          const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
+          if (authError) logger.warn(`[sync-subscriptions] Could not fetch auth user ${userId}:`, authError.message);
           await EmailService.send({
             to: adminEmail,
             subject: `[Peroot Cron] Churn: ${(authData.user?.email || userId).slice(0, 100)}`,
