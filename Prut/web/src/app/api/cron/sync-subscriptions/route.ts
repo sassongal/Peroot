@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
+import { EmailService } from "@/lib/emails/service";
+import { adminCronChurnAlertEmail } from "@/lib/emails/templates/admin-alerts";
 
 /**
  * GET /api/cron/sync-subscriptions
@@ -125,8 +127,22 @@ export async function GET(req: Request) {
           } catch { /* ledger is best-effort */ }
         }
 
-        // Churn emails disabled — automated email sending is paused
-        logger.info(`[sync-subscriptions] Churn email skipped (disabled) for user ${userId}`);
+        try {
+          const adminEmail = settings?.contact_email || "gal@joya-tech.net";
+          const { data: authData } = await supabase.auth.admin.getUserById(userId);
+          await EmailService.send({
+            to: adminEmail,
+            subject: `[Peroot Cron] Churn: ${(authData.user?.email || userId).slice(0, 100)}`,
+            html: adminCronChurnAlertEmail({
+              customerEmail: authData.user?.email || "—",
+              userId,
+            }),
+            emailType: "admin_churn_alert",
+          });
+          logger.info(`[sync-subscriptions] Churn alert sent for user ${userId}`);
+        } catch (emailErr) {
+          logger.error("[sync-subscriptions] Churn email error:", emailErr);
+        }
 
         fixedCount++;
         logger.info(
