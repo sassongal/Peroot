@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABELS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
@@ -7,6 +8,18 @@ import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { TemplateGrid } from "./TemplateGrid";
 import type { LibraryPrompt } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "תבניות פרומפטים עם משתנים - Peroot",
+  description: `${PROMPT_LIBRARY_COUNT}+ תבניות פרומפטים מוכנות לשימוש עם שדות למילוי. שדרגו כל תבנית עם AI ותתאימו אותה לצרכים שלכם.`,
+  alternates: { canonical: "/templates" },
+  openGraph: {
+    title: "תבניות פרומפטים עם משתנים - Peroot",
+    description: "תבניות פרומפטים מוכנות לשימוש עם שדות למילוי מותאמים אישית.",
+    url: "/templates",
+    type: "website",
+  },
+};
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
