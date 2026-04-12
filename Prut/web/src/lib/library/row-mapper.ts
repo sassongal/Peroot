@@ -12,6 +12,7 @@ export const getCategoriesKey = (userId?: string | null): string =>
   userId ? `${CATEGORIES_KEY}_${userId}` : CATEGORIES_KEY;
 
 export const readOrderMap = (userId?: string | null): Record<string, number> => {
+  if (typeof localStorage === 'undefined') return {};
   const key = getOrderKey(userId);
   const raw = localStorage.getItem(key);
   if (!raw) return {};
@@ -27,12 +28,17 @@ export const readOrderMap = (userId?: string | null): Record<string, number> => 
 };
 
 export const persistOrderMap = (userId: string | null, items: PersonalPrompt[]): void => {
+  if (typeof localStorage === 'undefined') return;
   const key = getOrderKey(userId);
   const next: Record<string, number> = {};
   items.forEach((item, index) => {
     next[item.id] = typeof item.sort_index === 'number' ? item.sort_index : index;
   });
-  localStorage.setItem(key, JSON.stringify(next));
+  try {
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch {
+    // QuotaExceededError or similar — order won't persist this session
+  }
 };
 
 /** Map a raw Supabase row to a PersonalPrompt, applying the orderMap for sort_index.

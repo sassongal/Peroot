@@ -35,17 +35,20 @@ export function useHomeMediaState(
   const [videoAspectRatio, setVideoAspectRatio] = useState("");
   const [targetModel, setTargetModel] = useState<TargetModel>(() => {
     if (typeof window !== "undefined") {
-      return (
-        (localStorage.getItem("peroot_target_model") as TargetModel) ||
-        "general"
-      );
+      const stored = localStorage.getItem("peroot_target_model");
+      const valid: TargetModel[] = ["chatgpt", "claude", "gemini", "general"];
+      if (stored && valid.includes(stored as TargetModel)) return stored as TargetModel;
     }
     return "general";
   });
 
   const handleSetTargetModel = useCallback((model: TargetModel) => {
     setTargetModel(model);
-    localStorage.setItem("peroot_target_model", model);
+    try {
+      localStorage.setItem("peroot_target_model", model);
+    } catch {
+      // QuotaExceededError — state updated, persistence skipped
+    }
   }, []);
 
   return {
