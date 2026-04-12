@@ -56,26 +56,7 @@ const CAPABILITY_BADGE: Record<string, { label: string; className: string }> = {
   },
 };
 
-// Called once per parent slug — returns IDs for that category only
-export async function generateStaticParams({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const categoryData = CATEGORY_SLUG_MAP[params.slug];
-  if (!categoryData) return [];
-
-  const supabase = createServiceClient();
-  const { data } = await supabase
-    .from("public_library_prompts")
-    .select("id")
-    .eq("is_active", true)
-    .ilike("category_id", categoryData.id.toLowerCase());
-
-  return (data ?? []).map((p) => ({ id: String(p.id) }));
-}
-
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, id } = await params;
