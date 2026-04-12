@@ -11,73 +11,10 @@ import { logger } from "@/lib/logger";
 import { escapePostgrestValue } from "@/lib/sanitize";
 import { findSimilarPrompts } from "@/lib/prompt-similarity";
 import { applyGuestFiltersAndSort } from "@/lib/library/sort";
+import { rowToPrompt, getOrderKey, getCategoriesKey, readOrderMap, persistOrderMap } from "@/lib/library/row-mapper";
 
 const STORAGE_KEY = 'peroot_personal_library';
-const CATEGORIES_KEY = 'peroot_personal_categories';
-const ORDER_KEY = 'peroot_personal_order';
 const DEFAULT_PAGE_SIZE = 15;
-
-const getOrderKey = (userId?: string | null) =>
-  userId ? `${ORDER_KEY}_${userId}` : ORDER_KEY;
-
-const getCategoriesKey = (userId?: string | null) =>
-  userId ? `${CATEGORIES_KEY}_${userId}` : CATEGORIES_KEY;
-
-const readOrderMap = (userId?: string | null): Record<string, number> => {
-  const key = getOrderKey(userId);
-  const raw = localStorage.getItem(key);
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as Record<string, number>;
-    }
-  } catch (error) {
-    logger.warn("Failed to parse personal order map", error);
-  }
-  return {};
-};
-
-const persistOrderMap = (userId: string | null, items: PersonalPrompt[]) => {
-  const key = getOrderKey(userId);
-  const next: Record<string, number> = {};
-  items.forEach((item, index) => {
-    next[item.id] = typeof item.sort_index === "number" ? item.sort_index : index;
-  });
-  localStorage.setItem(key, JSON.stringify(next));
-};
-
-/** Map a raw Supabase row to a PersonalPrompt, applying the orderMap for sort_index.
- *  Priority: localStorage orderMap > DB sort_index > positional index */
-function rowToPrompt(row: Record<string, unknown>, index: number, orderMap: Record<string, number>): PersonalPrompt {
-  const id = row.id as string;
-  const dbSortIndex = typeof row.sort_index === "number" ? row.sort_index : undefined;
-  return {
-    id,
-    title: row.title as string,
-    prompt: row.prompt as string,
-    prompt_style: (row.prompt_style as string | undefined) ?? undefined,
-    category: (row.category as string) ?? "",
-    personal_category: (row.personal_category as string | null) ?? null,
-    use_case: row.use_case as string,
-    source: row.source as PersonalPrompt['source'],
-    use_count: (row.use_count as number) ?? 0,
-    capability_mode: (row.capability_mode as CapabilityMode) ?? CapabilityMode.STANDARD,
-    tags: (row.tags as string[]) ?? [],
-    created_at: row.created_at ? new Date(row.created_at as string).getTime() : Date.now(),
-    updated_at: row.updated_at
-      ? new Date(row.updated_at as string).getTime()
-      : row.created_at
-        ? new Date(row.created_at as string).getTime()
-        : Date.now(),
-    last_used_at: row.last_used_at ? new Date(row.last_used_at as string).getTime() : null,
-    is_pinned: (row.is_pinned as boolean) ?? false,
-    is_template: (row.is_template as boolean) ?? false,
-    success_count: (row.success_count as number) ?? 0,
-    fail_count: (row.fail_count as number) ?? 0,
-    sort_index: typeof orderMap[id] === "number" ? orderMap[id] : dbSortIndex ?? index,
-  };
-}
 
 export function useLibrary() {
   // Current page items (server users) or sliced local items (guests)
@@ -489,7 +426,7 @@ export function useLibrary() {
               } else {
                 localStorage.removeItem(STORAGE_KEY);
                 localStorage.removeItem(getCategoriesKey(null));
-                localStorage.removeItem(ORDER_KEY);
+                localStorage.removeItem(getOrderKey(null));
               }
             }
           } catch (e) {
