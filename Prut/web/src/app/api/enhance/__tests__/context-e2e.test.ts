@@ -38,10 +38,13 @@ vi.mock('@/lib/supabase/service', () => ({
   }),
 }));
 
-const generateStreamMock = vi.fn(async (_args: unknown) => ({
-  result: { toTextStreamResponse: () => new Response('ok') },
-  modelId: 'gemini-2.5-flash',
-}));
+const generateStreamMock = vi.fn(async (args?: unknown) => {
+  void args;
+  return {
+    result: { toTextStreamResponse: () => new Response('ok') },
+    modelId: 'gemini-2.5-flash',
+  };
+});
 vi.mock('@/lib/ai/gateway', () => ({
   AIGateway: { generateStream: (args: unknown) => generateStreamMock(args) },
 }));

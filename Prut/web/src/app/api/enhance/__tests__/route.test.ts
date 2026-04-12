@@ -26,10 +26,7 @@ function mockQueryBuilder(
     builder[m] = vi.fn().mockReturnValue(builder);
   }
   // Make the builder thenable so `await` resolves it directly
-  builder.then = (
-    resolve: (v: unknown) => void,
-    _reject?: (e: unknown) => void,
-  ) => {
+  builder.then = (resolve: (v: unknown) => void) => {
     resolve(resolveValue);
     // Must return a real Promise so chained .then/.catch work
     return Promise.resolve(resolveValue);
@@ -134,11 +131,14 @@ vi.mock("next/server", async () => {
 // Inflight-lock mock — default is "always acquire, noop release". Tests
 // that want to exercise the duplicate-in-flight 409 path can override
 // via vi.mocked(acquireInflightLock).mockResolvedValueOnce(...).
-const mockAcquireInflightLock = vi.fn(async (_input: unknown) => ({
-  acquired: true,
-  key: null as string | null,
-  release: async () => {},
-}));
+const mockAcquireInflightLock = vi.fn(async (input?: unknown) => {
+  void input;
+  return {
+    acquired: true,
+    key: null as string | null,
+    release: async () => {},
+  };
+});
 vi.mock("@/lib/ai/inflight-lock", () => ({
   acquireInflightLock: (input: unknown) => mockAcquireInflightLock(input),
 }));

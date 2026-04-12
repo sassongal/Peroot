@@ -11,15 +11,17 @@ import { CapabilityMode, parseCapabilityMode, capabilityModeToDbMode } from "@/l
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
-import { enqueueJob } from "@/lib/jobs/queue";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
-import { validateApiKey } from "@/lib/api-auth";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
+import { enqueueJob } from "@/lib/jobs/queue";
+import { resolveAuth, ApiAuthError } from "./lib/auth";
+import { buildActivityLogDetails } from "./lib/activity-log";
+import { saveEnhanceResults, maybeEnqueueBackgroundJobs } from "./lib/after-stream";
 
 export const maxDuration = 30;
 
@@ -89,26 +91,16 @@ export async function POST(req: Request) {
 
     supabase = await createClient();
 
-    // Support Bearer token auth for Chrome extension + Developer API keys
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-
-    let useServiceClient = false;
-
-    if (bearerToken?.startsWith("prk_")) {
-      // Developer API key auth
-      const apiKeyResult = await validateApiKey(bearerToken);
-      if (!apiKeyResult.valid) {
-        return NextResponse.json({ error: apiKeyResult.error || "Invalid API key" }, { status: 401 });
+    // Resolve caller identity: API key (prk_*), extension Bearer JWT, or session cookie
+    let bearerToken: string | undefined;
+    let useServiceClient: boolean;
+    try {
+      ({ userId, bearerToken, useServiceClient } = await resolveAuth(req, supabase));
+    } catch (err) {
+      if (err instanceof ApiAuthError) {
+        return NextResponse.json({ error: err.message }, { status: 401 });
       }
-      userId = apiKeyResult.userId;
-      useServiceClient = true;
-    } else {
-      const { data: { user } } = bearerToken
-          ? await supabase.auth.getUser(bearerToken)
-          : await supabase.auth.getUser();
-      userId = user?.id;
-      if (bearerToken && userId) useServiceClient = true;
+      throw err;
     }
 
     // Guest access: allow unauthenticated users with IP-based rate limiting
@@ -319,6 +311,10 @@ export async function POST(req: Request) {
         : firstContextType === 'image' ? 'image'
         : 'text';
 
+    // Derive the history `source` field from the auth method used
+    const historySource: "api" | "extension" | "web" =
+      bearerToken?.startsWith("prk_") ? "api" : bearerToken ? "extension" : "web";
+
     // 4.6 Result cache lookup. Scoped PER USER (no cross-user sharing) and
     // skipped whenever personalization signal or context attachments are
     // present — see src/lib/ai/enhance-cache.ts for the full skip rules.
@@ -381,48 +377,36 @@ export async function POST(req: Request) {
             after(async () => {
                 try {
                     if (userId && supabase) {
-                        await queryClient.from('history').insert({
-                            user_id: userId,
+                        const cacheHitDetails = buildActivityLogDetails({
+                            mode: String(mode),
+                            modelId: cachedModelId,
+                            durationMs: cacheLatencyMs,
+                            tokens: { inputTokens: 0, outputTokens: 0 },
                             prompt,
-                            enhanced_prompt: cached.text,
+                            resultText: cached.text,
                             tone,
                             category,
-                            capability_mode: capability_mode || 'STANDARD',
-                            title: prompt.slice(0, 60),
-                            source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
-                            input_source: inputSource,
-                            updated_at: new Date().toISOString(),
-                        }).then(({ error: histErr }) => {
-                            if (histErr) logger.warn('[Enhance:cache-hit] History insert failed:', histErr.message);
+                            capabilityMode: capability_mode,
+                            targetModel: target_model,
+                            isRefinement,
+                            contextAttachments,
+                            iteration,
+                            isJsonOutput: engineOutput.outputFormat === 'json',
+                            cacheHit: true,
                         });
 
-                        await queryClient.from('activity_logs').insert({
-                            user_id: userId,
-                            action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
-                            entity_type: 'prompt',
-                            details: {
-                                mode,
-                                model: cachedModelId,
-                                latency_ms: cacheLatencyMs,
-                                tokens: { inputTokens: 0, outputTokens: 0 },
-                                prompt_length: prompt.length,
-                                result_length: cached.text.length,
-                                tone,
-                                category,
-                                capability_mode: capability_mode || 'STANDARD',
-                                target_model: target_model || 'general',
-                                is_refinement: isRefinement,
-                                has_context: !!(contextAttachments && contextAttachments.length > 0),
-                                context_count: contextAttachments?.length || 0,
-                                attachment_tokens_est: (contextAttachments || []).reduce((sum, c) => sum + (c.tokenCount || 0), 0),
-                                iteration: iteration || 0,
-                                json_output: engineOutput.outputFormat === 'json',
-                                // Non-null marker so admins can filter cache-hit rows
-                                // in activity_logs without adding a new column.
-                                cache_hit: true,
-                            }
-                        }).then(({ error: actErr }) => {
-                            if (actErr) logger.warn('[Enhance:cache-hit] Activity log insert failed:', actErr.message);
+                        await saveEnhanceResults({
+                            queryClient: queryClient as ReturnType<typeof createServiceClient>,
+                            userId,
+                            prompt,
+                            enhancedPrompt: cached.text,
+                            tone,
+                            category,
+                            capabilityMode: capability_mode,
+                            inputSource,
+                            source: historySource,
+                            isRefinement,
+                            activityLogDetails: cacheHitDetails,
                         });
 
                         try {
@@ -614,73 +598,44 @@ export async function POST(req: Request) {
                     }
 
                     if (userId && supabase) {
-                        // Save to history table so admin can see actual prompts
-                        await queryClient.from('history').insert({
-                            user_id: userId,
+                        const liveDetails = buildActivityLogDetails({
+                            mode: String(mode),
+                            modelId,
+                            durationMs,
+                            tokens: usageCopy,
                             prompt,
-                            enhanced_prompt: textCopy,
+                            resultText: textCopy,
                             tone,
                             category,
-                            capability_mode: capability_mode || 'STANDARD',
-                            title: prompt.slice(0, 60),
-                            source: bearerToken?.startsWith('prk_') ? 'api' : bearerToken ? 'extension' : 'web',
-                            input_source: inputSource,
-                            updated_at: new Date().toISOString(),
-                        }).then(({ error: histErr }) => {
-                            if (histErr) logger.warn('[Enhance] History insert failed:', histErr.message);
+                            capabilityMode: capability_mode,
+                            targetModel: target_model,
+                            isRefinement,
+                            contextAttachments,
+                            iteration,
+                            isJsonOutput,
+                            jsonValid,
+                            jsonError,
+                            injectionStats: engineOutput.injectionStats,
                         });
 
-                        await queryClient.from('activity_logs').insert({
-                            user_id: userId,
-                            action: isRefinement ? 'Prmpt Refine' : 'Prmpt Enhance',
-                            entity_type: 'prompt',
-                            details: {
-                                mode,
-                                model: modelId,
-                                latency_ms: durationMs,
-                                tokens: usageCopy,
-                                prompt_length: prompt.length,
-                                result_length: textCopy.length,
-                                tone,
-                                category,
-                                capability_mode: capability_mode || 'STANDARD',
-                                target_model: target_model || 'general',
-                                is_refinement: isRefinement,
-                                has_context: !!(contextAttachments && contextAttachments.length > 0),
-                                context_count: contextAttachments?.length || 0,
-                                attachment_tokens_est: (contextAttachments || []).reduce((sum, c) => sum + (c.tokenCount || 0), 0),
-                                iteration: iteration || 0,
-                                // JSON mode observability: lets the admin audit page
-                                // compute "invalid JSON rate" by filtering on
-                                // details->>json_valid = 'false'.
-                                json_output: isJsonOutput,
-                                json_valid: jsonValid,
-                                json_error: jsonError,
-                                // Memory injection telemetry — see InjectionStats
-                                // in src/lib/engines/types.ts. Lets us A/B-test the
-                                // L2/L3 layers by joining on these fields.
-                                injection: engineOutput.injectionStats || null,
-                            }
-                        }).then(({ error: actErr }) => {
-                            if (actErr) logger.warn('[Enhance] Activity log insert failed:', actErr.message);
+                        await saveEnhanceResults({
+                            queryClient: queryClient as ReturnType<typeof createServiceClient>,
+                            userId,
+                            prompt,
+                            enhancedPrompt: textCopy,
+                            tone,
+                            category,
+                            capabilityMode: capability_mode,
+                            inputSource,
+                            source: historySource,
+                            isRefinement,
+                            activityLogDetails: liveDetails,
                         });
 
-                        try {
-                            const { count } = await queryClient
-                                .from('activity_logs')
-                                .select('*', { count: 'exact', head: true })
-                                .eq('user_id', userId)
-                                .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
-
-                            if (count && count % 20 === 0) {
-                                await enqueueJob('style_analysis', { userId: userId });
-                            }
-
-                            await enqueueJob('achievement_check', { userId: userId });
-
-                        } catch (bgError) {
-                            logger.error("[EnhanceAPI] Error enqueuing background jobs:", bgError);
-                        }
+                        await maybeEnqueueBackgroundJobs(
+                            queryClient as ReturnType<typeof createServiceClient>,
+                            userId,
+                        );
                     }
                 } finally {
                     await lock.release();

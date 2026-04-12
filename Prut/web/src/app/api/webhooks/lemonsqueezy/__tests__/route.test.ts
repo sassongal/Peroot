@@ -927,7 +927,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         }),
       }));
 
-      const { request } = signedRequest('order_created');
+      signedRequest('order_created');
       // Manually build since our helper sets subscription attributes
       const event = {
         meta: { event_name: 'order_created', custom_data: {} },
@@ -1129,7 +1129,9 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       const res = await POST(request);
 
       expect(res.status).toBe(500);
-      expect(await res.text()).toBe('Database error');
+      // DB error throws inside handleSubscriptionEvent and is caught by the
+      // route's generic catch — response body is now the generic processing error.
+      expect(await res.text()).toBe('Processing error');
     });
 
     it('falls back to upsert when subscription update fails for non-created events', async () => {
