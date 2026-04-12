@@ -5,6 +5,9 @@ import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
+const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+const _examplesOg = `${_SITE}/api/og?title=${encodeURIComponent("לפני ואחרי: Peroot בפעולה")}&subtitle=${encodeURIComponent("ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים")}&category=${encodeURIComponent("דוגמאות")}`;
+
 export const metadata: Metadata = {
   title: "דוגמאות פרומפטים - לפני ואחרי",
   description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
@@ -12,15 +15,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
     description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
-    url: "/examples",
+    url: `${_SITE}/examples`,
     siteName: "Peroot",
     locale: "he_IL",
     type: "website",
+    images: [{ url: _examplesOg, width: 1200, height: 630, alt: "דוגמאות פרומפטים לפני ואחרי" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
     description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים.",
+    images: [_examplesOg],
   },
 };
 

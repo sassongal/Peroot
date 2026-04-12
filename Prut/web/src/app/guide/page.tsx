@@ -31,6 +31,9 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { CopyButton } from "./CopyButton";
 
+const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+const _guideOg = `${_SITE}/api/og?title=${encodeURIComponent("מדריך כתיבת פרומפטים")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini")}&category=${encodeURIComponent("מדריכים")}`;
+
 export const metadata: Metadata = {
   title: "מדריך כתיבת פרומפטים | פירוט - Peroot",
   description:
@@ -38,15 +41,18 @@ export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
   openGraph: {
     title: "מדריך כתיבת פרומפטים מקצועיים | פירוט",
-    description:
-      "המדריך המלא בעברית לכתיבת פרומפטים שמייצרים תוצאות מדויקות מ-AI",
+    description: "המדריך המלא בעברית לכתיבת פרומפטים שמייצרים תוצאות מדויקות מ-AI",
+    url: `${_SITE}/guide`,
+    siteName: "Peroot",
     locale: "he_IL",
     type: "article",
+    images: [{ url: _guideOg, width: 1200, height: 630, alt: "מדריך כתיבת פרומפטים בעברית" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "מדריך כתיבת פרומפטים מקצועיים | פירוט",
     description: "המדריך המלא בעברית לכתיבת פרומפטים שמייצרים תוצאות מדויקות מ-AI",
+    images: [_guideOg],
   },
 };
 

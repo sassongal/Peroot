@@ -22,6 +22,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+const _featuresOg = `${_SITE}/api/og?title=${encodeURIComponent("כל היכולות של Peroot")}&subtitle=${encodeURIComponent("5 מנועי AI, תמיכה ב-15+ פלטפורמות, ספרייה אישית ועוד")}&category=${encodeURIComponent("פיצ'רים")}`;
+
 export const metadata: Metadata = {
   title: "מה עושים פה? | פירוט - Peroot",
   description:
@@ -29,15 +32,18 @@ export const metadata: Metadata = {
   alternates: { canonical: "/features" },
   openGraph: {
     title: "מה עושים פה? | כל היכולות של פירוט",
-    description:
-      "5 מנועי AI, תמיכה ב-15+ פלטפורמות, ספרייה אישית, שרשראות פרומפטים ועוד",
+    description: "5 מנועי AI, תמיכה ב-15+ פלטפורמות, ספרייה אישית, שרשראות פרומפטים ועוד",
+    url: `${_SITE}/features`,
+    siteName: "Peroot",
     locale: "he_IL",
     type: "website",
+    images: [{ url: _featuresOg, width: 1200, height: 630, alt: "כל היכולות של Peroot" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "מה עושים פה? | כל היכולות של פירוט",
     description: "5 מנועי AI, תמיכה ב-15+ פלטפורמות, ספרייה אישית, שרשראות פרומפטים ועוד",
+    images: [_featuresOg],
   },
 };
 
