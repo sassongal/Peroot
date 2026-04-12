@@ -147,17 +147,17 @@ export function useContextAttachments(tier: Tier = 'free') {
   const addFiles = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return;
+      // Validate size/type before modifying state
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) throw new Error(`הקובץ ${file.name} גדול מדי (מקסימום 10MB)`);
+        if (!ACCEPTED_FILE_TYPES.includes(file.type)) throw new Error(`פורמט קובץ לא נתמך: ${file.name}`);
+      }
       // Validate count atomically (pendingCounts prevents races)
       const currentCount = countByType(attachmentsRef.current, "file") + pendingCounts.current.file;
       if (currentCount + files.length > limits.maxFiles) {
         throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
       }
       pendingCounts.current.file += files.length;
-
-      for (const file of files) {
-        if (file.size > MAX_FILE_SIZE) throw new Error(`הקובץ ${file.name} גדול מדי (מקסימום 10MB)`);
-        if (!ACCEPTED_FILE_TYPES.includes(file.type)) throw new Error(`פורמט קובץ לא נתמך: ${file.name}`);
-      }
 
       const ids = files.map(() => generateId());
       setAttachments((prev) => [
