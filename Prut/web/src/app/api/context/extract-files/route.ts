@@ -5,6 +5,7 @@ import { processBatch } from '@/lib/context/engine';
 import { checkExtractionLimit } from '@/lib/context/engine/extraction-rate-limit';
 import { logger } from '@/lib/logger';
 import { MAX_FILE_SIZE_MB } from '@/lib/context/engine/extract';
+import { getContextLimits } from '@/lib/plans';
 import type { ProcessAttachmentInput } from '@/lib/context/engine';
 import type { PlanTier } from '@/lib/context/engine/types';
 
@@ -22,18 +23,31 @@ export async function POST(request: NextRequest) {
       .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
     const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
 
-    const rl = await checkExtractionLimit(user.id, tier);
-    if (!rl.allowed) {
-      return NextResponse.json(
-        { error: `חרגת ממכסת העיבוד היומית (${rl.limit}). נסה שוב מחר או שדרג ל-Pro.`, remaining: 0 },
-        { status: 429 },
-      );
-    }
-
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     if (files.length === 0) {
       return NextResponse.json({ error: 'לא נבחרו קבצים' }, { status: 400 });
+    }
+
+    // Fix 1: enforce per-tier file cap (mirrors client-side limits in useContextAttachments)
+    const maxFilesForTier = getContextLimits(tier).maxFiles;
+    if (files.length > maxFilesForTier) {
+      return NextResponse.json(
+        { error: `ניתן לעבד עד ${maxFilesForTier} קבצים בבת אחת` },
+        { status: 400 },
+      );
+    }
+
+    // Fix 2: call checkExtractionLimit once per file so the rate-limit counter
+    // correctly accounts for batch size (the function increments by 1 per call).
+    for (let i = 0; i < files.length; i++) {
+      const rl = await checkExtractionLimit(user.id, tier);
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: `חרגת ממכסת העיבוד היומית (${rl.limit}). נסה שוב מחר או שדרג ל-Pro.`, remaining: 0 },
+          { status: 429 },
+        );
+      }
     }
 
     for (const file of files) {
