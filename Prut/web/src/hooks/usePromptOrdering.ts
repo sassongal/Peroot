@@ -287,19 +287,24 @@ export function usePromptOrdering({
 
       setAllLocalItems(prev => {
         const updated = [...prev];
+        // Build sort_index assignments without mutating newItems (updater may run >1x in StrictMode)
+        const indexAssignments = new Map<string, number>();
         categoriesInBatch.forEach(cat => {
           const currentMax = updated
             .filter(p => p.personal_category === cat)
             .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1);
-
           let runningIdx = currentMax + 1;
           newItems.forEach(item => {
             if (item.personal_category === cat) {
-              item.sort_index = runningIdx++;
+              indexAssignments.set(item.id, runningIdx++);
             }
           });
         });
-        return [...newItems, ...updated];
+        const assignedItems = newItems.map(item => ({
+          ...item,
+          sort_index: indexAssignments.has(item.id) ? indexAssignments.get(item.id)! : item.sort_index,
+        }));
+        return [...assignedItems, ...updated];
       });
     }
   }, [supabase, user, setAllLocalItems, refreshCurrentPage]);

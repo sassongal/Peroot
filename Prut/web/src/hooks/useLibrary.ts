@@ -43,7 +43,6 @@ export function useLibrary() {
 
   const { fetchFolderCounts, fetchPage } = useLibraryFetch({
     supabase,
-    user: null, // user identity passed per-call via userId param; this field unused in impl
     setPersonalLibrary,
     setTotalCount,
     setIsPageLoading,

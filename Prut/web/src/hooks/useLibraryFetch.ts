@@ -2,7 +2,6 @@
 
 import { useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { User } from '@supabase/supabase-js';
 import { PersonalPrompt } from '@/lib/types';
 import { logger } from '@/lib/logger';
 import { escapePostgrestValue } from '@/lib/sanitize';
@@ -10,7 +9,6 @@ import { rowToPrompt, readOrderMap } from '@/lib/library/row-mapper';
 
 interface UseLibraryFetchParams {
   supabase: SupabaseClient;
-  user: User | null;
   setPersonalLibrary?: (items: PersonalPrompt[]) => void;
   setTotalCount?: (count: number) => void;
   setIsPageLoading?: (loading: boolean) => void;

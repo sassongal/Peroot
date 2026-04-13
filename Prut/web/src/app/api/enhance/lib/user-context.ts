@@ -50,7 +50,7 @@ export async function resolveUserContext(
     };
   }
 
-  let tier: 'free' | 'pro' | 'admin' | 'guest' = 'guest';
+  let tier: 'free' | 'pro' | 'admin' | 'guest' = 'free';
   let isAdmin = false;
   let cachedHit = false;
 
