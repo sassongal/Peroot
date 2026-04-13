@@ -205,6 +205,19 @@ function PageContent() {
     onInterrupted: useCallback(() => {
       dispatch({ type: 'STREAM_INTERRUPTED' });
     }, [dispatch]),
+    onResponse: useCallback((headers: Headers) => {
+      if (headers.get('X-Model-Fallback') === '1') {
+        const modelUsed = headers.get('X-Model-Used');
+        const label = modelUsed === 'mistral-small' ? 'Mistral Small'
+          : modelUsed === 'llama-4-scout' ? 'Llama 4 Scout'
+          : modelUsed === 'gpt-oss-20b' ? 'GPT-OSS 20B'
+          : modelUsed ?? 'מודל חלופי';
+        toast(`מופעל על ${label} (Gemini לא זמין כרגע)`, {
+          duration: 5000,
+          description: 'ייתכן שאיכות הפלט תהיה שונה מהרגיל.',
+        });
+      }
+    }, []),
   });
 
   // Sidebar & mobile FAQ state

@@ -34,7 +34,7 @@ const COLOR_TONE_KEYWORDS = [
 // Camera brands/specs
 const CAMERA_BRANDS = [
   'Sony A7', 'Canon EOS', 'Nikon Z', 'Hasselblad', 'Leica', 'Fujifilm',
-  'ARRI Alexa', 'RED Komodo', 'Phase One', 'Blackmagic',
+  'Blackmagic', 'DJI', 'GoPro',
 ];
 
 /**

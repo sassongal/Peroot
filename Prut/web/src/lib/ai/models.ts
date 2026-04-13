@@ -75,7 +75,7 @@ export const TASK_ROUTING: Record<string, ModelId[]> = {
   enhance:  ['gemini-2.5-flash', 'mistral-small', 'gemini-2.5-flash-lite', 'llama-4-scout', 'gpt-oss-20b'],
   research: ['gemini-2.5-flash', 'mistral-small', 'gemini-2.5-flash-lite', 'llama-4-scout'],
   agent:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
-  image:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small'],
+  image:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small', 'llama-4-scout'],
   video:    ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'mistral-small'],
   chain:    ['gemini-2.5-flash', 'mistral-small', 'llama-4-scout', 'gpt-oss-20b'],
   // Lightweight internal tasks (category suggestion, tagging). Flash Lite is

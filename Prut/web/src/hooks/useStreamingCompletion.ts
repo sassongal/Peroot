@@ -8,9 +8,11 @@ interface StreamingOptions {
   onError: (error: Error) => void;
   /** Called when the stream is cut mid-response. Receives the partial text accumulated so far. */
   onInterrupted?: (partialText: string) => void;
+  /** Called immediately after a successful response is received, before reading the body. */
+  onResponse?: (headers: Headers) => void;
 }
 
-export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted }: StreamingOptions) {
+export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted, onResponse }: StreamingOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -42,6 +44,8 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
             .catch(() => ({ error: `HTTP ${response.status}` }));
           throw new Error(errorData.error || `HTTP ${response.status}`);
         }
+
+        onResponse?.(response.headers);
 
         if (!response.body) throw new Error('No response body');
 
@@ -83,7 +87,7 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
         abortControllerRef.current = null;
       }
     },
-    [abort, onChunk, onDone, onError, onInterrupted]
+    [abort, onChunk, onDone, onError, onInterrupted, onResponse]
   );
 
   return { startStream, abort, isStreaming };

@@ -642,7 +642,13 @@ export class ImageEngine extends BaseEngine {
       };
 
       if (input.modeParams?.aspect_ratio) {
-        variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output (e.g., --ar ${input.modeParams.aspect_ratio} for Midjourney, [aspectRatio: ${input.modeParams.aspect_ratio}] for Imagen/Gemini, "width"/"height" matching this ratio for SD JSON).`;
+        if (platformKey === 'general') {
+          // General mode generates a visual description, not platform syntax.
+          // Guide composition framing rather than injecting --ar / aspectRatio tags.
+          variables.aspect_ratio_hint = `\nIMPORTANT: The user wants an aspect ratio of ${input.modeParams.aspect_ratio}. Frame the description with this proportionality in mind (e.g., wide panoramic composition for 16:9, square balanced crop for 1:1, tall portrait framing for 9:16).`;
+        } else {
+          variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output (e.g., --ar ${input.modeParams.aspect_ratio} for Midjourney, [aspectRatio: ${input.modeParams.aspect_ratio}] for Imagen/Gemini, "width"/"height" matching this ratio for SD JSON).`;
+        }
       } else {
         variables.aspect_ratio_hint = '';
       }

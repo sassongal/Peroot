@@ -644,7 +644,17 @@ export async function POST(req: Request) {
         },
     });
 
-    return result.toTextStreamResponse();
+    const streamResponse = result.toTextStreamResponse();
+    const responseHeaders = new Headers(streamResponse.headers);
+    responseHeaders.set('X-Model-Used', modelId);
+    // Flag fallbacks so the client can surface a quality warning
+    if (modelId !== 'gemini-2.5-flash') {
+      responseHeaders.set('X-Model-Fallback', '1');
+    }
+    return new Response(streamResponse.body, {
+      status: streamResponse.status,
+      headers: responseHeaders,
+    });
 
   } catch (error) {
     // Release the in-flight lock on any error path so the next retry is

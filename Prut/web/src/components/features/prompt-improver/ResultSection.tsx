@@ -245,13 +245,30 @@ export function ResultSection({
 
           {/* Content area - loading skeleton OR shared BeforeAfterSplit */}
           {isLoading && !completion ? (
-            <div className="p-8 space-y-4 animate-pulse" dir="rtl">
-              <div className="h-4 bg-(--glass-border) rounded w-3/4" />
-              <div className="h-4 bg-(--glass-border) rounded w-full" />
-              <div className="h-4 bg-(--glass-border) rounded w-5/6" />
-              <div className="h-4 bg-(--glass-border) rounded w-2/3" />
-              <div className="h-4 bg-(--glass-border) rounded w-4/5" />
-            </div>
+            (() => {
+              // JSON-mode platforms (stable-diffusion, nanobanana) cannot stream —
+              // the full payload only arrives once generation is complete. Show a
+              // platform-aware message so users understand the wait is expected.
+              const isJsonPlatform = selectedPlatform === 'stable-diffusion' || selectedPlatform === 'nanobanana';
+              const platformLabel = selectedPlatform === 'stable-diffusion' ? 'Stable Diffusion' : selectedPlatform === 'nanobanana' ? 'Gemini Image' : '';
+              return (
+                <div className="p-8 space-y-4" dir="rtl">
+                  {isJsonPlatform && (
+                    <div className="flex items-center gap-2 text-sm text-(--text-muted) mb-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-(--accent-text) animate-pulse shrink-0" />
+                      <span>מייצר פרמטרים עבור {platformLabel}... (ללא הצגה מתקדמת)</span>
+                    </div>
+                  )}
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-(--glass-border) rounded w-3/4" />
+                    <div className="h-4 bg-(--glass-border) rounded w-full" />
+                    <div className="h-4 bg-(--glass-border) rounded w-5/6" />
+                    <div className="h-4 bg-(--glass-border) rounded w-2/3" />
+                    <div className="h-4 bg-(--glass-border) rounded w-4/5" />
+                  </div>
+                </div>
+              );
+            })()
           ) : (
             <div className="p-4 flex-1">
               {/* Inline toolbar — lives above the result text so it never
