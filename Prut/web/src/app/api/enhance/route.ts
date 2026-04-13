@@ -23,6 +23,7 @@ import { buildActivityLogDetails } from "./lib/activity-log";
 import { saveEnhanceResults, maybeEnqueueBackgroundJobs } from "./lib/after-stream";
 import { resolveUserContext } from "./lib/user-context";
 import { buildEngineInput } from "./lib/engine-input";
+import { validateJsonOutput } from "./lib/json-validator";
 
 export const maxDuration = 30;
 
@@ -439,23 +440,13 @@ export async function POST(req: Request) {
                     let jsonValid: boolean | null = null;
                     let jsonError: string | null = null;
                     if (isJsonOutput && textCopy.length > 0) {
-                        const cleaned = textCopy
-                            .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/, '')
-                            .replace(/\[GENIUS_QUESTIONS\][\s\S]*$/, '')
-                            .replace(/^```(?:json)?\s*/i, '')
-                            .replace(/\s*```\s*$/i, '')
-                            .trim();
-                        try {
-                            JSON.parse(cleaned);
-                            jsonValid = true;
-                        } catch (err) {
-                            jsonValid = false;
-                            jsonError = err instanceof Error ? err.message : String(err);
+                        ({ jsonValid, jsonError } = validateJsonOutput(textCopy));
+                        if (!jsonValid) {
                             logger.warn('[Enhance] Invalid JSON output', {
                                 modelId,
                                 capability_mode,
                                 error: jsonError,
-                                sample: cleaned.slice(0, 200),
+                                sample: textCopy.slice(0, 200),
                             });
                         }
                     }
