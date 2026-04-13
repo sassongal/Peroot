@@ -100,7 +100,7 @@ Audio:
 Dialogue: (she speaks softly) "Remember our first time here? You bought me that terrible ice cream." (he chuckles quietly) "It wasn't terrible — you ate all of it."
 SFX: "gentle waves lapping against the seawall below", "a distant ice cream truck jingle, barely audible."
 Ambient: "seagulls calling overhead, light wind through coastal grass, children laughing far down the beach."
-Music: "solo acoustic guitar, a simple major-key fingerpicking pattern, nostalgic and tender, unhurried."`,
+Music: "solo acoustic guitar, andante, warm and nostalgic."`,
       category: 'emotion',
     },
     {

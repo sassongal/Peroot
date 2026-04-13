@@ -302,15 +302,15 @@ Your output MUST start directly with the prompt content. NEVER output:
 - "כתוב את הפרומפט הבא:"
 - "הנה הפרומפט:"
 - Any explanation, meta-commentary, or preamble
-Start IMMEDIATELY with the cinematic description.
-Your FIRST WORD must be "[Camera:" for the structured format. Example: "[Camera: medium shot, slow push in]".
+Start IMMEDIATELY with the [Camera: ...] line.
+Your FIRST WORD must be "[Camera:". Example: "[Camera: medium shot, slow push in]".
 
 EXAMPLE:
 Concept: "ריקוד ברחוב"
-Output: Wide angle, handheld.
-Young man in white sneakers and black joggers, urban backdrop.
-Launches into fluid breakdance — drops to one knee at 0s, spins into windmill at 1s, freezes in baby freeze at 3s, snaps upright at 3.5s.
-Shot on full-frame cinema camera, golden hour backlight, music video aesthetic.`,
+Output: [Camera: wide angle, handheld]
+[Subject: Young man in white sneakers and black joggers, urban backdrop]
+[Motion: Launches into fluid breakdance — drops to one knee at 0s, spins into windmill at 1s, freezes in baby freeze at 3s, snaps upright at 3.5s]
+[Style: Shot on full-frame cinema camera, golden hour backlight, music video aesthetic]`,
 
   minimax: `PLATFORM: Minimax Hailuo 2.3
 Hailuo 2.3 excels at human body movement and facial expressions. Best-in-class for choreography, gestures, and micro-expressions. Supports anime, illustration, and cinematic styles.
@@ -504,7 +504,15 @@ export class VideoEngine extends BaseEngine {
     };
 
     if (input.modeParams?.aspect_ratio) {
-      variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output. Design the shot composition for a ${input.modeParams.aspect_ratio} frame.`;
+      // For video, aspect ratio is ALWAYS a UI/API parameter — never embed it as text in the prompt.
+      // Guide composition framing only: the model should shape the shot accordingly.
+      const ratio = input.modeParams.aspect_ratio;
+      const compositionHint =
+        ratio === '16:9' ? 'wide cinematic panoramic composition' :
+        ratio === '9:16' ? 'tall vertical portrait composition' :
+        ratio === '1:1'  ? 'square balanced composition' :
+        `composition suited for a ${ratio} frame`;
+      variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${ratio}. Design the shot for ${compositionHint} — do NOT add aspect ratio text or parameters to the prompt; aspect ratio is set in the platform UI/API.`;
     } else {
       variables.aspect_ratio_hint = '';
     }
