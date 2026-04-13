@@ -31,12 +31,12 @@ export const GET = withAdmin(async (_req, supabase) => {
     const activeUserIds = [...new Set((recentActivity5m ?? []).map((r) => r.user_id).filter(Boolean))];
     const activeSessions = activeUserIds.length;
 
-    // ── Live feed: last 50 events ───────────────────────────────────────────
+    // ── Live feed: last 200 events ─────────────────────────────────────────
     const { data: feedRows, error: feedError } = await supabase
       .from('activity_logs')
       .select('id, user_id, action, entity_type, details, created_at')
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(200);
 
     if (feedError) {
       logger.error('[Admin Realtime] Feed query error:', feedError);

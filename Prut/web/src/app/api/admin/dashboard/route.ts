@@ -73,18 +73,16 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
       supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', todayMidnight),
       // Generations this month
       supabase.from('history').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
-      // DAU: distinct users with activity today (capped to prevent OOM)
-      supabase.from('activity_logs').select('user_id').gte('created_at', todayMidnight).limit(50000),
-      // WAU: distinct users with activity in last 7 days
-      supabase.from('activity_logs').select('user_id').gte('created_at', sevenDaysAgo).limit(50000),
-      // MAU: distinct users with activity in last 30 days
-      supabase.from('activity_logs').select('user_id').gte('created_at', thirtyDaysAgo).limit(50000),
-      // Engine mode breakdown from recent activity
-      supabase.from('activity_logs')
-        .select('details')
-        .in('action', ['Prmpt Enhance', 'Prmpt Refine'])
-        .gte('created_at', firstOfMonth)
-        .limit(1000),
+      // DAU: distinct users with activity today — use history count (exact, no cap needed)
+      supabase.from('history').select('user_id').gte('created_at', todayMidnight),
+      // WAU: distinct users in last 7 days
+      supabase.from('history').select('user_id').gte('created_at', sevenDaysAgo),
+      // MAU: distinct users in last 30 days
+      supabase.from('history').select('user_id').gte('created_at', thirtyDaysAgo),
+      // Engine mode breakdown from history (has capability_mode column, no cap)
+      supabase.from('history')
+        .select('capability_mode')
+        .gte('created_at', firstOfMonth),
       // Error count (failed generations)
       supabase.from('api_usage_logs')
         .select('*', { count: 'exact', head: true })
@@ -124,11 +122,10 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
       ? ((generationsThisMonth ?? 0) / mau).toFixed(1)
       : '0';
 
-    // Engine mode distribution
+    // Engine mode distribution — direct from history.capability_mode (no JSON parsing)
     const modeDistribution: Record<string, number> = {};
     for (const row of modeBreakdown ?? []) {
-      const details = row.details as Record<string, unknown> | null;
-      const mode = (details?.capability_mode || details?.mode || 'STANDARD') as string;
+      const mode = (row.capability_mode as string) || 'STANDARD';
       modeDistribution[mode] = (modeDistribution[mode] || 0) + 1;
     }
 

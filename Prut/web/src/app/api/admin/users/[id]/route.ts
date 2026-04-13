@@ -74,7 +74,13 @@ export const GET = withAdmin(async (
         .from('history')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id),
-      supabase.from('api_usage_logs').select('estimated_cost_usd').eq('user_id', id).limit(10000),
+      // Token usage + cost — fetch all rows for accurate totals (no limit; indexed by user_id)
+      supabase
+        .from('api_usage_logs')
+        .select('estimated_cost_usd, input_tokens, output_tokens, provider, model, engine_mode, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false })
+        .limit(10000),
       // 1 row only — just enough for lastActive timestamp
       supabase
         .from('activity_logs')
@@ -106,10 +112,25 @@ export const GET = withAdmin(async (
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const totalApiCost = (apiCostRows ?? []).reduce(
-      (sum, r) => sum + (r.estimated_cost_usd ?? 0),
-      0
-    );
+    // Aggregate token + cost totals from api_usage_logs
+    let totalApiCost = 0;
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    for (const r of apiCostRows ?? []) {
+      totalApiCost      += r.estimated_cost_usd ?? 0;
+      totalInputTokens  += r.input_tokens  ?? 0;
+      totalOutputTokens += r.output_tokens ?? 0;
+    }
+    // Recent API calls for per-prompt timeline (last 100, already ordered desc)
+    const recentApiCalls = (apiCostRows ?? []).slice(0, 100).map(r => ({
+      provider:    r.provider,
+      model:       r.model,
+      engine_mode: r.engine_mode,
+      input_tokens:  r.input_tokens  ?? 0,
+      output_tokens: r.output_tokens ?? 0,
+      cost_usd:    r.estimated_cost_usd ?? 0,
+      created_at:  r.created_at,
+    }));
 
     // Compute source/category/tone/mode breakdowns from history (up to 5000 rows — accurate)
     const sources: Record<string, number> = {};
@@ -139,6 +160,9 @@ export const GET = withAdmin(async (
       promptCount: promptCount ?? 0,
       historyCount: historyCount ?? 0,
       totalApiCost,
+      totalInputTokens,
+      totalOutputTokens,
+      recentApiCalls,
       recentActivity: recentActivity ?? [],
       recentHistory: recentHistory ?? [],
       sourceBreakdown: sources,
