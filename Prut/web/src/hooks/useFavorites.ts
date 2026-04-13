@@ -171,6 +171,13 @@ export function useFavorites() {
         .eq("user_id", user.id)
         .eq("item_type", itemType)
         .eq("item_id", itemId);
+      void supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "favorite_remove",
+        entity_type: itemType,
+        entity_id: itemId,
+        details: {},
+      });
     } else {
       await supabase
         .from("prompt_favorites")
@@ -178,8 +185,15 @@ export function useFavorites() {
           { user_id: user.id, item_type: itemType, item_id: itemId },
           { onConflict: "user_id,item_type,item_id" }
         );
+      void supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "favorite_add",
+        entity_type: itemType,
+        entity_id: itemId,
+        details: {},
+      });
     }
-    
+
     return true;
   };
 

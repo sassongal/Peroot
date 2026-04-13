@@ -27,7 +27,16 @@ export async function POST() {
 
     if (updateError) throw updateError;
 
-    return NextResponse.json({ 
+    // Log onboarding completion (fire-and-forget)
+    void supabase.from('activity_logs').insert({
+      user_id: user.id,
+      action: 'onboarding_complete',
+      entity_type: 'profile',
+      entity_id: user.id,
+      details: {},
+    });
+
+    return NextResponse.json({
         success: true,
         message: "Onboarding completed successfully"
     });

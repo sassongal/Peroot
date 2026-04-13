@@ -596,6 +596,14 @@ export function useLibrary() {
       }
 
       await refreshCurrentPage();
+      // Log library save (fire-and-forget — don't block on logging failure)
+      void supabase.from('activity_logs').insert({
+        user_id: user.id,
+        action: 'library_save',
+        entity_type: 'personal_library',
+        entity_id: inserted?.id ?? null,
+        details: { title: prompt.title, category: prompt.personal_category ?? prompt.category },
+      });
       return inserted?.id;
     } else {
       // GUEST path — fuzzy duplicate check against local items

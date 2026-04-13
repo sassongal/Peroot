@@ -109,6 +109,15 @@ export async function GET(request: Request) {
   const createdAt = new Date(data.session.user.created_at).getTime();
   const isNewUser = Date.now() - createdAt < 60_000;
 
+  // Log login event (fire-and-forget)
+  void supabase.from('activity_logs').insert({
+    user_id: data.session.user.id,
+    action: isNewUser ? 'user_registered' : 'user_login',
+    entity_type: 'auth',
+    entity_id: data.session.user.id,
+    details: { provider: data.session.user.app_metadata?.provider ?? 'email' },
+  });
+
   if (isNewUser) {
     try {
       // Fetch registration_bonus from site_settings (single source of truth)
