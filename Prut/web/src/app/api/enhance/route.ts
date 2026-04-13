@@ -17,18 +17,13 @@ import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-se
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
-import { memoryFlags } from "@/lib/memory/injection-flags";
 import { enqueueJob } from "@/lib/jobs/queue";
 import { resolveAuth, ApiAuthError } from "./lib/auth";
 import { buildActivityLogDetails } from "./lib/activity-log";
 import { saveEnhanceResults, maybeEnqueueBackgroundJobs } from "./lib/after-stream";
+import { resolveUserContext } from "./lib/user-context";
 
 export const maxDuration = 30;
-
-// In-memory per-instance cache. Subscription upgrades may take up to 15s to reflect.
-// Acceptable trade-off vs Redis round-trip on every request.
-const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: number }>();
-const PROFILE_CACHE_TTL = 15_000; // 15 seconds
 
 const RequestSchema = z.object({
   prompt: z.string().min(1).max(10000),
@@ -112,66 +107,13 @@ export async function POST(req: Request) {
         ? createServiceClient()
         : supabase;
 
-    // 1. Context Fetching - check cache for profile/tier first
-    let tier: 'free' | 'pro' | 'admin' | 'guest' = 'guest';
-    let isAdmin = false;
-    let cachedHit = false;
-
-    if (userId) {
-        const cached = profileCache.get(userId);
-        if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
-            tier = cached.tier as 'free' | 'pro' | 'admin';
-            isAdmin = cached.isAdmin;
-            cachedHit = true;
-        }
-    }
-
-    // Parallel fetch: skip profile+admin queries if cached
-    // Uses queryClient (service role for Bearer token, regular supabase otherwise)
-    //
-    // History recall source: by default we now fetch from `history` (top-3
-    // most recent enhances) which gives us the *enhanced_prompt* — letting
-    // the model see before→after pairs instead of raw user prompts only.
-    // Set PEROOT_LEGACY_HISTORY_RECALL=1 to revert to the use_count-ordered
-    // fetch from personal_library (raw prompts only).
-    const useHistoryTable = memoryFlags.useHistoryTableForRecall;
-    const historyRecallPromise = !isRefinement && memoryFlags.historyEnabled
-        ? (useHistoryTable
-            ? queryClient.from('history')
-                .select('title, prompt, enhanced_prompt')
-                .eq('user_id', userId)
-                .not('enhanced_prompt', 'is', null)
-                .order('created_at', { ascending: false })
-                .limit(3)
-            : queryClient.from('personal_library')
-                .select('title, prompt')
-                .eq('user_id', userId)
-                .order('use_count', { ascending: false })
-                .order('created_at', { ascending: false })
-                .limit(3))
-        : Promise.resolve({ data: null });
-
-    const contextPromise = userId ? Promise.all([
-        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('profiles').select('plan_tier').eq('id', userId).maybeSingle(),
-        historyRecallPromise,
-        !isRefinement && memoryFlags.personalityEnabled ? queryClient.from('user_style_personality').select('style_tokens, personality_brief, preferred_format').eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null }),
-        cachedHit ? Promise.resolve({ data: null }) : queryClient.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle()
-    ]) : Promise.resolve([ { data: null }, { data: null }, { data: null }, { data: null } ]);
-
-    const [profileRes, historyRes, personalityRes, adminRoleRes] = await contextPromise;
-
-    // 1.1 Process Profile & Tier (from DB if not cached)
-    if (!cachedHit && profileRes.data) {
-        const profile = profileRes.data;
-        tier = (profile.plan_tier as 'free' | 'pro' | 'admin') || 'free';
-        isAdmin = !!adminRoleRes?.data || isAdmin;
-
-        // Store in cache
-        if (userId) {
-            if (profileCache.size > 10000) profileCache.clear();
-            profileCache.set(userId, { tier, isAdmin, ts: Date.now() });
-        }
-    }
+    // 1. Context Fetching — resolve user tier, admin flag, history, and personality.
+    // Profile results are cached in-module (TTL 15s) to avoid a DB round-trip on every request.
+    const { tier, isAdmin, historyRes, personalityRes } = await resolveUserContext({
+        userId,
+        queryClient,
+        isRefinement,
+    });
 
     // 1.5 Capability Mode Gating -- advanced modes require Pro (checked before
     // credit decrement so free users are not charged for gated requests)
