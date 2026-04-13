@@ -22,6 +22,7 @@ import { resolveAuth, ApiAuthError } from "./lib/auth";
 import { buildActivityLogDetails } from "./lib/activity-log";
 import { saveEnhanceResults, maybeEnqueueBackgroundJobs } from "./lib/after-stream";
 import { resolveUserContext } from "./lib/user-context";
+import { buildEngineInput } from "./lib/engine-input";
 
 export const maxDuration = 30;
 
@@ -191,36 +192,12 @@ export async function POST(req: Request) {
     const engine = await getEngine(mode);
 
     // 4.5 Style RAG Processing (using pre-fetched data)
-    let userHistory: { title: string; prompt: string; enhanced?: string }[] = [];
-    let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined = undefined;
-
-    if (userId && !isGuest && !isRefinement) {
-        if (historyRes.data) {
-            // historyRes can come from two sources depending on the flag:
-            //   - history table:        { title, prompt, enhanced_prompt }
-            //   - personal_library:     { title, prompt }
-            // We normalize both into the engine's expected shape so the
-            // engine code stays source-agnostic.
-            const rawRows = historyRes.data as Array<{ title?: string | null; prompt?: string | null; enhanced_prompt?: string | null }>;
-            userHistory = rawRows
-                .filter(r => r.prompt && r.prompt.trim().length > 0)
-                .map(r => ({
-                    title: r.title || '',
-                    prompt: r.prompt as string,
-                    ...(r.enhanced_prompt ? { enhanced: r.enhanced_prompt } : {}),
-                }));
-        }
-
-        if (personalityRes.data) {
-            userPersonality = {
-                tokens: personalityRes.data.style_tokens || [],
-                brief: personalityRes.data.personality_brief,
-                format: personalityRes.data.preferred_format
-            };
-        }
-    }
-
-    const engineInput: EngineInput = {
+    // historyRes can come from two sources depending on the flag:
+    //   - history table:        { title, prompt, enhanced_prompt }
+    //   - personal_library:     { title, prompt }
+    // buildEngineInput normalizes both into the engine's expected shape so the
+    // engine code stays source-agnostic.
+    const engineInput: EngineInput = buildEngineInput({
         prompt,
         tone,
         category,
@@ -229,14 +206,19 @@ export async function POST(req: Request) {
         previousResult,
         refinementInstruction,
         answers,
-        userHistory,
-        userPersonality,
+        userId,
+        isGuest,
+        isRefinement,
+        historyRes,
+        personalityRes,
         iteration,
         // Cast to satisfy EngineInput — name/content may be absent on new ContextBlock shape;
         // BaseEngine.buildContextSummaryForUserPrompt handles both shapes defensively.
         context: contextAttachments as EngineInput['context'],
-        targetModel: target_model || 'general',
-    };
+        targetModel: target_model,
+    });
+    const userHistory = engineInput.userHistory ?? [];
+    const userPersonality = engineInput.userPersonality;
 
     const engineOutput = isRefinement
         ? engine.generateRefinement(engineInput)
