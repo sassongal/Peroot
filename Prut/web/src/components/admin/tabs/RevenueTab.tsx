@@ -18,6 +18,7 @@ import {
   Activity,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { InfoTooltip } from "@/components/admin/InfoTooltip";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,12 +68,26 @@ interface Subscriber {
   is_manual?: boolean;
 }
 
+interface UnitEconomics {
+  grossMarginByTier: {
+    pro: { revenue: number; cost: number; margin: number; marginPct: number };
+    free: { revenue: number; cost: number; margin: number };
+  };
+  costPerUserByTier: { pro: number; free: number };
+  ltv: { arpu: number; churnRate: number; ltv: number };
+  cohortMrr: Array<{
+    cohort: string;
+    months: Array<{ month: number; activeCount: number; mrr: number }>;
+  }>;
+}
+
 interface RevenueData {
   kpi: KPI & { proUsersWithoutSub?: number };
   monthly: MonthlyPoint[];
   planBreakdown: PlanBreakdown;
   subscribers: Subscriber[];
   recentEvents: RecentEvent[];
+  unitEconomics?: UnitEconomics;
   timestamp: string;
 }
 
@@ -145,6 +160,7 @@ function KpiCard({
   color,
   loading,
   trend,
+  tooltip,
 }: {
   label: string;
   sublabel: string;
@@ -153,6 +169,7 @@ function KpiCard({
   color: ColorKey;
   loading: boolean;
   trend?: "up" | "down" | "neutral";
+  tooltip?: string;
 }) {
   const c = colorMap[color];
 
@@ -177,11 +194,14 @@ function KpiCard({
         <div className={cn("p-4 rounded-2xl border transition-all duration-700 shadow-2xl", c.icon)}>
           <Icon className="w-6 h-6" />
         </div>
-        {trend && (
-          <div className={cn("p-2 rounded-xl", trendColor)}>
-            <TrendIcon className="w-4 h-4" />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {tooltip && <InfoTooltip text={tooltip} position="top" />}
+          {trend && (
+            <div className={cn("p-2 rounded-xl", trendColor)}>
+              <TrendIcon className="w-4 h-4" />
+            </div>
+          )}
+        </div>
       </div>
       <div className="space-y-1">
         {loading ? (
@@ -204,12 +224,14 @@ function SecondaryCard({
   value,
   icon: Icon,
   loading,
+  tooltip,
 }: {
   label: string;
   sublabel: string;
   value: string;
   icon: React.ElementType;
   loading: boolean;
+  tooltip?: string;
 }) {
   return (
     <div className="p-6 rounded-[32px] bg-zinc-950/60 border border-white/5 flex items-center gap-5 hover:border-white/10 transition-all duration-300">
@@ -220,7 +242,10 @@ function SecondaryCard({
         {loading ? (
           <div className="h-6 w-20 rounded-lg bg-white/5 animate-pulse" />
         ) : (
-          <div className="text-2xl font-black text-white tracking-tight tabular-nums truncate">{value}</div>
+          <div className="flex items-center gap-1.5">
+            <div className="text-2xl font-black text-white tracking-tight tabular-nums truncate">{value}</div>
+            {tooltip && <InfoTooltip text={tooltip} position="top" />}
+          </div>
         )}
         <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest truncate">{label}</div>
         <div className="text-[8px] text-zinc-800 font-bold truncate">{sublabel}</div>
@@ -393,6 +418,7 @@ export default function RevenueTab() {
               color="emerald"
               loading={loading}
               trend="up"
+              tooltip="Monthly Recurring Revenue — ההכנסה החוזרת החודשית מכלל המנויים הפעילים. מחושב כ: (מנויים פעילים) × מחיר Pro. כולל משתמשי Pro ללא רשומת subscription."
             />
             <KpiCard
               label="Active Subscribers"
@@ -401,6 +427,7 @@ export default function RevenueTab() {
               icon={Users}
               color="blue"
               loading={loading}
+              tooltip="מספר המנויים הפעילים. כולל גם משתמשים עם plan_tier=pro בפרופיל שאין להם רשומה בטבלת subscriptions (שדרוג ידני)."
             />
             <KpiCard
               label="Churn Rate"
@@ -410,6 +437,7 @@ export default function RevenueTab() {
               color="rose"
               loading={loading}
               trend={data && data.kpi.churnRate > 5 ? "down" : "neutral"}
+              tooltip="אחוז הנטישה — Churned / (Active + Churned). מתחת ל-5% נחשב טוב לפלטפורמות SaaS. מעל 10% — מסוכן."
             />
             <KpiCard
               label="New This Month"
@@ -419,6 +447,7 @@ export default function RevenueTab() {
               color="purple"
               loading={loading}
               trend="up"
+              tooltip="מנויים חדשים שנוצרו מתחילת החודש הנוכחי. לא כולל שדרוגים ידניים — רק רשומות subscription חדשות."
             />
           </div>
 
@@ -430,6 +459,7 @@ export default function RevenueTab() {
               value={data ? fmtPct(data.kpi.conversionRate) : "-"}
               icon={CreditCard}
               loading={loading}
+              tooltip="Conversion Rate — Pro Users / כלל המשתמשים הרשומים. מדד ליעילות ה-Funnel. 2-5% נחשב ממוצע לפלטפורמות freemium."
             />
             <SecondaryCard
               label="ARPU"
@@ -437,6 +467,7 @@ export default function RevenueTab() {
               value={data ? fmtILS(data.kpi.arpu) : "-"}
               icon={BarChart3}
               loading={loading}
+              tooltip="ARPU — Average Revenue Per User. מחושב: MRR / סה״כ משתמשים (כולל חינמיים). מראה כמה שווה כל משתמש בממוצע."
             />
             <SecondaryCard
               label="Total Users"
@@ -444,6 +475,7 @@ export default function RevenueTab() {
               value={data ? fmtCount(data.kpi.totalUsers) : "-"}
               icon={Users}
               loading={loading}
+              tooltip="סה״כ משתמשים רשומים בטבלת profiles. כולל חינמיים, Pro, ומשתמשים לא פעילים."
             />
           </div>
 
@@ -710,6 +742,172 @@ export default function RevenueTab() {
               )}
             </div>
           </div>
+
+          {/* ── Unit Economics ─────────────────────────────────────────── */}
+          {data?.unitEconomics && (
+            <div className="space-y-8 px-2">
+              <SectionTitle
+                icon={TrendingUp}
+                color="amber"
+                title="Unit Economics"
+                sub="LTV · Gross Margin · Cost per User"
+              />
+
+              {/* KPI row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <SecondaryCard
+                  label="Gross Margin"
+                  sublabel="Pro tier (MTD)"
+                  value={fmtPct(data.unitEconomics.grossMarginByTier.pro.marginPct)}
+                  icon={TrendingUp}
+                  loading={loading}
+                  tooltip="גרוס מרג'ין לטייר Pro: (הכנסה - עלות AI) / הכנסה. מראה כמה מכל שקל שמשלם לקוח Pro נשאר אחרי עלויות AI. מעל 70% = בריא."
+                />
+                <SecondaryCard
+                  label="LTV (Estimated)"
+                  sublabel="Lifetime Value — Pro"
+                  value={fmtILS(data.unitEconomics.ltv.ltv)}
+                  icon={DollarSign}
+                  loading={loading}
+                  tooltip="Lifetime Value — כמה ₪ מביא לקוח Pro לאורך כל חייו. מחושב: ARPU / שיעור נטישה חודשי. אם אין נטישה — מוגבל ל-24 חודשים."
+                />
+                <SecondaryCard
+                  label="Cost / Pro User"
+                  sublabel="AI cost per pro user (MTD)"
+                  value={fmtILS(data.unitEconomics.costPerUserByTier.pro)}
+                  icon={BarChart3}
+                  loading={loading}
+                  tooltip="עלות AI ממוצעת לכל משתמש Pro החודש. מחושב מ-api_usage_logs. כדי שהמוצר יהיה רווחי, עלות זו צריכה להיות נמוכה ממחיר המנוי."
+                />
+              </div>
+
+              {/* Revenue vs Cost bar chart */}
+              <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-black text-white tracking-tight">Revenue vs AI Cost (Pro, MTD)</h3>
+                  <span className={cn(
+                    "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border",
+                    data.unitEconomics.grossMarginByTier.pro.marginPct >= 70
+                      ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                      : data.unitEconomics.grossMarginByTier.pro.marginPct >= 40
+                        ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                        : "text-rose-400 bg-rose-500/10 border-rose-500/20"
+                  )}>
+                    {fmtPct(data.unitEconomics.grossMarginByTier.pro.marginPct)} margin
+                  </span>
+                </div>
+
+                <div className="space-y-5">
+                  {/* Revenue */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                      <span className="text-zinc-500">Revenue</span>
+                      <span className="text-emerald-400">{fmtILS(data.unitEconomics.grossMarginByTier.pro.revenue)}</span>
+                    </div>
+                    <div className="h-3.5 rounded-full bg-zinc-900 overflow-hidden">
+                      <div className="h-full bg-emerald-600 rounded-full" style={{ width: '100%' }} />
+                    </div>
+                  </div>
+                  {/* AI Cost */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                      <span className="text-zinc-500">AI Cost</span>
+                      <span className="text-rose-400">{fmtILS(data.unitEconomics.grossMarginByTier.pro.cost)}</span>
+                    </div>
+                    <div className="h-3.5 rounded-full bg-zinc-900 overflow-hidden">
+                      <div
+                        className="h-full bg-rose-600 rounded-full transition-all duration-700"
+                        style={{
+                          width: data.unitEconomics.grossMarginByTier.pro.revenue > 0
+                            ? `${Math.min((data.unitEconomics.grossMarginByTier.pro.cost / data.unitEconomics.grossMarginByTier.pro.revenue) * 100, 100)}%`
+                            : '0%',
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* Gross Margin */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                      <span className="text-zinc-500">Gross Margin</span>
+                      <span className="text-amber-400">{fmtILS(data.unitEconomics.grossMarginByTier.pro.margin)}</span>
+                    </div>
+                    <div className="h-3.5 rounded-full bg-zinc-900 overflow-hidden">
+                      <div
+                        className="h-full bg-amber-600 rounded-full transition-all duration-700"
+                        style={{
+                          width: `${Math.max(Math.min(data.unitEconomics.grossMarginByTier.pro.marginPct, 100), 0)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* LTV breakdown */}
+                <div className="flex items-center gap-8 pt-4 border-t border-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                  <div>ARPU: <span className="text-white">{fmtILS(data.unitEconomics.ltv.arpu)}/mo</span></div>
+                  <div>Churn Rate: <span className="text-white">{fmtPct(data.unitEconomics.ltv.churnRate)}</span></div>
+                  <div>LTV: <span className="text-white">{fmtILS(data.unitEconomics.ltv.ltv)}</span></div>
+                </div>
+              </div>
+
+              {/* Cohort MRR Table */}
+              <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6 overflow-x-auto">
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight">Cohort MRR Retention</h3>
+                  <p className="text-[10px] text-zinc-600 font-bold mt-1">משתמשי Pro לפי חודש הצטרפות · כל עמודה = חודש מאז הגעה</p>
+                </div>
+
+                <table className="w-full min-w-[480px]">
+                  <thead>
+                    <tr>
+                      <th className="text-right pb-3 pr-6 text-[9px] font-black uppercase tracking-widest text-zinc-600">Cohort</th>
+                      {Array.from({ length: 6 }, (_, i) => (
+                        <th key={i} className="text-center pb-3 px-2 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                          M+{i}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {data.unitEconomics.cohortMrr.map((row) => {
+                      const month0 = row.months.find(m => m.month === 0);
+                      const baseline = month0?.activeCount ?? 1;
+                      return (
+                        <tr key={row.cohort} className="hover:bg-white/2 transition-all">
+                          <td className="py-3 pr-6 text-[10px] font-black text-zinc-400">{row.cohort}</td>
+                          {Array.from({ length: 6 }, (_, i) => {
+                            const m = row.months.find(x => x.month === i);
+                            if (!m) {
+                              return (
+                                <td key={i} className="py-3 px-2 text-center text-[9px] text-zinc-800 font-bold">
+                                  —
+                                </td>
+                              );
+                            }
+                            const retentionPct = baseline > 0 ? m.activeCount / baseline : 0;
+                            const bgOpacity = Math.max(retentionPct * 0.7, m.activeCount > 0 ? 0.08 : 0);
+                            return (
+                              <td key={i} className="py-3 px-2 text-center" title={`${m.activeCount} users · ${fmtILS(m.mrr)}`}>
+                                <div
+                                  className="inline-flex flex-col items-center justify-center w-16 h-10 rounded-xl text-white font-black text-[10px] transition-all duration-300"
+                                  style={{ background: `rgba(37, 99, 235, ${bgOpacity})` }}
+                                >
+                                  <span>{m.activeCount}</span>
+                                  {m.mrr > 0 && (
+                                    <span className="text-[8px] text-blue-300/60">{fmtILS(m.mrr)}</span>
+                                  )}
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

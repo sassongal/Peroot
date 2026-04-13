@@ -25,6 +25,7 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
       allSubsResult,
       totalUsersResult,
       planBreakdownResult,
+      apiCostsMTDResult,
       recentEventsResult,
     ] = await Promise.all([
       // Active subscriptions
@@ -57,10 +58,17 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
         .from('profiles')
         .select('*', { count: 'exact', head: true }),
 
-      // Plan tier breakdown from profiles (include id, email for pro user matching)
+      // Plan tier breakdown from profiles (include id, email for pro user matching + cohort/churn)
       supabase
         .from('profiles')
-        .select('id, plan_tier, email, full_name, created_at'),
+        .select('id, plan_tier, email, full_name, created_at, churned_at'),
+
+      // API costs MTD grouped by user (for gross margin calculation)
+      supabase
+        .from('api_usage_logs')
+        .select('user_id, estimated_cost_usd')
+        .gte('created_at', startOfMonth)
+        .limit(50000),
 
       // Recent subscription events from activity_logs
       supabase
@@ -172,6 +180,92 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
     const effectiveActiveSubs = Math.max(activeSubs, proProfiles.length);
     const effectiveMrr = effectiveActiveSubs * PRO_PRICE_ILS;
 
+    // ── Unit Economics ─────────────────────────────────────────────────────
+    // Build per-user cost map from api_usage_logs this month
+    const userCostMap = new Map<string, number>();
+    for (const r of apiCostsMTDResult.data ?? []) {
+      if (r.user_id) {
+        userCostMap.set(r.user_id, (userCostMap.get(r.user_id) ?? 0) + (r.estimated_cost_usd ?? 0));
+      }
+    }
+
+    // Aggregate costs by tier
+    const tierCosts: Record<string, number> = { free: 0, pro: 0, premium: 0 };
+    for (const p of profiles) {
+      const tier = ((p.plan_tier as string) ?? 'free').toLowerCase();
+      const cost = userCostMap.get(p.id as string) ?? 0;
+      if (tier in tierCosts) tierCosts[tier] += cost;
+      else tierCosts['free'] += cost;
+    }
+
+    // Gross margin (Pro tier, MTD)
+    const proRevenueMTD = planCounts['pro'] * PRO_PRICE_ILS;
+    const proMargin = proRevenueMTD - tierCosts['pro'];
+    const proMarginPct = proRevenueMTD > 0 ? (proMargin / proRevenueMTD) * 100 : 0;
+
+    const costPerProUser = planCounts['pro'] > 0 ? tierCosts['pro'] / planCounts['pro'] : 0;
+    const costPerFreeUser = planCounts['free'] > 0 ? tierCosts['free'] / planCounts['free'] : 0;
+
+    // LTV: ARPU / monthly_churn_rate (capped at 24 months)
+    const churnedProfileCount = profiles.filter(p => p.churned_at).length;
+    const everProCount = profiles.filter(p => ((p.plan_tier as string) ?? 'free') !== 'free' || p.churned_at).length;
+    const monthlyChurnRate = everProCount > 0 ? churnedProfileCount / everProCount : 0;
+    const ltv = monthlyChurnRate > 0 ? PRO_PRICE_ILS / monthlyChurnRate : PRO_PRICE_ILS * 24;
+
+    // Cohort MRR: last 6 months of signups × months active
+    const cohortMrr: { cohort: string; months: { month: number; activeCount: number; mrr: number }[] }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const cohortStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const cohortEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      const cohortKey = `${cohortStart.getFullYear()}-${String(cohortStart.getMonth() + 1).padStart(2, '0')}`;
+
+      const cohortProfiles = profiles.filter(p => {
+        const ca = new Date(p.created_at as string);
+        return ca >= cohortStart && ca <= cohortEnd;
+      });
+
+      const monthsData: { month: number; activeCount: number; mrr: number }[] = [];
+      for (let m = 0; m <= 5 - i; m++) {
+        const checkDate = new Date(cohortStart.getFullYear(), cohortStart.getMonth() + m + 1, 1);
+        if (checkDate > now) break;
+
+        const activeCount = cohortProfiles.filter(p => {
+          const isPro = ((p.plan_tier as string) ?? 'free') !== 'free';
+          const stillActive = !p.churned_at || new Date(p.churned_at as string) > checkDate;
+          return isPro && stillActive;
+        }).length;
+
+        monthsData.push({ month: m, activeCount, mrr: parseFloat((activeCount * PRO_PRICE_ILS).toFixed(2)) });
+      }
+      cohortMrr.push({ cohort: cohortKey, months: monthsData });
+    }
+
+    const unitEconomics = {
+      grossMarginByTier: {
+        pro: {
+          revenue: parseFloat(proRevenueMTD.toFixed(2)),
+          cost: parseFloat(tierCosts['pro'].toFixed(4)),
+          margin: parseFloat(proMargin.toFixed(2)),
+          marginPct: parseFloat(proMarginPct.toFixed(1)),
+        },
+        free: {
+          revenue: 0,
+          cost: parseFloat(tierCosts['free'].toFixed(4)),
+          margin: parseFloat((-tierCosts['free']).toFixed(2)),
+        },
+      },
+      costPerUserByTier: {
+        pro: parseFloat(costPerProUser.toFixed(4)),
+        free: parseFloat(costPerFreeUser.toFixed(4)),
+      },
+      ltv: {
+        arpu: PRO_PRICE_ILS,
+        churnRate: parseFloat((monthlyChurnRate * 100).toFixed(2)),
+        ltv: parseFloat(ltv.toFixed(2)),
+      },
+      cohortMrr,
+    };
+
     return NextResponse.json({
       kpi: {
         mrr: effectiveMrr,
@@ -188,6 +282,7 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
       planBreakdown: planCounts,
       subscribers,
       recentEvents,
+      unitEconomics,
       timestamp: now.toISOString(),
     });
 });

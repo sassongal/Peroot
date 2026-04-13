@@ -20,6 +20,7 @@ import {
   Percent,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { InfoTooltip } from "@/components/admin/InfoTooltip";
 import { getApiPath } from "@/lib/api-path";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
@@ -195,6 +196,7 @@ function KpiCard({
   color,
   href,
   flashing,
+  tooltip,
 }: {
   label: string;
   value: string;
@@ -204,6 +206,7 @@ function KpiCard({
   color: AccentColor;
   href: string;
   flashing?: boolean;
+  tooltip?: string;
 }) {
   const a = ACCENT[color];
   return (
@@ -224,12 +227,17 @@ function KpiCard({
         )}>
           <Icon className="w-5 h-5" />
         </div>
-        <span className={cn(
-          "text-[9px] font-black uppercase tracking-[0.25em] px-2.5 py-1 rounded-lg",
-          a.badge
-        )}>
-          {trend}
-        </span>
+        <div className="flex items-center gap-2">
+          {tooltip && (
+            <InfoTooltip text={tooltip} position="top" />
+          )}
+          <span className={cn(
+            "text-[9px] font-black uppercase tracking-[0.25em] px-2.5 py-1 rounded-lg",
+            a.badge
+          )}>
+            {trend}
+          </span>
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -599,6 +607,7 @@ export default function AdminDashboardPage() {
             color="blue"
             href="/admin/users"
             flashing={kpiFlash}
+            tooltip="סה״כ משתמשים רשומים בפלטפורמה. מפוצל לפי פלן: Pro (משלם) ו-Free (חינמי). אחוז ה-Conversion מראה כמה אחוז מהכלל שדרגו ל-Pro."
           />
           <KpiCard
             label="Monthly Revenue"
@@ -609,6 +618,7 @@ export default function AdminDashboardPage() {
             color="emerald"
             href="/admin/users"
             flashing={kpiFlash}
+            tooltip="MRR — Monthly Recurring Revenue. סה״כ ההכנסה החוזרת החודשית ממנויים פעילים. מחושב כ: מספר מנויי Pro פעילים × מחיר המנוי."
           />
           <KpiCard
             label="API Costs MTD"
@@ -619,6 +629,7 @@ export default function AdminDashboardPage() {
             color="amber"
             href="/admin/activity"
             flashing={kpiFlash}
+            tooltip="עלות שימוש ב-API של AI מתחילת החודש. LLM = עלות ישירה מ-api_usage_logs. Manual = הוצאות ידניות שהוזנו. Errors = קריאות שעלותן $0 (נחשב כשגיאה)."
           />
           <KpiCard
             label="Generations MTD"
@@ -629,15 +640,20 @@ export default function AdminDashboardPage() {
             color="purple"
             href="/admin/prompts"
             flashing={kpiFlash}
+            tooltip="מספר פרומפטים/גנרציות שיועדרו החודש. avg/user = ממוצע לכל משתמש פעיל (MAU). Total = סה״כ כל הזמן."
           />
         </div>
 
         {/* ── Engagement Row ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <EngagementCard label="DAU" value={data.dau} icon={Target} />
-          <EngagementCard label="WAU" value={data.wau} icon={BarChart3} />
-          <EngagementCard label="MAU" value={data.mau} icon={Activity} />
-          <EngagementCard label="Conversion" value={`${data.conversionRate}%`} icon={Percent} />
+          <EngagementCard label="DAU" value={data.dau} icon={Target}
+            tooltip="Daily Active Users — משתמשים ייחודיים שביצעו לפחות גנרציה אחת היום. מחושב מטבלת history." />
+          <EngagementCard label="WAU" value={data.wau} icon={BarChart3}
+            tooltip="Weekly Active Users — משתמשים ייחודיים שפעלו ב-7 הימים האחרונים. אינדיקטור לשימור שבועי." />
+          <EngagementCard label="MAU" value={data.mau} icon={Activity}
+            tooltip="Monthly Active Users — משתמשים ייחודיים שפעלו ב-30 הימים האחרונים. הבסיס לחישוב ARPU ו-avg prompts/user." />
+          <EngagementCard label="Conversion" value={`${data.conversionRate}%`} icon={Percent}
+            tooltip="אחוז ה-Conversion — Pro Users / Total Users. מראה כמה אחוז מהמשתמשים הרשומים שדרגו לפלן Pro." />
         </div>
 
         {/* ── Charts Row ── */}
@@ -864,19 +880,24 @@ function EngagementCard({
   label,
   value,
   icon: Icon,
+  tooltip,
 }: {
   label: string;
   value: number | string;
   icon: React.ElementType;
+  tooltip?: string;
 }) {
   return (
     <div className="p-5 rounded-2xl bg-zinc-950 border border-white/5 flex items-center gap-4 hover:border-white/10 transition-all">
       <div className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-zinc-500">
         <Icon className="w-4 h-4" />
       </div>
-      <div>
-        <div className="text-xl font-black text-white tabular-nums tracking-tighter">
-          {value}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <div className="text-xl font-black text-white tabular-nums tracking-tighter">
+            {value}
+          </div>
+          {tooltip && <InfoTooltip text={tooltip} position="top" />}
         </div>
         <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
           {label}
