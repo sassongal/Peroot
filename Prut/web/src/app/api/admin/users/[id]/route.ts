@@ -75,21 +75,23 @@ export const GET = withAdmin(async (
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id),
       supabase.from('api_usage_logs').select('estimated_cost_usd').eq('user_id', id).limit(10000),
+      // 1 row only — just enough for lastActive timestamp
       supabase
         .from('activity_logs')
         .select('id, user_id, action, created_at, details')
         .eq('user_id', id)
         .order('created_at', { ascending: false })
-        .limit(30),
+        .limit(1),
       supabase
         .from('history')
         .select('id, prompt, enhanced_prompt, tone, category, capability_mode, title, source, created_at')
         .eq('user_id', id)
         .order('created_at', { ascending: false })
         .limit(10),
+      // Fetch enough rows for accurate analytics (source + tone + category + mode)
       supabase
         .from('history')
-        .select('source')
+        .select('source, tone, category, capability_mode')
         .eq('user_id', id)
         .limit(5000),
       supabase
@@ -109,22 +111,17 @@ export const GET = withAdmin(async (
       0
     );
 
-    // Compute source breakdown (web vs extension)
-    const sources = (sourceBreakdown ?? []).reduce<Record<string, number>>((acc, row) => {
-      const src = (row.source as string) || 'web';
-      acc[src] = (acc[src] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Compute favorite categories/tones from activity
+    // Compute source/category/tone/mode breakdowns from history (up to 5000 rows — accurate)
+    const sources: Record<string, number> = {};
     const categoryMap: Record<string, number> = {};
     const toneMap: Record<string, number> = {};
     const modeMap: Record<string, number> = {};
-    for (const log of recentActivity ?? []) {
-      const details = log.details as Record<string, unknown> | null;
-      if (details?.category) categoryMap[details.category as string] = (categoryMap[details.category as string] || 0) + 1;
-      if (details?.tone) toneMap[details.tone as string] = (toneMap[details.tone as string] || 0) + 1;
-      if (details?.mode) modeMap[details.mode as string] = (modeMap[details.mode as string] || 0) + 1;
+    for (const row of sourceBreakdown ?? []) {
+      const src = (row.source as string) || 'web';
+      sources[src] = (sources[src] || 0) + 1;
+      if (row.category) categoryMap[row.category as string] = (categoryMap[row.category as string] || 0) + 1;
+      if (row.tone)     toneMap[row.tone as string]         = (toneMap[row.tone as string] || 0) + 1;
+      if (row.capability_mode) modeMap[row.capability_mode as string] = (modeMap[row.capability_mode as string] || 0) + 1;
     }
 
     // Find last activity timestamp

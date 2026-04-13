@@ -183,8 +183,11 @@ export default function UserDetailPage() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set());
 
-  // Activity load-more
-  const [activityVisible, setActivityVisible] = useState(10);
+  // Activity tab state (real server pagination)
+  const [activity, setActivity] = useState<ActivityLog[]>([]);
+  const [activityOffset, setActivityOffset] = useState(0);
+  const [activityTotal, setActivityTotal] = useState(0);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   // Admin action state
   const [tierValue, setTierValue] = useState("free");
@@ -263,6 +266,27 @@ export default function UserDetailPage() {
     }
   }, [userId, historyOffset]);
 
+  // Fetch/load-more activity from dedicated paginated endpoint
+  const fetchActivity = useCallback(async (reset = false) => {
+    setLoadingActivity(true);
+    const offset = reset ? 0 : activityOffset;
+    try {
+      const res = await fetch(
+        getApiPath(`/api/admin/users/${userId}/activity?limit=50&offset=${offset}`)
+      );
+      if (!res.ok) throw new Error("Failed to fetch activity");
+      const json: { logs: ActivityLog[]; total: number } = await res.json();
+      setActivity((prev) => (reset ? json.logs : [...prev, ...json.logs]));
+      setActivityOffset(offset + (json.logs?.length ?? 0));
+      setActivityTotal(json.total ?? 0);
+    } catch (err) {
+      logger.error(err);
+      toast.error("Failed to load activity");
+    } finally {
+      setLoadingActivity(false);
+    }
+  }, [userId, activityOffset]);
+
   useEffect(() => {
     fetchDetail();
   }, [fetchDetail]);
@@ -271,7 +295,10 @@ export default function UserDetailPage() {
     if (activeTab === "prompts") {
       fetchPrompts();
     }
-  }, [activeTab, fetchPrompts]);
+    if (activeTab === "activity" && activity.length === 0) {
+      fetchActivity(true);
+    }
+  }, [activeTab, fetchPrompts, fetchActivity, activity.length]);
 
   // Admin action
   async function doAction(action: string, value?: string | number) {
@@ -739,14 +766,30 @@ export default function UserDetailPage() {
             {/* ── Activity Tab ── */}
             {activeTab === "activity" && (
               <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                    {activityTotal > 0 ? `${activityTotal} total actions` : "Activity"}
+                  </span>
+                  <button
+                    onClick={() => { setActivity([]); setActivityOffset(0); fetchActivity(true); }}
+                    className="text-[9px] font-black uppercase tracking-widest text-zinc-700 hover:text-zinc-400 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
+
                 <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 overflow-hidden">
-                  {recentActivity.length === 0 ? (
+                  {loadingActivity && activity.length === 0 ? (
+                    <div className="flex items-center justify-center py-20">
+                      <RefreshCw className="w-8 h-8 animate-spin text-blue-500/20" />
+                    </div>
+                  ) : activity.length === 0 ? (
                     <p className="text-center text-zinc-800 font-black uppercase tracking-widest text-[9px] py-20">
                       No activity recorded
                     </p>
                   ) : (
                     <div className="divide-y divide-white/5">
-                      {recentActivity.slice(0, activityVisible).map((log) => (
+                      {activity.map((log) => (
                         <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-white/2 transition-all">
                           <div className="mt-0.5 p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
                             <Activity className="w-3.5 h-3.5 text-zinc-600" />
@@ -770,13 +813,17 @@ export default function UserDetailPage() {
                   )}
                 </div>
 
-                {activityVisible < recentActivity.length && (
+                {activity.length < activityTotal && (
                   <button
-                    onClick={() => setActivityVisible((v) => v + 10)}
-                    className="w-full py-4 rounded-2xl bg-white/3 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                    onClick={() => fetchActivity(false)}
+                    disabled={loadingActivity}
+                    className="w-full py-4 rounded-2xl bg-white/3 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                   >
-                    <ChevronDown className="w-4 h-4" />
-                    Load More
+                    {loadingActivity
+                      ? <RefreshCw className="w-4 h-4 animate-spin" />
+                      : <ChevronDown className="w-4 h-4" />
+                    }
+                    {loadingActivity ? "Loading…" : `Load More (${activityTotal - activity.length} remaining)`}
                   </button>
                 )}
               </div>
