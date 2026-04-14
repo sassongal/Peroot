@@ -562,8 +562,11 @@ export async function POST(req: Request) {
     const streamResponse = result.toTextStreamResponse();
     const responseHeaders = new Headers(streamResponse.headers);
     responseHeaders.set('X-Model-Used', modelId);
-    // Flag fallbacks so the client can surface a quality warning
-    if (modelId !== 'gemini-2.5-flash') {
+    // Flag actual provider degradation (non-Google fallback) so the client
+    // can surface a quality warning. gemini-2.5-flash-lite is intentional
+    // routing for small-context prompts — not a degradation.
+    const GOOGLE_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-flash-lite']);
+    if (!GOOGLE_MODELS.has(modelId)) {
       responseHeaders.set('X-Model-Fallback', '1');
     }
     return new Response(streamResponse.body, {
