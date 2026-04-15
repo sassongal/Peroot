@@ -63,17 +63,39 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const checkAdminStatus = useCallback(async () => {
     try {
-      const response = await fetch(getApiPath('/api/admin/is-admin'));
+      const response = await fetch(getApiPath('/api/admin/is-admin'), {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+
+      if (response.status === 401) {
+        // Not logged in — send to login, not home
+        router.push('/login');
+        return;
+      }
+
+      if (response.status === 403) {
+        // Logged in but not admin
+        setIsAdmin(false);
+        return;
+      }
+
+      if (!response.ok) {
+        // Server error — don't redirect, retry once
+        logger.error('Admin status check failed:', response.status);
+        setIsAdmin(false);
+        return;
+      }
+
       const data = await response.json();
-      
-      if (!data.isAdmin) {
-        router.push('/');
-      } else {
+      if (data.isAdmin) {
         setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
       }
     } catch (error) {
       logger.error('Failed to verify admin status:', error);
-      router.push('/');
+      setIsAdmin(false);
     }
   }, [router]);
 
@@ -98,10 +120,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <AlertCircle className="w-12 h-12 text-red-500" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">Access Denied</h1>
-          <p className="text-slate-500 font-medium">{t.auth.unexpected_error || "המזהה שלך אינו מורשה לגשת לאזור הניהול של Peroot."}</p>
-          <Link href="/" className="inline-block px-8 py-3 bg-white text-black rounded-xl font-bold transition-all hover:bg-slate-200">
-             {t.common.back || "חזרה לדף הבית"}
-          </Link>
+          <p className="text-slate-500 font-medium">המזהה שלך אינו מורשה לגשת לאזור הניהול של Peroot.</p>
+          <div className="flex flex-col gap-3">
+            <Link href="/login" className="inline-block px-8 py-3 bg-white text-black rounded-xl font-bold transition-all hover:bg-slate-200">
+              התחבר עם חשבון אחר
+            </Link>
+            <Link href="/" className="inline-block px-8 py-3 bg-zinc-800 text-white rounded-xl font-bold transition-all hover:bg-zinc-700">
+              {t.common.back || "חזרה לדף הבית"}
+            </Link>
+          </div>
         </div>
       </div>
     );
