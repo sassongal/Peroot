@@ -12,6 +12,7 @@ import {
   CreditCard,
   Gift,
   AlertTriangle,
+  LayoutDashboard,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -36,6 +37,7 @@ export default function SettingsPage() {
   const initialSection = searchParams.get("tab") || "profile";
   const billingSuccess = searchParams.get("success") === "true";
   const [activeSection, setActiveSection] = useState<string>(initialSection);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,6 +76,14 @@ export default function SettingsPage() {
       } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
+        const { data: roleRow } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        setIsAdmin(!!roleRow);
+
         const [{ data: profile }, { data: settings }] = await Promise.all([
           supabase.from("profiles").select("display_name, credits_balance, credits_refreshed_at").eq("id", user.id).single(),
           supabase.from("site_settings").select("daily_free_limit").single(),
@@ -388,6 +398,16 @@ export default function SettingsPage() {
               );
             })}
           </nav>
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 mt-2"
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="font-medium">פאנל ניהול</span>
+            </Link>
+          )}
 
           <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
             {activeSection === "profile" && (
