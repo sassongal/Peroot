@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { createElement } from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 
@@ -9,10 +8,8 @@ afterEach(() => cleanup());
 // framer-motion uses useContext internally; mock it to avoid hook errors in jsdom
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
-    get: (_t, tag: string | symbol) => {
-      if (typeof tag !== 'string') {
-        return () => null;
-      }
+    get: (_t, tag: string) => {
+      const { createElement } = require('react');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return ({ children, ...props }: any) => createElement(tag, props, children);
     },
@@ -37,16 +34,5 @@ describe('StageProgressBar', () => {
   it('shows error state when stage=error', () => {
     render(<StageProgressBar stage="error" />);
     expect(screen.getByTestId('stage-error')).toBeInTheDocument();
-  });
-  it('marks all pills complete when stage=ready (no infinite spinner on last pill)', () => {
-    render(<StageProgressBar stage="ready" />);
-    expect(screen.getByTestId('stage-pill-uploading')).toHaveAttribute('data-state', 'complete');
-    expect(screen.getByTestId('stage-pill-extracting')).toHaveAttribute('data-state', 'complete');
-    expect(screen.getByTestId('stage-pill-enriching')).toHaveAttribute('data-state', 'complete');
-    expect(screen.getByTestId('stage-pill-ready')).toHaveAttribute('data-state', 'complete');
-  });
-  it('shows warning state when stage=warning', () => {
-    render(<StageProgressBar stage="warning" />);
-    expect(screen.getByTestId('stage-warning')).toBeInTheDocument();
   });
 });

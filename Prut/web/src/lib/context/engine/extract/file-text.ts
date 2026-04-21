@@ -1,4 +1,4 @@
-interface TextExtractionResult {
+export interface TextExtractionResult {
   text: string;
   metadata: {
     format: 'txt';

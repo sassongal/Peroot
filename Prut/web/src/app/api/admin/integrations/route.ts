@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
+import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
 
 export const maxDuration = 30;
 
@@ -18,9 +19,7 @@ export const GET = withAdmin(async (_req, supabase) => {
     const propertyId = process.env.GA4_PROPERTY_ID;
 
     if (credentialsJson && propertyId) {
-      const { BetaAnalyticsDataClient } = await import(
-        "@google-analytics/data"
-      );
+      const { BetaAnalyticsDataClient } = await import("@google-analytics/data");
       const credentials = JSON.parse(credentialsJson);
       const client = new BetaAnalyticsDataClient({ credentials });
 
@@ -41,8 +40,7 @@ export const GET = withAdmin(async (_req, supabase) => {
 
       const rows = response.rows || [];
       const current = rows[0]?.metricValues?.map((v) => Number(v.value)) || [];
-      const previous =
-        rows[1]?.metricValues?.map((v) => Number(v.value)) || [];
+      const previous = rows[1]?.metricValues?.map((v) => Number(v.value)) || [];
 
       results.ga4 = {
         status: "active",
@@ -56,12 +54,8 @@ export const GET = withAdmin(async (_req, supabase) => {
           activeUsers: previous[0]
             ? Math.round(((current[0] - previous[0]) / previous[0]) * 100)
             : 0,
-          sessions: previous[1]
-            ? Math.round(((current[1] - previous[1]) / previous[1]) * 100)
-            : 0,
-          pageViews: previous[2]
-            ? Math.round(((current[2] - previous[2]) / previous[2]) * 100)
-            : 0,
+          sessions: previous[1] ? Math.round(((current[1] - previous[1]) / previous[1]) * 100) : 0,
+          pageViews: previous[2] ? Math.round(((current[2] - previous[2]) / previous[2]) * 100) : 0,
         },
       };
     } else {
@@ -86,9 +80,7 @@ export const GET = withAdmin(async (_req, supabase) => {
       { count: promptsMonth },
       { data: recentActivity },
     ] = await Promise.all([
-      supabase!
-        .from("profiles")
-        .select("*", { count: "exact", head: true }),
+      supabase!.from("profiles").select("*", { count: "exact", head: true }),
       supabase!
         .from("profiles")
         .select("*", { count: "exact", head: true })
@@ -115,8 +107,7 @@ export const GET = withAdmin(async (_req, supabase) => {
     const errorCount =
       recentActivity?.filter(
         (a) =>
-          a.action?.toLowerCase().includes("error") ||
-          a.action?.toLowerCase().includes("fail")
+          a.action?.toLowerCase().includes("error") || a.action?.toLowerCase().includes("fail"),
       ).length || 0;
 
     results.app = {
@@ -151,12 +142,9 @@ export const GET = withAdmin(async (_req, supabase) => {
   try {
     if (process.env.REDIS_URL && process.env.REDIS_TOKEN) {
       const start = Date.now();
-      const res = await fetch(
-        `${process.env.REDIS_URL}/ping`,
-        {
-          headers: { Authorization: `Bearer ${process.env.REDIS_TOKEN}` },
-        }
-      );
+      const res = await fetch(`${process.env.REDIS_URL}/ping`, {
+        headers: { Authorization: `Bearer ${process.env.REDIS_TOKEN}` },
+      });
       const latency = Date.now() - start;
       results.redis = {
         status: res.ok ? "active" : "error",
@@ -170,13 +158,69 @@ export const GET = withAdmin(async (_req, supabase) => {
     results.redis = { status: "error" };
   }
 
-  // ── 5. Email (Resend) Status ──────────────────────────────────────────
-  results.resend = {
-    status: process.env.RESEND_API_KEY ? "active" : "not-configured",
-    fromEmail: process.env.RESEND_FROM_EMAIL || "not set",
-  };
+  // ── 5. Email (Resend) Status — live API check ─────────────────────────
+  try {
+    if (process.env.RESEND_API_KEY) {
+      const resendRes = await fetch("https://api.resend.com/emails?limit=1", {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      });
+      if (resendRes.ok) {
+        const resendData = await resendRes.json();
+        const lastEmail = resendData.data?.[0];
+        results.resend = {
+          status: "active",
+          fromEmail: process.env.RESEND_FROM_EMAIL || "not set",
+          lastSentAt: lastEmail?.created_at ?? null,
+          lastSentTo: lastEmail?.to?.[0] ?? null,
+        };
+      } else {
+        results.resend = {
+          status: "error",
+          fromEmail: process.env.RESEND_FROM_EMAIL || "not set",
+          lastSentAt: null,
+        };
+      }
+    } else {
+      results.resend = { status: "not-configured", fromEmail: "not set", lastSentAt: null };
+    }
+  } catch (err) {
+    logger.error("[Integrations] Resend error:", err);
+    results.resend = {
+      status: process.env.RESEND_API_KEY ? "active" : "not-configured",
+      fromEmail: process.env.RESEND_FROM_EMAIL || "not set",
+      lastSentAt: null,
+    };
+  }
 
-  // ── 6. Service Config Checks ──────────────────────────────────────────
+  // ── 6. LemonSqueezy — live API check ──────────────────────────────────
+  try {
+    if (process.env.LEMONSQUEEZY_API_KEY) {
+      configureLemonSqueezy();
+      const { listSubscriptions } = await import("@lemonsqueezy/lemonsqueezy.js");
+      const result = await listSubscriptions({ filter: { status: "active" } });
+      const subs = result.data?.data ?? [];
+      const activeSubs = subs.length;
+      const mrr = parseFloat((activeSubs * 3.99).toFixed(2));
+      results.lemonSqueezy = {
+        status: "active",
+        activeSubs,
+        mrr,
+        storeId: process.env.LEMONSQUEEZY_STORE_ID || null,
+      };
+    } else {
+      results.lemonSqueezy = { status: "not-configured", activeSubs: 0, mrr: 0, storeId: null };
+    }
+  } catch (err) {
+    logger.error("[Integrations] LemonSqueezy error:", err);
+    results.lemonSqueezy = {
+      status: process.env.LEMONSQUEEZY_API_KEY ? "error" : "not-configured",
+      activeSubs: 0,
+      mrr: 0,
+      storeId: process.env.LEMONSQUEEZY_STORE_ID || null,
+    };
+  }
+
+  // ── 7. Service Config Checks ──────────────────────────────────────────
   results.services = {
     clarity: {
       configured: !!process.env.NEXT_PUBLIC_CLARITY_ID,
@@ -186,9 +230,7 @@ export const GET = withAdmin(async (_req, supabase) => {
     },
     indexnow: {
       configured: !!process.env.INDEXNOW_KEY,
-      keyPrefix: process.env.INDEXNOW_KEY
-        ? `${process.env.INDEXNOW_KEY.slice(0, 8)}...`
-        : null,
+      keyPrefix: process.env.INDEXNOW_KEY ? `${process.env.INDEXNOW_KEY.slice(0, 8)}...` : null,
     },
     posthog: {
       configured: !!process.env.NEXT_PUBLIC_POSTHOG_KEY,
@@ -196,10 +238,6 @@ export const GET = withAdmin(async (_req, supabase) => {
     searchConsole: {
       configured: !!process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL,
       siteUrl: process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || null,
-    },
-    lemonSqueezy: {
-      configured: !!process.env.LEMONSQUEEZY_API_KEY,
-      storeId: process.env.LEMONSQUEEZY_STORE_ID || null,
     },
   };
 

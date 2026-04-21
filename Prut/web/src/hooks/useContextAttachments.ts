@@ -1,25 +1,13 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import type {
-  ContextAttachment,
-  ContextPayload,
-  AttachmentType,
-  AttachmentStatus,
-} from "@/lib/context/types";
+import type { ContextAttachment, ContextPayload, AttachmentType } from "@/lib/context/types";
 import type { ProcessingStage } from "@/lib/context/engine/types";
+import { PLAN_CONTEXT_LIMITS } from "@/lib/plans";
 import { getApiPath } from "@/lib/api-path";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-// Tier-specific limits (mirror server-side plans.ts)
-const TIER_LIMITS = {
-  free:  { maxFiles: 1, maxUrls: 1, maxImages: 1, tokenLimit: 8_000 },
-  pro:   { maxFiles: 5, maxUrls: 5, maxImages: 5, tokenLimit: 40_000 },
-} as const;
-
-type Tier = keyof typeof TIER_LIMITS;
 
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -36,15 +24,49 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-function countByType(
-  attachments: ContextAttachment[],
-  type: AttachmentType
-): number {
+function countByType(attachments: ContextAttachment[], type: AttachmentType): number {
   return attachments.filter((a) => a.type === type).length;
 }
 
-export function useContextAttachments(tier: Tier = 'free') {
-  const limits = TIER_LIMITS[tier];
+async function readSseStream(
+  response: Response,
+  onStage: (stage: ProcessingStage) => void,
+  onBlock: (block: unknown) => void,
+  onError: (error: string) => void,
+): Promise<void> {
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() ?? "";
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith("data:")) continue;
+      try {
+        const parsed = JSON.parse(line.slice(5).trim()) as Record<string, unknown>;
+        if (parsed.stage) onStage(parsed.stage as ProcessingStage);
+        else if (parsed.block) onBlock(parsed.block);
+        else if (parsed.error) onError(parsed.error as string);
+      } catch {
+        // malformed SSE line — skip
+      }
+    }
+  }
+}
+
+export interface UseContextAttachmentsOptions {
+  tier?: "free" | "pro";
+}
+
+export function useContextAttachments(options: UseContextAttachmentsOptions = {}) {
+  const tier = options.tier ?? "free";
+  const limits = PLAN_CONTEXT_LIMITS[tier];
+
   const [attachments, setAttachments] = useState<ContextAttachment[]>([]);
   const attachmentsRef = useRef(attachments);
   attachmentsRef.current = attachments;
@@ -60,32 +82,27 @@ export function useContextAttachments(tier: Tier = 'free') {
         }
         return sum;
       }, 0),
-    [attachments]
+    [attachments],
   );
 
-  const isOverLimit = totalTokens > limits.tokenLimit;
+  const isOverLimit = totalTokens > limits.total;
 
-  const updateAttachment = useCallback(
-    (id: string, updates: Partial<ContextAttachment>) => {
-      setAttachments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
-      );
-    },
-    []
-  );
+  const updateAttachment = useCallback((id: string, updates: Partial<ContextAttachment>) => {
+    setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+  }, []);
 
   const addFile = useCallback(
     async (file: File) => {
-      // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "file") + pendingCounts.current.file >= limits.maxFiles) {
+      if (
+        countByType(attachmentsRef.current, "file") + pendingCounts.current.file >=
+        limits.maxFiles
+      ) {
         throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
       }
       pendingCounts.current.file++;
-      // Validate size
       if (file.size > MAX_FILE_SIZE) {
         throw new Error("הקובץ גדול מדי (מקסימום 10MB)");
       }
-      // Validate type
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
         throw new Error("פורמט קובץ לא נתמך");
       }
@@ -96,7 +113,7 @@ export function useContextAttachments(tier: Tier = 'free') {
         type: "file",
         name: file.name,
         filename: file.name,
-        format: file.name.split('.').pop()?.toLowerCase(),
+        format: file.name.split(".").pop()?.toLowerCase(),
         size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
       };
@@ -114,24 +131,29 @@ export function useContextAttachments(tier: Tier = 'free') {
 
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || "שגיאה בחילוץ הקובץ");
+          throw new Error((body as { error?: string }).error || "שגיאה בחילוץ הקובץ");
         }
 
-        const body = await res.json();
-        if (body.block) {
-          setAttachments((prev) => prev.map(a =>
-            a.id === id
-              ? { ...a, block: body.block, stage: body.block.stage, status: body.block.stage === 'error' ? 'error' : 'ready' }
-              : a,
-          ));
-          return;
-        }
-        // legacy fallback (can be removed once all three routes return {block})
-        updateAttachment(id, {
-          status: "ready",
-          extractedText: body.text,
-          tokenCount: body.tokens ?? body.tokenCount,
-        });
+        await readSseStream(
+          res,
+          (stage) => updateAttachment(id, { stage }),
+          (block) => {
+            const b = block as { stage?: string };
+            setAttachments((prev) =>
+              prev.map((a) =>
+                a.id === id
+                  ? {
+                      ...a,
+                      block: block as ContextAttachment["block"],
+                      stage: b.stage as ProcessingStage,
+                      status: b.stage === "error" ? "error" : "ready",
+                    }
+                  : a,
+              ),
+            );
+          },
+          (error) => updateAttachment(id, { status: "error", error }),
+        );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
@@ -141,88 +163,18 @@ export function useContextAttachments(tier: Tier = 'free') {
         pendingCounts.current.file--;
       }
     },
-    [updateAttachment, limits.maxFiles]
-  );
-
-  const addFiles = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
-      // Validate size/type before modifying state
-      for (const file of files) {
-        if (file.size > MAX_FILE_SIZE) throw new Error(`הקובץ ${file.name} גדול מדי (מקסימום 10MB)`);
-        if (!ACCEPTED_FILE_TYPES.includes(file.type)) throw new Error(`פורמט קובץ לא נתמך: ${file.name}`);
-      }
-      // Validate count atomically (pendingCounts prevents races)
-      const currentCount = countByType(attachmentsRef.current, "file") + pendingCounts.current.file;
-      if (currentCount + files.length > limits.maxFiles) {
-        throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
-      }
-      pendingCounts.current.file += files.length;
-
-      const ids = files.map(() => generateId());
-      setAttachments((prev) => [
-        ...prev,
-        ...files.map((file, i) => ({
-          id: ids[i],
-          type: "file" as AttachmentType,
-          name: file.name,
-          filename: file.name,
-          format: file.name.split('.').pop()?.toLowerCase(),
-          size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
-          status: "loading" as const,
-        })),
-      ]);
-
-      try {
-        const formData = new FormData();
-        for (const file of files) formData.append("files", file);
-        const res = await fetch(getApiPath("/api/context/extract-files"), {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || "שגיאה בחילוץ הקבצים");
-        }
-        const body = await res.json();
-        const blocks: unknown[] = body.blocks ?? [];
-        setAttachments((prev) =>
-          prev.map((a) => {
-            const idx = ids.indexOf(a.id);
-            if (idx === -1) return a;
-            const block = blocks[idx] as { stage?: string } | undefined;
-            if (!block) return { ...a, status: "error" as const, error: "שגיאה בעיבוד" } as ContextAttachment;
-            return {
-              ...a,
-              block: block as ContextAttachment['block'],
-              stage: block.stage as ProcessingStage | undefined,
-              status: (block.stage === "error" ? "error" : "ready") as AttachmentStatus,
-            } as ContextAttachment;
-          })
-        );
-      } catch (err) {
-        setAttachments((prev) =>
-          prev.map((a) =>
-            ids.includes(a.id)
-              ? { ...a, status: "error" as const, error: err instanceof Error ? err.message : "שגיאה לא צפויה" }
-              : a
-          )
-        );
-      } finally {
-        pendingCounts.current.file -= files.length;
-      }
-    },
-    [limits.maxFiles]
+    [limits.maxFiles, updateAttachment],
   );
 
   const addUrl = useCallback(
     async (url: string) => {
-      // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "url") + pendingCounts.current.url >= limits.maxUrls) {
+      if (
+        countByType(attachmentsRef.current, "url") + pendingCounts.current.url >=
+        limits.maxUrls
+      ) {
         throw new Error(`ניתן לצרף עד ${limits.maxUrls} כתובות URL`);
       }
       pendingCounts.current.url++;
-      // Validate URL format
       try {
         new URL(url);
       } catch {
@@ -248,24 +200,29 @@ export function useContextAttachments(tier: Tier = 'free') {
 
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || "שגיאה בחילוץ התוכן מהכתובת");
+          throw new Error((body as { error?: string }).error || "שגיאה בחילוץ התוכן מהכתובת");
         }
 
-        const body = await res.json();
-        if (body.block) {
-          setAttachments((prev) => prev.map(a =>
-            a.id === id
-              ? { ...a, block: body.block, stage: body.block.stage, status: body.block.stage === 'error' ? 'error' : 'ready' }
-              : a,
-          ));
-          return;
-        }
-        // legacy fallback (can be removed once all three routes return {block})
-        updateAttachment(id, {
-          status: "ready",
-          extractedText: body.text,
-          tokenCount: body.tokens ?? body.tokenCount,
-        });
+        await readSseStream(
+          res,
+          (stage) => updateAttachment(id, { stage }),
+          (block) => {
+            const b = block as { stage?: string };
+            setAttachments((prev) =>
+              prev.map((a) =>
+                a.id === id
+                  ? {
+                      ...a,
+                      block: block as ContextAttachment["block"],
+                      stage: b.stage as ProcessingStage,
+                      status: b.stage === "error" ? "error" : "ready",
+                    }
+                  : a,
+              ),
+            );
+          },
+          (error) => updateAttachment(id, { status: "error", error }),
+        );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
@@ -275,21 +232,21 @@ export function useContextAttachments(tier: Tier = 'free') {
         pendingCounts.current.url--;
       }
     },
-    [updateAttachment, limits.maxUrls]
+    [limits.maxUrls, updateAttachment],
   );
 
   const addImage = useCallback(
     async (file: File) => {
-      // Validate count (sync counter prevents double-click race)
-      if (countByType(attachmentsRef.current, "image") + pendingCounts.current.image >= limits.maxImages) {
+      if (
+        countByType(attachmentsRef.current, "image") + pendingCounts.current.image >=
+        limits.maxImages
+      ) {
         throw new Error(`ניתן לצרף עד ${limits.maxImages} תמונות`);
       }
       pendingCounts.current.image++;
-      // Validate size
       if (file.size > MAX_IMAGE_SIZE) {
         throw new Error("התמונה גדולה מדי (מקסימום 5MB)");
       }
-      // Validate type
       if (!file.type.startsWith("image/")) {
         throw new Error("פורמט תמונה לא נתמך");
       }
@@ -300,7 +257,7 @@ export function useContextAttachments(tier: Tier = 'free') {
         type: "image",
         name: file.name,
         filename: file.name,
-        format: file.name.split('.').pop()?.toLowerCase(),
+        format: file.name.split(".").pop()?.toLowerCase(),
         size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
       };
@@ -318,24 +275,29 @@ export function useContextAttachments(tier: Tier = 'free') {
 
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || "שגיאה בעיבוד התמונה");
+          throw new Error((body as { error?: string }).error || "שגיאה בעיבוד התמונה");
         }
 
-        const body = await res.json();
-        if (body.block) {
-          setAttachments((prev) => prev.map(a =>
-            a.id === id
-              ? { ...a, block: body.block, stage: body.block.stage, status: body.block.stage === 'error' ? 'error' : 'ready' }
-              : a,
-          ));
-          return;
-        }
-        // legacy fallback (can be removed once all three routes return {block})
-        updateAttachment(id, {
-          status: "ready",
-          extractedText: body.description ?? body.text,
-          tokenCount: body.tokens ?? body.tokenCount,
-        });
+        await readSseStream(
+          res,
+          (stage) => updateAttachment(id, { stage }),
+          (block) => {
+            const b = block as { stage?: string };
+            setAttachments((prev) =>
+              prev.map((a) =>
+                a.id === id
+                  ? {
+                      ...a,
+                      block: block as ContextAttachment["block"],
+                      stage: b.stage as ProcessingStage,
+                      status: b.stage === "error" ? "error" : "ready",
+                    }
+                  : a,
+              ),
+            );
+          },
+          (error) => updateAttachment(id, { status: "error", error }),
+        );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
@@ -345,24 +307,7 @@ export function useContextAttachments(tier: Tier = 'free') {
         pendingCounts.current.image--;
       }
     },
-    [updateAttachment, limits.maxImages]
-  );
-
-  const retryAttachment = useCallback(
-    async (id: string) => {
-      const att = attachmentsRef.current.find((a) => a.id === id);
-      if (!att || att.status !== 'error') return;
-
-      // Remove old entry and re-add via the appropriate method
-      setAttachments((prev) => prev.filter((a) => a.id !== id));
-
-      if (att.type === 'url' && att.name) {
-        await addUrl(att.name);
-      }
-      // For file/image we can't retry without the original File object,
-      // so we just clear the error so the user can re-attach.
-    },
-    [addUrl]
+    [limits.maxImages, updateAttachment],
   );
 
   const removeAttachment = useCallback((id: string) => {
@@ -375,36 +320,17 @@ export function useContextAttachments(tier: Tier = 'free') {
 
   const getContextPayload = useCallback((): ContextPayload[] => {
     return attachments
-      .filter((a) => a.status === "ready" && (a.block || a.extractedText))
-      .map((a) => {
-        // Prefer the new ContextBlock shape when available
-        if (a.block) {
-          return a.block as unknown as ContextPayload;
-        }
-        // Legacy fallback
-        return {
-          type: a.type,
-          name: a.name,
-          content: a.extractedText!,
-          tokenCount: a.tokenCount ?? 0,
-          format: a.format || undefined,
-          filename: a.filename || a.name,
-          url: a.url || (a.type === 'url' ? a.name : undefined),
-          description: a.type === 'image' ? (a.extractedText || undefined) : undefined,
-        };
-      });
+      .filter((a) => a.status === "ready" && a.block)
+      .map((a) => a.block as unknown as ContextPayload);
   }, [attachments]);
 
   return {
     attachments,
     totalTokens,
     isOverLimit,
-    limits,
     addFile,
-    addFiles,
     addUrl,
     addImage,
-    retryAttachment,
     removeAttachment,
     clearAll,
     getContextPayload,

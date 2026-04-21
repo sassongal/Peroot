@@ -10,7 +10,10 @@ import {
   Filter,
   Plus,
   LayoutDashboard,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
+import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { BatchImportTool } from "@/components/admin/BatchImportTool";
 import { CategoryManager } from "@/components/admin/CategoryManager";
@@ -32,7 +35,9 @@ function StatItem({
     <div className="px-6 py-4 bg-white/2 border border-white/5 rounded-3xl flex items-center gap-4 transition-all hover:bg-white/5">
       <Icon className={cn("w-5 h-5", color)} />
       <div className="flex flex-col">
-        <span className="text-[9px] font-black text-zinc-600 tracking-tighter uppercase">{label}</span>
+        <span className="text-[9px] font-black text-zinc-600 tracking-tighter uppercase">
+          {label}
+        </span>
         <span className="text-xl font-black text-white tabular-nums">{value}</span>
       </div>
     </div>
@@ -55,7 +60,9 @@ function TabBtn({
       onClick={onClick}
       className={cn(
         "flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-        active ? "bg-white/10 text-white shadow-xl" : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5"
+        active
+          ? "bg-white/10 text-white shadow-xl"
+          : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5",
       )}
     >
       <Icon className="w-4 h-4" />
@@ -64,15 +71,33 @@ function TabBtn({
   );
 }
 
+interface FeedbackStats {
+  total: number;
+  positive: number;
+  negative: number;
+  positiveRate: number;
+}
+
 export function LibraryTab() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [stats, setStats] = useState({ totalDocs: 0, categoryCount: 0 });
+  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       setStats({ totalDocs: 240, categoryCount: 8 });
     };
     fetchStats();
+
+    const fetchFeedback = async () => {
+      try {
+        const res = await fetch(getApiPath("/api/admin/feedback-stats"));
+        if (res.ok) setFeedbackStats(await res.json());
+      } catch {
+        // silently ignore
+      }
+    };
+    fetchFeedback();
   }, []);
 
   return (
@@ -84,20 +109,63 @@ export function LibraryTab() {
           <h2 className="text-5xl font-black bg-linear-to-r from-white to-zinc-400 bg-clip-text text-transparent tracking-tighter uppercase">
             Public Repository
           </h2>
-          <p className="text-zinc-500 font-medium tracking-wide">ניהול ספריה ציבורית, ייבוא נתונים רוחבי וארכיטקטורת קטגוריות</p>
+          <p className="text-zinc-500 font-medium tracking-wide">
+            ניהול ספריה ציבורית, ייבוא נתונים רוחבי וארכיטקטורת קטגוריות
+          </p>
         </div>
 
-        <div className="flex gap-4">
-          <StatItem label="TOTAL PROMPTS" value={stats.totalDocs} icon={Database} color="text-blue-500" />
-          <StatItem label="CATEGORIES" value={stats.categoryCount} icon={Tags} color="text-amber-500" />
+        <div className="flex gap-4 flex-wrap">
+          <StatItem
+            label="TOTAL PROMPTS"
+            value={stats.totalDocs}
+            icon={Database}
+            color="text-blue-500"
+          />
+          <StatItem
+            label="CATEGORIES"
+            value={stats.categoryCount}
+            icon={Tags}
+            color="text-amber-500"
+          />
+          {feedbackStats && (
+            <>
+              <StatItem
+                label="THUMBS UP"
+                value={feedbackStats.positive}
+                icon={ThumbsUp}
+                color="text-emerald-500"
+              />
+              <StatItem
+                label="THUMBS DOWN"
+                value={feedbackStats.negative}
+                icon={ThumbsDown}
+                color="text-rose-500"
+              />
+            </>
+          )}
         </div>
       </div>
 
       {/* Tab Navigation */}
       <div className="flex gap-2 p-1.5 bg-zinc-950 border border-white/5 rounded-3xl w-fit">
-        <TabBtn label="Overview" icon={LayoutDashboard} active={activeTab === "overview"} onClick={() => setActiveTab("overview")} />
-        <TabBtn label="Batch Import" icon={Upload} active={activeTab === "import"} onClick={() => setActiveTab("import")} />
-        <TabBtn label="Categories" icon={Tags} active={activeTab === "categories"} onClick={() => setActiveTab("categories")} />
+        <TabBtn
+          label="Overview"
+          icon={LayoutDashboard}
+          active={activeTab === "overview"}
+          onClick={() => setActiveTab("overview")}
+        />
+        <TabBtn
+          label="Batch Import"
+          icon={Upload}
+          active={activeTab === "import"}
+          onClick={() => setActiveTab("import")}
+        />
+        <TabBtn
+          label="Categories"
+          icon={Tags}
+          active={activeTab === "categories"}
+          onClick={() => setActiveTab("categories")}
+        />
       </div>
 
       {/* Tab Content */}

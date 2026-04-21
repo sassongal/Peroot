@@ -1,6 +1,6 @@
 import type { DocumentType } from './types';
 
-interface ExpertRole {
+export interface ExpertRole {
   role: string;
   tone: string;
   focusAreas: string[];

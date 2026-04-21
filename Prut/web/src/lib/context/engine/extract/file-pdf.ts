@@ -6,7 +6,7 @@
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 
-interface PdfExtractionResult {
+export interface PdfExtractionResult {
   text: string;
   metadata: {
     pages: number;

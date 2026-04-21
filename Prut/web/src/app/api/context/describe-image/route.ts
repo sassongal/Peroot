@@ -1,63 +1,95 @@
 // src/app/api/context/describe-image/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { processAttachment } from '@/lib/context/engine';
-import { checkExtractionLimit } from '@/lib/context/engine/extraction-rate-limit';
-import { logger } from '@/lib/logger';
-import type { PlanTier } from '@/lib/context/engine/types';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { processAttachment } from "@/lib/context/engine";
+import { checkExtractionLimit } from "@/lib/context/engine/extraction-rate-limit";
+import { logger } from "@/lib/logger";
+import type { PlanTier, ProcessingStage } from "@/lib/context/engine/types";
 
 export const maxDuration = 30;
 
 const MAX_IMAGE_SIZE_MB = 5;
-const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const enc = new TextEncoder();
+function sseEvent(data: unknown): Uint8Array {
+  return enc.encode(`data: ${JSON.stringify(data)}\n\n`);
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
     const { data: profile } = await supabase
-      .from('profiles').select('plan_tier').eq('id', user.id).maybeSingle();
-    const tier: PlanTier = profile?.plan_tier === 'pro' ? 'pro' : 'free';
+      .from("profiles")
+      .select("plan_tier")
+      .eq("id", user.id)
+      .maybeSingle();
+    const tier: PlanTier = profile?.plan_tier === "pro" ? "pro" : "free";
 
     const rl = await checkExtractionLimit(user.id, tier);
     if (!rl.allowed) {
-      return NextResponse.json({ error: 'חרגת ממכסת העיבוד היומית' }, { status: 429 });
+      return NextResponse.json(
+        { error: "חרגת ממכסת העיבוד היומית" },
+        { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
+      );
     }
 
     const formData = await request.formData();
-    const file = formData.get('image') as File | null;
-    if (!file) return NextResponse.json({ error: 'לא נבחרה תמונה' }, { status: 400 });
+    const file = formData.get("image") as File | null;
+    if (!file) return NextResponse.json({ error: "לא נבחרה תמונה" }, { status: 400 });
 
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > MAX_IMAGE_SIZE_MB) {
       return NextResponse.json(
-        { error: `התמונה גדולה מדי (מקסימום ${MAX_IMAGE_SIZE_MB}MB)` }, { status: 400 },
+        { error: `התמונה גדולה מדי (מקסימום ${MAX_IMAGE_SIZE_MB}MB)` },
+        { status: 400 },
       );
     }
     if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: 'פורמט תמונה לא נתמך' }, { status: 400 });
+      return NextResponse.json({ error: "פורמט תמונה לא נתמך" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    logger.info('[context/describe-image] processing', { filename: file.name, sizeMb: sizeMb.toFixed(2), mimeType: file.type, tier });
-    let block;
-    try {
-      block = await processAttachment({
-        id: crypto.randomUUID(), type: 'image', userId: user.id, tier,
-        buffer, filename: file.name, mimeType: file.type,
-      });
-    } catch (engineErr) {
-      const msg = engineErr instanceof Error ? engineErr.message : String(engineErr);
-      const stack = engineErr instanceof Error ? engineErr.stack : undefined;
-      logger.error('[context/describe-image] engine error', { msg, stack, filename: file.name, tier });
-      return NextResponse.json({ error: 'שגיאה בעיבוד התמונה' }, { status: 500 });
-    }
-    return NextResponse.json({ block });
+    const id = crypto.randomUUID();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const block = await processAttachment({
+            id,
+            type: "image",
+            userId: user.id,
+            tier,
+            buffer,
+            filename: file.name,
+            mimeType: file.type,
+            onStage: (stage: ProcessingStage) => controller.enqueue(sseEvent({ stage })),
+          });
+          controller.enqueue(sseEvent({ block }));
+        } catch (err) {
+          await rl.rollback();
+          logger.error("[context/describe-image]", err);
+          controller.enqueue(sseEvent({ error: "שגיאה בעיבוד התמונה" }));
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    logger.error('[context/describe-image] unhandled error', { msg, filename: 'unknown' });
-    return NextResponse.json({ error: 'שגיאה בעיבוד התמונה' }, { status: 500 });
+    logger.error("[context/describe-image] outer", err);
+    return NextResponse.json({ error: "שגיאה בעיבוד התמונה" }, { status: 500 });
   }
 }

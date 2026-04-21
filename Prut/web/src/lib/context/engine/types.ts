@@ -8,25 +8,25 @@
  */
 
 export type ProcessingStage =
-  | 'uploading'
-  | 'extracting'
-  | 'enriching'
-  | 'ready'
-  | 'warning'
-  | 'error';
+  | "uploading"
+  | "extracting"
+  | "enriching"
+  | "ready"
+  | "warning"
+  | "error";
 
 export type DocumentType =
-  | 'חוזה משפטי'
-  | 'מאמר אקדמי'
-  | 'דף שיווקי'
-  | 'טבלת נתונים'
-  | 'קוד מקור'
-  | 'אימייל/התכתבות'
-  | 'דף אינטרנט'
-  | 'תמונה'
-  | 'generic';
+  | "חוזה משפטי"
+  | "מאמר אקדמי"
+  | "דף שיווקי"
+  | "טבלת נתונים"
+  | "קוד מקור"
+  | "אימייל/התכתבות"
+  | "דף אינטרנט"
+  | "תמונה"
+  | "generic";
 
-export type EntityType = 'person' | 'org' | 'date' | 'amount' | 'location' | 'other';
+export type EntityType = "person" | "org" | "date" | "amount" | "location" | "other";
 
 export interface ContextEntity {
   name: string;
@@ -54,7 +54,7 @@ export interface ContextBlockDisplay {
   summary: string;
   keyFacts: string[];
   entities: ContextEntity[];
-  rawText: string;
+  rawText?: string; // stripped from Redis-cached blocks; always present on fresh pipeline output
   metadata: ContextBlockMetadata;
 }
 
@@ -65,14 +65,14 @@ export interface ContextBlockInjected {
 }
 
 export interface PipelineError {
-  stage: 'extract' | 'enrich' | 'compress' | 'structure' | 'inject';
+  stage: "extract" | "enrich" | "compress" | "structure" | "inject";
   message: string;
   retryable: boolean;
 }
 
 export interface ContextBlock {
   id: string;
-  type: 'file' | 'url' | 'image';
+  type: "file" | "url" | "image";
   sha256: string;
   display: ContextBlockDisplay;
   injected: ContextBlockInjected;
@@ -80,11 +80,11 @@ export interface ContextBlock {
   error?: PipelineError;
 }
 
-export type PlanTier = 'free' | 'pro';
+export type PlanTier = "free" | "pro";
 
 export interface ProcessAttachmentInput {
   id: string;
-  type: 'file' | 'url' | 'image';
+  type: "file" | "url" | "image";
   userId: string;
   tier: PlanTier;
   // file inputs
@@ -93,4 +93,6 @@ export interface ProcessAttachmentInput {
   mimeType?: string;
   // url input
   url?: string;
+  // optional progress callback for SSE streaming
+  onStage?: (stage: ProcessingStage) => void;
 }
