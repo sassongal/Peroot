@@ -30,6 +30,7 @@ on April 15, 2026. This is the first dev session on the new machine.
 Next.js 16.2.3 (App Router, Turbopack) · React 19 · TypeScript 5 · Tailwind 4
 Supabase (Auth + Postgres + RLS) · Vercel AI SDK · Upstash Redis · LemonSqueezy
 Sentry · PostHog · Google Analytics 4 · Microsoft Clarity · Resend (email)
+`react-force-graph` — Canvas force-directed graph (SSR-safe via `dynamic(..., { ssr: false })`)
 
 ---
 
@@ -68,6 +69,10 @@ components/
   ui/                       # shadcn/ui components
   features/
     library/                # Personal prompt library
+      graph-utils.ts        # buildGraphData() — 4 edge types (category/tag/template/reference)
+      PromptGraphView.tsx   # Obsidian-style force graph — SSR-safe dynamic import
+    context/
+      StageProgressBar.tsx  # Processing stages: uploading→extracting→enriching→ready/warning/error
     prompt-improver/        # AI prompt enhancement UI
     chains/                 # Prompt chains feature
   admin/                    # Admin dashboard
@@ -100,7 +105,7 @@ lib/
 hooks/
   useLibrary.ts             # Library state + CRUD
   usePromptWorkflow.ts      # Prompt improvement workflow
-  useHistory.ts             # Usage history
+  useHistory.ts             # Usage history (React Query, returns HistoryItem[])
 
 context/
   LibraryContext.tsx
@@ -157,6 +162,20 @@ Admin routes check `role = 'admin'` in profiles table.
 - Hebrew-first UI — all user-facing strings in Hebrew
 - All AI system prompts written in Hebrew
 - Server Components by default, `"use client"` only when necessary
+
+## Personal Library Architecture
+- `PersonalLibraryView` orchestrates all library state and passes a `shared: PersonalLibrarySharedState` object down to header, sidebar, grid, modals
+- `localViewType: "grid" | "graph"` — sub-view toggle inside PersonalLibraryView (NOT a HomeClient viewMode)
+- **History** is a virtual folder: `useHistory()` items are mapped to `PersonalPrompt[]` locally; `setFolder("history")` skips `ctxSetActiveFolder` to avoid server pagination with unknown folder key
+- **Graph view** (`PromptGraphView`) uses ALL prompts from `filteredPersonalLibrary`, not the paginated slice
+- `addPrompt` is actually `addPromptWithSuggestion` in LibraryDataContext — auto-categorizes via AI (non-blocking) for saves to "כללי" by authenticated users
+- `PersonalLibrarySharedState` is defined in `src/components/views/personal-library/types.ts` — extend it when adding new shared state
+
+## Context Engine (useContextAttachments)
+- Files/images: `stage: "uploading"` set immediately on attachment creation
+- URLs: extract hostname as display name, `stage: "extracting"` set immediately  
+- `getContextPayload()` returns blocks where `status === "ready" && attachment.block`; `warning` stage → `status: "ready"` so included in payload
+- `ProcessingStage` union: `"uploading" | "extracting" | "enriching" | "ready" | "warning" | "error"`
 
 ---
 
