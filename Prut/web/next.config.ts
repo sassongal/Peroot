@@ -1,24 +1,23 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import bundleAnalyzer from "@next/bundle-analyzer";
-import path from "path";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
 const securityHeaders = [
-  { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'X-XSS-Protection', value: '1; mode=block' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-XSS-Protection", value: "1; mode=block" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
   {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=31536000; includeSubDomains; preload',
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains; preload",
   },
   {
-    key: 'Content-Security-Policy',
+    key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://va.vercel-scripts.com",
@@ -31,65 +30,59 @@ const securityHeaders = [
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-    ].join('; '),
+    ].join("; "),
   },
 ];
 
 const nextConfig: NextConfig = {
   compress: true,
-  serverExternalPackages: [
-    'pdfjs-dist',
-    'mammoth',
-    'xlsx',
-    'jsdom',
-    '@mozilla/readability',
-  ],
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'posthog-js', '@sentry/nextjs'],
-  },
   turbopack: {
-    root: path.resolve(import.meta.dirname),
+    root: process.cwd(),
+  },
+  serverExternalPackages: ["pdfjs-dist", "mammoth", "xlsx", "jsdom", "@mozilla/readability"],
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns", "posthog-js", "@sentry/nextjs"],
   },
   async redirects() {
     return [
       {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'peroot.space' }],
-        destination: 'https://www.peroot.space/:path*',
+        source: "/:path*",
+        has: [{ type: "host", value: "peroot.space" }],
+        destination: "https://www.peroot.space/:path*",
         permanent: true,
       },
     ];
   },
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      { protocol: 'https', hostname: '*.supabase.co' },
-      { protocol: 'https', hostname: '*.googleusercontent.com' },
-      { protocol: 'https', hostname: 'www.peroot.space' },
-      { protocol: 'https', hostname: 'ui-avatars.com', pathname: '/api/**' },
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+      { protocol: "https", hostname: "www.peroot.space" },
+      { protocol: "https", hostname: "ui-avatars.com", pathname: "/api/**" },
     ],
   },
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
+        headers: [...securityHeaders, { key: "Content-Language", value: "he" }],
+      },
+      {
+        source: "/images/:path*",
         headers: [
-          ...securityHeaders,
-          { key: 'Content-Language', value: 'he' },
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
         ],
       },
       {
-        source: '/images/:path*',
+        source: "/api/:path*",
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
-        ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.peroot.space' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          {
+            key: "Access-Control-Allow-Origin",
+            value: process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space",
+          },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
         ],
       },
     ];
