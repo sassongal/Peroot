@@ -66,9 +66,6 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'ui-avatars.com', pathname: '/api/**' },
     ],
   },
-  turbopack: {
-     root: __dirname,
-  },
   async headers() {
     return [
       {
