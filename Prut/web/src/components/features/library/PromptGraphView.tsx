@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { X, Zap, Tag, Clock, BarChart2, Star, BookTemplate } from "lucide-react";
+import { X, Zap, Tag, Clock, BarChart2, Star, BookTemplate, Check, Plus } from "lucide-react";
 import type { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
@@ -13,6 +13,31 @@ import {
   type GraphLink,
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
+import { useLibraryContext } from "@/context/LibraryContext";
+
+// Safari < 15.4 doesn't support roundRect — polyfill before any canvas code runs
+if (typeof window !== "undefined") {
+  const proto = CanvasRenderingContext2D.prototype as CanvasRenderingContext2D & {
+    roundRect?: (x: number, y: number, w: number, h: number, r: number | number[]) => void;
+  };
+  if (!proto.roundRect) {
+    proto.roundRect = function (x, y, w, h, r) {
+      const radius = typeof r === "number" ? r : (Array.isArray(r) ? (r as number[])[0] ?? 0 : 0);
+      const rx = Math.min(radius, w / 2, h / 2);
+      this.beginPath();
+      this.moveTo(x + rx, y);
+      this.lineTo(x + w - rx, y);
+      this.arcTo(x + w, y, x + w, y + rx, rx);
+      this.lineTo(x + w, y + h - rx);
+      this.arcTo(x + w, y + h, x + w - rx, y + h, rx);
+      this.lineTo(x + rx, y + h);
+      this.arcTo(x, y + h, x, y + h - rx, rx);
+      this.lineTo(x, y + rx);
+      this.arcTo(x, y, x + rx, y, rx);
+      this.closePath();
+    };
+  }
+}
 
 // SSR-safe — canvas APIs require browser
 const ForceGraph2D = dynamic(() => import("react-force-graph").then((m) => m.ForceGraph2D), {
@@ -147,12 +172,15 @@ function drawCapabilityIcon(
 }
 
 export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
+  const { updateTags, updatePrompt } = useLibraryContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedPrompt, setSelectedPrompt] = useState<PersonalPrompt | null>(null);
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
   const tickRef = useRef(0);
   const rafRef = useRef<number>(0);
+  // Preserve node positions across graphData rebuilds so the simulation doesn't restart
+  const positionMapRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const fgRef = useRef<{
     d3Force?: (
       name: string,
@@ -194,7 +222,18 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
     };
   }, []);
 
-  const graphData = useMemo(() => buildGraphData(prompts, favoriteIds), [prompts, favoriteIds]);
+  const graphData = useMemo(() => {
+    const data = buildGraphData(prompts, favoriteIds);
+    // Restore saved positions so the simulation doesn't restart from scratch
+    data.nodes.forEach((n) => {
+      const saved = positionMapRef.current.get(n.id);
+      if (saved) {
+        n.x = saved.x;
+        n.y = saved.y;
+      }
+    });
+    return data;
+  }, [prompts, favoriteIds]);
 
   // Connected node IDs for hover-dim effect
   const connectedIds = useMemo(() => {
@@ -210,11 +249,21 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
     return ids;
   }, [hoverNode, graphData.links]);
 
+  // Save current positions so we can restore them on next graphData rebuild
+  const savePositions = useCallback(() => {
+    graphData.nodes.forEach((n) => {
+      if (n.x !== undefined && n.y !== undefined) {
+        positionMapRef.current.set(n.id, { x: n.x, y: n.y });
+      }
+    });
+  }, [graphData.nodes]);
+
   const handleNodeClick = useCallback((node: GraphNode) => {
+    savePositions();
     if (node.type === "prompt" && node.prompt) {
       setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
     }
-  }, []);
+  }, [savePositions]);
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     setHoverNode(node);
@@ -576,13 +625,21 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
             onUsePrompt(p);
             setSelectedPrompt(null);
           }}
+          onSaveTitle={async (id, title) => {
+            await updatePrompt(id, { title });
+            setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, title } : prev);
+          }}
+          onSaveTags={async (id, tags) => {
+            await updateTags(id, tags);
+            setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, tags } : prev);
+          }}
         />
       </div>
 
       {/* Mobile: bottom sheet */}
       {selectedPrompt && (
         <div
-          className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-black/90 backdrop-blur-xl border-t border-white/15 rounded-t-2xl shadow-2xl max-h-[65vh] overflow-y-auto"
+          className="md:hidden fixed inset-x-0 bottom-0 z-[60] bg-black/90 backdrop-blur-xl border-t border-white/15 rounded-t-2xl shadow-2xl max-h-[65vh] overflow-y-auto"
           dir="rtl"
         >
           <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-2" />
@@ -592,6 +649,14 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
             onUse={(p) => {
               onUsePrompt(p);
               setSelectedPrompt(null);
+            }}
+            onSaveTitle={async (id, title) => {
+              await updatePrompt(id, { title });
+              setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, title } : prev);
+            }}
+            onSaveTags={async (id, tags) => {
+              await updateTags(id, tags);
+              setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, tags } : prev);
             }}
           />
         </div>
@@ -606,11 +671,32 @@ function SelectedPromptPanel({
   prompt,
   onClose,
   onUse,
+  onSaveTitle,
+  onSaveTags,
 }: {
   prompt: PersonalPrompt | null;
   onClose: () => void;
   onUse: (p: PersonalPrompt) => void;
+  onSaveTitle: (id: string, title: string) => Promise<void>;
+  onSaveTags: (id: string, tags: string[]) => Promise<void>;
 }) {
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [savingTags, setSavingTags] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (prompt) setTitleDraft(prompt.title);
+    setEditingTitle(false);
+    setTagInput("");
+  }, [prompt?.id]);
+
+  useEffect(() => {
+    if (editingTitle) titleRef.current?.focus();
+  }, [editingTitle]);
+
   if (!prompt) return null;
 
   const cap = prompt.capability_mode ?? CapabilityMode.STANDARD;
@@ -618,17 +704,70 @@ function SelectedPromptPanel({
   const total = (prompt.success_count ?? 0) + (prompt.fail_count ?? 0);
   const successPct = total > 0 ? Math.round(((prompt.success_count ?? 0) / total) * 100) : null;
 
+  const handleSaveTitle = async () => {
+    const trimmed = titleDraft.trim();
+    if (!trimmed || trimmed === prompt.title) { setEditingTitle(false); return; }
+    setSavingTitle(true);
+    try { await onSaveTitle(prompt.id, trimmed); } finally {
+      setSavingTitle(false);
+      setEditingTitle(false);
+    }
+  };
+
+  const handleAddTag = async () => {
+    const tag = tagInput.trim().toLowerCase();
+    if (!tag || prompt.tags?.includes(tag)) { setTagInput(""); return; }
+    const newTags = [...(prompt.tags ?? []), tag];
+    setSavingTags(true);
+    setTagInput("");
+    try { await onSaveTags(prompt.id, newTags); } finally { setSavingTags(false); }
+  };
+
+  const handleRemoveTag = async (tag: string) => {
+    const newTags = (prompt.tags ?? []).filter((t) => t !== tag);
+    setSavingTags(true);
+    try { await onSaveTags(prompt.id, newTags); } finally { setSavingTags(false); }
+  };
+
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
-        <h3 className="text-sm font-semibold text-white truncate flex-1">{prompt.title}</h3>
-        <button
-          onClick={onClose}
-          className="ml-2 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-          aria-label="סגור"
-        >
-          <X className="w-4 h-4" />
-        </button>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 gap-2">
+        {editingTitle ? (
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <input
+              ref={titleRef}
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(); if (e.key === "Escape") setEditingTitle(false); }}
+              className="flex-1 min-w-0 text-sm font-semibold text-white bg-white/10 rounded-md px-2 py-0.5 outline-none border border-white/20 focus:border-amber-400/60"
+              disabled={savingTitle}
+              dir="auto"
+            />
+            <button onClick={handleSaveTitle} disabled={savingTitle} className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-white/10">
+              <Check className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setEditingTitle(false)} className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <h3
+            className="text-sm font-semibold text-white truncate flex-1 cursor-pointer hover:text-amber-300 transition-colors"
+            title="לחץ לעריכת כותרת"
+            onClick={() => setEditingTitle(true)}
+          >
+            {prompt.title}
+          </h3>
+        )}
+        {!editingTitle && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+            aria-label="סגור"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto">
@@ -660,20 +799,45 @@ function SelectedPromptPanel({
           {prompt.prompt}
         </p>
 
-        {/* Tags */}
-        {prompt.tags && prompt.tags.length > 0 && (
-          <div className="flex items-start gap-1.5 flex-wrap">
-            <Tag className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
-            {prompt.tags.slice(0, 10).map((tag) => (
-              <span
+        {/* Tags — editable */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1 flex-wrap">
+            <Tag className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            {(prompt.tags ?? []).slice(0, 15).map((tag) => (
+              <button
                 key={tag}
-                className="px-1.5 py-0.5 rounded-md bg-white/8 text-slate-300 text-[10px] border border-white/8"
+                onClick={() => !savingTags && handleRemoveTag(tag)}
+                disabled={savingTags}
+                className="group flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/8 text-slate-300 text-[10px] border border-white/8 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition-colors"
+                title="הסר תגית"
               >
                 {tag}
-              </span>
+                <X className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             ))}
           </div>
-        )}
+          {/* Add tag input */}
+          <div className="flex items-center gap-1">
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(); }}
+              placeholder="+ תגית חדשה"
+              disabled={savingTags}
+              dir="auto"
+              className="flex-1 text-[11px] bg-white/5 border border-white/10 rounded-md px-2 py-1 text-slate-300 placeholder-slate-600 outline-none focus:border-amber-400/40 transition-colors"
+            />
+            {tagInput.trim() && (
+              <button
+                onClick={handleAddTag}
+                disabled={savingTags}
+                className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Template variables */}
         {prompt.template_variables && prompt.template_variables.length > 0 && (

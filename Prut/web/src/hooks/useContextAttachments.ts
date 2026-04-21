@@ -99,13 +99,13 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       ) {
         throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
       }
-      pendingCounts.current.file++;
       if (file.size > MAX_FILE_SIZE) {
         throw new Error("הקובץ גדול מדי (מקסימום 10MB)");
       }
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
         throw new Error("פורמט קובץ לא נתמך");
       }
+      pendingCounts.current.file++;
 
       const id = generateId();
       const attachment: ContextAttachment = {
@@ -248,13 +248,13 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       ) {
         throw new Error(`ניתן לצרף עד ${limits.maxImages} תמונות`);
       }
-      pendingCounts.current.image++;
       if (file.size > MAX_IMAGE_SIZE) {
         throw new Error("התמונה גדולה מדי (מקסימום 5MB)");
       }
       if (!file.type.startsWith("image/")) {
         throw new Error("פורמט תמונה לא נתמך");
       }
+      pendingCounts.current.image++;
 
       const id = generateId();
       const attachment: ContextAttachment = {

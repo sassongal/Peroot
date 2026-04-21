@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Library, Wand2, Sun, Moon, MoreHorizontal, type LucideIcon } from "lucide-react";
+import { BookOpen, Library, Wand2, Sun, Moon, MoreHorizontal, Network, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
@@ -112,6 +112,30 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               </button>
             );
           })}
+
+          {/* Graph button — navigates to personal library and opens graph view */}
+          <button
+            onClick={() => {
+              onNavigate("personal");
+              window.dispatchEvent(new CustomEvent("peroot:open-graph"));
+            }}
+            className={cn(
+              "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:outline-none border",
+              viewMode === "personal"
+                ? "bg-purple-500/15 text-purple-500 dark:text-purple-300 border-purple-500/30"
+                : "text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-500/8 border-transparent"
+            )}
+            title="גרף הפרומפטים שלי"
+            aria-label="פתח גרף הספרייה האישית"
+          >
+            <Network
+              className={cn(
+                "w-4 h-4 transition-all",
+                viewMode !== "personal" && "animate-pulse"
+              )}
+            />
+            <span className="hidden sm:inline">גרף</span>
+          </button>
 
           <Link
             href="/blog"

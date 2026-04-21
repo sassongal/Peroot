@@ -91,10 +91,7 @@ export function PersonalLibraryView({
   // Chains section collapse
   const [chainsExpanded, setChainsExpanded] = useState(false);
 
-  // Auto-open chains when the top-nav "Chains" tab is clicked. HomeClient
-  // dispatches a `peroot:open-chains` window event so we don't have to
-  // drill a ref/flag through the whole personal-library tree. We also
-  // scroll the chains section into view once it mounts.
+  // Auto-open chains when the top-nav "Chains" tab is clicked.
   useEffect(() => {
     const handler = () => {
       setChainsExpanded(true);
@@ -106,6 +103,13 @@ export function PersonalLibraryView({
     };
     window.addEventListener("peroot:open-chains", handler);
     return () => window.removeEventListener("peroot:open-chains", handler);
+  }, []);
+
+  // Open graph view when the top-nav graph button is clicked.
+  useEffect(() => {
+    const handler = () => setLocalViewType("graph");
+    window.addEventListener("peroot:open-graph", handler);
+    return () => window.removeEventListener("peroot:open-graph", handler);
   }, []);
 
   // Expanded card ids

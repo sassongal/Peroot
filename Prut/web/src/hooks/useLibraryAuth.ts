@@ -117,7 +117,11 @@ export function useLibraryAuth({
       if (userRef.current?.id !== newUser?.id) {
         userRef.current = newUser;
         setUser(newUser);
-        await onUserChange(newUser);
+        try {
+          await onUserChange(newUser);
+        } catch (err) {
+          logger.error("[useLibraryAuth] onAuthStateChange onUserChange failed:", err);
+        }
       }
     });
 
