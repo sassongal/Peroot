@@ -96,7 +96,9 @@ export function pickDefaults(task?: string, userMax?: number, userTemp?: number)
     const presets: Record<string, { max: number; temp: number }> = {
         image:    { max: 16384, temp: 0.5 },
         video:    { max: 16384, temp: 0.5 },
-        research: { max: 10240, temp: 0.6 },
+        research: { max: 16384, temp: 0.6 }, // raised 10240 → 16384: Hebrew + citations
+                                             // expand output; matches HARD_MAX so research
+                                             // can use full budget without silent cuts.
         enhance:  { max: 8192,  temp: 0.7 }, // was 4096 — Gemini thinking consumed budget
         agent:    { max: 16384, temp: 0.7 }, // was 8192 — Gemini reasoning averages 5.4K
                                              // tokens on agent (2x enhance), and output
@@ -104,6 +106,8 @@ export function pickDefaults(task?: string, userMax?: number, userTemp?: number)
                                              // + PROMPT_TITLE + GENIUS_QUESTIONS trailer.
                                              // Live test: output=8188 reasoning=5452 = hard ceiling hit.
         chain:    { max: 3072,  temp: 0.4 },
+        classify: { max: 256,   temp: 0.2 }, // Lightweight classification task: tiny JSON
+                                             // output, low temp for determinism.
     };
     const preset = presets[task ?? 'enhance'] ?? presets.enhance;
     const requestedMax = userMax ?? preset.max;
@@ -148,7 +152,7 @@ export function buildProviderOptions(task?: string): PerootProviderOptions | und
     // Only tasks that produce long structured output need thinking disabled.
     // Enhance/agent/research actually benefit from the reasoning mode, so
     // we leave them with default thinking behavior.
-    const thinkingDisabledTasks = new Set(['image', 'video', 'chain']);
+    const thinkingDisabledTasks = new Set(['image', 'video', 'chain', 'classify']);
     if (!task || !thinkingDisabledTasks.has(task)) {
         return undefined;
     }
@@ -159,6 +163,35 @@ export function buildProviderOptions(task?: string): PerootProviderOptions | und
             },
         },
     };
+}
+
+// Approximate chars-per-token ratio used for context-window pre-filtering.
+const CHARS_PER_TOKEN = 4;
+
+// Context windows for models that have smaller-than-HARD_MAX windows.
+// Only list models whose context is a practical constraint for us.
+const MODEL_CONTEXT_TOKENS: Partial<Record<string, number>> = {
+    'gpt-oss-20b': 32_768, // 32k context; reserve ~12k for output → 20k input safe
+};
+
+/**
+ * Drops models from the fallback chain whose context window cannot fit the
+ * estimated input token count (leaving no room for output).
+ *
+ * Keeps at least one model in the chain regardless of size.
+ *
+ * @internal Exported for tests only.
+ */
+export function filterModelsForEstimatedInput(chain: string[], estimatedInputTokens: number): string[] {
+    if (chain.length <= 1) return chain;
+    const filtered = chain.filter((modelId) => {
+        const contextLimit = MODEL_CONTEXT_TOKENS[modelId];
+        if (!contextLimit) return true; // model not in our constraint map → keep
+        // Reserve ~40% of context for output
+        const safeInputLimit = Math.floor(contextLimit * 0.6);
+        return estimatedInputTokens <= safeInputLimit;
+    });
+    return filtered.length > 0 ? filtered : [chain[0]];
 }
 
 export class AIGateway {
