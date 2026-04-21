@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import path from "path";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -46,9 +47,11 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'posthog-js', '@sentry/nextjs'],
   },
+  turbopack: {
+    root: path.resolve(import.meta.dirname),
+  },
   async redirects() {
     return [
-      // Canonical domain: redirect non-www → www (301)
       {
         source: '/:path*',
         has: [{ type: 'host', value: 'peroot.space' }],
@@ -93,11 +96,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry configuration options
 const sentryWebpackPluginOptions = {
-  // Suppresses source map uploading logs during build
   silent: true,
-  // Upload sourcemaps only in production
   disableServerWebpackPlugin: process.env.NODE_ENV !== "production",
   disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
 };
