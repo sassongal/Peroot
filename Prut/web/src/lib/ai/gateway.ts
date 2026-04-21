@@ -242,10 +242,12 @@ export class AIGateway {
             ...baseModels.filter((m) => m !== params.preferredModel),
           ]
         : baseModels;
-    const models =
-      params.estimatedInputTokens
-        ? (filterModelsForEstimatedInput([...preferredChain], params.estimatedInputTokens) as ModelId[])
-        : preferredChain;
+    const models = params.estimatedInputTokens
+      ? (filterModelsForEstimatedInput(
+          [...preferredChain],
+          params.estimatedInputTokens,
+        ) as ModelId[])
+      : preferredChain;
 
     try {
       for (const modelId of models) {
@@ -346,10 +348,12 @@ export class AIGateway {
             ...baseModels2.filter((m) => m !== params.preferredModel),
           ]
         : baseModels2;
-    const models =
-      params.estimatedInputTokens
-        ? (filterModelsForEstimatedInput([...preferredChain2], params.estimatedInputTokens) as ModelId[])
-        : preferredChain2;
+    const models = params.estimatedInputTokens
+      ? (filterModelsForEstimatedInput(
+          [...preferredChain2],
+          params.estimatedInputTokens,
+        ) as ModelId[])
+      : preferredChain2;
 
     try {
       for (const modelId of models) {

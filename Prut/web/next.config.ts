@@ -39,7 +39,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
-  serverExternalPackages: ["pdfjs-dist", "mammoth", "xlsx", "jsdom", "@mozilla/readability", "@napi-rs/canvas"],
+  serverExternalPackages: [
+    "pdfjs-dist",
+    "mammoth",
+    "xlsx",
+    "jsdom",
+    "@mozilla/readability",
+    "@napi-rs/canvas",
+  ],
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "posthog-js", "@sentry/nextjs"],
   },

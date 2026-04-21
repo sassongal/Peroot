@@ -21,13 +21,14 @@ export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsPro
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
-    (sum, a) => sum + (a.status === "ready" ? (a.tokenCount ?? a.block?.injected?.tokenCount ?? 0) : 0),
-    0
+    (sum, a) =>
+      sum + (a.status === "ready" ? (a.tokenCount ?? a.block?.injected?.tokenCount ?? 0) : 0),
+    0,
   );
   const isOverLimit = totalTokens > 15_000;
-  const readyCount = attachments.filter(a => a.status === "ready").length;
-  const loadingCount = attachments.filter(a => a.status === "loading").length;
-  const errorCount = attachments.filter(a => a.status === "error").length;
+  const readyCount = attachments.filter((a) => a.status === "ready").length;
+  const loadingCount = attachments.filter((a) => a.status === "loading").length;
+  const errorCount = attachments.filter((a) => a.status === "error").length;
 
   return (
     <div dir="rtl" className="flex flex-col gap-3">
@@ -37,8 +38,8 @@ export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsPro
           <AttachmentCard
             key={a.id}
             block={a.block}
-            stage={a.stage ?? 'uploading'}
-            title={a.name || a.url || 'attachment'}
+            stage={a.stage ?? "uploading"}
+            title={a.name || a.url || "attachment"}
             onRemove={() => onRemove(a.id)}
             onRetry={onRetry ? () => onRetry(a.id) : undefined}
           />
@@ -77,9 +78,7 @@ export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsPro
 
         {/* Limits hint */}
         {attachments.length > 0 && attachments.length < 3 && (
-          <span className="text-[var(--text-muted)]">
-            עד 3 קבצים · קובץ עד 10MB · תמונה עד 5MB
-          </span>
+          <span className="text-[var(--text-muted)]">עד 3 קבצים · קובץ עד 10MB · תמונה עד 5MB</span>
         )}
       </div>
     </div>
