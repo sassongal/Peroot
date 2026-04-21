@@ -52,9 +52,13 @@ export function useLibraryAuth({
 
       userRef.current = currentUser;
       setUser(currentUser);
-      await onUserChange(currentUser);
-
-      if (mounted) setIsLoaded(true);
+      try {
+        await onUserChange(currentUser);
+      } catch (err) {
+        logger.error('[useLibraryAuth] onUserChange failed:', err);
+      } finally {
+        if (mounted) setIsLoaded(true);
+      }
     }
 
     init();

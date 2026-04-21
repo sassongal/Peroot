@@ -10,7 +10,7 @@ describe('useLibraryFetch', () => {
       rpc: vi.fn().mockResolvedValue({ data: {}, error: null }),
     };
     const { result } = renderHook(() =>
-      useLibraryFetch({ supabase: mockSupabase as any, user: null })
+      useLibraryFetch({ supabase: mockSupabase as any })
     );
     expect(typeof result.current.fetchPage).toBe('function');
     expect(typeof result.current.fetchFolderCounts).toBe('function');

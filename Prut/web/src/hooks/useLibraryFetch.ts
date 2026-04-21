@@ -174,6 +174,9 @@ export function useLibraryFetch({
         case 'last_used':
           query = query.order('last_used_at', { ascending: false, nullsFirst: false });
           break;
+        case 'recent':
+          query = query.order('created_at', { ascending: false });
+          break;
         case 'performance':
         default:
           query = query.order('updated_at', { ascending: false });

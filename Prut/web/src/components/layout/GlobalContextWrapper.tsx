@@ -17,7 +17,26 @@ function InnerWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ExtensionBanner />
-      <Toaster position="top-center" theme="system" closeButton />
+      <Toaster
+        position="top-center"
+        theme="system"
+        closeButton
+        richColors
+        expand={false}
+        gap={8}
+        toastOptions={{
+          style: {
+            fontSize: "15px",
+            padding: "14px 18px",
+            minWidth: "340px",
+            borderRadius: "14px",
+          },
+          duration: 4000,
+          classNames: {
+            toast: "shadow-xl",
+          },
+        }}
+      />
       {children}
     </>
   );

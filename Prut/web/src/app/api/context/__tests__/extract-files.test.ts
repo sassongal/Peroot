@@ -37,8 +37,8 @@ describe('POST /api/context/extract-files', () => {
     'returns blocks array with length 2 for two PDFs',
     async () => {
       const form = new FormData();
-      form.append('files', new File([pdfBytes], 'a.pdf', { type: 'application/pdf' }));
-      form.append('files', new File([pdfBytes], 'b.pdf', { type: 'application/pdf' }));
+      form.append('files', new File([pdfBytes as BlobPart], 'a.pdf', { type: 'application/pdf' }));
+      form.append('files', new File([pdfBytes as BlobPart], 'b.pdf', { type: 'application/pdf' }));
       const req = new Request('http://t', { method: 'POST', body: form });
       const res = await POST(req as unknown as import('next/server').NextRequest);
       expect(res.status).toBe(200);

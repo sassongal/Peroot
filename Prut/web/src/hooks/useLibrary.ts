@@ -145,9 +145,11 @@ export function useLibrary() {
         fetchFolderCounts(currentUser.id),
       ]);
 
-      const storedCats = localStorage.getItem(getCategoriesKey(currentUser.id));
-      if (storedCats) {
-        setPersonalCategories(JSON.parse(storedCats));
+      try {
+        const storedCats = localStorage.getItem(getCategoriesKey(currentUser.id));
+        if (storedCats) setPersonalCategories(JSON.parse(storedCats));
+      } catch {
+        // malformed localStorage — ignore, categories loaded fresh from DB
       }
     } else {
       // GUEST - load from localStorage
@@ -200,8 +202,12 @@ export function useLibrary() {
       });
       setPageState(1);
 
-      const storedCats = localStorage.getItem(getCategoriesKey(null));
-      if (storedCats) setPersonalCategories(JSON.parse(storedCats));
+      try {
+        const storedCats = localStorage.getItem(getCategoriesKey(null));
+        if (storedCats) setPersonalCategories(JSON.parse(storedCats));
+      } catch {
+        // malformed localStorage — ignore
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchPage, fetchFolderCounts, applyGuestPagination]);
