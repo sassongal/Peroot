@@ -572,7 +572,9 @@ export async function POST(req: Request) {
           ? "video"
           : mode === CapabilityMode.DEEP_RESEARCH
             ? "research"
-            : "enhance";
+            : mode === CapabilityMode.AGENT_BUILDER
+              ? "agent"
+              : "enhance";
     const isJsonOutput = engineOutput.outputFormat === "json";
 
     // Refine requests (previousResult + refinementInstruction/answers) reuse
