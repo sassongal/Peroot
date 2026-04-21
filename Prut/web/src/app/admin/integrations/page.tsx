@@ -70,13 +70,18 @@ interface LiveData {
   };
   sentry?: { status: string; hasDSN?: boolean; hasAuthToken?: boolean };
   redis?: { status: string; latencyMs?: number };
-  resend?: { status: string; fromEmail?: string };
+  resend?: {
+    status: string;
+    fromEmail?: string;
+    lastSentAt?: string | null;
+    lastSentTo?: string | null;
+  };
+  lemonSqueezy?: { status: string; activeSubs?: number; mrr?: number; storeId?: string | null };
   services?: {
     clarity?: { configured: boolean; id?: string | null };
     indexnow?: { configured: boolean; keyPrefix?: string | null };
     posthog?: { configured: boolean };
     searchConsole?: { configured: boolean; siteUrl?: string | null };
-    lemonSqueezy?: { configured: boolean; storeId?: string | null };
   };
   fetchedAt?: string;
 }
@@ -106,7 +111,7 @@ function MetricCard({
           <span
             className={cn(
               "flex items-center gap-0.5 text-[10px] font-black",
-              delta > 0 ? "text-emerald-400" : "text-rose-400"
+              delta > 0 ? "text-emerald-400" : "text-rose-400",
             )}
           >
             {delta > 0 ? (
@@ -200,7 +205,7 @@ function ActionButton({
     "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 shrink-0 cursor-pointer",
     variant === "primary"
       ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-      : "bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+      : "bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed",
   );
 
   const content = (
@@ -262,7 +267,11 @@ function EnvVarBadge({ name }: { name: string }) {
       className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[10px] bg-zinc-900 border border-white/[0.07] text-zinc-400 hover:text-white hover:border-white/20 transition-colors cursor-pointer"
       title="Copy to clipboard"
     >
-      {copied ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 opacity-50" />}
+      {copied ? (
+        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+      ) : (
+        <Copy className="w-3 h-3 opacity-50" />
+      )}
       {name}
     </button>
   );
@@ -280,11 +289,7 @@ function SetupPanel({ children }: { children: React.ReactNode }) {
         {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         הוראות הגדרה
       </button>
-      {open && (
-        <div className="mt-4 space-y-3 pl-2 border-s border-white/5">
-          {children}
-        </div>
-      )}
+      {open && <div className="mt-4 space-y-3 pl-2 border-s border-white/5">{children}</div>}
     </div>
   );
 }
@@ -305,31 +310,76 @@ interface IntegrationCardProps {
 }
 
 const ACCENT_COLORS = {
-  blue: { bg: "bg-blue-500/10", border: "border-blue-500/20", text: "text-blue-400", hover: "hover:border-blue-500/20" },
-  amber: { bg: "bg-amber-500/10", border: "border-amber-500/20", text: "text-amber-400", hover: "hover:border-amber-500/20" },
-  purple: { bg: "bg-purple-500/10", border: "border-purple-500/20", text: "text-purple-400", hover: "hover:border-purple-500/20" },
-  emerald: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-400", hover: "hover:border-emerald-500/20" },
-  rose: { bg: "bg-rose-500/10", border: "border-rose-500/20", text: "text-rose-400", hover: "hover:border-rose-500/20" },
-  cyan: { bg: "bg-cyan-500/10", border: "border-cyan-500/20", text: "text-cyan-400", hover: "hover:border-cyan-500/20" },
-  orange: { bg: "bg-orange-500/10", border: "border-orange-500/20", text: "text-orange-400", hover: "hover:border-orange-500/20" },
+  blue: {
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    text: "text-blue-400",
+    hover: "hover:border-blue-500/20",
+  },
+  amber: {
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    text: "text-amber-400",
+    hover: "hover:border-amber-500/20",
+  },
+  purple: {
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/20",
+    text: "text-purple-400",
+    hover: "hover:border-purple-500/20",
+  },
+  emerald: {
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    text: "text-emerald-400",
+    hover: "hover:border-emerald-500/20",
+  },
+  rose: {
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/20",
+    text: "text-rose-400",
+    hover: "hover:border-rose-500/20",
+  },
+  cyan: {
+    bg: "bg-cyan-500/10",
+    border: "border-cyan-500/20",
+    text: "text-cyan-400",
+    hover: "hover:border-cyan-500/20",
+  },
+  orange: {
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+    text: "text-orange-400",
+    hover: "hover:border-orange-500/20",
+  },
 };
 
 function IntegrationCard({
-  icon, title, description, status, features, actions, setup, accent = "blue", metrics, extra,
+  icon,
+  title,
+  description,
+  status,
+  features,
+  actions,
+  setup,
+  accent = "blue",
+  metrics,
+  extra,
 }: IntegrationCardProps) {
   const a = ACCENT_COLORS[accent];
 
   return (
-    <div className={cn(
-      "p-6 rounded-3xl bg-zinc-950 border border-white/5 flex flex-col gap-4 transition-all duration-300",
-      a.hover, "hover:shadow-xl"
-    )}>
+    <div
+      className={cn(
+        "p-6 rounded-3xl bg-zinc-950 border border-white/5 flex flex-col gap-4 transition-all duration-300",
+        a.hover,
+        "hover:shadow-xl",
+      )}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={cn("p-3 rounded-2xl border", a.bg, a.border, a.text)}>
-            {icon}
-          </div>
+          <div className={cn("p-3 rounded-2xl border", a.bg, a.border, a.text)}>{icon}</div>
           <div>
             <h3 className="text-base font-black text-white tracking-tight">{title}</h3>
             <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed max-w-xs">{description}</p>
@@ -345,16 +395,16 @@ function IntegrationCard({
 
       {/* Feature tags */}
       <div className="flex flex-wrap gap-1.5">
-        {features.map((f) => <FeatureTag key={f} label={f} />)}
+        {features.map((f) => (
+          <FeatureTag key={f} label={f} />
+        ))}
       </div>
 
       {/* Extra content */}
       {extra}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 pt-1 border-t border-white/[0.04]">
-        {actions}
-      </div>
+      <div className="flex flex-wrap gap-2 pt-1 border-t border-white/[0.04]">{actions}</div>
 
       {/* Setup */}
       {setup && <div className="border-t border-white/[0.04] pt-3">{setup}</div>}
@@ -389,7 +439,13 @@ function IndexNowSubmitButton() {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <ActionButton variant="primary" icon={<Send className="w-3 h-3" />} onClick={handleSubmit} loading={state === "loading"} disabled={state === "loading"}>
+      <ActionButton
+        variant="primary"
+        icon={<Send className="w-3 h-3" />}
+        onClick={handleSubmit}
+        loading={state === "loading"}
+        disabled={state === "loading"}
+      >
         שלח URLs עכשיו
       </ActionButton>
       {state === "success" && result && (
@@ -436,25 +492,93 @@ export default function IntegrationsPage() {
   }, [fetchData]);
 
   // Derive statuses from live data
-  const ga4Status: ServiceStatus = !data ? "loading" : data.ga4?.status === "active" ? "active" : data.ga4?.status === "error" ? "error" : "needs-setup";
-  const clarityStatus: ServiceStatus = !data ? "loading" : data.services?.clarity?.configured ? "active" : "needs-setup";
-  const indexnowStatus: ServiceStatus = !data ? "loading" : data.services?.indexnow?.configured ? "active" : "needs-setup";
-  const sentryStatus: ServiceStatus = !data ? "loading" : data.sentry?.status === "active" ? "active" : "needs-setup";
-  const redisStatus: ServiceStatus = !data ? "loading" : data.redis?.status === "active" ? "active" : data.redis?.status === "error" ? "error" : "needs-setup";
-  const posthogStatus: ServiceStatus = !data ? "loading" : data.services?.posthog?.configured ? "active" : "needs-setup";
-  const gscStatus: ServiceStatus = !data ? "loading" : data.services?.searchConsole?.configured ? "active" : "needs-setup";
+  const ga4Status: ServiceStatus = !data
+    ? "loading"
+    : data.ga4?.status === "active"
+      ? "active"
+      : data.ga4?.status === "error"
+        ? "error"
+        : "needs-setup";
+  const clarityStatus: ServiceStatus = !data
+    ? "loading"
+    : data.services?.clarity?.configured
+      ? "active"
+      : "needs-setup";
+  const indexnowStatus: ServiceStatus = !data
+    ? "loading"
+    : data.services?.indexnow?.configured
+      ? "active"
+      : "needs-setup";
+  const sentryStatus: ServiceStatus = !data
+    ? "loading"
+    : data.sentry?.status === "active"
+      ? "active"
+      : "needs-setup";
+  const redisStatus: ServiceStatus = !data
+    ? "loading"
+    : data.redis?.status === "active"
+      ? "active"
+      : data.redis?.status === "error"
+        ? "error"
+        : "needs-setup";
+  const posthogStatus: ServiceStatus = !data
+    ? "loading"
+    : data.services?.posthog?.configured
+      ? "active"
+      : "needs-setup";
+  const gscStatus: ServiceStatus = !data
+    ? "loading"
+    : data.services?.searchConsole?.configured
+      ? "active"
+      : "needs-setup";
 
-  const activeCount = [ga4Status, clarityStatus, indexnowStatus, sentryStatus, redisStatus, posthogStatus, gscStatus, "active" /* vercel */, "active" /* resend */].filter(s => s === "active").length;
-  const setupCount = [ga4Status, clarityStatus, indexnowStatus, sentryStatus, redisStatus, posthogStatus, gscStatus].filter(s => s === "needs-setup").length;
+  const resendStatus: ServiceStatus = !data
+    ? "loading"
+    : data.resend?.status === "active"
+      ? "active"
+      : data.resend?.status === "error"
+        ? "error"
+        : "needs-setup";
+  const lsStatus: ServiceStatus = !data
+    ? "loading"
+    : data.lemonSqueezy?.status === "active"
+      ? "active"
+      : data.lemonSqueezy?.status === "error"
+        ? "error"
+        : "needs-setup";
 
-  const posthogHost = typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.posthog.com"
-    : "https://us.posthog.com";
+  const activeCount = [
+    ga4Status,
+    clarityStatus,
+    indexnowStatus,
+    sentryStatus,
+    redisStatus,
+    posthogStatus,
+    gscStatus,
+    resendStatus,
+    lsStatus,
+    "active" /* vercel */,
+  ].filter((s) => s === "active").length;
+  const setupCount = [
+    ga4Status,
+    clarityStatus,
+    indexnowStatus,
+    sentryStatus,
+    redisStatus,
+    posthogStatus,
+    gscStatus,
+    resendStatus,
+    lsStatus,
+  ].filter((s) => s === "needs-setup").length;
+
+  const posthogHost =
+    typeof process !== "undefined"
+      ? (process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.posthog.com")
+      : "https://us.posthog.com";
 
   return (
     <AdminLayout>
       <div className="space-y-8 animate-in fade-in duration-700 select-none pb-24" dir="rtl">
-
         {/* ── Page Header ── */}
         <div className="bg-zinc-950/50 px-6 md:px-10 py-8 md:py-10 rounded-3xl border border-white/5 space-y-3">
           <div className="flex items-center justify-between">
@@ -509,11 +633,12 @@ export default function IntegrationsPage() {
 
         {/* ── Analytics & Monitoring ── */}
         <div className="px-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600">Analytics & User Intelligence</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600">
+            Analytics & User Intelligence
+          </p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
           {/* 1. Google Analytics 4 */}
           <IntegrationCard
             icon={<Globe className="w-5 h-5" />}
@@ -525,20 +650,43 @@ export default function IntegrationsPage() {
             metrics={
               data?.ga4?.status === "active" && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <MetricCard label="משתמשים פעילים" value={data.ga4.activeUsers || 0} delta={data.ga4.deltas?.activeUsers} />
-                  <MetricCard label="סשנים" value={data.ga4.sessions || 0} delta={data.ga4.deltas?.sessions} />
-                  <MetricCard label="צפיות" value={data.ga4.pageViews || 0} delta={data.ga4.deltas?.pageViews} />
+                  <MetricCard
+                    label="משתמשים פעילים"
+                    value={data.ga4.activeUsers || 0}
+                    delta={data.ga4.deltas?.activeUsers}
+                  />
+                  <MetricCard
+                    label="סשנים"
+                    value={data.ga4.sessions || 0}
+                    delta={data.ga4.deltas?.sessions}
+                  />
+                  <MetricCard
+                    label="צפיות"
+                    value={data.ga4.pageViews || 0}
+                    delta={data.ga4.deltas?.pageViews}
+                  />
                   <MetricCard label="Bounce Rate" value={`${data.ga4.bounceRate || 0}%`} />
-                  <MetricCard label="משך ממוצע" value={data.ga4.avgSessionDuration || 0} suffix="שניות" />
+                  <MetricCard
+                    label="משך ממוצע"
+                    value={data.ga4.avgSessionDuration || 0}
+                    suffix="שניות"
+                  />
                 </div>
               )
             }
             actions={
               <>
-                <ActionButton href="https://analytics.google.com/analytics/web/#/p528142013" variant="primary" icon={<BarChart3 className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://analytics.google.com/analytics/web/#/p528142013"
+                  variant="primary"
+                  icon={<BarChart3 className="w-3 h-3" />}
+                >
                   GA4 Dashboard
                 </ActionButton>
-                <ActionButton href="/admin/google-analytics" icon={<Activity className="w-3 h-3" />}>
+                <ActionButton
+                  href="/admin/google-analytics"
+                  icon={<Activity className="w-3 h-3" />}
+                >
                   Admin GA Page
                 </ActionButton>
               </>
@@ -552,13 +700,26 @@ export default function IntegrationsPage() {
             description="הקלטת סשנים, מפות חום וניתוח התנהגות משתמשים בזמן אמת."
             status={clarityStatus}
             accent="blue"
-            features={["Session Recordings", "Heatmaps", "Rage Clicks", "Dead Clicks", "Smart Insights"]}
+            features={[
+              "Session Recordings",
+              "Heatmaps",
+              "Rage Clicks",
+              "Dead Clicks",
+              "Smart Insights",
+            ]}
             actions={
               <>
-                <ActionButton href="https://clarity.microsoft.com/" variant="primary" icon={<BarChart3 className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://clarity.microsoft.com/"
+                  variant="primary"
+                  icon={<BarChart3 className="w-3 h-3" />}
+                >
                   פתח Clarity Dashboard
                 </ActionButton>
-                <ActionButton href="https://clarity.microsoft.com/" icon={<ExternalLink className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://clarity.microsoft.com/"
+                  icon={<ExternalLink className="w-3 h-3" />}
+                >
                   Get API Key
                 </ActionButton>
               </>
@@ -568,12 +729,14 @@ export default function IntegrationsPage() {
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 text-amber-400">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <p className="text-xs font-bold leading-relaxed">
-                    הגדר <EnvVarBadge name="NEXT_PUBLIC_CLARITY_ID" /> ב-Vercel Environment Variables
+                    הגדר <EnvVarBadge name="NEXT_PUBLIC_CLARITY_ID" /> ב-Vercel Environment
+                    Variables
                   </p>
                 </div>
               ) : data?.services?.clarity?.id ? (
                 <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-600">
-                  Project ID: <span className="font-mono text-zinc-400">{data.services.clarity.id}</span>
+                  Project ID:{" "}
+                  <span className="font-mono text-zinc-400">{data.services.clarity.id}</span>
                 </div>
               ) : null
             }
@@ -582,7 +745,10 @@ export default function IntegrationsPage() {
                 <SetupStep step={1} text="היכנס ל-clarity.microsoft.com עם חשבון Microsoft" />
                 <SetupStep step={2} text="לחץ על 'New project' והגדר את הדומיין www.peroot.space" />
                 <SetupStep step={3} text="העתק את ה-Project ID מהגדרות הפרויקט" />
-                <SetupStep step={4} text="הוסף את ה-ID כ-NEXT_PUBLIC_CLARITY_ID ב-Vercel → Settings → Environment Variables" />
+                <SetupStep
+                  step={4}
+                  text="הוסף את ה-ID כ-NEXT_PUBLIC_CLARITY_ID ב-Vercel → Settings → Environment Variables"
+                />
                 <SetupStep step={5} text="בצע redeploy על מנת שהשינוי ייכנס לתוקף" />
               </SetupPanel>
             }
@@ -598,10 +764,17 @@ export default function IntegrationsPage() {
             features={["Visitors", "Page Views", "Bounce Rate", "LCP", "FID", "CLS"]}
             actions={
               <>
-                <ActionButton href="https://vercel.com/sassongal/web/analytics" variant="primary" icon={<BarChart3 className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://vercel.com/sassongal/web/analytics"
+                  variant="primary"
+                  icon={<BarChart3 className="w-3 h-3" />}
+                >
                   Vercel Analytics
                 </ActionButton>
-                <ActionButton href="https://vercel.com/sassongal/web/speed-insights" icon={<Zap className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://vercel.com/sassongal/web/speed-insights"
+                  icon={<Zap className="w-3 h-3" />}
+                >
                   Speed Insights
                 </ActionButton>
               </>
@@ -615,10 +788,20 @@ export default function IntegrationsPage() {
             description="ניתוח ביצועי חיפוש אורגני, כיסוי אינדקס ומצב Sitemap."
             status={gscStatus}
             accent="emerald"
-            features={["Search Queries", "Click-through Rates", "Index Coverage", "Core Web Vitals", "Sitemap"]}
+            features={[
+              "Search Queries",
+              "Click-through Rates",
+              "Index Coverage",
+              "Core Web Vitals",
+              "Sitemap",
+            ]}
             actions={
               <>
-                <ActionButton href="https://search.google.com/search-console?resource_id=https://www.peroot.space" variant="primary" icon={<Search className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://search.google.com/search-console?resource_id=https://www.peroot.space"
+                  variant="primary"
+                  icon={<Search className="w-3 h-3" />}
+                >
                   Search Console
                 </ActionButton>
                 <ActionButton href="/admin/seo-console" icon={<Activity className="w-3 h-3" />}>
@@ -642,10 +825,16 @@ export default function IntegrationsPage() {
             }
             setup={
               <SetupPanel>
-                <SetupStep step={1} text="הוסף את www.peroot.space ב-Search Console ובחר 'URL prefix'" />
+                <SetupStep
+                  step={1}
+                  text="הוסף את www.peroot.space ב-Search Console ובחר 'URL prefix'"
+                />
                 <SetupStep step={2} text="העתק את קוד האימות מ-HTML tag" />
                 <SetupStep step={3} text="הוסף NEXT_PUBLIC_GOOGLE_VERIFICATION ב-Vercel env vars" />
-                <SetupStep step={4} text="הוסף GOOGLE_SEARCH_CONSOLE_SITE_URL=https://www.peroot.space" />
+                <SetupStep
+                  step={4}
+                  text="הוסף GOOGLE_SEARCH_CONSOLE_SITE_URL=https://www.peroot.space"
+                />
                 <SetupStep step={5} text="שלח Sitemap: https://www.peroot.space/sitemap.xml" />
               </SetupPanel>
             }
@@ -662,14 +851,20 @@ export default function IntegrationsPage() {
             extra={
               indexnowStatus === "active" && data?.services?.indexnow?.keyPrefix ? (
                 <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-600">
-                  Key: <span className="font-mono text-amber-400">{data.services.indexnow.keyPrefix}</span>
+                  Key:{" "}
+                  <span className="font-mono text-amber-400">
+                    {data.services.indexnow.keyPrefix}
+                  </span>
                 </div>
               ) : null
             }
             actions={
               <>
                 <IndexNowSubmitButton />
-                <ActionButton href="https://www.bing.com/indexnow" icon={<ExternalLink className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://www.bing.com/indexnow"
+                  icon={<ExternalLink className="w-3 h-3" />}
+                >
                   Register Key
                 </ActionButton>
               </>
@@ -690,10 +885,20 @@ export default function IntegrationsPage() {
             description="אנליטיקות מוצר, feature flags, הקלטת סשנים ופאנלים."
             status={posthogStatus}
             accent="purple"
-            features={["Event Tracking", "Feature Flags", "Session Recording", "Funnels", "Cohorts"]}
+            features={[
+              "Event Tracking",
+              "Feature Flags",
+              "Session Recording",
+              "Funnels",
+              "Cohorts",
+            ]}
             actions={
               <>
-                <ActionButton href={posthogHost} variant="primary" icon={<ExternalLink className="w-3 h-3" />}>
+                <ActionButton
+                  href={posthogHost}
+                  variant="primary"
+                  icon={<ExternalLink className="w-3 h-3" />}
+                >
                   פתח PostHog
                 </ActionButton>
                 <ActionButton href="/admin/experiments" icon={<FlaskConical className="w-3 h-3" />}>
@@ -711,16 +916,16 @@ export default function IntegrationsPage() {
               ) : null
             }
           />
-
         </div>
 
         {/* ── Monitoring & Infrastructure ── */}
         <div className="px-1 pt-2">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600">Monitoring & Infrastructure</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600">
+            Monitoring & Infrastructure
+          </p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
           {/* 7. Sentry */}
           <IntegrationCard
             icon={<AlertTriangle className="w-5 h-5" />}
@@ -738,7 +943,11 @@ export default function IntegrationsPage() {
               ) : null
             }
             actions={
-              <ActionButton href="https://sentry.io/" variant="primary" icon={<AlertTriangle className="w-3 h-3" />}>
+              <ActionButton
+                href="https://sentry.io/"
+                variant="primary"
+                icon={<AlertTriangle className="w-3 h-3" />}
+              >
                 Sentry Dashboard
               </ActionButton>
             }
@@ -760,7 +969,11 @@ export default function IntegrationsPage() {
               ) : null
             }
             actions={
-              <ActionButton href="https://console.upstash.com/" variant="primary" icon={<Database className="w-3 h-3" />}>
+              <ActionButton
+                href="https://console.upstash.com/"
+                variant="primary"
+                icon={<Database className="w-3 h-3" />}
+              >
                 Upstash Console
               </ActionButton>
             }
@@ -771,19 +984,34 @@ export default function IntegrationsPage() {
             icon={<Mail className="w-5 h-5" />}
             title="Resend"
             description="שליחת מיילים - קמפיינים, אימות והתראות."
-            status={data?.resend?.status === "active" ? "active" : !data ? "loading" : "needs-setup"}
+            status={resendStatus}
             accent="blue"
             features={["Email Campaigns", "Transactional", "Templates"]}
-            extra={
-              data?.resend?.fromEmail && data.resend.fromEmail !== "not set" ? (
-                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-600">
-                  From: <span className="font-mono text-blue-400">{data.resend.fromEmail}</span>
+            metrics={
+              data?.resend?.status === "active" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <MetricCard
+                    label="From"
+                    value={data.resend.fromEmail !== "not set" ? data.resend.fromEmail || "—" : "—"}
+                  />
+                  <MetricCard
+                    label="מייל אחרון"
+                    value={
+                      data.resend.lastSentAt
+                        ? new Date(data.resend.lastSentAt).toLocaleDateString("he-IL")
+                        : "—"
+                    }
+                  />
                 </div>
               ) : null
             }
             actions={
               <>
-                <ActionButton href="https://resend.com/emails" variant="primary" icon={<Mail className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://resend.com/emails"
+                  variant="primary"
+                  icon={<Mail className="w-3 h-3" />}
+                >
                   Resend Dashboard
                 </ActionButton>
                 <ActionButton href="/admin/email-campaigns" icon={<Mail className="w-3 h-3" />}>
@@ -802,19 +1030,25 @@ export default function IntegrationsPage() {
             accent="cyan"
             features={["Uptime Monitoring", "SMS / Email Alerts", "Status Page"]}
             actions={
-              <ActionButton href="https://betterstack.com/better-uptime" variant="primary" icon={<ExternalLink className="w-3 h-3" />}>
+              <ActionButton
+                href="https://betterstack.com/better-uptime"
+                variant="primary"
+                icon={<ExternalLink className="w-3 h-3" />}
+              >
                 Sign Up Free
               </ActionButton>
             }
             setup={
               <SetupPanel>
                 <SetupStep step={1} text="הירשם חינם ב-betterstack.com/better-uptime" />
-                <SetupStep step={2} text="הוסף monitors ל-www.peroot.space, /api/health, /api/enhance" />
+                <SetupStep
+                  step={2}
+                  text="הוסף monitors ל-www.peroot.space, /api/health, /api/enhance"
+                />
                 <SetupStep step={3} text="הגדר התראות מייל/SMS" />
               </SetupPanel>
             }
           />
-
         </div>
 
         {/* ── Security ── */}
@@ -833,10 +1067,17 @@ export default function IntegrationsPage() {
             features={["HTTPS Enforcement", "Browser Preload List", "MITM Protection"]}
             actions={
               <>
-                <ActionButton href="https://hstspreload.org/?domain=www.peroot.space" variant="primary" icon={<CheckCircle2 className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://hstspreload.org/?domain=www.peroot.space"
+                  variant="primary"
+                  icon={<CheckCircle2 className="w-3 h-3" />}
+                >
                   בדוק סטטוס
                 </ActionButton>
-                <ActionButton href="https://vercel.com/sassongal/web/settings/domains" icon={<Globe className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://vercel.com/sassongal/web/settings/domains"
+                  icon={<Globe className="w-3 h-3" />}
+                >
                   הוסף www ב-Vercel
                 </ActionButton>
               </>
@@ -856,19 +1097,32 @@ export default function IntegrationsPage() {
             icon={<Users className="w-5 h-5" />}
             title="LemonSqueezy"
             description="תשלומים ומנויים - Pro plan management."
-            status={!data ? "loading" : data.services?.lemonSqueezy?.configured ? "active" : "needs-setup"}
+            status={lsStatus}
             accent="amber"
             features={["Subscriptions", "Webhooks", "Customer Portal"]}
+            metrics={
+              data?.lemonSqueezy?.status === "active" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <MetricCard label="מנויים פעילים" value={data.lemonSqueezy.activeSubs ?? 0} />
+                  <MetricCard label="MRR" value={`₪${(data.lemonSqueezy.mrr ?? 0).toFixed(2)}`} />
+                </div>
+              ) : null
+            }
             extra={
-              data?.services?.lemonSqueezy?.storeId ? (
+              data?.lemonSqueezy?.storeId ? (
                 <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-600">
-                  Store: <span className="font-mono text-amber-400">{data.services.lemonSqueezy.storeId}</span>
+                  Store:{" "}
+                  <span className="font-mono text-amber-400">{data.lemonSqueezy.storeId}</span>
                 </div>
               ) : null
             }
             actions={
               <>
-                <ActionButton href="https://app.lemonsqueezy.com/dashboard" variant="primary" icon={<TrendingUp className="w-3 h-3" />}>
+                <ActionButton
+                  href="https://app.lemonsqueezy.com/dashboard"
+                  variant="primary"
+                  icon={<TrendingUp className="w-3 h-3" />}
+                >
                   LemonSqueezy Dashboard
                 </ActionButton>
                 <ActionButton href="/admin/revenue" icon={<FileText className="w-3 h-3" />}>
@@ -887,7 +1141,6 @@ export default function IntegrationsPage() {
             {activeCount + 1 /* +1 for Better Stack when configured */} שירותים מנוטרים
           </span>
         </div>
-
       </div>
     </AdminLayout>
   );

@@ -1,4 +1,4 @@
-import { estimateTokens } from '@/lib/context/token-counter';
+import { estimateTokens } from "@/lib/context/token-counter";
 
 export interface CompressResult {
   text: string;
@@ -18,9 +18,12 @@ export function compressToLimit(text: string, maxTokens: number): CompressResult
     return { text, truncated: false, originalTokenCount: original, finalTokenCount: original };
   }
   const charBudget = maxTokens * 4;
-  let cut = text.slice(0, charBudget);
-  const lastBreak = cut.lastIndexOf('\n\n');
-  if (lastBreak > charBudget * 0.7) cut = cut.slice(0, lastBreak);
+  const headChars = Math.floor(charBudget * 0.7);
+  const tailChars = charBudget - headChars;
+  const head = text.slice(0, headChars);
+  const tail = text.slice(-tailChars);
+  const separator = "\n\n[...קוצר...]\n\n";
+  const cut = head + separator + tail;
   return {
     text: cut,
     truncated: true,
