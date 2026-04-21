@@ -85,7 +85,12 @@ export function LibraryTab() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      setStats({ totalDocs: 240, categoryCount: 8 });
+      try {
+        const res = await fetch(getApiPath("/api/admin/library-stats"));
+        if (res.ok) setStats(await res.json());
+      } catch {
+        // silently ignore — keep zeros
+      }
     };
     fetchStats();
 

@@ -608,12 +608,18 @@ export async function POST(req: Request) {
       );
     }) as unknown as ContextBlock[];
     const preferredModel = selectEngineModel({ blocks: contextBlocks });
+    const contextTokens = contextBlocks.reduce((sum, b) => sum + (b.injected?.tokenCount ?? 0), 0);
+    // Rough token estimate: system + user prompt chars ÷ 4, plus injected context
+    const estimatedInputTokens =
+      Math.ceil((engineOutput.systemPrompt.length + engineOutput.userPrompt.length) / 4) +
+      contextTokens;
 
     const { result, modelId } = await AIGateway.generateStream({
       system: engineOutput.systemPrompt,
       prompt: engineOutput.userPrompt,
       task: resolvedTask,
       preferredModel,
+      estimatedInputTokens,
       // Refine lifts the ceiling from 4096 → 8192; everything else stays
       // on the task preset (undefined = use pickDefaults).
       ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),

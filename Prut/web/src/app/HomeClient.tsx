@@ -1445,6 +1445,7 @@ function PageContent() {
             onAnswerChange={(id, val) =>
               dispatch({ type: "SET_QUESTION_ANSWER", payload: { id, answer: val } })
             }
+            onQuickRefine={(instruction) => handleRefine(instruction)}
             onRefine={(instruction) => handleRefine(instruction || "")}
           />
         )}
