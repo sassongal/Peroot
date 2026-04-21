@@ -7,6 +7,9 @@ import { AttachmentCard } from "./AttachmentCard";
 interface ContextChipsProps {
   attachments: ContextAttachment[];
   onRemove: (id: string) => void;
+  onRetry?: (id: string) => void;
+  maxFiles?: number;
+  tokenLimit?: number;
 }
 
 function formatTokenCount(count: number): string {
@@ -14,7 +17,7 @@ function formatTokenCount(count: number): string {
   return String(count);
 }
 
-export function ContextChips({ attachments, onRemove }: ContextChipsProps) {
+export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
@@ -37,7 +40,7 @@ export function ContextChips({ attachments, onRemove }: ContextChipsProps) {
             stage={a.stage ?? 'uploading'}
             title={a.name || a.url || 'attachment'}
             onRemove={() => onRemove(a.id)}
-            onRetry={undefined}
+            onRetry={onRetry ? () => onRetry(a.id) : undefined}
           />
         ))}
       </div>

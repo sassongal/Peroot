@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
-import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
+import { lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
 
 export const maxDuration = 30;
 
@@ -195,7 +195,7 @@ export const GET = withAdmin(async (_req, supabase) => {
   // ── 6. LemonSqueezy — live API check ──────────────────────────────────
   try {
     if (process.env.LEMONSQUEEZY_API_KEY) {
-      configureLemonSqueezy();
+      lemonSqueezySetup({ apiKey: process.env.LEMONSQUEEZY_API_KEY! });
       const { listSubscriptions } = await import("@lemonsqueezy/lemonsqueezy.js");
       const result = await listSubscriptions({ filter: { status: "active" } });
       const subs = result.data?.data ?? [];

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
-import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
+import { lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
 
 const PRO_PRICE_ILS = 3.99;
 const LS_MRR_CACHE_KEY = "admin:revenue:ls_mrr";
@@ -14,7 +14,7 @@ async function getLsMrr(): Promise<{ mrr: number; activeSubs: number } | null> {
     if (cached) return cached;
 
     if (!process.env.LEMONSQUEEZY_API_KEY) return null;
-    configureLemonSqueezy();
+    lemonSqueezySetup({ apiKey: process.env.LEMONSQUEEZY_API_KEY! });
     const { listSubscriptions } = await import("@lemonsqueezy/lemonsqueezy.js");
     const result = await listSubscriptions({ filter: { status: "active" } });
     if (!result.data) return null;
