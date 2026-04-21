@@ -14,7 +14,11 @@ import { PersonalLibraryHeader } from "./personal-library/PersonalLibraryHeader"
 import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
 import { PersonalLibraryModals } from "./personal-library/PersonalLibraryModals";
 import { PersonalLibrarySidebar } from "./personal-library/PersonalLibrarySidebar";
+import { PromptGraphView } from "@/components/features/library/PromptGraphView";
 import type { PersonalLibrarySharedState } from "./personal-library/types";
+import { useHistory } from "@/hooks/useHistory";
+import type { HistoryItem } from "@/hooks/useHistory";
+import { CapabilityMode } from "@/lib/capability-mode";
 
 interface PersonalLibraryViewProps {
   onUsePrompt: (prompt: PersonalPrompt | LibraryPrompt) => void;
@@ -24,12 +28,13 @@ interface PersonalLibraryViewProps {
 }
 
 export function PersonalLibraryView({
-    onUsePrompt,
-    onCopyText,
-    handleImportHistory,
-    historyLength
+  onUsePrompt,
+  onCopyText,
+  handleImportHistory,
+  historyLength,
 }: PersonalLibraryViewProps) {
   const ctx = useLibraryContext();
+  const { history } = useHistory();
 
   const {
     filteredPersonalLibrary,
@@ -80,6 +85,9 @@ export function PersonalLibraryView({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeLocalFolder, setActiveLocalFolder] = useState<string>("all");
 
+  // Graph vs grid view toggle
+  const [localViewType, setLocalViewType] = useState<"grid" | "graph">("grid");
+
   // Chains section collapse
   const [chainsExpanded, setChainsExpanded] = useState(false);
 
@@ -92,12 +100,12 @@ export function PersonalLibraryView({
       setChainsExpanded(true);
       requestAnimationFrame(() => {
         document
-          .querySelector('[data-chains-section]')
-          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          .querySelector("[data-chains-section]")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     };
-    window.addEventListener('peroot:open-chains', handler);
-    return () => window.removeEventListener('peroot:open-chains', handler);
+    window.addEventListener("peroot:open-chains", handler);
+    return () => window.removeEventListener("peroot:open-chains", handler);
   }, []);
 
   // Expanded card ids
@@ -110,7 +118,11 @@ export function PersonalLibraryView({
   const [showNewMoveInlineInput, setShowNewMoveInlineInput] = useState(false);
 
   // Context menu for folders
-  const [folderContextMenu, setFolderContextMenu] = useState<{ folder: string; x: number; y: number } | null>(null);
+  const [folderContextMenu, setFolderContextMenu] = useState<{
+    folder: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   // New folder input
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
@@ -127,54 +139,94 @@ export function PersonalLibraryView({
   const importFileRef = useRef<HTMLInputElement | null>(null);
   const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // ─── History → PersonalPrompt converter ──────────────────────────────────
+
+  const historyAsPrompts: PersonalPrompt[] = history.map((h: HistoryItem) => ({
+    id: h.id,
+    title: h.title || h.entity.category || h.enhanced.slice(0, 60),
+    prompt: h.enhanced,
+    category: h.category,
+    personal_category: null,
+    use_case: h.tone || "",
+    created_at: h.timestamp,
+    updated_at: h.timestamp,
+    use_count: 0,
+    source: "manual" as const,
+    tags: [],
+    last_used_at: null,
+    capability_mode: CapabilityMode.STANDARD,
+  }));
+
   // ─── Derived Data ─────────────────────────────────────────────────────────
 
-  // Determine effective active folder (null from context = "all")
-  const effectiveFolder = ctxActiveFolder !== undefined
-    ? (ctxActiveFolder === null ? "all" : ctxActiveFolder)
-    : activeLocalFolder;
+  // Determine effective active folder (null from context = "all").
+  // history is local-only so we check activeLocalFolder first.
+  const effectiveFolder =
+    activeLocalFolder === "history"
+      ? "history"
+      : ctxActiveFolder !== undefined
+        ? ctxActiveFolder === null
+          ? "all"
+          : ctxActiveFolder
+        : activeLocalFolder;
+
+  const isHistoryFolder = effectiveFolder === "history";
 
   // Display items filtered by active folder (local filtering when context doesn't handle it)
   const allDisplayItems = filteredPersonalLibrary;
 
   const folderFilteredItems = (() => {
+    if (isHistoryFolder) return historyAsPrompts;
     if (effectiveFolder === "all") return allDisplayItems;
-    if (effectiveFolder === "favorites") return allDisplayItems.filter(p => favoritePersonalIds.has(p.id));
-    if (effectiveFolder === "pinned") return allDisplayItems.filter(p => p.is_pinned);
-    if (effectiveFolder === "templates") return allDisplayItems.filter(p => p.is_template === true);
-    return allDisplayItems.filter(p => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === effectiveFolder);
+    if (effectiveFolder === "favorites")
+      return allDisplayItems.filter((p) => favoritePersonalIds.has(p.id));
+    if (effectiveFolder === "pinned") return allDisplayItems.filter((p) => p.is_pinned);
+    if (effectiveFolder === "templates")
+      return allDisplayItems.filter((p) => p.is_template === true);
+    return allDisplayItems.filter(
+      (p) => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === effectiveFolder,
+    );
   })();
 
-  // Pagination
-  const usedPage = ctxPage ?? localPage;
+  // Pagination — history uses local-only pagination (no server pagination)
+  const usedPage = isHistoryFolder ? localPage : (ctxPage ?? localPage);
   const usedPageSize = ctxPageSize;
-  const usedTotalCount = ctxTotalCount ?? folderFilteredItems.length;
+  const usedTotalCount = isHistoryFolder
+    ? historyAsPrompts.length
+    : (ctxTotalCount ?? folderFilteredItems.length);
   const totalPages = Math.max(1, Math.ceil(usedTotalCount / usedPageSize));
 
   // Local paginated slice (when context doesn't paginate)
-  const paginatedItems = ctxPage !== undefined
-    ? folderFilteredItems // context already paginates
-    : folderFilteredItems.slice((localPage - 1) * usedPageSize, localPage * usedPageSize);
+  const paginatedItems =
+    !isHistoryFolder && ctxPage !== undefined
+      ? folderFilteredItems // context already paginates
+      : folderFilteredItems.slice((localPage - 1) * usedPageSize, localPage * usedPageSize);
 
   const displayItems = paginatedItems;
 
   // Folder counts derived locally as fallback
   const localFolderCounts: Record<string, number> = {
     all: allDisplayItems.length,
-    favorites: allDisplayItems.filter(p => favoritePersonalIds.has(p.id)).length,
-    pinned: allDisplayItems.filter(p => p.is_pinned).length,
-    templates: allDisplayItems.filter(p => p.is_template === true).length,
+    favorites: allDisplayItems.filter((p) => favoritePersonalIds.has(p.id)).length,
+    pinned: allDisplayItems.filter((p) => p.is_pinned).length,
+    templates: allDisplayItems.filter((p) => p.is_template === true).length,
+    history: historyAsPrompts.length,
   };
-  const allPersonalCategories = Array.from(new Set([
-    PERSONAL_DEFAULT_CATEGORY,
-    ...personalCategories,
-    ...allDisplayItems.map(p => p.personal_category).filter(Boolean) as string[]
-  ]));
-  allPersonalCategories.forEach(cat => {
-    localFolderCounts[cat] = allDisplayItems.filter(p => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === cat).length;
+  const allPersonalCategories = Array.from(
+    new Set([
+      PERSONAL_DEFAULT_CATEGORY,
+      ...personalCategories,
+      ...(allDisplayItems.map((p) => p.personal_category).filter(Boolean) as string[]),
+    ]),
+  );
+  allPersonalCategories.forEach((cat) => {
+    localFolderCounts[cat] = allDisplayItems.filter(
+      (p) => (p.personal_category || PERSONAL_DEFAULT_CATEGORY) === cat,
+    ).length;
   });
 
-  const folderCounts = ctxFolderCounts ?? localFolderCounts;
+  const baseFolderCounts = ctxFolderCounts ?? localFolderCounts;
+  const folderCounts = { ...baseFolderCounts, history: historyAsPrompts.length };
   const isLoading = !isPersonalLoaded || ctxIsPageLoading;
 
   // ─── Effects ──────────────────────────────────────────────────────────────
@@ -189,7 +241,13 @@ export function PersonalLibraryView({
     queueMicrotask(() => setLocalPage(1));
   }, [effectiveFolder, personalQuery, selectedCapabilityFilter]);
   useEffect(() => {
-    const handleClick = () => { setOpenMenuId(null); setFolderContextMenu(null); setShowMoveSubMenu(false); setShowNewMoveInlineInput(false); setNewMoveInlineName(""); };
+    const handleClick = () => {
+      setOpenMenuId(null);
+      setFolderContextMenu(null);
+      setShowMoveSubMenu(false);
+      setShowNewMoveInlineInput(false);
+      setNewMoveInlineName("");
+    };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, []);
@@ -199,22 +257,27 @@ export function PersonalLibraryView({
   const extractVariablesFromPrompt = (text: string): string[] => {
     const matches = text.match(/\{([^}]+)\}/g);
     if (!matches) return [];
-    return [...new Set(matches.map(m => m.slice(1, -1)))];
+    return [...new Set(matches.map((m) => m.slice(1, -1)))];
   };
 
   const getStyledPromptMarkup = (prompt: PersonalPrompt) => {
     return prompt.prompt_style || prompt.prompt;
   };
 
-  const setFolder = useCallback((folder: string) => {
-    // Send virtual folders as-is to useLibrary (it handles favorites/pinned/all specially)
-    if (ctxSetActiveFolder) ctxSetActiveFolder(folder === "all" ? null : folder);
-    setActiveLocalFolder(folder);
-    // Map to personalView for legacy context filtering
-    if (folder === "favorites") setPersonalView("favorites");
-    else setPersonalView("all");
-    setSidebarOpen(false);
-  }, [ctxSetActiveFolder, setPersonalView]);
+  const setFolder = useCallback(
+    (folder: string) => {
+      setActiveLocalFolder(folder);
+      setSidebarOpen(false);
+      // history is local-only — don't push to server pagination context
+      if (folder === "history") return;
+      // Send virtual folders as-is to useLibrary (it handles favorites/pinned/all specially)
+      if (ctxSetActiveFolder) ctxSetActiveFolder(folder === "all" ? null : folder);
+      // Map to personalView for legacy context filtering
+      if (folder === "favorites") setPersonalView("favorites");
+      else setPersonalView("all");
+    },
+    [ctxSetActiveFolder, setPersonalView],
+  );
 
   const handleSearchChange = (val: string) => {
     setLocalSearch(val);
@@ -227,7 +290,8 @@ export function PersonalLibraryView({
 
   const handleSortChange = (val: string) => {
     if (ctxSetSortBy) ctxSetSortBy(val);
-    else setPersonalSort(val as "recent" | "title" | "usage" | "custom" | "last_used" | "performance");
+    else
+      setPersonalSort(val as "recent" | "title" | "usage" | "custom" | "last_used" | "performance");
   };
 
   const handlePageChange = (p: number) => {
@@ -299,14 +363,17 @@ export function PersonalLibraryView({
 
   const selectAllVisible = () => {
     const next = new Set(selectedIds);
-    const visibleIds = displayItems.map(p => p.id);
-    const allVisibleSelected = visibleIds.every(id => next.has(id));
-    if (allVisibleSelected) visibleIds.forEach(id => next.delete(id));
-    else visibleIds.forEach(id => next.add(id));
+    const visibleIds = displayItems.map((p) => p.id);
+    const allVisibleSelected = visibleIds.every((id) => next.has(id));
+    if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+    else visibleIds.forEach((id) => next.add(id));
     setSelectedIds(next);
   };
 
-  const clearSelection = () => { setSelectedIds(new Set()); setSelectionMode(false); };
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  };
 
   const handleBatchDelete = async () => {
     if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
@@ -314,7 +381,9 @@ export function PersonalLibraryView({
       await ctx.deletePrompts(Array.from(selectedIds));
       toast.success("נמחקו בהצלחה");
       clearSelection();
-    } catch { toast.error("שגיאה במחיקה"); }
+    } catch {
+      toast.error("שגיאה במחיקה");
+    }
   };
 
   const handleBatchMove = async () => {
@@ -327,15 +396,23 @@ export function PersonalLibraryView({
       setIsCreatingNewMoveCategory(false);
       setNewMoveCategoryInput("");
       clearSelection();
-    } catch { toast.error("שגיאה בהעברה"); }
+    } catch {
+      toast.error("שגיאה בהעברה");
+    }
   };
 
   const handleBatchTag = async () => {
-    const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
-    if (tags.length === 0) { toast.error("יש להזין לפחות תגית אחת"); return; }
+    const tags = tagsInput
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tags.length === 0) {
+      toast.error("יש להזין לפחות תגית אחת");
+      return;
+    }
     try {
       const promises = Array.from(selectedIds).map(async (id) => {
-        const item = filteredPersonalLibrary.find(p => p.id === id);
+        const item = filteredPersonalLibrary.find((p) => p.id === id);
         if (!item) return;
         const newTags = Array.from(new Set([...(item.tags || []), ...tags]));
         await ctx.updateTags(id, newTags);
@@ -345,13 +422,16 @@ export function PersonalLibraryView({
       setShowTagDialog(false);
       setTagsInput("");
       clearSelection();
-    } catch { toast.error("שגיאה בעדכון תגיות"); }
+    } catch {
+      toast.error("שגיאה בעדכון תגיות");
+    }
   };
 
   const handleBatchExport = () => {
-    const items = filteredPersonalLibrary.filter(p => selectedIds.has(p.id));
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
-    const a = document.createElement('a');
+    const items = filteredPersonalLibrary.filter((p) => selectedIds.has(p.id));
+    const dataStr =
+      "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+    const a = document.createElement("a");
     a.setAttribute("href", dataStr);
     a.setAttribute("download", `peroot_export_${Date.now()}.json`);
     document.body.appendChild(a);
@@ -367,18 +447,31 @@ export function PersonalLibraryView({
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed)) { toast.error("קובץ לא תקין - נדרש מערך JSON"); return; }
-      const valid = parsed.filter((item: Record<string, unknown>) =>
-        typeof item.title === "string" && typeof item.prompt === "string"
+      if (!Array.isArray(parsed)) {
+        toast.error("קובץ לא תקין - נדרש מערך JSON");
+        return;
+      }
+      const valid = parsed.filter(
+        (item: Record<string, unknown>) =>
+          typeof item.title === "string" && typeof item.prompt === "string",
       );
-      if (valid.length === 0) { toast.error("לא נמצאו פרומפטים תקינים בקובץ"); return; }
-      const existingTexts = new Set(personalLibrary.map(p => p.prompt.trim()));
-      const toImport = valid.filter((item: Record<string, unknown>) => !existingTexts.has((item.prompt as string).trim()));
+      if (valid.length === 0) {
+        toast.error("לא נמצאו פרומפטים תקינים בקובץ");
+        return;
+      }
+      const existingTexts = new Set(personalLibrary.map((p) => p.prompt.trim()));
+      const toImport = valid.filter(
+        (item: Record<string, unknown>) => !existingTexts.has((item.prompt as string).trim()),
+      );
       const skipped = valid.length - toImport.length;
-      if (toImport.length === 0) { toast.info(`כל ${valid.length} הפרומפטים כבר קיימים בספרייה`); return; }
-      const confirmMsg = skipped > 0
-        ? `ייבוא ${toImport.length} פרומפטים (${skipped} כפולים דולגו). להמשיך?`
-        : `ייבוא ${toImport.length} פרומפטים. להמשיך?`;
+      if (toImport.length === 0) {
+        toast.info(`כל ${valid.length} הפרומפטים כבר קיימים בספרייה`);
+        return;
+      }
+      const confirmMsg =
+        skipped > 0
+          ? `ייבוא ${toImport.length} פרומפטים (${skipped} כפולים דולגו). להמשיך?`
+          : `ייבוא ${toImport.length} פרומפטים. להמשיך?`;
       if (!confirm(confirmMsg)) return;
       const promptsToAdd = toImport.map((item: Record<string, unknown>) => ({
         title: item.title as string,
@@ -393,7 +486,9 @@ export function PersonalLibraryView({
       }));
       await addPrompts(promptsToAdd);
       toast.success(`יובאו ${toImport.length} פרומפטים בהצלחה`);
-    } catch { toast.error("שגיאה בקריאת הקובץ - ודא שזהו קובץ JSON תקין"); }
+    } catch {
+      toast.error("שגיאה בקריאת הקובץ - ודא שזהו קובץ JSON תקין");
+    }
   };
 
   const addPersonalPromptFromLibrary = async (prompt: LibraryPrompt) => {
@@ -407,7 +502,7 @@ export function PersonalLibraryView({
         source: "library",
         reference: prompt.id,
         prompt_style: undefined,
-        tags: []
+        tags: [],
       });
       toast.success("נשמר לספריה האישית");
     } catch (e) {
@@ -427,7 +522,8 @@ export function PersonalLibraryView({
   // ─── Folder right-click context menu ─────────────────────────────────────
 
   const handleFolderContextMenu = (e: React.MouseEvent, folder: string) => {
-    if (folder === "all" || folder === "favorites" || folder === "pinned" || folder === "templates") return;
+    if (folder === "all" || folder === "favorites" || folder === "pinned" || folder === "templates")
+      return;
     e.preventDefault();
     setFolderContextMenu({ folder, x: e.clientX, y: e.clientY });
   };
@@ -446,7 +542,8 @@ export function PersonalLibraryView({
     } else {
       pages.push(1);
       if (usedPage > 3) pages.push("...");
-      for (let i = Math.max(2, usedPage - 1); i <= Math.min(totalPages - 1, usedPage + 1); i++) pages.push(i);
+      for (let i = Math.max(2, usedPage - 1); i <= Math.min(totalPages - 1, usedPage + 1); i++)
+        pages.push(i);
       if (usedPage < totalPages - 2) pages.push("...");
       pages.push(totalPages);
     }
@@ -460,6 +557,7 @@ export function PersonalLibraryView({
     if (effectiveFolder === "favorites") return "מועדפים";
     if (effectiveFolder === "pinned") return "מוצמדים";
     if (effectiveFolder === "templates") return "תבניות";
+    if (effectiveFolder === "history") return "היסטוריה";
     return effectiveFolder;
   })();
 
@@ -528,6 +626,8 @@ export function PersonalLibraryView({
     setIsCreatingNewMoveCategory,
     newMoveCategoryInput,
     setNewMoveCategoryInput,
+    localViewType,
+    setLocalViewType,
     importFileRef,
     handleSearchChange,
     handleSortChange,
@@ -549,8 +649,10 @@ export function PersonalLibraryView({
   // ─── Main Render ──────────────────────────────────────────────────────────
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-20 md:pb-0" dir="rtl">
-
+    <div
+      className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-20 md:pb-0"
+      dir="rtl"
+    >
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -566,32 +668,33 @@ export function PersonalLibraryView({
         aria-label="תיקיות הספרייה האישית"
         className={cn(
           "fixed top-0 right-0 h-full w-72 max-w-[85vw] z-50 bg-[#0A0A0F] border-l border-(--glass-border) shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
-          sidebarOpen ? "translate-x-0" : "translate-x-full"
+          sidebarOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
         <PersonalLibrarySidebar shared={shared} isMobile={true} />
       </div>
 
       {/* Top Bar */}
-      <PersonalLibraryHeader
-        shared={shared}
-        viewProps={{ handleImportHistory, historyLength }}
-      />
+      <PersonalLibraryHeader shared={shared} viewProps={{ handleImportHistory, historyLength }} />
 
       {/* Main layout: sidebar + content */}
-      <div className="flex gap-4 items-start">
-
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/5 dark:bg-black/30 backdrop-blur-sm">
-          <PersonalLibrarySidebar shared={shared} isMobile={false} />
-        </aside>
-
-        {/* Main Content */}
-        <PersonalLibraryGrid
-          shared={shared}
-          viewProps={{ onUsePrompt, onCopyText }}
+      {localViewType === "graph" ? (
+        <PromptGraphView
+          prompts={filteredPersonalLibrary}
+          favoriteIds={favoritePersonalIds}
+          onUsePrompt={(p) => onUsePrompt(p)}
         />
-      </div>
+      ) : (
+        <div className="flex gap-4 items-start">
+          {/* Desktop Sidebar */}
+          <aside className="hidden md:flex flex-col w-[260px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-white/8 bg-black/5 dark:bg-black/30 backdrop-blur-sm">
+            <PersonalLibrarySidebar shared={shared} isMobile={false} />
+          </aside>
+
+          {/* Main Content */}
+          <PersonalLibraryGrid shared={shared} viewProps={{ onUsePrompt, onCopyText }} />
+        </div>
+      )}
 
       {/* Modals, floating bars, context menus */}
       <PersonalLibraryModals shared={shared} />

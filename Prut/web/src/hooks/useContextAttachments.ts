@@ -116,6 +116,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         format: file.name.split(".").pop()?.toLowerCase(),
         size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
+        stage: "uploading",
       };
 
       setAttachments((prev) => [...prev, attachment]);
@@ -182,11 +183,15 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       }
 
       const id = generateId();
+      const parsed = new URL(url);
+      const displayName = parsed.hostname.replace(/^www\./, "");
       const attachment: ContextAttachment = {
         id,
         type: "url",
-        name: url,
+        name: displayName,
+        url,
         status: "loading",
+        stage: "extracting",
       };
 
       setAttachments((prev) => [...prev, attachment]);
@@ -260,6 +265,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         format: file.name.split(".").pop()?.toLowerCase(),
         size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
+        stage: "uploading",
       };
 
       setAttachments((prev) => [...prev, attachment]);

@@ -1,22 +1,22 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { getApiPath } from '@/lib/api-path';
-import { createClient } from '@/lib/supabase/client';
-import { User } from '@supabase/supabase-js';
-import { PersonalPrompt } from '@/lib/types';
-import { CapabilityMode } from '@/lib/capability-mode';
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { getApiPath } from "@/lib/api-path";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { PersonalPrompt } from "@/lib/types";
+import { CapabilityMode } from "@/lib/capability-mode";
 import { logger } from "@/lib/logger";
 
 import { applyGuestFiltersAndSort } from "@/lib/library/sort";
 import { getCategoriesKey, readOrderMap, persistOrderMap } from "@/lib/library/row-mapper";
-import { useLibraryFetch } from './useLibraryFetch';
-import { useLibraryAuth } from './useLibraryAuth';
-import { useLibraryCategories } from './useLibraryCategories';
-import { usePromptMutations } from './usePromptMutations';
-import { usePromptOrdering } from './usePromptOrdering';
+import { useLibraryFetch } from "./useLibraryFetch";
+import { useLibraryAuth } from "./useLibraryAuth";
+import { useLibraryCategories } from "./useLibraryCategories";
+import { usePromptMutations } from "./usePromptMutations";
+import { usePromptOrdering } from "./usePromptOrdering";
 
-const STORAGE_KEY = 'peroot_personal_library';
+const STORAGE_KEY = "peroot_personal_library";
 const DEFAULT_PAGE_SIZE = 15;
 
 export function useLibrary() {
@@ -34,8 +34,8 @@ export function useLibrary() {
 
   // Filter / sort state
   const [activeFolder, setActiveFolderState] = useState<string | null>(null);
-  const [sortBy, setSortByState] = useState<string>('recent');
-  const [searchQuery, setSearchQueryState] = useState<string>('');
+  const [sortBy, setSortByState] = useState<string>("recent");
+  const [searchQuery, setSearchQueryState] = useState<string>("");
   const [capabilityFilter, setCapabilityFilterState] = useState<string | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
@@ -73,144 +73,144 @@ export function useLibrary() {
     const currentUser = userRef.current;
     if (!currentUser) return;
     const s = stateRef.current;
-    await Promise.all([
-      fetchPage(currentUser.id, s),
-      fetchFolderCounts(currentUser.id),
-    ]);
+    await Promise.all([fetchPage(currentUser.id, s), fetchFolderCounts(currentUser.id)]);
   }, [fetchPage, fetchFolderCounts]);
 
   // ---------------------------------------------------------------------------
   // GUEST CLIENT-SIDE PAGINATION HELPER
   // ---------------------------------------------------------------------------
 
-  const applyGuestPagination = useCallback((
-    allItems: PersonalPrompt[],
-    opts: {
-      page: number;
-      pageSize: number;
-      activeFolder: string | null;
-      sortBy: string;
-      searchQuery: string;
-      capabilityFilter: string | null;
-    }
-  ) => {
-    const filtered = applyGuestFiltersAndSort(
-      allItems,
-      {
-        activeFolder: opts.activeFolder,
-        searchQuery: opts.searchQuery,
-        capabilityFilter: opts.capabilityFilter,
+  const applyGuestPagination = useCallback(
+    (
+      allItems: PersonalPrompt[],
+      opts: {
+        page: number;
+        pageSize: number;
+        activeFolder: string | null;
+        sortBy: string;
+        searchQuery: string;
+        capabilityFilter: string | null;
       },
-      { sortBy: opts.sortBy }
-    );
+    ) => {
+      const filtered = applyGuestFiltersAndSort(
+        allItems,
+        {
+          activeFolder: opts.activeFolder,
+          searchQuery: opts.searchQuery,
+          capabilityFilter: opts.capabilityFilter,
+        },
+        { sortBy: opts.sortBy },
+      );
 
-    setTotalCount(filtered.length);
+      setTotalCount(filtered.length);
 
-    // Compute folder counts
-    const counts: Record<string, number> = {};
-    for (const item of allItems) {
-      const folder = item.personal_category ?? 'כללי';
-      counts[folder] = (counts[folder] ?? 0) + 1;
-    }
-    setFolderCounts(counts);
+      // Compute folder counts
+      const counts: Record<string, number> = {};
+      for (const item of allItems) {
+        const folder = item.personal_category ?? "כללי";
+        counts[folder] = (counts[folder] ?? 0) + 1;
+      }
+      setFolderCounts(counts);
 
-    const offset = (opts.page - 1) * opts.pageSize;
-    setPersonalLibrary(filtered.slice(offset, offset + opts.pageSize));
-  }, []);
+      const offset = (opts.page - 1) * opts.pageSize;
+      setPersonalLibrary(filtered.slice(offset, offset + opts.pageSize));
+    },
+    [],
+  );
 
   // ---------------------------------------------------------------------------
   // INITIALISATION — data-loading logic called by useLibraryAuth on user change
   // ---------------------------------------------------------------------------
 
-  const initForUser = useCallback(async (currentUser: User | null) => {
-    userRef.current = currentUser;
-    // Reset filters on every user change (covers both initial load and sign-in/out)
-    setPageState(1);
-    setActiveFolderState(null);
-    setSortByState('recent');
-    setSearchQueryState('');
-    setCapabilityFilterState(null);
+  const initForUser = useCallback(
+    async (currentUser: User | null) => {
+      userRef.current = currentUser;
+      // Reset filters on every user change (covers both initial load and sign-in/out)
+      setPageState(1);
+      setActiveFolderState(null);
+      setSortByState("recent");
+      setSearchQueryState("");
+      setCapabilityFilterState(null);
 
-    if (currentUser) {
-      const opts = {
-        page: 1,
-        pageSize: DEFAULT_PAGE_SIZE,
-        activeFolder: null,
-        sortBy: 'recent',
-        searchQuery: '',
-        capabilityFilter: null,
-      };
-      await Promise.all([
-        fetchPage(currentUser.id, opts),
-        fetchFolderCounts(currentUser.id),
-      ]);
+      if (currentUser) {
+        const opts = {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          activeFolder: null,
+          sortBy: "recent",
+          searchQuery: "",
+          capabilityFilter: null,
+        };
+        await Promise.all([fetchPage(currentUser.id, opts), fetchFolderCounts(currentUser.id)]);
 
-      try {
-        const storedCats = localStorage.getItem(getCategoriesKey(currentUser.id));
-        if (storedCats) setPersonalCategories(JSON.parse(storedCats));
-      } catch {
-        // malformed localStorage — ignore, categories loaded fresh from DB
-      }
-    } else {
-      // GUEST - load from localStorage
-      const orderMap = readOrderMap(null);
-      const storedLib = localStorage.getItem(STORAGE_KEY);
-      let localItems: PersonalPrompt[] = [];
-
-      if (storedLib) {
         try {
-          const parsed = JSON.parse(storedLib);
-          if (Array.isArray(parsed)) {
-            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-            const now = Date.now();
-            const filtered = parsed.filter((row) => {
-              const savedAt = row.savedAt ?? row.created_at ?? 0;
-              const ts = typeof savedAt === 'string' ? new Date(savedAt).getTime() : savedAt;
-              return (now - ts) < SEVEN_DAYS_MS;
-            });
-            localItems = filtered.map((row, index) => ({
-              ...row,
-              sort_index:
-                typeof row.sort_index === "number"
-                  ? row.sort_index
-                  : typeof orderMap[row.id] === "number"
-                    ? orderMap[row.id]
-                    : index,
-              created_at: row.created_at ?? Date.now(),
-              updated_at: row.updated_at ?? Date.now(),
-              prompt_style: row.prompt_style ?? undefined,
-              personal_category: row.personal_category ?? null,
-              capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
-              tags: row.tags || [],
-              last_used_at: row.last_used_at ?? null,
-              savedAt: row.savedAt ?? Date.now()
-            }));
+          const storedCats = localStorage.getItem(getCategoriesKey(currentUser.id));
+          if (storedCats) setPersonalCategories(JSON.parse(storedCats));
+        } catch {
+          // malformed localStorage — ignore, categories loaded fresh from DB
+        }
+      } else {
+        // GUEST - load from localStorage
+        const orderMap = readOrderMap(null);
+        const storedLib = localStorage.getItem(STORAGE_KEY);
+        let localItems: PersonalPrompt[] = [];
+
+        if (storedLib) {
+          try {
+            const parsed = JSON.parse(storedLib);
+            if (Array.isArray(parsed)) {
+              const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+              const now = Date.now();
+              const filtered = parsed.filter((row) => {
+                const savedAt = row.savedAt ?? row.created_at ?? 0;
+                const ts = typeof savedAt === "string" ? new Date(savedAt).getTime() : savedAt;
+                return now - ts < SEVEN_DAYS_MS;
+              });
+              localItems = filtered.map((row, index) => ({
+                ...row,
+                sort_index:
+                  typeof row.sort_index === "number"
+                    ? row.sort_index
+                    : typeof orderMap[row.id] === "number"
+                      ? orderMap[row.id]
+                      : index,
+                created_at: row.created_at ?? Date.now(),
+                updated_at: row.updated_at ?? Date.now(),
+                prompt_style: row.prompt_style ?? undefined,
+                personal_category: row.personal_category ?? null,
+                capability_mode: row.capability_mode ?? CapabilityMode.STANDARD,
+                tags: row.tags || [],
+                last_used_at: row.last_used_at ?? null,
+                savedAt: row.savedAt ?? Date.now(),
+              }));
+            }
+          } catch (error) {
+            logger.warn("Failed to parse personal library", error);
           }
-        } catch (error) {
-          logger.warn("Failed to parse personal library", error);
+        }
+
+        setAllLocalItems(localItems);
+        applyGuestPagination(localItems, {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          activeFolder: null,
+          sortBy: "recent",
+          searchQuery: "",
+          capabilityFilter: null,
+        });
+        setPageState(1);
+
+        try {
+          const storedCats = localStorage.getItem(getCategoriesKey(null));
+          if (storedCats) setPersonalCategories(JSON.parse(storedCats));
+        } catch {
+          // malformed localStorage — ignore
         }
       }
-
-      setAllLocalItems(localItems);
-      applyGuestPagination(localItems, {
-        page: 1,
-        pageSize: DEFAULT_PAGE_SIZE,
-        activeFolder: null,
-        sortBy: 'recent',
-        searchQuery: '',
-        capabilityFilter: null,
-      });
-      setPageState(1);
-
-      try {
-        const storedCats = localStorage.getItem(getCategoriesKey(null));
-        if (storedCats) setPersonalCategories(JSON.parse(storedCats));
-      } catch {
-        // malformed localStorage — ignore
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchPage, fetchFolderCounts, applyGuestPagination]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [fetchPage, fetchFolderCounts, applyGuestPagination],
+  );
 
   // ---------------------------------------------------------------------------
   // AUTH — subscription + migration handled in useLibraryAuth
@@ -222,13 +222,8 @@ export function useLibrary() {
   // CATEGORY CRUD — implemented in useLibraryCategories
   // ---------------------------------------------------------------------------
 
-  const {
-    personalCategories,
-    setPersonalCategories,
-    addCategory,
-    renameCategory,
-    deleteCategory,
-  } = useLibraryCategories({ supabase, user, refreshCurrentPage, setAllLocalItems });
+  const { personalCategories, setPersonalCategories, addCategory, renameCategory, deleteCategory } =
+    useLibraryCategories({ supabase, user, refreshCurrentPage, setAllLocalItems });
 
   // ---------------------------------------------------------------------------
   // RE-FETCH WHEN PAGINATION / FILTER STATE CHANGES (authenticated users)
@@ -239,9 +234,16 @@ export function useLibrary() {
     const currentUser = userRef.current;
     if (!currentUser) return;
 
-    fetchPage(currentUser.id, { page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter });
-  // We intentionally omit fetchPage from deps to avoid double-fetching on init
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchPage(currentUser.id, {
+      page,
+      pageSize,
+      activeFolder,
+      sortBy,
+      searchQuery,
+      capabilityFilter,
+    });
+    // We intentionally omit fetchPage from deps to avoid double-fetching on init
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter, isLoaded]);
 
   // ---------------------------------------------------------------------------
@@ -251,9 +253,25 @@ export function useLibrary() {
   useEffect(() => {
     if (!isLoaded) return;
     if (userRef.current) return; // handled above
-    applyGuestPagination(allLocalItems, { page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, activeFolder, sortBy, searchQuery, capabilityFilter, allLocalItems, isLoaded]);
+    applyGuestPagination(allLocalItems, {
+      page,
+      pageSize,
+      activeFolder,
+      sortBy,
+      searchQuery,
+      capabilityFilter,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    page,
+    pageSize,
+    activeFolder,
+    sortBy,
+    searchQuery,
+    capabilityFilter,
+    allLocalItems,
+    isLoaded,
+  ]);
 
   // ---------------------------------------------------------------------------
   // SYNC GUEST DATA TO LOCALSTORAGE
@@ -329,28 +347,40 @@ export function useLibrary() {
   const updateCategory = async (id: string, category: string) => {
     if (user) {
       const { count: catCount } = await supabase
-        .from('personal_library')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('personal_category', category)
-        .neq('id', id);
+        .from("personal_library")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("personal_category", category)
+        .neq("id", id);
 
-      const nextSortIndex = (catCount ?? 0);
+      const nextSortIndex = catCount ?? 0;
 
-      const { error } = await supabase.from('personal_library').update({
-        personal_category: category,
-        sort_index: nextSortIndex
-      }).eq('id', id).eq('user_id', user.id);
-      if (error) logger.error('[useLibrary] updateCategory error:', error);
+      const { error } = await supabase
+        .from("personal_library")
+        .update({
+          personal_category: category,
+          sort_index: nextSortIndex,
+        })
+        .eq("id", id)
+        .eq("user_id", user.id);
+      if (error) logger.error("[useLibrary] updateCategory error:", error);
 
       await refreshCurrentPage();
     } else {
-      setAllLocalItems(prev => {
-        const nextSortIndex = prev
-          .filter((item) => item.personal_category === category && item.id !== id)
-          .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
-        return prev.map(p =>
-          p.id === id ? { ...p, personal_category: category, sort_index: nextSortIndex, updated_at: Date.now() } : p
+      setAllLocalItems((prev) => {
+        const nextSortIndex =
+          prev
+            .filter((item) => item.personal_category === category && item.id !== id)
+            .reduce((max, item) => Math.max(max, item.sort_index ?? -1), -1) + 1;
+        return prev.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                personal_category: category,
+                sort_index: nextSortIndex,
+                updated_at: Date.now(),
+              }
+            : p,
         );
       });
     }
@@ -383,24 +413,21 @@ export function useLibrary() {
       }
       await refreshCurrentPage();
     } else {
-      setAllLocalItems(prev => prev.filter(p => !ids.includes(p.id)));
+      setAllLocalItems((prev) => prev.filter((p) => !ids.includes(p.id)));
     }
   };
 
   const updateProfile = async (updates: {
     onboarding_completed?: boolean;
-    plan_tier?: 'free' | 'pro';
+    plan_tier?: "free" | "pro";
     credits_balance?: number;
   }) => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', user.id);
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
 
     if (error) {
-      logger.error('[useLibrary] Error updating profile:', error);
+      logger.error("[useLibrary] Error updating profile:", error);
       throw error;
     }
   };
@@ -409,8 +436,8 @@ export function useLibrary() {
     if (!user) return;
 
     try {
-      const response = await fetch(getApiPath('/api/user/onboarding/complete'), {
-        method: 'POST',
+      const response = await fetch(getApiPath("/api/user/onboarding/complete"), {
+        method: "POST",
       });
 
       if (!response.ok) {
@@ -420,7 +447,7 @@ export function useLibrary() {
 
       return true;
     } catch (error) {
-      logger.error('[useLibrary] completeOnboarding error:', error);
+      logger.error("[useLibrary] completeOnboarding error:", error);
       throw error;
     }
   };

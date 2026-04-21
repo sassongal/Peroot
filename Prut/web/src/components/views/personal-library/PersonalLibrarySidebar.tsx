@@ -1,8 +1,16 @@
 "use client";
 
 import {
-    BookOpen, Star, Plus, Check, X,
-    Pin, Folder, FolderOpen, LayoutTemplate
+  BookOpen,
+  Star,
+  Plus,
+  Check,
+  X,
+  Pin,
+  Folder,
+  FolderOpen,
+  LayoutTemplate,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -48,26 +56,32 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
     { key: "favorites", label: "מועדפים", icon: Star },
     { key: "pinned", label: "מוצמדים", icon: Pin },
     { key: "templates", label: "תבניות", icon: LayoutTemplate },
+    { key: "history", label: "היסטוריה", icon: History },
   ];
 
-  const realFolders = Array.from(new Set([
-    PERSONAL_DEFAULT_CATEGORY,
-    ...personalCategories,
-    ...allDisplayItems.map(p => p.personal_category).filter(Boolean) as string[]
-  ]));
+  const realFolders = Array.from(
+    new Set([
+      PERSONAL_DEFAULT_CATEGORY,
+      ...personalCategories,
+      ...(allDisplayItems.map((p) => p.personal_category).filter(Boolean) as string[]),
+    ]),
+  );
 
   return (
     <div
       className={cn(
         "flex flex-col h-full overflow-y-auto",
-        isMobile ? "p-4 bg-[#0A0A0F] min-h-screen" : "p-3"
+        isMobile ? "p-4 bg-[#0A0A0F] min-h-screen" : "p-3",
       )}
       dir="rtl"
     >
       {isMobile && (
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-semibold text-(--text-primary)">תיקיות</span>
-          <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -86,15 +100,25 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
                 "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                 isActive
                   ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
-                  : "text-(--text-muted) hover:bg-(--glass-bg) hover:text-(--text-primary) border border-transparent"
+                  : "text-(--text-muted) hover:bg-(--glass-bg) hover:text-(--text-primary) border border-transparent",
               )}
             >
               <div className="flex items-center gap-2">
-                <Icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-amber-600 dark:text-amber-400" : "text-(--text-muted)")} />
+                <Icon
+                  className={cn(
+                    "w-3.5 h-3.5 shrink-0",
+                    isActive ? "text-amber-600 dark:text-amber-400" : "text-(--text-muted)",
+                  )}
+                />
                 <span className="truncate">{label}</span>
               </div>
               {count > 0 && (
-                <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600")}>
+                <span
+                  className={cn(
+                    "text-xs tabular-nums shrink-0",
+                    isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600",
+                  )}
+                >
                   {count}
                 </span>
               )}
@@ -104,16 +128,31 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
       </div>
 
       <p className="text-[10px] leading-snug text-slate-500 px-2 mb-2 space-y-1">
-        <span className="block"><strong className="text-slate-400 font-medium">מועדפים</strong> — קיצור לפרומפטים שסימנת בכוכב (מסונכרן לחשבון אחרי התחברות).</span>
-        <span className="block"><strong className="text-slate-400 font-medium">מוצמדים</strong> — פרומפטים שסומנו כמוצמדים.</span>
-        <span className="block"><strong className="text-slate-400 font-medium">תבניות</strong> — פרומפטים שמוגדרים כתבנית אישית (לא דף התבניות הציבורי).</span>
+        <span className="block">
+          <strong className="text-slate-400 font-medium">מועדפים</strong> — קיצור לפרומפטים שסימנת
+          בכוכב (מסונכרן לחשבון אחרי התחברות).
+        </span>
+        <span className="block">
+          <strong className="text-slate-400 font-medium">מוצמדים</strong> — פרומפטים שסומנו
+          כמוצמדים.
+        </span>
+        <span className="block">
+          <strong className="text-slate-400 font-medium">תבניות</strong> — פרומפטים שמוגדרים כתבנית
+          אישית (לא דף התבניות הציבורי).
+        </span>
+        <span className="block">
+          <strong className="text-slate-400 font-medium">היסטוריה</strong> — הפרומפטים האחרונים
+          ששיפרת, לצפייה ושימוש חוזר.
+        </span>
       </p>
 
       <div className="h-px bg-white/8 my-2" />
 
       {/* Capability Filter */}
       <div className="mb-3 px-1">
-        <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-2">מצב יכולת</span>
+        <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-2">
+          מצב יכולת
+        </span>
         <div className="scale-90 origin-top-right">
           <CapabilityFilter
             value={selectedCapabilityFilter}
@@ -127,7 +166,9 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
 
       {/* Real folders */}
       <div className="space-y-0.5 flex-1">
-        <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-3">תיקיות</span>
+        <span className="text-[10px] uppercase tracking-wider text-slate-600 block mb-1.5 px-3">
+          תיקיות
+        </span>
         {realFolders.map((folder) => {
           const count = folderCounts[folder] ?? 0;
           const isActive = effectiveFolder === folder;
@@ -142,11 +183,26 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
                     value={renameCategoryInput}
                     onChange={(e) => setRenameCategoryInput(e.target.value)}
                     className="flex-1 bg-black/40 border border-(--glass-border) rounded px-2 py-1 text-xs text-(--text-primary) outline-none focus:border-amber-500/50"
-                    onKeyDown={(e) => { if (e.key === 'Enter') saveRenameCategory(); if (e.key === 'Escape') cancelRenameCategory(); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveRenameCategory();
+                      if (e.key === "Escape") cancelRenameCategory();
+                    }}
                     autoFocus
                   />
-                  <button onClick={saveRenameCategory} aria-label="שמור" className="p-1 text-green-400 hover:bg-green-500/10 rounded focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><Check className="w-3 h-3" /></button>
-                  <button onClick={cancelRenameCategory} aria-label="ביטול" className="p-1 text-red-400 hover:bg-red-500/10 rounded focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"><X className="w-3 h-3" /></button>
+                  <button
+                    onClick={saveRenameCategory}
+                    aria-label="שמור"
+                    className="p-1 text-green-400 hover:bg-green-500/10 rounded focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={cancelRenameCategory}
+                    aria-label="ביטול"
+                    className="p-1 text-red-400 hover:bg-red-500/10 rounded focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               ) : (
                 <button
@@ -155,18 +211,24 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
                     "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                     isActive
                       ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
-                      : "text-(--text-muted) hover:bg-(--glass-bg) hover:text-(--text-primary) border border-transparent"
+                      : "text-(--text-muted) hover:bg-(--glass-bg) hover:text-(--text-primary) border border-transparent",
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    {isActive
-                      ? <FolderOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                      : <Folder className="w-3.5 h-3.5 text-(--text-muted) shrink-0" />
-                    }
+                    {isActive ? (
+                      <FolderOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    ) : (
+                      <Folder className="w-3.5 h-3.5 text-(--text-muted) shrink-0" />
+                    )}
                     <span className="truncate text-sm">{folder}</span>
                   </div>
                   {count > 0 && (
-                    <span className={cn("text-xs tabular-nums shrink-0", isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600")}>
+                    <span
+                      className={cn(
+                        "text-xs tabular-nums shrink-0",
+                        isActive ? "text-amber-600/70 dark:text-amber-400/70" : "text-slate-600",
+                      )}
+                    >
                       {count}
                     </span>
                   )}
@@ -188,15 +250,27 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
               placeholder="שם תיקייה..."
               className="flex-1 bg-black/40 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-(--text-primary) placeholder:text-slate-600 outline-none focus:border-amber-500/40"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddNewFolder();
-                if (e.key === 'Escape') { setShowNewFolderInput(false); setNewFolderName(""); }
+                if (e.key === "Enter") handleAddNewFolder();
+                if (e.key === "Escape") {
+                  setShowNewFolderInput(false);
+                  setNewFolderName("");
+                }
               }}
               autoFocus
             />
-            <button onClick={handleAddNewFolder} className="p-1.5 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+            <button
+              onClick={handleAddNewFolder}
+              className="p-1.5 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
               <Check className="w-3.5 h-3.5" />
             </button>
-            <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(""); }} className="p-1.5 rounded-lg text-(--text-muted) hover:bg-(--glass-bg) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none">
+            <button
+              onClick={() => {
+                setShowNewFolderInput(false);
+                setNewFolderName("");
+              }}
+              className="p-1.5 rounded-lg text-(--text-muted) hover:bg-(--glass-bg) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            >
               <X className="w-3.5 h-3.5" />
             </button>
           </div>

@@ -2,9 +2,19 @@
 
 import Link from "next/link";
 import {
-    BookOpen, Plus, Star, Pin, LayoutTemplate,
-    CheckSquare, Upload, History,
-    Sparkles, Menu, Info
+  BookOpen,
+  Plus,
+  Star,
+  Pin,
+  LayoutTemplate,
+  CheckSquare,
+  Upload,
+  History,
+  Sparkles,
+  Menu,
+  Info,
+  LayoutGrid,
+  Network,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -45,6 +55,8 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     handleSortChange,
     handleImportFile,
     setFolder,
+    localViewType,
+    setLocalViewType,
   } = shared;
 
   // Mobile quick tabs — surface favorites + virtual folders inline so
@@ -77,6 +89,36 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* Graph / Grid toggle */}
+          <div className="hidden md:flex items-center rounded-lg border border-(--glass-border) overflow-hidden">
+            <button
+              onClick={() => setLocalViewType("grid")}
+              aria-pressed={localViewType === "grid"}
+              title="תצוגת רשת"
+              className={cn(
+                "p-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                localViewType === "grid"
+                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+                  : "text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+              )}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setLocalViewType("graph")}
+              aria-pressed={localViewType === "graph"}
+              title="תצוגת גרף"
+              className={cn(
+                "p-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                localViewType === "graph"
+                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+                  : "text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+              )}
+            >
+              <Network className="w-4 h-4" />
+            </button>
+          </div>
+
           {/* Full library — hidden on mobile; surfaced as a chip in the mobile tabs row below */}
           <button
             onClick={() => setViewMode("library")}
@@ -93,7 +135,10 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           >
             <div className="relative w-4 h-4 md:w-5 md:h-5">
               <Sparkles className="absolute inset-0 w-full h-full text-yellow-600" />
-              <Plus className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+              <Plus
+                className="absolute inset-0 w-full h-full text-black translate-x-0.5 translate-y-0.5"
+                strokeWidth={2.5}
+              />
             </div>
             <span className="text-sm font-semibold text-black hidden sm:inline">חדש</span>
             <span className="text-sm font-semibold text-black hidden lg:inline">פרומפט חדש</span>
@@ -104,12 +149,14 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
       {!user && (
         <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs text-(--text-secondary) leading-relaxed">
           <span className="font-medium text-amber-800 dark:text-amber-200">מצב אורח: </span>
-          הפרומפטים האישיים נשמרים במכשיר זה בלבד; פריטים ישנים עלולים להיעלם אחרי כשבוע.
-          {" "}
-          <Link href="/login" className="text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-600 dark:hover:text-amber-200">
+          הפרומפטים האישיים נשמרים במכשיר זה בלבד; פריטים ישנים עלולים להיעלם אחרי כשבוע.{" "}
+          <Link
+            href="/login"
+            className="text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-600 dark:hover:text-amber-200"
+          >
             התחברו
-          </Link>
-          {" "}לסנכרון בענן וגיבוי קבוע.
+          </Link>{" "}
+          לסנכרון בענן וגיבוי קבוע.
         </div>
       )}
 
@@ -117,7 +164,8 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-(--text-muted)">
           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" aria-hidden />
           <span>
-            בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל הפרומפטים&quot;).
+            בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל
+            הפרומפטים&quot;).
           </span>
         </div>
       )}
@@ -137,17 +185,21 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
                   "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
                   isActive
                     ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 border border-amber-500/40 shadow-sm shadow-amber-500/10"
-                    : "bg-black/5 dark:bg-white/5 text-(--text-secondary) border border-(--glass-border) hover:text-(--text-primary)"
+                    : "bg-black/5 dark:bg-white/5 text-(--text-secondary) border border-(--glass-border) hover:text-(--text-primary)",
                 )}
                 aria-pressed={isActive}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span>{label}</span>
                 {count > 0 && (
-                  <span className={cn(
-                    "text-[10px] tabular-nums px-1.5 py-0.5 rounded-full",
-                    isActive ? "bg-amber-500/20 text-amber-800 dark:text-amber-100" : "bg-black/10 dark:bg-white/10 text-(--text-muted)"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[10px] tabular-nums px-1.5 py-0.5 rounded-full",
+                      isActive
+                        ? "bg-amber-500/20 text-amber-800 dark:text-amber-100"
+                        : "bg-black/10 dark:bg-white/10 text-(--text-muted)",
+                    )}
+                  >
                     {count}
                   </span>
                 )}
@@ -155,6 +207,20 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             );
           })}
           <div className="w-px h-6 bg-(--glass-border) mx-1 shrink-0" />
+          {/* Mobile graph toggle */}
+          <button
+            onClick={() => setLocalViewType(localViewType === "graph" ? "grid" : "graph")}
+            aria-pressed={localViewType === "graph"}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+              localViewType === "graph"
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 border-amber-500/40"
+                : "bg-black/5 dark:bg-white/5 text-(--text-secondary) border-(--glass-border) hover:text-(--text-primary)",
+            )}
+          >
+            <Network className="w-3.5 h-3.5 shrink-0" />
+            <span>גרף</span>
+          </button>
           <button
             onClick={() => setViewMode("library")}
             className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap bg-black/5 dark:bg-white/5 text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
@@ -195,7 +261,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
               "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
               selectionMode
                 ? "bg-blue-600 border-blue-500 text-(--text-primary) shadow-lg shadow-blue-900/30"
-                : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)"
+                : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
             )}
             title="ניהול פריטים"
           >
@@ -211,14 +277,22 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             <Upload className="w-3.5 h-3.5" />
             <span className="hidden md:inline">ייבוא</span>
           </button>
-          <input ref={importFileRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+          <input
+            ref={importFileRef}
+            type="file"
+            accept=".json"
+            onChange={handleImportFile}
+            className="hidden"
+          />
 
           <button
             onClick={handleImportHistory}
             disabled={historyLength === 0}
             className={cn(
               "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs transition-colors min-h-[44px] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-              historyLength === 0 ? "border-(--glass-border) text-slate-600 cursor-not-allowed" : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)"
+              historyLength === 0
+                ? "border-(--glass-border) text-slate-600 cursor-not-allowed"
+                : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
             )}
           >
             <History className="w-3.5 h-3.5" />

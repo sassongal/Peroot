@@ -60,7 +60,11 @@ export interface PersonalLibrarySharedState {
   applyStyleToken: (prefix: string, value: string) => void;
   clearStyleTokens: () => void;
   insertTextAtCursor: (text: string) => void;
-  quickInserts: { label: string; icon: React.ComponentType<{ className?: string }>; text: string }[];
+  quickInserts: {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    text: string;
+  }[];
 
   // Version history
   versionHistoryPrompt: PersonalPrompt | null;
@@ -72,7 +76,9 @@ export interface PersonalLibrarySharedState {
 
   // Folder context menu
   folderContextMenu: { folder: string; x: number; y: number } | null;
-  setFolderContextMenu: React.Dispatch<React.SetStateAction<{ folder: string; x: number; y: number } | null>>;
+  setFolderContextMenu: React.Dispatch<
+    React.SetStateAction<{ folder: string; x: number; y: number } | null>
+  >;
 
   // New folder input
   showNewFolderInput: boolean;
@@ -98,6 +104,10 @@ export interface PersonalLibrarySharedState {
   setIsCreatingNewMoveCategory: React.Dispatch<React.SetStateAction<boolean>>;
   newMoveCategoryInput: string;
   setNewMoveCategoryInput: React.Dispatch<React.SetStateAction<string>>;
+
+  // Graph view toggle
+  localViewType: "grid" | "graph";
+  setLocalViewType: React.Dispatch<React.SetStateAction<"grid" | "graph">>;
 
   // Import ref
   importFileRef: React.RefObject<HTMLInputElement | null>;

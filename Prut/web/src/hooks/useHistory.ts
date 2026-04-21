@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
-import { User } from '@supabase/supabase-js';
-import { fromHistoryRow } from '@/lib/prompt-entity';
-import type { PromptEntity } from '@/lib/prompt-entity';
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { fromHistoryRow } from "@/lib/prompt-entity";
+import type { PromptEntity } from "@/lib/prompt-entity";
 
 export interface HistoryItem {
   id: string; // UUID
@@ -20,8 +20,6 @@ export interface HistoryItem {
   entity: PromptEntity;
 }
 
-
-
 export function useHistory() {
   const [user, setUser] = useState<User | null>(null);
 
@@ -34,7 +32,9 @@ export function useHistory() {
     let mounted = true;
 
     async function initAuth() {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
       if (!mounted) return;
       setUser(currentUser);
       userRef.current = currentUser;
@@ -42,14 +42,16 @@ export function useHistory() {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       const newUser = session?.user ?? null;
       if (userRef.current?.id !== newUser?.id) {
         userRef.current = newUser;
         setUser(newUser);
         // Invalidate history when user changes so it refetches
-        queryClient.invalidateQueries({ queryKey: ['history'] });
+        queryClient.invalidateQueries({ queryKey: ["history"] });
       }
     });
 
@@ -61,15 +63,15 @@ export function useHistory() {
 
   // Fetch history via useQuery
   const { data: history = [], isSuccess: isLoaded } = useQuery({
-    queryKey: ['history', user?.id ?? null],
+    queryKey: ["history", user?.id ?? null],
     queryFn: async (): Promise<HistoryItem[]> => {
       if (!user) return [];
 
       const { data } = await supabase
-        .from('history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .from("history")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
         .limit(300);
 
       if (!data) return [];
@@ -80,7 +82,7 @@ export function useHistory() {
           id: entity.id,
           original: entity.original,
           enhanced: entity.enhanced,
-          tone: entity.tone ?? '',
+          tone: entity.tone ?? "",
           category: entity.category,
           title: entity.title || undefined,
           source: entity.source,
@@ -95,7 +97,13 @@ export function useHistory() {
 
   // Add to history mutation with optimistic update
   const addMutation = useMutation({
-    mutationFn: async ({ item, optimisticId }: { item: Omit<HistoryItem, 'id' | 'timestamp' | 'entity'>; optimisticId: string }) => {
+    mutationFn: async ({
+      item,
+      optimisticId,
+    }: {
+      item: Omit<HistoryItem, "id" | "timestamp" | "entity">;
+      optimisticId: string;
+    }) => {
       const currentUser = userRef.current;
       if (!currentUser) return null;
 
@@ -112,19 +120,24 @@ export function useHistory() {
         enhanced_prompt: item.enhanced,
         category: item.category,
         tone: item.tone,
-        title: item.title ?? '',
-        source: item.source ?? 'web',
+        title: item.title ?? "",
+        source: item.source ?? "web",
         created_at: nowIso,
         updated_at: nowIso,
       });
 
-      return { ...item, id: optimisticId, timestamp: Date.now(), entity: optimisticEntity } satisfies HistoryItem;
+      return {
+        ...item,
+        id: optimisticId,
+        timestamp: Date.now(),
+        entity: optimisticEntity,
+      } satisfies HistoryItem;
     },
     onMutate: async ({ item, optimisticId }) => {
       const currentUser = userRef.current;
       if (!currentUser) return;
 
-      const queryKey = ['history', currentUser.id];
+      const queryKey = ["history", currentUser.id];
       await queryClient.cancelQueries({ queryKey });
 
       const previousHistory = queryClient.getQueryData<HistoryItem[]>(queryKey);
@@ -136,8 +149,8 @@ export function useHistory() {
         enhanced_prompt: item.enhanced,
         category: item.category,
         tone: item.tone,
-        title: item.title ?? '',
-        source: item.source ?? 'web',
+        title: item.title ?? "",
+        source: item.source ?? "web",
         created_at: nowIso,
         updated_at: nowIso,
       });
@@ -159,7 +172,7 @@ export function useHistory() {
     onError: (_err, _item, context) => {
       const currentUser = userRef.current;
       if (currentUser && context?.previousHistory) {
-        queryClient.setQueryData(['history', currentUser.id], context.previousHistory);
+        queryClient.setQueryData(["history", currentUser.id], context.previousHistory);
       }
     },
     onSuccess: () => {
@@ -167,7 +180,7 @@ export function useHistory() {
       // replace the optimistic row with the authoritative server row.
       const currentUser = userRef.current;
       if (currentUser) {
-        queryClient.invalidateQueries({ queryKey: ['history', currentUser.id] });
+        queryClient.invalidateQueries({ queryKey: ["history", currentUser.id] });
       }
     },
   });
@@ -176,11 +189,11 @@ export function useHistory() {
   const clearMutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      await supabase.from('history').delete().eq('user_id', user.id);
+      await supabase.from("history").delete().eq("user_id", user.id);
     },
     onMutate: async () => {
       if (!user) return;
-      const queryKey = ['history', user.id];
+      const queryKey = ["history", user.id];
       await queryClient.cancelQueries({ queryKey });
       const previousHistory = queryClient.getQueryData<HistoryItem[]>(queryKey);
       queryClient.setQueryData<HistoryItem[]>(queryKey, []);
@@ -188,21 +201,21 @@ export function useHistory() {
     },
     onError: (_err, _vars, context) => {
       if (user && context?.previousHistory) {
-        queryClient.setQueryData(['history', user.id], context.previousHistory);
+        queryClient.setQueryData(["history", user.id], context.previousHistory);
       }
     },
     onSettled: () => {
       if (user) {
-        queryClient.invalidateQueries({ queryKey: ['history', user.id] });
+        queryClient.invalidateQueries({ queryKey: ["history", user.id] });
       }
     },
   });
 
   const addToHistory = useCallback(
-    (item: Omit<HistoryItem, 'id' | 'timestamp' | 'entity'>) => {
+    (item: Omit<HistoryItem, "id" | "timestamp" | "entity">) => {
       addMutation.mutate({ item, optimisticId: crypto.randomUUID() });
     },
-    [addMutation]
+    [addMutation],
   );
 
   const clearHistory = useCallback(async () => {
@@ -219,18 +232,18 @@ export function useHistory() {
       const trimmed = title.trim().slice(0, 200);
       if (!trimmed) return;
 
-      const queryKey = ['history', currentUser.id];
+      const queryKey = ["history", currentUser.id];
       // Optimistic update
       const previousHistory = queryClient.getQueryData<HistoryItem[]>(queryKey);
       queryClient.setQueryData<HistoryItem[]>(queryKey, (old = []) =>
-        old.map(h => (h.id === id ? { ...h, title: trimmed } : h))
+        old.map((h) => (h.id === id ? { ...h, title: trimmed } : h)),
       );
       try {
         const { error } = await supabase
-          .from('history')
+          .from("history")
           .update({ title: trimmed })
-          .eq('id', id)
-          .eq('user_id', currentUser.id);
+          .eq("id", id)
+          .eq("user_id", currentUser.id);
         if (error) throw error;
         queryClient.invalidateQueries({ queryKey });
       } catch (err) {
@@ -239,7 +252,7 @@ export function useHistory() {
         throw err;
       }
     },
-    [supabase, queryClient]
+    [supabase, queryClient],
   );
 
   // Anchor 1 — bump last_used_at via the SECURITY DEFINER RPC.
@@ -251,14 +264,14 @@ export function useHistory() {
       const currentUser = userRef.current;
       if (!currentUser) return;
       void supabase
-        .rpc('bump_prompt_last_used', { p_table: 'history', p_id: id })
+        .rpc("bump_prompt_last_used", { p_table: "history", p_id: id })
         .then(({ error }) => {
           if (error) {
-            console.warn('[useHistory] bump_prompt_last_used failed:', error.message);
+            console.warn("[useHistory] bump_prompt_last_used failed:", error.message);
           }
         });
     },
-    [supabase]
+    [supabase],
   );
 
   return {

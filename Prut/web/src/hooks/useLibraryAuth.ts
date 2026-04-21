@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { User, SupabaseClient } from '@supabase/supabase-js';
-import { PersonalPrompt } from '@/lib/types';
-import { CapabilityMode } from '@/lib/capability-mode';
-import { logger } from '@/lib/logger';
-import { getCategoriesKey, getOrderKey } from '@/lib/library/row-mapper';
+import { useState, useEffect, useRef } from "react";
+import { User, SupabaseClient } from "@supabase/supabase-js";
+import { PersonalPrompt } from "@/lib/types";
+import { CapabilityMode } from "@/lib/capability-mode";
+import { logger } from "@/lib/logger";
+import { getCategoriesKey, getOrderKey } from "@/lib/library/row-mapper";
 
-const STORAGE_KEY = 'peroot_personal_library';
+const STORAGE_KEY = "peroot_personal_library";
 
 export interface UseLibraryAuthOptions {
   supabase: SupabaseClient;
@@ -47,7 +47,9 @@ export function useLibraryAuth({
 
     async function init() {
       if (!mounted) return;
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
       if (!mounted) return;
 
       userRef.current = currentUser;
@@ -55,7 +57,7 @@ export function useLibraryAuth({
       try {
         await onUserChange(currentUser);
       } catch (err) {
-        logger.error('[useLibraryAuth] onUserChange failed:', err);
+        logger.error("[useLibraryAuth] onUserChange failed:", err);
       } finally {
         if (mounted) setIsLoaded(true);
       }
@@ -63,7 +65,9 @@ export function useLibraryAuth({
 
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       const newUser = session?.user ?? null;
 
@@ -76,7 +80,7 @@ export function useLibraryAuth({
             if (Array.isArray(localItems) && localItems.length > 0) {
               logger.info("Migrating guest items:", localItems.length);
 
-              const itemsToInsert = localItems.map(item => ({
+              const itemsToInsert = localItems.map((item) => ({
                 user_id: newUser.id,
                 title: item.title,
                 prompt: item.prompt,
@@ -93,7 +97,9 @@ export function useLibraryAuth({
                 tags: item.tags ?? [],
               }));
 
-              const { error: insertError } = await supabase.from('personal_library').insert(itemsToInsert);
+              const { error: insertError } = await supabase
+                .from("personal_library")
+                .insert(itemsToInsert);
               if (insertError) {
                 logger.error("Migration insert failed", insertError);
               } else {
@@ -119,7 +125,7 @@ export function useLibraryAuth({
       mounted = false;
       subscription.unsubscribe();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
   return { user, isLoaded };

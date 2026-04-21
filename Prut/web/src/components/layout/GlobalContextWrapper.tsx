@@ -8,10 +8,7 @@ import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-const Toaster = dynamic(
-  () => import("sonner").then((mod) => mod.Toaster),
-  { ssr: false }
-);
+const Toaster = dynamic(() => import("sonner").then((mod) => mod.Toaster), { ssr: false });
 
 function InnerWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -65,7 +62,9 @@ export function GlobalContextWrapper({
       });
     }
     // Always subscribe to auth state changes so sign-in/sign-out updates live.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       const next = session?.user ?? null;
       setUser((prev) => {
         if (next === null) {
@@ -89,20 +88,20 @@ export function GlobalContextWrapper({
   }, [initialUser]);
 
   const showLoginRequired = (feature: string) => {
-      setLoginFeature(feature);
-      setIsLoginRequiredModalOpen(true);
+    setLoginFeature(feature);
+    setIsLoginRequiredModalOpen(true);
   };
 
   return (
     <LibraryProvider user={user} showLoginRequired={showLoginRequired}>
-        <InnerWrapper>{children}</InnerWrapper>
-        <LoginRequiredModal
-            isOpen={isLoginRequiredModalOpen}
-            onClose={() => setIsLoginRequiredModalOpen(false)}
-            title="התחברות נדרשת"
-            message={`כדי להשתמש ב${loginFeature}, יש להתחבר לחשבון.`}
-            feature={loginFeature}
-        />
+      <InnerWrapper>{children}</InnerWrapper>
+      <LoginRequiredModal
+        isOpen={isLoginRequiredModalOpen}
+        onClose={() => setIsLoginRequiredModalOpen(false)}
+        title="התחברות נדרשת"
+        message={`כדי להשתמש ב${loginFeature}, יש להתחבר לחשבון.`}
+        feature={loginFeature}
+      />
     </LibraryProvider>
   );
 }
