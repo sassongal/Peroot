@@ -14,6 +14,13 @@ on April 15, 2026. This is the first dev session on the new machine.
 **Vercel project:** web (team: sassongals-projects)
 **Supabase project:** ravinxlujmlvxhgbjxti
 
+### Next.js 16 middleware — CRITICAL
+Next.js 16 renamed `middleware.ts` → `proxy.ts`. The active middleware file is `src/proxy.ts`.
+- **NEVER create `src/middleware.ts`** — having both files causes a fatal build error:
+  `Both middleware file and proxy file are detected. Please use proxy.ts only.`
+- All middleware logic (Supabase session refresh, CSRF, admin guard, maintenance) lives in `src/proxy.ts`
+- The exported function is named `proxy` and there is `export const config = { matcher: [...] }`
+
 ### Known local dev quirks (Windows-specific):
 - `@react-pdf/renderer` is STUBBED in node_modules — v4 has broken sub-packages on npm.
   Do NOT try to import it at top-level. Only use via dynamic import in `src/lib/export/download-prompt-pdf.tsx`
