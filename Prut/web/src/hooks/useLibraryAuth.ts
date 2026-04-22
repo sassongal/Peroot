@@ -53,6 +53,9 @@ export function useLibraryAuth({
         } = await supabase.auth.getUser();
         if (!mounted) return;
 
+        // Guard: if onAuthStateChange already set a valid user and getUser()
+        // returned null (stale cookie race), don't overwrite the authenticated state.
+        if (currentUser === null && userRef.current !== null) return;
         userRef.current = currentUser;
         setUser(currentUser);
         try {

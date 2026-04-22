@@ -77,10 +77,19 @@ export function useFavorites() {
     };
 
     const init = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user ?? null);
-      userRef.current = data.user ?? null;
-      await loadFavorites(data.user ?? null);
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!isMounted) return;
+        setUser(data.user ?? null);
+        userRef.current = data.user ?? null;
+        await loadFavorites(data.user ?? null);
+      } catch (err) {
+        logger.error("[useFavorites] init getUser failed:", err);
+        if (isMounted) {
+          setFavorites([]);
+          setIsLoaded(true);
+        }
+      }
     };
 
     init();
