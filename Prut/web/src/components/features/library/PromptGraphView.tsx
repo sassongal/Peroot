@@ -277,7 +277,11 @@ export function PromptGraphView({
   } | null>(null);
   // 3D ref — separate because react-force-graph-3d has a different surface
   const fg3dRef = useRef<{
-    cameraPosition?: (pos: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, ms?: number) => void;
+    cameraPosition?: (
+      pos: { x: number; y: number; z: number },
+      lookAt?: { x: number; y: number; z: number },
+      ms?: number,
+    ) => void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     graphData?: () => { nodes: any[] };
   } | null>(null);
@@ -453,6 +457,27 @@ export function PromptGraphView({
     }
     return ids;
   }, [normalize, searchQuery, capabilityFilter, favOnly, prompts, favoriteIds]);
+
+  // When filters are active, hide non-matching prompt nodes outright instead
+  // of only dimming them. 2D can dim via canvas alpha, but the 3D renderer
+  // has no equivalent — filtering at the data layer fixes both uniformly.
+  // Category / library anchor nodes are always kept so the scaffolding
+  // survives aggressive filters.
+  const visibleGraphData = useMemo(() => {
+    if (!matchedIds) return graphData;
+    const keep = new Set<string>();
+    for (const n of graphData.nodes) {
+      if (n.type !== "prompt") keep.add(n.id);
+      else if (matchedIds.has(n.id)) keep.add(n.id);
+    }
+    const nodes = graphData.nodes.filter((n) => keep.has(n.id));
+    const links = graphData.links.filter((l) => {
+      const src = typeof l.source === "object" ? l.source.id : l.source;
+      const tgt = typeof l.target === "object" ? l.target.id : l.target;
+      return keep.has(src) && keep.has(tgt);
+    });
+    return { nodes, links };
+  }, [graphData, matchedIds]);
 
   // Focused node + 1-hop neighbors — drives the cinematic dim effect.
   const focusIds = useMemo<Set<string> | null>(() => {
@@ -894,9 +919,12 @@ export function PromptGraphView({
     return 100;
   }, []);
 
-  // D3 force engine config — run once per graphData change so the link force
-  // picks up per-edge strength/distance for the newly-built links.
+  // D3 force engine config — run per graphData change AND on viewMode switch,
+  // because switching 2D↔3D unmounts/remounts the component so fgRef rebinds
+  // and the previously-applied per-edge strength/distance would otherwise be
+  // lost on the fresh instance.
   useEffect(() => {
+    if (viewMode !== "2d") return;
     const link = fgRef.current?.d3Force?.("link") as
       | {
           strength?: (fn: (l: GraphLink) => number) => unknown;
@@ -910,7 +938,7 @@ export function PromptGraphView({
       | undefined;
     // Stronger repulsion prevents the "tangled ball" look at high node counts.
     charge?.strength?.(-120);
-  }, [graphData, linkStrength, linkDistance]);
+  }, [visibleGraphData, linkStrength, linkDistance, viewMode]);
 
   const handleEngineStop = useCallback(() => {
     // no-op
@@ -923,7 +951,11 @@ export function PromptGraphView({
     if (!fg?.cameraPosition) return;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nodes = (fg.graphData?.()?.nodes ?? []) as Array<{ x?: number; y?: number; z?: number }>;
+      const nodes = (fg.graphData?.()?.nodes ?? []) as Array<{
+        x?: number;
+        y?: number;
+        z?: number;
+      }>;
       if (nodes.length === 0) return;
       let maxR = 0;
       for (const n of nodes) {
@@ -1167,6 +1199,50 @@ export function PromptGraphView({
           <p className="text-sm text-slate-400">טוען את כל הפרומפטים לגרף...</p>
         </div>
       )}
+
+      {/* Stats HUD — tells the user what they're actually looking at. */}
+      {!isLoading && graphData.nodes.length > 0 && (
+        <div
+          className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-300 shadow-lg pointer-events-none"
+          dir="rtl"
+        >
+          <span>{visibleGraphData.nodes.filter((n) => n.type === "prompt").length} פרומפטים</span>
+          <span className="text-slate-600">·</span>
+          <span>{visibleGraphData.links.length} קשרים</span>
+          {matchedIds && (
+            <>
+              <span className="text-slate-600">·</span>
+              <span className="text-amber-300">מסונן</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Empty-state — filters match zero prompts. Without this the canvas
+          just goes blank and users think the feature broke. */}
+      {!isLoading &&
+        matchedIds !== null &&
+        visibleGraphData.nodes.filter((n) => n.type === "prompt").length === 0 && (
+          <div
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 pointer-events-none"
+            dir="rtl"
+          >
+            <div className="rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl px-5 py-4 text-center shadow-xl pointer-events-auto">
+              <p className="text-sm text-slate-200 font-medium">אין תוצאות לסינון הנוכחי</p>
+              <p className="text-xs text-slate-400 mt-1">נסה לנקות את הסינון או החיפוש</p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setCapabilityFilter(new Set());
+                  setFavOnly(false);
+                }}
+                className="mt-3 text-[11px] px-3 py-1 rounded-md bg-amber-400 text-black font-semibold hover:bg-amber-300 transition-colors cursor-pointer"
+              >
+                נקה סינון
+              </button>
+            </div>
+          </div>
+        )}
       <div
         ref={containerRef}
         onPointerMove={handlePointerMove}
@@ -1175,8 +1251,9 @@ export function PromptGraphView({
         {viewMode === "2d" ? (
           /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           <ForceGraph2D
+            key="fg-2d"
             ref={fgRef as any}
-            graphData={graphData as any}
+            graphData={visibleGraphData as any}
             width={dimensions.width}
             height={dimensions.height}
             nodeId="id"
@@ -1209,8 +1286,9 @@ export function PromptGraphView({
         ) : (
           /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           <ForceGraph3D
+            key="fg-3d"
             ref={fg3dRef as any}
-            graphData={graphData as any}
+            graphData={visibleGraphData as any}
             width={dimensions.width}
             height={dimensions.height}
             nodeId="id"
