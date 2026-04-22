@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'peroot-v1';
+const CACHE_VERSION = 'peroot-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -41,6 +41,11 @@ self.addEventListener('fetch', (event) => {
   if (!request.url.startsWith('http')) return;
 
   const url = new URL(request.url);
+
+  // Skip cross-origin requests — let the browser handle external URLs directly.
+  // Without this, the SW fetch() is subject to the document's connect-src CSP,
+  // which blocks third-party domains even when they're listed in connect-src.
+  if (url.origin !== self.location.origin) return;
 
   // Static assets: cache-first
   if (STATIC_ASSETS_PATTERN.test(url.pathname)) {

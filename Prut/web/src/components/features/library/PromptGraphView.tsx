@@ -20,7 +20,22 @@ import { useLibraryContext } from "@/context/LibraryContext";
 // (we only use the 2D canvas renderer, so VR is never activated).
 if (typeof window !== "undefined") {
   if (!("AFRAME" in window)) {
-    (window as unknown as Record<string, unknown>).AFRAME = {};
+    // react-force-graph bundles VR/AR dependencies that call AFRAME methods at module
+    // evaluation time. We use only the 2D canvas renderer, so a no-op stub is enough.
+    const noop = () => {};
+    (window as unknown as Record<string, unknown>).AFRAME = {
+      registerComponent: noop,
+      registerSystem: noop,
+      registerPrimitive: noop,
+      registerGeometry: noop,
+      registerShader: noop,
+      registerElement: noop,
+      utils: { debug: { warn: noop, error: noop, log: noop } },
+      scenes: [],
+      components: {},
+      systems: {},
+      primitives: { primitives: {} },
+    };
   }
 
   const proto = CanvasRenderingContext2D.prototype as CanvasRenderingContext2D & {
