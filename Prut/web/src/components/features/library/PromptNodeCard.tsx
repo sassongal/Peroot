@@ -54,12 +54,7 @@ export function PromptNodeCard({
   onSaveTags,
   backButtonRef,
 }: PromptNodeCardProps) {
-  const {
-    togglePin,
-    movePrompts,
-    deletePrompts,
-    personalCategories,
-  } = useLibraryContext();
+  const { togglePin, movePrompts, deletePrompts, personalCategories } = useLibraryContext();
   const { favoritePersonalIds, handleToggleFavorite } = useFavoritesContext();
 
   const [editingTitle, setEditingTitle] = useState(false);
@@ -488,7 +483,10 @@ export function PromptNodeCard({
       </div>
 
       {/* Footer — primary + secondary actions */}
-      <div className="px-4 pb-4 pt-3 shrink-0 border-t border-white/10 flex flex-col gap-2" dir="rtl">
+      <div
+        className="px-4 pb-4 pt-3 shrink-0 border-t border-white/10 flex flex-col gap-2"
+        dir="rtl"
+      >
         {/* Primary row */}
         <div className="flex items-center gap-2">
           <button

@@ -133,7 +133,7 @@ export default function PricingPage() {
             <Sparkles className="w-3.5 h-3.5" />
             שדרג את הפרומפטים שלך
           </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-linear-to-l from-foreground to-zinc-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight bg-linear-to-l from-foreground to-zinc-500 bg-clip-text text-transparent">
             בחר את התוכנית שלך
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
