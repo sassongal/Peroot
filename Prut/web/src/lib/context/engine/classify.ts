@@ -13,6 +13,29 @@ interface TypeSignal {
 
 const SIGNALS: TypeSignal[] = [
   {
+    type: "דוח כספי",
+    keywords: [
+      /הכנסות|revenue/i,
+      /רווח\s+נקי|net\s+income|EBITDA/i,
+      /דוח\s+(כספי|רבעוני|שנתי)|financial\s+(report|statement)/i,
+      /מאזן|balance\s+sheet/i,
+      /תזרים\s+מזומנים|cash\s+flow/i,
+    ],
+    minHits: 3,
+  },
+  {
+    type: "מסמך משפטי",
+    keywords: [
+      /פסיקה|judgment|verdict/i,
+      /תביעה|lawsuit|complaint/i,
+      /כתב\s+אישום|indictment/i,
+      /בית\s+משפט|court|tribunal/i,
+      /עורך\s+דין|attorney|counsel/i,
+      /תצהיר|affidavit/i,
+    ],
+    minHits: 3,
+  },
+  {
     type: "חוזה משפטי",
     keywords: [/הסכם|חוזה/i, /צדדים|הצדדים/i, /סעיף\s*\d/, /כפוף\s+לחוק|התחייבות|סודיות/i],
     minHits: 3,

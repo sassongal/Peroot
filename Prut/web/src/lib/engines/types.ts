@@ -37,6 +37,8 @@ export interface EngineInput {
   iteration?: number;
   /** Target model for prompt optimization */
   targetModel?: TargetModel;
+  /** Force output language — overrides the engine's default (Hebrew) */
+  outputLanguage?: "hebrew" | "english";
   /** Context attachments (files, URLs, images) */
   context?: Array<{
     type: 'file' | 'url' | 'image';

@@ -87,19 +87,6 @@ ADVANCED OPTIMIZATION TECHNIQUES - apply where relevant:
 10. **Anti-Hallucination**: For factual/data tasks - add "אם אין לך מידע מוסמך - ציין זאת במפורש. אל תמציא עובדות, מספרים או מקורות"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RISEN STRUCTURAL VALIDATION - verify before output:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Before finalizing, confirm the prompt satisfies the RISEN framework:
-- **R (Role)**: Is the expert persona hyper-specific with methodology and experience?
-- **I (Instructions)**: Are the instructions unambiguous and actionable?
-- **S (Steps)**: For multi-step tasks — are steps numbered with clear dependencies?
-- **E (End Goal)**: Is the desired outcome explicitly stated? ("התוצאה הסופית צריכה להיות...")
-- **N (Narrowing)**: Are there at least 2-3 constraints that prevent scope creep?
-
-If any RISEN element is weak or missing — add it. The prompt must be complete and self-contained.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ANTI-PATTERNS — NEVER DO THESE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -158,28 +145,37 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
   generate(input: EngineInput): EngineOutput {
       const result = super.generate(input);
 
+      const concept = (input.prompt || '').trim();
+      const wordCount = concept.split(/\s+/).filter(Boolean).length;
+      const hasContext = !!(input.context && input.context.length > 0);
+
+      // Skip heavyweight skill injections for simple, one-shot inputs.
+      // Short prompts don't benefit from few-shot examples or CoT scaffolding;
+      // the proportional-complexity rule in the template already handles them.
+      const isSimple = wordCount <= 8 && !hasContext && !input.previousResult;
+
       // Inject concept classification (LLM-level semantic understanding, zero cost)
       result.systemPrompt += getConceptClassificationBlock('text');
 
-      // Inject skill-based few-shot examples, mistakes, and scoring criteria
-      const examplesBlock = getExamplesBlock('text', 'standard', input.prompt, 3);
-      const mistakesBlock = getMistakesBlock('text', 'standard');
-      const scoringBlock = getScoringBlock('text', 'standard');
+      if (!isSimple) {
+          // Inject skill-based few-shot examples, mistakes, and scoring criteria
+          const examplesBlock = getExamplesBlock('text', 'standard', input.prompt, 3);
+          const mistakesBlock = getMistakesBlock('text', 'standard');
+          const scoringBlock = getScoringBlock('text', 'standard');
 
-      if (examplesBlock) result.systemPrompt += examplesBlock;
-      if (mistakesBlock) result.systemPrompt += mistakesBlock;
+          if (examplesBlock) result.systemPrompt += examplesBlock;
+          if (mistakesBlock) result.systemPrompt += mistakesBlock;
 
-      // Chain-of-Thought reasoning — only inject when the concept looks complex
-      // enough to benefit from multi-step thinking. The 30-char heuristic is a
-      // rough proxy for "more than just a tagline or one-line request".
-      const concept = input.prompt || '';
-      if (concept.trim().length > 30) {
-          const cotBlock = getChainOfThoughtBlock('text', 'standard', concept);
-          if (cotBlock) result.systemPrompt += cotBlock;
-      }
+          // Chain-of-Thought reasoning — only inject when the concept looks complex
+          // enough to benefit from multi-step thinking.
+          if (concept.length > 30) {
+              const cotBlock = getChainOfThoughtBlock('text', 'standard', concept);
+              if (cotBlock) result.systemPrompt += cotBlock;
+          }
 
-      if (scoringBlock) {
-          result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+          if (scoringBlock) {
+              result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+          }
       }
 
       return result;

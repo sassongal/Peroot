@@ -1,5 +1,7 @@
 import type { DocumentType } from "../types";
 import { enrichContract } from "./enrich-contract";
+import { enrichLegal } from "./enrich-legal";
+import { enrichFinancial } from "./enrich-financial";
 import { enrichAcademic } from "./enrich-academic";
 import { enrichMarketing } from "./enrich-marketing";
 import { enrichData } from "./enrich-data";
@@ -14,6 +16,10 @@ export function selectEnrichPrompt(type: DocumentType, isImage: boolean): string
   switch (type) {
     case "חוזה משפטי":
       return enrichContract;
+    case "מסמך משפטי":
+      return enrichLegal;
+    case "דוח כספי":
+      return enrichFinancial;
     case "מאמר אקדמי":
       return enrichAcademic;
     case "דף שיווקי":

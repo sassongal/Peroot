@@ -679,9 +679,23 @@ export class ImageEngine extends BaseEngine {
           }
       }
 
-      // Context attachments as visual reference material
+      // Context attachments as visual reference material.
+      // Non-general platforms output English prompts, so the block header and
+      // extraction instructions must be in English to avoid Hebrew leaking into
+      // the final Midjourney / DALL-E / Flux / SD prompt.
       if (input.context && input.context.length > 0) {
-          finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
+          const useEnglish = platform !== 'general';
+          if (useEnglish) {
+              finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
+The user attached source material — extract visual elements as ENGLISH descriptors and weave them directly into the image prompt:
+- Attached images: describe style, colors, composition, mood, lighting — in English.
+- Branding/design files: extract color palette (hex values), typography style, logo marks, visual constraints.
+- URLs: extract visual identity, look & feel, dominant aesthetic — in English.
+- Do NOT write "based on the file" — embed the visual details directly in the prompt.
+
+`;
+          } else {
+              finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
 המשתמש צירף חומר מקור — השתמש בו כ-**השראה ויזואלית ומגבלות עיצוביות** לפרומפט התמונה:
 - תמונות מצורפות: תאר את הסגנון, הצבעים, הקומפוזיציה, ותחושת האווירה — ושלב אותם בפרומפט.
 - קבצי מיתוג/ברנדינג: חלץ צבעים, טיפוגרפיה, לוגו, ומגבלות סגנוניות.
@@ -689,16 +703,17 @@ export class ImageEngine extends BaseEngine {
 - אל תתאר "על סמך הקובץ" — שלב את הפרטים הויזואליים ישירות בפרומפט.
 
 `;
+          }
           for (const attachment of input.context) {
               const block = attachment as unknown as ContextBlock;
               const title = block.display?.title || attachment.name || 'attachment';
               const text = block.display?.rawText || block.display?.summary || attachment.content || attachment.description || '';
               if (attachment.type === 'image') {
-                  finalSystem += `━━━ 🖼️ תמונת ייחוס: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+                  finalSystem += `--- Image reference: "${title}" ---\n${text.slice(0, 1200)}\n\n`;
               } else if (attachment.type === 'url') {
-                  finalSystem += `━━━ 🌐 דף ייחוס: ${attachment.url || title} ━━━\n${text.slice(0, 1000)}\n\n`;
+                  finalSystem += `--- URL reference: ${attachment.url || title} ---\n${text.slice(0, 1000)}\n\n`;
               } else {
-                  finalSystem += `━━━ 📄 מסמך ייחוס: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+                  finalSystem += `--- Document reference: "${title}" ---\n${text.slice(0, 1200)}\n\n`;
               }
           }
       }

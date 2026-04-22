@@ -6,5 +6,7 @@ export const enrichMarketing = `
 - keyFacts: USP, מחיר/הנחה, CTA, social proof, hooks
 - entities: מותג (org), לקוחות/testimonials (person), תאריכי הצעה (date), סכומים (amount)
 
+בשדה keyFacts — ציין מחירים מדויקים, אחוזי הנחה, תאריכי מבצע, מספרי testimonials — לא תיאורים כלליים.
+החזר את כל השדות בעברית, גם אם המסמך המקורי בשפה אחרת.
 החזר JSON בלבד.
 `.trim();

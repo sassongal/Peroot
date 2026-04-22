@@ -39,6 +39,7 @@ const RequestSchema = z.object({
   answers: z.record(z.string(), z.string()).optional(),
   iteration: z.number().int().min(0).optional(),
   target_model: z.enum(["chatgpt", "claude", "gemini", "general"]).default("general").optional(),
+  output_language: z.enum(["hebrew", "english"]).optional(),
   // Accepts both the legacy shape { type, name, content } and the new
   // ContextBlock shape { id, type, sha256, stage, display, injected }.
   // All fields are explicitly typed and size-bounded — no passthrough() —
@@ -134,6 +135,7 @@ export async function POST(req: Request) {
       iteration,
       context: contextAttachments,
       target_model,
+      output_language,
     } = RequestSchema.parse(json);
 
     // Determine if this is a refinement request
@@ -193,11 +195,7 @@ export async function POST(req: Request) {
         if (!inflight) {
           inflight = (async () => {
             const [pRes, arRes] = await Promise.all([
-              queryClient
-                .from("profiles")
-                .select("plan_tier")
-                .eq("id", userId!)
-                .maybeSingle(),
+              queryClient.from("profiles").select("plan_tier").eq("id", userId!).maybeSingle(),
               queryClient
                 .from("user_roles")
                 .select("role")
@@ -419,6 +417,7 @@ export async function POST(req: Request) {
       // BaseEngine.buildContextSummaryForUserPrompt handles both shapes defensively.
       context: contextAttachments as EngineInput["context"],
       targetModel: target_model || "general",
+      outputLanguage: output_language,
     };
 
     const engineOutput = isRefinement

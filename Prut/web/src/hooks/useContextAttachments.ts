@@ -316,6 +316,55 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     [limits.maxImages, updateAttachment],
   );
 
+  const retryUrl = useCallback(
+    async (id: string) => {
+      const attachment = attachmentsRef.current.find((a) => a.id === id);
+      if (!attachment || attachment.type !== "url" || !attachment.url) return;
+
+      updateAttachment(id, { status: "loading", stage: "extracting", error: undefined, block: undefined });
+
+      try {
+        const res = await fetch(getApiPath("/api/context/extract-url"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: attachment.url }),
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error((body as { error?: string }).error || "שגיאה בחילוץ התוכן מהכתובת");
+        }
+
+        await readSseStream(
+          res,
+          (stage) => updateAttachment(id, { stage }),
+          (block) => {
+            const b = block as { stage?: string };
+            setAttachments((prev) =>
+              prev.map((a) =>
+                a.id === id
+                  ? {
+                      ...a,
+                      block: block as ContextAttachment["block"],
+                      stage: b.stage as ProcessingStage,
+                      status: b.stage === "error" ? "error" : "ready",
+                    }
+                  : a,
+              ),
+            );
+          },
+          (error) => updateAttachment(id, { status: "error", error }),
+        );
+      } catch (err) {
+        updateAttachment(id, {
+          status: "error",
+          error: err instanceof Error ? err.message : "שגיאה לא צפויה",
+        });
+      }
+    },
+    [updateAttachment],
+  );
+
   const removeAttachment = useCallback((id: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   }, []);
@@ -336,6 +385,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     isOverLimit,
     addFile,
     addUrl,
+    retryUrl,
     addImage,
     removeAttachment,
     clearAll,

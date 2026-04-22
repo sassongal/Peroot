@@ -17,6 +17,8 @@ export type ProcessingStage =
 
 export type DocumentType =
   | "חוזה משפטי"
+  | "מסמך משפטי"
+  | "דוח כספי"
   | "מאמר אקדמי"
   | "דף שיווקי"
   | "טבלת נתונים"
