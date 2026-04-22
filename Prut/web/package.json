@@ -59,6 +59,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-force-graph": "^1.48.2",
+    "react-force-graph-2d": "^1.29.1",
     "resend": "^6.8.0",
     "sanitize-html": "^2.17.2",
     "sonner": "^2.0.7",

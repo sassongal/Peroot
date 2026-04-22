@@ -16,28 +16,7 @@ import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 
 // Safari < 15.4 doesn't support roundRect — polyfill before any canvas code runs.
-// Also stub AFRAME global referenced by react-force-graph's bundled VR dependencies
-// (we only use the 2D canvas renderer, so VR is never activated).
 if (typeof window !== "undefined") {
-  if (!("AFRAME" in window)) {
-    // react-force-graph bundles VR/AR dependencies that call AFRAME methods at module
-    // evaluation time. We use only the 2D canvas renderer, so a no-op stub is enough.
-    const noop = () => {};
-    (window as unknown as Record<string, unknown>).AFRAME = {
-      registerComponent: noop,
-      registerSystem: noop,
-      registerPrimitive: noop,
-      registerGeometry: noop,
-      registerShader: noop,
-      registerElement: noop,
-      utils: { debug: { warn: noop, error: noop, log: noop } },
-      scenes: [],
-      components: {},
-      systems: {},
-      primitives: { primitives: {} },
-    };
-  }
-
   const proto = CanvasRenderingContext2D.prototype as CanvasRenderingContext2D & {
     roundRect?: (x: number, y: number, w: number, h: number, r: number | number[]) => void;
   };
@@ -60,8 +39,12 @@ if (typeof window !== "undefined") {
   }
 }
 
-// SSR-safe — canvas APIs require browser
-const ForceGraph2D = dynamic(() => import("react-force-graph").then((m) => m.ForceGraph2D), {
+// SSR-safe — canvas APIs require browser.
+// Import directly from `react-force-graph-2d` — the meta `react-force-graph`
+// package bundles 3D/VR/AR variants that reference THREE and AFRAME globals
+// at module-eval, which crashes the bundle. The 2D-only entry has no
+// THREE/AFRAME deps.
+const ForceGraph2D = dynamic(() => import("react-force-graph-2d").then((m) => m.default), {
   ssr: false,
 });
 
