@@ -46,7 +46,7 @@ export function useFavorites() {
               item_type: row.item_type as FavoriteType,
               item_id: row.item_id,
               created_at: row.created_at,
-            }))
+            })),
           );
         }
       } else {
@@ -62,8 +62,8 @@ export function useFavorites() {
                   (item) =>
                     item &&
                     (item.item_type === "library" || item.item_type === "personal") &&
-                    typeof item.item_id === "string"
-                )
+                    typeof item.item_id === "string",
+                ),
               );
             }
           }
@@ -94,27 +94,33 @@ export function useFavorites() {
 
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const newUser = session?.user ?? null;
-      
+
       // Migration Logic
       if (newUser && !userRef.current) {
-         const localStr = localStorage.getItem(STORAGE_KEY);
-         if (localStr) {
-             try {
-                const localFavs = JSON.parse(localStr) as FavoriteEntry[];
-                if (Array.isArray(localFavs) && localFavs.length > 0) {
-                    const toInsert = localFavs.map(f => ({
-                        user_id: newUser.id,
-                        item_type: f.item_type,
-                        item_id: f.item_id
-                    }));
-                    // Upsert to avoid conflicts if they already exist in DB
-                    await supabase.from("prompt_favorites").upsert(toInsert, { onConflict: 'user_id,item_type,item_id' });
-                    localStorage.removeItem(STORAGE_KEY);
-                }
-             } catch (e) { logger.error("Fav migration failed", e); }
-         }
+        const localStr = localStorage.getItem(STORAGE_KEY);
+        if (localStr) {
+          try {
+            const localFavs = JSON.parse(localStr) as FavoriteEntry[];
+            if (Array.isArray(localFavs) && localFavs.length > 0) {
+              const toInsert = localFavs.map((f) => ({
+                user_id: newUser.id,
+                item_type: f.item_type,
+                item_id: f.item_id,
+              }));
+              // Upsert to avoid conflicts if they already exist in DB
+              await supabase
+                .from("prompt_favorites")
+                .upsert(toInsert, { onConflict: "user_id,item_type,item_id" });
+              localStorage.removeItem(STORAGE_KEY);
+            }
+          } catch (e) {
+            logger.error("Fav migration failed", e);
+          }
+        }
       }
 
       if (userRef.current?.id !== newUser?.id) {
@@ -133,22 +139,23 @@ export function useFavorites() {
   useEffect(() => {
     if (!isLoaded) return; // Don't write if not loaded
     if (user) {
-        // If user is logged in, we rely on DB, do NOT write to guest local storage
-        // Maybe we want to clear it? Already done in migration.
-        return;
-    } 
+      // If user is logged in, we rely on DB, do NOT write to guest local storage
+      // Maybe we want to clear it? Already done in migration.
+      return;
+    }
     // Guest mode -> Sync to LS
     localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
   }, [favorites, isLoaded, user]);
 
   const favoriteLibraryIds = useMemo(
     () => new Set(favorites.filter((fav) => fav.item_type === "library").map((fav) => fav.item_id)),
-    [favorites]
+    [favorites],
   );
 
   const favoritePersonalIds = useMemo(
-    () => new Set(favorites.filter((fav) => fav.item_type === "personal").map((fav) => fav.item_id)),
-    [favorites]
+    () =>
+      new Set(favorites.filter((fav) => fav.item_type === "personal").map((fav) => fav.item_id)),
+    [favorites],
   );
 
   const toggleFavorite = async (itemType: FavoriteType, itemId: string): Promise<boolean> => {
@@ -165,7 +172,9 @@ export function useFavorites() {
     }
 
     // Compute shouldRemove before setState to avoid reading from inside setter
-    const shouldRemove = favorites.some((fav) => fav.item_type === itemType && fav.item_id === itemId);
+    const shouldRemove = favorites.some(
+      (fav) => fav.item_type === itemType && fav.item_id === itemId,
+    );
     setFavorites((prev) => {
       if (shouldRemove) {
         return prev.filter((fav) => !(fav.item_type === itemType && fav.item_id === itemId));
@@ -192,7 +201,7 @@ export function useFavorites() {
         .from("prompt_favorites")
         .upsert(
           { user_id: user.id, item_type: itemType, item_id: itemId },
-          { onConflict: "user_id,item_type,item_id" }
+          { onConflict: "user_id,item_type,item_id" },
         );
       void supabase.from("activity_logs").insert({
         user_id: user.id,

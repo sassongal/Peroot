@@ -44,29 +44,37 @@ export function useLibraryAuth({
 
   useEffect(() => {
     let mounted = true;
+    // Tracks whether we've applied any auth state (from getSession or onAuthStateChange).
+    // Prevents a late-resolving getSession() null from clobbering a user that
+    // onAuthStateChange already delivered.
+    let applied = false;
 
-    async function init() {
+    async function applyUser(newUser: User | null) {
       if (!mounted) return;
+      applied = true;
+      userRef.current = newUser;
+      setUser(newUser);
       try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        if (!mounted) return;
-
-        // Guard: if onAuthStateChange already set a valid user and getUser()
-        // returned null (stale cookie race), don't overwrite the authenticated state.
-        if (currentUser === null && userRef.current !== null) return;
-        userRef.current = currentUser;
-        setUser(currentUser);
-        try {
-          await onUserChange(currentUser);
-        } catch (err) {
-          logger.error("[useLibraryAuth] onUserChange failed:", err);
-        }
+        await onUserChange(newUser);
       } catch (err) {
-        logger.error("[useLibraryAuth] init getUser failed:", err);
+        logger.error("[useLibraryAuth] onUserChange failed:", err);
       } finally {
         if (mounted) setIsLoaded(true);
+      }
+    }
+
+    async function init() {
+      try {
+        // getSession() reads the cached session from storage — no network round-trip,
+        // no stale-JWT false-null. This is the authoritative local source of truth.
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!mounted || applied) return;
+        await applyUser(session?.user ?? null);
+      } catch (err) {
+        logger.error("[useLibraryAuth] init getSession failed:", err);
+        if (mounted && !applied) setIsLoaded(true);
       }
     }
 
@@ -121,13 +129,25 @@ export function useLibraryAuth({
         }
       }
 
-      if (userRef.current?.id !== newUser?.id) {
+      const idChanged = userRef.current?.id !== newUser?.id;
+      // Recovery only: SIGNED_IN / INITIAL_SESSION arrived with a real user but
+      // init() had settled into guest mode (userRef.current === null). Without
+      // this branch the UI would stay empty until the next real id change.
+      // We intentionally exclude TOKEN_REFRESHED (fires every ~55min on the same
+      // id — would cause a full library re-fetch while the user is scrolling).
+      const isRecoveryEvent = event === "SIGNED_IN" || event === "INITIAL_SESSION";
+      const needsRecovery = isRecoveryEvent && newUser && !userRef.current;
+
+      if (idChanged || needsRecovery) {
+        applied = true;
         userRef.current = newUser;
         setUser(newUser);
         try {
           await onUserChange(newUser);
         } catch (err) {
           logger.error("[useLibraryAuth] onAuthStateChange onUserChange failed:", err);
+        } finally {
+          if (mounted) setIsLoaded(true);
         }
       }
     });
