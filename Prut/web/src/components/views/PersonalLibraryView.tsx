@@ -20,6 +20,7 @@ import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
 import { PersonalLibraryModals } from "./personal-library/PersonalLibraryModals";
 import { PersonalLibrarySidebar } from "./personal-library/PersonalLibrarySidebar";
 import { PromptGraphView } from "@/components/features/library/PromptGraphView";
+import { GuestGraphPreview } from "@/components/features/library/GuestGraphPreview";
 import type { PersonalLibrarySharedState } from "./personal-library/types";
 import { useHistory } from "@/hooks/useHistory";
 import type { HistoryItem } from "@/hooks/useHistory";
@@ -715,7 +716,9 @@ export function PersonalLibraryView({
         className="flex items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-500"
         dir="rtl"
       >
-        <div className="w-full max-w-md bg-white/95 dark:bg-zinc-950/90 border border-white/10 rounded-3xl shadow-2xl p-8 flex flex-col items-center text-center gap-6">
+        <div className="w-full max-w-lg bg-white/95 dark:bg-zinc-950/90 border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center gap-5">
+          {/* Animated demo graph — gives guests a glimpse of the feature */}
+          <GuestGraphPreview height={220} />
           {/* Logo */}
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/20 flex items-center justify-center">
             <Image

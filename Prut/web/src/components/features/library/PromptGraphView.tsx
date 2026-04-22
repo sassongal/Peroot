@@ -275,6 +275,12 @@ export function PromptGraphView({
     zoomToFit?: (ms?: number, padding?: number) => void;
     d3ReheatSimulation?: () => void;
   } | null>(null);
+  // 3D ref — separate because react-force-graph-3d has a different surface
+  const fg3dRef = useRef<{
+    cameraPosition?: (pos: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, ms?: number) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    graphData?: () => { nodes: any[] };
+  } | null>(null);
 
   // Feature 2 — search + filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -910,6 +916,27 @@ export function PromptGraphView({
     // no-op
   }, []);
 
+  // 3D: fit camera to settled node cloud after the engine cools down.
+  // Small graphs would otherwise spawn inside a single sphere.
+  const handle3DEngineStop = useCallback(() => {
+    const fg = fg3dRef.current;
+    if (!fg?.cameraPosition) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nodes = (fg.graphData?.()?.nodes ?? []) as Array<{ x?: number; y?: number; z?: number }>;
+      if (nodes.length === 0) return;
+      let maxR = 0;
+      for (const n of nodes) {
+        const r = Math.hypot(n.x ?? 0, n.y ?? 0, n.z ?? 0);
+        if (r > maxR) maxR = r;
+      }
+      // Camera distance: clamp to avoid either clipping inside the cluster
+      // (tiny graphs) or flying out to infinity (huge graphs).
+      const distance = Math.max(160, Math.min(900, maxR * 2.6 + 120));
+      fg.cameraPosition({ x: 0, y: 0, z: distance }, { x: 0, y: 0, z: 0 }, 800);
+    } catch {}
+  }, []);
+
   // Feature 3 — click on empty canvas clears focus and fits the graph.
   // Guard: only reset when something is actually focused/selected, so casual
   // pan-clicks on the background don't constantly refit the camera.
@@ -1182,31 +1209,42 @@ export function PromptGraphView({
         ) : (
           /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           <ForceGraph3D
+            ref={fg3dRef as any}
             graphData={graphData as any}
             width={dimensions.width}
             height={dimensions.height}
             nodeId="id"
             nodeLabel={((n: GraphNode) => n.label) as any}
-            nodeVal={((n: GraphNode) => (n.isFavorite ? 8 : 5)) as any}
-            nodeColor={
+            nodeVal={
               ((n: GraphNode) =>
-                CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD]) as any
+                Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4))) as any
+            }
+            nodeColor={
+              ((n: GraphNode) => CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD]) as any
             }
             nodeOpacity={0.95}
-            nodeResolution={16}
+            nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
             linkColor={linkColor as any}
             linkWidth={linkWidth as any}
-            linkOpacity={0.6}
+            linkOpacity={0.55}
             linkDirectionalParticles={linkDirectionalParticles as any}
-            linkDirectionalParticleWidth={1.5}
-            linkDirectionalParticleSpeed={0.006}
+            linkDirectionalParticleWidth={1.8}
+            linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
             linkDirectionalParticleColor={linkDirectionalParticleColor as any}
             onNodeClick={handleNodeClick as any}
             onNodeHover={handleNodeHover as any}
+            onBackgroundClick={handleBackgroundClick as any}
+            onEngineStop={handle3DEngineStop}
             backgroundColor="rgba(2,6,23,0)"
             showNavInfo={false}
+            enableNodeDrag
+            enableNavigationControls
+            controlType="orbit"
             cooldownTicks={200}
             warmupTicks={60}
+            d3AlphaDecay={0.018}
+            d3VelocityDecay={0.28}
+            rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           />
         )}
       </div>
