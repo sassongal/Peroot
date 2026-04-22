@@ -7,10 +7,14 @@ import type { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
   buildGraphData,
+  computeClusters,
+  convexHull,
+  expandHull,
   CAPABILITY_COLORS,
   CAPABILITY_HIGHLIGHT,
   type GraphNode,
   type GraphLink,
+  type GraphCluster,
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -64,6 +68,21 @@ const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
   [CapabilityMode.AGENT_BUILDER]: "סוכן",
   [CapabilityMode.VIDEO_GENERATION]: "וידאו",
 };
+
+// Convert a 3/6-char hex color to rgba() with the given alpha.
+function hexToRgba(hex: string, alpha: number): string {
+  let h = hex.replace("#", "");
+  if (h.length === 3)
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  const n = parseInt(h, 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 // Draw a hexagon path (flat-top)
 function hexPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
@@ -246,7 +265,40 @@ export function PromptGraphView({
     d3Force?: (
       name: string,
     ) => { strength?: (v: number) => unknown; distance?: (v: number) => unknown } | undefined;
+    centerAt?: (x: number, y: number, ms?: number) => void;
+    zoom?: (k: number, ms?: number) => void;
+    zoomToFit?: (ms?: number, padding?: number) => void;
+    d3ReheatSimulation?: () => void;
   } | null>(null);
+
+  // Feature 2 — search + filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [capabilityFilter, setCapabilityFilter] = useState<Set<CapabilityMode>>(new Set());
+  const [favOnly, setFavOnly] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  // Feature 3 — focused node for cinematic zoom
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  // Feature 5 — edge hover tooltip
+  const [hoverLink, setHoverLink] = useState<GraphLink | null>(null);
+  const [hoverLinkPos, setHoverLinkPos] = useState<{ x: number; y: number } | null>(null);
+  // Feature 6 — first-visit hint
+  const [showHint, setShowHint] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (!localStorage.getItem("peroot:graph-hint-seen")) {
+        setShowHint(true);
+        const t = setTimeout(() => setShowHint(false), 8000);
+        return () => clearTimeout(t);
+      }
+    } catch {}
+  }, []);
+  const dismissHint = useCallback(() => {
+    setShowHint(false);
+    try {
+      localStorage.setItem("peroot:graph-hint-seen", "1");
+    } catch {}
+  }, []);
 
   // Track animation tick for pulsing effects
   useEffect(() => {
@@ -296,6 +348,107 @@ export function PromptGraphView({
     return data;
   }, [prompts, favoriteIds]);
 
+  // Community clusters — colored hulls in the backdrop layer.
+  const clusters = useMemo<GraphCluster[]>(
+    () => computeClusters(prompts, graphData.links),
+    [prompts, graphData.links],
+  );
+  const nodeById = useMemo(() => {
+    const m = new Map<string, GraphNode>();
+    for (const n of graphData.nodes) m.set(n.id, n);
+    return m;
+  }, [graphData.nodes]);
+
+  // Render hulls BEHIND nodes/links. `onRenderFramePre` runs before the
+  // built-in link+node passes, which is exactly what we want for a backdrop.
+  const onRenderFramePre = useCallback(
+    (ctx: CanvasRenderingContext2D, globalScale: number) => {
+      if (clusters.length === 0) return;
+      for (const c of clusters) {
+        const pts: Array<{ x: number; y: number }> = [];
+        for (const id of c.nodeIds) {
+          const n = nodeById.get(id);
+          if (n && n.x !== undefined && n.y !== undefined) {
+            pts.push({ x: n.x, y: n.y });
+          }
+        }
+        if (pts.length < 3) continue;
+        const hull = expandHull(convexHull(pts), 28);
+        if (hull.length === 0) continue;
+
+        // Fill
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(hull[0].x, hull[0].y);
+        for (let i = 1; i < hull.length; i++) ctx.lineTo(hull[i].x, hull[i].y);
+        ctx.closePath();
+        ctx.fillStyle = hexToRgba(c.color, 0.09);
+        ctx.fill();
+        ctx.lineWidth = 1.5 / globalScale;
+        ctx.strokeStyle = hexToRgba(c.color, 0.35);
+        ctx.stroke();
+
+        // Cluster label — centroid-anchored, small and quiet.
+        let cx = 0;
+        let minY = Infinity;
+        for (const p of hull) {
+          cx += p.x;
+          if (p.y < minY) minY = p.y;
+        }
+        cx /= hull.length;
+        const labelY = minY - 10 / globalScale;
+        const fontSize = Math.max(9, 11 / globalScale);
+        ctx.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillStyle = hexToRgba(c.color, 0.85);
+        ctx.fillText(c.label, cx, labelY);
+        ctx.restore();
+      }
+    },
+    [clusters, nodeById],
+  );
+
+  // Strip Hebrew niqqud + lowercase for case/niqqud-insensitive search.
+  const normalize = useCallback(
+    (s: string) => (s ?? "").toLowerCase().replace(/[\u05B0-\u05C7]/g, ""),
+    [],
+  );
+
+  // IDs of prompts matching the search + filters. `null` = no filter active.
+  const matchedIds = useMemo<Set<string> | null>(() => {
+    const q = normalize(searchQuery).trim();
+    const capActive = capabilityFilter.size > 0;
+    if (!q && !capActive && !favOnly) return null;
+    const ids = new Set<string>();
+    for (const p of prompts) {
+      const cap = p.capability_mode ?? CapabilityMode.STANDARD;
+      if (capActive && !capabilityFilter.has(cap)) continue;
+      if (favOnly && !(favoriteIds.has(p.id) || p.is_pinned)) continue;
+      if (q) {
+        const hay = normalize(
+          [p.title, p.personal_category, p.prompt, ...(p.tags ?? [])].filter(Boolean).join(" "),
+        );
+        if (!hay.includes(q)) continue;
+      }
+      ids.add(p.id);
+    }
+    return ids;
+  }, [normalize, searchQuery, capabilityFilter, favOnly, prompts, favoriteIds]);
+
+  // Focused node + 1-hop neighbors — drives the cinematic dim effect.
+  const focusIds = useMemo<Set<string> | null>(() => {
+    if (!focusedId) return null;
+    const ids = new Set<string>([focusedId]);
+    for (const l of graphData.links) {
+      const src = typeof l.source === "object" ? l.source.id : l.source;
+      const tgt = typeof l.target === "object" ? l.target.id : l.target;
+      if (src === focusedId) ids.add(tgt);
+      if (tgt === focusedId) ids.add(src);
+    }
+    return ids;
+  }, [focusedId, graphData.links]);
+
   // Connected node IDs for hover-dim effect
   const connectedIds = useMemo(() => {
     if (!hoverNode) return null;
@@ -309,6 +462,22 @@ export function PromptGraphView({
     });
     return ids;
   }, [hoverNode, graphData.links]);
+
+  // Unified "is this node dimmed?" check — hover takes precedence,
+  // then focus, then search/filter.
+  const isNodeVisible = useCallback(
+    (id: string): boolean => {
+      if (connectedIds) return connectedIds.has(id);
+      if (focusIds) return focusIds.has(id);
+      if (matchedIds) return matchedIds.has(id);
+      return true;
+    },
+    [connectedIds, focusIds, matchedIds],
+  );
+  const isNodeMatch = useCallback(
+    (id: string): boolean => (matchedIds ? matchedIds.has(id) : false),
+    [matchedIds],
+  );
 
   // Save current positions so we can restore them on next graphData rebuild
   const savePositions = useCallback(() => {
@@ -324,6 +493,14 @@ export function PromptGraphView({
       savePositions();
       if (node.type === "prompt" && node.prompt) {
         setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
+        setFocusedId((prev) => (prev === node.id ? null : node.id));
+        // Cinematic dolly-in on the clicked node.
+        const nx = node.x ?? 0;
+        const ny = node.y ?? 0;
+        try {
+          fgRef.current?.centerAt?.(nx, ny, 600);
+          fgRef.current?.zoom?.(2.2, 600);
+        } catch {}
       }
     },
     [savePositions],
@@ -340,11 +517,12 @@ export function PromptGraphView({
   // Track pointer over the container so hover tooltip can follow
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!hoverNode) return;
       const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-      setHoverPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      const p = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      if (hoverNode) setHoverPos(p);
+      if (hoverLink) setHoverLinkPos(p);
     },
-    [hoverNode],
+    [hoverNode, hoverLink],
   );
 
   const nodeCanvasObject = useCallback(
@@ -354,7 +532,9 @@ export function PromptGraphView({
       const isHovered = hoverNode?.id === node.id;
       const isSelected = selectedPrompt?.id === node.id;
       const isConnected = connectedIds ? connectedIds.has(node.id) : true;
-      const dimAlpha = connectedIds && !isConnected ? 0.18 : 1;
+      const visible = isNodeVisible(node.id);
+      const isSearchMatch = isNodeMatch(node.id);
+      const dimAlpha = !visible ? 0.08 : connectedIds && !isConnected ? 0.18 : 1;
 
       ctx.save();
       ctx.globalAlpha = dimAlpha;
@@ -489,15 +669,50 @@ export function PromptGraphView({
         ctx.restore();
       }
 
-      // Success rate ring
-      if (node.successRate !== undefined) {
-        const ringColor =
-          node.successRate > 0.7 ? "#22c55e" : node.successRate > 0.4 ? "#f59e0b" : "#ef4444";
-        const innerR = radius - 1;
+      // Search-match gold halo (Feature 2)
+      if (isSearchMatch) {
+        ctx.save();
+        ctx.shadowColor = "#fbbf24";
+        ctx.shadowBlur = 18;
         ctx.beginPath();
-        ctx.arc(nx, ny - innerR + 1.5, 1.5, 0, 2 * Math.PI);
-        ctx.fillStyle = ringColor;
-        ctx.fill();
+        ctx.arc(nx, ny, radius + 4, 0, 2 * Math.PI);
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Success-rate arc (Feature 4) — thin ring from 12 o'clock clockwise.
+      if (node.successRate !== undefined) {
+        const sr = node.successRate;
+        const ringColor = sr > 0.7 ? "#34d399" : sr >= 0.4 ? "#fbbf24" : "#fb7185";
+        const arcR = radius + 2.5;
+        // Background track
+        ctx.beginPath();
+        ctx.arc(nx, ny, arcR, 0, 2 * Math.PI);
+        ctx.strokeStyle = "rgba(148,163,184,0.18)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Filled portion — start at -π/2 (12 o'clock), clockwise.
+        if (sr > 0) {
+          ctx.beginPath();
+          ctx.arc(nx, ny, arcR, -Math.PI / 2, -Math.PI / 2 + sr * 2 * Math.PI);
+          ctx.strokeStyle = ringColor;
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.stroke();
+          ctx.lineCap = "butt";
+        }
+      }
+
+      // Focused-node pulse (Feature 3)
+      if (focusedId === node.id) {
+        const pulse = 0.5 + 0.5 * Math.sin(tickRef.current / 350);
+        ctx.beginPath();
+        ctx.arc(nx, ny, radius + 6 + pulse * 3, 0, 2 * Math.PI);
+        ctx.strokeStyle = `rgba(251,191,36,${0.35 + pulse * 0.4})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
 
       // Main sphere with radial gradient (3D look)
@@ -584,7 +799,7 @@ export function PromptGraphView({
 
       ctx.restore();
     },
-    [hoverNode, selectedPrompt, connectedIds],
+    [hoverNode, selectedPrompt, connectedIds, isNodeVisible, isNodeMatch, focusedId],
   );
 
   const linkColor = useCallback(
@@ -592,7 +807,8 @@ export function PromptGraphView({
       const src = typeof link.source === "object" ? link.source.id : link.source;
       const tgt = typeof link.target === "object" ? link.target.id : link.target;
       const isConnectedLink = !connectedIds || connectedIds.has(src) || connectedIds.has(tgt);
-      const baseAlpha = isConnectedLink ? 1 : 0.08;
+      const bothVisible = isNodeVisible(src) && isNodeVisible(tgt);
+      const baseAlpha = !bothVisible ? 0.05 : isConnectedLink ? 1 : 0.08;
 
       if (link.type === "tag") return `rgba(245,158,11,${0.75 * baseAlpha})`;
       if (link.type === "reference") return `rgba(168,85,247,${0.65 * baseAlpha})`;
@@ -607,7 +823,7 @@ export function PromptGraphView({
       // category (legacy — no longer emitted)
       return `rgba(148,163,184,${0.15 * baseAlpha})`;
     },
-    [connectedIds],
+    [connectedIds, isNodeVisible],
   );
 
   const linkWidth = useCallback((link: GraphLink) => {
@@ -682,6 +898,98 @@ export function PromptGraphView({
     // no-op
   }, []);
 
+  // Feature 3 — click on empty canvas clears focus and fits the graph.
+  const handleBackgroundClick = useCallback(() => {
+    setFocusedId(null);
+    setSelectedPrompt(null);
+    try {
+      fgRef.current?.zoomToFit?.(600, 80);
+    } catch {}
+  }, []);
+
+  // Feature 5 — edge hover tooltip
+  const handleLinkHover = useCallback(
+    (link: GraphLink | null) => {
+      setHoverLink(link);
+      if (typeof document !== "undefined") {
+        document.body.style.cursor = link || hoverNode ? "pointer" : "default";
+      }
+    },
+    [hoverNode],
+  );
+
+  // Feature 6 — keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const isTyping =
+        t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (e.key === "/" && !isTyping) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        dismissHint();
+      } else if (e.key === "Escape") {
+        if (searchQuery || capabilityFilter.size > 0 || favOnly || focusedId) {
+          setSearchQuery("");
+          setCapabilityFilter(new Set());
+          setFavOnly(false);
+          setFocusedId(null);
+          setSelectedPrompt(null);
+          try {
+            fgRef.current?.zoomToFit?.(600, 80);
+          } catch {}
+        }
+        dismissHint();
+      } else if ((e.key === "f" || e.key === "F") && !isTyping) {
+        setFavOnly((v) => !v);
+        dismissHint();
+      } else if ((e.key === "r" || e.key === "R") && !isTyping) {
+        try {
+          fgRef.current?.d3ReheatSimulation?.();
+        } catch {}
+        dismissHint();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchQuery, capabilityFilter, favOnly, focusedId, dismissHint]);
+
+  // Feature 5 helpers — precompute shared items for hover tooltip.
+  const describeEdge = useCallback(
+    (link: GraphLink): string => {
+      const srcId = typeof link.source === "object" ? link.source.id : link.source;
+      const tgtId = typeof link.target === "object" ? link.target.id : link.target;
+      const a = prompts.find((p) => p.id === srcId);
+      const b = prompts.find((p) => p.id === tgtId);
+      if (link.type === "reference") return "מקור מהספרייה";
+      if (link.type === "capability") return "אותה יכולת וקטגוריה";
+      if (link.type === "temporal") return "נוצרו בסמיכות זמן";
+      if (!a || !b) return link.type;
+      if (link.type === "tag") {
+        const aTags = new Set((a.tags ?? []).map((t) => t.toLowerCase()));
+        const shared = (b.tags ?? [])
+          .filter((t) => aTags.has(t.toLowerCase()))
+          .slice(0, 4)
+          .join(", ");
+        return `תגיות משותפות: ${shared || "—"}`;
+      }
+      if (link.type === "template") {
+        const aVars = new Set(a.template_variables ?? []);
+        const shared = (b.template_variables ?? [])
+          .filter((v) => aVars.has(v))
+          .slice(0, 4)
+          .map((v) => `{{${v}}}`)
+          .join(", ");
+        return `משתנים משותפים: ${shared || "—"}`;
+      }
+      if (link.type === "similarity") {
+        return `דמיון תוכן · ${link.strength ?? 0} מילים משותפות`;
+      }
+      return link.type;
+    },
+    [prompts],
+  );
+
   return (
     <div
       className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-white/10 backdrop-blur-sm"
@@ -701,6 +1009,87 @@ export function PromptGraphView({
           backgroundSize: "22px 22px",
         }}
       />
+      {/* Feature 2 — search + filter bar */}
+      <div
+        className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
+        dir="rtl"
+      >
+        <div className="relative flex-1 md:flex-initial">
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="חפש פרומפט… (/)"
+            className="w-full md:w-60 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:bg-white/10"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              aria-label="נקה חיפוש"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-1 flex-wrap">
+          {(Object.keys(CAPABILITY_LABELS) as CapabilityMode[]).map((cap) => {
+            const active = capabilityFilter.has(cap);
+            return (
+              <button
+                key={cap}
+                onClick={() =>
+                  setCapabilityFilter((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(cap)) next.delete(cap);
+                    else next.add(cap);
+                    return next;
+                  })
+                }
+                className={cn(
+                  "text-[11px] px-2 py-1 rounded-md border transition-colors",
+                  active
+                    ? "border-transparent text-black font-semibold"
+                    : "border-white/15 text-slate-300 hover:bg-white/8",
+                )}
+                style={active ? { backgroundColor: CAPABILITY_COLORS[cap] } : undefined}
+                title={CAPABILITY_LABELS[cap]}
+              >
+                {CAPABILITY_LABELS[cap]}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => setFavOnly((v) => !v)}
+          className={cn(
+            "text-[11px] px-2 py-1 rounded-md border flex items-center gap-1 transition-colors",
+            favOnly
+              ? "bg-amber-400/90 border-transparent text-black font-semibold"
+              : "border-white/15 text-slate-300 hover:bg-white/8",
+          )}
+          aria-pressed={favOnly}
+        >
+          <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
+          מועדפים
+        </button>
+      </div>
+
+      {/* Feature 6 — first-visit hint */}
+      {showHint && (
+        <div
+          onClick={dismissHint}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-full border border-white/15 bg-black/75 backdrop-blur-xl px-4 py-2 text-xs text-slate-200 shadow-xl cursor-pointer"
+          dir="rtl"
+        >
+          טיפ: <kbd className="px-1 bg-white/10 rounded">/</kbd> חיפוש ·{" "}
+          <kbd className="px-1 bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
+          <kbd className="px-1 bg-white/10 rounded">F</kbd> מועדפים ·{" "}
+          <kbd className="px-1 bg-white/10 rounded">R</kbd> רעיון מחדש
+        </div>
+      )}
+
       {/* Loading overlay while fetching all prompts */}
       {isLoading && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm">
@@ -722,8 +1111,11 @@ export function PromptGraphView({
           nodeId="id"
           nodeCanvasObject={nodeCanvasObject as any}
           nodeCanvasObjectMode={() => "replace"}
+          onRenderFramePre={onRenderFramePre as any}
           onNodeClick={handleNodeClick as any}
           onNodeHover={handleNodeHover as any}
+          onLinkHover={handleLinkHover as any}
+          onBackgroundClick={handleBackgroundClick as any}
           linkColor={linkColor as any}
           linkWidth={linkWidth as any}
           linkLineDash={linkLineDash as any}
@@ -991,6 +1383,20 @@ export function PromptGraphView({
               setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
             }}
           />
+        </div>
+      )}
+
+      {/* Feature 5 — edge hover tooltip */}
+      {hoverLink && hoverLinkPos && !hoverNode && (
+        <div
+          className="pointer-events-none absolute z-30 max-w-[260px] rounded-lg border border-white/15 bg-black/85 backdrop-blur-xl px-2.5 py-1.5 shadow-xl text-[11px] text-slate-100"
+          style={{
+            left: Math.max(8, Math.min(dimensions.width - 270, hoverLinkPos.x + 14)),
+            top: Math.max(8, Math.min(dimensions.height - 60, hoverLinkPos.y + 14)),
+          }}
+          dir="rtl"
+        >
+          {describeEdge(hoverLink)}
         </div>
       )}
     </div>

@@ -133,7 +133,7 @@ const STOPWORDS = new Set([
   "please",
 ]);
 
-function tokenize(text: string): string[] {
+export function tokenize(text: string): string[] {
   if (!text) return [];
   // Split on whitespace + punctuation; keep Hebrew (\u0590-\u05FF) and
   // Latin letters + digits. Strip Hebrew niqqud (\u05B0-\u05C7) first.
@@ -144,7 +144,7 @@ function tokenize(text: string): string[] {
     .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
 }
 
-function extractKeywords(p: PersonalPrompt, limit = 12): Set<string> {
+export function extractKeywords(p: PersonalPrompt, limit = 12): Set<string> {
   const title = tokenize(p.title ?? "");
   const body = tokenize(p.prompt ?? "");
   // Title tokens get weight 2 (duplicated) so title overlap scores higher.
@@ -334,4 +334,181 @@ export function buildGraphData(prompts: PersonalPrompt[], favoriteIds: Set<strin
     });
 
   return { nodes, links };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Cluster detection + convex hull for the Obsidian-style overlay
+// ────────────────────────────────────────────────────────────────────────────
+
+export interface GraphCluster {
+  clusterId: string;
+  nodeIds: string[];
+  label: string;
+  color: string;
+  capability: CapabilityMode;
+}
+
+// Union-find (disjoint set) — tiny inline impl.
+function makeUF(ids: string[]) {
+  const parent = new Map<string, string>();
+  for (const id of ids) parent.set(id, id);
+  const find = (x: string): string => {
+    let p = parent.get(x)!;
+    while (p !== parent.get(p)!) p = parent.get(p)!;
+    // path compression
+    let cur = x;
+    while (parent.get(cur) !== p) {
+      const next = parent.get(cur)!;
+      parent.set(cur, p);
+      cur = next;
+    }
+    return p;
+  };
+  const union = (a: string, b: string) => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent.set(ra, rb);
+  };
+  return { find, union };
+}
+
+/**
+ * Community detection over "strong" edges only. Returns one entry per
+ * component with ≥ 3 prompt nodes. Used to draw translucent hull overlays
+ * behind topical clusters — the Obsidian signature look.
+ */
+export function computeClusters(prompts: PersonalPrompt[], links: GraphLink[]): GraphCluster[] {
+  if (prompts.length === 0) return [];
+  const ids = prompts.map((p) => p.id);
+  const uf = makeUF(ids);
+
+  for (const l of links) {
+    const s = typeof l.source === "string" ? l.source : l.source.id;
+    const t = typeof l.target === "string" ? l.target : l.target.id;
+    // Strong edges only — temporal + capability are too noisy for grouping.
+    const isStrong =
+      l.type === "tag" ||
+      l.type === "template" ||
+      l.type === "reference" ||
+      (l.type === "similarity" && (l.strength ?? 0) >= 2);
+    if (!isStrong) continue;
+    // Skip edges that touch non-prompt nodes (e.g. library reference nodes).
+    if (!ids.includes(s) || !ids.includes(t)) continue;
+    uf.union(s, t);
+  }
+
+  const groups = new Map<string, string[]>();
+  for (const id of ids) {
+    const root = uf.find(id);
+    if (!groups.has(root)) groups.set(root, []);
+    groups.get(root)!.push(id);
+  }
+
+  const promptById = new Map(prompts.map((p) => [p.id, p]));
+  const clusters: GraphCluster[] = [];
+  for (const [root, nodeIds] of groups) {
+    if (nodeIds.length < 3) continue;
+
+    // Dominant capability
+    const capCounts = new Map<CapabilityMode, number>();
+    for (const id of nodeIds) {
+      const cap = promptById.get(id)?.capability_mode ?? CapabilityMode.STANDARD;
+      capCounts.set(cap, (capCounts.get(cap) ?? 0) + 1);
+    }
+    let dominantCap = CapabilityMode.STANDARD;
+    let best = 0;
+    for (const [cap, n] of capCounts) {
+      if (n > best) {
+        best = n;
+        dominantCap = cap;
+      }
+    }
+
+    // Label: top keyword across members
+    const keywordTally = new Map<string, number>();
+    for (const id of nodeIds) {
+      const p = promptById.get(id);
+      if (!p) continue;
+      for (const kw of extractKeywords(p, 6)) {
+        keywordTally.set(kw, (keywordTally.get(kw) ?? 0) + 1);
+      }
+    }
+    const topKw = [...keywordTally.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([w]) => w)
+      .join(" · ");
+    const label = topKw || "קבוצה";
+
+    clusters.push({
+      clusterId: root,
+      nodeIds,
+      label,
+      color: CAPABILITY_COLORS[dominantCap],
+      capability: dominantCap,
+    });
+  }
+  return clusters;
+}
+
+/**
+ * Andrew's monotone chain convex hull. Returns points in CCW order.
+ * O(n log n). Tiny — ~25 lines.
+ */
+export function convexHull(
+  points: Array<{ x: number; y: number }>,
+): Array<{ x: number; y: number }> {
+  if (points.length < 3) return points.slice();
+  const pts = points.slice().sort((a, b) => (a.x === b.x ? a.y - b.y : a.x - b.x));
+  const cross = (
+    o: { x: number; y: number },
+    a: { x: number; y: number },
+    b: { x: number; y: number },
+  ) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+  const lower: Array<{ x: number; y: number }> = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+      lower.pop();
+    }
+    lower.push(p);
+  }
+  const upper: Array<{ x: number; y: number }> = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+      upper.pop();
+    }
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
+/**
+ * Expand a convex hull outward by `padding` pixels along each vertex's
+ * outward normal. Good enough for the soft blob look — no need for a true
+ * Minkowski sum.
+ */
+export function expandHull(
+  hull: Array<{ x: number; y: number }>,
+  padding: number,
+): Array<{ x: number; y: number }> {
+  if (hull.length === 0) return hull;
+  // Centroid
+  let cx = 0;
+  let cy = 0;
+  for (const p of hull) {
+    cx += p.x;
+    cy += p.y;
+  }
+  cx /= hull.length;
+  cy /= hull.length;
+  return hull.map((p) => {
+    const dx = p.x - cx;
+    const dy = p.y - cy;
+    const len = Math.hypot(dx, dy) || 1;
+    return { x: p.x + (dx / len) * padding, y: p.y + (dy / len) * padding };
+  });
 }
