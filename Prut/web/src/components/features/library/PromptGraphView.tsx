@@ -547,6 +547,38 @@ export function PromptGraphView({
     [savePositions],
   );
 
+  // Direct pointer-based click detection on the container div.
+  // This runs independently of the 3D library's click mechanism and is the
+  // reliable path for opening the node card on left-click.
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
+
+  const handleContainerPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleContainerPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      const down = pointerDownPos.current;
+      pointerDownPos.current = null;
+      if (!down) return;
+      const dx = e.clientX - down.x;
+      const dy = e.clientY - down.y;
+      // Only treat as a click if pointer barely moved (threshold 6px)
+      if (Math.sqrt(dx * dx + dy * dy) > 6) return;
+      // Use current hoverNode from state to identify which node was clicked
+      if (hoverNode && hoverNode.type === "prompt" && hoverNode.prompt) {
+        savePositions();
+        setSelectedPrompt((prev) =>
+          prev?.id === hoverNode.prompt!.id ? null : hoverNode.prompt!,
+        );
+        setFocusedId((prev) => (prev === hoverNode.id ? null : hoverNode.id));
+      }
+    },
+    [hoverNode, savePositions],
+  );
+
   // Pin the node at its dragged position so it stays put after drag.
   // The library's clickAfterDrag(false) already ensures onNodeClick won't
   // fire after a drag, so no extra guard is needed here.
@@ -1336,6 +1368,8 @@ export function PromptGraphView({
       <div
         ref={containerRef}
         onPointerMove={handlePointerMove}
+        onPointerDown={handleContainerPointerDown}
+        onPointerUp={handleContainerPointerUp}
         className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
       >
         {viewMode === "2d" ? (
