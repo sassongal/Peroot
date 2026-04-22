@@ -69,6 +69,7 @@ interface Props {
   prompts: PersonalPrompt[];
   favoriteIds: Set<string>;
   onUsePrompt: (p: PersonalPrompt) => void;
+  isLoading?: boolean;
 }
 
 const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
@@ -192,7 +193,7 @@ function drawCapabilityIcon(
   else if (cap === CapabilityMode.AGENT_BUILDER) drawAgentIcon(ctx, cx, cy, r);
 }
 
-export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
+export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading = false }: Props) {
   const { updateTags, updatePrompt } = useLibraryContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -529,6 +530,13 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
 
   return (
     <div className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-white/8 bg-black/15 backdrop-blur-sm">
+      {/* Loading overlay while fetching all prompts */}
+      {isLoading && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-10 h-10 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
+          <p className="text-sm text-slate-400">טוען את כל הפרומפטים לגרף...</p>
+        </div>
+      )}
       <div
         ref={containerRef}
         className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)]"

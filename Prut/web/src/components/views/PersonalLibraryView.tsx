@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { Hash, AtSign, Wand2, LogIn, BookOpen, Star, Network, History } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 import { PersonalLibraryHeader } from "./personal-library/PersonalLibraryHeader";
 import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
@@ -89,6 +91,9 @@ export function PersonalLibraryView({
 
   // Graph vs grid view toggle
   const [localViewType, setLocalViewType] = useState<"grid" | "graph">("grid");
+  // All prompts for graph mode — fetched without pagination when graph activates
+  const [graphPrompts, setGraphPrompts] = useState<PersonalPrompt[]>([]);
+  const [graphLoading, setGraphLoading] = useState(false);
 
   // Chains section collapse
   const [chainsExpanded, setChainsExpanded] = useState(false);
@@ -113,6 +118,26 @@ export function PersonalLibraryView({
     window.addEventListener("peroot:open-graph", handler);
     return () => window.removeEventListener("peroot:open-graph", handler);
   }, []);
+
+  // When graph mode activates, fetch ALL personal prompts (no pagination).
+  // filteredPersonalLibrary only has the current page — graph needs the full library.
+  useEffect(() => {
+    if (localViewType !== "graph" || !ctx.user) return;
+    let cancelled = false;
+    setGraphLoading(true);
+    createClient()
+      .from("personal_library")
+      .select("*")
+      .eq("user_id", ctx.user.id)
+      .order("sort_index", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) logger.error("[graph] fetch all prompts failed", error);
+        setGraphPrompts((data ?? []) as PersonalPrompt[]);
+        setGraphLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [localViewType, ctx.user]);
 
   // Expanded card ids
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -694,9 +719,21 @@ export function PersonalLibraryView({
           {/* Feature list */}
           <ul className="w-full space-y-3 text-sm text-right">
             {[
-              { Icon: BookOpen, color: "text-amber-500", label: "ספרייה אישית — כל הפרומפטים שלך במקום אחד" },
-              { Icon: Star, color: "text-yellow-500", label: "מועדפים — גישה מהירה לפרומפטים שאהבת" },
-              { Icon: Network, color: "text-purple-500", label: "גרף ידע — ויזואליזציה של הקשרים בין הפרומפטים" },
+              {
+                Icon: BookOpen,
+                color: "text-amber-500",
+                label: "ספרייה אישית — כל הפרומפטים שלך במקום אחד",
+              },
+              {
+                Icon: Star,
+                color: "text-yellow-500",
+                label: "מועדפים — גישה מהירה לפרומפטים שאהבת",
+              },
+              {
+                Icon: Network,
+                color: "text-purple-500",
+                label: "גרף ידע — ויזואליזציה של הקשרים בין הפרומפטים",
+              },
               { Icon: History, color: "text-blue-500", label: "היסטוריה — כל הפרומפטים שיצרת" },
             ].map(({ Icon, color, label }) => (
               <li key={label} className="flex items-start gap-3">
@@ -760,11 +797,14 @@ export function PersonalLibraryView({
 
       {/* Main layout: sidebar + content */}
       {localViewType === "graph" ? (
-        <PromptGraphView
-          prompts={filteredPersonalLibrary}
-          favoriteIds={favoritePersonalIds}
-          onUsePrompt={(p) => onUsePrompt(p)}
-        />
+        <ErrorBoundary name="PromptGraphView">
+          <PromptGraphView
+            prompts={graphPrompts}
+            favoriteIds={favoritePersonalIds}
+            onUsePrompt={(p) => onUsePrompt(p)}
+            isLoading={graphLoading}
+          />
+        </ErrorBoundary>
       ) : (
         <div className="flex gap-4 items-start">
           {/* Desktop Sidebar */}

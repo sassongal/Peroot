@@ -126,7 +126,9 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
           <button
             onClick={() => {
               onNavigate("personal");
-              window.dispatchEvent(new CustomEvent("peroot:open-graph"));
+              // Delay so PersonalLibraryView has time to mount and attach its listener
+              // before the event fires — same pattern as the Chains button in HomeClient.
+              setTimeout(() => window.dispatchEvent(new CustomEvent("peroot:open-graph")), 50);
             }}
             className={cn(
               "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:outline-none border",
