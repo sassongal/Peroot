@@ -19,10 +19,13 @@ export interface GraphNode {
   // runtime — force-graph mutates these
   x?: number;
   y?: number;
+  z?: number;
   vx?: number;
   vy?: number;
+  vz?: number;
   fx?: number;
   fy?: number;
+  fz?: number;
 }
 
 export interface GraphLink {

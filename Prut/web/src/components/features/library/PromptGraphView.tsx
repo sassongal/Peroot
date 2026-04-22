@@ -287,7 +287,10 @@ export function PromptGraphView({
     ) => void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     graphData?: () => { nodes: any[] };
+    d3ReheatSimulation?: () => void;
   } | null>(null);
+  // Tracks whether the pointer moved (drag) so onNodeClick can skip card open
+  const hasDraggedRef = useRef(false);
 
   // Feature 2 — search + filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -537,21 +540,28 @@ export function PromptGraphView({
 
   const handleNodeClick = useCallback(
     (node: GraphNode) => {
+      // If the pointer moved (drag), skip opening the card and reset flag
+      if (hasDraggedRef.current) {
+        hasDraggedRef.current = false;
+        return;
+      }
       savePositions();
       if (node.type === "prompt" && node.prompt) {
         setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
         setFocusedId((prev) => (prev === node.id ? null : node.id));
-        // Cinematic dolly-in on the clicked node.
-        const nx = node.x ?? 0;
-        const ny = node.y ?? 0;
-        try {
-          fgRef.current?.centerAt?.(nx, ny, 600);
-          fgRef.current?.zoom?.(2.2, 600);
-        } catch {}
       }
     },
     [savePositions],
   );
+
+  // Pin the node at its dragged position so it stays put
+  const handleNodeDragEnd = useCallback((node: GraphNode) => {
+    hasDraggedRef.current = true;
+    node.fx = node.x;
+    node.fy = node.y;
+    node.fz = node.z;
+    fg3dRef.current?.d3ReheatSimulation?.();
+  }, []);
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     setHoverNode(node);
@@ -1403,12 +1413,13 @@ export function PromptGraphView({
             linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
             linkDirectionalParticleColor={linkDirectionalParticleColor as any}
             onNodeClick={handleNodeClick as any}
+            onNodeDragEnd={handleNodeDragEnd as any}
             onNodeHover={handleNodeHover as any}
             onBackgroundClick={handleBackgroundClick as any}
             onEngineStop={handle3DEngineStop}
             backgroundColor="rgba(2,6,23,0)"
             showNavInfo={false}
-            enableNodeDrag={false}
+            enableNodeDrag
             enableNavigationControls
             controlType="orbit"
             cooldownTicks={200}
