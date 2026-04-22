@@ -1,7 +1,22 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Check, X, Sparkles, Zap, ArrowRight, Crown, Shield, Chrome, Gift, Brain, RefreshCw, Library, Headphones, Bot } from "lucide-react";
+import {
+  Check,
+  X,
+  Sparkles,
+  Zap,
+  ArrowRight,
+  Crown,
+  Shield,
+  Chrome,
+  Gift,
+  Brain,
+  RefreshCw,
+  Library,
+  Headphones,
+  Bot,
+} from "lucide-react";
 import Link from "next/link";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
@@ -146,7 +161,8 @@ export default function PricingPage() {
           <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-border bg-secondary">
             <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span className="text-sm text-foreground">
-              <span className="font-bold text-foreground">50,000+</span> פרומפטים שודרגו על ידי המשתמשים שלנו
+              <span className="font-bold text-foreground">50,000+</span> פרומפטים שודרגו על ידי
+              המשתמשים שלנו
             </span>
           </div>
         </div>
@@ -197,16 +213,26 @@ export default function PricingPage() {
                 <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-red-400/80 line-through decoration-red-500/60 decoration-2">&#8362;9.99</span>
-                <span className="text-4xl font-black text-foreground">&#8362;{PLANS.pro.price}</span>
+                <span className="text-2xl font-bold text-red-400/80 line-through decoration-red-500/60 decoration-2">
+                  &#8362;9.99
+                </span>
+                <span className="text-4xl font-black text-foreground">
+                  &#8362;{PLANS.pro.price}
+                </span>
                 <span className="text-muted-foreground text-sm">/ חודש</span>
               </div>
               <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-amber-600 dark:text-amber-400 text-xs font-bold">מחיר השקה! עולה ל-&#8362;9.99 ב-1.5</span>
+                <span className="text-amber-600 dark:text-amber-400 text-xs font-bold">
+                  מחיר השקה! עולה ל-&#8362;9.99 ב-1.5
+                </span>
               </div>
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5">&#x23F0; המחיר עולה ב-1 במאי 2026</p>
-              <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">150 קרדיטים בחודש</p>
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5">
+                &#x23F0; המחיר עולה ב-1 במאי 2026
+              </p>
+              <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">
+                150 קרדיטים בחודש
+              </p>
               <div className="flex items-center gap-1.5 mt-2">
                 <Gift className="w-3.5 h-3.5 text-green-400" />
                 <span className="text-green-400 text-xs font-medium">יום ניסיון במתנה</span>
@@ -234,7 +260,11 @@ export default function PricingPage() {
                 disabled={checkoutLoading || (loading && isLoggedIn !== false)}
                 className="w-full py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all disabled:opacity-50 cursor-pointer"
               >
-                {checkoutLoading ? "מעבד..." : isLoggedIn === false ? "התחבר ושדרג לפרו" : "שדרג לפרו"}
+                {checkoutLoading
+                  ? "מעבד..."
+                  : isLoggedIn === false
+                    ? "התחבר ושדרג לפרו"
+                    : "שדרג לפרו"}
               </button>
             )}
           </div>
@@ -242,12 +272,18 @@ export default function PricingPage() {
 
         {/* Feature Comparison Table */}
         <section className="max-w-3xl mx-auto mt-20">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-8">השוואת תכונות מפורטת</h2>
+          <h2 className="text-2xl font-bold text-foreground text-center mb-8">
+            השוואת תכונות מפורטת
+          </h2>
           <div className="rounded-2xl border border-border overflow-hidden">
             {/* Table Header */}
             <div className="grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 bg-secondary border-b border-border">
-              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-muted-foreground">תכונה</div>
-              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-foreground text-center">חינם</div>
+              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-muted-foreground">
+                תכונה
+              </div>
+              <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-foreground text-center">
+                חינם
+              </div>
               <div className="p-3 md:p-4 text-xs md:text-sm font-semibold text-amber-600 dark:text-amber-400 text-center flex items-center justify-center gap-1.5">
                 <ProBadge size="md" />
                 פרו
@@ -259,15 +295,17 @@ export default function PricingPage() {
               return (
                 <div
                   key={i}
-                  className={`grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? 'border-b border-border' : ''} hover:bg-secondary transition-colors`}
+                  className={`grid grid-cols-[1.6fr_minmax(64px,auto)_minmax(72px,auto)] md:grid-cols-3 ${i < COMPARISON_FEATURES.length - 1 ? "border-b border-border" : ""} hover:bg-secondary transition-colors`}
                 >
                   <div className="p-3 md:p-4 flex items-center gap-2 md:gap-2.5 text-xs md:text-sm text-foreground leading-snug wrap-break-word">
                     <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span className="min-w-0">{feature.name}</span>
                   </div>
                   <div className="p-3 md:p-4 flex items-center justify-center">
-                    {typeof feature.free === 'string' ? (
-                      <span className="text-xs md:text-sm text-muted-foreground text-center">{feature.free}</span>
+                    {typeof feature.free === "string" ? (
+                      <span className="text-xs md:text-sm text-muted-foreground text-center">
+                        {feature.free}
+                      </span>
                     ) : feature.free ? (
                       <Check className="w-4 h-4 text-green-400" />
                     ) : (
@@ -275,8 +313,10 @@ export default function PricingPage() {
                     )}
                   </div>
                   <div className="p-3 md:p-4 flex items-center justify-center">
-                    {typeof feature.pro === 'string' ? (
-                      <span className="text-xs md:text-sm font-semibold text-amber-600 dark:text-amber-400 text-center">{feature.pro}</span>
+                    {typeof feature.pro === "string" ? (
+                      <span className="text-xs md:text-sm font-semibold text-amber-600 dark:text-amber-400 text-center">
+                        {feature.pro}
+                      </span>
                     ) : feature.pro ? (
                       <Check className="w-4 h-4 text-amber-400" />
                     ) : (
@@ -311,23 +351,45 @@ export default function PricingPage() {
 
         {/* Cross-links */}
         <div className="max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <CrossLinkCard href="/features" title="מה כלול? ראו כל היכולות" description="5 מנועי AI, תמונות, סרטונים וסוכנים" />
-          <CrossLinkCard href="/examples" title="דוגמאות לפרומפטים שיוצרים" description="לפני ואחרי - שדרוג אמיתי" />
-          <CrossLinkCard href="/prompts" title={`גישה לספריית ${PROMPT_LIBRARY_COUNT} תבניות`} description="פרומפטים מוכנים ב-30+ קטגוריות" />
-          <CrossLinkCard href="/templates" title="תבניות פרומפטים מוכנות" description="בחרו תבנית עם משתנים, מלאו והעתיקו" />
+          <CrossLinkCard
+            href="/features"
+            title="מה כלול? ראו כל היכולות"
+            description="5 מנועי AI, תמונות, סרטונים וסוכנים"
+          />
+          <CrossLinkCard
+            href="/examples"
+            title="דוגמאות לפרומפטים שיוצרים"
+            description="לפני ואחרי - שדרוג אמיתי"
+          />
+          <CrossLinkCard
+            href="/prompts"
+            title={`גישה לספריית ${PROMPT_LIBRARY_COUNT} תבניות`}
+            description="פרומפטים מוכנים ב-30+ קטגוריות"
+          />
+          <CrossLinkCard
+            href="/templates"
+            title="תבניות פרומפטים מוכנות"
+            description="בחרו תבנית עם משתנים, מלאו והעתיקו"
+          />
         </div>
 
         {/* Credit system explanation */}
         <div className="max-w-2xl mx-auto mt-16 p-6 bg-card border border-border rounded-2xl">
-          <h2 className="text-lg font-bold text-foreground mb-4 text-center">איך עובדת מערכת הקרדיטים?</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4 text-center">
+            איך עובדת מערכת הקרדיטים?
+          </h2>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
               <h4 className="font-semibold text-foreground">תוכנית חינם</h4>
-              <p className="text-muted-foreground">מקבלים 2 קרדיטים ביום שמתחדשים אוטומטית ב-14:00. כל שדרוג פרומפט = קרדיט אחד.</p>
+              <p className="text-muted-foreground">
+                מקבלים 2 קרדיטים ביום שמתחדשים אוטומטית ב-14:00. כל שדרוג פרומפט = קרדיט אחד.
+              </p>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-amber-600 dark:text-amber-400">תוכנית Pro</h4>
-              <p className="text-muted-foreground">150 קרדיטים בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום + למידת סגנון אישי.</p>
+              <p className="text-muted-foreground">
+                150 קרדיטים בחודש שמתחדשים עם כל חיוב. גישה למודלים פרימיום + למידת סגנון אישי.
+              </p>
             </div>
           </div>
         </div>
