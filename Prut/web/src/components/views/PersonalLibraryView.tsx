@@ -105,6 +105,8 @@ export function PersonalLibraryView({
   // All prompts for graph mode — fetched without pagination when graph activates
   const [graphPrompts, setGraphPrompts] = useState<PersonalPrompt[]>([]);
   const [graphLoading, setGraphLoading] = useState(false);
+  const [graphTotalCount, setGraphTotalCount] = useState<number | null>(null);
+  const GRAPH_ROW_LIMIT = 2000;
 
   // Chains section collapse
   const [chainsExpanded, setChainsExpanded] = useState(false);
@@ -139,14 +141,15 @@ export function PersonalLibraryView({
     setGraphLoading(true);
     createClient()
       .from("personal_library")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("user_id", userId)
       .order("sort_index", { ascending: true })
-      .limit(2000)
-      .then(({ data, error }) => {
+      .limit(GRAPH_ROW_LIMIT)
+      .then(({ data, count, error }) => {
         if (cancelled) return;
         if (error) logger.error("[graph] fetch all prompts failed", error);
         setGraphPrompts((data ?? []) as PersonalPrompt[]);
+        setGraphTotalCount(typeof count === "number" ? count : null);
         setGraphLoading(false);
       });
     return () => {
@@ -818,6 +821,11 @@ export function PersonalLibraryView({
             favoriteIds={favoritePersonalIds}
             onUsePrompt={(p) => onUsePrompt(p)}
             isLoading={graphLoading}
+            truncatedAt={
+              graphTotalCount !== null && graphTotalCount > graphPrompts.length
+                ? { shown: graphPrompts.length, total: graphTotalCount }
+                : null
+            }
           />
         </ErrorBoundary>
       ) : (

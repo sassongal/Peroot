@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { X, Zap, Tag, Clock, BarChart2, Star, BookTemplate, Check, Plus } from "lucide-react";
-import type { PersonalPrompt } from "@/lib/types";
+import type { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
   buildGraphData,
@@ -53,6 +53,8 @@ interface Props {
   favoriteIds: Set<string>;
   onUsePrompt: (p: PersonalPrompt) => void;
   isLoading?: boolean;
+  /** When the library exceeds the row cap, describe how many were omitted. */
+  truncatedAt?: { shown: number; total: number } | null;
 }
 
 const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
@@ -176,16 +178,15 @@ function drawCapabilityIcon(
   else if (cap === CapabilityMode.AGENT_BUILDER) drawAgentIcon(ctx, cx, cy, r);
 }
 
-export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading = false }: Props) {
-  const { updateTags, updatePrompt, libraryPrompts } = useLibraryContext() as ReturnType<
-    typeof useLibraryContext
-  > & {
-    libraryPrompts?: Array<{
-      id?: string;
-      source?: { reference?: string };
-      preview_image_url?: string;
-    }>;
-  };
+export function PromptGraphView({
+  prompts,
+  favoriteIds,
+  onUsePrompt,
+  isLoading = false,
+  truncatedAt = null,
+}: Props) {
+  const { updateTags, updatePrompt, libraryPrompts } = useLibraryContext();
+  const libraryPromptsTyped = libraryPrompts as LibraryPrompt[] | undefined;
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedPrompt, setSelectedPrompt] = useState<PersonalPrompt | null>(null);
@@ -201,15 +202,18 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
   // Build a map of reference-id → preview image URL from the library
   const previewUrlByRef = useMemo(() => {
     const map = new Map<string, string>();
-    (libraryPrompts ?? []).forEach((lp) => {
+    (libraryPromptsTyped ?? []).forEach((lp) => {
       const ref = lp.source?.reference ?? lp.id;
       if (ref && lp.preview_image_url) map.set(ref, lp.preview_image_url);
     });
     return map;
-  }, [libraryPrompts]);
+  }, [libraryPromptsTyped]);
 
-  // Preload images for image-generation prompts sourced from library
+  // Preload images for image-generation prompts sourced from library.
+  // Guarded against setState-after-unmount by a mount flag captured in the
+  // effect closure and checked before every forceRepaint.
   useEffect(() => {
+    let mounted = true;
     prompts.forEach((p) => {
       if (
         p.capability_mode === CapabilityMode.IMAGE_GENERATION &&
@@ -221,11 +225,20 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.referrerPolicy = "no-referrer";
-        img.onload = () => forceRepaint((n) => n + 1);
+        img.onload = () => {
+          if (mounted) forceRepaint((n) => n + 1);
+        };
+        img.onerror = () => {
+          // Drop broken entries so fallback icon renders and we don't retry.
+          if (p.reference) imageCacheRef.current.delete(p.reference);
+        };
         img.src = url;
         imageCacheRef.current.set(p.reference, img);
       }
     });
+    return () => {
+      mounted = false;
+    };
   }, [prompts, previewUrlByRef]);
   // Preserve node positions across graphData rebuilds so the simulation doesn't restart
   const positionMapRef = useRef<Map<string, { x: number; y: number }>>(new Map());
@@ -325,11 +338,14 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
   }, []);
 
   // Track pointer over the container so hover tooltip can follow
-  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!hoverNode) return;
-    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-    setHoverPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }, [hoverNode]);
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!hoverNode) return;
+      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+      setHoverPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    },
+    [hoverNode],
+  );
 
   const nodeCanvasObject = useCallback(
     (node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -630,8 +646,7 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
         style={{
-          backgroundImage:
-            "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)",
           backgroundSize: "22px 22px",
         }}
       />
@@ -684,15 +699,19 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
         <div
           className="pointer-events-none absolute z-30 max-w-[240px] rounded-xl border border-white/15 bg-black/85 backdrop-blur-xl px-3 py-2 shadow-2xl text-right"
           style={{
-            left: Math.min(dimensions.width - 250, Math.max(8, hoverPos.x + 16)),
-            top: Math.min(dimensions.height - 120, Math.max(8, hoverPos.y + 16)),
+            // Clamp into [8, width-250]. Outer max(8, ...) covers the case
+            // where the container is narrower than the tooltip itself.
+            left: Math.max(8, Math.min(dimensions.width - 250, hoverPos.x + 16)),
+            top: Math.max(8, Math.min(dimensions.height - 120, hoverPos.y + 16)),
           }}
           dir="rtl"
         >
           <div className="flex items-center gap-1.5 mb-1">
             <span
               className="inline-block w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: CAPABILITY_COLORS[hoverNode.capability ?? CapabilityMode.STANDARD] }}
+              style={{
+                backgroundColor: CAPABILITY_COLORS[hoverNode.capability ?? CapabilityMode.STANDARD],
+              }}
             />
             <span className="text-[10px] font-medium text-slate-400">
               {CAPABILITY_LABELS[hoverNode.capability ?? CapabilityMode.STANDARD]}
@@ -791,6 +810,17 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
         <div className="text-slate-500 hidden sm:block">גלגלת להגדלה · גרור להזזה</div>
         <div className="text-slate-500 sm:hidden">צבוט להגדלה</div>
       </div>
+
+      {/* Truncation banner — library exceeds row cap */}
+      {truncatedAt && (
+        <div
+          role="status"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-amber-500/15 backdrop-blur-sm text-amber-200 text-[11px] px-3 py-1.5 rounded-full border border-amber-400/30 select-none"
+          dir="rtl"
+        >
+          מציג {truncatedAt.shown} מתוך {truncatedAt.total} פרומפטים
+        </div>
+      )}
 
       {/* Mobile legend toggle pill */}
       <button
