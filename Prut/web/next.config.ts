@@ -20,10 +20,10 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://va.vercel-scripts.com",
+      "script-src 'self' 'unsafe-inline' https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://www.peroot.space https://*.clarity.ms https://ui-avatars.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://www.peroot.space https://*.clarity.ms https://c.bing.com https://ui-avatars.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.sentry.io https://*.lemonsqueezy.com https://generativelanguage.googleapis.com https://api.groq.com https://api.deepseek.com https://www.google-analytics.com https://analytics.google.com https://www.clarity.ms https://*.clarity.ms https://va.vercel-scripts.com https://vitals.vercel-insights.com https://lh3.googleusercontent.com https://ui-avatars.com https://www.googletagmanager.com",
       "frame-src 'self' https://*.lemonsqueezy.com",
       "frame-ancestors 'none'",
