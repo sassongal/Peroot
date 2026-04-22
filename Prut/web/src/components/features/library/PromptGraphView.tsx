@@ -594,10 +594,17 @@ export function PromptGraphView({
       const isConnectedLink = !connectedIds || connectedIds.has(src) || connectedIds.has(tgt);
       const baseAlpha = isConnectedLink ? 1 : 0.08;
 
-      if (link.type === "category") return `rgba(148,163,184,${0.25 * baseAlpha})`;
-      if (link.type === "tag") return `rgba(245,158,11,${0.6 * baseAlpha})`;
-      if (link.type === "reference") return `rgba(168,85,247,${0.6 * baseAlpha})`;
-      if (link.type === "template") return `rgba(34,211,238,${0.5 * baseAlpha})`;
+      if (link.type === "tag") return `rgba(245,158,11,${0.75 * baseAlpha})`;
+      if (link.type === "reference") return `rgba(168,85,247,${0.65 * baseAlpha})`;
+      if (link.type === "template") return `rgba(34,211,238,${0.55 * baseAlpha})`;
+      if (link.type === "similarity") {
+        // Emerald teal — scale alpha with shared-keyword strength
+        const s = Math.min(1, 0.35 + (link.strength ?? 1) * 0.12);
+        return `rgba(45,212,191,${s * baseAlpha})`;
+      }
+      if (link.type === "temporal") return `rgba(148,163,184,${0.2 * baseAlpha})`;
+      if (link.type === "capability") return `rgba(148,163,184,${0.12 * baseAlpha})`;
+      // category (legacy — no longer emitted)
       return `rgba(148,163,184,${0.15 * baseAlpha})`;
     },
     [connectedIds],
@@ -605,30 +612,74 @@ export function PromptGraphView({
 
   const linkWidth = useCallback((link: GraphLink) => {
     if (link.type === "tag") return Math.min(3.5, 1 + (link.strength ?? 1) * 0.6);
+    if (link.type === "similarity") return Math.min(3, 1.1 + (link.strength ?? 1) * 0.35);
     if (link.type === "template") return 1.5;
     if (link.type === "reference") return 1.5;
+    if (link.type === "temporal") return 0.6;
     return 0.8;
   }, []);
 
   const linkLineDash = useCallback((link: GraphLink) => {
     if (link.type === "template") return [4, 3];
+    if (link.type === "temporal") return [2, 4];
     return null;
   }, []);
 
   const linkDirectionalParticles = useCallback((link: GraphLink) => {
     if (link.type === "reference") return 3;
+    if (link.type === "similarity" && (link.strength ?? 0) >= 3) return 2;
     if (link.type === "tag" && (link.strength ?? 0) > 1) return 2;
     return 0;
   }, []);
 
   const linkDirectionalParticleColor = useCallback((link: GraphLink) => {
     if (link.type === "reference") return "rgba(192,132,252,0.9)";
+    if (link.type === "similarity") return "rgba(94,234,212,0.95)";
     return "rgba(251,191,36,0.9)";
   }, []);
 
-  // D3 force engine config after mount
+  // Per-edge force strength — strong semantic links pull tighter; temporal /
+  // capability fallbacks barely pull at all so they don't collapse clusters.
+  const linkStrength = useCallback((link: GraphLink) => {
+    if (link.type === "tag") return Math.min(0.9, 0.35 + (link.strength ?? 1) * 0.15);
+    if (link.type === "similarity") return Math.min(0.8, 0.25 + (link.strength ?? 1) * 0.1);
+    if (link.type === "template") return 0.4;
+    if (link.type === "reference") return 0.5;
+    if (link.type === "temporal") return 0.05;
+    if (link.type === "capability") return 0.03;
+    return 0.1;
+  }, []);
+
+  const linkDistance = useCallback((link: GraphLink) => {
+    if (link.type === "tag") return 60;
+    if (link.type === "similarity") return 70;
+    if (link.type === "template") return 80;
+    if (link.type === "reference") return 55;
+    if (link.type === "temporal") return 140;
+    if (link.type === "capability") return 160;
+    return 100;
+  }, []);
+
+  // D3 force engine config — run once per graphData change so the link force
+  // picks up per-edge strength/distance for the newly-built links.
+  useEffect(() => {
+    const link = fgRef.current?.d3Force?.("link") as
+      | {
+          strength?: (fn: (l: GraphLink) => number) => unknown;
+          distance?: (fn: (l: GraphLink) => number) => unknown;
+        }
+      | undefined;
+    link?.strength?.(linkStrength);
+    link?.distance?.(linkDistance);
+    const charge = fgRef.current?.d3Force?.("charge") as
+      | { strength?: (v: number) => unknown }
+      | undefined;
+    // Stronger repulsion prevents the "tangled ball" look at high node counts.
+    charge?.strength?.(-120);
+  }, [graphData, linkStrength, linkDistance]);
+
   const handleEngineStop = useCallback(() => {
-    // Nothing needed — forces are configured via props
+    // no-op
   }, []);
 
   return (
@@ -760,14 +811,14 @@ export function PromptGraphView({
           <div className="flex items-center gap-2">
             <div
               className="w-5 h-[2px] rounded shrink-0"
-              style={{ background: "rgba(148,163,184,0.5)" }}
+              style={{ background: "rgba(45,212,191,0.9)" }}
             />
-            <span>קטגוריה</span>
+            <span>דמיון תוכן</span>
           </div>
           <div className="flex items-center gap-2">
             <div
               className="w-5 h-[2px] rounded shrink-0"
-              style={{ background: "rgba(245,158,11,0.8)" }}
+              style={{ background: "rgba(245,158,11,0.9)" }}
             />
             <span>תגית משותפת</span>
           </div>
@@ -787,6 +838,16 @@ export function PromptGraphView({
               style={{ background: "rgba(168,85,247,0.8)" }}
             />
             <span>ספרייה</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-5 h-[2px] shrink-0"
+              style={{
+                background:
+                  "repeating-linear-gradient(90deg,rgba(148,163,184,0.6) 0 2px,transparent 2px 6px)",
+              }}
+            />
+            <span>נוצרו יחד</span>
           </div>
         </div>
         <div className="border-t border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
