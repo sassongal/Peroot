@@ -358,6 +358,12 @@ export function PromptGraphView({
     for (const n of graphData.nodes) m.set(n.id, n);
     return m;
   }, [graphData.nodes]);
+  // Indexed lookup — avoids O(n) .find() per edge hover on large libraries.
+  const promptById = useMemo(() => {
+    const m = new Map<string, PersonalPrompt>();
+    for (const p of prompts) m.set(p.id, p);
+    return m;
+  }, [prompts]);
 
   // Render hulls BEHIND nodes/links. `onRenderFramePre` runs before the
   // built-in link+node passes, which is exactly what we want for a backdrop.
@@ -899,13 +905,16 @@ export function PromptGraphView({
   }, []);
 
   // Feature 3 — click on empty canvas clears focus and fits the graph.
+  // Guard: only reset when something is actually focused/selected, so casual
+  // pan-clicks on the background don't constantly refit the camera.
   const handleBackgroundClick = useCallback(() => {
+    if (!focusedId && !selectedPrompt) return;
     setFocusedId(null);
     setSelectedPrompt(null);
     try {
       fgRef.current?.zoomToFit?.(600, 80);
     } catch {}
-  }, []);
+  }, [focusedId, selectedPrompt]);
 
   // Feature 5 — edge hover tooltip
   const handleLinkHover = useCallback(
@@ -959,8 +968,8 @@ export function PromptGraphView({
     (link: GraphLink): string => {
       const srcId = typeof link.source === "object" ? link.source.id : link.source;
       const tgtId = typeof link.target === "object" ? link.target.id : link.target;
-      const a = prompts.find((p) => p.id === srcId);
-      const b = prompts.find((p) => p.id === tgtId);
+      const a = promptById.get(srcId as string);
+      const b = promptById.get(tgtId as string);
       if (link.type === "reference") return "מקור מהספרייה";
       if (link.type === "capability") return "אותה יכולת וקטגוריה";
       if (link.type === "temporal") return "נוצרו בסמיכות זמן";
@@ -987,7 +996,7 @@ export function PromptGraphView({
       }
       return link.type;
     },
-    [prompts],
+    [promptById],
   );
 
   return (

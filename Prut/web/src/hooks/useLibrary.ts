@@ -141,7 +141,21 @@ export function useLibrary() {
           searchQuery: "",
           capabilityFilter: null,
         };
-        await Promise.all([fetchPage(currentUser.id, opts), fetchFolderCounts(currentUser.id)]);
+        // Run in parallel but isolate failures — one rejecting RPC should not
+        // leave the library empty if the other succeeded. allSettled lets us
+        // log per-call errors without tripping the outer catch in useLibraryAuth.
+        const results = await Promise.allSettled([
+          fetchPage(currentUser.id, opts),
+          fetchFolderCounts(currentUser.id),
+        ]);
+        for (const [idx, r] of results.entries()) {
+          if (r.status === "rejected") {
+            logger.error(
+              `[useLibrary] init ${idx === 0 ? "fetchPage" : "fetchFolderCounts"} failed`,
+              r.reason,
+            );
+          }
+        }
 
         try {
           const storedCats = localStorage.getItem(getCategoriesKey(currentUser.id));

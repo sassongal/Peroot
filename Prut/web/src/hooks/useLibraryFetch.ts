@@ -200,16 +200,15 @@ export function useLibraryFetch({
 
         if (error) {
           logger.error("[useLibrary] fetchPage error:", error);
-          return;
+          // Surface to caller so initForUser can distinguish from empty-result success.
+          throw error;
         }
 
-        if (data) {
-          setPersonalLibrary(
-            (data as Record<string, unknown>[]).map((row, index) =>
-              rowToPrompt(row, offset + index, orderMap),
-            ),
-          );
-        }
+        setPersonalLibrary(
+          ((data ?? []) as Record<string, unknown>[]).map((row, index) =>
+            rowToPrompt(row, offset + index, orderMap),
+          ),
+        );
         if (typeof count === "number") {
           setTotalCount(count);
         }
