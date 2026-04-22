@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { X, Zap, Tag, Clock, BarChart2, Star, BookTemplate, Check, Plus } from "lucide-react";
+import { toast } from "sonner";
 import type { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
@@ -212,6 +213,7 @@ export function PromptGraphView({
   const { updateTags, updatePrompt, libraryPrompts } = useLibraryContext();
   const libraryPromptsTyped = libraryPrompts as LibraryPrompt[] | undefined;
   const containerRef = useRef<HTMLDivElement>(null);
+  const backBtnRef = useRef<HTMLButtonElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedPrompt, setSelectedPrompt] = useState<PersonalPrompt | null>(null);
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
@@ -977,7 +979,10 @@ export function PromptGraphView({
   // react-force-graph-3d WebGL buffer requires preserveDrawingBuffer
   // which isn't set here, so a 3D screenshot would come out blank.
   const handleExportPng = useCallback(() => {
-    if (viewMode !== "2d") return;
+    if (viewMode !== "2d") {
+      toast.info("ייצוא PNG זמין במצב 2D בלבד");
+      return;
+    }
     const el = containerRef.current;
     if (!el) return;
     const canvas = el.querySelector("canvas");
@@ -988,7 +993,9 @@ export function PromptGraphView({
       a.href = url;
       a.download = `peroot-graph-${new Date().toISOString().slice(0, 10)}.png`;
       a.click();
-    } catch {}
+    } catch {
+      toast.error("ייצוא PNG נכשל");
+    }
   }, [viewMode]);
 
   // 3D: fit camera to settled node cloud after the engine cools down.
@@ -1050,12 +1057,14 @@ export function PromptGraphView({
         searchInputRef.current?.focus();
         dismissHint();
       } else if (e.key === "Escape") {
-        if (searchQuery || capabilityFilter.size > 0 || favOnly || focusedId) {
+        // Modal takes priority — close it first without clearing filters.
+        if (selectedPrompt) {
+          setSelectedPrompt(null);
+        } else if (searchQuery || capabilityFilter.size > 0 || favOnly || focusedId) {
           setSearchQuery("");
           setCapabilityFilter(new Set());
           setFavOnly(false);
           setFocusedId(null);
-          setSelectedPrompt(null);
           try {
             fgRef.current?.zoomToFit?.(600, 80);
           } catch {}
@@ -1073,7 +1082,16 @@ export function PromptGraphView({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [searchQuery, capabilityFilter, favOnly, focusedId, dismissHint]);
+  }, [searchQuery, capabilityFilter, favOnly, focusedId, selectedPrompt, dismissHint]);
+
+  // When the prompt modal opens, move focus to the back button so keyboard
+  // users land inside the dialog instead of still on the graph canvas.
+  useEffect(() => {
+    if (selectedPrompt) {
+      const t = setTimeout(() => backBtnRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [selectedPrompt]);
 
   // Feature 5 helpers — precompute shared items for hover tooltip.
   const describeEdge = useCallback(
@@ -1637,6 +1655,9 @@ export function PromptGraphView({
         <div
           className="absolute inset-0 z-40 flex items-center justify-center p-3 md:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setSelectedPrompt(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="graph-modal-title"
           dir="rtl"
         >
           <div
@@ -1646,6 +1667,7 @@ export function PromptGraphView({
             {/* Header with prominent back-to-graph button */}
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-gradient-to-l from-purple-500/10 via-transparent to-amber-500/10 shrink-0">
               <button
+                ref={backBtnRef}
                 onClick={() => setSelectedPrompt(null)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
               >
@@ -1664,7 +1686,7 @@ export function PromptGraphView({
                 </svg>
                 <span>חזרה לגרף</span>
               </button>
-              <div className="text-[11px] text-slate-400 truncate">
+              <div id="graph-modal-title" className="text-[11px] text-slate-400 truncate">
                 {CAPABILITY_LABELS[selectedPrompt.capability_mode ?? CapabilityMode.STANDARD]}
               </div>
             </div>
