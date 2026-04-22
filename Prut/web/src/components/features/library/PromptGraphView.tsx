@@ -289,8 +289,6 @@ export function PromptGraphView({
     graphData?: () => { nodes: any[] };
     d3ReheatSimulation?: () => void;
   } | null>(null);
-  // Tracks whether the pointer moved (drag) so onNodeClick can skip card open
-  const hasDraggedRef = useRef(false);
 
   // Feature 2 — search + filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -540,11 +538,6 @@ export function PromptGraphView({
 
   const handleNodeClick = useCallback(
     (node: GraphNode) => {
-      // If the pointer moved (drag), skip opening the card and reset flag
-      if (hasDraggedRef.current) {
-        hasDraggedRef.current = false;
-        return;
-      }
       savePositions();
       if (node.type === "prompt" && node.prompt) {
         setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
@@ -554,12 +547,9 @@ export function PromptGraphView({
     [savePositions],
   );
 
-  // Set drag flag only when the node actually moves (not on plain click mouseup)
-  const handleNodeDrag = useCallback(() => {
-    hasDraggedRef.current = true;
-  }, []);
-
-  // Pin the node at its dragged position so it stays put
+  // Pin the node at its dragged position so it stays put after drag.
+  // The library's clickAfterDrag(false) already ensures onNodeClick won't
+  // fire after a drag, so no extra guard is needed here.
   const handleNodeDragEnd = useCallback((node: GraphNode) => {
     node.fx = node.x;
     node.fy = node.y;
@@ -1417,7 +1407,6 @@ export function PromptGraphView({
             linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
             linkDirectionalParticleColor={linkDirectionalParticleColor as any}
             onNodeClick={handleNodeClick as any}
-            onNodeDrag={handleNodeDrag as any}
             onNodeDragEnd={handleNodeDragEnd as any}
             onNodeHover={handleNodeHover as any}
             onBackgroundClick={handleBackgroundClick as any}
@@ -1632,10 +1621,10 @@ export function PromptGraphView({
         </div>
       )}
 
-      {/* ── Selected prompt modal — centered card with "back to graph" ── */}
+      {/* ── Selected prompt modal — fixed viewport overlay so overflow-hidden on parent doesn't clip it ── */}
       {selectedPrompt && (
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center p-3 md:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setSelectedPrompt(null)}
           role="dialog"
           aria-modal="true"
