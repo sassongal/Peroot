@@ -14,6 +14,7 @@ import {
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { PromptNodeCard } from "./PromptNodeCard";
 
 // SSR-safe — `react-force-graph-3d` bundles THREE at module-eval, so it must
@@ -49,6 +50,8 @@ export function PromptGraphView({
   const { updateTags, updatePrompt, libraryPrompts, startEditingPersonalPrompt } =
     useLibraryContext();
   const libraryPromptsTyped = libraryPrompts as LibraryPrompt[] | undefined;
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
   const backBtnRef = useRef<HTMLButtonElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -314,7 +317,6 @@ export function PromptGraphView({
     [hoverNode, hoverLink],
   );
 
-
   // Colors kept in lockstep with the on-screen legend. If you change a value
   // here, update the legend swatches in the Legend block below to match.
   const linkColor = useCallback(
@@ -324,20 +326,23 @@ export function PromptGraphView({
       const isConnectedLink = !connectedIds || connectedIds.has(src) || connectedIds.has(tgt);
       const bothVisible = isNodeVisible(src) && isNodeVisible(tgt);
       const baseAlpha = !bothVisible ? 0.05 : isConnectedLink ? 1 : 0.1;
+      // Light backgrounds wash out faint edges — boost alpha to compensate
+      const f = isDark ? 1 : 1.4;
+      const a = (v: number) => Math.min(1, v * f);
 
-      if (link.type === "tag") return `rgba(245,158,11,${0.9 * baseAlpha})`;
-      if (link.type === "reference") return `rgba(168,85,247,${0.85 * baseAlpha})`;
-      if (link.type === "template") return `rgba(34,211,238,${0.8 * baseAlpha})`;
+      if (link.type === "tag") return `rgba(245,158,11,${a(0.9 * baseAlpha)})`;
+      if (link.type === "reference") return `rgba(168,85,247,${a(0.85 * baseAlpha)})`;
+      if (link.type === "template") return `rgba(34,211,238,${a(0.8 * baseAlpha)})`;
       if (link.type === "similarity") {
         // Emerald teal — scale alpha with shared-keyword strength, min 0.65
         const s = Math.min(0.95, 0.5 + (link.strength ?? 1) * 0.15);
-        return `rgba(45,212,191,${s * baseAlpha})`;
+        return `rgba(45,212,191,${a(s * baseAlpha)})`;
       }
-      if (link.type === "temporal") return `rgba(148,163,184,${0.55 * baseAlpha})`;
-      if (link.type === "capability") return `rgba(148,163,184,${0.12 * baseAlpha})`;
-      return `rgba(148,163,184,${0.15 * baseAlpha})`;
+      if (link.type === "temporal") return `rgba(148,163,184,${a(0.55 * baseAlpha)})`;
+      if (link.type === "capability") return `rgba(148,163,184,${a(0.12 * baseAlpha)})`;
+      return `rgba(148,163,184,${a(0.15 * baseAlpha)})`;
     },
-    [connectedIds, isNodeVisible],
+    [connectedIds, isNodeVisible, isDark],
   );
 
   const linkWidth = useCallback((link: GraphLink) => {
@@ -501,7 +506,15 @@ export function PromptGraphView({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [searchQuery, capabilityFilter, favOnly, focusedId, selectedPrompt, dismissHint, handleFitView]);
+  }, [
+    searchQuery,
+    capabilityFilter,
+    favOnly,
+    focusedId,
+    selectedPrompt,
+    dismissHint,
+    handleFitView,
+  ]);
 
   // When the prompt modal opens, move focus to the back button so keyboard
   // users land inside the dialog instead of still on the graph canvas.
@@ -550,12 +563,15 @@ export function PromptGraphView({
 
   return (
     <div
-      className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-white/10 backdrop-blur-sm"
+      className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/10 backdrop-blur-sm"
       style={{
-        background:
-          "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.06) 35%, rgba(2,6,23,0.55) 75%), " +
-          "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.08) 0%, transparent 70%), " +
-          "linear-gradient(180deg, rgba(2,6,23,0.55), rgba(2,6,23,0.75))",
+        background: isDark
+          ? "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.06) 35%, rgba(2,6,23,0.55) 75%), " +
+            "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.08) 0%, transparent 70%), " +
+            "linear-gradient(180deg, rgba(2,6,23,0.55), rgba(2,6,23,0.75))"
+          : "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.07) 0%, rgba(59,130,246,0.05) 35%, rgba(241,245,249,0.90) 75%), " +
+            "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.05) 0%, transparent 70%), " +
+            "linear-gradient(180deg, rgba(248,250,252,0.85), rgba(241,245,249,0.95))",
       }}
     >
       {/* Subtle dotted grid overlay for depth */}
@@ -563,35 +579,50 @@ export function PromptGraphView({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
         style={{
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)",
+          backgroundImage: isDark
+            ? "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)"
+            : "radial-gradient(rgba(0,0,0,0.10) 1px, transparent 1px)",
           backgroundSize: "22px 22px",
         }}
       />
       {/* Feature 2 — search + filter bar */}
       <div
-        className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
+        className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
         dir="rtl"
       >
-        <div className="relative flex-1 md:flex-initial">
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="חפש פרומפט… (/)"
-            className="w-full md:w-60 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:bg-white/10"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-              aria-label="נקה חיפוש"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+        {/* Row 1 (mobile): search input + fit button */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 md:flex-initial">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="חפש פרומפט… (/)"
+              className="w-full md:w-60 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:bg-white dark:focus:bg-white/10 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                aria-label="נקה חיפוש"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          {/* Fit button in row 1 on mobile only */}
+          <button
+            onClick={handleFitView}
+            className="md:hidden shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
+            title="התאם לתצוגה"
+            aria-label="התאם לתצוגה"
+          >
+            התאם
+          </button>
         </div>
-        <div className="flex items-center gap-1 flex-wrap">
+        {/* Row 2 (mobile): capability chips + favorites — horizontal scroll; desktop: flex-wrap continues the row */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-nowrap md:flex-wrap pb-0.5 md:pb-0">
           {(Object.keys(CAPABILITY_LABELS) as CapabilityMode[]).map((cap) => {
             const active = capabilityFilter.has(cap);
             return (
@@ -606,10 +637,10 @@ export function PromptGraphView({
                   })
                 }
                 className={cn(
-                  "text-[11px] px-2 py-1 rounded-md border transition-colors",
+                  "shrink-0 text-[11px] px-2 py-1 rounded-md border transition-colors",
                   active
                     ? "border-transparent text-black font-semibold"
-                    : "border-white/15 text-slate-300 hover:bg-white/8",
+                    : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8",
                 )}
                 style={active ? { backgroundColor: CAPABILITY_COLORS[cap] } : undefined}
                 title={CAPABILITY_LABELS[cap]}
@@ -618,23 +649,24 @@ export function PromptGraphView({
               </button>
             );
           })}
+          <button
+            onClick={() => setFavOnly((v) => !v)}
+            className={cn(
+              "shrink-0 text-[11px] px-2 py-1 rounded-md border flex items-center gap-1 transition-colors",
+              favOnly
+                ? "bg-amber-400/90 border-transparent text-black font-semibold"
+                : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8",
+            )}
+            aria-pressed={favOnly}
+          >
+            <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
+            מועדפים
+          </button>
         </div>
-        <button
-          onClick={() => setFavOnly((v) => !v)}
-          className={cn(
-            "text-[11px] px-2 py-1 rounded-md border flex items-center gap-1 transition-colors",
-            favOnly
-              ? "bg-amber-400/90 border-transparent text-black font-semibold"
-              : "border-white/15 text-slate-300 hover:bg-white/8",
-          )}
-          aria-pressed={favOnly}
-        >
-          <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
-          מועדפים
-        </button>
+        {/* Fit button on desktop only */}
         <button
           onClick={handleFitView}
-          className="text-[11px] px-2 py-1 rounded-md border border-white/15 text-slate-300 hover:bg-white/8 transition-colors"
+          className="hidden md:block shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
           title="התאם לתצוגה"
           aria-label="התאם לתצוגה"
         >
@@ -646,13 +678,13 @@ export function PromptGraphView({
           individual remove buttons. Easier than reading button states. */}
       {(searchQuery || capabilityFilter.size > 0 || favOnly) && (
         <div
-          className="absolute top-16 md:top-14 inset-x-3 md:inset-x-auto md:right-3 z-20 flex flex-wrap items-center gap-1.5"
+          className="absolute top-[4.5rem] md:top-14 inset-x-3 md:inset-x-auto md:right-3 z-20 flex flex-wrap items-center gap-1.5"
           dir="rtl"
         >
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/30 hover:bg-amber-500/30 transition-colors flex items-center gap-1"
+              className="text-[10px] px-2 py-1 rounded-full bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-200 border border-amber-400/40 dark:border-amber-400/30 hover:bg-amber-200/80 dark:hover:bg-amber-500/30 transition-colors flex items-center gap-1"
             >
               <span>חיפוש: {searchQuery}</span>
               <X className="w-2.5 h-2.5" />
@@ -692,36 +724,36 @@ export function PromptGraphView({
       {showHint && (
         <div
           onClick={dismissHint}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-full border border-white/15 bg-black/75 backdrop-blur-xl px-4 py-2 text-xs text-slate-200 shadow-xl cursor-pointer"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-full border border-slate-200/60 dark:border-white/15 bg-white/85 dark:bg-black/75 backdrop-blur-xl px-4 py-2 text-xs text-slate-700 dark:text-slate-200 shadow-xl cursor-pointer"
           dir="rtl"
         >
-          טיפ: <kbd className="px-1 bg-white/10 rounded">/</kbd> חיפוש ·{" "}
-          <kbd className="px-1 bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
-          <kbd className="px-1 bg-white/10 rounded">F</kbd> מועדפים ·{" "}
-          <kbd className="px-1 bg-white/10 rounded">R</kbd> רעיון מחדש
+          טיפ: <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">/</kbd> חיפוש ·{" "}
+          <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
+          <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">F</kbd> מועדפים ·{" "}
+          <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">R</kbd> רעיון מחדש
         </div>
       )}
 
       {/* Loading overlay while fetching all prompts */}
       {isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-white/50 dark:bg-black/40 backdrop-blur-sm">
           <div className="w-10 h-10 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
-          <p className="text-sm text-slate-400">טוען את כל הפרומפטים לגרף...</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">טוען את כל הפרומפטים לגרף...</p>
         </div>
       )}
 
       {/* Stats HUD — tells the user what they're actually looking at. */}
       {!isLoading && graphData.nodes.length > 0 && (
         <div
-          className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-300 shadow-lg pointer-events-none"
+          className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 shadow-lg pointer-events-none"
           dir="rtl"
         >
           <span>{visibleGraphData.nodes.filter((n) => n.type === "prompt").length} פרומפטים</span>
-          <span className="text-slate-600">·</span>
+          <span className="text-slate-400 dark:text-slate-600">·</span>
           <span>{visibleGraphData.links.length} קשרים</span>
           {matchedIds && (
             <>
-              <span className="text-slate-600">·</span>
+              <span className="text-slate-400 dark:text-slate-600">·</span>
               <span className="text-amber-300">מסונן</span>
             </>
           )}
@@ -737,9 +769,9 @@ export function PromptGraphView({
             className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 pointer-events-none"
             dir="rtl"
           >
-            <div className="rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl px-5 py-4 text-center shadow-xl pointer-events-auto">
-              <p className="text-sm text-slate-200 font-medium">אין תוצאות לסינון הנוכחי</p>
-              <p className="text-xs text-slate-400 mt-1">נסה לנקות את הסינון או החיפוש</p>
+            <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-black/70 backdrop-blur-xl px-5 py-4 text-center shadow-xl pointer-events-auto">
+              <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">אין תוצאות לסינון הנוכחי</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">נסה לנקות את הסינון או החיפוש</p>
               <button
                 onClick={() => {
                   setSearchQuery("");
@@ -762,58 +794,58 @@ export function PromptGraphView({
       >
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <ForceGraph3D
-            key="fg-3d"
-            ref={fg3dRef as any}
-            graphData={visibleGraphData as any}
-            width={dimensions.width}
-            height={dimensions.height}
-            nodeId="id"
-            nodeLabel={((n: GraphNode) => n.label) as any}
-            nodeVal={
-              ((n: GraphNode) => {
-                if (n.type === "tag") return 3;
-                if (n.type === "library") return 5;
-                return Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4));
-              }) as any
-            }
-            nodeColor={
-              ((n: GraphNode) => {
-                if (n.type === "tag") return "#f59e0b"; // amber — matches legend
-                if (n.type === "library") return "#a855f7"; // purple — matches legend
-                return CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
-              }) as any
-            }
-            nodeOpacity={0.95}
-            nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
-            linkColor={linkColor as any}
-            linkWidth={linkWidth as any}
-            linkOpacity={1}
-            linkDirectionalParticles={linkDirectionalParticles as any}
-            linkDirectionalParticleWidth={linkDirectionalParticleWidth as any}
-            linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
-            linkDirectionalParticleColor={linkDirectionalParticleColor as any}
-            onNodeClick={handleNodeClick as any}
-            onNodeDragEnd={handleNodeDragEnd as any}
-            onNodeHover={handleNodeHover as any}
-            onBackgroundClick={handleBackgroundClick as any}
-            onEngineStop={handle3DEngineStop}
-            backgroundColor="rgba(2,6,23,0)"
-            showNavInfo={false}
-            enableNodeDrag
-            enableNavigationControls
-            controlType="orbit"
-            cooldownTicks={200}
-            warmupTicks={60}
-            d3AlphaDecay={0.018}
-            d3VelocityDecay={0.28}
-            rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-          />
+          key="fg-3d"
+          ref={fg3dRef as any}
+          graphData={visibleGraphData as any}
+          width={dimensions.width}
+          height={dimensions.height}
+          nodeId="id"
+          nodeLabel={((n: GraphNode) => n.label) as any}
+          nodeVal={
+            ((n: GraphNode) => {
+              if (n.type === "tag") return 3;
+              if (n.type === "library") return 5;
+              return Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4));
+            }) as any
+          }
+          nodeColor={
+            ((n: GraphNode) => {
+              if (n.type === "tag") return "#f59e0b"; // amber — matches legend
+              if (n.type === "library") return "#a855f7"; // purple — matches legend
+              return CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
+            }) as any
+          }
+          nodeOpacity={0.95}
+          nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
+          linkColor={linkColor as any}
+          linkWidth={linkWidth as any}
+          linkOpacity={1}
+          linkDirectionalParticles={linkDirectionalParticles as any}
+          linkDirectionalParticleWidth={linkDirectionalParticleWidth as any}
+          linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
+          linkDirectionalParticleColor={linkDirectionalParticleColor as any}
+          onNodeClick={handleNodeClick as any}
+          onNodeDragEnd={handleNodeDragEnd as any}
+          onNodeHover={handleNodeHover as any}
+          onBackgroundClick={handleBackgroundClick as any}
+          onEngineStop={handle3DEngineStop}
+          backgroundColor="rgba(2,6,23,0)"
+          showNavInfo={false}
+          enableNodeDrag
+          enableNavigationControls
+          controlType="orbit"
+          cooldownTicks={200}
+          warmupTicks={60}
+          d3AlphaDecay={0.018}
+          d3VelocityDecay={0.28}
+          rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+        />
       </div>
 
       {/* Floating hover tooltip — shows a peek card next to the cursor */}
       {hoverNode && hoverPos && hoverNode.type === "prompt" && hoverNode.prompt && (
         <div
-          className="pointer-events-none absolute z-30 max-w-[240px] rounded-xl border border-white/15 bg-black/85 backdrop-blur-xl px-3 py-2 shadow-2xl text-right"
+          className="pointer-events-none absolute z-30 max-w-[240px] rounded-xl border border-slate-200/60 dark:border-white/15 bg-white/95 dark:bg-black/85 backdrop-blur-xl px-3 py-2 shadow-2xl text-right"
           style={{
             // Clamp into [8, width-250]. Outer max(8, ...) covers the case
             // where the container is narrower than the tooltip itself.
@@ -835,11 +867,11 @@ export function PromptGraphView({
             {hoverNode.isFavorite && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
             {hoverNode.isTemplate && <BookTemplate className="w-3 h-3 text-cyan-400" />}
           </div>
-          <div className="text-sm font-semibold text-white line-clamp-2 leading-snug">
+          <div className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-snug">
             {hoverNode.label}
           </div>
           {hoverNode.prompt.personal_category && (
-            <div className="text-[10px] text-slate-400 mt-1">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
               {hoverNode.prompt.personal_category}
             </div>
           )}
@@ -848,7 +880,7 @@ export function PromptGraphView({
               {(hoverNode.prompt.tags ?? []).slice(0, 4).map((t) => (
                 <span
                   key={t}
-                  className="text-[9px] px-1.5 py-0.5 rounded bg-white/8 text-slate-300 border border-white/10"
+                  className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/8 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10"
                 >
                   {t}
                 </span>
@@ -859,8 +891,8 @@ export function PromptGraphView({
       )}
 
       {/* Legend — desktop: bottom-left, mobile: hidden */}
-      <div className="hidden md:flex absolute bottom-4 left-4 flex-col gap-2 bg-black/65 backdrop-blur-md rounded-xl px-3 py-2.5 border border-white/10 text-[10px] text-slate-300 z-10 select-none">
-        <div className="font-semibold text-slate-200 text-[11px] mb-0.5">מקרא</div>
+      <div className="hidden md:flex absolute bottom-4 left-4 flex-col gap-2 bg-white/85 dark:bg-black/65 backdrop-blur-md rounded-xl px-3 py-2.5 border border-slate-200/60 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 z-10 select-none">
+        <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] mb-0.5">מקרא</div>
         <div className="flex flex-col gap-1">
           {Object.entries(CAPABILITY_COLORS).map(([mode, color]) => (
             <div key={mode} className="flex items-center gap-2">
@@ -872,7 +904,7 @@ export function PromptGraphView({
             </div>
           ))}
         </div>
-        <div className="border-t border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
+        <div className="border-t border-slate-200/60 dark:border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <div
               className="w-5 h-[2px] rounded shrink-0"
@@ -915,7 +947,7 @@ export function PromptGraphView({
             <span>נוצרו יחד</span>
           </div>
         </div>
-        <div className="border-t border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
+        <div className="border-t border-slate-200/60 dark:border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-400 shrink-0" />
             <span>מועדף / מוצמד</span>
@@ -931,17 +963,16 @@ export function PromptGraphView({
       </div>
 
       {/* Node count hint */}
-      <div className="absolute top-3 right-3 bg-black/55 backdrop-blur-sm text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-white/8 z-10 select-none leading-tight">
+      <div className="hidden sm:block absolute top-3 right-3 bg-white/80 dark:bg-black/55 backdrop-blur-sm text-slate-600 dark:text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/8 z-10 select-none leading-tight">
         <div>{prompts.length} פרומפטים</div>
-        <div className="text-slate-500 hidden sm:block">גלגלת להגדלה · גרור להזזה</div>
-        <div className="text-slate-500 sm:hidden">צבוט להגדלה</div>
+        <div className="text-slate-400 dark:text-slate-500">גלגלת להגדלה · גרור להזזה</div>
       </div>
 
       {/* Truncation banner — library exceeds row cap */}
       {truncatedAt && (
         <div
           role="status"
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-amber-500/15 backdrop-blur-sm text-amber-200 text-[11px] px-3 py-1.5 rounded-full border border-amber-400/30 select-none"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-amber-100/70 dark:bg-amber-500/15 backdrop-blur-sm text-amber-700 dark:text-amber-200 text-[11px] px-3 py-1.5 rounded-full border border-amber-400/50 dark:border-amber-400/30 select-none"
           dir="rtl"
         >
           מציג {truncatedAt.shown} מתוך {truncatedAt.total} פרומפטים
@@ -952,7 +983,7 @@ export function PromptGraphView({
       <button
         type="button"
         onClick={() => setMobileLegendOpen((o) => !o)}
-        className="md:hidden absolute bottom-4 left-4 z-20 flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-slate-200 text-[11px] px-3 py-2 rounded-full border border-white/15 shadow-lg active:scale-95 transition-transform"
+        className="md:hidden absolute bottom-4 left-4 z-20 flex items-center gap-1.5 bg-white/85 dark:bg-black/75 backdrop-blur-md text-slate-700 dark:text-slate-200 text-[11px] px-3 py-2 rounded-full border border-slate-200/60 dark:border-white/15 shadow-lg active:scale-95 transition-transform"
         aria-label="מקרא"
         aria-expanded={mobileLegendOpen}
       >
@@ -965,7 +996,7 @@ export function PromptGraphView({
 
       {mobileLegendOpen && (
         <div
-          className="md:hidden absolute bottom-16 left-4 right-4 z-20 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/15 p-4 shadow-2xl text-slate-200 text-xs"
+          className="md:hidden absolute bottom-16 left-4 right-4 z-20 bg-white/95 dark:bg-black/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-white/15 p-4 shadow-2xl text-slate-700 dark:text-slate-200 text-xs"
           dir="rtl"
         >
           <div className="flex items-center justify-between mb-2">
@@ -1000,7 +1031,7 @@ export function PromptGraphView({
               <span>תבנית</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-white/10 text-[10px] text-slate-400 leading-relaxed">
+          <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-white/10 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
             הקישו על צומת לפתיחת פרטים · צבטו להגדלה · גררו להזזה
           </div>
         </div>
@@ -1017,7 +1048,7 @@ export function PromptGraphView({
           dir="rtl"
         >
           <div
-            className="relative w-full max-w-2xl max-h-[88vh] md:max-h-[82vh] rounded-2xl border border-white/15 bg-slate-950/95 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-2xl max-h-[88vh] md:max-h-[82vh] rounded-2xl border border-white/15 bg-slate-950/95 shadow-2xl [overflow:clip] flex flex-col animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <span id="graph-modal-title" className="sr-only">
@@ -1051,7 +1082,7 @@ export function PromptGraphView({
       {/* Feature 5 — edge hover tooltip */}
       {hoverLink && hoverLinkPos && !hoverNode && (
         <div
-          className="pointer-events-none absolute z-30 max-w-[260px] rounded-lg border border-white/15 bg-black/85 backdrop-blur-xl px-2.5 py-1.5 shadow-xl text-[11px] text-slate-100"
+          className="pointer-events-none absolute z-30 max-w-[260px] rounded-lg border border-slate-200/60 dark:border-white/15 bg-white/95 dark:bg-black/85 backdrop-blur-xl px-2.5 py-1.5 shadow-xl text-[11px] text-slate-800 dark:text-slate-100"
           style={{
             left: Math.max(8, Math.min(dimensions.width - 270, hoverLinkPos.x + 14)),
             top: Math.max(8, Math.min(dimensions.height - 60, hoverLinkPos.y + 14)),
