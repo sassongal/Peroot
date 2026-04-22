@@ -944,6 +944,53 @@ export function PromptGraphView({
     // no-op
   }, []);
 
+  // "Fit" toolbar — frame everything. 2D calls the library API directly;
+  // 3D recomputes a camera distance from the settled bounding sphere so
+  // tiny and sparse graphs both fit on-screen.
+  const handleFitView = useCallback(() => {
+    if (viewMode === "2d") {
+      try {
+        fgRef.current?.zoomToFit?.(600, 80);
+      } catch {}
+      return;
+    }
+    const fg = fg3dRef.current;
+    if (!fg?.cameraPosition) return;
+    try {
+      const nodes = (fg.graphData?.()?.nodes ?? []) as Array<{
+        x?: number;
+        y?: number;
+        z?: number;
+      }>;
+      if (nodes.length === 0) return;
+      let maxR = 0;
+      for (const n of nodes) {
+        const r = Math.hypot(n.x ?? 0, n.y ?? 0, n.z ?? 0);
+        if (r > maxR) maxR = r;
+      }
+      const distance = Math.max(160, Math.min(900, maxR * 2.6 + 120));
+      fg.cameraPosition({ x: 0, y: 0, z: distance }, { x: 0, y: 0, z: 0 }, 800);
+    } catch {}
+  }, [viewMode]);
+
+  // Export the current graph canvas as a PNG. 2D only for now — the
+  // react-force-graph-3d WebGL buffer requires preserveDrawingBuffer
+  // which isn't set here, so a 3D screenshot would come out blank.
+  const handleExportPng = useCallback(() => {
+    if (viewMode !== "2d") return;
+    const el = containerRef.current;
+    if (!el) return;
+    const canvas = el.querySelector("canvas");
+    if (!canvas) return;
+    try {
+      const url = (canvas as HTMLCanvasElement).toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `peroot-graph-${new Date().toISOString().slice(0, 10)}.png`;
+      a.click();
+    } catch {}
+  }, [viewMode]);
+
   // 3D: fit camera to settled node cloud after the engine cools down.
   // Small graphs would otherwise spawn inside a single sphere.
   const handle3DEngineStop = useCallback(() => {
@@ -1176,7 +1223,69 @@ export function PromptGraphView({
             3D
           </button>
         </div>
+        <button
+          onClick={handleFitView}
+          className="text-[11px] px-2 py-1 rounded-md border border-white/15 text-slate-300 hover:bg-white/8 transition-colors"
+          title="התאם לתצוגה"
+          aria-label="התאם לתצוגה"
+        >
+          התאם
+        </button>
+        <button
+          onClick={handleExportPng}
+          className="hidden md:inline-flex text-[11px] px-2 py-1 rounded-md border border-white/15 text-slate-300 hover:bg-white/8 transition-colors"
+          title="ייצוא PNG"
+          aria-label="ייצוא PNG"
+        >
+          PNG
+        </button>
       </div>
+
+      {/* Filter chips — always-visible summary of active filters with
+          individual remove buttons. Easier than reading button states. */}
+      {(searchQuery || capabilityFilter.size > 0 || favOnly) && (
+        <div
+          className="absolute top-16 md:top-14 inset-x-3 md:inset-x-auto md:right-3 z-20 flex flex-wrap items-center gap-1.5"
+          dir="rtl"
+        >
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/30 hover:bg-amber-500/30 transition-colors flex items-center gap-1"
+            >
+              <span>חיפוש: {searchQuery}</span>
+              <X className="w-2.5 h-2.5" />
+            </button>
+          )}
+          {Array.from(capabilityFilter).map((cap) => (
+            <button
+              key={cap}
+              onClick={() =>
+                setCapabilityFilter((prev) => {
+                  const next = new Set(prev);
+                  next.delete(cap);
+                  return next;
+                })
+              }
+              className="text-[10px] px-2 py-1 rounded-full text-black font-semibold border border-transparent hover:opacity-85 transition-opacity flex items-center gap-1"
+              style={{ backgroundColor: CAPABILITY_COLORS[cap] }}
+            >
+              <span>{CAPABILITY_LABELS[cap]}</span>
+              <X className="w-2.5 h-2.5" />
+            </button>
+          ))}
+          {favOnly && (
+            <button
+              onClick={() => setFavOnly(false)}
+              className="text-[10px] px-2 py-1 rounded-full bg-amber-400/90 text-black font-semibold border border-transparent hover:bg-amber-400 transition-colors flex items-center gap-1"
+            >
+              <Star className="w-2.5 h-2.5 fill-black" />
+              <span>מועדפים</span>
+              <X className="w-2.5 h-2.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Feature 6 — first-visit hint */}
       {showHint && (
@@ -1523,56 +1632,61 @@ export function PromptGraphView({
         </div>
       )}
 
-      {/* ── Selected prompt panel ── */}
-      {/* Desktop: left slide-in panel */}
-      <div
-        className={cn(
-          "hidden md:flex absolute top-0 left-0 h-full w-72 flex-col bg-black/80 backdrop-blur-lg border-r border-white/10 shadow-2xl z-20 transition-transform duration-300",
-          selectedPrompt ? "translate-x-0" : "-translate-x-full pointer-events-none",
-        )}
-        dir="rtl"
-      >
-        <SelectedPromptPanel
-          prompt={selectedPrompt}
-          onClose={() => setSelectedPrompt(null)}
-          onUse={(p) => {
-            onUsePrompt(p);
-            setSelectedPrompt(null);
-          }}
-          onSaveTitle={async (id, title) => {
-            await updatePrompt(id, { title });
-            setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
-          }}
-          onSaveTags={async (id, tags) => {
-            await updateTags(id, tags);
-            setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
-          }}
-        />
-      </div>
-
-      {/* Mobile: bottom sheet */}
+      {/* ── Selected prompt modal — centered card with "back to graph" ── */}
       {selectedPrompt && (
         <div
-          className="md:hidden fixed inset-x-0 bottom-0 z-[60] bg-black/90 backdrop-blur-xl border-t border-white/15 rounded-t-2xl shadow-2xl max-h-[65vh] overflow-y-auto"
+          className="absolute inset-0 z-40 flex items-center justify-center p-3 md:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setSelectedPrompt(null)}
           dir="rtl"
         >
-          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-2" />
-          <SelectedPromptPanel
-            prompt={selectedPrompt}
-            onClose={() => setSelectedPrompt(null)}
-            onUse={(p) => {
-              onUsePrompt(p);
-              setSelectedPrompt(null);
-            }}
-            onSaveTitle={async (id, title) => {
-              await updatePrompt(id, { title });
-              setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
-            }}
-            onSaveTags={async (id, tags) => {
-              await updateTags(id, tags);
-              setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
-            }}
-          />
+          <div
+            className="relative w-full max-w-2xl max-h-[88vh] md:max-h-[82vh] rounded-2xl border border-white/15 bg-slate-950/95 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with prominent back-to-graph button */}
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-gradient-to-l from-purple-500/10 via-transparent to-amber-500/10 shrink-0">
+              <button
+                onClick={() => setSelectedPrompt(null)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+                <span>חזרה לגרף</span>
+              </button>
+              <div className="text-[11px] text-slate-400 truncate">
+                {CAPABILITY_LABELS[selectedPrompt.capability_mode ?? CapabilityMode.STANDARD]}
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <SelectedPromptPanel
+                prompt={selectedPrompt}
+                onClose={() => setSelectedPrompt(null)}
+                onUse={(p) => {
+                  onUsePrompt(p);
+                  setSelectedPrompt(null);
+                }}
+                onSaveTitle={async (id, title) => {
+                  await updatePrompt(id, { title });
+                  setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
+                }}
+                onSaveTags={async (id, tags) => {
+                  await updateTags(id, tags);
+                  setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
 
