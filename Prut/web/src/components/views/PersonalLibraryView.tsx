@@ -89,8 +89,19 @@ export function PersonalLibraryView({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeLocalFolder, setActiveLocalFolder] = useState<string>("all");
 
-  // Graph vs grid view toggle
-  const [localViewType, setLocalViewType] = useState<"grid" | "graph">("grid");
+  // Graph vs grid view toggle.
+  // Read sessionStorage on init so a pending graph request from TopNavBar
+  // survives the dynamic-import mount race (event may fire before listener).
+  const [localViewType, setLocalViewType] = useState<"grid" | "graph">(() => {
+    if (typeof window === "undefined") return "grid";
+    try {
+      if (sessionStorage.getItem("peroot:pending-graph") === "1") {
+        sessionStorage.removeItem("peroot:pending-graph");
+        return "graph";
+      }
+    } catch {}
+    return "grid";
+  });
   // All prompts for graph mode — fetched without pagination when graph activates
   const [graphPrompts, setGraphPrompts] = useState<PersonalPrompt[]>([]);
   const [graphLoading, setGraphLoading] = useState(false);
@@ -136,7 +147,9 @@ export function PersonalLibraryView({
         setGraphPrompts((data ?? []) as PersonalPrompt[]);
         setGraphLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [localViewType, ctx.user]);
 
   // Expanded card ids

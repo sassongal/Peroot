@@ -125,9 +125,13 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
           {/* Graph button — navigates to personal library and opens graph view */}
           <button
             onClick={() => {
+              // sessionStorage flag survives the dynamic-import mount race —
+              // PersonalLibraryView reads + clears it on mount. The event is a
+              // fast-path for when the view is already mounted.
+              try {
+                sessionStorage.setItem("peroot:pending-graph", "1");
+              } catch {}
               onNavigate("personal");
-              // Delay so PersonalLibraryView has time to mount and attach its listener
-              // before the event fires — same pattern as the Chains button in HomeClient.
               setTimeout(() => window.dispatchEvent(new CustomEvent("peroot:open-graph")), 50);
             }}
             className={cn(
