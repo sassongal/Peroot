@@ -7,53 +7,17 @@ import type { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
   buildGraphData,
-  computeClusters,
-  convexHull,
-  expandHull,
   CAPABILITY_COLORS,
   CAPABILITY_HIGHLIGHT,
   type GraphNode,
   type GraphLink,
-  type GraphCluster,
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PromptNodeCard } from "./PromptNodeCard";
 
-// Safari < 15.4 doesn't support roundRect — polyfill before any canvas code runs.
-if (typeof window !== "undefined") {
-  const proto = CanvasRenderingContext2D.prototype as CanvasRenderingContext2D & {
-    roundRect?: (x: number, y: number, w: number, h: number, r: number | number[]) => void;
-  };
-  if (!proto.roundRect) {
-    proto.roundRect = function (x, y, w, h, r) {
-      const radius = typeof r === "number" ? r : Array.isArray(r) ? ((r as number[])[0] ?? 0) : 0;
-      const rx = Math.min(radius, w / 2, h / 2);
-      this.beginPath();
-      this.moveTo(x + rx, y);
-      this.lineTo(x + w - rx, y);
-      this.arcTo(x + w, y, x + w, y + rx, rx);
-      this.lineTo(x + w, y + h - rx);
-      this.arcTo(x + w, y + h, x + w - rx, y + h, rx);
-      this.lineTo(x + rx, y + h);
-      this.arcTo(x, y + h, x, y + h - rx, rx);
-      this.lineTo(x, y + rx);
-      this.arcTo(x, y, x + rx, y, rx);
-      this.closePath();
-    };
-  }
-}
-
-// SSR-safe — canvas APIs require browser.
-// Import directly from `react-force-graph-2d` — the meta `react-force-graph`
-// package bundles 3D/VR/AR variants that reference THREE and AFRAME globals
-// at module-eval, which crashes the bundle. The 2D-only entry has no
-// THREE/AFRAME deps.
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d").then((m) => m.default), {
-  ssr: false,
-});
-// Same SSR-safe pattern for the 3D variant. `react-force-graph-3d` bundles
-// THREE at module-eval, so it must be loaded client-only.
+// SSR-safe — `react-force-graph-3d` bundles THREE at module-eval, so it must
+// be loaded client-only.
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d").then((m) => m.default), {
   ssr: false,
 });
@@ -75,134 +39,6 @@ const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
   [CapabilityMode.VIDEO_GENERATION]: "וידאו",
 };
 
-// Convert a 3/6-char hex color to rgba() with the given alpha.
-function hexToRgba(hex: string, alpha: number): string {
-  let h = hex.replace("#", "");
-  if (h.length === 3)
-    h = h
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  const n = parseInt(h, 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-// Draw a hexagon path (flat-top)
-function hexPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i;
-    const x = cx + r * Math.cos(angle);
-    const y = cy + r * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-}
-
-// Draw a camera icon inside a node at (cx,cy) with given radius
-function drawCameraIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  const s = r * 0.5;
-  ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.8)";
-  ctx.fillStyle = "rgba(255,255,255,0.8)";
-  ctx.lineWidth = r * 0.1;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  // Body
-  const bw = s * 1.6;
-  const bh = s * 1.1;
-  ctx.beginPath();
-  ctx.roundRect(cx - bw / 2, cy - bh / 2 + s * 0.15, bw, bh, s * 0.2);
-  ctx.stroke();
-  // Lens
-  ctx.beginPath();
-  ctx.arc(cx, cy + s * 0.15, s * 0.38, 0, 2 * Math.PI);
-  ctx.stroke();
-  // Viewfinder bump
-  ctx.beginPath();
-  ctx.roundRect(cx - s * 0.3, cy - bh / 2 - s * 0.1, s * 0.6, s * 0.28, s * 0.1);
-  ctx.fill();
-  ctx.restore();
-}
-
-// Draw video play triangle
-function drawPlayIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  const s = r * 0.45;
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.8)";
-  ctx.beginPath();
-  ctx.moveTo(cx - s * 0.4, cy - s * 0.6);
-  ctx.lineTo(cx + s * 0.7, cy);
-  ctx.lineTo(cx - s * 0.4, cy + s * 0.6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-// Draw a magnifying glass for research
-function drawSearchIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  const s = r * 0.45;
-  ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.8)";
-  ctx.lineWidth = r * 0.12;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.arc(cx - s * 0.1, cy - s * 0.1, s * 0.5, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(cx + s * 0.28, cy + s * 0.28);
-  ctx.lineTo(cx + s * 0.7, cy + s * 0.7);
-  ctx.stroke();
-  ctx.restore();
-}
-
-// Draw robot/agent icon
-function drawAgentIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  const s = r * 0.45;
-  ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.8)";
-  ctx.fillStyle = "rgba(255,255,255,0.8)";
-  ctx.lineWidth = r * 0.1;
-  ctx.lineCap = "round";
-  // Head
-  ctx.beginPath();
-  ctx.roundRect(cx - s * 0.55, cy - s * 0.65, s * 1.1, s * 0.9, s * 0.2);
-  ctx.stroke();
-  // Eyes
-  ctx.beginPath();
-  ctx.arc(cx - s * 0.22, cy - s * 0.2, s * 0.12, 0, 2 * Math.PI);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx + s * 0.22, cy - s * 0.2, s * 0.12, 0, 2 * Math.PI);
-  ctx.fill();
-  // Antenna
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - s * 0.65);
-  ctx.lineTo(cx, cy - s * 1.0);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(cx, cy - s * 1.0, s * 0.1, 0, 2 * Math.PI);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawCapabilityIcon(
-  ctx: CanvasRenderingContext2D,
-  cap: CapabilityMode,
-  cx: number,
-  cy: number,
-  r: number,
-) {
-  if (cap === CapabilityMode.IMAGE_GENERATION) drawCameraIcon(ctx, cx, cy, r);
-  else if (cap === CapabilityMode.VIDEO_GENERATION) drawPlayIcon(ctx, cx, cy, r);
-  else if (cap === CapabilityMode.DEEP_RESEARCH) drawSearchIcon(ctx, cx, cy, r);
-  else if (cap === CapabilityMode.AGENT_BUILDER) drawAgentIcon(ctx, cx, cy, r);
-}
-
 export function PromptGraphView({
   prompts,
   favoriteIds,
@@ -220,65 +56,8 @@ export function PromptGraphView({
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [mobileLegendOpen, setMobileLegendOpen] = useState(false);
-  const tickRef = useRef(0);
-  const rafRef = useRef<number>(0);
-  // Cache of loaded HTMLImageElement keyed by library reference id
-  const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
-  const [, forceRepaint] = useState(0);
-
-  // Build a map of reference-id → preview image URL from the library
-  const previewUrlByRef = useMemo(() => {
-    const map = new Map<string, string>();
-    (libraryPromptsTyped ?? []).forEach((lp) => {
-      const ref = lp.source?.reference ?? lp.id;
-      if (ref && lp.preview_image_url) map.set(ref, lp.preview_image_url);
-    });
-    return map;
-  }, [libraryPromptsTyped]);
-
-  // Preload images for image-generation prompts sourced from library.
-  // Guarded against setState-after-unmount by a mount flag captured in the
-  // effect closure and checked before every forceRepaint.
-  useEffect(() => {
-    let mounted = true;
-    prompts.forEach((p) => {
-      if (
-        p.capability_mode === CapabilityMode.IMAGE_GENERATION &&
-        p.source === "library" &&
-        p.reference
-      ) {
-        const url = previewUrlByRef.get(p.reference);
-        if (!url || imageCacheRef.current.has(p.reference)) return;
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.referrerPolicy = "no-referrer";
-        img.onload = () => {
-          if (mounted) forceRepaint((n) => n + 1);
-        };
-        img.onerror = () => {
-          // Drop broken entries so fallback icon renders and we don't retry.
-          if (p.reference) imageCacheRef.current.delete(p.reference);
-        };
-        img.src = url;
-        imageCacheRef.current.set(p.reference, img);
-      }
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [prompts, previewUrlByRef]);
   // Preserve node positions across graphData rebuilds so the simulation doesn't restart
   const positionMapRef = useRef<Map<string, { x: number; y: number }>>(new Map());
-  const fgRef = useRef<{
-    d3Force?: (
-      name: string,
-    ) => { strength?: (v: number) => unknown; distance?: (v: number) => unknown } | undefined;
-    centerAt?: (x: number, y: number, ms?: number) => void;
-    zoom?: (k: number, ms?: number) => void;
-    zoomToFit?: (ms?: number, padding?: number) => void;
-    d3ReheatSimulation?: () => void;
-  } | null>(null);
-  // 3D ref — separate because react-force-graph-3d has a different surface
   const fg3dRef = useRef<{
     cameraPosition?: (
       pos: { x: number; y: number; z: number },
@@ -294,8 +73,6 @@ export function PromptGraphView({
   const [searchQuery, setSearchQuery] = useState("");
   const [capabilityFilter, setCapabilityFilter] = useState<Set<CapabilityMode>>(new Set());
   const [favOnly, setFavOnly] = useState(false);
-  // 2D mode deprecated — always render 3D. Toggle UI removed.
-  const [viewMode] = useState<"2d" | "3d">("3d");
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Feature 3 — focused node for cinematic zoom
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -319,19 +96,6 @@ export function PromptGraphView({
     try {
       localStorage.setItem("peroot:graph-hint-seen", "1");
     } catch {}
-  }, []);
-
-  // Track animation tick for pulsing effects
-  useEffect(() => {
-    const tick = () => {
-      tickRef.current = Date.now();
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      document.body.style.cursor = "default";
-    };
   }, []);
 
   // Measure container with debounce
@@ -369,72 +133,12 @@ export function PromptGraphView({
     return data;
   }, [prompts, favoriteIds]);
 
-  // Community clusters — colored hulls in the backdrop layer.
-  const clusters = useMemo<GraphCluster[]>(
-    () => computeClusters(prompts, graphData.links),
-    [prompts, graphData.links],
-  );
-  const nodeById = useMemo(() => {
-    const m = new Map<string, GraphNode>();
-    for (const n of graphData.nodes) m.set(n.id, n);
-    return m;
-  }, [graphData.nodes]);
   // Indexed lookup — avoids O(n) .find() per edge hover on large libraries.
   const promptById = useMemo(() => {
     const m = new Map<string, PersonalPrompt>();
     for (const p of prompts) m.set(p.id, p);
     return m;
   }, [prompts]);
-
-  // Render hulls BEHIND nodes/links. `onRenderFramePre` runs before the
-  // built-in link+node passes, which is exactly what we want for a backdrop.
-  const onRenderFramePre = useCallback(
-    (ctx: CanvasRenderingContext2D, globalScale: number) => {
-      if (clusters.length === 0) return;
-      for (const c of clusters) {
-        const pts: Array<{ x: number; y: number }> = [];
-        for (const id of c.nodeIds) {
-          const n = nodeById.get(id);
-          if (n && n.x !== undefined && n.y !== undefined) {
-            pts.push({ x: n.x, y: n.y });
-          }
-        }
-        if (pts.length < 3) continue;
-        const hull = expandHull(convexHull(pts), 28);
-        if (hull.length === 0) continue;
-
-        // Fill
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(hull[0].x, hull[0].y);
-        for (let i = 1; i < hull.length; i++) ctx.lineTo(hull[i].x, hull[i].y);
-        ctx.closePath();
-        ctx.fillStyle = hexToRgba(c.color, 0.09);
-        ctx.fill();
-        ctx.lineWidth = 1.5 / globalScale;
-        ctx.strokeStyle = hexToRgba(c.color, 0.35);
-        ctx.stroke();
-
-        // Cluster label — centroid-anchored, small and quiet.
-        let cx = 0;
-        let minY = Infinity;
-        for (const p of hull) {
-          cx += p.x;
-          if (p.y < minY) minY = p.y;
-        }
-        cx /= hull.length;
-        const labelY = minY - 10 / globalScale;
-        const fontSize = Math.max(9, 11 / globalScale);
-        ctx.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillStyle = hexToRgba(c.color, 0.85);
-        ctx.fillText(c.label, cx, labelY);
-        ctx.restore();
-      }
-    },
-    [clusters, nodeById],
-  );
 
   // Strip Hebrew niqqud + lowercase for case/niqqud-insensitive search.
   const normalize = useCallback(
@@ -463,11 +167,9 @@ export function PromptGraphView({
     return ids;
   }, [normalize, searchQuery, capabilityFilter, favOnly, prompts, favoriteIds]);
 
-  // When filters are active, hide non-matching prompt nodes outright instead
-  // of only dimming them. 2D can dim via canvas alpha, but the 3D renderer
-  // has no equivalent — filtering at the data layer fixes both uniformly.
-  // Category / library anchor nodes are always kept so the scaffolding
-  // survives aggressive filters.
+  // When filters are active, hide non-matching prompt nodes outright so the
+  // 3D WebGL renderer stays clean. Category / library anchor nodes are always
+  // kept so the scaffolding survives aggressive filters.
   const visibleGraphData = useMemo(() => {
     if (!matchedIds) return graphData;
     const keep = new Set<string>();
@@ -612,282 +314,6 @@ export function PromptGraphView({
     [hoverNode, hoverLink],
   );
 
-  const nodeCanvasObject = useCallback(
-    (node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const nx = node.x ?? 0;
-      const ny = node.y ?? 0;
-      const isHovered = hoverNode?.id === node.id;
-      const isSelected = selectedPrompt?.id === node.id;
-      const isConnected = connectedIds ? connectedIds.has(node.id) : true;
-      const visible = isNodeVisible(node.id);
-      const isSearchMatch = isNodeMatch(node.id);
-      const dimAlpha = !visible ? 0.08 : connectedIds && !isConnected ? 0.18 : 1;
-
-      ctx.save();
-      ctx.globalAlpha = dimAlpha;
-
-      // ── Category node ──────────────────────────────────────────────────────
-      if (node.type === "category") {
-        const r = isHovered ? 15 : 13;
-
-        // Glow
-        if (isHovered) {
-          ctx.shadowColor = "rgba(255,255,255,0.5)";
-          ctx.shadowBlur = 12;
-        }
-
-        // Hex shape
-        hexPath(ctx, nx, ny, r);
-        const grad = ctx.createRadialGradient(nx - r * 0.3, ny - r * 0.3, 1, nx, ny, r);
-        grad.addColorStop(0, "#f8fafc");
-        grad.addColorStop(1, isHovered ? "#94a3b8" : "#cbd5e1");
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        if (isSelected) {
-          ctx.shadowColor = "#f59e0b";
-          ctx.shadowBlur = 10;
-          hexPath(ctx, nx, ny, r);
-          ctx.strokeStyle = "#f59e0b";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-
-        ctx.shadowBlur = 0;
-        const label = node.label.length > 12 ? node.label.slice(0, 12) + "…" : node.label;
-        const fontSize = Math.max(8, 10 / Math.max(globalScale, 0.5));
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#0f172a";
-        ctx.fillText(label, nx, ny);
-        ctx.restore();
-        return;
-      }
-
-      // ── Library node ───────────────────────────────────────────────────────
-      if (node.type === "library") {
-        const r = 11;
-        ctx.shadowColor = "rgba(168,85,247,0.6)";
-        ctx.shadowBlur = isHovered ? 14 : 6;
-
-        // Diamond
-        ctx.beginPath();
-        ctx.moveTo(nx, ny - r);
-        ctx.lineTo(nx + r, ny);
-        ctx.lineTo(nx, ny + r);
-        ctx.lineTo(nx - r, ny);
-        ctx.closePath();
-
-        const grad = ctx.createRadialGradient(nx - r * 0.3, ny - r * 0.3, 1, nx, ny, r);
-        grad.addColorStop(0, "#d8b4fe");
-        grad.addColorStop(1, "#7c3aed");
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-        const fontSize = Math.max(7, 8 / Math.max(globalScale, 0.5));
-        ctx.font = `${fontSize}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
-        if (globalScale > 1.5 || isHovered) ctx.fillText("ספרייה", nx, ny + r + 2);
-        ctx.restore();
-        return;
-      }
-
-      // ── Prompt node ────────────────────────────────────────────────────────
-      const radius = (node.size ?? 8) * (isHovered ? 1.15 : 1);
-      const cap = node.capability ?? CapabilityMode.STANDARD;
-      const color = CAPABILITY_COLORS[cap];
-      const highlight = CAPABILITY_HIGHLIGHT[cap];
-
-      // Pulse ring for recently used nodes
-      if (node.isRecentlyUsed && !connectedIds) {
-        const pulse = 0.4 + 0.3 * Math.sin(tickRef.current / 600);
-        ctx.beginPath();
-        ctx.arc(nx, ny, radius + 5 + pulse * 4, 0, 2 * Math.PI);
-        ctx.strokeStyle = `${color}55`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-
-      // Animated expanding ripple on hover — world-class polish
-      if (isHovered) {
-        const t = (tickRef.current % 1400) / 1400;
-        for (let i = 0; i < 2; i++) {
-          const phase = (t + i * 0.5) % 1;
-          const ringR = radius + phase * 22;
-          const a = (1 - phase) * 0.5;
-          ctx.beginPath();
-          ctx.arc(nx, ny, ringR, 0, 2 * Math.PI);
-          ctx.strokeStyle = `${highlight}${Math.floor(a * 255)
-            .toString(16)
-            .padStart(2, "0")}`;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-      }
-
-      // Outer glow (selected or hovered)
-      if (isSelected || isHovered) {
-        ctx.shadowColor = isSelected ? "#f59e0b" : color;
-        ctx.shadowBlur = isSelected ? 22 : 16;
-      }
-
-      // Gold favorite ring
-      if (node.isFavorite) {
-        ctx.beginPath();
-        ctx.arc(nx, ny, radius + 3, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#f59e0b";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      // Template ring (dashed cyan)
-      if (node.isTemplate) {
-        ctx.save();
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.arc(nx, ny, radius + (node.isFavorite ? 5.5 : 2.5), 0, 2 * Math.PI);
-        ctx.strokeStyle = "#22d3ee";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Search-match gold halo (Feature 2)
-      if (isSearchMatch) {
-        ctx.save();
-        ctx.shadowColor = "#fbbf24";
-        ctx.shadowBlur = 18;
-        ctx.beginPath();
-        ctx.arc(nx, ny, radius + 4, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#fbbf24";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Success-rate arc (Feature 4) — thin ring from 12 o'clock clockwise.
-      if (node.successRate !== undefined) {
-        const sr = node.successRate;
-        const ringColor = sr > 0.7 ? "#34d399" : sr >= 0.4 ? "#fbbf24" : "#fb7185";
-        const arcR = radius + 2.5;
-        // Background track
-        ctx.beginPath();
-        ctx.arc(nx, ny, arcR, 0, 2 * Math.PI);
-        ctx.strokeStyle = "rgba(148,163,184,0.18)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        // Filled portion — start at -π/2 (12 o'clock), clockwise.
-        if (sr > 0) {
-          ctx.beginPath();
-          ctx.arc(nx, ny, arcR, -Math.PI / 2, -Math.PI / 2 + sr * 2 * Math.PI);
-          ctx.strokeStyle = ringColor;
-          ctx.lineWidth = 2;
-          ctx.lineCap = "round";
-          ctx.stroke();
-          ctx.lineCap = "butt";
-        }
-      }
-
-      // Focused-node pulse (Feature 3)
-      if (focusedId === node.id) {
-        const pulse = 0.5 + 0.5 * Math.sin(tickRef.current / 350);
-        ctx.beginPath();
-        ctx.arc(nx, ny, radius + 6 + pulse * 3, 0, 2 * Math.PI);
-        ctx.strokeStyle = `rgba(251,191,36,${0.35 + pulse * 0.4})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-
-      // Main sphere with radial gradient (3D look)
-      ctx.beginPath();
-      ctx.arc(nx, ny, radius, 0, 2 * Math.PI);
-      const grad = ctx.createRadialGradient(
-        nx - radius * 0.35,
-        ny - radius * 0.35,
-        radius * 0.05,
-        nx,
-        ny,
-        radius,
-      );
-      grad.addColorStop(0, highlight);
-      grad.addColorStop(0.4, color);
-      grad.addColorStop(1, color + "bb");
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      ctx.shadowBlur = 0;
-
-      // For image-generation prompts sourced from the library, clip the preview
-      // image inside the node circle. Falls back to the camera icon if the
-      // image hasn't loaded or isn't available.
-      let drewImage = false;
-      if (cap === CapabilityMode.IMAGE_GENERATION && node.prompt?.reference) {
-        const img = imageCacheRef.current.get(node.prompt.reference);
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(nx, ny, radius - 1, 0, 2 * Math.PI);
-          ctx.clip();
-          const side = (radius - 1) * 2;
-          // cover-fit
-          const ar = img.naturalWidth / img.naturalHeight;
-          let dw = side;
-          let dh = side;
-          if (ar > 1) dw = side * ar;
-          else dh = side / ar;
-          ctx.drawImage(img, nx - dw / 2, ny - dh / 2, dw, dh);
-          // Vignette for readability
-          const vg = ctx.createRadialGradient(nx, ny, radius * 0.2, nx, ny, radius);
-          vg.addColorStop(0, "rgba(0,0,0,0)");
-          vg.addColorStop(1, "rgba(0,0,0,0.55)");
-          ctx.fillStyle = vg;
-          ctx.fillRect(nx - radius, ny - radius, radius * 2, radius * 2);
-          ctx.restore();
-          // Crisp colored outline so category color stays readable
-          ctx.beginPath();
-          ctx.arc(nx, ny, radius - 0.5, 0, 2 * Math.PI);
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-          drewImage = true;
-        }
-      }
-
-      // Capability icon inside the node (only at sufficient size, no image)
-      if (!drewImage && radius > 9) {
-        drawCapabilityIcon(ctx, cap, nx, ny, radius);
-      }
-
-      // Label: always on hover, on zoom > 2.2, or if selected
-      if (isHovered || isSelected || globalScale > 2.2) {
-        const label = node.label.length > 22 ? node.label.slice(0, 22) + "…" : node.label;
-        const fontSize = Math.max(8, 11 / Math.max(globalScale, 0.5));
-        ctx.font = `${isSelected ? "bold " : ""}${fontSize}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-
-        // Label background pill
-        const tw = ctx.measureText(label).width;
-        const pad = 3;
-        ctx.fillStyle = "rgba(2,6,23,0.75)";
-        ctx.beginPath();
-        const lx = nx - tw / 2 - pad;
-        const ly = ny + radius + 3;
-        ctx.roundRect(lx, ly, tw + pad * 2, fontSize + pad * 2, 3);
-        ctx.fill();
-
-        ctx.fillStyle = isSelected ? "#fde68a" : "rgba(255,255,255,0.95)";
-        ctx.fillText(label, nx, ny + radius + 3 + pad);
-      }
-
-      ctx.restore();
-    },
-    [hoverNode, selectedPrompt, connectedIds, isNodeVisible, isNodeMatch, focusedId],
-  );
 
   // Colors kept in lockstep with the on-screen legend. If you change a value
   // here, update the legend swatches in the Legend block below to match.
@@ -921,12 +347,6 @@ export function PromptGraphView({
     if (link.type === "reference") return 1.8;
     if (link.type === "temporal") return 0.7;
     return 0.8;
-  }, []);
-
-  const linkLineDash = useCallback((link: GraphLink) => {
-    if (link.type === "template") return [4, 3];
-    if (link.type === "temporal") return [2, 4];
-    return null;
   }, []);
 
   // In 3D (WebGL) we can't draw dashed lines, so template/temporal edges use
@@ -979,41 +399,9 @@ export function PromptGraphView({
     return 100;
   }, []);
 
-  // D3 force engine config — run per graphData change AND on viewMode switch,
-  // because switching 2D↔3D unmounts/remounts the component so fgRef rebinds
-  // and the previously-applied per-edge strength/distance would otherwise be
-  // lost on the fresh instance.
-  useEffect(() => {
-    if (viewMode !== "2d") return;
-    const link = fgRef.current?.d3Force?.("link") as
-      | {
-          strength?: (fn: (l: GraphLink) => number) => unknown;
-          distance?: (fn: (l: GraphLink) => number) => unknown;
-        }
-      | undefined;
-    link?.strength?.(linkStrength);
-    link?.distance?.(linkDistance);
-    const charge = fgRef.current?.d3Force?.("charge") as
-      | { strength?: (v: number) => unknown }
-      | undefined;
-    // Stronger repulsion prevents the "tangled ball" look at high node counts.
-    charge?.strength?.(-120);
-  }, [visibleGraphData, linkStrength, linkDistance, viewMode]);
-
-  const handleEngineStop = useCallback(() => {
-    // no-op
-  }, []);
-
-  // "Fit" toolbar — frame everything. 2D calls the library API directly;
-  // 3D recomputes a camera distance from the settled bounding sphere so
-  // tiny and sparse graphs both fit on-screen.
+  // "Fit" toolbar — recomputes camera distance from the settled bounding sphere
+  // so tiny and sparse graphs both fit on-screen.
   const handleFitView = useCallback(() => {
-    if (viewMode === "2d") {
-      try {
-        fgRef.current?.zoomToFit?.(600, 80);
-      } catch {}
-      return;
-    }
     const fg = fg3dRef.current;
     if (!fg?.cameraPosition) return;
     try {
@@ -1031,7 +419,7 @@ export function PromptGraphView({
       const distance = Math.max(160, Math.min(900, maxR * 2.6 + 120));
       fg.cameraPosition({ x: 0, y: 0, z: distance }, { x: 0, y: 0, z: 0 }, 800);
     } catch {}
-  }, [viewMode]);
+  }, []);
 
   // 3D: fit camera to settled node cloud after the engine cools down.
   // Small graphs would otherwise spawn inside a single sphere.
@@ -1065,10 +453,8 @@ export function PromptGraphView({
     if (!focusedId && !selectedPrompt) return;
     setFocusedId(null);
     setSelectedPrompt(null);
-    try {
-      fgRef.current?.zoomToFit?.(600, 80);
-    } catch {}
-  }, [focusedId, selectedPrompt]);
+    handleFitView();
+  }, [focusedId, selectedPrompt, handleFitView]);
 
   // Feature 5 — edge hover tooltip
   const handleLinkHover = useCallback(
@@ -1100,9 +486,7 @@ export function PromptGraphView({
           setCapabilityFilter(new Set());
           setFavOnly(false);
           setFocusedId(null);
-          try {
-            fgRef.current?.zoomToFit?.(600, 80);
-          } catch {}
+          handleFitView();
         }
         dismissHint();
       } else if ((e.key === "f" || e.key === "F") && !isTyping) {
@@ -1110,14 +494,14 @@ export function PromptGraphView({
         dismissHint();
       } else if ((e.key === "r" || e.key === "R") && !isTyping) {
         try {
-          fgRef.current?.d3ReheatSimulation?.();
+          fg3dRef.current?.d3ReheatSimulation?.();
         } catch {}
         dismissHint();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [searchQuery, capabilityFilter, favOnly, focusedId, selectedPrompt, dismissHint]);
+  }, [searchQuery, capabilityFilter, favOnly, focusedId, selectedPrompt, dismissHint, handleFitView]);
 
   // When the prompt modal opens, move focus to the back button so keyboard
   // users land inside the dialog instead of still on the graph canvas.
@@ -1376,44 +760,8 @@ export function PromptGraphView({
         onPointerUp={handleContainerPointerUp}
         className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
       >
-        {viewMode === "2d" ? (
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          <ForceGraph2D
-            key="fg-2d"
-            ref={fgRef as any}
-            graphData={visibleGraphData as any}
-            width={dimensions.width}
-            height={dimensions.height}
-            nodeId="id"
-            nodeCanvasObject={nodeCanvasObject as any}
-            nodeCanvasObjectMode={() => "replace"}
-            onRenderFramePre={onRenderFramePre as any}
-            onNodeClick={handleNodeClick as any}
-            onNodeHover={handleNodeHover as any}
-            onLinkHover={handleLinkHover as any}
-            onBackgroundClick={handleBackgroundClick as any}
-            linkColor={linkColor as any}
-            linkWidth={linkWidth as any}
-            linkLineDash={linkLineDash as any}
-            linkDirectionalParticles={linkDirectionalParticles as any}
-            linkDirectionalParticleWidth={2}
-            linkDirectionalParticleColor={linkDirectionalParticleColor as any}
-            linkDirectionalParticleSpeed={0.004}
-            cooldownTicks={200}
-            d3AlphaDecay={0.015}
-            d3VelocityDecay={0.25}
-            warmupTicks={60}
-            backgroundColor="transparent"
-            enableZoomInteraction
-            enablePanInteraction
-            enablePointerInteraction
-            onEngineStop={handleEngineStop}
-            minZoom={0.3}
-            maxZoom={8}
-          />
-        ) : (
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          <ForceGraph3D
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <ForceGraph3D
             key="fg-3d"
             ref={fg3dRef as any}
             graphData={visibleGraphData as any}
@@ -1460,7 +808,6 @@ export function PromptGraphView({
             d3VelocityDecay={0.28}
             rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           />
-        )}
       </div>
 
       {/* Floating hover tooltip — shows a peek card next to the cursor */}
