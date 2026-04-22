@@ -4,7 +4,7 @@ import type { PersonalPrompt } from "@/lib/types";
 export interface GraphNode {
   id: string;
   label: string;
-  type: "prompt" | "category" | "library";
+  type: "prompt" | "category" | "library" | "tag";
   // prompt nodes only
   size?: number;
   capability?: CapabilityMode;
@@ -319,19 +319,48 @@ export function buildGraphData(prompts: PersonalPrompt[], favoriteIds: Set<strin
     strength: c.strength,
   }));
 
-  // Library reference nodes (preserved — these create meaningful cross-prompt
-  // groupings when multiple prompts spawn from the same public library item).
+  // Library reference hubs — one node per library grouping. Falls back to
+  // the public-library `category` when the row has no explicit `reference`
+  // (the DB column may not be populated). This makes library-derived
+  // prompts cluster around a shared hub → visible purple edges.
   const libNodeIds = new Set<string>();
   prompts
-    .filter((p) => p.source === "library" && p.reference)
+    .filter((p) => p.source === "library")
     .forEach((p) => {
-      const refId = `lib:${p.reference}`;
+      const key = p.reference || p.category || "library";
+      const refId = `lib:${key}`;
       if (!libNodeIds.has(refId)) {
-        nodes.push({ id: refId, label: "ספרייה", type: "library" });
+        nodes.push({ id: refId, label: `ספרייה · ${key}`, type: "library" });
         libNodeIds.add(refId);
       }
       links.push({ source: p.id, target: refId, type: "reference" });
     });
+
+  // Tag hub nodes — one node per unique tag used by ≥1 prompt. Every tagged
+  // prompt gets an amber edge to its tag hub. Turns tags into visible
+  // clusters (Obsidian-style) even when no two prompts happen to share the
+  // exact same tag pair directly.
+  const tagCount = new Map<string, number>();
+  for (const p of prompts) {
+    for (const t of p.tags ?? []) {
+      const key = t.trim().toLowerCase();
+      if (!key) continue;
+      tagCount.set(key, (tagCount.get(key) ?? 0) + 1);
+    }
+  }
+  const tagNodeIds = new Set<string>();
+  for (const p of prompts) {
+    for (const t of p.tags ?? []) {
+      const key = t.trim().toLowerCase();
+      if (!key) continue;
+      const tagId = `tag:${key}`;
+      if (!tagNodeIds.has(tagId)) {
+        nodes.push({ id: tagId, label: `#${key}`, type: "tag" });
+        tagNodeIds.add(tagId);
+      }
+      links.push({ source: p.id, target: tagId, type: "tag" });
+    }
+  }
 
   return { nodes, links };
 }

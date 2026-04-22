@@ -1380,11 +1380,18 @@ export function PromptGraphView({
             nodeId="id"
             nodeLabel={((n: GraphNode) => n.label) as any}
             nodeVal={
-              ((n: GraphNode) =>
-                Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4))) as any
+              ((n: GraphNode) => {
+                if (n.type === "tag") return 3;
+                if (n.type === "library") return 5;
+                return Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4));
+              }) as any
             }
             nodeColor={
-              ((n: GraphNode) => CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD]) as any
+              ((n: GraphNode) => {
+                if (n.type === "tag") return "#f59e0b"; // amber — matches legend
+                if (n.type === "library") return "#a855f7"; // purple — matches legend
+                return CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
+              }) as any
             }
             nodeOpacity={0.95}
             nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
