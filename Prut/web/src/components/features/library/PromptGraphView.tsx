@@ -15,8 +15,14 @@ import {
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 
-// Safari < 15.4 doesn't support roundRect — polyfill before any canvas code runs
+// Safari < 15.4 doesn't support roundRect — polyfill before any canvas code runs.
+// Also stub AFRAME global referenced by react-force-graph's bundled VR dependencies
+// (we only use the 2D canvas renderer, so VR is never activated).
 if (typeof window !== "undefined") {
+  if (!("AFRAME" in window)) {
+    (window as unknown as Record<string, unknown>).AFRAME = {};
+  }
+
   const proto = CanvasRenderingContext2D.prototype as CanvasRenderingContext2D & {
     roundRect?: (x: number, y: number, w: number, h: number, r: number | number[]) => void;
   };

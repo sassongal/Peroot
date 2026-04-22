@@ -8,7 +8,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { stripStyleTokens } from "@/lib/text-utils";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
-import { Hash, AtSign, Wand2 } from "lucide-react";
+import { Hash, AtSign, Wand2, LogIn, BookOpen, Star, Network, History } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 import { PersonalLibraryHeader } from "./personal-library/PersonalLibraryHeader";
 import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
@@ -649,6 +651,81 @@ export function PersonalLibraryView({
     getStyledPromptMarkup,
     extractVariablesFromPrompt,
   };
+
+  // ─── Guest gate ────────────────────────────────────────────────────────────
+  // Show a login prompt for unauthenticated visitors instead of an infinite spinner.
+  if (isPersonalLoaded && !ctx.user) {
+    return (
+      <div
+        className="flex items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-500"
+        dir="rtl"
+      >
+        <div className="w-full max-w-md bg-white/95 dark:bg-zinc-950/90 border border-white/10 rounded-3xl shadow-2xl p-8 flex flex-col items-center text-center gap-6">
+          {/* Logo */}
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/20 flex items-center justify-center">
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_240.png"
+              alt="Peroot"
+              width={40}
+              height={40}
+              className="block dark:hidden"
+              style={{ width: "auto", height: "auto" }}
+            />
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_navbar_2x.png"
+              alt="Peroot"
+              width={40}
+              height={40}
+              className="hidden dark:block"
+              style={{ width: "auto", height: "auto" }}
+            />
+          </div>
+
+          {/* Headline */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              הספרייה האישית שלך מחכה
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              התחבר כדי לגשת לכל הפרומפטים שלך, המועדפים, הגרף האישי וההיסטוריה.
+            </p>
+          </div>
+
+          {/* Feature list */}
+          <ul className="w-full space-y-3 text-sm text-right">
+            {[
+              { Icon: BookOpen, color: "text-amber-500", label: "ספרייה אישית — כל הפרומפטים שלך במקום אחד" },
+              { Icon: Star, color: "text-yellow-500", label: "מועדפים — גישה מהירה לפרומפטים שאהבת" },
+              { Icon: Network, color: "text-purple-500", label: "גרף ידע — ויזואליזציה של הקשרים בין הפרומפטים" },
+              { Icon: History, color: "text-blue-500", label: "היסטוריה — כל הפרומפטים שיצרת" },
+            ].map(({ Icon, color, label }) => (
+              <li key={label} className="flex items-start gap-3">
+                <Icon className={cn("w-4 h-4 mt-0.5 shrink-0", color)} />
+                <span className="text-slate-600 dark:text-slate-400">{label}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Actions */}
+          <div className="w-full flex flex-col gap-3 pt-2">
+            <Link
+              href="/login"
+              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 rounded-xl text-white font-semibold shadow-lg transition-all"
+            >
+              <LogIn className="w-4 h-4" />
+              התחבר עכשיו
+            </Link>
+            <Link
+              href="/login?tab=signup"
+              className="w-full flex items-center justify-center py-3 px-5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm transition-colors"
+            >
+              פתח חשבון חינם
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Main Render ──────────────────────────────────────────────────────────
 
