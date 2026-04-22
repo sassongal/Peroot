@@ -849,36 +849,37 @@ export function PromptGraphView({
     [hoverNode, selectedPrompt, connectedIds, isNodeVisible, isNodeMatch, focusedId],
   );
 
+  // Colors kept in lockstep with the on-screen legend. If you change a value
+  // here, update the legend swatches in the Legend block below to match.
   const linkColor = useCallback(
     (link: GraphLink) => {
       const src = typeof link.source === "object" ? link.source.id : link.source;
       const tgt = typeof link.target === "object" ? link.target.id : link.target;
       const isConnectedLink = !connectedIds || connectedIds.has(src) || connectedIds.has(tgt);
       const bothVisible = isNodeVisible(src) && isNodeVisible(tgt);
-      const baseAlpha = !bothVisible ? 0.05 : isConnectedLink ? 1 : 0.08;
+      const baseAlpha = !bothVisible ? 0.05 : isConnectedLink ? 1 : 0.1;
 
-      if (link.type === "tag") return `rgba(245,158,11,${0.75 * baseAlpha})`;
-      if (link.type === "reference") return `rgba(168,85,247,${0.65 * baseAlpha})`;
-      if (link.type === "template") return `rgba(34,211,238,${0.55 * baseAlpha})`;
+      if (link.type === "tag") return `rgba(245,158,11,${0.9 * baseAlpha})`;
+      if (link.type === "reference") return `rgba(168,85,247,${0.85 * baseAlpha})`;
+      if (link.type === "template") return `rgba(34,211,238,${0.8 * baseAlpha})`;
       if (link.type === "similarity") {
-        // Emerald teal — scale alpha with shared-keyword strength
-        const s = Math.min(1, 0.35 + (link.strength ?? 1) * 0.12);
+        // Emerald teal — scale alpha with shared-keyword strength, min 0.65
+        const s = Math.min(0.95, 0.5 + (link.strength ?? 1) * 0.15);
         return `rgba(45,212,191,${s * baseAlpha})`;
       }
-      if (link.type === "temporal") return `rgba(148,163,184,${0.2 * baseAlpha})`;
+      if (link.type === "temporal") return `rgba(148,163,184,${0.55 * baseAlpha})`;
       if (link.type === "capability") return `rgba(148,163,184,${0.12 * baseAlpha})`;
-      // category (legacy — no longer emitted)
       return `rgba(148,163,184,${0.15 * baseAlpha})`;
     },
     [connectedIds, isNodeVisible],
   );
 
   const linkWidth = useCallback((link: GraphLink) => {
-    if (link.type === "tag") return Math.min(3.5, 1 + (link.strength ?? 1) * 0.6);
-    if (link.type === "similarity") return Math.min(3, 1.1 + (link.strength ?? 1) * 0.35);
-    if (link.type === "template") return 1.5;
-    if (link.type === "reference") return 1.5;
-    if (link.type === "temporal") return 0.6;
+    if (link.type === "tag") return Math.min(4, 1.4 + (link.strength ?? 1) * 0.6);
+    if (link.type === "similarity") return Math.min(3.2, 1.4 + (link.strength ?? 1) * 0.35);
+    if (link.type === "template") return 1.6;
+    if (link.type === "reference") return 1.8;
+    if (link.type === "temporal") return 0.7;
     return 0.8;
   }, []);
 
@@ -888,17 +889,32 @@ export function PromptGraphView({
     return null;
   }, []);
 
+  // In 3D (WebGL) we can't draw dashed lines, so template/temporal edges use
+  // evenly spaced directional particles to convey the "dashed"/"dotted" rhythm
+  // shown in the legend. Solid link types (tag / similarity / reference) get
+  // 0–3 particles just to hint at flow direction.
   const linkDirectionalParticles = useCallback((link: GraphLink) => {
+    if (link.type === "template") return 4; // dashed cyan — משתנה משותף
+    if (link.type === "temporal") return 5; // dotted gray — נוצרו יחד
     if (link.type === "reference") return 3;
-    if (link.type === "similarity" && (link.strength ?? 0) >= 3) return 2;
-    if (link.type === "tag" && (link.strength ?? 0) > 1) return 2;
+    if (link.type === "similarity") return (link.strength ?? 0) >= 2 ? 2 : 1;
+    if (link.type === "tag") return (link.strength ?? 0) > 1 ? 2 : 1;
     return 0;
   }, []);
 
   const linkDirectionalParticleColor = useCallback((link: GraphLink) => {
-    if (link.type === "reference") return "rgba(192,132,252,0.9)";
+    if (link.type === "template") return "rgba(94,234,252,0.95)";
+    if (link.type === "temporal") return "rgba(203,213,225,0.9)";
+    if (link.type === "reference") return "rgba(192,132,252,0.95)";
     if (link.type === "similarity") return "rgba(94,234,212,0.95)";
-    return "rgba(251,191,36,0.9)";
+    if (link.type === "tag") return "rgba(251,191,36,0.95)";
+    return "rgba(148,163,184,0.8)";
+  }, []);
+
+  const linkDirectionalParticleWidth = useCallback((link: GraphLink) => {
+    if (link.type === "temporal") return 1.2; // small dots
+    if (link.type === "template") return 1.6; // dashes
+    return 2.2;
   }, []);
 
   // Per-edge force strength — strong semantic links pull tighter; temporal /
@@ -1374,9 +1390,9 @@ export function PromptGraphView({
             nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
             linkColor={linkColor as any}
             linkWidth={linkWidth as any}
-            linkOpacity={0.55}
+            linkOpacity={1}
             linkDirectionalParticles={linkDirectionalParticles as any}
-            linkDirectionalParticleWidth={1.8}
+            linkDirectionalParticleWidth={linkDirectionalParticleWidth as any}
             linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
             linkDirectionalParticleColor={linkDirectionalParticleColor as any}
             onNodeClick={handleNodeClick as any}
@@ -1651,4 +1667,3 @@ export function PromptGraphView({
     </div>
   );
 }
-
