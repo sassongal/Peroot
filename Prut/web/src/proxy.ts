@@ -135,33 +135,12 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // --- Fast path for public routes: skip Supabase getUser() entirely ---
-  // Check maintenance cache first (in-memory, ~0ms). Only proceed to auth
-  // if maintenance is active (need admin check) or route requires auth.
   const isMaintenance = await getCachedMaintenanceMode();
 
-  if (!isMaintenance && !needsAuth(pathname)) {
-    // Public route, no maintenance — skip the expensive getUser() call.
-    // Still handle referral cookies and maintenance page redirect.
-    if (pathname === "/maintenance") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    const response = NextResponse.next({ request });
-    // Capture referral code from URL (?ref=CODE) into a cookie
-    const refCode = request.nextUrl.searchParams.get("ref");
-    const isValidRefCode = refCode && refCode.length <= 30 && /^[a-zA-Z0-9_-]+$/.test(refCode);
-    if (isValidRefCode && !request.cookies.get("referral_code")) {
-      response.cookies.set("referral_code", refCode, {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        httpOnly: true,
-        sameSite: "lax",
-      });
-    }
-    return response;
-  }
-
-  // --- Auth path: create Supabase client and call getUser() ---
+  // Supabase SSR requires getUser() on every request to refresh session cookies.
+  // Skipping it on "public" routes caused a 2–3 refresh flicker after login: the
+  // client would get stale tokens and the AuthContext would hydrate as guest
+  // until the cookies caught up. Always run the auth path.
   let supabaseResponse = NextResponse.next({
     request,
   });

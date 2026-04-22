@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/context/AuthContext";
 import { User as UserIcon, Settings, LogOut, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -22,26 +23,14 @@ export function UserMenu({ user, position }: UserMenuProps) {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAuth();
 
   const getErrorMessage = (err: unknown) =>
     err instanceof Error ? err.message : t.auth.unexpected_error;
 
   useEffect(() => {
     setMounted(true);
-    if (user) {
-      const supabase = createClient();
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) setIsAdmin(true);
-        });
-    }
-  }, [user]);
+  }, []);
 
   const handleSignOut = async () => {
     try {

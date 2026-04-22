@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+import { useAuth } from "@/context/AuthContext";
 import { fromHistoryRow } from "@/lib/prompt-entity";
 import type { PromptEntity } from "@/lib/prompt-entity";
 
@@ -21,45 +22,20 @@ export interface HistoryItem {
 }
 
 export function useHistory() {
-  const [user, setUser] = useState<User | null>(null);
-
+  const { user } = useAuth();
   const supabase = useMemo(() => createClient(), []);
-  const userRef = useRef<User | null>(null);
+  const userRef = useRef<User | null>(user);
   const queryClient = useQueryClient();
 
-  // Track auth state
+  // Keep ref in sync + invalidate history when the auth'd user id changes.
   useEffect(() => {
-    let mounted = true;
-
-    async function initAuth() {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      if (!mounted) return;
-      setUser(currentUser);
-      userRef.current = currentUser;
+    const prevId = userRef.current?.id ?? null;
+    const nextId = user?.id ?? null;
+    userRef.current = user;
+    if (prevId !== nextId) {
+      queryClient.invalidateQueries({ queryKey: ["history"] });
     }
-
-    initAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      const newUser = session?.user ?? null;
-      if (userRef.current?.id !== newUser?.id) {
-        userRef.current = newUser;
-        setUser(newUser);
-        // Invalidate history when user changes so it refetches
-        queryClient.invalidateQueries({ queryKey: ["history"] });
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [supabase, queryClient]);
+  }, [user, queryClient]);
 
   // Fetch history via useQuery
   const { data: history = [], isSuccess: isLoaded } = useQuery({

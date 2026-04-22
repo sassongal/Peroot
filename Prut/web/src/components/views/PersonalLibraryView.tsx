@@ -1,6 +1,7 @@
 "use client";
 
 import { useLibraryContext } from "@/context/LibraryContext";
+import { useAuth } from "@/context/AuthContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -134,28 +135,39 @@ export function PersonalLibraryView({
 
   // When graph mode activates, fetch ALL personal prompts (no pagination).
   // filteredPersonalLibrary only has the current page — graph needs the full library.
+  const { isLoaded: authLoaded } = useAuth();
   const userId = ctx.user?.id;
   useEffect(() => {
-    if (localViewType !== "graph" || !userId) return;
+    // Gate on authLoaded: firing before AuthContext hydrates can mean a stale
+    // JWT is on the wire, causing RLS to return a truncated result set
+    // (the "1-node graph" bug). created_at is NOT NULL; sort_index is nullable.
+    if (localViewType !== "graph" || !userId || !authLoaded) return;
     let cancelled = false;
     setGraphLoading(true);
     createClient()
       .from("personal_library")
       .select("*", { count: "exact" })
       .eq("user_id", userId)
-      .order("sort_index", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(GRAPH_ROW_LIMIT)
       .then(({ data, count, error }) => {
         if (cancelled) return;
         if (error) logger.error("[graph] fetch all prompts failed", error);
-        setGraphPrompts((data ?? []) as PersonalPrompt[]);
+        const rows = (data ?? []) as PersonalPrompt[];
+        if (typeof count === "number" && count > rows.length + 5) {
+          logger.warn("[graph] row count mismatch", {
+            rowsReturned: rows.length,
+            totalCount: count,
+          });
+        }
+        setGraphPrompts(rows);
         setGraphTotalCount(typeof count === "number" ? count : null);
         setGraphLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [localViewType, userId]);
+  }, [localViewType, userId, authLoaded]);
 
   // Expanded card ids
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());

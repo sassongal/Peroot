@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft, Mail, Lock, User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ const ICON_CLASS =
   "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-amber-400/70 transition-colors duration-200";
 
 export function AuthForm() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
@@ -70,7 +72,10 @@ export function AuthForm() {
           const nextParam = new URLSearchParams(window.location.search).get("next");
           let dest = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
           if (dest.length > 2048) dest = "/";
-          window.location.href = dest;
+          // router.refresh() reruns RSCs with the new cookies before navigation,
+          // so the destination renders with the authenticated session on first paint.
+          router.refresh();
+          router.push(dest);
         }
       } else {
         const { error } = await supabase.auth.signUp({

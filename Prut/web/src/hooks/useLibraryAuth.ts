@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
 import { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { logger } from "@/lib/logger";
 import { getCategoriesKey, getOrderKey } from "@/lib/library/row-mapper";
+import { useAuth } from "@/context/AuthContext";
 
 const STORAGE_KEY = "peroot_personal_library";
 
@@ -26,77 +27,43 @@ export interface UseLibraryAuthResult {
 }
 
 /**
- * Owns all Supabase auth wiring for the library:
- * - initial getUser() call
- * - onAuthStateChange subscription (with cleanup)
- * - guest-to-server data migration on login
+ * Library auth adapter on top of the central AuthContext.
+ * - Subscribes to id transitions and runs onUserChange (resets paging + reloads data).
+ * - Runs the guest → server localStorage migration on first login.
  *
- * Notifies useLibrary via onUserChange so it can reset state and reload data.
+ * No direct supabase.auth.* calls here: AuthContext owns that.
  */
 export function useLibraryAuth({
   supabase,
   onUserChange,
 }: UseLibraryAuthOptions): UseLibraryAuthResult {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoaded: authLoaded } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
-  // Track the previous user so we can detect login transitions for migration
-  const userRef = useRef<User | null>(null);
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+  const migrationRanRef = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
-    // Tracks whether we've applied any auth state (from getSession or onAuthStateChange).
-    // Prevents a late-resolving getSession() null from clobbering a user that
-    // onAuthStateChange already delivered.
-    let applied = false;
+    if (!authLoaded) return;
+    let cancelled = false;
+    const prevId = prevUserIdRef.current;
+    const nextId = user?.id ?? null;
+    // First auth settle OR user id transition → reload data.
+    const idChanged = prevId !== nextId;
+    if (!idChanged && prevId !== undefined) return;
 
-    async function applyUser(newUser: User | null) {
-      if (!mounted) return;
-      applied = true;
-      userRef.current = newUser;
-      setUser(newUser);
-      try {
-        await onUserChange(newUser);
-      } catch (err) {
-        logger.error("[useLibraryAuth] onUserChange failed:", err);
-      } finally {
-        if (mounted) setIsLoaded(true);
-      }
-    }
-
-    async function init() {
-      try {
-        // getSession() reads the cached session from storage — no network round-trip,
-        // no stale-JWT false-null. This is the authoritative local source of truth.
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!mounted || applied) return;
-        await applyUser(session?.user ?? null);
-      } catch (err) {
-        logger.error("[useLibraryAuth] init getSession failed:", err);
-        if (mounted && !applied) setIsLoaded(true);
-      }
-    }
-
-    init();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      const newUser = session?.user ?? null;
-
-      if (newUser && !userRef.current) {
-        // Just logged in — migrate guest localStorage data to the server
-        const localStr = localStorage.getItem(STORAGE_KEY);
+    (async () => {
+      // Guest → logged in transition: migrate localStorage prompts.
+      if (user && !prevId && !migrationRanRef.current) {
+        migrationRanRef.current = true;
+        const localStr =
+          typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
         if (localStr) {
           try {
             const localItems = JSON.parse(localStr) as PersonalPrompt[];
             if (Array.isArray(localItems) && localItems.length > 0) {
               logger.info("Migrating guest items:", localItems.length);
-
               const itemsToInsert = localItems.map((item) => ({
-                user_id: newUser.id,
+                user_id: user.id,
                 title: item.title,
                 prompt: item.prompt,
                 prompt_style: item.prompt_style ?? null,
@@ -111,7 +78,6 @@ export function useLibraryAuth({
                 capability_mode: item.capability_mode ?? CapabilityMode.STANDARD,
                 tags: item.tags ?? [],
               }));
-
               const { error: insertError } = await supabase
                 .from("personal_library")
                 .insert(itemsToInsert);
@@ -129,35 +95,23 @@ export function useLibraryAuth({
         }
       }
 
-      const idChanged = userRef.current?.id !== newUser?.id;
-      // Recovery only: SIGNED_IN / INITIAL_SESSION arrived with a real user but
-      // init() had settled into guest mode (userRef.current === null). Without
-      // this branch the UI would stay empty until the next real id change.
-      // We intentionally exclude TOKEN_REFRESHED (fires every ~55min on the same
-      // id — would cause a full library re-fetch while the user is scrolling).
-      const isRecoveryEvent = event === "SIGNED_IN" || event === "INITIAL_SESSION";
-      const needsRecovery = isRecoveryEvent && newUser && !userRef.current;
-
-      if (idChanged || needsRecovery) {
-        applied = true;
-        userRef.current = newUser;
-        setUser(newUser);
-        try {
-          await onUserChange(newUser);
-        } catch (err) {
-          logger.error("[useLibraryAuth] onAuthStateChange onUserChange failed:", err);
-        } finally {
-          if (mounted) setIsLoaded(true);
+      try {
+        await onUserChange(user);
+      } catch (err) {
+        logger.error("[useLibraryAuth] onUserChange failed:", err);
+      } finally {
+        if (!cancelled) {
+          prevUserIdRef.current = nextId;
+          setIsLoaded(true);
         }
       }
-    });
+    })();
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase]);
+  }, [user, authLoaded]);
 
   return { user, isLoaded };
 }
