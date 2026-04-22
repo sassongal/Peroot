@@ -554,9 +554,13 @@ export function PromptGraphView({
     [savePositions],
   );
 
+  // Set drag flag only when the node actually moves (not on plain click mouseup)
+  const handleNodeDrag = useCallback(() => {
+    hasDraggedRef.current = true;
+  }, []);
+
   // Pin the node at its dragged position so it stays put
   const handleNodeDragEnd = useCallback((node: GraphNode) => {
-    hasDraggedRef.current = true;
     node.fx = node.x;
     node.fy = node.y;
     node.fz = node.z;
@@ -1413,6 +1417,7 @@ export function PromptGraphView({
             linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
             linkDirectionalParticleColor={linkDirectionalParticleColor as any}
             onNodeClick={handleNodeClick as any}
+            onNodeDrag={handleNodeDrag as any}
             onNodeDragEnd={handleNodeDragEnd as any}
             onNodeHover={handleNodeHover as any}
             onBackgroundClick={handleBackgroundClick as any}
