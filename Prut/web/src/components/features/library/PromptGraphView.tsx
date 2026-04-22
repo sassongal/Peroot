@@ -22,7 +22,7 @@ if (typeof window !== "undefined") {
   };
   if (!proto.roundRect) {
     proto.roundRect = function (x, y, w, h, r) {
-      const radius = typeof r === "number" ? r : (Array.isArray(r) ? (r as number[])[0] ?? 0 : 0);
+      const radius = typeof r === "number" ? r : Array.isArray(r) ? ((r as number[])[0] ?? 0) : 0;
       const rx = Math.min(radius, w / 2, h / 2);
       this.beginPath();
       this.moveTo(x + rx, y);
@@ -258,12 +258,15 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
     });
   }, [graphData.nodes]);
 
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    savePositions();
-    if (node.type === "prompt" && node.prompt) {
-      setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
-    }
-  }, [savePositions]);
+  const handleNodeClick = useCallback(
+    (node: GraphNode) => {
+      savePositions();
+      if (node.type === "prompt" && node.prompt) {
+        setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
+      }
+    },
+    [savePositions],
+  );
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
     setHoverNode(node);
@@ -627,11 +630,11 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
           }}
           onSaveTitle={async (id, title) => {
             await updatePrompt(id, { title });
-            setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, title } : prev);
+            setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
           }}
           onSaveTags={async (id, tags) => {
             await updateTags(id, tags);
-            setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, tags } : prev);
+            setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
           }}
         />
       </div>
@@ -652,11 +655,11 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt }: Props) {
             }}
             onSaveTitle={async (id, title) => {
               await updatePrompt(id, { title });
-              setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, title } : prev);
+              setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
             }}
             onSaveTags={async (id, tags) => {
               await updateTags(id, tags);
-              setSelectedPrompt((prev) => prev && prev.id === id ? { ...prev, tags } : prev);
+              setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
             }}
           />
         </div>
@@ -706,9 +709,14 @@ function SelectedPromptPanel({
 
   const handleSaveTitle = async () => {
     const trimmed = titleDraft.trim();
-    if (!trimmed || trimmed === prompt.title) { setEditingTitle(false); return; }
+    if (!trimmed || trimmed === prompt.title) {
+      setEditingTitle(false);
+      return;
+    }
     setSavingTitle(true);
-    try { await onSaveTitle(prompt.id, trimmed); } finally {
+    try {
+      await onSaveTitle(prompt.id, trimmed);
+    } finally {
       setSavingTitle(false);
       setEditingTitle(false);
     }
@@ -716,17 +724,28 @@ function SelectedPromptPanel({
 
   const handleAddTag = async () => {
     const tag = tagInput.trim().toLowerCase();
-    if (!tag || prompt.tags?.includes(tag)) { setTagInput(""); return; }
+    if (!tag || prompt.tags?.includes(tag)) {
+      setTagInput("");
+      return;
+    }
     const newTags = [...(prompt.tags ?? []), tag];
     setSavingTags(true);
     setTagInput("");
-    try { await onSaveTags(prompt.id, newTags); } finally { setSavingTags(false); }
+    try {
+      await onSaveTags(prompt.id, newTags);
+    } finally {
+      setSavingTags(false);
+    }
   };
 
   const handleRemoveTag = async (tag: string) => {
     const newTags = (prompt.tags ?? []).filter((t) => t !== tag);
     setSavingTags(true);
-    try { await onSaveTags(prompt.id, newTags); } finally { setSavingTags(false); }
+    try {
+      await onSaveTags(prompt.id, newTags);
+    } finally {
+      setSavingTags(false);
+    }
   };
 
   return (
@@ -738,15 +757,25 @@ function SelectedPromptPanel({
               ref={titleRef}
               value={titleDraft}
               onChange={(e) => setTitleDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(); if (e.key === "Escape") setEditingTitle(false); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveTitle();
+                if (e.key === "Escape") setEditingTitle(false);
+              }}
               className="flex-1 min-w-0 text-sm font-semibold text-white bg-white/10 rounded-md px-2 py-0.5 outline-none border border-white/20 focus:border-amber-400/60"
               disabled={savingTitle}
               dir="auto"
             />
-            <button onClick={handleSaveTitle} disabled={savingTitle} className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-white/10">
+            <button
+              onClick={handleSaveTitle}
+              disabled={savingTitle}
+              className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-white/10"
+            >
               <Check className="w-3.5 h-3.5" />
             </button>
-            <button onClick={() => setEditingTitle(false)} className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10">
+            <button
+              onClick={() => setEditingTitle(false)}
+              className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10"
+            >
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -821,7 +850,9 @@ function SelectedPromptPanel({
             <input
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddTag();
+              }}
               placeholder="+ תגית חדשה"
               disabled={savingTags}
               dir="auto"

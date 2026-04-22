@@ -47,17 +47,21 @@ export function useLibraryAuth({
 
     async function init() {
       if (!mounted) return;
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      if (!mounted) return;
-
-      userRef.current = currentUser;
-      setUser(currentUser);
       try {
-        await onUserChange(currentUser);
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        if (!mounted) return;
+
+        userRef.current = currentUser;
+        setUser(currentUser);
+        try {
+          await onUserChange(currentUser);
+        } catch (err) {
+          logger.error("[useLibraryAuth] onUserChange failed:", err);
+        }
       } catch (err) {
-        logger.error("[useLibraryAuth] onUserChange failed:", err);
+        logger.error("[useLibraryAuth] init getUser failed:", err);
       } finally {
         if (mounted) setIsLoaded(true);
       }

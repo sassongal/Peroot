@@ -175,12 +175,12 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       ) {
         throw new Error(`ניתן לצרף עד ${limits.maxUrls} כתובות URL`);
       }
-      pendingCounts.current.url++;
       try {
         new URL(url);
       } catch {
         throw new Error("כתובת URL לא תקינה");
       }
+      pendingCounts.current.url++;
 
       const id = generateId();
       const parsed = new URL(url);
