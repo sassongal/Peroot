@@ -101,6 +101,32 @@ export function PromptGraphView({
     } catch {}
   }, []);
 
+  // Info banner — shown once, dismissible
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return !!localStorage.getItem("peroot:graph-banner-seen");
+    } catch {
+      return false;
+    }
+  });
+  const dismissBanner = useCallback(() => {
+    setBannerDismissed(true);
+    try {
+      localStorage.setItem("peroot:graph-banner-seen", "1");
+    } catch {}
+  }, []);
+
+  // Sync selectedPrompt with fresh library data so pin/folder/title updates
+  // made inside the card are reflected without reopening it.
+  useEffect(() => {
+    if (!selectedPrompt) return;
+    const fresh = prompts.find((p) => p.id === selectedPrompt.id);
+    if (fresh) setSelectedPrompt(fresh);
+    // prompts is the only dep — intentionally omit selectedPrompt to avoid loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompts]);
+
   // Measure container with debounce
   useEffect(() => {
     const el = containerRef.current;
@@ -562,18 +588,42 @@ export function PromptGraphView({
   );
 
   return (
-    <div
-      className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/10 backdrop-blur-sm"
-      style={{
-        background: isDark
-          ? "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.06) 35%, rgba(2,6,23,0.55) 75%), " +
-            "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.08) 0%, transparent 70%), " +
-            "linear-gradient(180deg, rgba(2,6,23,0.55), rgba(2,6,23,0.75))"
-          : "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.07) 0%, rgba(59,130,246,0.05) 35%, rgba(241,245,249,0.90) 75%), " +
-            "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.05) 0%, transparent 70%), " +
-            "linear-gradient(180deg, rgba(248,250,252,0.85), rgba(241,245,249,0.95))",
-      }}
-    >
+    <div className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/10 flex flex-col">
+      {/* Graph info banner — shown once, dismissible */}
+      {!bannerDismissed && (
+        <div
+          className="flex-shrink-0 flex items-start gap-2.5 px-4 py-2.5 border-b border-slate-200/60 dark:border-white/10 bg-amber-50/90 dark:bg-amber-500/5"
+          dir="rtl"
+        >
+          <BarChart2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <p className="flex-1 text-[12px] leading-relaxed text-slate-700 dark:text-slate-300">
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
+              גרף קשרי הפרומפטים —{" "}
+            </span>
+            כל פרומפט מיוצג כצומת צבעוני לפי סוג. קשרים מראים תגיות משותפות, משתנים, קטגוריה, וקרבה בזמן. לחץ על צומת לפתיחת פרטים · גרור לסידור מחדש · צבוט להגדלה.
+          </p>
+          <button
+            onClick={dismissBanner}
+            className="p-1 shrink-0 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded transition-colors"
+            aria-label="סגור הסבר"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+      {/* Graph area */}
+      <div
+        className="relative flex-1 backdrop-blur-sm"
+        style={{
+          background: isDark
+            ? "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.06) 35%, rgba(2,6,23,0.55) 75%), " +
+              "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.08) 0%, transparent 70%), " +
+              "linear-gradient(180deg, rgba(2,6,23,0.55), rgba(2,6,23,0.75))"
+            : "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.07) 0%, rgba(59,130,246,0.05) 35%, rgba(241,245,249,0.90) 75%), " +
+              "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.05) 0%, transparent 70%), " +
+              "linear-gradient(180deg, rgba(248,250,252,0.85), rgba(241,245,249,0.95))",
+        }}
+      >
       {/* Subtle dotted grid overlay for depth */}
       <div
         aria-hidden="true"
@@ -770,8 +820,12 @@ export function PromptGraphView({
             dir="rtl"
           >
             <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-black/70 backdrop-blur-xl px-5 py-4 text-center shadow-xl pointer-events-auto">
-              <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">אין תוצאות לסינון הנוכחי</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">נסה לנקות את הסינון או החיפוש</p>
+              <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">
+                אין תוצאות לסינון הנוכחי
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                נסה לנקות את הסינון או החיפוש
+              </p>
               <button
                 onClick={() => {
                   setSearchQuery("");
@@ -892,7 +946,9 @@ export function PromptGraphView({
 
       {/* Legend — desktop: bottom-left, mobile: hidden */}
       <div className="hidden md:flex absolute bottom-4 left-4 flex-col gap-2 bg-white/85 dark:bg-black/65 backdrop-blur-md rounded-xl px-3 py-2.5 border border-slate-200/60 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 z-10 select-none">
-        <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] mb-0.5">מקרא</div>
+        <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] mb-0.5">
+          מקרא
+        </div>
         <div className="flex flex-col gap-1">
           {Object.entries(CAPABILITY_COLORS).map(([mode, color]) => (
             <div key={mode} className="flex items-center gap-2">
@@ -1092,6 +1148,7 @@ export function PromptGraphView({
           {describeEdge(hoverLink)}
         </div>
       )}
+      </div>{/* end graph area */}
     </div>
   );
 }

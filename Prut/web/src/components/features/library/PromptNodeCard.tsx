@@ -18,6 +18,7 @@ import {
   Trash2,
   FolderInput,
   History,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { PersonalPrompt } from "@/lib/types";
@@ -65,10 +66,12 @@ export function PromptNodeCard({
   const [savingTags, setSavingTags] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [folderPickerOpen, setFolderPickerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const folderPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (prompt) setTitleDraft(prompt.title);
@@ -95,6 +98,17 @@ export function PromptNodeCard({
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!folderPickerOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (folderPickerRef.current && !folderPickerRef.current.contains(e.target as Node)) {
+        setFolderPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [folderPickerOpen]);
 
   const handleSaveTitle = useCallback(async () => {
     if (!prompt) return;
@@ -476,11 +490,48 @@ export function PromptNodeCard({
           )}
         </div>
 
-        {prompt.personal_category && (
-          <div className="text-[11px] text-slate-500">
-            תיקייה: <span className="text-slate-300">{prompt.personal_category}</span>
-          </div>
-        )}
+        {/* Folder — inline picker */}
+        <div ref={folderPickerRef} className="relative">
+          <button
+            onClick={() => setFolderPickerOpen((v) => !v)}
+            className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors group"
+          >
+            <FolderInput className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              תיקייה:{" "}
+              <span className="text-slate-200 group-hover:text-amber-300 transition-colors">
+                {prompt.personal_category || "ללא תיקייה"}
+              </span>
+            </span>
+            <ChevronDown
+              className={`w-3 h-3 transition-transform ${folderPickerOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {folderPickerOpen && (
+            <div className="absolute top-full mt-1 right-0 w-52 rounded-xl border border-white/15 bg-slate-900/98 backdrop-blur-md shadow-2xl z-20 overflow-hidden">
+              {personalCategories.length === 0 ? (
+                <div className="px-4 py-3 text-[11px] text-slate-500">אין תיקיות</div>
+              ) : (
+                personalCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      handleMove(cat);
+                      setFolderPickerOpen(false);
+                    }}
+                    disabled={cat === prompt.personal_category}
+                    className="w-full px-4 py-2 text-[11px] text-right text-slate-300 hover:bg-white/8 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-between"
+                  >
+                    {cat}
+                    {cat === prompt.personal_category && (
+                      <Check className="w-3 h-3 text-amber-400" />
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Footer — primary + secondary actions */}

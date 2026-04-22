@@ -64,7 +64,7 @@ export function VersionHistoryModal({ promptId, promptTitle, onClose, onRestore 
   }
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
       <div
         className="bg-[#111] border border-(--glass-border) rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl mx-4 flex flex-col animate-in slide-in-from-bottom-4 duration-300"
         onClick={e => e.stopPropagation()}
