@@ -1408,7 +1408,7 @@ export function PromptGraphView({
             onEngineStop={handle3DEngineStop}
             backgroundColor="rgba(2,6,23,0)"
             showNavInfo={false}
-            enableNodeDrag
+            enableNodeDrag={false}
             enableNavigationControls
             controlType="orbit"
             cooldownTicks={200}
