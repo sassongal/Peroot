@@ -600,7 +600,8 @@ export function PromptGraphView({
             <span className="font-semibold text-slate-800 dark:text-slate-200">
               גרף קשרי הפרומפטים —{" "}
             </span>
-            כל פרומפט מיוצג כצומת צבעוני לפי סוג. קשרים מראים תגיות משותפות, משתנים, קטגוריה, וקרבה בזמן. לחץ על צומת לפתיחת פרטים · גרור לסידור מחדש · צבוט להגדלה.
+            כל פרומפט מיוצג כצומת צבעוני לפי סוג. קשרים מראים תגיות משותפות, משתנים, קטגוריה, וקרבה
+            בזמן. לחץ על צומת לפתיחת פרטים · גרור לסידור מחדש · צבוט להגדלה.
           </p>
           <button
             onClick={dismissBanner}
@@ -624,448 +625,338 @@ export function PromptGraphView({
               "linear-gradient(180deg, rgba(248,250,252,0.85), rgba(241,245,249,0.95))",
         }}
       >
-      {/* Subtle dotted grid overlay for depth */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
-        style={{
-          backgroundImage: isDark
-            ? "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)"
-            : "radial-gradient(rgba(0,0,0,0.10) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
-      />
-      {/* Feature 2 — search + filter bar */}
-      <div
-        className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
-        dir="rtl"
-      >
-        {/* Row 1 (mobile): search input + fit button */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 md:flex-initial">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="חפש פרומפט… (/)"
-              className="w-full md:w-60 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:bg-white dark:focus:bg-white/10 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
-                aria-label="נקה חיפוש"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+        {/* Subtle dotted grid overlay for depth */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
+          style={{
+            backgroundImage: isDark
+              ? "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)"
+              : "radial-gradient(rgba(0,0,0,0.10) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+        {/* Feature 2 — search + filter bar */}
+        <div
+          className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
+          dir="rtl"
+        >
+          {/* Row 1 (mobile): search input + fit button */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 md:flex-initial">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="חפש פרומפט… (/)"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                className="w-full md:w-60 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:bg-white dark:focus:bg-white/10 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                  aria-label="נקה חיפוש"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {/* Fit button in row 1 on mobile only */}
+            <button
+              onClick={handleFitView}
+              className="md:hidden shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
+              title="התאם לתצוגה"
+              aria-label="התאם לתצוגה"
+            >
+              התאם
+            </button>
           </div>
-          {/* Fit button in row 1 on mobile only */}
+          {/* Row 2 (mobile): capability chips + favorites — horizontal scroll; desktop: flex-wrap continues the row */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-nowrap md:flex-wrap pb-0.5 md:pb-0">
+            {(Object.keys(CAPABILITY_LABELS) as CapabilityMode[]).map((cap) => {
+              const active = capabilityFilter.has(cap);
+              return (
+                <button
+                  key={cap}
+                  onClick={() =>
+                    setCapabilityFilter((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(cap)) next.delete(cap);
+                      else next.add(cap);
+                      return next;
+                    })
+                  }
+                  className={cn(
+                    "shrink-0 text-[11px] px-2 py-1 rounded-md border transition-colors",
+                    active
+                      ? "border-transparent text-black font-semibold"
+                      : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8",
+                  )}
+                  style={active ? { backgroundColor: CAPABILITY_COLORS[cap] } : undefined}
+                  title={CAPABILITY_LABELS[cap]}
+                >
+                  {CAPABILITY_LABELS[cap]}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setFavOnly((v) => !v)}
+              className={cn(
+                "shrink-0 text-[11px] px-2 py-1 rounded-md border flex items-center gap-1 transition-colors",
+                favOnly
+                  ? "bg-amber-400/90 border-transparent text-black font-semibold"
+                  : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8",
+              )}
+              aria-pressed={favOnly}
+            >
+              <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
+              מועדפים
+            </button>
+          </div>
+          {/* Fit button on desktop only */}
           <button
             onClick={handleFitView}
-            className="md:hidden shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
+            className="hidden md:block shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
             title="התאם לתצוגה"
             aria-label="התאם לתצוגה"
           >
             התאם
           </button>
         </div>
-        {/* Row 2 (mobile): capability chips + favorites — horizontal scroll; desktop: flex-wrap continues the row */}
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-nowrap md:flex-wrap pb-0.5 md:pb-0">
-          {(Object.keys(CAPABILITY_LABELS) as CapabilityMode[]).map((cap) => {
-            const active = capabilityFilter.has(cap);
-            return (
+
+        {/* Filter chips — always-visible summary of active filters with
+          individual remove buttons. Easier than reading button states. */}
+        {(searchQuery || capabilityFilter.size > 0 || favOnly) && (
+          <div
+            className="absolute top-[4.5rem] md:top-14 inset-x-3 md:inset-x-auto md:right-3 z-20 flex flex-wrap items-center gap-1.5"
+            dir="rtl"
+          >
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-[10px] px-2 py-1 rounded-full bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-200 border border-amber-400/40 dark:border-amber-400/30 hover:bg-amber-200/80 dark:hover:bg-amber-500/30 transition-colors flex items-center gap-1"
+              >
+                <span>חיפוש: {searchQuery}</span>
+                <X className="w-2.5 h-2.5" />
+              </button>
+            )}
+            {Array.from(capabilityFilter).map((cap) => (
               <button
                 key={cap}
                 onClick={() =>
                   setCapabilityFilter((prev) => {
                     const next = new Set(prev);
-                    if (next.has(cap)) next.delete(cap);
-                    else next.add(cap);
+                    next.delete(cap);
                     return next;
                   })
                 }
-                className={cn(
-                  "shrink-0 text-[11px] px-2 py-1 rounded-md border transition-colors",
-                  active
-                    ? "border-transparent text-black font-semibold"
-                    : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8",
-                )}
-                style={active ? { backgroundColor: CAPABILITY_COLORS[cap] } : undefined}
-                title={CAPABILITY_LABELS[cap]}
+                className="text-[10px] px-2 py-1 rounded-full text-black font-semibold border border-transparent hover:opacity-85 transition-opacity flex items-center gap-1"
+                style={{ backgroundColor: CAPABILITY_COLORS[cap] }}
               >
-                {CAPABILITY_LABELS[cap]}
+                <span>{CAPABILITY_LABELS[cap]}</span>
+                <X className="w-2.5 h-2.5" />
               </button>
-            );
-          })}
-          <button
-            onClick={() => setFavOnly((v) => !v)}
-            className={cn(
-              "shrink-0 text-[11px] px-2 py-1 rounded-md border flex items-center gap-1 transition-colors",
-              favOnly
-                ? "bg-amber-400/90 border-transparent text-black font-semibold"
-                : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8",
-            )}
-            aria-pressed={favOnly}
-          >
-            <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
-            מועדפים
-          </button>
-        </div>
-        {/* Fit button on desktop only */}
-        <button
-          onClick={handleFitView}
-          className="hidden md:block shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
-          title="התאם לתצוגה"
-          aria-label="התאם לתצוגה"
-        >
-          התאם
-        </button>
-      </div>
-
-      {/* Filter chips — always-visible summary of active filters with
-          individual remove buttons. Easier than reading button states. */}
-      {(searchQuery || capabilityFilter.size > 0 || favOnly) && (
-        <div
-          className="absolute top-[4.5rem] md:top-14 inset-x-3 md:inset-x-auto md:right-3 z-20 flex flex-wrap items-center gap-1.5"
-          dir="rtl"
-        >
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="text-[10px] px-2 py-1 rounded-full bg-amber-100/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-200 border border-amber-400/40 dark:border-amber-400/30 hover:bg-amber-200/80 dark:hover:bg-amber-500/30 transition-colors flex items-center gap-1"
-            >
-              <span>חיפוש: {searchQuery}</span>
-              <X className="w-2.5 h-2.5" />
-            </button>
-          )}
-          {Array.from(capabilityFilter).map((cap) => (
-            <button
-              key={cap}
-              onClick={() =>
-                setCapabilityFilter((prev) => {
-                  const next = new Set(prev);
-                  next.delete(cap);
-                  return next;
-                })
-              }
-              className="text-[10px] px-2 py-1 rounded-full text-black font-semibold border border-transparent hover:opacity-85 transition-opacity flex items-center gap-1"
-              style={{ backgroundColor: CAPABILITY_COLORS[cap] }}
-            >
-              <span>{CAPABILITY_LABELS[cap]}</span>
-              <X className="w-2.5 h-2.5" />
-            </button>
-          ))}
-          {favOnly && (
-            <button
-              onClick={() => setFavOnly(false)}
-              className="text-[10px] px-2 py-1 rounded-full bg-amber-400/90 text-black font-semibold border border-transparent hover:bg-amber-400 transition-colors flex items-center gap-1"
-            >
-              <Star className="w-2.5 h-2.5 fill-black" />
-              <span>מועדפים</span>
-              <X className="w-2.5 h-2.5" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Feature 6 — first-visit hint */}
-      {showHint && (
-        <div
-          onClick={dismissHint}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-full border border-slate-200/60 dark:border-white/15 bg-white/85 dark:bg-black/75 backdrop-blur-xl px-4 py-2 text-xs text-slate-700 dark:text-slate-200 shadow-xl cursor-pointer"
-          dir="rtl"
-        >
-          טיפ: <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">/</kbd> חיפוש ·{" "}
-          <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
-          <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">F</kbd> מועדפים ·{" "}
-          <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">R</kbd> רעיון מחדש
-        </div>
-      )}
-
-      {/* Loading overlay while fetching all prompts */}
-      {isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-white/50 dark:bg-black/40 backdrop-blur-sm">
-          <div className="w-10 h-10 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">טוען את כל הפרומפטים לגרף...</p>
-        </div>
-      )}
-
-      {/* Stats HUD — tells the user what they're actually looking at. */}
-      {!isLoading && graphData.nodes.length > 0 && (
-        <div
-          className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 shadow-lg pointer-events-none"
-          dir="rtl"
-        >
-          <span>{visibleGraphData.nodes.filter((n) => n.type === "prompt").length} פרומפטים</span>
-          <span className="text-slate-400 dark:text-slate-600">·</span>
-          <span>{visibleGraphData.links.length} קשרים</span>
-          {matchedIds && (
-            <>
-              <span className="text-slate-400 dark:text-slate-600">·</span>
-              <span className="text-amber-300">מסונן</span>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Empty-state — filters match zero prompts. Without this the canvas
-          just goes blank and users think the feature broke. */}
-      {!isLoading &&
-        matchedIds !== null &&
-        visibleGraphData.nodes.filter((n) => n.type === "prompt").length === 0 && (
-          <div
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 pointer-events-none"
-            dir="rtl"
-          >
-            <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-black/70 backdrop-blur-xl px-5 py-4 text-center shadow-xl pointer-events-auto">
-              <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">
-                אין תוצאות לסינון הנוכחי
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                נסה לנקות את הסינון או החיפוש
-              </p>
+            ))}
+            {favOnly && (
               <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setCapabilityFilter(new Set());
-                  setFavOnly(false);
-                }}
-                className="mt-3 text-[11px] px-3 py-1 rounded-md bg-amber-400 text-black font-semibold hover:bg-amber-300 transition-colors cursor-pointer"
+                onClick={() => setFavOnly(false)}
+                className="text-[10px] px-2 py-1 rounded-full bg-amber-400/90 text-black font-semibold border border-transparent hover:bg-amber-400 transition-colors flex items-center gap-1"
               >
-                נקה סינון
+                <Star className="w-2.5 h-2.5 fill-black" />
+                <span>מועדפים</span>
+                <X className="w-2.5 h-2.5" />
               </button>
-            </div>
+            )}
           </div>
         )}
-      <div
-        ref={containerRef}
-        onPointerMove={handlePointerMove}
-        onPointerDown={handleContainerPointerDown}
-        onPointerUp={handleContainerPointerUp}
-        className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
-      >
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <ForceGraph3D
-          key="fg-3d"
-          ref={fg3dRef as any}
-          graphData={visibleGraphData as any}
-          width={dimensions.width}
-          height={dimensions.height}
-          nodeId="id"
-          nodeLabel={((n: GraphNode) => n.label) as any}
-          nodeVal={
-            ((n: GraphNode) => {
-              if (n.type === "tag") return 3;
-              if (n.type === "library") return 5;
-              return Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4));
-            }) as any
-          }
-          nodeColor={
-            ((n: GraphNode) => {
-              if (n.type === "tag") return "#f59e0b"; // amber — matches legend
-              if (n.type === "library") return "#a855f7"; // purple — matches legend
-              return CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
-            }) as any
-          }
-          nodeOpacity={0.95}
-          nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
-          linkColor={linkColor as any}
-          linkWidth={linkWidth as any}
-          linkOpacity={1}
-          linkDirectionalParticles={linkDirectionalParticles as any}
-          linkDirectionalParticleWidth={linkDirectionalParticleWidth as any}
-          linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
-          linkDirectionalParticleColor={linkDirectionalParticleColor as any}
-          onNodeClick={handleNodeClick as any}
-          onNodeDragEnd={handleNodeDragEnd as any}
-          onNodeHover={handleNodeHover as any}
-          onBackgroundClick={handleBackgroundClick as any}
-          onEngineStop={handle3DEngineStop}
-          backgroundColor="rgba(2,6,23,0)"
-          showNavInfo={false}
-          enableNodeDrag
-          enableNavigationControls
-          controlType="orbit"
-          cooldownTicks={200}
-          warmupTicks={60}
-          d3AlphaDecay={0.018}
-          d3VelocityDecay={0.28}
-          rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-        />
-      </div>
 
-      {/* Floating hover tooltip — shows a peek card next to the cursor */}
-      {hoverNode && hoverPos && hoverNode.type === "prompt" && hoverNode.prompt && (
-        <div
-          className="pointer-events-none absolute z-30 max-w-[240px] rounded-xl border border-slate-200/60 dark:border-white/15 bg-white/95 dark:bg-black/85 backdrop-blur-xl px-3 py-2 shadow-2xl text-right"
-          style={{
-            // Clamp into [8, width-250]. Outer max(8, ...) covers the case
-            // where the container is narrower than the tooltip itself.
-            left: Math.max(8, Math.min(dimensions.width - 250, hoverPos.x + 16)),
-            top: Math.max(8, Math.min(dimensions.height - 120, hoverPos.y + 16)),
-          }}
-          dir="rtl"
-        >
-          <div className="flex items-center gap-1.5 mb-1">
-            <span
-              className="inline-block w-2 h-2 rounded-full shrink-0"
-              style={{
-                backgroundColor: CAPABILITY_COLORS[hoverNode.capability ?? CapabilityMode.STANDARD],
-              }}
-            />
-            <span className="text-[10px] font-medium text-slate-400">
-              {CAPABILITY_LABELS[hoverNode.capability ?? CapabilityMode.STANDARD]}
-            </span>
-            {hoverNode.isFavorite && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
-            {hoverNode.isTemplate && <BookTemplate className="w-3 h-3 text-cyan-400" />}
+        {/* Feature 6 — first-visit hint */}
+        {showHint && (
+          <div
+            onClick={dismissHint}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-full border border-slate-200/60 dark:border-white/15 bg-white/85 dark:bg-black/75 backdrop-blur-xl px-4 py-2 text-xs text-slate-700 dark:text-slate-200 shadow-xl cursor-pointer"
+            dir="rtl"
+          >
+            טיפ: <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">/</kbd> חיפוש ·{" "}
+            <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
+            <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">F</kbd> מועדפים ·{" "}
+            <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">R</kbd> רעיון מחדש
           </div>
-          <div className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-snug">
-            {hoverNode.label}
-          </div>
-          {hoverNode.prompt.personal_category && (
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-              {hoverNode.prompt.personal_category}
-            </div>
-          )}
-          {(hoverNode.prompt.tags ?? []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {(hoverNode.prompt.tags ?? []).slice(0, 4).map((t) => (
-                <span
-                  key={t}
-                  className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/8 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {/* Legend — desktop: bottom-left, mobile: hidden */}
-      <div className="hidden md:flex absolute bottom-4 left-4 flex-col gap-2 bg-white/85 dark:bg-black/65 backdrop-blur-md rounded-xl px-3 py-2.5 border border-slate-200/60 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 z-10 select-none">
-        <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] mb-0.5">
-          מקרא
-        </div>
-        <div className="flex flex-col gap-1">
-          {Object.entries(CAPABILITY_COLORS).map(([mode, color]) => (
-            <div key={mode} className="flex items-center gap-2">
-              <div
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: color }}
-              />
-              <span>{CAPABILITY_LABELS[mode as CapabilityMode]}</span>
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-slate-200/60 dark:border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-5 h-[2px] rounded shrink-0"
-              style={{ background: "rgba(45,212,191,0.9)" }}
-            />
-            <span>דמיון תוכן</span>
+        {/* Loading overlay while fetching all prompts */}
+        {isLoading && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-white/50 dark:bg-black/40 backdrop-blur-sm">
+            <div className="w-10 h-10 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              טוען את כל הפרומפטים לגרף...
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-5 h-[2px] rounded shrink-0"
-              style={{ background: "rgba(245,158,11,0.9)" }}
-            />
-            <span>תגית משותפת</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-5 h-[2px] shrink-0"
-              style={{
-                background:
-                  "repeating-linear-gradient(90deg,rgba(34,211,238,0.8) 0 4px,transparent 4px 7px)",
-              }}
-            />
-            <span>משתנה משותף</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-5 h-[2px] rounded shrink-0"
-              style={{ background: "rgba(168,85,247,0.8)" }}
-            />
-            <span>ספרייה</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-5 h-[2px] shrink-0"
-              style={{
-                background:
-                  "repeating-linear-gradient(90deg,rgba(148,163,184,0.6) 0 2px,transparent 2px 6px)",
-              }}
-            />
-            <span>נוצרו יחד</span>
-          </div>
-        </div>
-        <div className="border-t border-slate-200/60 dark:border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-400 shrink-0" />
-            <span>מועדף / מוצמד</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-2.5 h-2.5 rounded-full border border-cyan-400 shrink-0"
-              style={{ borderStyle: "dashed" }}
-            />
-            <span>תבנית</span>
-          </div>
-        </div>
-      </div>
+        )}
 
-      {/* Node count hint */}
-      <div className="hidden sm:block absolute top-3 right-3 bg-white/80 dark:bg-black/55 backdrop-blur-sm text-slate-600 dark:text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/8 z-10 select-none leading-tight">
-        <div>{prompts.length} פרומפטים</div>
-        <div className="text-slate-400 dark:text-slate-500">גלגלת להגדלה · גרור להזזה</div>
-      </div>
+        {/* Stats HUD — tells the user what they're actually looking at. */}
+        {!isLoading && graphData.nodes.length > 0 && (
+          <div
+            className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 shadow-lg pointer-events-none"
+            dir="rtl"
+          >
+            <span>{visibleGraphData.nodes.filter((n) => n.type === "prompt").length} פרומפטים</span>
+            <span className="text-slate-400 dark:text-slate-600">·</span>
+            <span>{visibleGraphData.links.length} קשרים</span>
+            {matchedIds && (
+              <>
+                <span className="text-slate-400 dark:text-slate-600">·</span>
+                <span className="text-amber-300">מסונן</span>
+              </>
+            )}
+          </div>
+        )}
 
-      {/* Truncation banner — library exceeds row cap */}
-      {truncatedAt && (
-        <div
-          role="status"
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-amber-100/70 dark:bg-amber-500/15 backdrop-blur-sm text-amber-700 dark:text-amber-200 text-[11px] px-3 py-1.5 rounded-full border border-amber-400/50 dark:border-amber-400/30 select-none"
-          dir="rtl"
-        >
-          מציג {truncatedAt.shown} מתוך {truncatedAt.total} פרומפטים
-        </div>
-      )}
-
-      {/* Mobile legend toggle pill */}
-      <button
-        type="button"
-        onClick={() => setMobileLegendOpen((o) => !o)}
-        className="md:hidden absolute bottom-4 left-4 z-20 flex items-center gap-1.5 bg-white/85 dark:bg-black/75 backdrop-blur-md text-slate-700 dark:text-slate-200 text-[11px] px-3 py-2 rounded-full border border-slate-200/60 dark:border-white/15 shadow-lg active:scale-95 transition-transform"
-        aria-label="מקרא"
-        aria-expanded={mobileLegendOpen}
-      >
-        <span
-          className="inline-block w-2 h-2 rounded-full bg-amber-400"
-          style={{ boxShadow: "0 0 8px rgba(251,191,36,0.8)" }}
-        />
-        מקרא
-      </button>
-
-      {mobileLegendOpen && (
-        <div
-          className="md:hidden absolute bottom-16 left-4 right-4 z-20 bg-white/95 dark:bg-black/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-white/15 p-4 shadow-2xl text-slate-700 dark:text-slate-200 text-xs"
-          dir="rtl"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-semibold">מקרא הגרף</span>
-            <button
-              onClick={() => setMobileLegendOpen(false)}
-              aria-label="סגור"
-              className="p-1 -m-1 rounded hover:bg-white/10"
+        {/* Empty-state — filters match zero prompts. Without this the canvas
+          just goes blank and users think the feature broke. */}
+        {!isLoading &&
+          matchedIds !== null &&
+          visibleGraphData.nodes.filter((n) => n.type === "prompt").length === 0 && (
+            <div
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 pointer-events-none"
+              dir="rtl"
             >
-              <X className="w-4 h-4" />
-            </button>
+              <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-black/70 backdrop-blur-xl px-5 py-4 text-center shadow-xl pointer-events-auto">
+                <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">
+                  אין תוצאות לסינון הנוכחי
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  נסה לנקות את הסינון או החיפוש
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setCapabilityFilter(new Set());
+                    setFavOnly(false);
+                  }}
+                  className="mt-3 text-[11px] px-3 py-1 rounded-md bg-amber-400 text-black font-semibold hover:bg-amber-300 transition-colors cursor-pointer"
+                >
+                  נקה סינון
+                </button>
+              </div>
+            </div>
+          )}
+        <div
+          ref={containerRef}
+          onPointerMove={handlePointerMove}
+          onPointerDown={handleContainerPointerDown}
+          onPointerUp={handleContainerPointerUp}
+          className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
+        >
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <ForceGraph3D
+            key="fg-3d"
+            ref={fg3dRef as any}
+            graphData={visibleGraphData as any}
+            width={dimensions.width}
+            height={dimensions.height}
+            nodeId="id"
+            nodeLabel={((n: GraphNode) => n.label) as any}
+            nodeVal={
+              ((n: GraphNode) => {
+                if (n.type === "tag") return 3;
+                if (n.type === "library") return 5;
+                return Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4));
+              }) as any
+            }
+            nodeColor={
+              ((n: GraphNode) => {
+                if (n.type === "tag") return "#f59e0b"; // amber — matches legend
+                if (n.type === "library") return "#a855f7"; // purple — matches legend
+                return CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
+              }) as any
+            }
+            nodeOpacity={0.95}
+            nodeResolution={graphData.nodes.length > 80 ? 12 : 16}
+            linkColor={linkColor as any}
+            linkWidth={linkWidth as any}
+            linkOpacity={1}
+            linkDirectionalParticles={linkDirectionalParticles as any}
+            linkDirectionalParticleWidth={linkDirectionalParticleWidth as any}
+            linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
+            linkDirectionalParticleColor={linkDirectionalParticleColor as any}
+            onNodeClick={handleNodeClick as any}
+            onNodeDragEnd={handleNodeDragEnd as any}
+            onNodeHover={handleNodeHover as any}
+            onBackgroundClick={handleBackgroundClick as any}
+            onEngineStop={handle3DEngineStop}
+            backgroundColor="rgba(2,6,23,0)"
+            showNavInfo={false}
+            enableNodeDrag
+            enableNavigationControls
+            controlType="orbit"
+            cooldownTicks={200}
+            warmupTicks={60}
+            d3AlphaDecay={0.018}
+            d3VelocityDecay={0.28}
+            rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+          />
+        </div>
+
+        {/* Floating hover tooltip — shows a peek card next to the cursor */}
+        {hoverNode && hoverPos && hoverNode.type === "prompt" && hoverNode.prompt && (
+          <div
+            className="pointer-events-none absolute z-30 max-w-[240px] rounded-xl border border-slate-200/60 dark:border-white/15 bg-white/95 dark:bg-black/85 backdrop-blur-xl px-3 py-2 shadow-2xl text-right"
+            style={{
+              // Clamp into [8, width-250]. Outer max(8, ...) covers the case
+              // where the container is narrower than the tooltip itself.
+              left: Math.max(8, Math.min(dimensions.width - 250, hoverPos.x + 16)),
+              top: Math.max(8, Math.min(dimensions.height - 120, hoverPos.y + 16)),
+            }}
+            dir="rtl"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span
+                className="inline-block w-2 h-2 rounded-full shrink-0"
+                style={{
+                  backgroundColor:
+                    CAPABILITY_COLORS[hoverNode.capability ?? CapabilityMode.STANDARD],
+                }}
+              />
+              <span className="text-[10px] font-medium text-slate-400">
+                {CAPABILITY_LABELS[hoverNode.capability ?? CapabilityMode.STANDARD]}
+              </span>
+              {hoverNode.isFavorite && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
+              {hoverNode.isTemplate && <BookTemplate className="w-3 h-3 text-cyan-400" />}
+            </div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+              {hoverNode.label}
+            </div>
+            {hoverNode.prompt.personal_category && (
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                {hoverNode.prompt.personal_category}
+              </div>
+            )}
+            {(hoverNode.prompt.tags ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {(hoverNode.prompt.tags ?? []).slice(0, 4).map((t) => (
+                  <span
+                    key={t}
+                    className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/8 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-2">
+        )}
+
+        {/* Legend — desktop: bottom-left, mobile: hidden */}
+        <div className="hidden md:flex absolute bottom-4 left-4 flex-col gap-2 bg-white/85 dark:bg-black/65 backdrop-blur-md rounded-xl px-3 py-2.5 border border-slate-200/60 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 z-10 select-none">
+          <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] mb-0.5">
+            מקרא
+          </div>
+          <div className="flex flex-col gap-1">
             {Object.entries(CAPABILITY_COLORS).map(([mode, color]) => (
               <div key={mode} className="flex items-center gap-2">
                 <div
@@ -1075,80 +966,197 @@ export function PromptGraphView({
                 <span>{CAPABILITY_LABELS[mode as CapabilityMode]}</span>
               </div>
             ))}
+          </div>
+          <div className="border-t border-slate-200/60 dark:border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-400" />
-              <span>מועדף</span>
+              <div
+                className="w-5 h-[2px] rounded shrink-0"
+                style={{ background: "rgba(45,212,191,0.9)" }}
+              />
+              <span>דמיון תוכן</span>
             </div>
             <div className="flex items-center gap-2">
               <div
-                className="w-2.5 h-2.5 rounded-full border border-cyan-400"
+                className="w-5 h-[2px] rounded shrink-0"
+                style={{ background: "rgba(245,158,11,0.9)" }}
+              />
+              <span>תגית משותפת</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-5 h-[2px] shrink-0"
+                style={{
+                  background:
+                    "repeating-linear-gradient(90deg,rgba(34,211,238,0.8) 0 4px,transparent 4px 7px)",
+                }}
+              />
+              <span>משתנה משותף</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-5 h-[2px] rounded shrink-0"
+                style={{ background: "rgba(168,85,247,0.8)" }}
+              />
+              <span>ספרייה</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-5 h-[2px] shrink-0"
+                style={{
+                  background:
+                    "repeating-linear-gradient(90deg,rgba(148,163,184,0.6) 0 2px,transparent 2px 6px)",
+                }}
+              />
+              <span>נוצרו יחד</span>
+            </div>
+          </div>
+          <div className="border-t border-slate-200/60 dark:border-white/10 mt-1 pt-1.5 flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-400 shrink-0" />
+              <span>מועדף / מוצמד</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-2.5 h-2.5 rounded-full border border-cyan-400 shrink-0"
                 style={{ borderStyle: "dashed" }}
               />
               <span>תבנית</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-white/10 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            הקישו על צומת לפתיחת פרטים · צבטו להגדלה · גררו להזזה
-          </div>
         </div>
-      )}
 
-      {/* ── Selected prompt modal — fixed viewport overlay so overflow-hidden on parent doesn't clip it ── */}
-      {selectedPrompt && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
-          onClick={() => setSelectedPrompt(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="graph-modal-title"
-          dir="rtl"
-        >
+        {/* Node count hint */}
+        <div className="hidden sm:block absolute top-3 right-3 bg-white/80 dark:bg-black/55 backdrop-blur-sm text-slate-600 dark:text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/8 z-10 select-none leading-tight">
+          <div>{prompts.length} פרומפטים</div>
+          <div className="text-slate-400 dark:text-slate-500">גלגלת להגדלה · גרור להזזה</div>
+        </div>
+
+        {/* Truncation banner — library exceeds row cap */}
+        {truncatedAt && (
           <div
-            className="relative w-full max-w-2xl max-h-[88vh] md:max-h-[82vh] rounded-2xl border border-white/15 bg-slate-950/95 shadow-2xl [overflow:clip] flex flex-col animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
+            role="status"
+            className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-amber-100/70 dark:bg-amber-500/15 backdrop-blur-sm text-amber-700 dark:text-amber-200 text-[11px] px-3 py-1.5 rounded-full border border-amber-400/50 dark:border-amber-400/30 select-none"
+            dir="rtl"
           >
-            <span id="graph-modal-title" className="sr-only">
-              {CAPABILITY_LABELS[selectedPrompt.capability_mode ?? CapabilityMode.STANDARD]}
-            </span>
-            <PromptNodeCard
-              prompt={selectedPrompt}
-              backButtonRef={backBtnRef}
-              onClose={() => setSelectedPrompt(null)}
-              onUse={(p) => {
-                onUsePrompt(p);
-                setSelectedPrompt(null);
-              }}
-              onEdit={(p) => {
-                startEditingPersonalPrompt(p);
-                setSelectedPrompt(null);
-              }}
-              onSaveTitle={async (id, title) => {
-                await updatePrompt(id, { title });
-                setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
-              }}
-              onSaveTags={async (id, tags) => {
-                await updateTags(id, tags);
-                setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
-              }}
-            />
+            מציג {truncatedAt.shown} מתוך {truncatedAt.total} פרומפטים
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Feature 5 — edge hover tooltip */}
-      {hoverLink && hoverLinkPos && !hoverNode && (
-        <div
-          className="pointer-events-none absolute z-30 max-w-[260px] rounded-lg border border-slate-200/60 dark:border-white/15 bg-white/95 dark:bg-black/85 backdrop-blur-xl px-2.5 py-1.5 shadow-xl text-[11px] text-slate-800 dark:text-slate-100"
-          style={{
-            left: Math.max(8, Math.min(dimensions.width - 270, hoverLinkPos.x + 14)),
-            top: Math.max(8, Math.min(dimensions.height - 60, hoverLinkPos.y + 14)),
-          }}
-          dir="rtl"
+        {/* Mobile legend toggle pill */}
+        <button
+          type="button"
+          onClick={() => setMobileLegendOpen((o) => !o)}
+          className="md:hidden absolute bottom-4 left-4 z-20 flex items-center gap-1.5 bg-white/85 dark:bg-black/75 backdrop-blur-md text-slate-700 dark:text-slate-200 text-[11px] px-3 py-2 rounded-full border border-slate-200/60 dark:border-white/15 shadow-lg active:scale-95 transition-transform"
+          aria-label="מקרא"
+          aria-expanded={mobileLegendOpen}
         >
-          {describeEdge(hoverLink)}
-        </div>
-      )}
-      </div>{/* end graph area */}
+          <span
+            className="inline-block w-2 h-2 rounded-full bg-amber-400"
+            style={{ boxShadow: "0 0 8px rgba(251,191,36,0.8)" }}
+          />
+          מקרא
+        </button>
+
+        {mobileLegendOpen && (
+          <div
+            className="md:hidden absolute bottom-16 left-4 right-4 z-20 bg-white/95 dark:bg-black/90 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-white/15 p-4 shadow-2xl text-slate-700 dark:text-slate-200 text-xs"
+            dir="rtl"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-semibold">מקרא הגרף</span>
+              <button
+                onClick={() => setMobileLegendOpen(false)}
+                aria-label="סגור"
+                className="p-1 -m-1 rounded hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(CAPABILITY_COLORS).map(([mode, color]) => (
+                <div key={mode} className="flex items-center gap-2">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span>{CAPABILITY_LABELS[mode as CapabilityMode]}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-400" />
+                <span>מועדף</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-2.5 h-2.5 rounded-full border border-cyan-400"
+                  style={{ borderStyle: "dashed" }}
+                />
+                <span>תבנית</span>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-white/10 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              הקישו על צומת לפתיחת פרטים · צבטו להגדלה · גררו להזזה
+            </div>
+          </div>
+        )}
+
+        {/* ── Selected prompt modal — fixed viewport overlay so overflow-hidden on parent doesn't clip it ── */}
+        {selectedPrompt && (
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
+            onClick={() => setSelectedPrompt(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="graph-modal-title"
+            dir="rtl"
+          >
+            <div
+              className="relative w-full max-w-2xl max-h-[88vh] md:max-h-[82vh] rounded-2xl border border-white/15 bg-slate-950/95 shadow-2xl [overflow:clip] flex flex-col animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span id="graph-modal-title" className="sr-only">
+                {CAPABILITY_LABELS[selectedPrompt.capability_mode ?? CapabilityMode.STANDARD]}
+              </span>
+              <PromptNodeCard
+                prompt={selectedPrompt}
+                backButtonRef={backBtnRef}
+                onClose={() => setSelectedPrompt(null)}
+                onUse={(p) => {
+                  onUsePrompt(p);
+                  setSelectedPrompt(null);
+                }}
+                onEdit={(p) => {
+                  startEditingPersonalPrompt(p);
+                  setSelectedPrompt(null);
+                }}
+                onSaveTitle={async (id, title) => {
+                  await updatePrompt(id, { title });
+                  setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
+                }}
+                onSaveTags={async (id, tags) => {
+                  await updateTags(id, tags);
+                  setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Feature 5 — edge hover tooltip */}
+        {hoverLink && hoverLinkPos && !hoverNode && (
+          <div
+            className="pointer-events-none absolute z-30 max-w-[260px] rounded-lg border border-slate-200/60 dark:border-white/15 bg-white/95 dark:bg-black/85 backdrop-blur-xl px-2.5 py-1.5 shadow-xl text-[11px] text-slate-800 dark:text-slate-100"
+            style={{
+              left: Math.max(8, Math.min(dimensions.width - 270, hoverLinkPos.x + 14)),
+              top: Math.max(8, Math.min(dimensions.height - 60, hoverLinkPos.y + 14)),
+            }}
+            dir="rtl"
+          >
+            {describeEdge(hoverLink)}
+          </div>
+        )}
+      </div>
+      {/* end graph area */}
     </div>
   );
 }

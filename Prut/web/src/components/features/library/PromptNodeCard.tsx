@@ -69,6 +69,12 @@ export function PromptNodeCard({
   const [folderPickerOpen, setFolderPickerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  // Full inline edit mode
+  const [editMode, setEditMode] = useState(false);
+  const [editTitleDraft, setEditTitleDraft] = useState("");
+  const [editUseCaseDraft, setEditUseCaseDraft] = useState("");
+  const [editPromptDraft, setEditPromptDraft] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const folderPickerRef = useRef<HTMLDivElement>(null);
@@ -80,6 +86,7 @@ export function PromptNodeCard({
     setMenuOpen(false);
     setMoveOpen(false);
     setConfirmDelete(false);
+    setEditMode(false);
   }, [prompt?.id]);
 
   useEffect(() => {
@@ -211,6 +218,32 @@ export function PromptNodeCard({
     }
   }, [prompt, deletePrompts, onClose]);
 
+  const handleOpenEdit = useCallback(() => {
+    if (!prompt) return;
+    setEditTitleDraft(prompt.title);
+    setEditUseCaseDraft(prompt.use_case ?? "");
+    setEditPromptDraft(prompt.prompt);
+    setEditMode(true);
+  }, [prompt]);
+
+  const handleSaveEdit = useCallback(async () => {
+    if (!prompt) return;
+    setSavingEdit(true);
+    try {
+      await updatePrompt(prompt.id, {
+        title: editTitleDraft.trim() || prompt.title,
+        use_case: editUseCaseDraft.trim(),
+        prompt: editPromptDraft.trim() || prompt.prompt,
+      });
+      toast.success("הפרומפט עודכן");
+      setEditMode(false);
+    } catch {
+      toast.error("שגיאה בשמירה");
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [prompt, updatePrompt, editTitleDraft, editUseCaseDraft, editPromptDraft]);
+
   if (!prompt) return null;
 
   const cap = prompt.capability_mode ?? CapabilityMode.STANDARD;
@@ -338,7 +371,63 @@ export function PromptNodeCard({
         </div>
       </div>
 
-      {/* Body */}
+      {/* Inline Edit Mode — replaces body + footer */}
+      {editMode && (
+        <>
+          <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto" dir="rtl">
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-slate-400">כותרת</label>
+              <input
+                value={editTitleDraft}
+                onChange={(e) => setEditTitleDraft(e.target.value)}
+                className="w-full text-sm font-semibold text-white bg-white/8 rounded-lg px-3 py-2 border border-white/15 focus:outline-none focus:border-amber-400/60 transition-colors"
+                dir="rtl"
+                autoFocus
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-slate-400">תיאור קצר</label>
+              <input
+                value={editUseCaseDraft}
+                onChange={(e) => setEditUseCaseDraft(e.target.value)}
+                placeholder="מה הפרומפט הזה עושה?"
+                className="w-full text-sm text-white bg-white/8 rounded-lg px-3 py-2 border border-white/15 focus:outline-none focus:border-amber-400/60 transition-colors placeholder:text-slate-600"
+                dir="rtl"
+              />
+            </div>
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="text-[11px] text-slate-400">תוכן הפרומפט</label>
+              <textarea
+                value={editPromptDraft}
+                onChange={(e) => setEditPromptDraft(e.target.value)}
+                className="flex-1 min-h-[140px] text-sm text-slate-200 bg-white/8 rounded-lg px-3 py-2 border border-white/15 focus:outline-none focus:border-amber-400/60 transition-colors resize-none leading-relaxed"
+                dir="rtl"
+              />
+            </div>
+          </div>
+          <div className="px-4 pb-4 pt-3 shrink-0 border-t border-white/10 flex gap-2" dir="rtl">
+            <button
+              onClick={handleSaveEdit}
+              disabled={savingEdit}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm bg-amber-400 text-black hover:bg-amber-300 disabled:opacity-60 transition-all"
+            >
+              <Check className="w-4 h-4" />
+              {savingEdit ? "שומר..." : "שמור שינויים"}
+            </button>
+            <button
+              onClick={() => setEditMode(false)}
+              disabled={savingEdit}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-medium text-sm text-white/80 border border-white/15 hover:bg-white/8 transition-all"
+            >
+              ביטול
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Body + Footer — hidden in edit mode */}
+      {!editMode && (
+        <>
       <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto" dir="rtl">
         {/* Editable title */}
         {editingTitle ? (
@@ -550,7 +639,7 @@ export function PromptNodeCard({
             השתמש בפרומפט
           </button>
           <button
-            onClick={() => onEdit(prompt)}
+            onClick={handleOpenEdit}
             className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-medium text-sm text-white/90 border border-white/15 hover:bg-white/8 hover:border-white/25 transition-all"
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -593,6 +682,8 @@ export function PromptNodeCard({
           </button>
         </div>
       </div>
+        </>
+      )}
 
       {/* Version history modal */}
       {showHistory && (
