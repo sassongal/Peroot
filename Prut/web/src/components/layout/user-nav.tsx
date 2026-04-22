@@ -38,7 +38,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success(t.auth.logout_success);
-      window.location.href = '/?logged-out=true';
+      window.location.href = "/?logged-out=true";
     } catch (err) {
       toast.error(t.auth.logout_error + ": " + getErrorMessage(err));
     }
@@ -58,19 +58,21 @@ export function UserMenu({ user, position }: UserMenuProps) {
       return (
         <div className="relative flex items-center gap-3 animate-in fade-in duration-700">
           <div className="flex flex-col items-end hidden md:flex">
-             <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">{t.auth.guest_mode}</span>
-             </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                {t.auth.guest_mode}
+              </span>
+            </div>
           </div>
           {/* Desktop: full login button */}
           <Link
-              href="/login"
-              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 rounded-full text-sm font-semibold text-amber-900 dark:text-white transition-all group shadow-2xl cursor-pointer"
-              suppressHydrationWarning
+            href="/login"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 rounded-full text-sm font-semibold text-amber-900 dark:text-white transition-all group shadow-2xl cursor-pointer"
+            suppressHydrationWarning
           >
-              <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-400" />
-              <span>{t.auth.login_signup}</span>
+            <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform text-amber-400" />
+            <span>{t.auth.login_signup}</span>
           </Link>
           {/* Mobile: icon button with popover */}
           <button
@@ -107,10 +109,12 @@ export function UserMenu({ user, position }: UserMenuProps) {
     return (
       <div className="relative flex items-center gap-3 animate-in fade-in duration-700">
         <div className="flex flex-col items-end hidden md:flex">
-             <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">{t.auth.connected}</span>
-             </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              {t.auth.connected}
+            </span>
+          </div>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -147,89 +151,101 @@ export function UserMenu({ user, position }: UserMenuProps) {
         {isOpen && (
           <>
             {/* Backdrop to close menu */}
-            <div
-              className="fixed inset-0 z-100"
-              onClick={() => setIsOpen(false)}
-            />
+            <div className="fixed inset-0 z-100" onClick={() => setIsOpen(false)} />
             {/* Dropdown menu */}
             <div
-              onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
-              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-(--glass-border) rounded-2xl shadow-2xl overflow-hidden z-101 animate-in fade-in slide-in-from-top-2 duration-200">
-               <div className="p-4 border-b border-(--glass-border) flex flex-col gap-3 bg-(--glass-bg)">
-                   {/* Embedded Logo in Menu */}
-                   <div className="flex justify-center pb-2 border-b border-(--glass-border)">
-                        <Image src={getAssetPath("/logo.svg")} alt="לוגו פרוט" width={80} height={20} className="h-5 w-auto opacity-70" />
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-amber-500 to-red-500 overflow-hidden shrink-0 border border-(--glass-border)">
-                        {avatarUrl ? (
-                          <img
-                            src={avatarUrl}
-                            alt="תמונת פרופיל"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                            loading="eager"
-                            decoding="async"
-                            onError={(e) => {
-                              const img = e.target as HTMLImageElement;
-                              if (!img.dataset.fallback && fallbackGenerated) {
-                                img.dataset.fallback = "1";
-                                img.src = fallbackGenerated;
-                              } else {
-                                img.onerror = null;
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white font-bold opacity-60">
-                            {user.email?.[0].toUpperCase()}
-                          </div>
-                        )}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setIsOpen(false);
+              }}
+              className="fixed top-16 left-4 right-4 sm:top-20 sm:right-auto sm:w-64 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-(--glass-border) rounded-2xl shadow-2xl overflow-hidden z-101 animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <div className="p-4 border-b border-(--glass-border) flex flex-col gap-3 bg-(--glass-bg)">
+                {/* Embedded Logo in Menu */}
+                <div className="flex justify-center pb-2 border-b border-(--glass-border)">
+                  <Image
+                    src={getAssetPath("/logo.svg")}
+                    alt="לוגו פרוט"
+                    width={80}
+                    height={20}
+                    className="h-5 w-auto opacity-70"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-amber-500 to-red-500 overflow-hidden shrink-0 border border-(--glass-border)">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="תמונת פרופיל"
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                        loading="eager"
+                        decoding="async"
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          if (!img.dataset.fallback && fallbackGenerated) {
+                            img.dataset.fallback = "1";
+                            img.src = fallbackGenerated;
+                          } else {
+                            img.onerror = null;
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white font-bold opacity-60">
+                        {user.email?.[0].toUpperCase()}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-(--text-primary) truncate" title={metadata.full_name || user.email?.split('@')[0]}>
-                            {metadata.full_name || user.email?.split('@')[0]}
-                        </p>
-                        <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
-                      </div>
-                   </div>
-               </div>
-               <div className="p-2 space-y-1">
-                  {isAdmin && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setIsOpen(false)}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-blue-400 hover:bg-blue-500/10 rounded-xl transition-colors text-right"
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-sm font-bold text-(--text-primary) truncate"
+                      title={metadata.full_name || user.email?.split("@")[0]}
                     >
-                        <Shield className="w-4 h-4" />
-                        <span>Admin Dashboard</span>
-                    </Link>
-                  )}
+                      {metadata.full_name || user.email?.split("@")[0]}
+                    </p>
+                    <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-2 space-y-1">
+                {isAdmin && (
                   <Link
-                    href="/pricing"
+                    href="/admin"
                     onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-xl transition-colors text-right"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-blue-400 hover:bg-blue-500/10 rounded-xl transition-colors text-right"
                   >
-                      <Crown className="w-4 h-4" />
-                      <span>שדרג ל-Pro</span>
+                    <Shield className="w-4 h-4" />
+                    <span>Admin Dashboard</span>
                   </Link>
-                  <Link
-                    href="/settings"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-(--text-secondary) hover:bg-(--glass-bg) rounded-xl transition-colors text-right"
-                  >
-                      <Settings className="w-4 h-4" />
-                      <span>{t.auth.account_settings}</span>
-                  </Link>
-                  <div className="border-t border-(--glass-border) my-1" />
-                  <button
-                    onClick={() => { setIsOpen(false); handleSignOut(); }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors text-right"
-                  >
-                      <LogOut className="w-4 h-4" />
-                      <span>{t.auth.logout}</span>
-                  </button>
-               </div>
+                )}
+                <Link
+                  href="/pricing"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-xl transition-colors text-right"
+                >
+                  <Crown className="w-4 h-4" />
+                  <span>שדרג ל-Pro</span>
+                </Link>
+                <Link
+                  href="/settings"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-(--text-secondary) hover:bg-(--glass-bg) rounded-xl transition-colors text-right"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span>{t.auth.account_settings}</span>
+                </Link>
+                <div className="border-t border-(--glass-border) my-1" />
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleSignOut();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors text-right"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>{t.auth.logout}</span>
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -247,7 +263,9 @@ export function UserMenu({ user, position }: UserMenuProps) {
           className="flex items-center gap-2.5 group px-4 py-2 hover:bg-(--glass-bg) rounded-xl transition-all border border-transparent hover:border-(--glass-border)"
         >
           <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
-          <span className="text-sm font-semibold text-(--text-muted) group-hover:text-(--text-primary) transition-colors">{t.auth.logout}</span>
+          <span className="text-sm font-semibold text-(--text-muted) group-hover:text-(--text-primary) transition-colors">
+            {t.auth.logout}
+          </span>
         </button>
       </div>
     );

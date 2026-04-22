@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useTransition } from "react";
@@ -70,7 +69,8 @@ export function AuthForm() {
         } else {
           toast.success("התחברת בהצלחה!");
           const nextParam = new URLSearchParams(window.location.search).get("next");
-          let dest = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+          let dest =
+            nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
           if (dest.length > 2048) dest = "/";
           // router.refresh() reruns RSCs with the new cookies before navigation,
           // so the destination renders with the authenticated session on first paint.
@@ -110,9 +110,7 @@ export function AuthForm() {
         <div className="space-y-2">
           <h2 className="text-xl font-bold text-white">בדוק את האימייל שלך</h2>
           <p className="text-sm text-white/50 leading-relaxed">
-            {showEmailSent
-              ? "שלחנו קישור אימות לכתובת:"
-              : "קישור לאיפוס סיסמה נשלח לאימייל שלך"}
+            {showEmailSent ? "שלחנו קישור אימות לכתובת:" : "קישור לאיפוס סיסמה נשלח לאימייל שלך"}
             <br />
             <span className="font-semibold text-amber-400/80">{email}</span>
           </p>
@@ -151,7 +149,9 @@ export function AuthForm() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative group">
-            <label htmlFor="reset-email" className="sr-only">כתובת אימייל</label>
+            <label htmlFor="reset-email" className="sr-only">
+              כתובת אימייל
+            </label>
             <Mail className={ICON_CLASS} />
             <input
               id="reset-email"
@@ -225,7 +225,9 @@ export function AuthForm() {
         <form onSubmit={handleSubmit} className="space-y-3">
           {!isLogin && (
             <div className="relative group animate-in fade-in zoom-in-95 duration-300">
-              <label htmlFor="full-name" className="sr-only">שם מלא</label>
+              <label htmlFor="full-name" className="sr-only">
+                שם מלא
+              </label>
               <UserIcon className={ICON_CLASS} />
               <input
                 id="full-name"
@@ -239,7 +241,9 @@ export function AuthForm() {
             </div>
           )}
           <div className="relative group">
-            <label htmlFor="email" className="sr-only">כתובת אימייל</label>
+            <label htmlFor="email" className="sr-only">
+              כתובת אימייל
+            </label>
             <Mail className={ICON_CLASS} />
             <input
               id="email"
@@ -252,7 +256,9 @@ export function AuthForm() {
             />
           </div>
           <div className="relative group">
-            <label htmlFor="password" className="sr-only">סיסמה</label>
+            <label htmlFor="password" className="sr-only">
+              סיסמה
+            </label>
             <Lock className={ICON_CLASS} />
             <input
               id="password"

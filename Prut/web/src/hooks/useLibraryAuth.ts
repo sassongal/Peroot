@@ -55,8 +55,7 @@ export function useLibraryAuth({
       // Guest → logged in transition: migrate localStorage prompts.
       if (user && !prevId && !migrationRanRef.current) {
         migrationRanRef.current = true;
-        const localStr =
-          typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+        const localStr = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
         if (localStr) {
           try {
             const localItems = JSON.parse(localStr) as PersonalPrompt[];

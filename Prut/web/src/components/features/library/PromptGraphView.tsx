@@ -51,6 +51,11 @@ if (typeof window !== "undefined") {
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d").then((m) => m.default), {
   ssr: false,
 });
+// Same SSR-safe pattern for the 3D variant. `react-force-graph-3d` bundles
+// THREE at module-eval, so it must be loaded client-only.
+const ForceGraph3D = dynamic(() => import("react-force-graph-3d").then((m) => m.default), {
+  ssr: false,
+});
 
 interface Props {
   prompts: PersonalPrompt[];
@@ -275,6 +280,7 @@ export function PromptGraphView({
   const [searchQuery, setSearchQuery] = useState("");
   const [capabilityFilter, setCapabilityFilter] = useState<Set<CapabilityMode>>(new Set());
   const [favOnly, setFavOnly] = useState(false);
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Feature 3 — focused node for cinematic zoom
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -1083,6 +1089,34 @@ export function PromptGraphView({
           <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
           מועדפים
         </button>
+        <div className="flex items-center rounded-md border border-white/15 overflow-hidden">
+          <button
+            onClick={() => setViewMode("2d")}
+            className={cn(
+              "text-[11px] px-2 py-1 transition-colors",
+              viewMode === "2d"
+                ? "bg-white/15 text-white font-semibold"
+                : "text-slate-300 hover:bg-white/8",
+            )}
+            aria-pressed={viewMode === "2d"}
+            title="תצוגה דו-ממדית"
+          >
+            2D
+          </button>
+          <button
+            onClick={() => setViewMode("3d")}
+            className={cn(
+              "text-[11px] px-2 py-1 transition-colors border-r border-white/15",
+              viewMode === "3d"
+                ? "bg-gradient-to-br from-cyan-400/90 to-purple-500/90 text-black font-semibold"
+                : "text-slate-300 hover:bg-white/8",
+            )}
+            aria-pressed={viewMode === "3d"}
+            title="תצוגה תלת-ממדית"
+          >
+            3D
+          </button>
+        </div>
       </div>
 
       {/* Feature 6 — first-visit hint */}
@@ -1111,39 +1145,70 @@ export function PromptGraphView({
         onPointerMove={handlePointerMove}
         className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
       >
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <ForceGraph2D
-          ref={fgRef as any}
-          graphData={graphData as any}
-          width={dimensions.width}
-          height={dimensions.height}
-          nodeId="id"
-          nodeCanvasObject={nodeCanvasObject as any}
-          nodeCanvasObjectMode={() => "replace"}
-          onRenderFramePre={onRenderFramePre as any}
-          onNodeClick={handleNodeClick as any}
-          onNodeHover={handleNodeHover as any}
-          onLinkHover={handleLinkHover as any}
-          onBackgroundClick={handleBackgroundClick as any}
-          linkColor={linkColor as any}
-          linkWidth={linkWidth as any}
-          linkLineDash={linkLineDash as any}
-          linkDirectionalParticles={linkDirectionalParticles as any}
-          linkDirectionalParticleWidth={2}
-          linkDirectionalParticleColor={linkDirectionalParticleColor as any}
-          linkDirectionalParticleSpeed={0.004}
-          cooldownTicks={200}
-          d3AlphaDecay={0.015}
-          d3VelocityDecay={0.25}
-          warmupTicks={60}
-          backgroundColor="transparent"
-          enableZoomInteraction
-          enablePanInteraction
-          enablePointerInteraction
-          onEngineStop={handleEngineStop}
-          minZoom={0.3}
-          maxZoom={8}
-        />
+        {viewMode === "2d" ? (
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          <ForceGraph2D
+            ref={fgRef as any}
+            graphData={graphData as any}
+            width={dimensions.width}
+            height={dimensions.height}
+            nodeId="id"
+            nodeCanvasObject={nodeCanvasObject as any}
+            nodeCanvasObjectMode={() => "replace"}
+            onRenderFramePre={onRenderFramePre as any}
+            onNodeClick={handleNodeClick as any}
+            onNodeHover={handleNodeHover as any}
+            onLinkHover={handleLinkHover as any}
+            onBackgroundClick={handleBackgroundClick as any}
+            linkColor={linkColor as any}
+            linkWidth={linkWidth as any}
+            linkLineDash={linkLineDash as any}
+            linkDirectionalParticles={linkDirectionalParticles as any}
+            linkDirectionalParticleWidth={2}
+            linkDirectionalParticleColor={linkDirectionalParticleColor as any}
+            linkDirectionalParticleSpeed={0.004}
+            cooldownTicks={200}
+            d3AlphaDecay={0.015}
+            d3VelocityDecay={0.25}
+            warmupTicks={60}
+            backgroundColor="transparent"
+            enableZoomInteraction
+            enablePanInteraction
+            enablePointerInteraction
+            onEngineStop={handleEngineStop}
+            minZoom={0.3}
+            maxZoom={8}
+          />
+        ) : (
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          <ForceGraph3D
+            graphData={graphData as any}
+            width={dimensions.width}
+            height={dimensions.height}
+            nodeId="id"
+            nodeLabel={((n: GraphNode) => n.label) as any}
+            nodeVal={((n: GraphNode) => (n.isFavorite ? 8 : 5)) as any}
+            nodeColor={
+              ((n: GraphNode) =>
+                CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD]) as any
+            }
+            nodeOpacity={0.95}
+            nodeResolution={16}
+            linkColor={linkColor as any}
+            linkWidth={linkWidth as any}
+            linkOpacity={0.6}
+            linkDirectionalParticles={linkDirectionalParticles as any}
+            linkDirectionalParticleWidth={1.5}
+            linkDirectionalParticleSpeed={0.006}
+            linkDirectionalParticleColor={linkDirectionalParticleColor as any}
+            onNodeClick={handleNodeClick as any}
+            onNodeHover={handleNodeHover as any}
+            backgroundColor="rgba(2,6,23,0)"
+            showNavInfo={false}
+            cooldownTicks={200}
+            warmupTicks={60}
+          />
+        )}
       </div>
 
       {/* Floating hover tooltip — shows a peek card next to the cursor */}
