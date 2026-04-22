@@ -553,7 +553,9 @@ export function PromptGraphView({
   const pointerDownRef = useRef<{ x: number; y: number; node: GraphNode | null } | null>(null);
   // Keep a ref to hoverNode so handlers can read it without stale closure
   const hoverNodeRef = useRef<GraphNode | null>(null);
-  useEffect(() => { hoverNodeRef.current = hoverNode; }, [hoverNode]);
+  useEffect(() => {
+    hoverNodeRef.current = hoverNode;
+  }, [hoverNode]);
 
   const handleContainerPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -574,9 +576,7 @@ export function PromptGraphView({
       const clicked = down.node ?? hoverNodeRef.current;
       if (clicked && clicked.type === "prompt" && clicked.prompt) {
         savePositions();
-        setSelectedPrompt((prev) =>
-          prev?.id === clicked.prompt!.id ? null : clicked.prompt!,
-        );
+        setSelectedPrompt((prev) => (prev?.id === clicked.prompt!.id ? null : clicked.prompt!));
         setFocusedId((prev) => (prev === clicked.id ? null : clicked.id));
       }
     },

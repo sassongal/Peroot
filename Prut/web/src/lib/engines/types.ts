@@ -1,7 +1,6 @@
-
 import { CapabilityMode } from "../capability-mode";
 
-export type TargetModel = 'chatgpt' | 'claude' | 'gemini' | 'general';
+export type TargetModel = "chatgpt" | "claude" | "gemini" | "general";
 
 export interface EngineConfig {
   id?: string;
@@ -41,7 +40,7 @@ export interface EngineInput {
   outputLanguage?: "hebrew" | "english";
   /** Context attachments (files, URLs, images) */
   context?: Array<{
-    type: 'file' | 'url' | 'image';
+    type: "file" | "url" | "image";
     name: string;
     content: string;
     format?: string;
@@ -65,7 +64,7 @@ export interface InjectionStats {
   /** Whether the historical examples included before→after pairs */
   historyHasEnhanced: boolean;
   /** Source of the historical examples for A/B comparison */
-  historySource: 'use_count' | 'recent_history' | 'none';
+  historySource: "use_count" | "recent_history" | "none";
   /** Approximate added token cost (rough char/4 estimate) */
   approxAddedTokens: number;
 }

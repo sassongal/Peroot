@@ -321,7 +321,12 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       const attachment = attachmentsRef.current.find((a) => a.id === id);
       if (!attachment || attachment.type !== "url" || !attachment.url) return;
 
-      updateAttachment(id, { status: "loading", stage: "extracting", error: undefined, block: undefined });
+      updateAttachment(id, {
+        status: "loading",
+        stage: "extracting",
+        error: undefined,
+        block: undefined,
+      });
 
       try {
         const res = await fetch(getApiPath("/api/context/extract-url"), {

@@ -1,4 +1,3 @@
-
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
@@ -13,10 +12,11 @@ import { getConceptClassificationBlock } from "./skills/concept-classification";
 
 export class StandardEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
-      super(config ?? {
-          mode: CapabilityMode.STANDARD,
-          name: "Standard Engine",
-          system_prompt_template: `You are a world-class Prompt Architect - the best in the Israeli market. Your mission: transform any raw user input into the most effective, structured, high-performance prompt possible, optimized for modern LLMs (GPT-4o, Claude 4/4.5, Gemini 2.5, DeepSeek V3).
+    super(
+      config ?? {
+        mode: CapabilityMode.STANDARD,
+        name: "Standard Engine",
+        system_prompt_template: `You are a world-class Prompt Architect - the best in the Israeli market. Your mission: transform any raw user input into the most effective, structured, high-performance prompt possible, optimized for modern LLMs (GPT-4o, Claude 4/4.5, Gemini 2.5, DeepSeek V3).
 
 CRITICAL RULES:
 1. Output ONLY the final prompt. No meta-commentary, no "Here is your prompt", no explanations.
@@ -134,79 +134,84 @@ For MEDIUM/COMPLEX, produce a prompt that genuinely exhibits:
 - Logical section structure separating role / task / context / format / constraints
 - Explicit negative rules ("אל תשתמש ב...", "avoid...") to prevent common failure modes
 - Output format specification (type, length, structure)`,
-          user_prompt_template: `Transform the following raw user input into a world-class structured prompt in Hebrew. Identify the intent, fill context gaps, apply the full architecture framework, and produce a prompt that will get exceptional results from any modern AI.
+        user_prompt_template: `Transform the following raw user input into a world-class structured prompt in Hebrew. Identify the intent, fill context gaps, apply the full architecture framework, and produce a prompt that will get exceptional results from any modern AI.
 
 User input: {{input}}
 
 Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
-      });
+      },
+    );
   }
 
   generate(input: EngineInput): EngineOutput {
-      const result = super.generate(input);
+    const result = super.generate(input);
 
-      const concept = (input.prompt || '').trim();
-      const wordCount = concept.split(/\s+/).filter(Boolean).length;
-      const hasContext = !!(input.context && input.context.length > 0);
+    const concept = (input.prompt || "").trim();
+    const wordCount = concept.split(/\s+/).filter(Boolean).length;
+    const hasContext = !!(input.context && input.context.length > 0);
 
-      // Skip heavyweight skill injections for simple, one-shot inputs.
-      // Short prompts don't benefit from few-shot examples or CoT scaffolding;
-      // the proportional-complexity rule in the template already handles them.
-      const isSimple = wordCount <= 8 && !hasContext && !input.previousResult;
+    // Skip heavyweight skill injections for simple, one-shot inputs.
+    // Short prompts don't benefit from few-shot examples or CoT scaffolding;
+    // the proportional-complexity rule in the template already handles them.
+    const isSimple = wordCount <= 8 && !hasContext && !input.previousResult;
 
-      // Inject concept classification (LLM-level semantic understanding, zero cost)
-      result.systemPrompt += getConceptClassificationBlock('text');
+    // Inject concept classification (LLM-level semantic understanding, zero cost)
+    result.systemPrompt += getConceptClassificationBlock("text");
 
-      if (!isSimple) {
-          // Inject skill-based few-shot examples, mistakes, and scoring criteria
-          const examplesBlock = getExamplesBlock('text', 'standard', input.prompt, 3);
-          const mistakesBlock = getMistakesBlock('text', 'standard');
-          const scoringBlock = getScoringBlock('text', 'standard');
+    if (!isSimple) {
+      // Inject skill-based few-shot examples, mistakes, and scoring criteria
+      const examplesBlock = getExamplesBlock("text", "standard", input.prompt, 3);
+      const mistakesBlock = getMistakesBlock("text", "standard");
+      const scoringBlock = getScoringBlock("text", "standard");
 
-          if (examplesBlock) result.systemPrompt += examplesBlock;
-          if (mistakesBlock) result.systemPrompt += mistakesBlock;
+      if (examplesBlock) result.systemPrompt += examplesBlock;
+      if (mistakesBlock) result.systemPrompt += mistakesBlock;
 
-          // Chain-of-Thought reasoning — only inject when the concept looks complex
-          // enough to benefit from multi-step thinking.
-          if (concept.length > 30) {
-              const cotBlock = getChainOfThoughtBlock('text', 'standard', concept);
-              if (cotBlock) result.systemPrompt += cotBlock;
-          }
-
-          if (scoringBlock) {
-              result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
-          }
+      // Chain-of-Thought reasoning — only inject when the concept looks complex
+      // enough to benefit from multi-step thinking.
+      if (concept.length > 30) {
+        const cotBlock = getChainOfThoughtBlock("text", "standard", concept);
+        if (cotBlock) result.systemPrompt += cotBlock;
       }
 
-      return result;
+      if (scoringBlock) {
+        result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your output passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+      }
+    }
+
+    return result;
   }
 
   generateRefinement(input: EngineInput): EngineOutput {
-      if (!input.previousResult) throw new Error("Previous result required for refinement");
+    if (!input.previousResult) throw new Error("Previous result required for refinement");
 
-      const iteration = input.iteration || 1;
-      const instruction = (input.refinementInstruction || "שפר את הפרומפט והפוך אותו למקצועי, ספציפי וניתן לפעולה יותר.").trim().slice(0, 2000);
+    const iteration = input.iteration || 1;
+    const instruction = (
+      input.refinementInstruction || "שפר את הפרומפט והפוך אותו למקצועי, ספציפי וניתן לפעולה יותר."
+    )
+      .trim()
+      .slice(0, 2000);
 
-      let answersBlock = "";
-      if (input.answers && Object.keys(input.answers).length > 0) {
-          const pairs = Object.entries(input.answers)
-              .filter(([, v]) => v.trim())
-              .map(([key, answer]) => `- [${key}] ${answer}`)
-              .join("\n");
-          if (pairs) {
-              answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;
-          }
+    let answersBlock = "";
+    if (input.answers && Object.keys(input.answers).length > 0) {
+      const pairs = Object.entries(input.answers)
+        .filter(([, v]) => v.trim())
+        .map(([key, answer]) => `- [${key}] ${answer}`)
+        .join("\n");
+      if (pairs) {
+        answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;
       }
+    }
 
-      const identity = this.getSystemIdentity();
+    const identity = this.getSystemIdentity();
 
-      // Pull a refinement example calibrated to the current iteration. Round 1
-      // shows expansion (raw → enhanced); round 3+ shows surgical precision.
-      const refinementBlock = getRefinementExamplesBlock('text', 'standard', iteration);
-      const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+    // Pull a refinement example calibrated to the current iteration. Round 1
+    // shows expansion (raw → enhanced); round 3+ shows surgical precision.
+    const refinementBlock = getRefinementExamplesBlock("text", "standard", iteration);
+    const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
 
-      return {
-          systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ''}
+    return {
+      systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ""}
 
 כללי שדרוג:
 1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט, גם הקטן ביותר.
@@ -232,27 +237,27 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
 5. הפלט חייב להיות בעברית בלבד.
 6. אל תוסיף הסברים - רק את הפרומפט המשודרג.
 7. כל גרסה חדשה חייבת להיות שיפור משמעותי - לא שינוי קוסמטי.
-${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים כירורגיים ודיוק קיצוני בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני - חפש את הפערים שנותרו, לא את מה שכבר טוב.' : ''}
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים כירורגיים ודיוק קיצוני בלבד.` : iteration === 2 ? "\nזהו סבב חידוד שני - חפש את הפערים שנותרו, לא את מה שכבר טוב." : ""}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ''}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
+${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
 לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים בעלי ההשפעה הגבוהה ביותר שנותרו - ספציפיות, מדידות, ניתנות לפעולה. החזר מערך ריק [] אם הפרומפט כעת מקיף ומלא.
 פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
 
-          userPrompt: `הפרומפט הנוכחי:
+      userPrompt: `הפרומפט הנוכחי:
 ---
 ${input.previousResult}
 ---
 ${answersBlock}
-${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
+${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ""}
 
 שלב את כל המידע החדש לתוך פרומפט מעודכן ומשודרג בעברית. בדוק ספציפית את הפערים בתפקיד, הקשר, פורמט פלט, ומגבלות - אלה הם האזורים בעלי ההשפעה הגבוהה ביותר על איכות הפלט.`,
 
-          outputFormat: "text",
-          requiredFields: [],
-      };
+      outputFormat: "text",
+      requiredFields: [],
+    };
   }
 }

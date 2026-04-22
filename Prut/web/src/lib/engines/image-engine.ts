@@ -1,4 +1,3 @@
-
 import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
@@ -12,7 +11,10 @@ import {
 } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
 import { getJsonExamplesBlock } from "./json-examples";
-import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
+import {
+  extractVisualPreferences,
+  buildVisualPreferencesBlock,
+} from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
 import { getPlatformOverrides } from "./platform-overrides";
 
@@ -157,7 +159,7 @@ Your FIRST WORD must be the primary subject. Example first words: "A", "Portrait
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  'stable-diffusion-text': `You are an elite Stable Diffusion XL prompt engineer. Your mission: generate the ACTUAL SD prompt that will be DIRECTLY pasted into the Stable Diffusion interface.
+  "stable-diffusion-text": `You are an elite Stable Diffusion XL prompt engineer. Your mission: generate the ACTUAL SD prompt that will be DIRECTLY pasted into the Stable Diffusion interface.
 
 CRITICAL RULES:
 1. Output ONLY the ready-to-paste prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
@@ -221,7 +223,7 @@ Your output must start with quality tags or subject keywords. Example: "masterpi
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  'stable-diffusion-json': `You are an elite Stable Diffusion XL prompt engineer. Your mission: generate the ACTUAL SD JSON config that will be DIRECTLY used for generation.
+  "stable-diffusion-json": `You are an elite Stable Diffusion XL prompt engineer. Your mission: generate the ACTUAL SD JSON config that will be DIRECTLY used for generation.
 
 CRITICAL RULES:
 1. Output ONLY valid JSON. No explanations, no markdown code fences, no preamble.
@@ -366,7 +368,7 @@ Your FIRST WORD must be the subject description. Never a meta-sentence.
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  'nanobanana-json': `You are an elite Gemini Image prompt engineer specializing in structured JSON output. Your mission: generate the ACTUAL Gemini Image JSON config that will be DIRECTLY used for generation.
+  "nanobanana-json": `You are an elite Gemini Image prompt engineer specializing in structured JSON output. Your mission: generate the ACTUAL Gemini Image JSON config that will be DIRECTLY used for generation.
 
 CRITICAL RULES:
 1. Output ONLY valid JSON. No explanations, no markdown code fences, no preamble.
@@ -540,13 +542,13 @@ Concept: {{input}}
 
 Output ONLY the ready-to-use FLUX.2 prompt. No meta-text, no explanations.`,
 
-  'stable-diffusion-text': `Generate the ACTUAL Stable Diffusion prompt in keyword format that will be DIRECTLY pasted into the SD interface. Include weights, quality boosters, and negative prompt.
+  "stable-diffusion-text": `Generate the ACTUAL Stable Diffusion prompt in keyword format that will be DIRECTLY pasted into the SD interface. Include weights, quality boosters, and negative prompt.
 
 Concept: {{input}}
 
 Output ONLY the ready-to-use prompt and negative prompt. No meta-text, no explanations.`,
 
-  'stable-diffusion-json': `Generate the ACTUAL Stable Diffusion JSON config that will be DIRECTLY used for generation. Include prompt, negative_prompt, dimensions, steps, cfg_scale, and sampler.
+  "stable-diffusion-json": `Generate the ACTUAL Stable Diffusion JSON config that will be DIRECTLY used for generation. Include prompt, negative_prompt, dimensions, steps, cfg_scale, and sampler.
 
 Concept: {{input}}
 
@@ -564,7 +566,7 @@ Concept: {{input}}
 
 Output ONLY the ready-to-use prompt. No meta-text, no explanations.`,
 
-  'nanobanana-json': `Generate the ACTUAL Gemini Image JSON config that will be DIRECTLY used for generation. Include subject (with consistency_id), camera settings, lighting, style, aspect_ratio, and constraints.
+  "nanobanana-json": `Generate the ACTUAL Gemini Image JSON config that will be DIRECTLY used for generation. Include subject (with consistency_id), camera settings, lighting, style, aspect_ratio, and constraints.
 
 Concept: {{input}}
 
@@ -572,12 +574,12 @@ Output ONLY valid JSON. No explanations or code fences.`,
 };
 
 function getPlatformKey(platform?: string, outputFormat?: string): string {
-  if (!platform || platform === 'general') return 'general';
-  if (platform === 'stable-diffusion') {
-    return outputFormat === 'json' ? 'stable-diffusion-json' : 'stable-diffusion-text';
+  if (!platform || platform === "general") return "general";
+  if (platform === "stable-diffusion") {
+    return outputFormat === "json" ? "stable-diffusion-json" : "stable-diffusion-text";
   }
-  if (platform === 'nanobanana') {
-    return outputFormat === 'json' ? 'nanobanana-json' : 'nanobanana';
+  if (platform === "nanobanana") {
+    return outputFormat === "json" ? "nanobanana-json" : "nanobanana";
   }
   return platform;
 }
@@ -595,98 +597,98 @@ export function getShippedImageEngineBaseline(): {
 
 export class ImageEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
-      super(config ?? {
-          mode: CapabilityMode.IMAGE_GENERATION,
-          name: "Image Generation Engine",
-          system_prompt_template: PLATFORM_PROMPTS['general'],
-          user_prompt_template: PLATFORM_USER_PROMPTS['general'],
-      });
+    super(
+      config ?? {
+        mode: CapabilityMode.IMAGE_GENERATION,
+        name: "Image Generation Engine",
+        system_prompt_template: PLATFORM_PROMPTS["general"],
+        user_prompt_template: PLATFORM_USER_PROMPTS["general"],
+      },
+    );
   }
 
   generate(input: EngineInput): EngineOutput {
-      const platform = (input.modeParams?.image_platform || 'general') as ImagePlatform;
-      const outputFormat = (input.modeParams?.output_format || 'text') as ImageOutputFormat;
-      const platformKey = getPlatformKey(platform, outputFormat);
+    const platform = (input.modeParams?.image_platform || "general") as ImagePlatform;
+    const outputFormat = (input.modeParams?.output_format || "text") as ImageOutputFormat;
+    const platformKey = getPlatformKey(platform, outputFormat);
 
-      const overrides = getPlatformOverrides(
-        this.config.default_params as Record<string, unknown> | undefined
-      );
-      const platformOverride = overrides?.[platformKey];
+    const overrides = getPlatformOverrides(
+      this.config.default_params as Record<string, unknown> | undefined,
+    );
+    const platformOverride = overrides?.[platformKey];
 
-      // DB general templates + optional JSON overrides per platform (see admin / engine editor)
-      let systemTemplate: string;
-      let userTemplate: string;
-      if (platformOverride?.system_template) {
-        systemTemplate = platformOverride.system_template;
-      } else if (platformKey === "general") {
-        systemTemplate = this.config.system_prompt_template;
+    // DB general templates + optional JSON overrides per platform (see admin / engine editor)
+    let systemTemplate: string;
+    let userTemplate: string;
+    if (platformOverride?.system_template) {
+      systemTemplate = platformOverride.system_template;
+    } else if (platformKey === "general") {
+      systemTemplate = this.config.system_prompt_template;
+    } else {
+      systemTemplate = PLATFORM_PROMPTS[platformKey] || PLATFORM_PROMPTS["general"];
+    }
+
+    if (platformOverride?.user_template) {
+      userTemplate = platformOverride.user_template;
+    } else if (platformKey === "general") {
+      userTemplate = this.config.user_prompt_template;
+    } else {
+      userTemplate = PLATFORM_USER_PROMPTS[platformKey] || PLATFORM_USER_PROMPTS["general"];
+    }
+
+    const variables: Record<string, string> = {
+      input: escapeTemplateVars(input.prompt),
+      tone: escapeTemplateVars(input.tone),
+      category: escapeTemplateVars(input.category),
+      ...sanitizeModeParams(input.modeParams),
+    };
+
+    if (input.modeParams?.aspect_ratio) {
+      if (platformKey === "general") {
+        // General mode generates a visual description, not platform syntax.
+        // Guide composition framing rather than injecting --ar / aspectRatio tags.
+        variables.aspect_ratio_hint = `\nIMPORTANT: The user wants an aspect ratio of ${input.modeParams.aspect_ratio}. Frame the description with this proportionality in mind (e.g., wide panoramic composition for 16:9, square balanced crop for 1:1, tall portrait framing for 9:16).`;
       } else {
-        systemTemplate =
-          PLATFORM_PROMPTS[platformKey] || PLATFORM_PROMPTS["general"];
+        variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output (e.g., --ar ${input.modeParams.aspect_ratio} for Midjourney, [aspectRatio: ${input.modeParams.aspect_ratio}] for Imagen/Gemini, "width"/"height" matching this ratio for SD JSON).`;
       }
+    } else {
+      variables.aspect_ratio_hint = "";
+    }
 
-      if (platformOverride?.user_template) {
-        userTemplate = platformOverride.user_template;
-      } else if (platformKey === "general") {
-        userTemplate = this.config.user_prompt_template;
-      } else {
-        userTemplate =
-          PLATFORM_USER_PROMPTS[platformKey] || PLATFORM_USER_PROMPTS["general"];
+    const systemPrompt = this.buildTemplate(systemTemplate, variables);
+    const userPrompt = this.buildTemplate(userTemplate, variables);
+
+    // For non-general platforms, skip the GENIUS_QUESTIONS / scoring additions
+    // since output should be clean prompt text (or JSON for SD)
+    const isGeneral = platform === "general";
+
+    let finalSystem = systemPrompt;
+
+    // Text-mode userPersonality is still skipped (noise for visual prompts),
+    // but we DO extract visual preferences from image prompt history.
+
+    const identity = this.getSystemIdentity();
+    if (identity) {
+      finalSystem += `\n\n${identity}`;
+    }
+
+    // Extract and inject visual preferences from user's prompt history
+    if (input.userHistory && input.userHistory.length >= 2) {
+      const visualPrefs = extractVisualPreferences(input.userHistory);
+      const prefsBlock = buildVisualPreferencesBlock(visualPrefs);
+      if (prefsBlock) {
+        finalSystem += prefsBlock;
       }
+    }
 
-      const variables: Record<string, string> = {
-          input: escapeTemplateVars(input.prompt),
-          tone: escapeTemplateVars(input.tone),
-          category: escapeTemplateVars(input.category),
-          ...sanitizeModeParams(input.modeParams),
-      };
-
-      if (input.modeParams?.aspect_ratio) {
-        if (platformKey === 'general') {
-          // General mode generates a visual description, not platform syntax.
-          // Guide composition framing rather than injecting --ar / aspectRatio tags.
-          variables.aspect_ratio_hint = `\nIMPORTANT: The user wants an aspect ratio of ${input.modeParams.aspect_ratio}. Frame the description with this proportionality in mind (e.g., wide panoramic composition for 16:9, square balanced crop for 1:1, tall portrait framing for 9:16).`;
-        } else {
-          variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${input.modeParams.aspect_ratio}. Use this exact ratio in your output (e.g., --ar ${input.modeParams.aspect_ratio} for Midjourney, [aspectRatio: ${input.modeParams.aspect_ratio}] for Imagen/Gemini, "width"/"height" matching this ratio for SD JSON).`;
-        }
-      } else {
-        variables.aspect_ratio_hint = '';
-      }
-
-      const systemPrompt = this.buildTemplate(systemTemplate, variables);
-      const userPrompt = this.buildTemplate(userTemplate, variables);
-
-      // For non-general platforms, skip the GENIUS_QUESTIONS / scoring additions
-      // since output should be clean prompt text (or JSON for SD)
-      const isGeneral = platform === 'general';
-
-      let finalSystem = systemPrompt;
-
-      // Text-mode userPersonality is still skipped (noise for visual prompts),
-      // but we DO extract visual preferences from image prompt history.
-
-      const identity = this.getSystemIdentity();
-      if (identity) {
-          finalSystem += `\n\n${identity}`;
-      }
-
-      // Extract and inject visual preferences from user's prompt history
-      if (input.userHistory && input.userHistory.length >= 2) {
-          const visualPrefs = extractVisualPreferences(input.userHistory);
-          const prefsBlock = buildVisualPreferencesBlock(visualPrefs);
-          if (prefsBlock) {
-              finalSystem += prefsBlock;
-          }
-      }
-
-      // Context attachments as visual reference material.
-      // Non-general platforms output English prompts, so the block header and
-      // extraction instructions must be in English to avoid Hebrew leaking into
-      // the final Midjourney / DALL-E / Flux / SD prompt.
-      if (input.context && input.context.length > 0) {
-          const useEnglish = platform !== 'general';
-          if (useEnglish) {
-              finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
+    // Context attachments as visual reference material.
+    // Non-general platforms output English prompts, so the block header and
+    // extraction instructions must be in English to avoid Hebrew leaking into
+    // the final Midjourney / DALL-E / Flux / SD prompt.
+    if (input.context && input.context.length > 0) {
+      const useEnglish = platform !== "general";
+      if (useEnglish) {
+        finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
 The user attached source material — extract visual elements as ENGLISH descriptors and weave them directly into the image prompt:
 - Attached images: describe style, colors, composition, mood, lighting — in English.
 - Branding/design files: extract color palette (hex values), typography style, logo marks, visual constraints.
@@ -694,8 +696,8 @@ The user attached source material — extract visual elements as ENGLISH descrip
 - Do NOT write "based on the file" — embed the visual details directly in the prompt.
 
 `;
-          } else {
-              finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
+      } else {
+        finalSystem += `\n\n[VISUAL_REFERENCE_MATERIAL]
 המשתמש צירף חומר מקור — השתמש בו כ-**השראה ויזואלית ומגבלות עיצוביות** לפרומפט התמונה:
 - תמונות מצורפות: תאר את הסגנון, הצבעים, הקומפוזיציה, ותחושת האווירה — ושלב אותם בפרומפט.
 - קבצי מיתוג/ברנדינג: חלץ צבעים, טיפוגרפיה, לוגו, ומגבלות סגנוניות.
@@ -703,141 +705,161 @@ The user attached source material — extract visual elements as ENGLISH descrip
 - אל תתאר "על סמך הקובץ" — שלב את הפרטים הויזואליים ישירות בפרומפט.
 
 `;
-          }
-          for (const attachment of input.context) {
-              const block = attachment as unknown as ContextBlock;
-              const title = block.display?.title || attachment.name || 'attachment';
-              const text = block.display?.rawText || block.display?.summary || attachment.content || attachment.description || '';
-              if (attachment.type === 'image') {
-                  finalSystem += `--- Image reference: "${title}" ---\n${text.slice(0, 1200)}\n\n`;
-              } else if (attachment.type === 'url') {
-                  finalSystem += `--- URL reference: ${attachment.url || title} ---\n${text.slice(0, 1000)}\n\n`;
-              } else {
-                  finalSystem += `--- Document reference: "${title}" ---\n${text.slice(0, 1200)}\n\n`;
-              }
-          }
       }
-
-      // Inject concept classification (LLM-level semantic understanding)
-      finalSystem += getConceptClassificationBlock('image');
-
-      // Inject few-shot examples. JSON mode gets fully-filled JSON examples
-      // that match the exact schema the LLM is expected to produce — otherwise
-      // the LLM was seeing an empty schema template alongside plain-text
-      // examples from the text-mode skill files and producing inconsistent,
-      // often-truncated JSON. Text mode keeps the existing skill examples.
-      const isJsonMode = (platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json';
-      const skillPlatformKey = platform === 'general' ? 'general' : platform;
-
-      if (isJsonMode) {
-          const jsonExamplesBlock = getJsonExamplesBlock(platformKey, 3);
-          if (jsonExamplesBlock) {
-              finalSystem += jsonExamplesBlock;
-          }
-          // Skip getMistakesBlock in JSON mode — the mistakes taxonomy was
-          // authored against text prompts (bad vs good comma-separated
-          // keywords) and is noise when the output is structured JSON.
-      } else {
-          const examplesBlock = getExamplesBlock('image', skillPlatformKey, input.prompt, 3);
-          if (examplesBlock) {
-              finalSystem += examplesBlock;
-          }
-          const mistakesBlock = getMistakesBlock('image', skillPlatformKey);
-          if (mistakesBlock) {
-              finalSystem += mistakesBlock;
-          }
+      for (const attachment of input.context) {
+        const block = attachment as unknown as ContextBlock;
+        const title = block.display?.title || attachment.name || "attachment";
+        const text =
+          block.display?.rawText ||
+          block.display?.summary ||
+          attachment.content ||
+          attachment.description ||
+          "";
+        if (attachment.type === "image") {
+          finalSystem += `--- Image reference: "${title}" ---\n${text.slice(0, 1200)}\n\n`;
+        } else if (attachment.type === "url") {
+          finalSystem += `--- URL reference: ${attachment.url || title} ---\n${text.slice(0, 1000)}\n\n`;
+        } else {
+          finalSystem += `--- Document reference: "${title}" ---\n${text.slice(0, 1200)}\n\n`;
+        }
       }
+    }
 
-      // Inject platform-specific scoring criteria for quality gate
-      const scoringBlock = getScoringBlock('image', skillPlatformKey);
+    // Inject concept classification (LLM-level semantic understanding)
+    finalSystem += getConceptClassificationBlock("image");
 
+    // Inject few-shot examples. JSON mode gets fully-filled JSON examples
+    // that match the exact schema the LLM is expected to produce — otherwise
+    // the LLM was seeing an empty schema template alongside plain-text
+    // examples from the text-mode skill files and producing inconsistent,
+    // often-truncated JSON. Text mode keeps the existing skill examples.
+    const isJsonMode =
+      (platform === "stable-diffusion" || platform === "nanobanana") && outputFormat === "json";
+    const skillPlatformKey = platform === "general" ? "general" : platform;
+
+    if (isJsonMode) {
+      const jsonExamplesBlock = getJsonExamplesBlock(platformKey, 3);
+      if (jsonExamplesBlock) {
+        finalSystem += jsonExamplesBlock;
+      }
+      // Skip getMistakesBlock in JSON mode — the mistakes taxonomy was
+      // authored against text prompts (bad vs good comma-separated
+      // keywords) and is noise when the output is structured JSON.
+    } else {
+      const examplesBlock = getExamplesBlock("image", skillPlatformKey, input.prompt, 3);
+      if (examplesBlock) {
+        finalSystem += examplesBlock;
+      }
+      const mistakesBlock = getMistakesBlock("image", skillPlatformKey);
+      if (mistakesBlock) {
+        finalSystem += mistakesBlock;
+      }
+    }
+
+    // Inject platform-specific scoring criteria for quality gate
+    const scoringBlock = getScoringBlock("image", skillPlatformKey);
+
+    if (!isJsonMode) {
+      const cotBlock = getChainOfThoughtBlock("image", skillPlatformKey, input.prompt);
+      if (cotBlock) finalSystem += cotBlock;
+      const refineExamplesBlock = getRefinementExamplesBlock("image", skillPlatformKey, 1);
+      if (refineExamplesBlock) finalSystem += refineExamplesBlock;
+    }
+
+    const hasContext = !!(input.context && input.context.length > 0);
+    const contextQualityRule = hasContext
+      ? "\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate specific visual elements (colors, style, mood, composition). Ignoring attachments is a FAILURE."
+      : "";
+    const contextQuestionHint = hasContext
+      ? "\nCONTEXT-AWARE: reference material is attached — ask about INTENT (mood board? exact replication? loose inspiration?) not about what's in the files."
+      : "";
+
+    if (isGeneral) {
+      // General mode: expanded visual GENIUS-style gate + platform checklist + questions
+      finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Do you cover all seven visual layers — subject, style, composition, lighting, color mood, technical quality, negative guidance?\n2. SPECIFICITY: Replace vague words (nice, beautiful) with concrete materials, distances, time of day, and palette.\n3. ANTI-PATTERNS: No empty filler or contradictory instructions; Hebrew flows as one scene with technical terms in English where standard.\n4. ACTIONABILITY: Would this produce an excellent image on the FIRST try for the described medium?\n5. STRUCTURE: Scannable emphasis — most important visual intent appears early in the paragraph.\n6. EDGE CASES: Text-in-image, logos, or aspect constraints stated explicitly when relevant.${contextQualityRule}${scoringBlock ? scoringBlock : ""}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.${contextQuestionHint}\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]\n\nCRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the main prompt paragraph. Follow-up blocks must appear only on new lines after the prompt.`;
+    } else {
+      // Platform-specific modes: visual GENIUS checks + platform checklist + title + questions
+      finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Subject, lighting, composition, palette, and platform-specific parameters are present.\n2. SPECIFICITY: Concrete nouns and materials — not vague mood labels alone.\n3. ANTI-PATTERNS: No deprecated or contradictory syntax for this platform.\n4. ACTIONABILITY: Output is paste-ready English (or JSON) with no meta-commentary.\n5. STRUCTURE: Parameters and prose ordered as this platform expects.${contextQualityRule}${scoringBlock ? `\nPLATFORM-SPECIFIC QUALITY GATE:${scoringBlock}` : ""}\n</internal_quality_check>`;
+      // JSON mode is mutually exclusive with the PROMPT_TITLE/GENIUS_QUESTIONS
+      // trailer: the nanobanana-json / stable-diffusion-json system prompts
+      // start with "Output ONLY valid JSON. No explanations, no markdown
+      // code fences, no preamble." — appending an instruction to also emit
+      // [PROMPT_TITLE] and [GENIUS_QUESTIONS] after the `}` creates a
+      // contradiction that Gemini 2.5 Flash resolves by stopping
+      // mid-description (truncating the JSON) or by inlining the tokens
+      // inside string values. Titles and questions can be derived via a
+      // separate lightweight pass in JSON mode.
       if (!isJsonMode) {
-        const cotBlock = getChainOfThoughtBlock('image', skillPlatformKey, input.prompt);
-        if (cotBlock) finalSystem += cotBlock;
-        const refineExamplesBlock = getRefinementExamplesBlock('image', skillPlatformKey, 1);
-        if (refineExamplesBlock) finalSystem += refineExamplesBlock;
+        finalSystem += `\n\nAfter the prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]\n\nCRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the paste-ready English prompt. Title and follow-up blocks must appear only on new lines after the full prompt.`;
       }
+    }
 
-      const hasContext = !!(input.context && input.context.length > 0);
-      const contextQualityRule = hasContext
-          ? '\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate specific visual elements (colors, style, mood, composition). Ignoring attachments is a FAILURE.'
-          : '';
-      const contextQuestionHint = hasContext
-          ? '\nCONTEXT-AWARE: reference material is attached — ask about INTENT (mood board? exact replication? loose inspiration?) not about what\'s in the files.'
-          : '';
+    // Append context summary to user prompt if attachments exist
+    let finalUserPrompt = userPrompt;
+    if (hasContext) {
+      const summary = input
+        .context!.map((a) => {
+          const block = a as unknown as ContextBlock;
+          const title = block.display?.title || a.name || "attachment";
+          const text =
+            block.display?.summary || block.display?.rawText || a.content || a.description || "";
+          if (a.type === "image") return `[תמונת ייחוס: ${title}] ${text.slice(0, 600)}`;
+          return `[${title}] ${text.slice(0, 600)}`;
+        })
+        .join("\n");
+      finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב את האלמנטים הויזואליים בפרומפט]\n${summary}`;
+    }
 
-      if (isGeneral) {
-          // General mode: expanded visual GENIUS-style gate + platform checklist + questions
-          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Do you cover all seven visual layers — subject, style, composition, lighting, color mood, technical quality, negative guidance?\n2. SPECIFICITY: Replace vague words (nice, beautiful) with concrete materials, distances, time of day, and palette.\n3. ANTI-PATTERNS: No empty filler or contradictory instructions; Hebrew flows as one scene with technical terms in English where standard.\n4. ACTIONABILITY: Would this produce an excellent image on the FIRST try for the described medium?\n5. STRUCTURE: Scannable emphasis — most important visual intent appears early in the paragraph.\n6. EDGE CASES: Text-in-image, logos, or aspect constraints stated explicitly when relevant.${contextQualityRule}${scoringBlock ? scoringBlock : ''}\n</internal_quality_check>\n\nAfter the enhanced prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.${contextQuestionHint}\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]\n\nCRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the main prompt paragraph. Follow-up blocks must appear only on new lines after the prompt.`;
-      } else {
-          // Platform-specific modes: visual GENIUS checks + platform checklist + title + questions
-          finalSystem += `\n\n<internal_quality_check hidden="true">\nSilently verify before generating (NEVER include any of this in output):\n1. COMPLETENESS: Subject, lighting, composition, palette, and platform-specific parameters are present.\n2. SPECIFICITY: Concrete nouns and materials — not vague mood labels alone.\n3. ANTI-PATTERNS: No deprecated or contradictory syntax for this platform.\n4. ACTIONABILITY: Output is paste-ready English (or JSON) with no meta-commentary.\n5. STRUCTURE: Parameters and prose ordered as this platform expects.${contextQualityRule}${scoringBlock ? `\nPLATFORM-SPECIFIC QUALITY GATE:${scoringBlock}` : ''}\n</internal_quality_check>`;
-          // JSON mode is mutually exclusive with the PROMPT_TITLE/GENIUS_QUESTIONS
-          // trailer: the nanobanana-json / stable-diffusion-json system prompts
-          // start with "Output ONLY valid JSON. No explanations, no markdown
-          // code fences, no preamble." — appending an instruction to also emit
-          // [PROMPT_TITLE] and [GENIUS_QUESTIONS] after the `}` creates a
-          // contradiction that Gemini 2.5 Flash resolves by stopping
-          // mid-description (truncating the JSON) or by inlining the tokens
-          // inside string values. Titles and questions can be derived via a
-          // separate lightweight pass in JSON mode.
-          if (!isJsonMode) {
-              finalSystem += `\n\nAfter the prompt, on a new line add a short descriptive Hebrew title:\n[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]\n\nThen add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions in JSON array format.\nFormat: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]\nIf comprehensive, return [GENIUS_QUESTIONS][]\n\nCRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the paste-ready English prompt. Title and follow-up blocks must appear only on new lines after the full prompt.`;
-          }
-      }
-
-      // Append context summary to user prompt if attachments exist
-      let finalUserPrompt = userPrompt;
-      if (hasContext) {
-          const summary = input.context!.map(a => {
-              const block = a as unknown as ContextBlock;
-              const title = block.display?.title || a.name || 'attachment';
-              const text = block.display?.summary || block.display?.rawText || a.content || a.description || '';
-              if (a.type === 'image') return `[תמונת ייחוס: ${title}] ${text.slice(0, 600)}`;
-              return `[${title}] ${text.slice(0, 600)}`;
-          }).join('\n');
-          finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב את האלמנטים הויזואליים בפרומפט]\n${summary}`;
-      }
-
-      return {
-          systemPrompt: finalSystem,
-          userPrompt: finalUserPrompt,
-          outputFormat: ((platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json') ? 'json' : 'text',
-          requiredFields: [],
-      };
+    return {
+      systemPrompt: finalSystem,
+      userPrompt: finalUserPrompt,
+      outputFormat:
+        (platform === "stable-diffusion" || platform === "nanobanana") && outputFormat === "json"
+          ? "json"
+          : "text",
+      requiredFields: [],
+    };
   }
 
   generateRefinement(input: EngineInput): EngineOutput {
-      if (!input.previousResult) throw new Error("Previous result required for refinement");
+    if (!input.previousResult) throw new Error("Previous result required for refinement");
 
-      const iteration = input.iteration || 1;
-      const platform = (input.modeParams?.image_platform || 'general') as ImagePlatform;
-      const outputFormat = (input.modeParams?.output_format || 'text') as ImageOutputFormat;
-      const platformKey = getPlatformKey(platform, outputFormat);
-      const isGeneral = platform === 'general';
-      const isJsonOutput = (platform === 'stable-diffusion' || platform === 'nanobanana') && outputFormat === 'json';
+    const iteration = input.iteration || 1;
+    const platform = (input.modeParams?.image_platform || "general") as ImagePlatform;
+    const outputFormat = (input.modeParams?.output_format || "text") as ImageOutputFormat;
+    const platformKey = getPlatformKey(platform, outputFormat);
+    const isGeneral = platform === "general";
+    const isJsonOutput =
+      (platform === "stable-diffusion" || platform === "nanobanana") && outputFormat === "json";
 
-      const instruction = (input.refinementInstruction || (isGeneral ? "שפר את פרומפט התמונה והפוך אותו לויזואלי ומדויק יותר." : "Refine the image prompt and make it more visually precise and detailed.")).trim().slice(0, 2000);
+    const instruction = (
+      input.refinementInstruction ||
+      (isGeneral
+        ? "שפר את פרומפט התמונה והפוך אותו לויזואלי ומדויק יותר."
+        : "Refine the image prompt and make it more visually precise and detailed.")
+    )
+      .trim()
+      .slice(0, 2000);
 
-      let answersBlock = "";
-      if (input.answers && Object.keys(input.answers).length > 0) {
-          const pairs = Object.entries(input.answers)
-              .filter(([, v]) => v.trim())
-              .map(([key, answer]) => `- [${key}] ${answer}`)
-              .join("\n");
-          if (pairs) {
-              answersBlock = isGeneral
-                  ? `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`
-                  : `\n\nUser answers to clarifying questions:\n${pairs}\n`;
-          }
+    let answersBlock = "";
+    if (input.answers && Object.keys(input.answers).length > 0) {
+      const pairs = Object.entries(input.answers)
+        .filter(([, v]) => v.trim())
+        .map(([key, answer]) => `- [${key}] ${answer}`)
+        .join("\n");
+      if (pairs) {
+        answersBlock = isGeneral
+          ? `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`
+          : `\n\nUser answers to clarifying questions:\n${pairs}\n`;
       }
+    }
 
-      const identity = this.getSystemIdentity();
+    const identity = this.getSystemIdentity();
 
-      if (isGeneral) {
-          // General mode: Hebrew refinement focused on the 7 visual layers
-          return {
-              systemPrompt: `אתה ארכיטקט פרומפטים ויזואליים ברמה הגבוהה ביותר. משימתך: לשדרג את פרומפט התמונה הקיים לרמת מושלמות ויזואלית על בסיס המשוב והפרטים החדשים שסופקו.
+    if (isGeneral) {
+      // General mode: Hebrew refinement focused on the 7 visual layers
+      return {
+        systemPrompt: `אתה ארכיטקט פרומפטים ויזואליים ברמה הגבוהה ביותר. משימתך: לשדרג את פרומפט התמונה הקיים לרמת מושלמות ויזואלית על בסיס המשוב והפרטים החדשים שסופקו.
 
 כללי שדרוג פרומפט תמונה:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.
@@ -853,79 +875,79 @@ The user attached source material — extract visual elements as ENGLISH descrip
 4. שמור על שפה עברית כשפה ראשית עם מונחים טכניים באנגלית (שמות מצלמות, סגנונות, רנדרינג).
 5. אל תוסיף הסברים - רק את הפרומפט הויזואלי המשודרג.
 6. כל גרסה חדשה חייבת לייצר תמונה טובה יותר על הניסיון הראשון.
-${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים ויזואליים כירורגיים בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני - חפש את הפערים הויזואליים שנותרו.' : ''}
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים ויזואליים כירורגיים בלבד.` : iteration === 2 ? "\nזהו סבב חידוד שני - חפש את הפערים הויזואליים שנותרו." : ""}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ''}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
+${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
 לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הויזואליים הגבוהים ביותר שנותרו - נושא, סגנון, תאורה, קומפוזיציה, או אווירה. החזר מערך ריק [] אם הפרומפט עכשיו מקיף את כל 7 השכבות.
 פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
 
-              userPrompt: `הפרומפט הנוכחי:
+        userPrompt: `הפרומפט הנוכחי:
 ---
 ${input.previousResult}
 ---
 ${answersBlock}
-${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
+${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ""}
 
 שלב את כל המידע החדש לתוך פרומפט תמונה מעודכן ומשודרג בעברית. בדוק ספציפית: האם כל 7 השכבות הויזואליות מכוסות? האם התיאורים ספציפיים וקונקרטיים? האם הנחיות שליליות מוסיפות הגנה מפני תוצרי AI נפוצים?`,
 
-              outputFormat: "text",
-              requiredFields: [],
-          };
-      }
-
-      // Platform-specific mode: English refinement with platform-aware guidance
-      const platformDisplayName: Record<string, string> = {
-          midjourney: 'Midjourney',
-          dalle: 'DALL-E 3',
-          flux: 'Flux',
-          'stable-diffusion': 'Stable Diffusion',
-          imagen: 'Google Imagen',
-          nanobanana: 'Nano Banana',
+        outputFormat: "text",
+        requiredFields: [],
       };
-      const displayName = platformDisplayName[platform] || platform;
+    }
 
-      const jsonGuidance = isJsonOutput
-          ? `\n7. OUTPUT FORMAT: The result MUST be valid JSON - no markdown code fences, no explanations, no preamble. Preserve all required JSON fields for ${displayName}.`
-          : '';
+    // Platform-specific mode: English refinement with platform-aware guidance
+    const platformDisplayName: Record<string, string> = {
+      midjourney: "Midjourney",
+      dalle: "DALL-E 3",
+      flux: "Flux",
+      "stable-diffusion": "Stable Diffusion",
+      imagen: "Google Imagen",
+      nanobanana: "Nano Banana",
+    };
+    const displayName = platformDisplayName[platform] || platform;
 
-      return {
-          systemPrompt: `You are an Elite ${displayName} Prompt Engineer performing a precision refinement. Your task: upgrade the existing ${displayName} prompt based on user feedback and answers.
+    const jsonGuidance = isJsonOutput
+      ? `\n7. OUTPUT FORMAT: The result MUST be valid JSON - no markdown code fences, no explanations, no preamble. Preserve all required JSON fields for ${displayName}.`
+      : "";
+
+    return {
+      systemPrompt: `You are an Elite ${displayName} Prompt Engineer performing a precision refinement. Your task: upgrade the existing ${displayName} prompt based on user feedback and answers.
 
 Refinement rules:
 1. Integrate ALL user answers and feedback - miss nothing, even minor details.
 2. Maintain and enhance all 7 visual layers: subject, artistic style, composition, lighting, color & mood, technical quality, negative guidance.
 3. Apply ${displayName}-specific best practices:
-${platformKey === 'midjourney' ? '   - Write natural prose (20-40 words), avoid keyword-stuffing, end with --ar --s --chaos parameters, use --no for exclusions, use --raw for photorealism, use --oref/--ow instead of --cref. Do NOT include --cref (replaced by --oref/--ow in v7). --quality/--q is still supported with values 1, 2, or 4.' : ''}${platformKey === 'dalle' ? '   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere.' : ''}${platformKey === 'flux' ? '   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words.' : ''}${platformKey === 'stable-diffusion-text' ? '   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section.' : ''}${platformKey === 'stable-diffusion-json' ? '   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept.' : ''}${platformKey === 'imagen' ? '   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags.' : ''}${platformKey === 'nanobanana' ? '   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax.' : ''}${platformKey === 'nanobanana-json' ? '   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints.' : ''}
+${platformKey === "midjourney" ? "   - Write natural prose (20-40 words), avoid keyword-stuffing, end with --ar --s --chaos parameters, use --no for exclusions, use --raw for photorealism, use --oref/--ow instead of --cref. Do NOT include --cref (replaced by --oref/--ow in v7). --quality/--q is still supported with values 1, 2, or 4." : ""}${platformKey === "dalle" ? "   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere." : ""}${platformKey === "flux" ? "   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words." : ""}${platformKey === "stable-diffusion-text" ? "   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section." : ""}${platformKey === "stable-diffusion-json" ? "   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept." : ""}${platformKey === "imagen" ? "   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags." : ""}${platformKey === "nanobanana" ? "   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax." : ""}${platformKey === "nanobanana-json" ? "   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints." : ""}
 4. Every refinement must be a significant improvement - not cosmetic. Replace vague language with precise visual direction.
 5. Output ONLY the refined prompt (or JSON). No meta-commentary, explanations, or preamble.
 6. If answers reveal a new creative direction, expand accordingly - leave no visual gaps.${jsonGuidance}
-${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is already at a high level - make surgical precision improvements only.` : iteration === 2 ? '\nThis is the second refinement round - focus on remaining visual gaps, not what is already strong.' : ''}
+${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is already at a high level - make surgical precision improvements only.` : iteration === 2 ? "\nThis is the second refinement round - focus on remaining visual gaps, not what is already strong." : ""}
 
 Platform: ${displayName}. Tone: ${input.tone}. Category: ${input.category}.
 
-${identity ? `${identity}\n\n` : ''}After the improved prompt, on a new line add a short descriptive Hebrew title:
+${identity ? `${identity}\n\n` : ""}After the improved prompt, on a new line add a short descriptive Hebrew title:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
 Then add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact visual gaps. Return an empty array [] if the prompt is now comprehensive across all 7 visual layers.
 Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
 
-${platformKey === 'midjourney' ? 'QUESTION FOCUS for Midjourney v7: Ask about aspect ratio preference, stylize value (0-1000), --raw vs default aesthetic, omni reference URLs (--oref/--ow), style reference URLs (--sref/--sw), --draft mode for iteration, --personalize preference, and --weird value for experimental creativity.' : ''}${platformKey === 'dalle' ? 'QUESTION FOCUS for DALL-E 3: Ask about preferred size (1024x1024/1792x1024/1024x1792), vivid vs natural style, text elements to render in the image, narrative composition details, and story context.' : ''}${platformKey === 'flux' ? 'QUESTION FOCUS for Flux: Ask about aspect ratio, guidance scale preference (2-10), negative prompt elements to exclude, preferred model variant (Pro/Ultra/Dev), and whether raw mode is desired.' : ''}${platformKey === 'stable-diffusion-text' || platformKey === 'stable-diffusion-json' ? 'QUESTION FOCUS for Stable Diffusion: Ask about sampler preference, LoRA/style models to use, clip skip value, CFG scale adjustment, negative prompt refinement, and whether hires fix upscaling is needed.' : ''}${platformKey === 'imagen' ? 'QUESTION FOCUS for Imagen: Ask about aspect ratio, seed for variations/consistency, subject detail depth, exclusion refinements, and multi-subject spatial relationships.' : ''}${platformKey === 'nanobanana' || platformKey === 'nanobanana-json' ? 'QUESTION FOCUS for Gemini: Ask about aspect ratio, constraint refinements, character consistency requirements, reference style/artist, and whether multi-image generation is needed.' : ''}`,
+${platformKey === "midjourney" ? "QUESTION FOCUS for Midjourney v7: Ask about aspect ratio preference, stylize value (0-1000), --raw vs default aesthetic, omni reference URLs (--oref/--ow), style reference URLs (--sref/--sw), --draft mode for iteration, --personalize preference, and --weird value for experimental creativity." : ""}${platformKey === "dalle" ? "QUESTION FOCUS for DALL-E 3: Ask about preferred size (1024x1024/1792x1024/1024x1792), vivid vs natural style, text elements to render in the image, narrative composition details, and story context." : ""}${platformKey === "flux" ? "QUESTION FOCUS for Flux: Ask about aspect ratio, guidance scale preference (2-10), negative prompt elements to exclude, preferred model variant (Pro/Ultra/Dev), and whether raw mode is desired." : ""}${platformKey === "stable-diffusion-text" || platformKey === "stable-diffusion-json" ? "QUESTION FOCUS for Stable Diffusion: Ask about sampler preference, LoRA/style models to use, clip skip value, CFG scale adjustment, negative prompt refinement, and whether hires fix upscaling is needed." : ""}${platformKey === "imagen" ? "QUESTION FOCUS for Imagen: Ask about aspect ratio, seed for variations/consistency, subject detail depth, exclusion refinements, and multi-subject spatial relationships." : ""}${platformKey === "nanobanana" || platformKey === "nanobanana-json" ? "QUESTION FOCUS for Gemini: Ask about aspect ratio, constraint refinements, character consistency requirements, reference style/artist, and whether multi-image generation is needed." : ""}`,
 
-          userPrompt: `Current ${displayName} prompt:
+      userPrompt: `Current ${displayName} prompt:
 ---
 ${input.previousResult}
 ---
 ${answersBlock}
-${instruction ? `Additional instructions from user: ${instruction}` : ''}
+${instruction ? `Additional instructions from user: ${instruction}` : ""}
 
-Integrate all new information and produce an upgraded, refined ${displayName} prompt${isJsonOutput ? ' as valid JSON' : ' in English'}.`,
+Integrate all new information and produce an upgraded, refined ${displayName} prompt${isJsonOutput ? " as valid JSON" : " in English"}.`,
 
-          outputFormat: isJsonOutput ? 'json' : 'text',
-          requiredFields: [],
-      };
+      outputFormat: isJsonOutput ? "json" : "text",
+      requiredFields: [],
+    };
   }
 }
