@@ -2,8 +2,7 @@
 
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { X, Zap, Tag, Clock, BarChart2, Star, BookTemplate, Check, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { X, BarChart2, Star, BookTemplate } from "lucide-react";
 import type { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
@@ -19,6 +18,7 @@ import {
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
+import { PromptNodeCard } from "./PromptNodeCard";
 
 // Safari < 15.4 doesn't support roundRect — polyfill before any canvas code runs.
 if (typeof window !== "undefined") {
@@ -210,7 +210,8 @@ export function PromptGraphView({
   isLoading = false,
   truncatedAt = null,
 }: Props) {
-  const { updateTags, updatePrompt, libraryPrompts } = useLibraryContext();
+  const { updateTags, updatePrompt, libraryPrompts, startEditingPersonalPrompt } =
+    useLibraryContext();
   const libraryPromptsTyped = libraryPrompts as LibraryPrompt[] | undefined;
   const containerRef = useRef<HTMLDivElement>(null);
   const backBtnRef = useRef<HTMLButtonElement>(null);
@@ -292,7 +293,8 @@ export function PromptGraphView({
   const [searchQuery, setSearchQuery] = useState("");
   const [capabilityFilter, setCapabilityFilter] = useState<Set<CapabilityMode>>(new Set());
   const [favOnly, setFavOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
+  // 2D mode deprecated — always render 3D. Toggle UI removed.
+  const [viewMode] = useState<"2d" | "3d">("3d");
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Feature 3 — focused node for cinematic zoom
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -975,29 +977,6 @@ export function PromptGraphView({
     } catch {}
   }, [viewMode]);
 
-  // Export the current graph canvas as a PNG. 2D only for now — the
-  // react-force-graph-3d WebGL buffer requires preserveDrawingBuffer
-  // which isn't set here, so a 3D screenshot would come out blank.
-  const handleExportPng = useCallback(() => {
-    if (viewMode !== "2d") {
-      toast.info("ייצוא PNG זמין במצב 2D בלבד");
-      return;
-    }
-    const el = containerRef.current;
-    if (!el) return;
-    const canvas = el.querySelector("canvas");
-    if (!canvas) return;
-    try {
-      const url = (canvas as HTMLCanvasElement).toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `peroot-graph-${new Date().toISOString().slice(0, 10)}.png`;
-      a.click();
-    } catch {
-      toast.error("ייצוא PNG נכשל");
-    }
-  }, [viewMode]);
-
   // 3D: fit camera to settled node cloud after the engine cools down.
   // Small graphs would otherwise spawn inside a single sphere.
   const handle3DEngineStop = useCallback(() => {
@@ -1213,34 +1192,6 @@ export function PromptGraphView({
           <Star className={cn("w-3 h-3", favOnly && "fill-black")} />
           מועדפים
         </button>
-        <div className="flex items-center rounded-md border border-white/15 overflow-hidden">
-          <button
-            onClick={() => setViewMode("2d")}
-            className={cn(
-              "text-[11px] px-2 py-1 transition-colors",
-              viewMode === "2d"
-                ? "bg-white/15 text-white font-semibold"
-                : "text-slate-300 hover:bg-white/8",
-            )}
-            aria-pressed={viewMode === "2d"}
-            title="תצוגה דו-ממדית"
-          >
-            2D
-          </button>
-          <button
-            onClick={() => setViewMode("3d")}
-            className={cn(
-              "text-[11px] px-2 py-1 transition-colors border-r border-white/15",
-              viewMode === "3d"
-                ? "bg-gradient-to-br from-cyan-400/90 to-purple-500/90 text-black font-semibold"
-                : "text-slate-300 hover:bg-white/8",
-            )}
-            aria-pressed={viewMode === "3d"}
-            title="תצוגה תלת-ממדית"
-          >
-            3D
-          </button>
-        </div>
         <button
           onClick={handleFitView}
           className="text-[11px] px-2 py-1 rounded-md border border-white/15 text-slate-300 hover:bg-white/8 transition-colors"
@@ -1248,14 +1199,6 @@ export function PromptGraphView({
           aria-label="התאם לתצוגה"
         >
           התאם
-        </button>
-        <button
-          onClick={handleExportPng}
-          className="hidden md:inline-flex text-[11px] px-2 py-1 rounded-md border border-white/15 text-slate-300 hover:bg-white/8 transition-colors"
-          title="ייצוא PNG"
-          aria-label="ייצוא PNG"
-        >
-          PNG
         </button>
       </div>
 
@@ -1664,50 +1607,30 @@ export function PromptGraphView({
             className="relative w-full max-w-2xl max-h-[88vh] md:max-h-[82vh] rounded-2xl border border-white/15 bg-slate-950/95 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with prominent back-to-graph button */}
-            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-gradient-to-l from-purple-500/10 via-transparent to-amber-500/10 shrink-0">
-              <button
-                ref={backBtnRef}
-                onClick={() => setSelectedPrompt(null)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-                <span>חזרה לגרף</span>
-              </button>
-              <div id="graph-modal-title" className="text-[11px] text-slate-400 truncate">
-                {CAPABILITY_LABELS[selectedPrompt.capability_mode ?? CapabilityMode.STANDARD]}
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <SelectedPromptPanel
-                prompt={selectedPrompt}
-                onClose={() => setSelectedPrompt(null)}
-                onUse={(p) => {
-                  onUsePrompt(p);
-                  setSelectedPrompt(null);
-                }}
-                onSaveTitle={async (id, title) => {
-                  await updatePrompt(id, { title });
-                  setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
-                }}
-                onSaveTags={async (id, tags) => {
-                  await updateTags(id, tags);
-                  setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
-                }}
-              />
-            </div>
+            <span id="graph-modal-title" className="sr-only">
+              {CAPABILITY_LABELS[selectedPrompt.capability_mode ?? CapabilityMode.STANDARD]}
+            </span>
+            <PromptNodeCard
+              prompt={selectedPrompt}
+              backButtonRef={backBtnRef}
+              onClose={() => setSelectedPrompt(null)}
+              onUse={(p) => {
+                onUsePrompt(p);
+                setSelectedPrompt(null);
+              }}
+              onEdit={(p) => {
+                startEditingPersonalPrompt(p);
+                setSelectedPrompt(null);
+              }}
+              onSaveTitle={async (id, title) => {
+                await updatePrompt(id, { title });
+                setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, title } : prev));
+              }}
+              onSaveTags={async (id, tags) => {
+                await updateTags(id, tags);
+                setSelectedPrompt((prev) => (prev && prev.id === id ? { ...prev, tags } : prev));
+              }}
+            />
           </div>
         </div>
       )}
@@ -1729,270 +1652,3 @@ export function PromptGraphView({
   );
 }
 
-// ── Extracted panel component ─────────────────────────────────────────────────
-
-function SelectedPromptPanel({
-  prompt,
-  onClose,
-  onUse,
-  onSaveTitle,
-  onSaveTags,
-}: {
-  prompt: PersonalPrompt | null;
-  onClose: () => void;
-  onUse: (p: PersonalPrompt) => void;
-  onSaveTitle: (id: string, title: string) => Promise<void>;
-  onSaveTags: (id: string, tags: string[]) => Promise<void>;
-}) {
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState("");
-  const [savingTitle, setSavingTitle] = useState(false);
-  const [tagInput, setTagInput] = useState("");
-  const [savingTags, setSavingTags] = useState(false);
-  const titleRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (prompt) setTitleDraft(prompt.title);
-    setEditingTitle(false);
-    setTagInput("");
-  }, [prompt?.id]);
-
-  useEffect(() => {
-    if (editingTitle) titleRef.current?.focus();
-  }, [editingTitle]);
-
-  if (!prompt) return null;
-
-  const cap = prompt.capability_mode ?? CapabilityMode.STANDARD;
-  const color = CAPABILITY_COLORS[cap];
-  const total = (prompt.success_count ?? 0) + (prompt.fail_count ?? 0);
-  const successPct = total > 0 ? Math.round(((prompt.success_count ?? 0) / total) * 100) : null;
-
-  const handleSaveTitle = async () => {
-    const trimmed = titleDraft.trim();
-    if (!trimmed || trimmed === prompt.title) {
-      setEditingTitle(false);
-      return;
-    }
-    setSavingTitle(true);
-    try {
-      await onSaveTitle(prompt.id, trimmed);
-    } finally {
-      setSavingTitle(false);
-      setEditingTitle(false);
-    }
-  };
-
-  const handleAddTag = async () => {
-    const tag = tagInput.trim().toLowerCase();
-    if (!tag || prompt.tags?.includes(tag)) {
-      setTagInput("");
-      return;
-    }
-    const newTags = [...(prompt.tags ?? []), tag];
-    setSavingTags(true);
-    setTagInput("");
-    try {
-      await onSaveTags(prompt.id, newTags);
-    } finally {
-      setSavingTags(false);
-    }
-  };
-
-  const handleRemoveTag = async (tag: string) => {
-    const newTags = (prompt.tags ?? []).filter((t) => t !== tag);
-    setSavingTags(true);
-    try {
-      await onSaveTags(prompt.id, newTags);
-    } finally {
-      setSavingTags(false);
-    }
-  };
-
-  return (
-    <>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 gap-2">
-        {editingTitle ? (
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <input
-              ref={titleRef}
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveTitle();
-                if (e.key === "Escape") setEditingTitle(false);
-              }}
-              className="flex-1 min-w-0 text-sm font-semibold text-white bg-white/10 rounded-md px-2 py-0.5 outline-none border border-white/20 focus:border-amber-400/60"
-              disabled={savingTitle}
-              dir="auto"
-            />
-            <button
-              onClick={handleSaveTitle}
-              disabled={savingTitle}
-              className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-white/10"
-            >
-              <Check className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setEditingTitle(false)}
-              className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ) : (
-          <h3
-            className="text-sm font-semibold text-white truncate flex-1 cursor-pointer hover:text-amber-300 transition-colors"
-            title="לחץ לעריכת כותרת"
-            onClick={() => setEditingTitle(true)}
-          >
-            {prompt.title}
-          </h3>
-        )}
-        {!editingTitle && (
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-            aria-label="סגור"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto">
-        {/* Capability + badges row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className="flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border"
-            style={{ color, borderColor: color + "55", backgroundColor: color + "18" }}
-          >
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-            {CAPABILITY_LABELS[cap]}
-          </span>
-          {prompt.is_template && (
-            <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-cyan-400/40 text-cyan-300 bg-cyan-400/10">
-              <BookTemplate className="w-3 h-3" />
-              תבנית
-            </span>
-          )}
-          {(prompt.is_pinned || prompt.use_count > 0) && (
-            <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-amber-400/40 text-amber-300 bg-amber-400/10">
-              <Star className="w-3 h-3" />
-              {prompt.is_pinned ? "מוצמד" : `${prompt.use_count} שימושים`}
-            </span>
-          )}
-        </div>
-
-        {/* Prompt text */}
-        <p className="text-xs text-slate-300 leading-relaxed line-clamp-6 whitespace-pre-line bg-white/4 rounded-lg p-2.5">
-          {prompt.prompt}
-        </p>
-
-        {/* Tags — editable */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-1 flex-wrap">
-            <Tag className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-            {(prompt.tags ?? []).slice(0, 15).map((tag) => (
-              <button
-                key={tag}
-                onClick={() => !savingTags && handleRemoveTag(tag)}
-                disabled={savingTags}
-                className="group flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/8 text-slate-300 text-[10px] border border-white/8 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition-colors"
-                title="הסר תגית"
-              >
-                {tag}
-                <X className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            ))}
-          </div>
-          {/* Add tag input */}
-          <div className="flex items-center gap-1">
-            <input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddTag();
-              }}
-              placeholder="+ תגית חדשה"
-              disabled={savingTags}
-              dir="auto"
-              className="flex-1 text-[11px] bg-white/5 border border-white/10 rounded-md px-2 py-1 text-slate-300 placeholder-slate-600 outline-none focus:border-amber-400/40 transition-colors"
-            />
-            {tagInput.trim() && (
-              <button
-                onClick={handleAddTag}
-                disabled={savingTags}
-                className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Template variables */}
-        {prompt.template_variables && prompt.template_variables.length > 0 && (
-          <div className="flex items-start gap-1.5 flex-wrap">
-            <span className="text-[10px] text-cyan-400 shrink-0 mt-0.5">משתנים:</span>
-            {prompt.template_variables.map((v) => (
-              <span
-                key={v}
-                className="px-1.5 py-0.5 rounded-md bg-cyan-400/10 text-cyan-300 text-[10px] border border-cyan-400/20"
-              >
-                {"{{"}
-                {v}
-                {"}}"}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Stats row */}
-        <div className="flex items-center gap-4 text-[11px] text-slate-500">
-          {prompt.use_count > 0 && (
-            <div className="flex items-center gap-1">
-              <BarChart2 className="w-3 h-3" />
-              <span>{prompt.use_count} שימושים</span>
-            </div>
-          )}
-          {successPct !== null && (
-            <div
-              className="flex items-center gap-1"
-              style={{
-                color: successPct > 70 ? "#22c55e" : successPct > 40 ? "#f59e0b" : "#ef4444",
-              }}
-            >
-              <span>{successPct}% הצלחה</span>
-            </div>
-          )}
-          {prompt.last_used_at && (
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{new Date(prompt.last_used_at).toLocaleDateString("he-IL")}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Category */}
-        {prompt.personal_category && (
-          <div className="text-[11px] text-slate-500">
-            תיקייה: <span className="text-slate-300">{prompt.personal_category}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Use button */}
-      <div className="px-4 pb-5 shrink-0">
-        <button
-          onClick={() => onUse(prompt)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-black transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-          style={{ backgroundColor: CAPABILITY_COLORS[cap] }}
-        >
-          <Zap className="w-4 h-4" />
-          השתמש בפרומפט
-        </button>
-      </div>
-    </>
-  );
-}
