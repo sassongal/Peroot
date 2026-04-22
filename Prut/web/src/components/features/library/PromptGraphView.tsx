@@ -177,13 +177,56 @@ function drawCapabilityIcon(
 }
 
 export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading = false }: Props) {
-  const { updateTags, updatePrompt } = useLibraryContext();
+  const { updateTags, updatePrompt, libraryPrompts } = useLibraryContext() as ReturnType<
+    typeof useLibraryContext
+  > & {
+    libraryPrompts?: Array<{
+      id?: string;
+      source?: { reference?: string };
+      preview_image_url?: string;
+    }>;
+  };
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedPrompt, setSelectedPrompt] = useState<PersonalPrompt | null>(null);
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
+  const [mobileLegendOpen, setMobileLegendOpen] = useState(false);
   const tickRef = useRef(0);
   const rafRef = useRef<number>(0);
+  // Cache of loaded HTMLImageElement keyed by library reference id
+  const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
+  const [, forceRepaint] = useState(0);
+
+  // Build a map of reference-id → preview image URL from the library
+  const previewUrlByRef = useMemo(() => {
+    const map = new Map<string, string>();
+    (libraryPrompts ?? []).forEach((lp) => {
+      const ref = lp.source?.reference ?? lp.id;
+      if (ref && lp.preview_image_url) map.set(ref, lp.preview_image_url);
+    });
+    return map;
+  }, [libraryPrompts]);
+
+  // Preload images for image-generation prompts sourced from library
+  useEffect(() => {
+    prompts.forEach((p) => {
+      if (
+        p.capability_mode === CapabilityMode.IMAGE_GENERATION &&
+        p.source === "library" &&
+        p.reference
+      ) {
+        const url = previewUrlByRef.get(p.reference);
+        if (!url || imageCacheRef.current.has(p.reference)) return;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.referrerPolicy = "no-referrer";
+        img.onload = () => forceRepaint((n) => n + 1);
+        img.src = url;
+        imageCacheRef.current.set(p.reference, img);
+      }
+    });
+  }, [prompts, previewUrlByRef]);
   // Preserve node positions across graphData rebuilds so the simulation doesn't restart
   const positionMapRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const fgRef = useRef<{
@@ -278,7 +321,15 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
     if (typeof document !== "undefined") {
       document.body.style.cursor = node ? "pointer" : "default";
     }
+    if (!node) setHoverPos(null);
   }, []);
+
+  // Track pointer over the container so hover tooltip can follow
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!hoverNode) return;
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    setHoverPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, [hoverNode]);
 
   const nodeCanvasObject = useCallback(
     (node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -378,10 +429,27 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
         ctx.stroke();
       }
 
+      // Animated expanding ripple on hover — world-class polish
+      if (isHovered) {
+        const t = (tickRef.current % 1400) / 1400;
+        for (let i = 0; i < 2; i++) {
+          const phase = (t + i * 0.5) % 1;
+          const ringR = radius + phase * 22;
+          const a = (1 - phase) * 0.5;
+          ctx.beginPath();
+          ctx.arc(nx, ny, ringR, 0, 2 * Math.PI);
+          ctx.strokeStyle = `${highlight}${Math.floor(a * 255)
+            .toString(16)
+            .padStart(2, "0")}`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+
       // Outer glow (selected or hovered)
       if (isSelected || isHovered) {
         ctx.shadowColor = isSelected ? "#f59e0b" : color;
-        ctx.shadowBlur = isSelected ? 18 : 12;
+        ctx.shadowBlur = isSelected ? 22 : 16;
       }
 
       // Gold favorite ring
@@ -435,8 +503,44 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
 
       ctx.shadowBlur = 0;
 
-      // Capability icon inside the node (only at sufficient size)
-      if (radius > 9) {
+      // For image-generation prompts sourced from the library, clip the preview
+      // image inside the node circle. Falls back to the camera icon if the
+      // image hasn't loaded or isn't available.
+      let drewImage = false;
+      if (cap === CapabilityMode.IMAGE_GENERATION && node.prompt?.reference) {
+        const img = imageCacheRef.current.get(node.prompt.reference);
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(nx, ny, radius - 1, 0, 2 * Math.PI);
+          ctx.clip();
+          const side = (radius - 1) * 2;
+          // cover-fit
+          const ar = img.naturalWidth / img.naturalHeight;
+          let dw = side;
+          let dh = side;
+          if (ar > 1) dw = side * ar;
+          else dh = side / ar;
+          ctx.drawImage(img, nx - dw / 2, ny - dh / 2, dw, dh);
+          // Vignette for readability
+          const vg = ctx.createRadialGradient(nx, ny, radius * 0.2, nx, ny, radius);
+          vg.addColorStop(0, "rgba(0,0,0,0)");
+          vg.addColorStop(1, "rgba(0,0,0,0.55)");
+          ctx.fillStyle = vg;
+          ctx.fillRect(nx - radius, ny - radius, radius * 2, radius * 2);
+          ctx.restore();
+          // Crisp colored outline so category color stays readable
+          ctx.beginPath();
+          ctx.arc(nx, ny, radius - 0.5, 0, 2 * Math.PI);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          drewImage = true;
+        }
+      }
+
+      // Capability icon inside the node (only at sufficient size, no image)
+      if (!drewImage && radius > 9) {
         drawCapabilityIcon(ctx, cap, nx, ny, radius);
       }
 
@@ -512,7 +616,25 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
   }, []);
 
   return (
-    <div className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-white/8 bg-black/15 backdrop-blur-sm">
+    <div
+      className="relative w-full flex-1 min-h-[500px] rounded-2xl overflow-hidden border border-white/10 backdrop-blur-sm"
+      style={{
+        background:
+          "radial-gradient(120% 80% at 50% 0%, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.06) 35%, rgba(2,6,23,0.55) 75%), " +
+          "radial-gradient(80% 60% at 100% 100%, rgba(245,158,11,0.08) 0%, transparent 70%), " +
+          "linear-gradient(180deg, rgba(2,6,23,0.55), rgba(2,6,23,0.75))",
+      }}
+    >
+      {/* Subtle dotted grid overlay for depth */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
+      />
       {/* Loading overlay while fetching all prompts */}
       {isLoading && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm">
@@ -522,7 +644,8 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
       )}
       <div
         ref={containerRef}
-        className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)]"
+        onPointerMove={handlePointerMove}
+        className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
       >
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <ForceGraph2D
@@ -555,6 +678,50 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
           maxZoom={8}
         />
       </div>
+
+      {/* Floating hover tooltip — shows a peek card next to the cursor */}
+      {hoverNode && hoverPos && hoverNode.type === "prompt" && hoverNode.prompt && (
+        <div
+          className="pointer-events-none absolute z-30 max-w-[240px] rounded-xl border border-white/15 bg-black/85 backdrop-blur-xl px-3 py-2 shadow-2xl text-right"
+          style={{
+            left: Math.min(dimensions.width - 250, Math.max(8, hoverPos.x + 16)),
+            top: Math.min(dimensions.height - 120, Math.max(8, hoverPos.y + 16)),
+          }}
+          dir="rtl"
+        >
+          <div className="flex items-center gap-1.5 mb-1">
+            <span
+              className="inline-block w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: CAPABILITY_COLORS[hoverNode.capability ?? CapabilityMode.STANDARD] }}
+            />
+            <span className="text-[10px] font-medium text-slate-400">
+              {CAPABILITY_LABELS[hoverNode.capability ?? CapabilityMode.STANDARD]}
+            </span>
+            {hoverNode.isFavorite && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
+            {hoverNode.isTemplate && <BookTemplate className="w-3 h-3 text-cyan-400" />}
+          </div>
+          <div className="text-sm font-semibold text-white line-clamp-2 leading-snug">
+            {hoverNode.label}
+          </div>
+          {hoverNode.prompt.personal_category && (
+            <div className="text-[10px] text-slate-400 mt-1">
+              {hoverNode.prompt.personal_category}
+            </div>
+          )}
+          {(hoverNode.prompt.tags ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {(hoverNode.prompt.tags ?? []).slice(0, 4).map((t) => (
+                <span
+                  key={t}
+                  className="text-[9px] px-1.5 py-0.5 rounded bg-white/8 text-slate-300 border border-white/10"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Legend — desktop: bottom-left, mobile: hidden */}
       <div className="hidden md:flex absolute bottom-4 left-4 flex-col gap-2 bg-black/65 backdrop-blur-md rounded-xl px-3 py-2.5 border border-white/10 text-[10px] text-slate-300 z-10 select-none">
@@ -621,8 +788,67 @@ export function PromptGraphView({ prompts, favoriteIds, onUsePrompt, isLoading =
       {/* Node count hint */}
       <div className="absolute top-3 right-3 bg-black/55 backdrop-blur-sm text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-white/8 z-10 select-none leading-tight">
         <div>{prompts.length} פרומפטים</div>
-        <div className="text-slate-500">גלגלת להגדלה · גרור להזזה</div>
+        <div className="text-slate-500 hidden sm:block">גלגלת להגדלה · גרור להזזה</div>
+        <div className="text-slate-500 sm:hidden">צבוט להגדלה</div>
       </div>
+
+      {/* Mobile legend toggle pill */}
+      <button
+        type="button"
+        onClick={() => setMobileLegendOpen((o) => !o)}
+        className="md:hidden absolute bottom-4 left-4 z-20 flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-slate-200 text-[11px] px-3 py-2 rounded-full border border-white/15 shadow-lg active:scale-95 transition-transform"
+        aria-label="מקרא"
+        aria-expanded={mobileLegendOpen}
+      >
+        <span
+          className="inline-block w-2 h-2 rounded-full bg-amber-400"
+          style={{ boxShadow: "0 0 8px rgba(251,191,36,0.8)" }}
+        />
+        מקרא
+      </button>
+
+      {mobileLegendOpen && (
+        <div
+          className="md:hidden absolute bottom-16 left-4 right-4 z-20 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/15 p-4 shadow-2xl text-slate-200 text-xs"
+          dir="rtl"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-semibold">מקרא הגרף</span>
+            <button
+              onClick={() => setMobileLegendOpen(false)}
+              aria-label="סגור"
+              className="p-1 -m-1 rounded hover:bg-white/10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(CAPABILITY_COLORS).map(([mode, color]) => (
+              <div key={mode} className="flex items-center gap-2">
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+                <span>{CAPABILITY_LABELS[mode as CapabilityMode]}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full border-2 border-amber-400" />
+              <span>מועדף</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-2.5 h-2.5 rounded-full border border-cyan-400"
+                style={{ borderStyle: "dashed" }}
+              />
+              <span>תבנית</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/10 text-[10px] text-slate-400 leading-relaxed">
+            הקישו על צומת לפתיחת פרטים · צבטו להגדלה · גררו להזזה
+          </div>
+        </div>
+      )}
 
       {/* ── Selected prompt panel ── */}
       {/* Desktop: left slide-in panel */}

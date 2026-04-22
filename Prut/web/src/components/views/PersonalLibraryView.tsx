@@ -132,15 +132,17 @@ export function PersonalLibraryView({
 
   // When graph mode activates, fetch ALL personal prompts (no pagination).
   // filteredPersonalLibrary only has the current page — graph needs the full library.
+  const userId = ctx.user?.id;
   useEffect(() => {
-    if (localViewType !== "graph" || !ctx.user) return;
+    if (localViewType !== "graph" || !userId) return;
     let cancelled = false;
     setGraphLoading(true);
     createClient()
       .from("personal_library")
       .select("*")
-      .eq("user_id", ctx.user.id)
+      .eq("user_id", userId)
       .order("sort_index", { ascending: true })
+      .limit(2000)
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) logger.error("[graph] fetch all prompts failed", error);
@@ -150,7 +152,7 @@ export function PersonalLibraryView({
     return () => {
       cancelled = true;
     };
-  }, [localViewType, ctx.user]);
+  }, [localViewType, userId]);
 
   // Expanded card ids
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
