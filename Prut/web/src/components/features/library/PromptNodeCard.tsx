@@ -54,7 +54,7 @@ export function PromptNodeCard({
   onSaveTags,
   backButtonRef,
 }: PromptNodeCardProps) {
-  const { togglePin, movePrompts, deletePrompts, personalCategories } = useLibraryContext();
+  const { togglePin, movePrompts, deletePrompts, personalCategories, updatePrompt } = useLibraryContext();
   const { favoritePersonalIds, handleToggleFavorite } = useFavoritesContext();
 
   const [editingTitle, setEditingTitle] = useState(false);
@@ -550,7 +550,10 @@ export function PromptNodeCard({
           onClose={() => setShowHistory(false)}
           onRestore={async (content, title) => {
             try {
-              await onSaveTitle(prompt.id, title ?? prompt.title);
+              await updatePrompt(prompt.id, {
+                prompt: content,
+                title: title ?? prompt.title,
+              });
               toast.success("הגרסה שוחזרה");
             } catch {
               toast.error("שחזור נכשל");

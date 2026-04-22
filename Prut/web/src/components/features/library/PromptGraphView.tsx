@@ -548,35 +548,39 @@ export function PromptGraphView({
   );
 
   // Direct pointer-based click detection on the container div.
-  // This runs independently of the 3D library's click mechanism and is the
-  // reliable path for opening the node card on left-click.
-  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
+  // Captures the hovered node at pointerdown so we don't miss it if the
+  // library's hover state updates asynchronously between down and up.
+  const pointerDownRef = useRef<{ x: number; y: number; node: GraphNode | null } | null>(null);
+  // Keep a ref to hoverNode so handlers can read it without stale closure
+  const hoverNodeRef = useRef<GraphNode | null>(null);
+  useEffect(() => { hoverNodeRef.current = hoverNode; }, [hoverNode]);
 
   const handleContainerPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
-    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+    pointerDownRef.current = { x: e.clientX, y: e.clientY, node: hoverNodeRef.current };
   }, []);
 
   const handleContainerPointerUp = useCallback(
     (e: React.PointerEvent) => {
       if (e.button !== 0) return;
-      const down = pointerDownPos.current;
-      pointerDownPos.current = null;
+      const down = pointerDownRef.current;
+      pointerDownRef.current = null;
       if (!down) return;
       const dx = e.clientX - down.x;
       const dy = e.clientY - down.y;
-      // Only treat as a click if pointer barely moved (threshold 6px)
-      if (Math.sqrt(dx * dx + dy * dy) > 6) return;
-      // Use current hoverNode from state to identify which node was clicked
-      if (hoverNode && hoverNode.type === "prompt" && hoverNode.prompt) {
+      // Only treat as a click if pointer moved < 8px (generous for touch)
+      if (Math.sqrt(dx * dx + dy * dy) > 8) return;
+      // Prefer node captured at pointerdown; fall back to current hover
+      const clicked = down.node ?? hoverNodeRef.current;
+      if (clicked && clicked.type === "prompt" && clicked.prompt) {
         savePositions();
         setSelectedPrompt((prev) =>
-          prev?.id === hoverNode.prompt!.id ? null : hoverNode.prompt!,
+          prev?.id === clicked.prompt!.id ? null : clicked.prompt!,
         );
-        setFocusedId((prev) => (prev === hoverNode.id ? null : hoverNode.id));
+        setFocusedId((prev) => (prev === clicked.id ? null : clicked.id));
       }
     },
-    [hoverNode, savePositions],
+    [savePositions],
   );
 
   // Pin the node at its dragged position so it stays put after drag.
