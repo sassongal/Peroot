@@ -11,6 +11,18 @@ export const maxDuration = 30;
 const MAX_IMAGE_SIZE_MB = 5;
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
+function hasImageMagicBytes(buf: Buffer, mime: string): boolean {
+  if (buf.length < 4) return false;
+  if (mime === "image/jpeg") return buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (mime === "image/png")
+    return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  if (mime === "image/webp")
+    return buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46;
+  if (mime === "image/gif")
+    return buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38;
+  return false;
+}
+
 const enc = new TextEncoder();
 function sseEvent(data: unknown): Uint8Array {
   return enc.encode(`data: ${JSON.stringify(data)}\n\n`);
@@ -41,20 +53,30 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
-    if (!file) return NextResponse.json({ error: "לא נבחרה תמונה" }, { status: 400 });
+    if (!file) {
+      await rl.rollback();
+      return NextResponse.json({ error: "לא נבחרה תמונה" }, { status: 400 });
+    }
 
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > MAX_IMAGE_SIZE_MB) {
+      await rl.rollback();
       return NextResponse.json(
         { error: `התמונה גדולה מדי (מקסימום ${MAX_IMAGE_SIZE_MB}MB)` },
         { status: 400 },
       );
     }
     if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      await rl.rollback();
       return NextResponse.json({ error: "פורמט תמונה לא נתמך" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (!hasImageMagicBytes(buffer, file.type)) {
+      await rl.rollback();
+      return NextResponse.json({ error: "פורמט תמונה לא תקין" }, { status: 400 });
+    }
     const id = crypto.randomUUID();
 
     const stream = new ReadableStream({

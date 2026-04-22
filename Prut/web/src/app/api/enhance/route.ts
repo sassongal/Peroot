@@ -25,6 +25,7 @@ export const maxDuration = 30;
 // In-memory per-instance cache. Subscription upgrades may take up to 15s to reflect.
 // Acceptable trade-off vs Redis round-trip on every request.
 const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: number }>();
+const profileInflight = new Map<string, Promise<{ tier: string; isAdmin: boolean }>>();
 const PROFILE_CACHE_TTL = 15_000; // 15 seconds
 
 const RequestSchema = z.object({
@@ -183,6 +184,38 @@ export async function POST(req: Request) {
       if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
         tier = cached.tier as "free" | "pro" | "admin";
         isAdmin = cached.isAdmin;
+        cachedHit = true;
+      } else {
+        // Dedup concurrent profile fetches for the same user (thundering-herd protection).
+        // Multiple requests racing on a cold cache all share the same in-flight promise
+        // so we hit the DB exactly once per TTL window per user per instance.
+        let inflight = profileInflight.get(userId);
+        if (!inflight) {
+          inflight = (async () => {
+            const [pRes, arRes] = await Promise.all([
+              queryClient
+                .from("profiles")
+                .select("plan_tier")
+                .eq("id", userId!)
+                .maybeSingle(),
+              queryClient
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", userId!)
+                .eq("role", "admin")
+                .maybeSingle(),
+            ]);
+            const t = (pRes.data?.plan_tier as "free" | "pro" | "admin") || "free";
+            const a = !!arRes.data;
+            if (profileCache.size > 10_000) profileCache.clear();
+            profileCache.set(userId!, { tier: t, isAdmin: a, ts: Date.now() });
+            return { tier: t, isAdmin: a };
+          })().finally(() => profileInflight.delete(userId!));
+          profileInflight.set(userId, inflight);
+        }
+        const result = await inflight;
+        tier = result.tier as "free" | "pro" | "admin";
+        isAdmin = result.isAdmin;
         cachedHit = true;
       }
     }
@@ -409,8 +442,11 @@ export async function POST(req: Request) {
     // 4.6 Result cache lookup. Scoped PER USER (no cross-user sharing) and
     // skipped whenever personalization signal or context attachments are
     // present — see src/lib/ai/enhance-cache.ts for the full skip rules.
-    // The X-Peroot-Cache-Bypass header lets power users force a fresh run.
-    const bypassCache = req.headers.get("x-peroot-cache-bypass") === "1";
+    // The X-Peroot-Cache-Bypass header lets pro/admin users force a fresh run.
+    // Restricted to pro/admin to prevent free/guest users from bypassing the cache
+    // and forcing expensive LLM calls on every request.
+    const bypassCache =
+      (isAdmin || tier === "pro") && req.headers.get("x-peroot-cache-bypass") === "1";
     const cacheKey = bypassCache
       ? null
       : buildCacheKey({

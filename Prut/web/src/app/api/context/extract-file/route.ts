@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
     if (rawContentLength) {
       const bytes = parseInt(rawContentLength, 10);
       if (!Number.isNaN(bytes) && bytes > (MAX_FILE_SIZE_MB + 2) * 1024 * 1024) {
+        await rl.rollback();
         return NextResponse.json(
           { error: `הקובץ גדול מדי (מקסימום ${MAX_FILE_SIZE_MB}MB)` },
           { status: 413 },
@@ -66,10 +67,14 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    if (!file) return NextResponse.json({ error: "לא נבחר קובץ" }, { status: 400 });
+    if (!file) {
+      await rl.rollback();
+      return NextResponse.json({ error: "לא נבחר קובץ" }, { status: 400 });
+    }
 
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > MAX_FILE_SIZE_MB) {
+      await rl.rollback();
       return NextResponse.json(
         { error: `הקובץ גדול מדי (מקסימום ${MAX_FILE_SIZE_MB}MB)` },
         { status: 400 },
@@ -79,6 +84,7 @@ export async function POST(request: NextRequest) {
     // Pre-validate format before buffering — avoids allocating 10 MB for unsupported types
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
     if (!ALLOWED_MIME_TYPES.has(file.type) && !SUPPORTED_FILE_EXTENSIONS[ext]) {
+      await rl.rollback();
       return NextResponse.json({ error: "פורמט קובץ לא נתמך" }, { status: 400 });
     }
 
