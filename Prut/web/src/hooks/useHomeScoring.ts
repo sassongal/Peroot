@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
@@ -39,17 +39,19 @@ export function useHomeScoring({
 
   // EMA smoothing: prevents jumpy scores during rapid typing.
   // Weighted toward new value (0.7) so it converges fast but avoids spikes.
-  const prevScoreRef = useRef<number>(0);
-  const liveInputScore = useMemo(() => {
-    if (!rawInputScore || rawInputScore.level === 'empty') {
-      return rawInputScore;
-    }
-    const smoothed = Math.round(prevScoreRef.current * 0.3 + rawInputScore.total * 0.7);
-    return { ...rawInputScore, total: smoothed };
-  }, [rawInputScore]);
+  // Stored in state (not ref) so the smoothed total is always derived from a
+  // value written outside render — safe under React 19's refs-during-render rule.
+  const [liveInputScore, setLiveInputScore] = useState(rawInputScore);
   useEffect(() => {
-    prevScoreRef.current = liveInputScore?.total ?? 0;
-  }, [liveInputScore]);
+    queueMicrotask(() => {
+      setLiveInputScore((prev) => {
+        if (!rawInputScore || rawInputScore.level === 'empty') return rawInputScore;
+        const prevTotal = prev?.total ?? 0;
+        const smoothed = Math.round(prevTotal * 0.3 + rawInputScore.total * 0.7);
+        return { ...rawInputScore, total: smoothed };
+      });
+    });
+  }, [rawInputScore]);
 
   // IMPORTANT: header score must match the breakdown drawer and PDF export.
   // Both use EnhancedScorer — computing from the same source avoids silent mismatches.

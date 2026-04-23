@@ -100,7 +100,8 @@ export function AuthProvider({
   // Resolve admin role from user_roles. One query per logged-in user id.
   useEffect(() => {
     if (!user) {
-      setIsAdmin(false);
+      // Defer to avoid synchronous setState-during-effect which React 19 flags.
+      queueMicrotask(() => setIsAdmin(false));
       return;
     }
     let cancelled = false;

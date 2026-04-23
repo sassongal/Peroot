@@ -144,7 +144,9 @@ export function PersonalLibraryView({
     // (the "1-node graph" bug). created_at is NOT NULL; sort_index is nullable.
     if (localViewType !== "graph" || !userId || !authLoaded) return;
     let cancelled = false;
-    setGraphLoading(true);
+    queueMicrotask(() => {
+      if (!cancelled) setGraphLoading(true);
+    });
     createClient()
       .from("personal_library")
       .select("*", { count: "exact" })
