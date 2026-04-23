@@ -4,8 +4,13 @@ export const GSC_SITE_URL =
   process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL ?? "https://www.peroot.space";
 
 export function getGscAuth() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  if (!raw) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY not set");
+  // Accept either env name — GOOGLE_APPLICATION_CREDENTIALS_JSON is the
+  // existing Vercel convention here; GOOGLE_SERVICE_ACCOUNT_KEY is the
+  // name used in earlier docs/scripts. Prefer the former.
+  const raw =
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ??
+    process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!raw) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY not configured");
   let credentials: Record<string, unknown>;
   try {
     credentials = JSON.parse(raw);
@@ -14,7 +19,10 @@ export function getGscAuth() {
   }
   return new google.auth.GoogleAuth({
     credentials,
-    scopes: ["https://www.googleapis.com/auth/webmasters.readonly"],
+    scopes: [
+      "https://www.googleapis.com/auth/webmasters.readonly",
+      "https://www.googleapis.com/auth/indexing",
+    ],
   });
 }
 
