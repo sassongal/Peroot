@@ -33,12 +33,8 @@ function Metric({
 }) {
   return (
     <div className="space-y-1">
-      <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
-        {label}
-      </div>
-      <div className={cn("text-xl font-bold text-zinc-300", valueColor)}>
-        {value}
-      </div>
+      <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">{label}</div>
+      <div className={cn("text-xl font-bold text-zinc-300", valueColor)}>{value}</div>
     </div>
   );
 }
@@ -74,9 +70,7 @@ function ResourceBar({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="text-[9px] font-black text-zinc-800 tracking-widest">
-        {pct}% OF TOTAL
-      </div>
+      <div className="text-[9px] font-black text-zinc-800 tracking-widest">{pct}% OF TOTAL</div>
     </div>
   );
 }
@@ -161,7 +155,19 @@ export function DatabaseTab() {
   // Use largest single table as the bar scale max (not total) so bars are meaningful
   const maxSingleTable = Math.max(...Object.values(dbStats.rowCounts), 1);
 
-  const TABLE_COLORS = ["blue","purple","emerald","amber","blue","purple","emerald","amber","blue","purple","emerald"] as const;
+  const TABLE_COLORS = [
+    "blue",
+    "purple",
+    "emerald",
+    "amber",
+    "blue",
+    "purple",
+    "emerald",
+    "amber",
+    "blue",
+    "purple",
+    "emerald",
+  ] as const;
   const TABLE_LABELS: Record<string, string> = {
     profiles: "Profiles",
     personal_library: "Personal Library",
@@ -177,10 +183,7 @@ export function DatabaseTab() {
   };
 
   return (
-    <div
-      className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none"
-      dir="rtl"
-    >
+    <div className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none" dir="rtl">
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -196,8 +199,8 @@ export function DatabaseTab() {
             Infra Matrix
           </h1>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
-            ניהול מסד נתונים, גיבויים ותקינות תשתית הענן. כל פעולה כאן משפיעה ישירות
-            על ליבת המערכת וזמינות המידע.
+            ניהול מסד נתונים, גיבויים ותקינות תשתית הענן. כל פעולה כאן משפיעה ישירות על ליבת המערכת
+            וזמינות המידע.
           </p>
         </div>
 
@@ -226,12 +229,10 @@ export function DatabaseTab() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-4xl font-black text-white tracking-tighter">
-                Genesis Snapshot
-              </h3>
+              <h3 className="text-4xl font-black text-white tracking-tighter">Genesis Snapshot</h3>
               <p className="text-zinc-500 text-base font-medium leading-relaxed max-w-sm">
-                יצירת עותק מקומי מוצפן ושלם של כל מסד הנתונים הנוכחי, כולל הגדרות
-                מערכת ופרופילי משתמשים.
+                יצירת עותק מקומי מוצפן ושלם של כל מסד הנתונים הנוכחי, כולל הגדרות מערכת ופרופילי
+                משתמשים.
               </p>
             </div>
 
@@ -245,9 +246,7 @@ export function DatabaseTab() {
               ) : (
                 <Archive className="w-5 h-5" />
               )}
-              <span>
-                {backupLoading ? "Building Snapshot..." : "Initiate Global Export"}
-              </span>
+              <span>{backupLoading ? "Building Snapshot..." : "Initiate Global Export"}</span>
             </button>
 
             <div className="grid grid-cols-3 gap-6 pt-10 border-t border-white/5">
@@ -266,8 +265,8 @@ export function DatabaseTab() {
                   dbStats.health === "Healthy"
                     ? "text-emerald-400"
                     : dbStats.health === "Error"
-                    ? "text-rose-400"
-                    : "text-zinc-400"
+                      ? "text-rose-400"
+                      : "text-zinc-400"
                 }
               />
             </div>
@@ -289,12 +288,10 @@ export function DatabaseTab() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-4xl font-black text-white tracking-tighter">
-                Refresh Stats
-              </h3>
+              <h3 className="text-4xl font-black text-white tracking-tighter">Refresh Stats</h3>
               <p className="text-zinc-500 text-base font-medium leading-relaxed max-w-sm">
-                עדכון נתוני בסיס הנתונים בזמן אמת: ספירת שורות לכל טבלה, בדיקת
-                תקינות ומצב הזיכרון הכולל.
+                עדכון נתוני בסיס הנתונים בזמן אמת: ספירת שורות לכל טבלה, בדיקת תקינות ומצב הזיכרון
+                הכולל.
               </p>
             </div>
 
@@ -303,12 +300,8 @@ export function DatabaseTab() {
               disabled={dbStats.statsLoading}
               className="w-full py-6 rounded-[24px] bg-emerald-600/10 hover:bg-emerald-600 text-emerald-500 hover:text-white border border-emerald-600/20 font-black uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-4 shadow-xl"
             >
-              <RefreshCw
-                className={cn("w-5 h-5", dbStats.statsLoading && "animate-spin")}
-              />
-              <span>
-                {dbStats.statsLoading ? "Fetching Stats..." : "Refresh Database Stats"}
-              </span>
+              <RefreshCw className={cn("w-5 h-5", dbStats.statsLoading && "animate-spin")} />
+              <span>{dbStats.statsLoading ? "Fetching Stats..." : "Refresh Database Stats"}</span>
             </button>
 
             <div className="grid grid-cols-2 gap-6 pt-10 border-t border-white/5">
@@ -352,9 +345,7 @@ export function DatabaseTab() {
               </div>
             </div>
             <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
-              {dbStats.statsLoading
-                ? "..."
-                : `${totalRows.toLocaleString()} Total Rows`}
+              {dbStats.statsLoading ? "..." : `${totalRows.toLocaleString()} Total Rows`}
             </span>
           </div>
 

@@ -256,7 +256,9 @@ export function LibraryTab() {
                     key={p.id}
                     className="grid grid-cols-12 gap-4 px-8 py-4 border-b border-white/5 hover:bg-white/2 transition-all duration-200 items-center"
                   >
-                    <div className="col-span-5 font-bold text-zinc-300 text-sm truncate">{p.title}</div>
+                    <div className="col-span-5 font-bold text-zinc-300 text-sm truncate">
+                      {p.title}
+                    </div>
                     <div className="col-span-3">
                       {p.capability_mode && (
                         <span className="px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-wide">
@@ -270,7 +272,12 @@ export function LibraryTab() {
                       ) : (
                         <XCircle className="w-3.5 h-3.5 text-zinc-700" />
                       )}
-                      <span className={cn("text-[9px] font-black uppercase", p.is_active ? "text-emerald-500" : "text-zinc-700")}>
+                      <span
+                        className={cn(
+                          "text-[9px] font-black uppercase",
+                          p.is_active ? "text-emerald-500" : "text-zinc-700",
+                        )}
+                      >
                         {p.is_active ? "Active" : "Inactive"}
                       </span>
                     </div>

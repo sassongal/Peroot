@@ -127,7 +127,9 @@ function SummaryCard({
             {value}
           </div>
         )}
-        <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">{label}</div>
+        <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
+          {label}
+        </div>
         <div className="text-[9px] text-zinc-800 font-bold">{sublabel}</div>
       </div>
     </div>
@@ -169,8 +171,15 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">{label}</span>
-      <span className={cn("text-sm font-black truncate max-w-[280px]", highlight ? "text-blue-400" : "text-zinc-300")}>
+      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">
+        {label}
+      </span>
+      <span
+        className={cn(
+          "text-sm font-black truncate max-w-[280px]",
+          highlight ? "text-blue-400" : "text-zinc-300",
+        )}
+      >
         {value}
       </span>
     </div>
@@ -242,7 +251,6 @@ export function EmailCampaignsTab() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none" dir="rtl">
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -250,7 +258,9 @@ export function EmailCampaignsTab() {
             <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
               <Mail className="w-4 h-4" />
             </div>
-            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Email Campaign Engine</span>
+            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">
+              Email Campaign Engine
+            </span>
           </div>
           <h2 className="text-6xl font-black bg-linear-to-l from-white to-zinc-600 bg-clip-text text-transparent tracking-tighter leading-none">
             Email Campaigns
@@ -307,7 +317,12 @@ export function EmailCampaignsTab() {
 
       {/* Segment Stats */}
       <div className="px-2 space-y-4">
-        <SectionTitle icon={Users} color="emerald" title="Segment Overview" sub="סטטיסטיקות לפי סגמנט" />
+        <SectionTitle
+          icon={Users}
+          color="emerald"
+          title="Segment Overview"
+          sub="סטטיסטיקות לפי סגמנט"
+        />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {SEGMENT_OPTIONS.map((seg) => {
             const count = data?.segmentCounts?.[seg.value] ?? 0;
@@ -320,16 +335,35 @@ export function EmailCampaignsTab() {
                   "p-6 rounded-[28px] border text-right transition-all duration-300 active:scale-95",
                   isSelected
                     ? "bg-blue-600 border-blue-500 shadow-2xl shadow-blue-600/20"
-                    : "bg-zinc-950/60 border-white/5 hover:border-white/10"
+                    : "bg-zinc-950/60 border-white/5 hover:border-white/10",
                 )}
               >
-                <div className={cn("text-2xl font-black tabular-nums", isSelected ? "text-white" : "text-zinc-300")}>
-                  {loading ? <div className="h-7 w-12 rounded-lg bg-white/10 animate-pulse" /> : fmtCount(count)}
+                <div
+                  className={cn(
+                    "text-2xl font-black tabular-nums",
+                    isSelected ? "text-white" : "text-zinc-300",
+                  )}
+                >
+                  {loading ? (
+                    <div className="h-7 w-12 rounded-lg bg-white/10 animate-pulse" />
+                  ) : (
+                    fmtCount(count)
+                  )}
                 </div>
-                <div className={cn("text-[10px] font-black uppercase tracking-widest mt-1", isSelected ? "text-blue-200" : "text-zinc-600")}>
+                <div
+                  className={cn(
+                    "text-[10px] font-black uppercase tracking-widest mt-1",
+                    isSelected ? "text-blue-200" : "text-zinc-600",
+                  )}
+                >
                   {seg.label}
                 </div>
-                <div className={cn("text-[9px] font-bold mt-0.5", isSelected ? "text-blue-300" : "text-zinc-800")}>
+                <div
+                  className={cn(
+                    "text-[9px] font-bold mt-0.5",
+                    isSelected ? "text-blue-300" : "text-zinc-800",
+                  )}
+                >
                   {seg.he}
                 </div>
               </button>
@@ -340,14 +374,21 @@ export function EmailCampaignsTab() {
 
       {/* Campaign Composer */}
       <div className="px-2 space-y-4">
-        <SectionTitle icon={Mail} color="blue" title="Campaign Composer" sub="כתיבה ושליחת קמפיין חדש" />
+        <SectionTitle
+          icon={Mail}
+          color="blue"
+          title="Campaign Composer"
+          sub="כתיבה ושליחת קמפיין חדש"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Composer panel */}
           <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 space-y-6 shadow-2xl">
             {/* Subject */}
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">Subject Line</label>
+              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">
+                Subject Line
+              </label>
               <input
                 type="text"
                 value={subject}
@@ -360,7 +401,9 @@ export function EmailCampaignsTab() {
 
             {/* Segment selector */}
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">Target Segment</label>
+              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">
+                Target Segment
+              </label>
               <div className="relative">
                 <select
                   value={segment}
@@ -368,7 +411,9 @@ export function EmailCampaignsTab() {
                   className="w-full appearance-none bg-zinc-900 border border-white/5 text-white rounded-2xl px-5 py-3.5 text-sm font-bold focus:outline-none focus:border-blue-500/40 transition-colors cursor-pointer pr-10"
                 >
                   {SEGMENT_OPTIONS.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label} - {s.he}</option>
+                    <option key={s.value} value={s.value}>
+                      {s.label} - {s.he}
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
@@ -380,7 +425,9 @@ export function EmailCampaignsTab() {
 
             {/* HTML Content */}
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">Email Content (HTML)</label>
+              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">
+                Email Content (HTML)
+              </label>
               <textarea
                 value={htmlContent}
                 onChange={(e) => setHtmlContent(e.target.value)}
@@ -400,7 +447,7 @@ export function EmailCampaignsTab() {
                   "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30",
                   showPreview
                     ? "bg-white/10 border border-white/10 text-white"
-                    : "bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white"
+                    : "bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white",
                 )}
               >
                 <Eye className="w-4 h-4" />
@@ -408,7 +455,10 @@ export function EmailCampaignsTab() {
               </button>
 
               <button
-                onClick={() => { setSendResult(null); setShowConfirm(true); }}
+                onClick={() => {
+                  setSendResult(null);
+                  setShowConfirm(true);
+                }}
                 disabled={!canSend || sending}
                 className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-all active:scale-95 disabled:opacity-40 shadow-2xl shadow-blue-600/20"
               >
@@ -424,7 +474,7 @@ export function EmailCampaignsTab() {
                   "flex items-start gap-3 p-5 rounded-2xl border text-sm font-bold",
                   sendResult.success
                     ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                    : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                    : "bg-rose-500/10 border-rose-500/20 text-rose-400",
                 )}
               >
                 {sendResult.success ? (
@@ -437,7 +487,9 @@ export function EmailCampaignsTab() {
                     <>
                       <p>נשלח בהצלחה ל-{fmtCount(sendResult.sent)} נמענים</p>
                       {sendResult.failed > 0 && (
-                        <p className="text-amber-400 text-[10px] font-bold">{sendResult.failed} שליחות נכשלו</p>
+                        <p className="text-amber-400 text-[10px] font-bold">
+                          {sendResult.failed} שליחות נכשלו
+                        </p>
                       )}
                       {sendResult.message && (
                         <p className="text-[10px] font-bold opacity-70">{sendResult.message}</p>
@@ -456,10 +508,14 @@ export function EmailCampaignsTab() {
             <div className="px-8 py-5 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Eye className="w-4 h-4 text-zinc-600" />
-                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Email Preview</span>
+                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
+                  Email Preview
+                </span>
               </div>
               {subject && (
-                <span className="text-xs font-bold text-zinc-500 truncate max-w-[200px]">{subject}</span>
+                <span className="text-xs font-bold text-zinc-500 truncate max-w-[200px]">
+                  {subject}
+                </span>
               )}
             </div>
 
@@ -494,7 +550,9 @@ export function EmailCampaignsTab() {
             <div className="px-8 py-4 border-t border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="w-3.5 h-3.5 text-zinc-700" />
-                <span className="text-[9px] font-black text-zinc-700 uppercase tracking-wider">{selectedSegmentInfo.label}</span>
+                <span className="text-[9px] font-black text-zinc-700 uppercase tracking-wider">
+                  {selectedSegmentInfo.label}
+                </span>
               </div>
               <span className="text-[9px] font-black text-zinc-600 tabular-nums">
                 {loading ? "..." : fmtCount(recipientCount)} נמענים
@@ -506,7 +564,12 @@ export function EmailCampaignsTab() {
 
       {/* Recent Campaigns */}
       <div className="px-2 space-y-4">
-        <SectionTitle icon={Clock} color="purple" title="Recent Campaigns" sub="קמפיינים שנשלחו לאחרונה" />
+        <SectionTitle
+          icon={Clock}
+          color="purple"
+          title="Recent Campaigns"
+          sub="קמפיינים שנשלחו לאחרונה"
+        />
 
         <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
           {loading ? (
@@ -526,7 +589,11 @@ export function EmailCampaignsTab() {
                     key={h}
                     className={cn(
                       "text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em]",
-                      h === "נושא" ? "col-span-4" : h === "תאריך" ? "col-span-3" : "col-span-2 text-center"
+                      h === "נושא"
+                        ? "col-span-4"
+                        : h === "תאריך"
+                          ? "col-span-3"
+                          : "col-span-2 text-center",
                     )}
                   >
                     {h}
@@ -547,21 +614,32 @@ export function EmailCampaignsTab() {
                     key={c.id}
                     className="grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/2 transition-all duration-300 group"
                   >
-                    <div className="col-span-4 font-bold text-zinc-300 text-sm truncate">{subjectText}</div>
+                    <div className="col-span-4 font-bold text-zinc-300 text-sm truncate">
+                      {subjectText}
+                    </div>
                     <div className="col-span-2 flex justify-center">
                       <span className="px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-wider">
                         {segInfo?.label ?? seg}
                       </span>
                     </div>
                     <div className="col-span-2 text-center">
-                      <span className="text-emerald-400 font-black text-sm tabular-nums">{fmtCount(sent)}</span>
+                      <span className="text-emerald-400 font-black text-sm tabular-nums">
+                        {fmtCount(sent)}
+                      </span>
                     </div>
                     <div className="col-span-2 text-center">
-                      <span className={cn("font-black text-sm tabular-nums", failed > 0 ? "text-rose-400" : "text-zinc-700")}>
+                      <span
+                        className={cn(
+                          "font-black text-sm tabular-nums",
+                          failed > 0 ? "text-rose-400" : "text-zinc-700",
+                        )}
+                      >
                         {failed > 0 ? fmtCount(failed) : "-"}
                       </span>
                     </div>
-                    <div className="col-span-2 text-zinc-600 font-bold text-[10px] text-left">{fmtDate(c.created_at)}</div>
+                    <div className="col-span-2 text-zinc-600 font-bold text-[10px] text-left">
+                      {fmtDate(c.created_at)}
+                    </div>
                   </div>
                 );
               })}
@@ -602,7 +680,9 @@ export function EmailCampaignsTab() {
 
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black text-white tracking-tight">אישור שליחת קמפיין</h2>
-              <p className="text-zinc-500 font-medium text-sm">אתה עומד לשלוח מייל לסגמנט מוגדר. פעולה זו אינה הפיכה.</p>
+              <p className="text-zinc-500 font-medium text-sm">
+                אתה עומד לשלוח מייל לסגמנט מוגדר. פעולה זו אינה הפיכה.
+              </p>
             </div>
 
             <div className="rounded-2xl bg-zinc-900 border border-white/5 p-5 space-y-3">
@@ -614,8 +694,8 @@ export function EmailCampaignsTab() {
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
               <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <p className="text-amber-400 font-bold text-xs">
-                הודעה זו תישלח לכל {fmtCount(recipientCount)} המשתמשים בסגמנט &quot;{selectedSegmentInfo.he}&quot;.
-                ודא שהתוכן נכון לפני האישור.
+                הודעה זו תישלח לכל {fmtCount(recipientCount)} המשתמשים בסגמנט &quot;
+                {selectedSegmentInfo.he}&quot;. ודא שהתוכן נכון לפני האישור.
               </p>
             </div>
 
@@ -633,9 +713,15 @@ export function EmailCampaignsTab() {
                 className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-all active:scale-95 disabled:opacity-60 shadow-2xl shadow-blue-600/20"
               >
                 {sending ? (
-                  <><RefreshCw className="w-4 h-4 animate-spin" />שולח...</>
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    שולח...
+                  </>
                 ) : (
-                  <><Send className="w-4 h-4" />אשר ושלח</>
+                  <>
+                    <Send className="w-4 h-4" />
+                    אשר ושלח
+                  </>
                 )}
               </button>
             </div>
@@ -694,17 +780,24 @@ function GlobalEmailLogs() {
     }
   }, [page, search, sourceFilter, typeFilter]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   const statusColor = (s: string) => {
-    if (s === "sent" || s === "delivered") return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+    if (s === "sent" || s === "delivered")
+      return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
     if (s === "failed" || s === "bounced") return "text-red-400 bg-red-500/10 border-red-500/20";
     return "text-zinc-400 bg-zinc-500/10 border-zinc-500/20";
   };
 
   const fmtTime = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString("he-IL") + " " + d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+    return (
+      d.toLocaleDateString("he-IL") +
+      " " +
+      d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })
+    );
   };
 
   const totalPages = Math.ceil(total / 30);
@@ -718,7 +811,9 @@ function GlobalEmailLogs() {
           </div>
           <div>
             <h3 className="text-lg font-black text-white tracking-tight">לוג אימיילים</h3>
-            <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">{total} emails total</p>
+            <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">
+              {total} emails total
+            </p>
           </div>
         </div>
         <button
@@ -736,24 +831,41 @@ function GlobalEmailLogs() {
           type="text"
           placeholder="חפש לפי אימייל..."
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="flex-1 min-w-[200px] px-4 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-white placeholder:text-zinc-700 focus:ring-1 focus:ring-purple-500/30 focus:border-purple-500/30"
         />
         <select
           value={sourceFilter}
-          onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSourceFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-zinc-400"
         >
           <option value="">כל המקורות</option>
-          {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+          {sources.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
         <select
           value={typeFilter}
-          onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setTypeFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-zinc-400"
         >
           <option value="">כל הסוגים</option>
-          {types.map((t) => <option key={t} value={t}>{t}</option>)}
+          {types.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -770,21 +882,35 @@ function GlobalEmailLogs() {
         ) : (
           <div className="divide-y divide-white/5">
             {logs.map((log) => (
-              <div key={log.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/2 transition-all text-sm">
-                <span className={cn("px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shrink-0", statusColor(log.status))}>
+              <div
+                key={log.id}
+                className="px-6 py-4 flex items-center gap-4 hover:bg-white/2 transition-all text-sm"
+              >
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shrink-0",
+                    statusColor(log.status),
+                  )}
+                >
                   {log.status}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-zinc-300 truncate">{log.email_to}</span>
-                    <span className="text-[9px] text-zinc-700 font-mono shrink-0">{log.source}</span>
+                    <span className="text-[9px] text-zinc-700 font-mono shrink-0">
+                      {log.source}
+                    </span>
                   </div>
                   {log.subject && (
                     <p className="text-xs text-zinc-600 truncate mt-0.5">{log.subject}</p>
                   )}
                 </div>
-                <span className="text-[9px] text-zinc-600 font-mono shrink-0">{log.email_type}</span>
-                <span className="text-[9px] text-zinc-700 font-bold shrink-0 whitespace-nowrap">{fmtTime(log.created_at)}</span>
+                <span className="text-[9px] text-zinc-600 font-mono shrink-0">
+                  {log.email_type}
+                </span>
+                <span className="text-[9px] text-zinc-700 font-bold shrink-0 whitespace-nowrap">
+                  {fmtTime(log.created_at)}
+                </span>
               </div>
             ))}
           </div>

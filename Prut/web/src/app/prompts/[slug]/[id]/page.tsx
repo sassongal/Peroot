@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!prompt || !categoryData) return { title: "פרומפט לא נמצא" };
 
   const title = `${prompt.title} — ${categoryData.labelHe} | Peroot`;
-  const baseDesc = (prompt.use_case?.trim() || prompt.prompt?.slice(0, 100)?.trim() || "");
+  const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 100)?.trim() || "";
   const description = `${baseDesc.slice(0, 100)} — פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`;
   const canonicalUrl = `/prompts/${slug}/${id}`;
   const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
@@ -129,7 +129,7 @@ export default async function PromptPage({ params }: Props) {
     supabase
       .from("public_library_prompts")
       .select(
-        "id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode, created_at, updated_at"
+        "id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode, created_at, updated_at",
       )
       .eq("id", id)
       .eq("is_active", true)
@@ -177,7 +177,6 @@ export default async function PromptPage({ params }: Props) {
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
         <div className="max-w-4xl mx-auto px-4 py-8 md:py-14">
-
           {/* Breadcrumbs */}
           <nav
             aria-label="breadcrumb"
@@ -187,23 +186,15 @@ export default async function PromptPage({ params }: Props) {
               דף הבית
             </Link>
             <span>/</span>
-            <Link
-              href="/prompts"
-              className="hover:text-foreground transition-colors"
-            >
+            <Link href="/prompts" className="hover:text-foreground transition-colors">
               ספריית פרומפטים
             </Link>
             <span>/</span>
-            <Link
-              href={`/prompts/${slug}`}
-              className="hover:text-foreground transition-colors"
-            >
+            <Link href={`/prompts/${slug}`} className="hover:text-foreground transition-colors">
               {categoryData.labelHe}
             </Link>
             <span>/</span>
-            <span className="text-secondary-foreground line-clamp-1 max-w-[200px]">
-              {p.title}
-            </span>
+            <span className="text-secondary-foreground line-clamp-1 max-w-[200px]">{p.title}</span>
           </nav>
 
           {/* Hero */}
@@ -254,28 +245,17 @@ export default async function PromptPage({ params }: Props) {
           <section aria-label="תוכן הפרומפט" className="mb-8">
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/50">
-                <span className="text-xs font-medium text-muted-foreground">
-                  הפרומפט
-                </span>
+                <span className="text-xs font-medium text-muted-foreground">הפרומפט</span>
                 <div className="flex items-center gap-2">
                   <CopyButton text={p.prompt} />
-                  <UsePromptButton
-                    id={p.id}
-                    title={p.title}
-                    prompt={p.prompt}
-                    category={slug}
-                  />
+                  <UsePromptButton id={p.id} title={p.title} prompt={p.prompt} category={slug} />
                 </div>
               </div>
               <div
                 className={`p-5 text-sm leading-relaxed text-foreground whitespace-pre-wrap ${
-                  p.capability_mode === "IMAGE_GENERATION"
-                    ? "font-mono dir-ltr text-left"
-                    : ""
+                  p.capability_mode === "IMAGE_GENERATION" ? "font-mono dir-ltr text-left" : ""
                 }`}
-                dir={
-                  p.capability_mode === "IMAGE_GENERATION" ? "ltr" : undefined
-                }
+                dir={p.capability_mode === "IMAGE_GENERATION" ? "ltr" : undefined}
               >
                 {p.prompt}
               </div>
@@ -285,9 +265,7 @@ export default async function PromptPage({ params }: Props) {
           {/* Variables */}
           {p.variables && p.variables.length > 0 && (
             <section aria-label="משתנים להתאמה אישית" className="mb-8">
-              <h2 className="text-sm font-semibold text-foreground mb-3">
-                משתנים להתאמה אישית
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground mb-3">משתנים להתאמה אישית</h2>
               <div className="flex flex-wrap gap-2">
                 {p.variables.map((v) => (
                   <span
@@ -318,9 +296,7 @@ export default async function PromptPage({ params }: Props) {
                       {r.title}
                     </p>
                     {r.use_case && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {r.use_case}
-                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{r.use_case}</p>
                     )}
                   </Link>
                 ))}
@@ -348,7 +324,8 @@ export default async function PromptPage({ params }: Props) {
               רוצים לשדרג את הפרומפט הזה?
             </h2>
             <p className="text-muted-foreground mb-5 max-w-lg mx-auto text-sm leading-relaxed">
-              Peroot משדרגת כל פרומפט אוטומטית — מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר ב-ChatGPT, Claude ו-Gemini.
+              Peroot משדרגת כל פרומפט אוטומטית — מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר
+              ב-ChatGPT, Claude ו-Gemini.
             </p>
             <Link
               href="/?ref=library-prompt"
@@ -369,7 +346,6 @@ export default async function PromptPage({ params }: Props) {
               חזרה ל{categoryData.labelHe}
             </Link>
           </div>
-
         </div>
       </div>
     </>

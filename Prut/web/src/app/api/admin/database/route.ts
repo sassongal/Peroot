@@ -48,7 +48,7 @@ export const GET = withAdmin(async (req, supabase) => {
 
       // Row counts in parallel for all tracked tables
       const countResults = await Promise.all(
-        STATS_TABLES.map((t) => supabase.from(t).select("*", { count: "exact", head: true }))
+        STATS_TABLES.map((t) => supabase.from(t).select("*", { count: "exact", head: true })),
       );
 
       const rowCounts: Record<string, number> = {};
@@ -67,10 +67,7 @@ export const GET = withAdmin(async (req, supabase) => {
       const tables: Record<string, unknown[]> = {};
 
       for (const table of BACKUP_TABLES) {
-        const { data, error: tblError } = await supabase
-          .from(table)
-          .select("*")
-          .limit(10000);
+        const { data, error: tblError } = await supabase.from(table).select("*").limit(10000);
         if (!tblError && data) tables[table] = data;
       }
 
@@ -100,9 +97,6 @@ export const GET = withAdmin(async (req, supabase) => {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (err) {
     logger.error("[admin/database] Error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 });
