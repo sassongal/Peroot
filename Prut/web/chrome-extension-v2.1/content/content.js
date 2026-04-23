@@ -441,6 +441,7 @@ if (!window.__peerootContentLoaded) {
         z-index: 2147483646;
         display: flex;
         align-items: center;
+        flex-direction: row;
         background: #111113;
         border: 1px solid rgba(251,191,36,0.25);
         border-radius: 10px;
@@ -452,9 +453,11 @@ if (!window.__peerootContentLoaded) {
         opacity: 0;
         transform: translateY(4px);
         transition: opacity 0.15s, transform 0.15s;
-        pointer-events: auto;
-        direction: rtl;
+        pointer-events: none;
         overflow: hidden;
+      }
+      #peroot-inline-toolbar.pit-visible {
+        pointer-events: auto;
       }
       #peroot-inline-toolbar .pit-trigger {
         display: flex;
@@ -472,10 +475,10 @@ if (!window.__peerootContentLoaded) {
         overflow: hidden;
         transition: max-width 0.22s cubic-bezier(0.16,1,0.3,1), opacity 0.18s;
         opacity: 0;
-        border-right: 1px solid rgba(251,191,36,0.12);
+        border-left: 1px solid rgba(251,191,36,0.12);
       }
       #peroot-inline-toolbar:hover .pit-actions {
-        max-width: 260px;
+        max-width: 280px;
         opacity: 1;
       }
       #peroot-inline-toolbar .pit-action-btn {
@@ -585,7 +588,7 @@ if (!window.__peerootContentLoaded) {
     requestAnimationFrame(() => {
       btn.style.opacity = "1";
       btn.style.transform = "translateY(0)";
-      btn.style.display = "flex";
+      btn.classList.add("pit-visible");
     });
   }
 
@@ -593,6 +596,7 @@ if (!window.__peerootContentLoaded) {
     if (!inlineBtn) return;
     inlineBtn.style.opacity = "0";
     inlineBtn.style.transform = "translateY(4px)";
+    inlineBtn.classList.remove("pit-visible"); // stop intercepting pointer events when invisible
     inlineTarget = null;
   }
 

@@ -824,6 +824,14 @@ async function refinePrompt(question, answer, questionKey) {
   setLoading(true);
   isEnhancing = true;
 
+  // Reset timer for the refinement call
+  if (timerInterval) clearInterval(timerInterval);
+  const refineStart = Date.now();
+  resultTimer.textContent = "0.0s";
+  timerInterval = setInterval(() => {
+    resultTimer.textContent = ((Date.now() - refineStart) / 1000).toFixed(1) + "s";
+  }, 100);
+
   try {
     const stored = await new Promise(r =>
       chrome.storage.local.get(['peroot_last_tone', 'peroot_last_mode', 'peroot_output_language'], r)
@@ -902,6 +910,7 @@ async function refinePrompt(question, answer, questionKey) {
     if (err?.name === "AbortError") showError("הבקשה נתקעה יותר מדי זמן. נסה שוב.");
     else showError(err?.message ? `שגיאה: ${err.message}` : "שגיאת רשת. בדוק את החיבור.");
   } finally {
+    clearInterval(timerInterval);
     isEnhancing = false;
     setLoading(false);
   }
