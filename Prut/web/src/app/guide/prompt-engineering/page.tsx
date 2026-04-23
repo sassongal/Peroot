@@ -48,7 +48,7 @@ const FAQ = [
   {
     question: "מה זה הנדסת פרומפטים (Prompt Engineering)?",
     answer:
-      "הנדסת פרומפטים היא הדיסציפלינה של ניסוח הוראות מדויקות למודלי בינה מלאכותית כדי לקבל תוצאות איכותיות, עקביות וחוזרות. המטרה היא להפוך כוונה מעורפלת (\"כתוב לי משהו על שיווק\") להוראה מובנית עם הקשר, תפקיד, פורמט ומגבלות ברורות.",
+      'הנדסת פרומפטים היא הדיסציפלינה של ניסוח הוראות מדויקות למודלי בינה מלאכותית כדי לקבל תוצאות איכותיות, עקביות וחוזרות. המטרה היא להפוך כוונה מעורפלת ("כתוב לי משהו על שיווק") להוראה מובנית עם הקשר, תפקיד, פורמט ומגבלות ברורות.',
   },
   {
     question: "איך לומדים הנדסת פרומפטים?",
@@ -125,9 +125,9 @@ export default function PromptEngineeringGuidePage() {
     <>
       <JsonLd
         data={breadcrumbSchema([
-          { name: "בית", url: `${SITE_URL}/` },
-          { name: "מדריך", url: `${SITE_URL}/guide` },
-          { name: "הנדסת פרומפטים", url: `${SITE_URL}/guide/prompt-engineering` },
+          { name: "בית", url: "/" },
+          { name: "מדריך", url: "/guide" },
+          { name: "הנדסת פרומפטים", url: "/guide/prompt-engineering" },
         ])}
       />
       <JsonLd data={faqSchema(FAQ)} />
@@ -152,10 +152,10 @@ export default function PromptEngineeringGuidePage() {
         />
 
         <p className="text-lg text-muted-foreground mb-6">
-          הנדסת פרומפטים (Prompt Engineering) היא המיומנות החשובה ביותר בעידן ה-AI. בין אם אתם כותבים
-          תוכן, מפתחים מוצרים, או סתם רוצים תשובות טובות יותר מ-ChatGPT — השליטה בכתיבת פרומפטים
-          משפיעה ישירות על איכות התוצאה. המדריך הזה מכסה את כל מה שצריך לדעת, בעברית, עם דוגמאות
-          מעשיות.
+          הנדסת פרומפטים (Prompt Engineering) היא המיומנות החשובה ביותר בעידן ה-AI. בין אם אתם
+          כותבים תוכן, מפתחים מוצרים, או סתם רוצים תשובות טובות יותר מ-ChatGPT — השליטה בכתיבת
+          פרומפטים משפיעה ישירות על איכות התוצאה. המדריך הזה מכסה את כל מה שצריך לדעת, בעברית, עם
+          דוגמאות מעשיות.
         </p>
 
         <div className="flex flex-wrap gap-3 mb-10">
@@ -176,25 +176,61 @@ export default function PromptEngineeringGuidePage() {
         <nav className="mb-12 p-4 rounded-xl border border-border bg-card/50">
           <h2 className="text-sm font-bold mb-3 text-muted-foreground">תוכן עניינים</h2>
           <ol className="space-y-1.5 text-sm list-decimal list-inside">
-            <li><a href="#what-is" className="hover:underline">מה זה הנדסת פרומפטים?</a></li>
-            <li><a href="#why" className="hover:underline">למה זה חשוב?</a></li>
-            <li><a href="#anatomy" className="hover:underline">6 הרכיבים של פרומפט מקצועי</a></li>
-            <li><a href="#techniques" className="hover:underline">7 טכניקות מתקדמות</a></li>
-            <li><a href="#examples" className="hover:underline">12 דוגמאות לפני/אחרי</a></li>
-            <li><a href="#by-model" className="hover:underline">הבדלים בין המודלים</a></li>
-            <li><a href="#mistakes" className="hover:underline">8 טעויות נפוצות</a></li>
-            <li><a href="#checklist" className="hover:underline">צ'קליסט של 15 פריטים</a></li>
-            <li><a href="#faq" className="hover:underline">שאלות נפוצות</a></li>
+            <li>
+              <a href="#what-is" className="hover:underline">
+                מה זה הנדסת פרומפטים?
+              </a>
+            </li>
+            <li>
+              <a href="#why" className="hover:underline">
+                למה זה חשוב?
+              </a>
+            </li>
+            <li>
+              <a href="#anatomy" className="hover:underline">
+                6 הרכיבים של פרומפט מקצועי
+              </a>
+            </li>
+            <li>
+              <a href="#techniques" className="hover:underline">
+                7 טכניקות מתקדמות
+              </a>
+            </li>
+            <li>
+              <a href="#examples" className="hover:underline">
+                12 דוגמאות לפני/אחרי
+              </a>
+            </li>
+            <li>
+              <a href="#by-model" className="hover:underline">
+                הבדלים בין המודלים
+              </a>
+            </li>
+            <li>
+              <a href="#mistakes" className="hover:underline">
+                8 טעויות נפוצות
+              </a>
+            </li>
+            <li>
+              <a href="#checklist" className="hover:underline">
+                צ'קליסט של 15 פריטים
+              </a>
+            </li>
+            <li>
+              <a href="#faq" className="hover:underline">
+                שאלות נפוצות
+              </a>
+            </li>
           </ol>
         </nav>
 
         <section id="what-is" className="mb-12">
           <h2 className="text-2xl md:text-3xl font-serif font-bold mb-4">מה זה הנדסת פרומפטים?</h2>
           <p className="mb-4">
-            <strong>הנדסת פרומפטים</strong> היא הדיסציפלינה של ניסוח הוראות מדויקות למודלי שפה גדולים
-            (LLMs) — כמו ChatGPT, Claude, Gemini ו-Llama — במטרה לייצר תוצאות איכותיות, עקביות
-            ומדידות. בניגוד לאינטואיציה הראשונית, לא מדובר ב"לדבר יפה" עם ה-AI: זה תהליך מובנה שמשלב
-            הבנה של איך מודלים חושבים, ידע בתחום המקצועי, וחשיבה מערכתית על פלט צפוי.
+            <strong>הנדסת פרומפטים</strong> היא הדיסציפלינה של ניסוח הוראות מדויקות למודלי שפה
+            גדולים (LLMs) — כמו ChatGPT, Claude, Gemini ו-Llama — במטרה לייצר תוצאות איכותיות,
+            עקביות ומדידות. בניגוד לאינטואיציה הראשונית, לא מדובר ב"לדבר יפה" עם ה-AI: זה תהליך
+            מובנה שמשלב הבנה של איך מודלים חושבים, ידע בתחום המקצועי, וחשיבה מערכתית על פלט צפוי.
           </p>
           <p className="mb-4">
             המונח נטבע ב-2020 סביב GPT-3, אבל הפך לתחום מקצועי מלא רק עם ChatGPT ב-2022. היום יש
@@ -204,8 +240,8 @@ export default function PromptEngineeringGuidePage() {
           </p>
           <p>
             הנדסת פרומפטים עוסקת בשלושה רבדים: <strong>ניסוח</strong> (הוראה ברורה),{" "}
-            <strong>הקשר</strong> (מידע רלוונטי) ו-<strong>פורמט</strong> (מבנה הפלט). שליטה
-            בשלושתם מביאה לתוצאות שונות לחלוטין מפרומפט "גולמי".
+            <strong>הקשר</strong> (מידע רלוונטי) ו-<strong>פורמט</strong> (מבנה הפלט). שליטה בשלושתם
+            מביאה לתוצאות שונות לחלוטין מפרומפט "גולמי".
           </p>
         </section>
 
@@ -236,8 +272,8 @@ export default function PromptEngineeringGuidePage() {
           </div>
           <p>
             בגוף ארגוני, פרומפט גרוע עולה כסף אמיתי: יותר tokens, יותר שעות עבודה, יותר תיקונים.
-            במחקר של Anthropic מ-2024, שיפור פרומפט העלה דיוק ב-37% בממוצע על משימות classification —
-            ללא שינוי במודל.
+            במחקר של Anthropic מ-2024, שיפור פרומפט העלה דיוק ב-37% בממוצע על משימות classification
+            — ללא שינוי במודל.
           </p>
         </section>
 
@@ -260,8 +296,8 @@ export default function PromptEngineeringGuidePage() {
             <li className="p-4 rounded-xl border border-border bg-card">
               <h3 className="font-bold mb-1">2. משימה (Task)</h3>
               <p className="text-sm">
-                הפעולה המדויקת שאתם רוצים: "נסח", "סכם", "השווה", "תרגם". פועל בהתחלה, תוצאה
-                ספציפית בסוף.
+                הפעולה המדויקת שאתם רוצים: "נסח", "סכם", "השווה", "תרגם". פועל בהתחלה, תוצאה ספציפית
+                בסוף.
               </p>
             </li>
             <li className="p-4 rounded-xl border border-border bg-card">
@@ -298,12 +334,13 @@ export default function PromptEngineeringGuidePage() {
             <div>
               <h3 className="text-xl font-bold mb-2">1. Chain-of-Thought (חשיבה בשלבים)</h3>
               <p className="mb-2">
-                הוספת "חשוב צעד אחרי צעד" או "פרט את הלוגיקה שלך לפני התשובה" משפרת משימות היגיון
-                פי 3. המודל "מחשיב בקול רם" ומגלה טעויות במהלך הדרך.
+                הוספת "חשוב צעד אחרי צעד" או "פרט את הלוגיקה שלך לפני התשובה" משפרת משימות היגיון פי
+                3. המודל "מחשיב בקול רם" ומגלה טעויות במהלך הדרך.
               </p>
               <pre className="p-3 rounded-lg bg-secondary/50 text-sm overflow-x-auto">
                 <code>
-                  חשב את ההנחה לעסקה: מחיר 12,400₪, הנחה של 8% לחבר מועדון, ועוד 3% לקונה מעל 10,000₪. פרט כל שלב לפני התשובה הסופית.
+                  חשב את ההנחה לעסקה: מחיר 12,400₪, הנחה של 8% לחבר מועדון, ועוד 3% לקונה מעל
+                  10,000₪. פרט כל שלב לפני התשובה הסופית.
                 </code>
               </pre>
             </div>
@@ -533,10 +570,7 @@ export default function PromptEngineeringGuidePage() {
           <h2 className="text-2xl md:text-3xl font-serif font-bold mb-4">שאלות נפוצות</h2>
           <div className="space-y-3">
             {FAQ.map((item) => (
-              <details
-                key={item.question}
-                className="border border-border rounded-lg p-4 group"
-              >
+              <details key={item.question} className="border border-border rounded-lg p-4 group">
                 <summary className="font-medium cursor-pointer">{item.question}</summary>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{item.answer}</p>
               </details>
@@ -571,9 +605,7 @@ export default function PromptEngineeringGuidePage() {
         </section>
 
         <div className="p-6 rounded-2xl bg-linear-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-center">
-          <h2 className="text-2xl font-serif font-bold mb-2">
-            רוצים ליישם את זה על פרומפט אמיתי?
-          </h2>
+          <h2 className="text-2xl font-serif font-bold mb-2">רוצים ליישם את זה על פרומפט אמיתי?</h2>
           <p className="text-muted-foreground mb-4">
             Peroot עושה את כל 6 הרכיבים + 15 פריטי הצ'קליסט אוטומטית. מזינים טיוטה, מקבלים פרומפט
             מקצועי עם דירוג איכות בזמן אמת.
