@@ -30,11 +30,17 @@ export function HomeSEOContent() {
       <div className="home-seo-hero" dir="rtl">
         <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 text-center">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
-            Peroot - מחולל פרומפטים מקצועי בעברית
+            Peroot (פירוט) — מחולל ומשדרג פרומפטים בעברית
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-            שדרגו כל פרומפט לרמה מקצועית עם AI. Peroot מנתח, משפר ומייעל
-            פרומפטים ל-ChatGPT, Claude, Gemini ועוד — בעברית, בחינם, תוך שניות.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 leading-relaxed">
+            פלטפורמת הנדסת הפרומפטים (prompt engineering) המובילה בישראל.
+            כתיבת פרומפטים מקצועיים לכל מודל שפה — ChatGPT, Claude, Gemini ו-Midjourney — בעברית, בחינם, תוך שניות.
+          </p>
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
+            Peroot מנתח, משפר ומייעל כל פרומפט עם מבנה מקצועי, שאלות מיקוד ודירוג איכות בזמן אמת.
+            <Link href="/guide" className="text-amber-600 dark:text-amber-400 hover:underline mx-1">מה זה פרומפט?</Link>
+            ·
+            <Link href="/guide" className="text-amber-600 dark:text-amber-400 hover:underline mx-1">מדריך לכתיבת פרומפטים</Link>
           </p>
 
           {/* CTA buttons */}
@@ -73,6 +79,32 @@ export function HomeSEOContent() {
               <h3 className="font-bold text-foreground mb-2">עברית מהיסוד</h3>
               <p className="text-sm text-muted-foreground">לא תרגום — יצירה מקורית בעברית עם תמיכה מלאה ב-RTL ושאלות הבהרה חכמות.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Head-term targeted section — boosts ranking for "הנדסת פרומפטים" / "כתיבת פרומפטים" */}
+        <div className="max-w-3xl mx-auto px-4 mb-16 text-right">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-6">
+            הנדסת פרומפטים בעברית — מה זה?
+          </h2>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            הנדסת פרומפטים (prompt engineering) היא האומנות של ניסוח הוראות מדויקות למודלי בינה מלאכותית כדי לקבל תשובות איכותיות ועקביות.
+            כתיבת פרומפטים טובים דורשת מבנה ברור, הקשר מדויק, דוגמאות רלוונטיות וניסוח בהיר של התוצאה הרצויה.
+          </p>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            Peroot הופך כל פרומפט גולמי לפרומפט מקצועי אוטומטית: הוא מזהה את המטרה, מוסיף הקשר חסר, מציע שאלות הבהרה, ומחזיר גרסה מובנית עם דירוג איכות לכל ממד.
+            כך תקבלו תוצאות טובות יותר ב-ChatGPT, Claude ו-Gemini בלי להיות מומחים להנדסת פרומפטים.
+          </p>
+          <div className="flex flex-wrap gap-4 mt-4">
+            <Link href="/guide" className="text-amber-600 dark:text-amber-400 hover:underline">
+              המדריך המלא להנדסת פרומפטים →
+            </Link>
+            <Link href="/prompts" className="text-amber-600 dark:text-amber-400 hover:underline">
+              דוגמאות לפרומפטים מוכנים →
+            </Link>
+            <Link href="/blog/prompt-engineering-dictionary-glossary" className="text-amber-600 dark:text-amber-400 hover:underline">
+              מילון מושגים →
+            </Link>
           </div>
         </div>
 

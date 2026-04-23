@@ -66,3 +66,6 @@ tools/crewai-ui-audit/
 repomix-output.*
 repomix.config.json
 .env*.local
+
+# Local-only diagnostic output
+gsc-priority-submit.txt
