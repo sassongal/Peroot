@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Peroot - AI Prompt Enhancer",
   "short_name": "Peroot",
-  "version": "1.2.0",
-  "description": "Enhance any prompt instantly with AI. Auto-detects ChatGPT, Claude, Gemini, DeepSeek, Perplexity, Mistral & MiniMax — tunes output for each. Image/video JSON prompts now bulletproof (no more truncation). Smart live scoring, prompt library, conversation export, and more.",
+  "version": "1.3.0",
+  "description": "Enhance any prompt instantly with AI. Iterative refinement with GENIUS_QUESTIONS, output language control, one-click context menu actions (summarize, bullets, translate), inline enhance button on any site, and prompt library sync.",
   "homepage_url": "https://www.peroot.space",
   "author": "Peroot by Joyatech",
   "permissions": [

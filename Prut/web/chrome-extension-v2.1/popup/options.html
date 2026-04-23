@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Peroot — הגדרות</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07070a;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.07);
+      --amber: #f59e0b;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --success: #22c55e;
+      --radius: 10px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8f8f8;
+      --surface: rgba(0,0,0,0.04);
+      --border: rgba(0,0,0,0.1);
+      --text: #18181b;
+      --text-muted: #52525b;
+    }
+
+    body {
+      font-family: 'Alef', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+      direction: rtl;
+    }
+
+    .page {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-logo { width: 36px; height: 36px; border-radius: 8px; }
+
+    .header-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+
+    .header-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .option-row:last-child { border-bottom: none; }
+
+    .option-label { font-size: 14px; font-weight: 600; }
+    .option-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .chip-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    .chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Alef', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip:hover { border-color: rgba(245,158,11,0.4); color: var(--text); }
+
+    .chip.active {
+      background: rgba(245,158,11,0.12);
+      border-color: rgba(245,158,11,0.5);
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .save-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--success);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .save-banner.show { transform: translateX(-50%) translateY(0); }
+
+    .about-row {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-row:last-child { border-bottom: none; }
+
+    .about-row a { color: var(--amber); text-decoration: none; }
+    .about-row a:hover { text-decoration: underline; }
+
+    .version-badge {
+      display: inline-block;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: var(--amber);
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-thumb {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-thumb::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-thumb { background: var(--amber); }
+    .toggle-switch input:checked + .toggle-thumb::after { transform: translateX(18px); }
+
+    /* Keyboard badge */
+    .kbd {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text);
+    }
+
+    /* Link button */
+    .btn-link {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--amber);
+      font-family: 'Alef', sans-serif;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-link:hover { border-color: rgba(245,158,11,0.5); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <img src="../icons/icon-128.png" alt="Peroot" class="header-logo">
+      <div class="header-text">
+        <h1>Peroot</h1>
+        <p>הגדרות תוסף</p>
+      </div>
+    </div>
+
+    <!-- Theme -->
+    <div class="section">
+      <div class="section-title">ערכת צבעים</div>
+      <div class="card">
+        <div class="option-row">
+          <div>
+            <div class="option-label">מצב תצוגה</div>
+            <div class="option-desc">החל על חלון התוסף</div>
+          </div>
+          <div class="chip-group" id="theme-chips">
+            <button class="chip" data-theme-val="dark">כהה</button>
+            <button class="chip" data-theme-val="light">בהיר</button>
+            <button class="chip" data-theme-val="system">מערכת</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Default Mode -->
+    <div class="section">
+      <div class="section-title">מצב ברירת מחדל</div>
+      <div class="card">
+        <div class="option-row">
+          <div>
+            <div class="option-label">מצב שדרוג</div>
+            <div class="option-desc">מצבי Pro דורשים מנוי Pro</div>
+          </div>
+          <div class="chip-group" id="mode-chips">
+            <button class="chip" data-mode-val="STANDARD">רגיל</button>
+            <button class="chip" data-mode-val="DEEP_RESEARCH">מחקר</button>
+            <button class="chip" data-mode-val="IMAGE_GENERATION">תמונה</button>
+            <button class="chip" data-mode-val="VIDEO_GENERATION">וידאו</button>
+            <button class="chip" data-mode-val="AGENT_BUILDER">סוכן</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Default Tone -->
+    <div class="section">
+      <div class="section-title">טון ברירת מחדל</div>
+      <div class="card">
+        <div class="option-row">
+          <div>
+            <div class="option-label">טון שדרוג</div>
+            <div class="option-desc">ניתן לשנות בכל שדרוג</div>
+          </div>
+          <div class="chip-group" id="tone-chips">
+            <button class="chip" data-tone-val="Professional">מקצועי</button>
+            <button class="chip" data-tone-val="Casual">יומיומי</button>
+            <button class="chip" data-tone-val="Creative">יצירתי</button>
+            <button class="chip" data-tone-val="Persuasive">משכנע</button>
+            <button class="chip" data-tone-val="Academic">אקדמי</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Language -->
+    <div class="section">
+      <div class="section-title">שפת פלט</div>
+      <div class="card">
+        <div class="option-row">
+          <div>
+            <div class="option-label">שפת הפרומפט המשודרג</div>
+            <div class="option-desc">בחר בעברית, אנגלית, או לפי שפת הקלט</div>
+          </div>
+          <div class="chip-group" id="lang-chips">
+            <button class="chip" data-lang-val="hebrew">עברית</button>
+            <button class="chip" data-lang-val="english">English</button>
+            <button class="chip" data-lang-val="auto">אוטומטי</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Productivity -->
+    <div class="section">
+      <div class="section-title">פרודוקטיביות</div>
+      <div class="card">
+        <div class="option-row">
+          <div>
+            <div class="option-label">כפתור שדרוג מהיר</div>
+            <div class="option-desc">הצג כפתור ⚡ שדרג בשדות טקסט בכל אתר</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="inline-btn-toggle" checked>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="option-row">
+          <div>
+            <div class="option-label">קיצורי מקשים</div>
+            <div class="option-desc"><kbd class="kbd">Alt+P</kbd> פתח · <kbd class="kbd">Alt+Shift+E</kbd> שדרג טקסט מסומן</div>
+          </div>
+          <a href="chrome://extensions/shortcuts" target="_blank" class="btn-link">שנה קיצורים ›</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="section">
+      <div class="section-title">אודות</div>
+      <div class="card">
+        <div class="about-row">
+          <span class="version-badge" id="version-badge">v1.3.0</span>
+          Peroot — שדרוג פרומפטים עם AI
+        </div>
+        <div class="about-row">
+          <a href="https://www.peroot.space" target="_blank" rel="noopener">peroot.space</a>
+          &nbsp;·&nbsp;
+          <a href="https://www.peroot.space/privacy" target="_blank" rel="noopener">מדיניות פרטיות</a>
+        </div>
+        <div class="about-row">
+          קיצורי מקשים: <strong>Alt+P</strong> פתח תוסף · <strong>Alt+Shift+E</strong> שדרג טקסט מסומן
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-banner" id="save-banner">✓ הגדרות נשמרו</div>
+
+  <script>
+    const store = chrome.storage.sync || chrome.storage.local;
+
+    // Apply theme immediately on load
+    // Theme pref lives in sync storage (follows user across devices).
+    // All other prefs are local (device-specific usage state).
+    store.get(['peroot_theme_pref'], (syncPrefs) => {
+      const theme = syncPrefs.peroot_theme_pref || 'dark';
+      applyTheme(theme);
+      setActive('theme-chips', '[data-theme-val]', 'data-theme-val', theme);
+    });
+    chrome.storage.local.get(
+      ['peroot_last_mode', 'peroot_last_tone', 'peroot_output_language', 'peroot_inline_btn'],
+      (localPrefs) => {
+        setActive('mode-chips', '[data-mode-val]', 'data-mode-val', localPrefs.peroot_last_mode || 'STANDARD');
+        setActive('tone-chips', '[data-tone-val]', 'data-tone-val', localPrefs.peroot_last_tone || 'Professional');
+        setActive('lang-chips', '[data-lang-val]', 'data-lang-val', localPrefs.peroot_output_language || 'hebrew');
+        const toggle = document.getElementById('inline-btn-toggle');
+        if (toggle) toggle.checked = localPrefs.peroot_inline_btn !== false;
+      }
+    );
+
+    // Version badge
+    try {
+      document.getElementById('version-badge').textContent = 'v' + chrome.runtime.getManifest().version;
+    } catch {}
+
+    function applyTheme(val) {
+      if (val === 'system') {
+        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', val);
+      }
+    }
+
+    function setActive(groupId, selector, attr, value) {
+      document.querySelectorAll(`#${groupId} ${selector}`).forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute(attr) === value);
+      });
+    }
+
+    function showSaved() {
+      const banner = document.getElementById('save-banner');
+      banner.classList.add('show');
+      setTimeout(() => banner.classList.remove('show'), 1800);
+    }
+
+    // Theme chips
+    document.querySelectorAll('[data-theme-val]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.themeVal;
+        setActive('theme-chips', '[data-theme-val]', 'data-theme-val', val);
+        store.set({ peroot_theme_pref: val });
+        applyTheme(val);
+        showSaved();
+      });
+    });
+
+    // Mode chips
+    document.querySelectorAll('[data-mode-val]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.modeVal;
+        setActive('mode-chips', '[data-mode-val]', 'data-mode-val', val);
+        chrome.storage.local.set({ peroot_last_mode: val });
+        showSaved();
+      });
+    });
+
+    // Tone chips
+    document.querySelectorAll('[data-tone-val]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.toneVal;
+        setActive('tone-chips', '[data-tone-val]', 'data-tone-val', val);
+        chrome.storage.local.set({ peroot_last_tone: val });
+        showSaved();
+      });
+    });
+
+    // Language chips
+    document.querySelectorAll('[data-lang-val]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.langVal;
+        setActive('lang-chips', '[data-lang-val]', 'data-lang-val', val);
+        chrome.storage.local.set({ peroot_output_language: val });
+        showSaved();
+      });
+    });
+
+    // Inline button toggle
+    document.getElementById('inline-btn-toggle')?.addEventListener('change', (e) => {
+      chrome.storage.local.set({ peroot_inline_btn: e.target.checked });
+      showSaved();
+    });
+  </script>
+</body>
+</html>

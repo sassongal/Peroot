@@ -322,6 +322,21 @@
 
   // ── API Proxy (routes through service worker to avoid CORS) ──────────
 
+  /**
+   * Resolve the effective output language from the stored preference and the
+   * input text.  When the preference is "auto", detect the dominant script:
+   * if >60% of alphabetic characters are Latin the user is writing in English
+   * so the output should match. Otherwise leave it unset (server defaults to Hebrew).
+   */
+  function resolveOutputLanguage(pref, inputText) {
+    if (pref === 'english') return 'english';
+    if (pref !== 'auto') return null; // hebrew — no override needed
+    const hebrew = (inputText.match(/[\u05D0-\u05EA]/g) || []).length;
+    const latin  = (inputText.match(/[a-zA-Z]/g) || []).length;
+    const total  = hebrew + latin;
+    return total > 0 && latin / total > 0.6 ? 'english' : null;
+  }
+
   function apiFetch(path, options = {}) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({
@@ -447,9 +462,23 @@
 
     isEnhancing = true;
     updateButtonState('loading');
-    showToast('\u05DE\u05E9\u05D3\u05E8\u05D2...', 'info');
+    showToast('משדרג...', 'info');
 
     try {
+      // Read tone/mode/platform from shared storage so injector stays in sync
+      // with whatever the user last configured in the popup.
+      const stored = await new Promise(r =>
+        chrome.storage.local.get(
+          ['peroot_last_tone', 'peroot_last_mode', 'peroot_last_image_platform', 'peroot_last_video_platform', 'peroot_output_language'],
+          r
+        )
+      );
+      const tone = stored.peroot_last_tone || 'Professional';
+      const mode = stored.peroot_last_mode || selectedMode;
+      const imgPlat = stored.peroot_last_image_platform || selectedImagePlatform;
+      const vidPlat = stored.peroot_last_video_platform || selectedVideoPlatform;
+      const outputLang = resolveOutputLanguage(stored.peroot_output_language || 'hebrew', text);
+
       // Map the detected site to target_model so the server tunes the
       // enhanced prompt for the exact platform the user is sitting on.
       // detectedSiteKey is set at module init (line ~227) via SITES.
@@ -464,12 +493,13 @@
         method: 'POST',
         body: {
           prompt: text,
-          tone: 'Professional',
-          category: '\u05DB\u05DC\u05DC\u05D9',
-          capability_mode: selectedMode,
+          tone,
+          category: 'כללי',
+          capability_mode: mode,
           target_model: targetModel,
-          ...(selectedMode === 'IMAGE_GENERATION' && { mode_params: { image_platform: selectedImagePlatform } }),
-          ...(selectedMode === 'VIDEO_GENERATION' && { mode_params: { video_platform: selectedVideoPlatform } }),
+          ...(outputLang === 'english' && { output_language: 'english' }),
+          ...(mode === 'IMAGE_GENERATION' && { mode_params: { image_platform: imgPlat } }),
+          ...(mode === 'VIDEO_GENERATION' && { mode_params: { video_platform: vidPlat } }),
         },
         stream: true,
       });
@@ -908,13 +938,13 @@
     if (!content) return;
 
     if (!prompts.length) {
-      content.innerHTML = '<div class="peroot-sp-empty">No saved prompts yet.<br>Save prompts on peroot.space!</div>';
+      content.innerHTML = '<div class="peroot-sp-empty">עדיין אין פרומפטים שמורים.<br>שמור פרומפטים ב-peroot.space!</div>';
       return;
     }
 
     content.innerHTML = prompts.map((p, i) => `
       <div class="peroot-sp-card" data-idx="${i}">
-        <div class="peroot-sp-card-title">${escHtml(p.title || 'Untitled')}</div>
+        <div class="peroot-sp-card-title">${escHtml(p.title || 'ללא כותרת')}</div>
         <div class="peroot-sp-card-text">${escHtml((p.prompt || '').slice(0, 120))}${(p.prompt || '').length > 120 ? '...' : ''}</div>
         <div class="peroot-sp-card-actions">
           <button class="peroot-sp-use-btn" data-idx="${i}">השתמש</button>
@@ -932,7 +962,7 @@
           currentSite.setInputText(inputEl, prompt.prompt || '');
           inputEl.focus();
           closeSidePanel();
-          showToast('Prompt inserted!', 'success');
+          showToast('הפרומפט הוכנס!', 'success');
         }
       });
     });
@@ -942,7 +972,7 @@
         const prompt = prompts[parseInt(btn.dataset.idx)];
         if (prompt) {
           navigator.clipboard.writeText(prompt.prompt || '');
-          showToast('Copied!', 'success');
+          showToast('הועתק!', 'success');
         }
       });
     });
@@ -999,7 +1029,7 @@
     const assistantMsgs = currentSite.getAssistantMessages();
 
     if (!userMsgs.length && !assistantMsgs.length) {
-      showToast('No conversation found', 'error');
+      showToast('לא נמצאה שיחה', 'error');
       return;
     }
 
@@ -1027,7 +1057,7 @@
     }
 
     if (!allMsgs.length) {
-      showToast('Could not extract messages', 'error');
+      showToast('לא הצלחתי לחלץ הודעות', 'error');
       return;
     }
 
@@ -1050,17 +1080,17 @@
       <div class="peroot-export-overlay" id="peroot-export-overlay"></div>
       <div class="peroot-export-content">
         <div class="peroot-export-header">
-          <span>📤 Export Conversation</span>
+          <span>📤 יצוא שיחה</span>
           <button class="peroot-export-close" id="peroot-export-close">✕</button>
         </div>
         <div class="peroot-export-stats">
-          ${messages.length} messages • ${messages.filter(m => m.role === 'user').length} user • ${messages.filter(m => m.role === 'assistant').length} assistant
+          ${messages.length} הודעות • ${messages.filter(m => m.role === 'user').length} משתמש • ${messages.filter(m => m.role === 'assistant').length} עוזר
         </div>
         <div class="peroot-export-preview">${escHtml(markdown).slice(0, 500)}${markdown.length > 500 ? '...' : ''}</div>
         <div class="peroot-export-actions">
-          <button class="peroot-export-btn peroot-export-primary" id="peroot-export-copy">📋 Copy as Markdown</button>
-          <button class="peroot-export-btn" id="peroot-export-download">💾 Download .md</button>
-          <button class="peroot-export-btn" id="peroot-export-continue">🔄 Continue in another AI</button>
+          <button class="peroot-export-btn peroot-export-primary" id="peroot-export-copy">📋 העתק כ-Markdown</button>
+          <button class="peroot-export-btn" id="peroot-export-download">💾 הורד .md</button>
+          <button class="peroot-export-btn" id="peroot-export-continue">🔄 המשך ב-AI אחר</button>
         </div>
       </div>
     `;
@@ -1074,7 +1104,7 @@
     // Copy
     modal.querySelector('#peroot-export-copy').addEventListener('click', () => {
       navigator.clipboard.writeText(markdown);
-      showToast('Conversation copied!', 'success');
+      showToast('השיחה הועתקה!', 'success');
       modal.remove();
     });
 
@@ -1087,15 +1117,15 @@
       a.download = `conversation-${new Date().toISOString().slice(0, 10)}.md`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('Downloaded!', 'success');
+      showToast('הורד!', 'success');
       modal.remove();
     });
 
     // Continue in another AI
     modal.querySelector('#peroot-export-continue').addEventListener('click', () => {
-      const continuePrompt = `Please continue this conversation from where it left off:\n\n${markdown}`;
+      const continuePrompt = `המשך את השיחה הזו מהמקום שהפסקת:\n\n${markdown}`;
       navigator.clipboard.writeText(continuePrompt);
-      showToast('Copied with context prefix — paste into any AI chat!', 'success');
+      showToast('הועתק עם הקשר — הדבק בכל צ׳אט AI!', 'success');
       modal.remove();
     });
   }

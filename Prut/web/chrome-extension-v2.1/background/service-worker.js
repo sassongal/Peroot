@@ -26,6 +26,8 @@ chrome.runtime.onInstalled.addListener(() => {
     { id: "lengthen", title: "\u05D4\u05D0\u05E8\u05DA" },
     { id: "fix", title: "\u05EA\u05E7\u05DF \u05E9\u05D2\u05D9\u05D0\u05D5\u05EA" },
     { id: "translate", title: "Translate EN/HE" },
+    { id: "summarize", title: "\u05E1\u05DB\u05DD \u05DC\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA" },
+    { id: "bullets", title: "\u05D4\u05E4\u05D5\u05DA \u05DC\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA" },
   ];
 
   actions.forEach((a) => {

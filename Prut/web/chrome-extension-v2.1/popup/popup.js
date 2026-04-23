@@ -41,10 +41,25 @@ const scoreLabel = $("score-label");
 const scoreTip = $("score-tip");
 
 let lastEnhanced = "";
+let lastOriginalForFeedback = "";
 let isEnhancing = false;
 let selectedTone = "Professional";
 let scoreTimeout = null;
 let detectedTargetModel = "general";
+
+/**
+ * Resolve the effective output language.
+ * "english" → force English. "auto" → detect from input text (Latin >60% → English).
+ * "hebrew" or anything else → null (server default, Hebrew).
+ */
+function resolveOutputLanguage(pref, inputText) {
+  if (pref === 'english') return 'english';
+  if (pref !== 'auto') return null;
+  const hebrew = (inputText.match(/[\u05D0-\u05EA]/g) || []).length;
+  const latin  = (inputText.match(/[a-zA-Z]/g) || []).length;
+  const total  = hebrew + latin;
+  return total > 0 && latin / total > 0.6 ? 'english' : null;
+}
 
 function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
   const controller = new AbortController();
@@ -306,15 +321,26 @@ function updateScoreBar(text) {
  * Keeps the popup feeling like a continuation of the previous session
  * instead of resetting to STANDARD/Professional every time.
  */
+function updateLangToggle(langPref) {
+  const btn = $('lang-toggle-btn');
+  if (!btn) return;
+  const labels = { hebrew: 'HE', english: 'EN', auto: 'AUTO' };
+  btn.textContent = labels[langPref] || 'HE';
+  btn.classList.toggle('lang-en', langPref === 'english');
+}
+
 async function restoreLastUsedSettings() {
   try {
-    const { peroot_last_mode, peroot_last_tone, peroot_last_image_platform, peroot_last_video_platform } =
+    const { peroot_last_mode, peroot_last_tone, peroot_last_image_platform, peroot_last_video_platform, peroot_output_language } =
       await chrome.storage.local.get([
         "peroot_last_mode",
         "peroot_last_tone",
         "peroot_last_image_platform",
         "peroot_last_video_platform",
+        "peroot_output_language",
       ]);
+
+    updateLangToggle(peroot_output_language || 'hebrew');
 
     // Only restore Pro-gated modes if the user is actually Pro — otherwise
     // fall back to STANDARD. This avoids a locked-mode selected state.
@@ -610,6 +636,8 @@ function onLoginSuccess() {
   detectTargetModel().then((m) => {
     detectedTargetModel = m;
     updateTargetModelBadge(m);
+    // Show mode suggestion after credits/tier are loaded (300ms after restoreLastUsedSettings)
+    setTimeout(() => maybeShowModeSuggestion(m), 400);
   }).catch(() => {});
   // First-run onboarding — show once after the first successful login.
   maybeShowFirstRunOnboarding();
@@ -653,6 +681,261 @@ async function maybeShowFirstRunOnboarding() {
       dismiss();
     });
   } catch { /* ignore — non-critical */ }
+}
+
+/**
+ * Show a dismissable mode suggestion banner when the active platform suggests
+ * a better mode than the current one. Only shown for Pro users (mode is gated).
+ * Auto-dismisses after 6 seconds.
+ */
+function maybeShowModeSuggestion(targetModel) {
+  const existing = document.getElementById('mode-suggestion-banner');
+  if (existing) existing.remove();
+
+  // Map platform → suggested mode and label
+  const suggestions = {
+    perplexity: { mode: 'DEEP_RESEARCH', label: 'מזהה Perplexity — נסה מצב מחקר מעמיק' },
+  };
+
+  const suggestion = suggestions[targetModel];
+  if (!suggestion) return;
+  // Only suggest if the user is on the default STANDARD mode and is Pro
+  if (selectedMode !== 'STANDARD') return;
+  if (!isProOrAdmin()) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'mode-suggestion-banner';
+  banner.className = 'mode-suggestion-banner';
+  banner.innerHTML = `
+    <span>${suggestion.label}</span>
+    <button id="mode-suggestion-apply" title="החל מצב">✦</button>
+    <button id="mode-suggestion-dismiss" title="סגור">✕</button>
+  `;
+
+  const modeSelector = document.getElementById('mode-selector');
+  modeSelector?.after(banner);
+
+  const dismiss = () => banner.remove();
+
+  banner.querySelector('#mode-suggestion-apply').addEventListener('click', () => {
+    // Activate the suggested mode button
+    const modeBtn = document.querySelector(`.mode-btn[data-mode="${suggestion.mode}"]`);
+    if (modeBtn && !modeBtn.classList.contains('locked')) {
+      modeBtn.click();
+    }
+    dismiss();
+  });
+  banner.querySelector('#mode-suggestion-dismiss').addEventListener('click', dismiss);
+
+  // Auto-dismiss after 6 seconds
+  setTimeout(dismiss, 6000);
+}
+
+/**
+ * Parse [GENIUS_QUESTIONS] from a raw enhance response stream.
+ * Returns parsed JSON array or [] on failure.
+ */
+function parseGeniusQuestions(raw) {
+  const marker = "[GENIUS_QUESTIONS]";
+  const idx = raw.indexOf(marker);
+  if (idx === -1) return [];
+  const jsonStr = raw.slice(idx + marker.length).trim();
+  if (!jsonStr || jsonStr === "[]") return [];
+  try {
+    const parsed = JSON.parse(jsonStr);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Render top GENIUS_QUESTIONS as clickable chips below the result.
+ * Each question shows example answers — clicking one fires a refinement.
+ */
+function showRefinementQuestions(questions) {
+  const section = $('refinement-section');
+  const container = $('refinement-questions');
+  if (!section || !container) return;
+
+  container.innerHTML = '';
+
+  if (!questions || questions.length === 0) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  const top = [...questions]
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+    .slice(0, 3);
+
+  top.forEach((q) => {
+    const item = document.createElement('div');
+    item.className = 'refinement-question';
+
+    const qRow = document.createElement('div');
+    qRow.className = 'refinement-q-row';
+
+    const qText = document.createElement('span');
+    qText.className = 'refinement-q-text';
+    qText.textContent = q.question || '';
+    qRow.appendChild(qText);
+
+    if (q.impactEstimate) {
+      const badge = document.createElement('span');
+      badge.className = 'refinement-impact';
+      badge.textContent = q.impactEstimate;
+      qRow.appendChild(badge);
+    }
+
+    item.appendChild(qRow);
+
+    const examples = (q.examples || []).slice(0, 3);
+    if (examples.length > 0) {
+      const chips = document.createElement('div');
+      chips.className = 'refinement-examples';
+      examples.forEach((example) => {
+        const chip = document.createElement('button');
+        chip.className = 'refinement-chip';
+        chip.textContent = example;
+        chip.addEventListener('click', () => refinePrompt(q.question, example, String(q.id || q.question.slice(0, 40))));
+        chips.appendChild(chip);
+      });
+      item.appendChild(chips);
+    }
+
+    container.appendChild(item);
+  });
+
+  section.classList.remove('hidden');
+}
+
+/**
+ * Fire a refinement enhance call using GENIUS_QUESTIONS answer.
+ * Sends previousResult + refinementInstruction to trigger generateRefinement().
+ */
+async function refinePrompt(question, answer, questionKey) {
+  if (isEnhancing || !lastEnhanced) return;
+
+  $('refinement-section')?.classList.add('hidden');
+  $('feedback-row')?.classList.add('hidden');
+  hideError();
+  resultText.classList.add("streaming");
+  setLoading(true);
+  isEnhancing = true;
+
+  try {
+    const stored = await new Promise(r =>
+      chrome.storage.local.get(['peroot_last_tone', 'peroot_last_mode', 'peroot_output_language'], r)
+    );
+    const tone = stored.peroot_last_tone || selectedTone;
+    const mode = stored.peroot_last_mode || selectedMode;
+    const outputLang = resolveOutputLanguage(stored.peroot_output_language || 'hebrew', promptInput.value || lastOriginalForFeedback);
+
+    const refinementInstruction = `שאלה: ${question}\nתשובה: ${answer}`;
+    const answers = { [questionKey || question.slice(0, 50)]: answer };
+
+    const headers = await getAuthHeaders({ "Content-Type": "application/json" });
+    const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        prompt: promptInput.value || lastOriginalForFeedback,
+        tone,
+        category: "כללי",
+        capability_mode: mode,
+        target_model: detectedTargetModel,
+        previousResult: lastEnhanced,
+        refinementInstruction,
+        answers,
+        ...(outputLang === 'english' && { output_language: 'english' }),
+      }),
+    }, 90000);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 403) showError(err.error || "אין מספיק קרדיטים");
+      else if (res.status === 401) showError("פג תוקף ההתחברות. נסה שוב.");
+      else showError(err.error || "שגיאה בשדרוג");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+
+    const cleanDisplay = (raw) => raw
+      .split("[GENIUS_QUESTIONS]")[0]
+      .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
+      .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
+      .trim();
+
+    resultSection.classList.remove("hidden");
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      fullText += decoder.decode(value, { stream: true });
+      resultText.textContent = cleanDisplay(fullText);
+      resultText.scrollTop = resultText.scrollHeight;
+    }
+
+    resultText.classList.remove("streaming");
+    lastEnhanced = cleanDisplay(fullText);
+
+    // Show feedback row for new result
+    const feedbackRow = $('feedback-row');
+    if (feedbackRow) {
+      feedbackRow.classList.remove('hidden');
+      const upBtn = $('feedback-up-btn');
+      const downBtn = $('feedback-down-btn');
+      if (upBtn) { upBtn.disabled = false; upBtn.classList.remove('voted-up', 'voted-down'); }
+      if (downBtn) { downBtn.disabled = false; downBtn.classList.remove('voted-up', 'voted-down'); }
+    }
+
+    // Parse new questions from refined result
+    showRefinementQuestions(parseGeniusQuestions(fullText));
+
+    try { await navigator.clipboard.writeText(lastEnhanced); } catch {}
+    fetchCredits();
+  } catch (err) {
+    if (err?.name === "AbortError") showError("הבקשה נתקעה יותר מדי זמן. נסה שוב.");
+    else showError(err?.message ? `שגיאה: ${err.message}` : "שגיאת רשת. בדוק את החיבור.");
+  } finally {
+    isEnhancing = false;
+    setLoading(false);
+  }
+}
+
+/**
+ * Submit thumbs up/down feedback for the last enhancement.
+ * One-shot: disables both buttons after first vote.
+ */
+async function submitFeedback(rating) {
+  const upBtn = $('feedback-up-btn');
+  const downBtn = $('feedback-down-btn');
+  if (!upBtn || !downBtn) return;
+
+  upBtn.disabled = true;
+  downBtn.disabled = true;
+  upBtn.classList.toggle('voted-up', rating > 0);
+  downBtn.classList.toggle('voted-down', rating < 0);
+
+  try {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
+    await fetch(`${API_BASE}/api/feedback`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        rating,
+        input_text: lastOriginalForFeedback.substring(0, 10000),
+        enhanced_text: lastEnhanced.substring(0, 50000),
+        capability_mode: selectedMode,
+      }),
+    });
+  } catch {
+    // Non-critical — feedback send failure is silent
+  }
 }
 
 function setLoginLoading(loading, msg) {
@@ -726,6 +1009,8 @@ async function doEnhance() {
   hideError();
   resultSection.classList.add("hidden");
   scoreBar.classList.add("hidden");
+  $('feedback-row')?.classList.add('hidden');
+  $('refinement-section')?.classList.add('hidden');
   setLoading(true);
 
   // Phase-based loading messages
@@ -770,6 +1055,12 @@ async function doEnhance() {
       detectedTargetModel = await detectTargetModel();
     }
 
+    // Read output language preference and resolve against the actual input text
+    const { peroot_output_language } = await new Promise(r =>
+      chrome.storage.local.get(['peroot_output_language'], r)
+    );
+    const outputLang = resolveOutputLanguage(peroot_output_language || 'hebrew', text);
+
     const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
@@ -779,6 +1070,7 @@ async function doEnhance() {
         category: "\u05DB\u05DC\u05DC\u05D9",
         capability_mode: selectedMode,
         target_model: detectedTargetModel,
+        ...(outputLang === 'english' && { output_language: 'english' }),
         ...(selectedMode === "IMAGE_GENERATION" && { mode_params: { image_platform: selectedImagePlatform } }),
         ...(selectedMode === "VIDEO_GENERATION" && { mode_params: { video_platform: selectedVideoPlatform } }),
       }),
@@ -851,10 +1143,24 @@ async function doEnhance() {
 
     resultText.classList.remove("streaming");
     lastEnhanced = cleanDisplay(fullText);
+    lastOriginalForFeedback = text;
     enhanceRetried = false; // Reset retry flag on success
 
     clearInterval(phaseInterval);
     enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+
+    // Parse and surface GENIUS_QUESTIONS for one-click iterative refinement
+    showRefinementQuestions(parseGeniusQuestions(fullText));
+
+    // Show feedback row (reset state for this new enhancement)
+    const feedbackRow = $('feedback-row');
+    const upBtn = $('feedback-up-btn');
+    const downBtn = $('feedback-down-btn');
+    if (feedbackRow) {
+      feedbackRow.classList.remove('hidden');
+      if (upBtn) { upBtn.disabled = false; upBtn.classList.remove('voted-up', 'voted-down'); }
+      if (downBtn) { downBtn.disabled = false; downBtn.classList.remove('voted-up', 'voted-down'); }
+    }
 
     // Score comparison flash
     const beforeScore = scorePrompt(text);
@@ -1216,23 +1522,8 @@ function createPromptCard(item) {
     flash(copyCardBtn, "הועתק!");
   });
 
-  const insertCardBtn = document.createElement("button");
-  insertCardBtn.className = "btn-sm";
-  insertCardBtn.textContent = "הכנס";
-  insertCardBtn.addEventListener("click", async (e) => {
-    e.stopPropagation();
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      chrome.runtime.sendMessage(
-        { type: "INJECT_AND_INSERT", tabId: tab.id, text: item.prompt },
-        () => flash(insertCardBtn, "הוכנס!")
-      );
-    }
-  });
-
   actions.appendChild(useBtn);
   actions.appendChild(copyCardBtn);
-  actions.appendChild(insertCardBtn);
 
   card.appendChild(header);
   card.appendChild(text);
@@ -1348,6 +1639,20 @@ document.querySelectorAll('.tone-chip').forEach(chip => {
     selectedTone = chip.dataset.tone;
   });
 });
+
+// ═══ LANGUAGE TOGGLE ═══
+$('lang-toggle-btn')?.addEventListener('click', () => {
+  chrome.storage.local.get(['peroot_output_language'], ({ peroot_output_language }) => {
+    const cycle = { hebrew: 'english', english: 'auto', auto: 'hebrew' };
+    const next = cycle[peroot_output_language || 'hebrew'] || 'english';
+    chrome.storage.local.set({ peroot_output_language: next });
+    updateLangToggle(next);
+  });
+});
+
+// ═══ FEEDBACK ═══
+$('feedback-up-btn')?.addEventListener('click', () => submitFeedback(1));
+$('feedback-down-btn')?.addEventListener('click', () => submitFeedback(-1));
 
 // ═══ SAVE TO LIBRARY ═══
 saveBtn.addEventListener("click", async () => {

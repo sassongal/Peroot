@@ -41,26 +41,67 @@ if (!window.__peerootContentLoaded) {
   // e.g. ChatGPT likes numbered lists, Claude likes XML delimiters.
   function detectTargetModel() {
     const host = location.hostname;
+    const path = location.pathname;
     if (/chat\.openai\.com|chatgpt\.com/.test(host)) return "chatgpt";
     if (/claude\.ai/.test(host)) return "claude";
     if (/gemini\.google\.com/.test(host)) return "gemini";
+    if (/grok\.com/.test(host) || (/x\.com/.test(host) && /\/i\/grok/.test(path))) return "grok";
+    if (/copilot\.microsoft\.com/.test(host)) return "copilot";
+    if (/poe\.com/.test(host)) return "poe";
+    if (/chat\.deepseek\.com/.test(host)) return "deepseek";
+    if (/perplexity\.ai/.test(host)) return "perplexity";
+    if (/chat\.mistral\.ai/.test(host)) return "mistral";
     return "general";
   }
   const TARGET_MODEL = detectTargetModel();
 
+  // ─── Language Detection ───
+  // When preference is "auto", detect the dominant script of the input text.
+  // Latin >60% of alphabetic chars → English output; otherwise let server default (Hebrew).
+  function resolveOutputLanguage(pref, inputText) {
+    if (pref === 'english') return 'english';
+    if (pref !== 'auto') return null;
+    const hebrew = (inputText.match(/[\u05D0-\u05EA]/g) || []).length;
+    const latin  = (inputText.match(/[a-zA-Z]/g) || []).length;
+    const total  = hebrew + latin;
+    return total > 0 && latin / total > 0.6 ? 'english' : null;
+  }
+
+  // ─── Stored Preferences ───
+  // Loaded once per script init. Refreshed on each handleEnhance call.
+  let storedTone = "Professional";
+  let storedLang = "hebrew";
+  function loadPrefs(cb) {
+    chrome.storage.local.get(
+      ['peroot_last_tone', 'peroot_output_language'],
+      (prefs) => {
+        storedTone = prefs.peroot_last_tone || "Professional";
+        storedLang = prefs.peroot_output_language || "hebrew";
+        if (cb) cb();
+      }
+    );
+  }
+  loadPrefs();
+
   // ─── Action Definitions ───
+  // buildBody receives the actual text so resolveOutputLanguage can do
+  // per-call auto-detection when the preference is set to "auto".
   const ACTIONS = {
     enhance: {
       label: "\u05E9\u05D3\u05E8\u05D2",
-      buildBody: (text) => ({
-        prompt: text, tone: "Professional", category: "General",
-        target_model: TARGET_MODEL,
-      }),
+      buildBody: (text) => {
+        const lang = resolveOutputLanguage(storedLang, text);
+        return {
+          prompt: text, tone: storedTone, category: "כללי",
+          target_model: TARGET_MODEL,
+          ...(lang === 'english' && { output_language: 'english' }),
+        };
+      },
     },
     shorten: {
       label: "\u05E7\u05E6\u05E8",
       buildBody: (text) => ({
-        prompt: text, tone: "Professional", category: "General",
+        prompt: text, tone: storedTone, category: "כללי",
         target_model: TARGET_MODEL,
         refinementInstruction: "Make this significantly shorter and more concise. Keep the core message but remove all unnecessary words. Output ONLY the shortened text.",
         previousResult: text,
@@ -69,7 +110,7 @@ if (!window.__peerootContentLoaded) {
     lengthen: {
       label: "\u05D4\u05D0\u05E8\u05DA",
       buildBody: (text) => ({
-        prompt: text, tone: "Professional", category: "General",
+        prompt: text, tone: storedTone, category: "כללי",
         target_model: TARGET_MODEL,
         refinementInstruction: "Expand and elaborate on this text. Add more detail, examples, and depth while maintaining the original tone. Output ONLY the expanded text.",
         previousResult: text,
@@ -78,7 +119,7 @@ if (!window.__peerootContentLoaded) {
     fix: {
       label: "\u05EA\u05E7\u05DF",
       buildBody: (text) => ({
-        prompt: text, tone: "Professional", category: "General",
+        prompt: text, tone: storedTone, category: "כללי",
         target_model: TARGET_MODEL,
         refinementInstruction: "Fix all grammar, spelling, and punctuation errors. Improve sentence structure where needed. Output ONLY the corrected text.",
         previousResult: text,
@@ -87,9 +128,31 @@ if (!window.__peerootContentLoaded) {
     translate: {
       label: "\u05EA\u05E8\u05D2\u05DD",
       buildBody: (text) => ({
-        prompt: text, tone: "Professional", category: "General",
+        prompt: text, tone: storedTone, category: "כללי",
         target_model: TARGET_MODEL,
         refinementInstruction: "Translate this text to English. If already in English, translate to Hebrew. Output ONLY the translation.",
+        previousResult: text,
+      }),
+    },
+    summarize: {
+      label: "\u05E1\u05DB\u05DD",
+      buildBody: (text) => {
+        const lang = resolveOutputLanguage(storedLang, text);
+        return {
+          prompt: text, tone: storedTone, category: "כללי",
+          target_model: TARGET_MODEL,
+          refinementInstruction: "Summarize this text into 3-5 key bullet points. Be concise and capture only the essential information. Output ONLY the summary.",
+          previousResult: text,
+          ...(lang === 'english' && { output_language: 'english' }),
+        };
+      },
+    },
+    bullets: {
+      label: "\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA",
+      buildBody: (text) => ({
+        prompt: text, tone: storedTone, category: "כללי",
+        target_model: TARGET_MODEL,
+        refinementInstruction: "Reformat this text as a clean bulleted list. Break it into logical bullet points. Output ONLY the bulleted list.",
         previousResult: text,
       }),
     },
@@ -211,6 +274,10 @@ if (!window.__peerootContentLoaded) {
     const actions = currentPanel?.querySelector("#peroot-actions");
     const status = currentPanel?.querySelector("#peroot-status");
     if (!body) return;
+
+    // Load prefs inside the async function so the storage read always
+    // completes before buildBody() reads storedTone/storedLang.
+    await new Promise(resolve => loadPrefs(resolve));
 
     const actionDef = ACTIONS[action] || ACTIONS.enhance;
 
@@ -355,52 +422,139 @@ if (!window.__peerootContentLoaded) {
     });
   }
 
-  // ─── Inline Enhance Button ───
-  // Shows a small floating button when user focuses a text input with content
+  // ─── Inline Enhance Toolbar ───
+  // Shows a compact floating toolbar when user focuses a text input with content.
+  // Collapsed: shows ⚡ pill. Expanded on hover: reveals action buttons.
   let inlineBtn = null;
   let inlineTarget = null;
   let inlineHideTimer = null;
 
+  // Inject CSS for hover-expand (inline styles can't express :hover transitions)
+  (function injectInlineToolbarCSS() {
+    if (document.getElementById("peroot-inline-css")) return;
+    const s = document.createElement("style");
+    s.id = "peroot-inline-css";
+    s.textContent = `
+      #peroot-inline-toolbar {
+        all: initial;
+        position: fixed;
+        z-index: 2147483646;
+        display: flex;
+        align-items: center;
+        background: #111113;
+        border: 1px solid rgba(251,191,36,0.25);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.55);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 0.15s, transform 0.15s;
+        pointer-events: auto;
+        direction: rtl;
+        overflow: hidden;
+      }
+      #peroot-inline-toolbar .pit-trigger {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 10px;
+        color: #fbbf24;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      #peroot-inline-toolbar .pit-actions {
+        display: flex;
+        align-items: center;
+        max-width: 0;
+        overflow: hidden;
+        transition: max-width 0.22s cubic-bezier(0.16,1,0.3,1), opacity 0.18s;
+        opacity: 0;
+        border-right: 1px solid rgba(251,191,36,0.12);
+      }
+      #peroot-inline-toolbar:hover .pit-actions {
+        max-width: 260px;
+        opacity: 1;
+      }
+      #peroot-inline-toolbar .pit-action-btn {
+        all: unset;
+        padding: 5px 9px;
+        color: #a1a1aa;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: color 0.12s, background 0.12s;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      #peroot-inline-toolbar .pit-action-btn:hover {
+        color: #fbbf24;
+        background: rgba(251,191,36,0.08);
+      }
+      #peroot-inline-toolbar .pit-action-btn.pit-primary {
+        color: #fbbf24;
+      }
+      #peroot-inline-toolbar .pit-action-btn.pit-primary:hover {
+        color: #fff;
+        background: rgba(251,191,36,0.12);
+      }
+    `;
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
+  const INLINE_ACTIONS = [
+    { key: "enhance",   label: "⚡ שדרג",   primary: true },
+    { key: "fix",       label: "✓ תקן" },
+    { key: "shorten",   label: "↕ קצר" },
+    { key: "lengthen",  label: "↔ הארך" },
+    { key: "translate", label: "↯ תרגם" },
+    { key: "summarize", label: "≡ סכם" },
+    { key: "bullets",   label: "• נקודות" },
+  ];
+
   function createInlineBtn() {
     if (inlineBtn) return inlineBtn;
-    const btn = document.createElement("div");
-    btn.id = "peroot-inline-btn";
-    btn.innerHTML = `<span class="peroot-inline-icon">⚡</span><span class="peroot-inline-label">שדרג</span>`;
-    btn.style.cssText = `
-      all: initial;
-      position: fixed;
-      z-index: 2147483646;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      background: #111113;
-      border: 1px solid rgba(251,191,36,0.25);
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      color: #fbbf24;
-      cursor: pointer;
-      opacity: 0;
-      transform: translateY(4px);
-      transition: opacity 0.15s, transform 0.15s;
-      pointer-events: auto;
-      direction: rtl;
-    `;
-    btn.addEventListener("mousedown", (e) => {
+    const toolbar = document.createElement("div");
+    toolbar.id = "peroot-inline-toolbar";
+
+    // Trigger pill (always visible, clicking fires enhance)
+    const trigger = document.createElement("div");
+    trigger.className = "pit-trigger";
+    trigger.innerHTML = `⚡ <span>שדרג</span>`;
+    trigger.addEventListener("mousedown", (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (!inlineTarget) return;
       const text = getFieldValue(inlineTarget);
       if (text) handleEnhance(text, "enhance");
     });
-    btn.addEventListener("mouseenter", () => clearTimeout(inlineHideTimer));
-    btn.addEventListener("mouseleave", () => scheduleHideInline());
-    document.body.appendChild(btn);
-    inlineBtn = btn;
-    return btn;
+    toolbar.appendChild(trigger);
+
+    // Action buttons (revealed on hover)
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "pit-actions";
+    INLINE_ACTIONS.forEach(({ key, label, primary }) => {
+      const btn = document.createElement("button");
+      btn.className = "pit-action-btn" + (primary ? " pit-primary" : "");
+      btn.textContent = label;
+      btn.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!inlineTarget) return;
+        const text = getFieldValue(inlineTarget);
+        if (text) handleEnhance(text, key);
+      });
+      actionsWrap.appendChild(btn);
+    });
+    toolbar.appendChild(actionsWrap);
+
+    toolbar.addEventListener("mouseenter", () => clearTimeout(inlineHideTimer));
+    toolbar.addEventListener("mouseleave", () => scheduleHideInline());
+    document.body.appendChild(toolbar);
+    inlineBtn = toolbar;
+    return toolbar;
   }
 
   function getFieldValue(el) {
@@ -423,6 +577,7 @@ if (!window.__peerootContentLoaded) {
     let top = rect.top - 32;
     let left = rect.left;
     if (top < 4) top = rect.bottom + 4;
+    // Keep collapsed width (≈80px) in-bounds; expanded overflow is fine (RTL direction handles it)
     if (left + 80 > window.innerWidth) left = window.innerWidth - 84;
 
     btn.style.top = `${top}px`;
@@ -430,6 +585,7 @@ if (!window.__peerootContentLoaded) {
     requestAnimationFrame(() => {
       btn.style.opacity = "1";
       btn.style.transform = "translateY(0)";
+      btn.style.display = "flex";
     });
   }
 
@@ -445,29 +601,34 @@ if (!window.__peerootContentLoaded) {
     inlineHideTimer = setTimeout(hideInlineBtn, 300);
   }
 
-  // Skip inline button on peroot.space itself
+  // Skip inline button on peroot.space itself and if user disabled it
   if (!window.location.hostname.includes("peroot.space")) {
-    document.addEventListener("focusin", (e) => {
-      const el = e.target;
-      if (
-        el.tagName === "TEXTAREA" ||
-        (el.tagName === "INPUT" && ["text", "search", "url", "email", ""].includes(el.type)) ||
-        el.isContentEditable
-      ) {
-        // Check after short delay to let value populate
-        setTimeout(() => showInlineBtn(el), 200);
-      }
-    }, true);
+    chrome.storage.local.get(['peroot_inline_btn'], (prefs) => {
+      // Default: enabled (true). Only skip if explicitly set to false.
+      if (prefs.peroot_inline_btn === false) return;
 
-    document.addEventListener("focusout", (e) => {
-      scheduleHideInline();
-    }, true);
+      document.addEventListener("focusin", (e) => {
+        const el = e.target;
+        if (
+          el.tagName === "TEXTAREA" ||
+          (el.tagName === "INPUT" && ["text", "search", "url", "email", ""].includes(el.type)) ||
+          el.isContentEditable
+        ) {
+          // Check after short delay to let value populate
+          setTimeout(() => showInlineBtn(el), 200);
+        }
+      }, true);
 
-    // Update button visibility on input
-    document.addEventListener("input", (e) => {
-      if (e.target === inlineTarget) {
-        showInlineBtn(e.target);
-      }
-    }, true);
+      document.addEventListener("focusout", () => {
+        scheduleHideInline();
+      }, true);
+
+      // Update button visibility on input
+      document.addEventListener("input", (e) => {
+        if (e.target === inlineTarget) {
+          showInlineBtn(e.target);
+        }
+      }, true);
+    });
   }
 }

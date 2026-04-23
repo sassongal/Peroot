@@ -94,7 +94,7 @@
       </div>
       <div class="settings-section">
         <h3 class="settings-title">אודות</h3>
-        <p class="settings-desc">Peroot <span id="ext-version">v1.2.0</span> · <a href="https://www.peroot.space" target="_blank" rel="noopener" class="settings-link">peroot.space</a></p>
+        <p class="settings-desc">Peroot <span id="ext-version">v1.3.0</span> · <a href="https://www.peroot.space" target="_blank" rel="noopener" class="settings-link">peroot.space</a></p>
       </div>
     </div>
 
@@ -153,12 +153,15 @@
           <button class="platform-chip" data-vplatform="higgsfield">Higgsfield</button>
           <button class="platform-chip" data-vplatform="minimax">Minimax</button>
         </div>
-        <div class="tone-chips" id="tone-chips">
-          <button class="tone-chip active" data-tone="Professional">מקצועי</button>
-          <button class="tone-chip" data-tone="Casual">יומיומי</button>
-          <button class="tone-chip" data-tone="Creative">יצירתי</button>
-          <button class="tone-chip" data-tone="Persuasive">משכנע</button>
-          <button class="tone-chip" data-tone="Academic">אקדמי</button>
+        <div class="tone-row">
+          <div class="tone-chips" id="tone-chips">
+            <button class="tone-chip active" data-tone="Professional">מקצועי</button>
+            <button class="tone-chip" data-tone="Casual">יומיומי</button>
+            <button class="tone-chip" data-tone="Creative">יצירתי</button>
+            <button class="tone-chip" data-tone="Persuasive">משכנע</button>
+            <button class="tone-chip" data-tone="Academic">אקדמי</button>
+          </div>
+          <button id="lang-toggle-btn" class="lang-toggle" title="שפת פלט — לחץ לשינוי" aria-label="שפת פלט">HE</button>
         </div>
         <div class="enhance-input-container">
           <div class="textarea-wrap">
@@ -192,6 +195,18 @@
           <button id="insert-btn" class="btn-sm">הכנס לשדה</button>
           <button id="reuse-btn" class="btn-sm">שדרג שוב</button>
           <button id="save-btn" class="btn-sm prompt-card-btn-use">&#9733; שמור</button>
+        </div>
+        <div id="feedback-row" class="feedback-row hidden" aria-label="דרג את התוצאה">
+          <span class="feedback-label">התוצאה הייתה טובה?</span>
+          <button id="feedback-up-btn" class="btn-feedback" title="כן, תוצאה טובה" aria-label="תוצאה טובה">&#128077;</button>
+          <button id="feedback-down-btn" class="btn-feedback" title="לא, תוצאה גרועה" aria-label="תוצאה גרועה">&#128078;</button>
+        </div>
+        <div id="refinement-section" class="refinement-section hidden" aria-label="שאלות לשיפור הפרומפט">
+          <div class="refinement-header">
+            <span class="refinement-title">&#10024; שדרג עוד</span>
+            <span class="refinement-subtitle">בחר תשובה לשיפור הפרומפט</span>
+          </div>
+          <div id="refinement-questions" class="refinement-questions"></div>
         </div>
       </div>
 
