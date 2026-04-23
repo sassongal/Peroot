@@ -46,17 +46,15 @@ async function getTemplates(): Promise<LibraryPrompt[]> {
 
     // Normalize category keys
     const categoryKeyMap = Object.fromEntries(
-      Object.keys(CATEGORY_LABELS).map((k) => [k.toLowerCase(), k])
+      Object.keys(CATEGORY_LABELS).map((k) => [k.toLowerCase(), k]),
     );
 
     const mapped: LibraryPrompt[] = data.map(
       ({ category_id, ...rest }) =>
         ({
           ...rest,
-          category:
-            (category_id && categoryKeyMap[category_id.toLowerCase()]) ||
-            "General",
-        }) as LibraryPrompt
+          category: (category_id && categoryKeyMap[category_id.toLowerCase()]) || "General",
+        }) as LibraryPrompt,
     );
 
     // Filter to only prompts that contain at least one {variable}
@@ -102,8 +100,7 @@ export default async function TemplatesPage() {
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           name: "תבניות פרומפטים מוכנות בעברית",
-          description:
-            "עשרות תבניות פרומפטים מוכנות לשימוש עם משתנים להתאמה אישית.",
+          description: "עשרות תבניות פרומפטים מוכנות לשימוש עם משתנים להתאמה אישית.",
           url: `${SITE_URL}/templates`,
           inLanguage: "he",
           numberOfItems: templates.length,
@@ -122,16 +119,11 @@ export default async function TemplatesPage() {
             aria-label="breadcrumb"
             className="flex items-center gap-2 text-xs text-muted-foreground mb-8"
           >
-            <Link
-              href="/"
-              className="hover:text-foreground transition-colors"
-            >
+            <Link href="/" className="hover:text-foreground transition-colors">
               דף הבית
             </Link>
             <span>/</span>
-            <span className="text-secondary-foreground">
-              תבניות פרומפטים
-            </span>
+            <span className="text-secondary-foreground">תבניות פרומפטים</span>
           </nav>
 
           {/* Hero */}
@@ -181,8 +173,7 @@ export default async function TemplatesPage() {
               רוצים לשדרג כל פרומפט אוטומטית?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-              Peroot משדרגת כל פרומפט - מבנה מקצועי, הקשר מדויק ותוצאות טובות
-              יותר ב-AI.
+              Peroot משדרגת כל פרומפט - מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר ב-AI.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
@@ -210,10 +201,7 @@ export default async function TemplatesPage() {
             </h2>
             <div className="space-y-4">
               {FAQ_ITEMS.map((item, i) => (
-                <details
-                  key={i}
-                  className="group rounded-xl border border-border bg-card p-5"
-                >
+                <details key={i} className="group rounded-xl border border-border bg-card p-5">
                   <summary className="cursor-pointer text-sm font-bold text-foreground list-none flex items-center justify-between gap-2">
                     {item.question}
                     <span className="text-muted-foreground transition-transform group-open:rotate-180">

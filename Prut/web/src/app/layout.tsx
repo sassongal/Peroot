@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
-    template: "%s | Peroot"
+    template: "%s | Peroot",
   },
   description:
     "הפכו רעיונות לפרומפטים מדויקים עבור ChatGPT, Claude, ו-Gemini. המערכת של Peroot משדרגת כל פרומפט עם מבנה מקצועי, שאלות מיקוד ודירוג איכות בזמן אמת.",
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     "geo.region": "IL",
     "geo.placename": "Israel",
     "geo.position": "32.0853;34.7818",
-    "ICBM": "32.0853, 34.7818",
+    ICBM: "32.0853, 34.7818",
     "content-language": "he",
     "llms.txt": "/llms.txt",
   },
@@ -123,9 +123,9 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   manifest: "/manifest.json",
@@ -162,19 +162,46 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} className="dark" suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={locale === "he" ? "rtl" : "ltr"}
+      className="dark"
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="preload" href="/_next/image?url=%2FPeroot-hero.png&w=384&q=75" as="image" fetchPriority="high" type="image/avif" />
+        <link
+          rel="preload"
+          href="/_next/image?url=%2FPeroot-hero.png&w=384&q=75"
+          as="image"
+          fetchPriority="high"
+          type="image/avif"
+        />
         {/* Inline blocking script — intentionally NOT using next/script.
             Must execute synchronously before first paint to read the saved
             theme class from localStorage and apply it, preventing a flash of
             wrong-theme content (FOUC). Content is a static string, not
             user-controlled, so dangerouslySetInnerHTML is safe here. */}
-        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}`,
+          }}
+        />
         {/* PWA Splash Screens */}
-        <link rel="apple-touch-startup-image" href="/splash-iphone.webp" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-        <link rel="apple-touch-startup-image" href="/splash-iphone-pro.webp" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
-        <link rel="apple-touch-startup-image" href="/splash-ipad.webp" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" />
+        <link
+          rel="apple-touch-startup-image"
+          href="/splash-iphone.webp"
+          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/splash-iphone-pro.webp"
+          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/splash-ipad.webp"
+          media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)"
+        />
       </head>
       <body
         className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col overflow-x-hidden`}
@@ -185,14 +212,20 @@ export default async function RootLayout({
         <ServiceWorkerRegistration />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
-            {locale === 'he' ? 'דלג לתוכן הראשי' : 'Skip to main content'}
+            {locale === "he" ? "דלג לתוכן הראשי" : "Skip to main content"}
           </a>
           <JsonLd data={organizationSchema()} />
           <JsonLd data={webSiteSchema()} />
           <ThemeProvider>
             <QueryProvider>
               <I18nProvider dictionary={dictionary} lang={locale}>
-                <Suspense fallback={<div className="grow flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" /></div>}>
+                <Suspense
+                  fallback={
+                    <div className="grow flex items-center justify-center min-h-screen">
+                      <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                    </div>
+                  }
+                >
                   <GlobalContextWrapper initialUser={initialUser}>
                     <ErrorBoundary name="AppRoot">
                       <main id="main-content" className="grow">

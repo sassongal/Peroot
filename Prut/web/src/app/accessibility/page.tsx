@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Accessibility as AccessibilityIcon, Phone, Mail, User } from "lucide-react";
@@ -18,21 +17,22 @@ export default function AccessibilityPage() {
       dir="rtl"
     >
       <div className="max-w-4xl mx-auto space-y-10">
-        <Link 
+        <Link
           href="/"
           className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors mb-4"
         >
           <ArrowRight className="w-4 h-4" />
           חזרה לדף הבית
         </Link>
-        
+
         <header className="space-y-4 border-b border-border pb-10">
           <div className="flex items-center gap-4 text-foreground">
             <AccessibilityIcon className="w-10 h-10 text-purple-500" />
             <h1 className="text-4xl md:text-5xl font-serif font-bold">הצהרת נגישות</h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            אנו ב-Peroot רואים חשיבות עליונה במתן שירות שוויוני, מכובד, נגיש ומקצועי לכלל הגולשים, בהתאם לחוק שוויון זכויות לאנשים עם מוגבלות.
+            אנו ב-Peroot רואים חשיבות עליונה במתן שירות שוויוני, מכובד, נגיש ומקצועי לכלל הגולשים,
+            בהתאם לחוק שוויון זכויות לאנשים עם מוגבלות.
           </p>
         </header>
 
@@ -43,10 +43,13 @@ export default function AccessibilityPage() {
           </h2>
           <div className="bg-secondary border border-border rounded-2xl p-6 space-y-4">
             <p>
-              אתר זה עומד בדרישות תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע&quot;ג-2013. התאמות הנגישות בוצעו בהתאם לתקן הישראלי ת&quot;י 5568 המבוסס על WCAG 2.1 ברמת <strong>AA</strong>.
+              אתר זה עומד בדרישות תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות),
+              התשע&quot;ג-2013. התאמות הנגישות בוצעו בהתאם לתקן הישראלי ת&quot;י 5568 המבוסס על WCAG
+              2.1 ברמת <strong>AA</strong>.
             </p>
             <p className="text-sm text-muted-foreground">
-              בדיקה אחרונה: ינואר 2026. בדיקות בוצעו בדפדפני Chrome, Edge, Firefox ו-Safari ובקוראי מסך NVDA ו-VoiceOver.
+              בדיקה אחרונה: ינואר 2026. בדיקות בוצעו בדפדפני Chrome, Edge, Firefox ו-Safari ובקוראי
+              מסך NVDA ו-VoiceOver.
             </p>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium">
               <li className="flex items-center gap-2 bg-secondary p-3 rounded-xl border border-border">
@@ -81,11 +84,16 @@ export default function AccessibilityPage() {
           <h2 className="text-2xl text-foreground font-semibold">הנחיות להפעלה וניווט</h2>
           <div className="space-y-4 leading-relaxed">
             <p>
-              האתר מותאם לצפייה בדפדפנים המודרניים (Chrome, Edge, Firefox, Safari) וכולל את ההתאמות הבאות:
+              האתר מותאם לצפייה בדפדפנים המודרניים (Chrome, Edge, Firefox, Safari) וכולל את ההתאמות
+              הבאות:
             </p>
             <ul className="list-disc pr-6 space-y-2">
-              <li>שימוש במקש <strong>Tab</strong> למעבר בין אלמנטים אינטראקטיביים.</li>
-              <li>שימוש ב-<strong>Enter</strong> ו-<strong>Space</strong> להפעלת כפתורים ותפריטים.</li>
+              <li>
+                שימוש במקש <strong>Tab</strong> למעבר בין אלמנטים אינטראקטיביים.
+              </li>
+              <li>
+                שימוש ב-<strong>Enter</strong> ו-<strong>Space</strong> להפעלת כפתורים ותפריטים.
+              </li>
               <li>קישור &quot;דלג לתוכן הראשי&quot; זמין מתחילת העמוד.</li>
               <li>תמיכה בתיאורי טקסט חלופיים (Alt Text) לתמונות משמעותיות.</li>
               <li>אפשרות להפחתת אנימציות במערכת (prefers-reduced-motion).</li>
@@ -96,22 +104,22 @@ export default function AccessibilityPage() {
         <section className="space-y-4">
           <h2 className="text-2xl text-foreground font-semibold">יישומי נגישות נוספים</h2>
           <p>
-            האתר נבנה בטכנולוגיית React/Next.js ומיישם ניהול פוקוס, ARIA Roles ותיוגים סמנטיים כדי להנגיש אלמנטים דינמיים כגון מודאלים ותפריטים נפתחים באופן עקבי.
+            האתר נבנה בטכנולוגיית React/Next.js ומיישם ניהול פוקוס, ARIA Roles ותיוגים סמנטיים כדי
+            להנגיש אלמנטים דינמיים כגון מודאלים ותפריטים נפתחים באופן עקבי.
           </p>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-2xl text-foreground font-semibold">מגבלות ידועות</h2>
           <p>
-            ייתכן כי רכיבי צד שלישי (כגון קישורים חיצוניים או תכנים מוטמעים) לא יהיו נגישים במלואם. אנו ממשיכים לשפר את הנגישות ונשמח לקבל דיווחים.
+            ייתכן כי רכיבי צד שלישי (כגון קישורים חיצוניים או תכנים מוטמעים) לא יהיו נגישים במלואם.
+            אנו ממשיכים לשפר את הנגישות ונשמח לקבל דיווחים.
           </p>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-2xl text-foreground font-semibold">הסדרי נגישות פיזיים</h2>
-          <p>
-            השירות ניתן באופן דיגיטלי בלבד, ואין קבלת קהל או משרד פיזי לקבלת שירות.
-          </p>
+          <p>השירות ניתן באופן דיגיטלי בלבד, ואין קבלת קהל או משרד פיזי לקבלת שירות.</p>
         </section>
 
         <section className="space-y-6 pt-6 border-t border-border">
@@ -119,23 +127,31 @@ export default function AccessibilityPage() {
             רכז נגישות ודרכי התקשרות
           </h2>
           <p>
-            למרות מאמצנו להנגיש את כלל דפי האתר, ייתכן שיתגלו חלקים שטרם הונגשו במלואם. אם נתקלתם בבעיה או שיש לכם הצעה לשיפור, נשמח לשמוע מכם. ניתן גם להשתמש בכפתור &quot;תעזור לנו להשתפר&quot; בתחתית האתר.
+            למרות מאמצנו להנגיש את כלל דפי האתר, ייתכן שיתגלו חלקים שטרם הונגשו במלואם. אם נתקלתם
+            בבעיה או שיש לכם הצעה לשיפור, נשמח לשמוע מכם. ניתן גם להשתמש בכפתור &quot;תעזור לנו
+            להשתפר&quot; בתחתית האתר.
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-secondary p-6 rounded-2xl border border-border flex flex-col items-center text-center gap-3">
               <User className="w-6 h-6 text-purple-400" />
-              <span className="text-xs text-muted-foreground uppercase tracking-widest">רכז נגישות</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-widest">
+                רכז נגישות
+              </span>
               <span className="font-bold text-foreground">גל ששון</span>
             </div>
             <div className="bg-secondary p-6 rounded-2xl border border-border flex flex-col items-center text-center gap-3">
               <Mail className="w-6 h-6 text-purple-400" />
-              <span className="text-xs text-muted-foreground uppercase tracking-widest">אימייל</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-widest">
+                אימייל
+              </span>
               <span className="font-bold text-foreground">gal@joya-tech.net</span>
             </div>
             <div className="bg-secondary p-6 rounded-2xl border border-border flex flex-col items-center text-center gap-3">
               <Phone className="w-6 h-6 text-purple-400" />
-              <span className="text-xs text-muted-foreground uppercase tracking-widest">זמן מענה</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-widest">
+                זמן מענה
+              </span>
               <span className="font-bold text-foreground">עד 48 שעות</span>
             </div>
           </div>

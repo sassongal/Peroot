@@ -42,6 +42,8 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
   const { theme, toggleTheme } = useTheme();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreWrapRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const moreTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -54,9 +56,14 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    // Move focus into the menu so keyboard users aren't stranded behind the
+    // backdrop; restore to the trigger on close.
+    const firstItem = moreMenuRef.current?.querySelector<HTMLAnchorElement>('a[role="menuitem"]');
+    firstItem?.focus();
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      moreTriggerRef.current?.focus();
     };
   }, [moreOpen]);
 
@@ -186,6 +193,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
 
           <div className="relative shrink-0 md:hidden" ref={moreWrapRef}>
             <button
+              ref={moreTriggerRef}
               type="button"
               onClick={() => setMoreOpen((o) => !o)}
               className={cn(
@@ -202,22 +210,31 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
               <span className="text-xs font-medium max-[360px]:hidden">עוד</span>
             </button>
             {moreOpen && (
-              <div
-                role="menu"
-                className="absolute end-0 top-full z-60 mt-1 min-w-44 rounded-xl border border-(--border-nav) bg-(--surface-nav) py-1 shadow-lg backdrop-blur-xl"
-              >
-                {MORE_NAV_LINKS.map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    role="menuitem"
-                    className="block px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
-                    onClick={() => setMoreOpen(false)}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
+              <>
+                <button
+                  type="button"
+                  aria-label="סגור תפריט"
+                  onClick={() => setMoreOpen(false)}
+                  className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+                />
+                <div
+                  ref={moreMenuRef}
+                  role="menu"
+                  className="fixed left-1/2 top-1/2 z-[61] w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-(--border-nav) bg-(--surface-nav) py-2 shadow-2xl backdrop-blur-xl"
+                >
+                  {MORE_NAV_LINKS.map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      role="menuitem"
+                      className="block px-5 py-3 text-base text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10"
+                      onClick={() => setMoreOpen(false)}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
