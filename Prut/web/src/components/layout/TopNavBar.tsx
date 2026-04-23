@@ -220,7 +220,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
                 <div
                   ref={moreMenuRef}
                   role="menu"
-                  className="fixed left-1/2 top-1/2 z-[61] w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-(--border-nav) bg-(--surface-nav) py-2 shadow-2xl backdrop-blur-xl"
+                  className="fixed inset-x-4 top-16 z-[61] rounded-2xl border border-(--border-nav) bg-(--surface-nav) py-2 shadow-2xl backdrop-blur-xl max-h-[calc(100svh-5rem)] overflow-y-auto"
                 >
                   {MORE_NAV_LINKS.map(({ href, label }) => (
                     <Link
