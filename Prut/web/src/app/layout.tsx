@@ -36,11 +36,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.peroot.space";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
+    default: "Peroot (פירוט) — מחולל פרומפטים בעברית | חינם ל-ChatGPT ו-Claude",
     template: "%s | Peroot",
   },
   description:
-    "הפכו רעיונות לפרומפטים מדויקים עבור ChatGPT, Claude, ו-Gemini. המערכת של Peroot משדרגת כל פרומפט עם מבנה מקצועי, שאלות מיקוד ודירוג איכות בזמן אמת.",
+    "הנדסת פרומפטים בעברית בחינם. Peroot משדרג כל פרומפט למבנה מקצועי עם דירוג איכות — תוצאות טובות יותר ב-ChatGPT, Claude, Gemini ו-Midjourney.",
   applicationName: "Peroot",
   authors: [{ name: "JoyaTech", url: "https://joya-tech.net" }],
   generator: "Next.js",
@@ -88,9 +88,9 @@ export const metadata: Metadata = {
     "llms.txt": "/llms.txt",
   },
   openGraph: {
-    title: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
+    title: "Peroot (פירוט) — הנדסת פרומפטים בעברית בחינם",
     description:
-      "הכלי המתקדם בישראל ליצירה ושיפור של פרומפטים. שדרגו את התוצאות שלכם ב-AI עם מבנה חכם, הקשר מדויק ושאלות הכוונה.",
+      "מחולל פרומפטים מקצועיים לכל מודל AI. שדרוג אוטומטי עם דירוג איכות, 480+ תבניות מוכנות, תמיכה מלאה בעברית. חינם.",
     url: siteUrl,
     siteName: "Peroot",
     locale: "he_IL",

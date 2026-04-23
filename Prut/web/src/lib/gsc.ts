@@ -8,8 +8,7 @@ export function getGscAuth() {
   // existing Vercel convention here; GOOGLE_SERVICE_ACCOUNT_KEY is the
   // name used in earlier docs/scripts. Prefer the former.
   const raw =
-    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ??
-    process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ?? process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
   if (!raw) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY not configured");
   let credentials: Record<string, unknown>;
   try {

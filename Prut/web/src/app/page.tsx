@@ -8,9 +8,9 @@ import { softwareAppSchema } from "@/lib/schema";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Peroot (פירוט) - מחולל פרומפטים מקצועי בעברית",
+  title: "Peroot (פירוט) — מחולל פרומפטים בעברית | חינם ל-ChatGPT ו-Claude",
   description:
-    "שדרגו את הפרומפטים שלכם עם AI. Peroot מנתח, משפר ומייעל פרומפטים לכל מודל שפה - ChatGPT, Claude, Gemini ועוד. חינם ובעברית.",
+    "הנדסת פרומפטים בעברית בחינם. Peroot משדרג כל פרומפט למבנה מקצועי עם דירוג איכות — תוצאות טובות יותר ב-ChatGPT, Claude, Gemini ו-Midjourney. נסו עכשיו.",
   alternates: { canonical: "/" },
 };
 
