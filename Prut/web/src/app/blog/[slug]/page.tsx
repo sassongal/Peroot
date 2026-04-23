@@ -17,16 +17,16 @@ import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 
 // Maps blog post category (Hebrew) to the most relevant prompt library slug
 const BLOG_CATEGORY_TO_PROMPT_SLUG: Record<string, string> = {
-  "שיווק": "marketing",
-  "תוכן": "creative",
-  "תמונות": "images",
+  שיווק: "marketing",
+  תוכן: "creative",
+  תמונות: "images",
   "קוד ופיתוח": "dev",
-  "חינוך": "teachers",
-  "מדריכים": "general",
-  "פרילנסרים": "general",
+  חינוך: "teachers",
+  מדריכים: "general",
+  פרילנסרים: "general",
   "טעויות נפוצות": "general",
-  "השוואות": "general",
-  "סקירות": "general",
+  השוואות: "general",
+  סקירות: "general",
 };
 
 interface Props {
@@ -68,7 +68,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = await createClient();
   const { data: post } = await supabase
     .from("blog_posts")
-    .select("title, meta_title, meta_description, excerpt, slug, thumbnail_url, category, updated_at")
+    .select(
+      "title, meta_title, meta_description, excerpt, slug, thumbnail_url, category, updated_at",
+    )
     .eq("slug", slug)
     .eq("status", "published")
     .single();
@@ -141,6 +143,21 @@ function injectH2Ids(html: string): string {
 }
 
 /**
+ * Decode a small set of HTML entities commonly produced by the editor so the
+ * JSON-LD schema text matches what readers actually see. Full entity decoding
+ * isn't needed — we're feeding search engines, not rendering markup.
+ */
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+/**
  * Extract Q&A pairs from blog content for FAQ schema.
  * Looks for H2/H3 that end with "?" followed by paragraph content.
  */
@@ -149,10 +166,15 @@ function extractFaqPairs(html: string): { question: string; answer: string }[] {
   const regex = /<h[23][^>]*>([\s\S]*?)<\/h[23]>\s*([\s\S]*?)(?=<h[23]|$)/gi;
   let match;
   while ((match = regex.exec(html)) !== null) {
-    const heading = match[1].replace(/<[^>]+>/g, "").trim();
+    const heading = decodeEntities(match[1].replace(/<[^>]+>/g, "")).trim();
     if (!heading.includes("?")) continue;
     const answerHtml = match[2];
-    const answer = answerHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const answer = decodeEntities(
+      answerHtml
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
     if (answer.length > 20) {
       pairs.push({ question: heading, answer: answer.slice(0, 500) });
     }
@@ -169,8 +191,13 @@ function extractHowToSteps(html: string): { name: string; text: string }[] {
   const regex = /<h2[^>]*>([\s\S]*?)<\/h2>\s*([\s\S]*?)(?=<h2|$)/gi;
   let match;
   while ((match = regex.exec(html)) !== null) {
-    const name = match[1].replace(/<[^>]+>/g, "").trim();
-    const text = match[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const name = decodeEntities(match[1].replace(/<[^>]+>/g, "")).trim();
+    const text = decodeEntities(
+      match[2]
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
     if (name && text.length > 10) {
       steps.push({ name, text: text.slice(0, 300) });
     }
@@ -245,9 +272,7 @@ export default async function BlogPostPage({ params }: Props) {
                 {post.title}
               </h1>
               {post.excerpt && (
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {post.excerpt}
-                </p>
+                <p className="text-lg text-muted-foreground leading-relaxed">{post.excerpt}</p>
               )}
             </header>
 
@@ -276,12 +301,17 @@ export default async function BlogPostPage({ params }: Props) {
 
             {/* Newsletter signup */}
             <div className="mt-8 p-6 rounded-2xl border border-amber-500/20 bg-linear-to-br from-amber-500/5 to-transparent">
-              <p className="text-lg font-serif text-foreground mb-3">נהנית מהתוכן? הצטרף לניוזלטר שלנו</p>
+              <p className="text-lg font-serif text-foreground mb-3">
+                נהנית מהתוכן? הצטרף לניוזלטר שלנו
+              </p>
               <NewsletterSignup />
             </div>
 
             {/* Author Bio */}
-            <div className="mt-12 p-6 rounded-2xl border border-border bg-secondary flex items-start gap-4" dir="rtl">
+            <div
+              className="mt-12 p-6 rounded-2xl border border-border bg-secondary flex items-start gap-4"
+              dir="rtl"
+            >
               <div className="w-12 h-12 rounded-full bg-linear-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 shrink-0">
                 <span className="text-lg font-bold text-amber-600 dark:text-amber-400">G</span>
               </div>
@@ -289,8 +319,8 @@ export default async function BlogPostPage({ params }: Props) {
                 <p className="text-sm font-bold text-foreground">{post.author || "Gal Sasson"}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">מייסד JoyaTech ויוצר Peroot</p>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                  מפתח ויזם בתחום ה-AI עם התמחות בעיבוד שפה טבעית ופרומפט אנג&apos;ינירינג.
-                  בונה כלים שעוזרים למשתמשים לתקשר טוב יותר עם מודלי AI.
+                  מפתח ויזם בתחום ה-AI עם התמחות בעיבוד שפה טבעית ופרומפט אנג&apos;ינירינג. בונה
+                  כלים שעוזרים למשתמשים לתקשר טוב יותר עם מודלי AI.
                 </p>
               </div>
             </div>
@@ -309,15 +339,25 @@ export default async function BlogPostPage({ params }: Props) {
               return (
                 <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <CrossLinkCard href={promptHref} title={promptTitle} description={promptDesc} />
-                  <CrossLinkCard href="/guide" title="המדריך המלא לפרומפטים בעברית" description="5 עקרונות זהב וטכניקות מתקדמות" />
-                  <CrossLinkCard href="/features" title="כל הכלים של Peroot" description="תמונות, סרטונים, מחקר וסוכני AI" />
+                  <CrossLinkCard
+                    href="/guide"
+                    title="המדריך המלא לפרומפטים בעברית"
+                    description="5 עקרונות זהב וטכניקות מתקדמות"
+                  />
+                  <CrossLinkCard
+                    href="/features"
+                    title="כל הכלים של Peroot"
+                    description="תמונות, סרטונים, מחקר וסוכני AI"
+                  />
                 </div>
               );
             })()}
 
             {/* Gradient CTA */}
             <div className="mt-12 rounded-2xl bg-linear-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-8 text-center space-y-4">
-              <h3 className="text-2xl font-serif text-foreground">רוצים לשדרג את הפרומפטים שלכם?</h3>
+              <h3 className="text-2xl font-serif text-foreground">
+                רוצים לשדרג את הפרומפטים שלכם?
+              </h3>
               <p className="text-muted-foreground max-w-lg mx-auto">
                 Peroot משדרג כל פרומפט לרמה מקצועית - בעברית, בחינם, תוך שניות.
               </p>
@@ -354,17 +394,19 @@ export default async function BlogPostPage({ params }: Props) {
         ])}
       />
       {/* FAQ schema for Q&A category posts */}
-      {post.category === "שאלות ותשובות" && (() => {
-        const pairs = extractFaqPairs(post.content ?? "");
-        return pairs.length > 0 ? <JsonLd data={faqSchema(pairs)} /> : null;
-      })()}
+      {post.category === "שאלות ותשובות" &&
+        (() => {
+          const pairs = extractFaqPairs(post.content ?? "");
+          return pairs.length > 0 ? <JsonLd data={faqSchema(pairs)} /> : null;
+        })()}
       {/* HowTo schema for guide category posts */}
-      {post.category === "מדריכים" && (() => {
-        const steps = extractHowToSteps(post.content ?? "");
-        return steps.length > 0 ? (
-          <JsonLd data={howToSchema({ name: post.title, steps })} />
-        ) : null;
-      })()}
+      {post.category === "מדריכים" &&
+        (() => {
+          const steps = extractHowToSteps(post.content ?? "");
+          return steps.length > 0 ? (
+            <JsonLd data={howToSchema({ name: post.title, steps })} />
+          ) : null;
+        })()}
     </main>
   );
 }
