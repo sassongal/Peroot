@@ -76,7 +76,6 @@ export const metadata: Metadata = {
     },
     languages: {
       "he-IL": "/",
-      "en": "/",
       "x-default": "/",
     },
   },

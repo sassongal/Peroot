@@ -18,6 +18,8 @@ export const metadata: Metadata = {
     description: "תבניות פרומפטים מוכנות לשימוש עם שדות למילוי מותאמים אישית.",
     url: "/templates",
     type: "website",
+    locale: "he_IL",
+    siteName: "Peroot",
   },
 };
 

@@ -6,6 +6,7 @@ import { ArrowRight, Accessibility as AccessibilityIcon, Phone, Mail, User } fro
 export const metadata: Metadata = {
   title: "הצהרת נגישות",
   description: "הצהרת הנגישות של Peroot והתאמות שבוצעו באתר.",
+  alternates: { canonical: "/accessibility" },
 };
 
 export default function AccessibilityPage() {

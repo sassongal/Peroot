@@ -4,15 +4,18 @@ export function organizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "JoyaTech",
-    url: "https://joya-tech.net",
-    description: "JoyaTech - חברת טכנולוגיה ישראלית המפתחת כלי AI חדשניים בעברית",
+    name: "Peroot",
+    alternateName: "פירוט",
+    url: SITE_URL,
+    description: "Peroot (פירוט) - פלטפורמת הנדסת פרומפטים מקצועית בעברית, המפותחת על ידי JoyaTech",
     logo: {
       "@type": "ImageObject",
       url: `${SITE_URL}/assets/branding/logo.png`,
     },
     sameAs: [
       "https://www.facebook.com/profile.php?id=61579689932777",
+      "https://www.linkedin.com/in/sassongal/",
+      "https://github.com/sassongal",
     ],
     founder: {
       "@type": "Person",
@@ -23,10 +26,10 @@ export function organizationSchema() {
         "https://www.linkedin.com/in/sassongal/",
       ],
     },
-    brand: {
-      "@type": "Brand",
-      name: "Peroot",
-      url: SITE_URL,
+    parentOrganization: {
+      "@type": "Organization",
+      name: "JoyaTech",
+      url: "https://joya-tech.net",
     },
     areaServed: {
       "@type": "Country",
@@ -40,6 +43,7 @@ export function articleSchema(post: {
   title: string;
   excerpt?: string | null;
   published_at?: string | null;
+  updated_at?: string | null;
   author?: string | null;
   thumbnail_url?: string | null;
   slug: string;
@@ -50,7 +54,7 @@ export function articleSchema(post: {
     headline: post.title,
     description: post.excerpt || "",
     datePublished: post.published_at || new Date().toISOString(),
-    dateModified: post.published_at || new Date().toISOString(),
+    dateModified: post.updated_at || post.published_at || new Date().toISOString(),
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": `${SITE_URL}/blog/${post.slug}`,

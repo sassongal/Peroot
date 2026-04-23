@@ -36,6 +36,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/templates`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/extension`, lastModified: new Date('2025-01-01'), changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${baseUrl}/terms`, lastModified: new Date('2025-01-01'), changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${baseUrl}/privacy`, lastModified: new Date('2025-01-01'), changeFrequency: 'yearly', priority: 0.4 },
   ];
 
   // ALL prompt categories (not just top 6)
