@@ -1,14 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  AlertTriangle,
-  Check,
-  CreditCard,
-  Crown,
-  Trash2,
-  Zap,
-} from "lucide-react";
+import { AlertTriangle, Check, CreditCard, Crown, Trash2, Zap } from "lucide-react";
 import type { Subscription } from "@/hooks/useSubscription";
 
 interface SettingsBillingSectionProps {
@@ -25,12 +18,15 @@ export function SettingsBillingSection({
   portalUrl,
 }: SettingsBillingSectionProps) {
   return (
-    <section className="space-y-6 animate-in fade-in duration-300" aria-labelledby="settings-billing-heading">
+    <section
+      className="space-y-6 animate-in fade-in duration-300"
+      aria-labelledby="settings-billing-heading"
+    >
       <header className="space-y-1">
         <h2 id="settings-billing-heading" className="text-xl font-bold">
           מנוי וחיוב
         </h2>
-        <p className="text-sm text-slate-500">נהל את המנוי והתשלום שלך</p>
+        <p className="text-sm text-slate-400">נהל את המנוי והתשלום שלך</p>
       </header>
 
       {billingSuccess && (
@@ -143,7 +139,8 @@ export function SettingsBillingSection({
         <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
           <p className="text-sm text-yellow-300">
-            המנוי שלך בוטל ויסתיים ב-{new Date(subscription.ends_at).toLocaleDateString("he-IL")}. לאחר מכן תעבור לתוכנית החינם.
+            המנוי שלך בוטל ויסתיים ב-{new Date(subscription.ends_at).toLocaleDateString("he-IL")}.
+            לאחר מכן תעבור לתוכנית החינם.
           </p>
         </div>
       )}
@@ -154,8 +151,9 @@ export function SettingsBillingSection({
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             ביטול יכנס לתוקף בסוף תקופת החיוב הנוכחית
           </p>
-          <p className="text-xs text-slate-600">
-            לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב הנוכחית.
+          <p className="text-xs text-slate-500">
+            לביטול המנוי לחץ על &quot;ביטול מנוי&quot; למעלה. הגישה ל-Pro תישמר עד סוף תקופת החיוב
+            הנוכחית.
           </p>
         </div>
       )}

@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Library,
   Database,
   Upload,
   Tags,
   Search,
-  Filter,
-  Plus,
   LayoutDashboard,
   ThumbsUp,
   ThumbsDown,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
@@ -78,22 +80,49 @@ interface FeedbackStats {
   positiveRate: number;
 }
 
+interface LibraryPrompt {
+  id: string;
+  title: string;
+  category_id: string | null;
+  capability_mode: string | null;
+  is_active: boolean;
+  created_at: string;
+  use_case: string | null;
+}
+
 export function LibraryTab() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [stats, setStats] = useState({ totalDocs: 0, categoryCount: 0 });
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null);
+  const [prompts, setPrompts] = useState<LibraryPrompt[]>([]);
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [promptsLoading, setPromptsLoading] = useState(false);
+
+  const fetchStats = useCallback(async (q: string, p: number) => {
+    setPromptsLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(p) });
+      if (q) params.set("search", q);
+      const res = await fetch(getApiPath(`/api/admin/library-stats?${params}`));
+      if (res.ok) {
+        const data = await res.json();
+        setStats({ totalDocs: data.totalDocs, categoryCount: data.categoryCount });
+        setPrompts(data.prompts ?? []);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setPromptsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch(getApiPath("/api/admin/library-stats"));
-        if (res.ok) setStats(await res.json());
-      } catch {
-        // silently ignore — keep zeros
-      }
-    };
-    fetchStats();
+    fetchStats(search, page);
+  }, [fetchStats, search, page]);
 
+  useEffect(() => {
     const fetchFeedback = async () => {
       try {
         const res = await fetch(getApiPath("/api/admin/feedback-stats"));
@@ -176,25 +205,107 @@ export function LibraryTab() {
       {/* Tab Content */}
       <div className="min-h-[600px]">
         {activeTab === "overview" && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-3 h-20 bg-zinc-950 border border-white/5 rounded-3xl flex items-center px-8 gap-4">
-                <Search className="w-5 h-5 text-zinc-700" />
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Search */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setPage(0);
+                setSearch(searchInput);
+              }}
+              className="flex gap-4"
+            >
+              <div className="flex-1 h-14 bg-zinc-950 border border-white/5 rounded-2xl flex items-center px-6 gap-3">
+                <Search className="w-4 h-4 text-zinc-700" />
                 <input
-                  placeholder="חיפוש מהיר בספריה..."
-                  className="flex-1 bg-transparent border-none outline-none text-white font-bold"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="חיפוש לפי שם..."
+                  className="flex-1 bg-transparent border-none outline-none text-white font-bold text-sm"
                 />
-                <Filter className="w-4 h-4 text-zinc-700" />
               </div>
-              <button className="h-20 bg-blue-600 hover:bg-blue-500 text-white rounded-3xl flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest transition-all">
-                <Plus className="w-5 h-5" />
-                Create New
+              <button
+                type="submit"
+                className="px-6 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
+              >
+                חפש
               </button>
+            </form>
+
+            {/* Prompts table */}
+            <div className="rounded-[32px] border border-white/5 bg-zinc-950 overflow-hidden">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-4 px-8 py-4 border-b border-white/5 text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                <div className="col-span-5">Title</div>
+                <div className="col-span-3">Mode</div>
+                <div className="col-span-2">Status</div>
+                <div className="col-span-2">Created</div>
+              </div>
+
+              {promptsLoading ? (
+                <div className="flex items-center justify-center h-40 text-zinc-700 text-xs font-black uppercase tracking-widest">
+                  <Library className="w-5 h-5 animate-pulse mr-3" /> Loading...
+                </div>
+              ) : prompts.length === 0 ? (
+                <div className="flex items-center justify-center h-40 text-zinc-800 text-[10px] font-black uppercase tracking-widest">
+                  No prompts found
+                </div>
+              ) : (
+                prompts.map((p) => (
+                  <div
+                    key={p.id}
+                    className="grid grid-cols-12 gap-4 px-8 py-4 border-b border-white/5 hover:bg-white/2 transition-all duration-200 items-center"
+                  >
+                    <div className="col-span-5 font-bold text-zinc-300 text-sm truncate">{p.title}</div>
+                    <div className="col-span-3">
+                      {p.capability_mode && (
+                        <span className="px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-wide">
+                          {p.capability_mode.replace(/_/g, " ")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="col-span-2 flex items-center gap-1.5">
+                      {p.is_active ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                      ) : (
+                        <XCircle className="w-3.5 h-3.5 text-zinc-700" />
+                      )}
+                      <span className={cn("text-[9px] font-black uppercase", p.is_active ? "text-emerald-500" : "text-zinc-700")}>
+                        {p.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <div className="col-span-2 text-zinc-700 text-[10px] font-bold">
+                      {new Date(p.created_at).toLocaleDateString("he-IL")}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
-            <div className="p-20 text-center text-zinc-800 font-black uppercase tracking-[0.4em] text-[10px] border border-dashed border-white/5 rounded-[48px]">
-              <Library className="w-12 h-12 mx-auto mb-6 opacity-5 text-blue-500" />
-              Sequence List Loading...
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-2">
+              <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
+                {stats.totalDocs} prompts total
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="p-2 rounded-xl bg-zinc-900 border border-white/5 text-zinc-500 disabled:opacity-30 hover:text-white transition-all"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <span className="px-4 py-2 rounded-xl bg-zinc-900 border border-white/5 text-zinc-500 text-[10px] font-black">
+                  {page + 1}
+                </span>
+                <button
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={prompts.length < 20}
+                  className="p-2 rounded-xl bg-zinc-900 border border-white/5 text-zinc-500 disabled:opacity-30 hover:text-white transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         )}

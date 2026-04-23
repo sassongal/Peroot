@@ -5,7 +5,7 @@ import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
-import { CapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, getCapabilityLabelHe } from "@/lib/capability-mode";
 import {
   BarChart3,
   RefreshCw,
@@ -50,15 +50,6 @@ interface ScoredSample {
 }
 
 // ── Labels ─────────────────────────────────────────────────────────────────────
-
-const MODE_LABELS: Record<string, string> = {
-  STANDARD: "רגיל",
-  DEEP_RESEARCH: "מחקר מעמיק",
-  IMAGE_GENERATION: "יצירת תמונה",
-  VIDEO_GENERATION: "יצירת וידאו",
-  AGENT_BUILDER: "בניית סוכן",
-  unknown: "לא צוין",
-};
 
 const SOURCE_LABELS: Record<string, string> = {
   web: "אתר",
@@ -112,7 +103,9 @@ export function ScoringAnalyticsTab() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Client-side scoring of the sample — single pass for all derived stats
   const scoredSamples: ScoredSample[] = useMemo(() => {
@@ -165,7 +158,9 @@ export function ScoringAnalyticsTab() {
       <div className="text-center py-20 text-red-400">
         <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
         <p>{error || "אין נתונים"}</p>
-        <button onClick={fetchData} className="mt-3 text-sm underline text-(--text-muted)">נסה שוב</button>
+        <button onClick={fetchData} className="mt-3 text-sm underline text-(--text-muted)">
+          נסה שוב
+        </button>
       </div>
     );
   }
@@ -190,13 +185,17 @@ export function ScoringAnalyticsTab() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={Layers} label="סה״כ שיפורים" value={data.total.toLocaleString()} />
-        <KpiCard icon={Zap} label="ציון ממוצע (50 אחרונים)" value={`${avgScore}/100`} />
+        <KpiCard icon={Zap} label="ציון ממוצע (200 אחרונים)" value={`${avgScore}/100`} />
         <KpiCard icon={PieChart} label="מצבים פעילים" value={data.byMode.length.toString()} />
-        <KpiCard icon={TrendingUp} label="היום" value={(data.daily.at(-1)?.count ?? 0).toString()} />
+        <KpiCard
+          icon={TrendingUp}
+          label="היום"
+          value={(data.daily.at(-1)?.count ?? 0).toString()}
+        />
       </div>
 
       {/* Score Distribution */}
-      <Section title="התפלגות ציונים (50 אחרונים)">
+      <Section title="התפלגות ציונים (200 אחרונים)">
         <div className="flex items-end gap-2 h-24">
           {Object.entries(scoreDistribution).map(([level, count]) => {
             const maxCount = Math.max(...Object.values(scoreDistribution), 1);
@@ -205,10 +204,15 @@ export function ScoringAnalyticsTab() {
               <div key={level} className="flex-1 flex flex-col items-center gap-1">
                 <span className="text-[10px] text-(--text-muted)">{count}</span>
                 <div
-                  className={cn("w-full rounded-t-md transition-all", LEVEL_COLORS[level] || "bg-slate-500/20")}
+                  className={cn(
+                    "w-full rounded-t-md transition-all",
+                    LEVEL_COLORS[level] || "bg-slate-500/20",
+                  )}
                   style={{ height: `${Math.max(pct, 4)}%` }}
                 />
-                <span className="text-[9px] text-(--text-muted)">{LEVEL_LABELS[level] || level}</span>
+                <span className="text-[9px] text-(--text-muted)">
+                  {LEVEL_LABELS[level] || level}
+                </span>
               </div>
             );
           })}
@@ -242,7 +246,7 @@ export function ScoringAnalyticsTab() {
       {/* By Mode / By Source / By Input Source */}
       <div className="grid md:grid-cols-3 gap-4">
         <Section title="לפי מצב">
-          <BreakdownList items={data.byMode} labels={MODE_LABELS} />
+          <BreakdownList items={data.byMode} labelFn={getCapabilityLabelHe} />
         </Section>
         <Section title="לפי מקור">
           <BreakdownList items={data.bySource} labels={SOURCE_LABELS} />
@@ -278,7 +282,15 @@ export function ScoringAnalyticsTab() {
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function KpiCard({ icon: Icon, label, value }: { icon: typeof Layers; label: string; value: string }) {
+function KpiCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Layers;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-3 space-y-1">
       <div className="flex items-center gap-1.5 text-(--text-muted)">
@@ -299,14 +311,23 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function BreakdownList({ items, labels }: { items: CountEntry[]; labels: Record<string, string> }) {
+function BreakdownList({
+  items,
+  labels,
+  labelFn,
+}: {
+  items: CountEntry[];
+  labels?: Record<string, string>;
+  labelFn?: (value: string) => string;
+}) {
   const total = items.reduce((sum, i) => sum + i.count, 0) || 1;
   const sorted = [...items].sort((a, b) => b.count - a.count);
+  const getLabel = (value: string) => labelFn?.(value) ?? labels?.[value] ?? value;
   return (
     <div className="space-y-1.5">
       {sorted.map(({ value, count }) => (
         <div key={value} className="flex items-center justify-between text-xs">
-          <span className="text-(--text-secondary)">{labels[value] || value}</span>
+          <span className="text-(--text-secondary)">{getLabel(value)}</span>
           <div className="flex items-center gap-2">
             <span className="text-(--text-muted)">{Math.round((count / total) * 100)}%</span>
             <span className="text-(--text-muted) w-6 text-left">{count}</span>

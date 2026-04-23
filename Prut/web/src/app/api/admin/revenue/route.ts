@@ -7,6 +7,8 @@ import { lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
 const PRO_PRICE_ILS = 3.99;
 const LS_MRR_CACHE_KEY = "admin:revenue:ls_mrr";
 const LS_MRR_CACHE_TTL = 300; // 5 minutes
+const PAYLOAD_CACHE_KEY = "admin:revenue:payload:v1";
+const PAYLOAD_CACHE_TTL = 300; // 5 minutes
 
 async function getLsMrr(): Promise<{ mrr: number; activeSubs: number } | null> {
   try {
@@ -49,6 +51,13 @@ export async function GET() {
         { error: error || "Forbidden" },
         { status: error === "Unauthorized" ? 401 : 403 },
       );
+    }
+
+    try {
+      const cached = await redis.get<Record<string, unknown>>(PAYLOAD_CACHE_KEY);
+      if (cached) return NextResponse.json(cached);
+    } catch (err) {
+      logger.warn("[Admin Revenue] Redis cache read failed:", err);
     }
 
     const now = new Date();
@@ -215,7 +224,68 @@ export async function GET() {
     const effectiveActiveSubs = lsMrr ? lsMrr.activeSubs : Math.max(activeSubs, proProfiles.length);
     const effectiveMrr = lsMrr ? lsMrr.mrr : effectiveActiveSubs * PRO_PRICE_ILS;
 
-    return NextResponse.json({
+    // ── Unit economics ─────────────────────────────────────────────────────
+    // Cost data: last 30d API spend attributed to pro vs free users
+    const proUserIdSet = new Set(proProfiles.map((p) => p.id));
+    const minus30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: costLogs30d } = await supabase
+      .from("api_usage_logs")
+      .select("user_id, estimated_cost_usd")
+      .gte("created_at", minus30d);
+
+    let proCost = 0;
+    let freeCost = 0;
+    for (const row of costLogs30d ?? []) {
+      const cost = row.estimated_cost_usd ?? 0;
+      if (proUserIdSet.has(row.user_id)) {
+        proCost += cost;
+      } else {
+        freeCost += cost;
+      }
+    }
+
+    const proRevenue = effectiveMrr; // monthly revenue from pro users
+    const proMargin = proRevenue - proCost;
+    const proMarginPct = proRevenue > 0 ? (proMargin / proRevenue) * 100 : 0;
+
+    const freeUsersCount = Math.max(1, totalUsers - effectiveActiveSubs);
+    const costPerPro = effectiveActiveSubs > 0 ? proCost / effectiveActiveSubs : 0;
+    const costPerFree = freeCost / freeUsersCount;
+
+    const arpuMonthly = effectiveActiveSubs > 0 ? effectiveMrr / effectiveActiveSubs : 0;
+    const churnRatePct = churnRate / 100;
+    const ltv = churnRatePct > 0 ? arpuMonthly / churnRatePct : arpuMonthly * 24; // cap at 24-month estimate
+
+    const unitEconomics = {
+      grossMarginByTier: {
+        pro: {
+          revenue: parseFloat(proRevenue.toFixed(2)),
+          cost: parseFloat(proCost.toFixed(4)),
+          margin: parseFloat(proMargin.toFixed(2)),
+          marginPct: parseFloat(proMarginPct.toFixed(1)),
+        },
+        free: {
+          revenue: 0,
+          cost: parseFloat(freeCost.toFixed(4)),
+          margin: parseFloat((-freeCost).toFixed(4)),
+        },
+      },
+      costPerUserByTier: {
+        pro: parseFloat(costPerPro.toFixed(4)),
+        free: parseFloat(costPerFree.toFixed(4)),
+      },
+      ltv: {
+        arpu: parseFloat(arpuMonthly.toFixed(2)),
+        churnRate: parseFloat(churnRate.toFixed(2)),
+        ltv: parseFloat(ltv.toFixed(2)),
+      },
+      cohortMrr: [] as Array<{
+        cohort: string;
+        months: Array<{ month: number; activeCount: number; mrr: number }>;
+      }>,
+    };
+
+    const payload = {
       kpi: {
         mrr: effectiveMrr,
         activeSubs: effectiveActiveSubs,
@@ -232,8 +302,17 @@ export async function GET() {
       planBreakdown: planCounts,
       subscribers,
       recentEvents,
+      unitEconomics,
       timestamp: now.toISOString(),
-    });
+    };
+
+    try {
+      await redis.set(PAYLOAD_CACHE_KEY, payload, { ex: PAYLOAD_CACHE_TTL });
+    } catch (err) {
+      logger.warn("[Admin Revenue] Redis cache write failed:", err);
+    }
+
+    return NextResponse.json(payload);
   } catch (err) {
     logger.error("[Admin Revenue] Unexpected error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

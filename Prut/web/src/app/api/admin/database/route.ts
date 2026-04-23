@@ -17,6 +17,13 @@ const STATS_TABLES = [
   "personal_library",
   "activity_logs",
   "api_usage_logs",
+  "subscriptions",
+  "credit_ledger",
+  "newsletter_subscribers",
+  "prompt_favorites",
+  "prompt_usage_events",
+  "prompt_feedback",
+  "webhook_events",
 ] as const;
 
 /**
@@ -39,34 +46,20 @@ export const GET = withAdmin(async (req, supabase) => {
 
       const health = healthError ? "Error" : "Healthy";
 
-      // Row counts in parallel
-      const [
-        { count: profilesCount },
-        { count: libraryCount },
-        { count: activityCount },
-        { count: apiUsageCount },
-      ] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase
-          .from("personal_library")
-          .select("*", { count: "exact", head: true }),
-        supabase
-          .from("activity_logs")
-          .select("*", { count: "exact", head: true }),
-        supabase
-          .from("api_usage_logs")
-          .select("*", { count: "exact", head: true }),
-      ]);
+      // Row counts in parallel for all tracked tables
+      const countResults = await Promise.all(
+        STATS_TABLES.map((t) => supabase.from(t).select("*", { count: "exact", head: true }))
+      );
+
+      const rowCounts: Record<string, number> = {};
+      STATS_TABLES.forEach((t, i) => {
+        rowCounts[t] = countResults[i].count ?? 0;
+      });
 
       return NextResponse.json({
-        tableCount: STATS_TABLES.length + BACKUP_TABLES.length - 2, // deduplicate profiles & personal_library
+        tableCount: STATS_TABLES.length,
         health,
-        rowCounts: {
-          profiles: profilesCount ?? 0,
-          personal_library: libraryCount ?? 0,
-          activity_logs: activityCount ?? 0,
-          api_usage_logs: apiUsageCount ?? 0,
-        },
+        rowCounts,
       });
     }
 

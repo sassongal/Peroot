@@ -108,13 +108,26 @@ export const GET = withAdmin(async (_req, supabase) => {
         userActivity.set(row.user_id, (userActivity.get(row.user_id) ?? 0) + 1);
       }
     }
-    const topUsers = Array.from(userActivity.entries())
+    const topUserIds = Array.from(userActivity.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([userId, eventCount]) => ({
+      .map(([userId]) => userId);
+
+    const { data: topProfiles } = topUserIds.length > 0
+      ? await supabase.from('profiles').select('id, email, full_name').in('id', topUserIds)
+      : { data: [] };
+
+    const profileMap = new Map((topProfiles ?? []).map((p) => [p.id, p]));
+
+    const topUsers = topUserIds.map((userId) => {
+      const profile = profileMap.get(userId);
+      return {
         userId: userId.slice(0, 8) + '…',
-        eventCount,
-      }));
+        email: profile?.email ?? null,
+        displayName: profile?.full_name || profile?.email || userId.slice(0, 8) + '…',
+        eventCount: userActivity.get(userId) ?? 0,
+      };
+    });
 
     // ── Counters ────────────────────────────────────────────────────────────
     // Events/min: events in last 5 minutes / 5

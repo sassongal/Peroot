@@ -84,37 +84,81 @@ function Skeleton({ className }: { className?: string }) {
 type AccentColor = "blue" | "purple" | "emerald" | "amber" | "rose" | "cyan";
 
 const ACCENT_MAP: Record<AccentColor, { icon: string; border: string; bg: string }> = {
-  blue:    { icon: "text-blue-400",    border: "hover:border-blue-500/30",    bg: "bg-blue-500/10 border-blue-500/20"    },
-  purple:  { icon: "text-purple-400",  border: "hover:border-purple-500/30",  bg: "bg-purple-500/10 border-purple-500/20"  },
-  emerald: { icon: "text-emerald-400", border: "hover:border-emerald-500/30", bg: "bg-emerald-500/10 border-emerald-500/20" },
-  amber:   { icon: "text-amber-400",   border: "hover:border-amber-500/30",   bg: "bg-amber-500/10 border-amber-500/20"   },
-  rose:    { icon: "text-rose-400",    border: "hover:border-rose-500/30",    bg: "bg-rose-500/10 border-rose-500/20"    },
-  cyan:    { icon: "text-cyan-400",    border: "hover:border-cyan-500/30",    bg: "bg-cyan-500/10 border-cyan-500/20"    },
+  blue: {
+    icon: "text-blue-400",
+    border: "hover:border-blue-500/30",
+    bg: "bg-blue-500/10 border-blue-500/20",
+  },
+  purple: {
+    icon: "text-purple-400",
+    border: "hover:border-purple-500/30",
+    bg: "bg-purple-500/10 border-purple-500/20",
+  },
+  emerald: {
+    icon: "text-emerald-400",
+    border: "hover:border-emerald-500/30",
+    bg: "bg-emerald-500/10 border-emerald-500/20",
+  },
+  amber: {
+    icon: "text-amber-400",
+    border: "hover:border-amber-500/30",
+    bg: "bg-amber-500/10 border-amber-500/20",
+  },
+  rose: {
+    icon: "text-rose-400",
+    border: "hover:border-rose-500/30",
+    bg: "bg-rose-500/10 border-rose-500/20",
+  },
+  cyan: {
+    icon: "text-cyan-400",
+    border: "hover:border-cyan-500/30",
+    bg: "bg-cyan-500/10 border-cyan-500/20",
+  },
 };
 
-function SummaryCard({ label, value, sub, icon: Icon, color }: {
-  label: string; value: string; sub?: string; icon: React.ElementType; color: AccentColor;
+function SummaryCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: React.ElementType;
+  color: AccentColor;
 }) {
   const a = ACCENT_MAP[color];
   return (
-    <div className={cn(
-      "p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6",
-      "transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl",
-      a.border
-    )}>
+    <div
+      className={cn(
+        "p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6",
+        "transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl",
+        a.border,
+      )}
+    >
       <div className={cn("p-4 rounded-2xl border w-fit", a.bg, a.icon)}>
         <Icon className="w-5 h-5" />
       </div>
       <div className="space-y-1">
         <div className="text-4xl font-black text-white tracking-tighter tabular-nums">{value}</div>
-        <div className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">{label}</div>
+        <div className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
+          {label}
+        </div>
         {sub && <div className="text-[10px] font-bold text-zinc-600 pt-0.5">{sub}</div>}
       </div>
     </div>
   );
 }
 
-function FeatureAdoptionTracker({ features, loading }: { features: FeatureAdoption[]; loading: boolean }) {
+function FeatureAdoptionTracker({
+  features,
+  loading,
+}: {
+  features: FeatureAdoption[];
+  loading: boolean;
+}) {
   const max = Math.max(...features.map((f) => f.adoptionRate), 1);
 
   return (
@@ -165,10 +209,16 @@ function FeatureAdoptionTracker({ features, loading }: { features: FeatureAdopti
               <span className="w-16 text-sm font-black text-white tabular-nums text-left">
                 {feature.distinctUsers.toLocaleString()}
               </span>
-              <span className={cn(
-                "w-20 text-sm font-black tabular-nums text-left",
-                feature.adoptionRate >= 30 ? "text-emerald-400" : feature.adoptionRate >= 10 ? "text-amber-400" : "text-zinc-400"
-              )}>
+              <span
+                className={cn(
+                  "w-20 text-sm font-black tabular-nums text-left",
+                  feature.adoptionRate >= 30
+                    ? "text-emerald-400"
+                    : feature.adoptionRate >= 10
+                      ? "text-amber-400"
+                      : "text-zinc-400",
+                )}
+              >
                 {feature.adoptionRate}%
               </span>
               <div className="w-28 h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -185,8 +235,14 @@ function FeatureAdoptionTracker({ features, loading }: { features: FeatureAdopti
   );
 }
 
-function SegmentComparison({ breakdown, summary, loading }: {
-  breakdown: SegmentFeature[]; summary: Summary; loading: boolean;
+function SegmentComparison({
+  breakdown,
+  summary,
+  loading,
+}: {
+  breakdown: SegmentFeature[];
+  summary: Summary;
+  loading: boolean;
 }) {
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-8 relative overflow-hidden">
@@ -198,18 +254,24 @@ function SegmentComparison({ breakdown, summary, loading }: {
           </div>
           <div>
             <h3 className="text-lg font-black text-white tracking-tight">Segment Comparison</h3>
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">פרו מול משתמשים חינמיים</p>
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
+              פרו מול משתמשים חינמיים
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Pro ({summary.proUsers})</span>
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+              Pro ({summary.proUsers})
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
-            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Free ({summary.freeUsers})</span>
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+              Free ({summary.freeUsers})
+            </span>
           </div>
         </div>
       </div>
@@ -222,12 +284,19 @@ function SegmentComparison({ breakdown, summary, loading }: {
         <>
           <div className="p-6 rounded-2xl bg-white/2 border border-white/5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">Avg Activity Per User (30d)</span>
-              <span className={cn(
-                "text-xs font-black px-3 py-1 rounded-full",
-                summary.segmentGap > 0 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-400 bg-rose-500/10"
-              )}>
-                Gap: {summary.segmentGap > 0 ? "+" : ""}{summary.segmentGap}
+              <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+                Avg Activity Per User (30d)
+              </span>
+              <span
+                className={cn(
+                  "text-xs font-black px-3 py-1 rounded-full",
+                  summary.segmentGap > 0
+                    ? "text-emerald-400 bg-emerald-500/10"
+                    : "text-rose-400 bg-rose-500/10",
+                )}
+              >
+                Gap: {summary.segmentGap > 0 ? "+" : ""}
+                {summary.segmentGap}
               </span>
             </div>
 
@@ -237,10 +306,14 @@ function SegmentComparison({ breakdown, summary, loading }: {
                 <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-linear-to-r from-blue-600 to-blue-400 rounded-full"
-                    style={{ width: `${Math.min((summary.proAvgActivity / Math.max(summary.proAvgActivity, summary.freeAvgActivity, 1)) * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min((summary.proAvgActivity / Math.max(summary.proAvgActivity, summary.freeAvgActivity, 1)) * 100, 100)}%`,
+                    }}
                   />
                 </div>
-                <span className="text-sm font-black text-white w-12 text-left tabular-nums">{summary.proAvgActivity}</span>
+                <span className="text-sm font-black text-white w-12 text-left tabular-nums">
+                  {summary.proAvgActivity}
+                </span>
               </div>
 
               <div className="flex items-center gap-4">
@@ -248,10 +321,14 @@ function SegmentComparison({ breakdown, summary, loading }: {
                 <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-linear-to-r from-zinc-600 to-zinc-500 rounded-full"
-                    style={{ width: `${Math.min((summary.freeAvgActivity / Math.max(summary.proAvgActivity, summary.freeAvgActivity, 1)) * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min((summary.freeAvgActivity / Math.max(summary.proAvgActivity, summary.freeAvgActivity, 1)) * 100, 100)}%`,
+                    }}
                   />
                 </div>
-                <span className="text-sm font-black text-white w-12 text-left tabular-nums">{summary.freeAvgActivity}</span>
+                <span className="text-sm font-black text-white w-12 text-left tabular-nums">
+                  {summary.freeAvgActivity}
+                </span>
               </div>
             </div>
           </div>
@@ -270,14 +347,27 @@ function SegmentComparison({ breakdown, summary, loading }: {
                   key={item.action}
                   className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors"
                 >
-                  <span className="flex-1 text-sm font-bold text-zinc-300 truncate">{formatAction(item.action)}</span>
-                  <span className="w-20 text-center text-sm font-black text-blue-400 tabular-nums">{item.proRate}%</span>
-                  <span className="w-20 text-center text-sm font-black text-zinc-500 tabular-nums">{item.freeRate}%</span>
-                  <span className={cn(
-                    "w-16 text-sm font-black tabular-nums text-left",
-                    delta > 0 ? "text-emerald-400" : delta < 0 ? "text-rose-400" : "text-zinc-600"
-                  )}>
-                    {delta > 0 ? "+" : ""}{delta}%
+                  <span className="flex-1 text-sm font-bold text-zinc-300 truncate">
+                    {formatAction(item.action)}
+                  </span>
+                  <span className="w-20 text-center text-sm font-black text-blue-400 tabular-nums">
+                    {item.proRate}%
+                  </span>
+                  <span className="w-20 text-center text-sm font-black text-zinc-500 tabular-nums">
+                    {item.freeRate}%
+                  </span>
+                  <span
+                    className={cn(
+                      "w-16 text-sm font-black tabular-nums text-left",
+                      delta > 0
+                        ? "text-emerald-400"
+                        : delta < 0
+                          ? "text-rose-400"
+                          : "text-zinc-600",
+                    )}
+                  >
+                    {delta > 0 ? "+" : ""}
+                    {delta}%
                   </span>
                 </div>
               );
@@ -299,16 +389,22 @@ function PostHogSection({ connected }: { connected: boolean }) {
           <FlaskConical className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-white tracking-tight">A/B Tests - Live Experiments</h3>
-          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">PostHog Experiments API</p>
+          <h3 className="text-lg font-black text-white tracking-tight">
+            A/B Tests - Live Experiments
+          </h3>
+          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
+            PostHog Experiments API
+          </p>
         </div>
 
-        <div className={cn(
-          "ms-auto px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest",
-          connected
-            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-            : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-        )}>
+        <div
+          className={cn(
+            "ms-auto px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+            connected
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              : "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+          )}
+        >
           {connected ? "Connected" : "Not Connected"}
         </div>
       </div>
@@ -318,7 +414,9 @@ function PostHogSection({ connected }: { connected: boolean }) {
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
           <div>
             <p className="text-sm font-black text-white">PostHog API מחובר</p>
-            <p className="text-[10px] text-zinc-500 mt-0.5">נתוני ניסויים חיים יופיעו כאן לאחר הטמעת קריאת ה-API בשרת</p>
+            <p className="text-[10px] text-zinc-500 mt-0.5">
+              נתוני ניסויים חיים יופיעו כאן לאחר הטמעת קריאת ה-API בשרת
+            </p>
           </div>
         </div>
       ) : (
@@ -326,7 +424,9 @@ function PostHogSection({ connected }: { connected: boolean }) {
           <div className="p-6 rounded-2xl bg-white/2 border border-white/5 space-y-4">
             <div className="flex items-center gap-3">
               <Key className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-sm font-black text-white">Connect PostHog Server API Key to view live experiments</span>
+              <span className="text-sm font-black text-white">
+                Connect PostHog Server API Key to view live experiments
+              </span>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">
               כדי לצפות בניסויי A/B בזמן אמת, הוסף את משתני הסביבה הבאים לקובץ{" "}
@@ -335,10 +435,19 @@ function PostHogSection({ connected }: { connected: boolean }) {
 
             <div className="space-y-2 font-mono text-xs">
               {[
-                { key: "POSTHOG_PERSONAL_API_KEY", desc: "PostHog personal API key (Project Settings → Personal API Keys)" },
-                { key: "NEXT_PUBLIC_POSTHOG_KEY", desc: "Public PostHog project key (already used for client-side tracking)" },
+                {
+                  key: "POSTHOG_PERSONAL_API_KEY",
+                  desc: "PostHog personal API key (Project Settings → Personal API Keys)",
+                },
+                {
+                  key: "NEXT_PUBLIC_POSTHOG_KEY",
+                  desc: "Public PostHog project key (already used for client-side tracking)",
+                },
               ].map((env) => (
-                <div key={env.key} className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900 border border-white/5">
+                <div
+                  key={env.key}
+                  className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900 border border-white/5"
+                >
                   <ChevronRight className="w-3 h-3 text-amber-400 mt-0.5 shrink-0" />
                   <div className="space-y-0.5">
                     <div className="text-amber-300 font-black">{env.key}</div>
@@ -350,7 +459,12 @@ function PostHogSection({ connected }: { connected: boolean }) {
 
             <p className="text-[10px] text-zinc-600 pt-2">
               API Docs:{" "}
-              <a href="https://posthog.com/docs/api/experiments" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+              <a
+                href="https://posthog.com/docs/api/experiments"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
                 posthog.com/docs/api/experiments
               </a>
             </p>
@@ -371,12 +485,13 @@ export default function ExperimentsTab() {
   const [data, setData] = useState<ExperimentsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [range, setRange] = useState<7 | 30 | 90>(30);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(getApiPath("/api/admin/experiments"));
+      const res = await fetch(getApiPath(`/api/admin/experiments?range=${range}`));
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error((body as { error?: string }).error || `HTTP ${res.status}`);
@@ -389,9 +504,11 @@ export default function ExperimentsTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [range]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   if (loading && !data) {
     return (
@@ -448,21 +565,41 @@ export default function ExperimentsTab() {
             <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <FlaskConical className="w-4 h-4 text-blue-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">Hybrid - Supabase + PostHog</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">
+              Hybrid - Supabase + PostHog
+            </span>
           </div>
           <p className="text-zinc-500 font-medium tracking-tight text-lg">
             ניסויי A/B, אימוץ פיצ׳רים, השוואת סגמנטים — {data.periodDays} ימים אחרונים
           </p>
         </div>
 
-        <button
-          onClick={loadData}
-          disabled={loading}
-          className="flex items-center gap-2 text-[9px] font-bold text-zinc-700 uppercase tracking-widest hover:text-white transition-colors self-end"
-        >
-          <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
-          {loading ? "טוען..." : "רענן נתונים"}
-        </button>
+        <div className="flex items-center gap-3 self-end">
+          <div className="flex p-1 bg-white/5 border border-white/5 rounded-xl">
+            {([7, 30, 90] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                  range === r
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                    : "text-zinc-500 hover:text-zinc-300",
+                )}
+              >
+                {r}d
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="flex items-center gap-2 text-[9px] font-bold text-zinc-700 uppercase tracking-widest hover:text-white transition-colors"
+          >
+            <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
+            {loading ? "טוען..." : "רענן נתונים"}
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -477,14 +614,20 @@ export default function ExperimentsTab() {
         <SummaryCard
           label="Most Adopted"
           value={summary.mostAdopted ? `${summary.mostAdopted.adoptionRate}%` : "-"}
-          sub={summary.mostAdopted ? formatAction(summary.mostAdopted.action).slice(0, 20) : undefined}
+          sub={
+            summary.mostAdopted ? formatAction(summary.mostAdopted.action).slice(0, 20) : undefined
+          }
           icon={TrendingUp}
           color="emerald"
         />
         <SummaryCard
           label="Least Adopted"
           value={summary.leastAdopted ? `${summary.leastAdopted.adoptionRate}%` : "-"}
-          sub={summary.leastAdopted ? formatAction(summary.leastAdopted.action).slice(0, 20) : undefined}
+          sub={
+            summary.leastAdopted
+              ? formatAction(summary.leastAdopted.action).slice(0, 20)
+              : undefined
+          }
           icon={TrendingDown}
           color="rose"
         />
@@ -508,20 +651,32 @@ export default function ExperimentsTab() {
               <ArrowUpRight className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white tracking-tight">Experiment-Related Events</h3>
+              <h3 className="text-lg font-black text-white tracking-tight">
+                Experiment-Related Events
+              </h3>
               <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">
-                פעולות שמכילות &quot;experiment&quot;, &quot;ab_test&quot;, &quot;feature_flag&quot; או &quot;variant&quot;
+                פעולות שמכילות &quot;experiment&quot;, &quot;ab_test&quot;, &quot;feature_flag&quot;
+                או &quot;variant&quot;
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
             {data.experimentFeatures.map((f) => (
-              <div key={f.action} className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors">
+              <div
+                key={f.action}
+                className="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/3 transition-colors"
+              >
                 <Circle className="w-2 h-2 text-cyan-500 shrink-0" />
-                <span className="flex-1 text-sm font-bold text-zinc-300">{formatAction(f.action)}</span>
-                <span className="text-sm font-black text-white tabular-nums">{f.distinctUsers} users</span>
-                <span className="text-xs font-black text-cyan-400 tabular-nums">{f.adoptionRate}%</span>
+                <span className="flex-1 text-sm font-bold text-zinc-300">
+                  {formatAction(f.action)}
+                </span>
+                <span className="text-sm font-black text-white tabular-nums">
+                  {f.distinctUsers} users
+                </span>
+                <span className="text-xs font-black text-cyan-400 tabular-nums">
+                  {f.adoptionRate}%
+                </span>
               </div>
             ))}
           </div>

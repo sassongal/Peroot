@@ -51,30 +51,24 @@ interface Summary {
 interface ApiResponse {
   notifications: Notification[];
   summary: Summary;
+  ackedIds?: string[];
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "nexus_admin_acked_notifications";
 const AUTO_REFRESH_INTERVAL = 60_000; // 60 seconds
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getAcked(): Set<string> {
+async function persistAcked(acked: Set<string>) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Set();
-    return new Set(JSON.parse(raw) as string[]);
+    await fetch("/api/admin/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ackedIds: Array.from(acked) }),
+    });
   } catch {
-    return new Set();
-  }
-}
-
-function saveAcked(acked: Set<string>) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(acked)));
-  } catch {
-    // ignore storage errors
+    // non-blocking — best effort
   }
 }
 
@@ -169,9 +163,7 @@ function SummaryCard({
         <Icon className="w-5 h-5" />
       </div>
       <div className="space-y-1">
-        <div className="text-4xl font-black text-white tracking-tighter leading-none">
-          {value}
-        </div>
+        <div className="text-4xl font-black text-white tracking-tighter leading-none">{value}</div>
         <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
           {label}
         </div>
@@ -185,8 +177,7 @@ function HealthGauge({ score }: { score: number }) {
   const { text, color } = healthLabel(score);
   const strokeDasharray = 226; // circumference of r=36
   const strokeDashoffset = strokeDasharray - (score / 100) * strokeDasharray;
-  const gaugeColor =
-    score >= 70 ? "#10b981" : score >= 50 ? "#f59e0b" : "#f43f5e";
+  const gaugeColor = score >= 70 ? "#10b981" : score >= 50 ? "#f59e0b" : "#f43f5e";
 
   return (
     <div className="group p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-5 transition-all duration-500 hover:border-white/10">
@@ -195,12 +186,7 @@ function HealthGauge({ score }: { score: number }) {
       </div>
       <div className="flex items-center gap-6">
         {/* SVG Gauge */}
-        <svg
-          width="80"
-          height="80"
-          viewBox="0 0 80 80"
-          className="shrink-0 -rotate-90"
-        >
+        <svg width="80" height="80" viewBox="0 0 80 80" className="shrink-0 -rotate-90">
           <circle
             cx="40"
             cy="40"
@@ -252,9 +238,7 @@ function NotificationCard({
     <div
       className={cn(
         "relative rounded-[28px] border p-6 transition-all duration-300",
-        acknowledged
-          ? "border-white/5 bg-zinc-950/40 opacity-50"
-          : cn(cfg.border, cfg.bg)
+        acknowledged ? "border-white/5 bg-zinc-950/40 opacity-50" : cn(cfg.border, cfg.bg),
       )}
     >
       {/* Severity stripe */}
@@ -264,8 +248,8 @@ function NotificationCard({
           notification.type === "critical"
             ? "bg-rose-500"
             : notification.type === "warning"
-            ? "bg-amber-500"
-            : "bg-blue-500"
+              ? "bg-amber-500"
+              : "bg-blue-500",
         )}
       />
 
@@ -276,9 +260,7 @@ function NotificationCard({
             <div
               className={cn(
                 "p-2 rounded-xl border mt-0.5",
-                acknowledged
-                  ? "text-zinc-600 bg-zinc-800/50 border-zinc-700/50"
-                  : cn(cfg.badge)
+                acknowledged ? "text-zinc-600 bg-zinc-800/50 border-zinc-700/50" : cn(cfg.badge),
               )}
             >
               <Icon className="w-4 h-4" />
@@ -291,9 +273,7 @@ function NotificationCard({
                 <span
                   className={cn(
                     "px-2 py-0.5 rounded-lg border text-[9px] font-black uppercase tracking-wider",
-                    acknowledged
-                      ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-600"
-                      : cfg.badge
+                    acknowledged ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-600" : cfg.badge,
                   )}
                 >
                   {acknowledged ? "נסגר" : cfg.label}
@@ -319,9 +299,7 @@ function NotificationCard({
         </div>
 
         {/* Message */}
-        <p className="text-sm text-zinc-400 font-medium leading-relaxed">
-          {notification.message}
-        </p>
+        <p className="text-sm text-zinc-400 font-medium leading-relaxed">{notification.message}</p>
 
         {/* Metric pill */}
         {notification.metric && (
@@ -361,11 +339,6 @@ export function NotificationsTab() {
   const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Hydrate acked from localStorage on mount
-  useEffect(() => {
-    setAcked(getAcked());
-  }, []);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -373,6 +346,10 @@ export function NotificationsTab() {
       if (!res.ok) throw new Error("Failed to fetch");
       const json: ApiResponse = await res.json();
       setData(json);
+      // Hydrate acked from server on every fetch (cross-browser persistent)
+      if (json.ackedIds) {
+        setAcked(new Set(json.ackedIds));
+      }
       setLastRefresh(new Date());
       setCountdown(AUTO_REFRESH_INTERVAL / 1000);
     } catch (err) {
@@ -408,20 +385,20 @@ export function NotificationsTab() {
     const next = new Set(acked);
     next.add(id);
     setAcked(next);
-    saveAcked(next);
+    void persistAcked(next);
   }
 
   function handleClearAll() {
     const allIds = new Set((data?.notifications ?? []).map((n) => n.id));
     const next = new Set([...acked, ...allIds]);
     setAcked(next);
-    saveAcked(next);
+    void persistAcked(next);
   }
 
   function handleRestoreAll() {
     const emptyAcked = new Set<string>();
     setAcked(emptyAcked);
-    saveAcked(emptyAcked);
+    void persistAcked(emptyAcked);
   }
 
   const notifications = data?.notifications ?? [];
@@ -438,7 +415,6 @@ export function NotificationsTab() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20" dir="rtl">
-
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -529,7 +505,6 @@ export function NotificationsTab() {
 
       {/* ── Notification Feed ─────────────────────────────────────────────── */}
       <div className="space-y-6">
-
         {/* Feed header + toggle */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -537,9 +512,7 @@ export function NotificationsTab() {
               <Activity className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white tracking-tight">
-                Anomaly Feed
-              </h2>
+              <h2 className="text-xl font-black text-white tracking-tight">Anomaly Feed</h2>
               <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">
                 {loading
                   ? "טוען נתונים..."
@@ -569,9 +542,7 @@ export function NotificationsTab() {
         ) : displayedNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4 rounded-[36px] border border-emerald-500/20 bg-emerald-500/5">
             <ShieldCheck className="w-12 h-12 text-emerald-500/40" />
-            <span className="text-sm font-black text-emerald-600">
-              כל ההתראות נסגרו
-            </span>
+            <span className="text-sm font-black text-emerald-600">כל ההתראות נסגרו</span>
             <span className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
               No active notifications
             </span>

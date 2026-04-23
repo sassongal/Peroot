@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 
 /**
  * GET /api/admin/health
@@ -15,20 +15,29 @@ import { withAdmin } from '@/lib/api-middleware';
  */
 export const GET = withAdmin(async (_req, supabase) => {
   const now = new Date();
-  const startOfToday    = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString();
-  const minus7d  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000).toISOString();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const startOfYesterday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - 1,
+  ).toISOString();
+  const minus7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const minus24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
   // -- Database health: measure query response time
   const dbStart = Date.now();
   const { count: profileCount, error: dbError } = await supabase
-    .from('profiles')
-    .select('id', { count: 'exact', head: true });
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
   const dbResponseMs = Date.now() - dbStart;
 
-  const dbStatus: 'healthy' | 'warning' | 'critical' =
-    dbError ? 'critical' : dbResponseMs < 300 ? 'healthy' : dbResponseMs < 800 ? 'warning' : 'critical';
+  const dbStatus: "healthy" | "warning" | "critical" = dbError
+    ? "critical"
+    : dbResponseMs < 300
+      ? "healthy"
+      : dbResponseMs < 800
+        ? "warning"
+        : "critical";
 
   // -- Storage: row counts
   const [
@@ -36,9 +45,9 @@ export const GET = withAdmin(async (_req, supabase) => {
     { count: activityLogsCount },
     { count: apiUsageLogsCount },
   ] = await Promise.all([
-    supabase.from('personal_library').select('id', { count: 'exact', head: true }),
-    supabase.from('activity_logs').select('id', { count: 'exact', head: true }),
-    supabase.from('api_usage_logs').select('id', { count: 'exact', head: true }),
+    supabase.from("personal_library").select("id", { count: "exact", head: true }),
+    supabase.from("activity_logs").select("id", { count: "exact", head: true }),
+    supabase.from("api_usage_logs").select("id", { count: "exact", head: true }),
   ]);
 
   // Growth indicators: compare last 24h new rows vs previous 24h
@@ -51,11 +60,27 @@ export const GET = withAdmin(async (_req, supabase) => {
     { count: activityLast24h },
     { count: apiCallsLast24h },
   ] = await Promise.all([
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', minus24h),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', minus48h).lt('created_at', minus24h),
-    supabase.from('personal_library').select('id', { count: 'exact', head: true }).gte('created_at', minus24h),
-    supabase.from('activity_logs').select('id', { count: 'exact', head: true }).gte('created_at', minus24h),
-    supabase.from('api_usage_logs').select('id', { count: 'exact', head: true }).gte('created_at', minus24h),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", minus24h),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", minus48h)
+      .lt("created_at", minus24h),
+    supabase
+      .from("personal_library")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", minus24h),
+    supabase
+      .from("activity_logs")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", minus24h),
+    supabase
+      .from("api_usage_logs")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", minus24h),
   ]);
 
   const storage = {
@@ -80,113 +105,185 @@ export const GET = withAdmin(async (_req, supabase) => {
 
   // -- Error rate: last 24h
   const { data: recentActivityData } = await supabase
-    .from('activity_logs')
-    .select('action, details')
-    .gte('created_at', minus24h);
+    .from("activity_logs")
+    .select("action, details")
+    .gte("created_at", minus24h);
 
   const totalEventsLast24h = recentActivityData?.length ?? 0;
   const errorEvents = (recentActivityData ?? []).filter((r) => {
-    const actionStr = String(r.action ?? '').toLowerCase();
-    const detailsStr = JSON.stringify(r.details ?? '').toLowerCase();
+    const actionStr = String(r.action ?? "").toLowerCase();
+    const detailsStr = JSON.stringify(r.details ?? "").toLowerCase();
     return (
-      actionStr.includes('error') ||
-      actionStr.includes('fail') ||
-      detailsStr.includes('error') ||
-      detailsStr.includes('exception')
+      actionStr.includes("error") ||
+      actionStr.includes("fail") ||
+      detailsStr.includes("error") ||
+      detailsStr.includes("exception")
     );
   }).length;
 
-  const errorRatePct = totalEventsLast24h > 0
-    ? Math.round((errorEvents / totalEventsLast24h) * 10000) / 100
-    : 0;
+  const errorRatePct =
+    totalEventsLast24h > 0 ? Math.round((errorEvents / totalEventsLast24h) * 10000) / 100 : 0;
 
-  const errorStatus: 'healthy' | 'warning' | 'critical' =
-    errorRatePct < 1 ? 'healthy' : errorRatePct < 5 ? 'warning' : 'critical';
+  const errorStatus: "healthy" | "warning" | "critical" =
+    errorRatePct < 1 ? "healthy" : errorRatePct < 5 ? "warning" : "critical";
 
-  // -- API performance: hourly averages over last 24h
+  // -- API performance: hourly averages over last 24h (full columns)
   const { data: apiLogs24h } = await supabase
-    .from('api_usage_logs')
-    .select('created_at, estimated_cost_usd, tokens_used')
-    .gte('created_at', minus24h)
-    .order('created_at', { ascending: true });
+    .from("api_usage_logs")
+    .select(
+      "created_at, estimated_cost_usd, input_tokens, output_tokens, provider, model, duration_ms, cache_hit, endpoint",
+    )
+    .gte("created_at", minus24h)
+    .order("created_at", { ascending: true });
 
-  const hourlyBuckets: { hour: string; callCount: number; totalTokens: number; totalCost: number }[] = [];
+  const logs24h = apiLogs24h ?? [];
+
+  const hourlyBuckets: {
+    hour: string;
+    callCount: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+    totalCost: number;
+    avgDurationMs: number;
+  }[] = [];
   for (let i = 23; i >= 0; i--) {
     const slotStart = new Date(now.getTime() - (i + 1) * 60 * 60 * 1000);
-    const slotEnd   = new Date(now.getTime() - i       * 60 * 60 * 1000);
-    const slotRows  = (apiLogs24h ?? []).filter((r) => {
+    const slotEnd = new Date(now.getTime() - i * 60 * 60 * 1000);
+    const slotRows = logs24h.filter((r) => {
       const t = new Date(r.created_at).getTime();
       return t >= slotStart.getTime() && t < slotEnd.getTime();
     });
+    const totalInputTokens = slotRows.reduce((s, r) => s + (r.input_tokens ?? 0), 0);
+    const totalOutputTokens = slotRows.reduce((s, r) => s + (r.output_tokens ?? 0), 0);
+    const durSum = slotRows.reduce((s, r) => s + (r.duration_ms ?? 0), 0);
     hourlyBuckets.push({
-      hour: `${String(slotStart.getHours()).padStart(2, '0')}:00`,
+      hour: `${String(slotStart.getHours()).padStart(2, "0")}:00`,
       callCount: slotRows.length,
-      totalTokens: slotRows.reduce((s, r) => s + (r.tokens_used ?? 0), 0),
+      totalInputTokens,
+      totalOutputTokens,
+      totalTokens: totalInputTokens + totalOutputTokens,
       totalCost: slotRows.reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0),
+      avgDurationMs: slotRows.length > 0 ? Math.round(durSum / slotRows.length) : 0,
     });
   }
 
-  const totalApiCallsLast24h = (apiLogs24h ?? []).length;
+  // Provider / model breakdown
+  const providerBreakdown: Record<
+    string,
+    {
+      calls: number;
+      inputTokens: number;
+      outputTokens: number;
+      cost: number;
+      avgDurationMs: number;
+    }
+  > = {};
+  const modelBreakdown: Record<
+    string,
+    { calls: number; inputTokens: number; outputTokens: number; cost: number }
+  > = {};
+  for (const r of logs24h) {
+    const p = r.provider ?? "unknown";
+    const m = r.model ?? "unknown";
+    if (!providerBreakdown[p])
+      providerBreakdown[p] = {
+        calls: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        cost: 0,
+        avgDurationMs: 0,
+      };
+    if (!modelBreakdown[m])
+      modelBreakdown[m] = { calls: 0, inputTokens: 0, outputTokens: 0, cost: 0 };
+    providerBreakdown[p].calls++;
+    providerBreakdown[p].inputTokens += r.input_tokens ?? 0;
+    providerBreakdown[p].outputTokens += r.output_tokens ?? 0;
+    providerBreakdown[p].cost += r.estimated_cost_usd ?? 0;
+    providerBreakdown[p].avgDurationMs += r.duration_ms ?? 0;
+    modelBreakdown[m].calls++;
+    modelBreakdown[m].inputTokens += r.input_tokens ?? 0;
+    modelBreakdown[m].outputTokens += r.output_tokens ?? 0;
+    modelBreakdown[m].cost += r.estimated_cost_usd ?? 0;
+  }
+  for (const p of Object.keys(providerBreakdown)) {
+    const b = providerBreakdown[p];
+    b.avgDurationMs = b.calls > 0 ? Math.round(b.avgDurationMs / b.calls) : 0;
+    b.cost = Math.round(b.cost * 1e6) / 1e6;
+  }
+  for (const m of Object.keys(modelBreakdown)) {
+    modelBreakdown[m].cost = Math.round(modelBreakdown[m].cost * 1e6) / 1e6;
+  }
+
+  const totalApiCallsLast24h = logs24h.length;
   const avgCallsPerHour = Math.round(totalApiCallsLast24h / 24);
-  const apiStatus: 'healthy' | 'warning' | 'critical' =
-    totalApiCallsLast24h === 0 ? 'warning' : 'healthy';
+  const totalInputTokens24h = logs24h.reduce((s, r) => s + (r.input_tokens ?? 0), 0);
+  const totalOutputTokens24h = logs24h.reduce((s, r) => s + (r.output_tokens ?? 0), 0);
+  const cacheHits24h = logs24h.filter((r) => r.cache_hit).length;
+  const avgDurationMs24h =
+    totalApiCallsLast24h > 0
+      ? Math.round(logs24h.reduce((s, r) => s + (r.duration_ms ?? 0), 0) / totalApiCallsLast24h)
+      : 0;
+  const apiStatus: "healthy" | "warning" | "critical" =
+    totalApiCallsLast24h === 0 ? "warning" : "healthy";
 
   // -- Cost burn rate
   const { data: todayLogs } = await supabase
-    .from('api_usage_logs')
-    .select('estimated_cost_usd')
-    .gte('created_at', startOfToday);
+    .from("api_usage_logs")
+    .select("estimated_cost_usd")
+    .gte("created_at", startOfToday);
 
   const { data: yesterdayLogs } = await supabase
-    .from('api_usage_logs')
-    .select('estimated_cost_usd')
-    .gte('created_at', startOfYesterday)
-    .lt('created_at', startOfToday);
+    .from("api_usage_logs")
+    .select("estimated_cost_usd")
+    .gte("created_at", startOfYesterday)
+    .lt("created_at", startOfToday);
 
   const { data: last7dLogs } = await supabase
-    .from('api_usage_logs')
-    .select('estimated_cost_usd')
-    .gte('created_at', minus7d);
+    .from("api_usage_logs")
+    .select("estimated_cost_usd")
+    .gte("created_at", minus7d);
 
-  const todayCost     = (todayLogs ?? []).reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0);
+  const todayCost = (todayLogs ?? []).reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0);
   const yesterdayCost = (yesterdayLogs ?? []).reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0);
-  const last7dTotal   = (last7dLogs ?? []).reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0);
-  const sevenDayAvg   = last7dTotal / 7;
+  const last7dTotal = (last7dLogs ?? []).reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0);
+  const sevenDayAvg = last7dTotal / 7;
 
   const costBurnRate = {
     today: todayCost,
     yesterday: yesterdayCost,
     sevenDayAvg,
-    trend: yesterdayCost > 0
-      ? Math.round(((todayCost - yesterdayCost) / yesterdayCost) * 10000) / 100
-      : 0,
+    trend:
+      yesterdayCost > 0
+        ? Math.round(((todayCost - yesterdayCost) / yesterdayCost) * 10000) / 100
+        : 0,
   };
 
   // -- Uptime: last 10 API calls all succeeded
   const { data: last10Calls } = await supabase
-    .from('api_usage_logs')
-    .select('id, estimated_cost_usd, created_at')
-    .order('created_at', { ascending: false })
+    .from("api_usage_logs")
+    .select("id, estimated_cost_usd, created_at")
+    .order("created_at", { ascending: false })
     .limit(10);
 
   const uptimeCallsFound = (last10Calls ?? []).length;
   const uptimePct = uptimeCallsFound === 0 ? 100 : Math.round((uptimeCallsFound / 10) * 100);
-  const uptimeStatus: 'healthy' | 'warning' | 'critical' =
-    uptimePct >= 90 ? 'healthy' : uptimePct >= 50 ? 'warning' : 'critical';
+  const uptimeStatus: "healthy" | "warning" | "critical" =
+    uptimePct >= 90 ? "healthy" : uptimePct >= 50 ? "warning" : "critical";
 
   // -- Composite health score (0-100)
-  const statusScore = (s: 'healthy' | 'warning' | 'critical') =>
-    s === 'healthy' ? 100 : s === 'warning' ? 60 : 20;
+  const statusScore = (s: "healthy" | "warning" | "critical") =>
+    s === "healthy" ? 100 : s === "warning" ? 60 : 20;
 
   const healthScore = Math.round(
-    statusScore(dbStatus)    * 0.30 +
-    statusScore(errorStatus) * 0.30 +
-    statusScore(apiStatus)   * 0.20 +
-    statusScore(uptimeStatus) * 0.20
+    statusScore(dbStatus) * 0.3 +
+      statusScore(errorStatus) * 0.3 +
+      statusScore(apiStatus) * 0.2 +
+      statusScore(uptimeStatus) * 0.2,
   );
 
-  const overallStatus: 'healthy' | 'warning' | 'critical' =
-    healthScore >= 80 ? 'healthy' : healthScore >= 50 ? 'warning' : 'critical';
+  const overallStatus: "healthy" | "warning" | "critical" =
+    healthScore >= 80 ? "healthy" : healthScore >= 50 ? "warning" : "critical";
 
   return NextResponse.json({
     healthScore,
@@ -200,6 +297,17 @@ export const GET = withAdmin(async (_req, supabase) => {
       status: apiStatus,
       totalCallsLast24h: totalApiCallsLast24h,
       avgCallsPerHour,
+      totalInputTokens: totalInputTokens24h,
+      totalOutputTokens: totalOutputTokens24h,
+      totalTokens: totalInputTokens24h + totalOutputTokens24h,
+      avgDurationMs: avgDurationMs24h,
+      cacheHits: cacheHits24h,
+      cacheHitRate:
+        totalApiCallsLast24h > 0
+          ? Math.round((cacheHits24h / totalApiCallsLast24h) * 10000) / 100
+          : 0,
+      providerBreakdown,
+      modelBreakdown,
       hourlyBuckets,
     },
     errorRate: {

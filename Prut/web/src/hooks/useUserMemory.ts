@@ -57,19 +57,22 @@ export function useUserMemory() {
     [],
   );
 
-  const deleteFact = useCallback(async (id: string): Promise<{ success: boolean }> => {
-    setFacts((prev) => prev.filter((f) => f.id !== id));
-    const res = await fetch("/api/user/memory", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    if (!res.ok) {
-      await fetchFacts();
-      return { success: false };
-    }
-    return { success: true };
-  }, [fetchFacts]);
+  const deleteFact = useCallback(
+    async (id: string): Promise<{ success: boolean }> => {
+      setFacts((prev) => prev.filter((f) => f.id !== id));
+      const res = await fetch("/api/user/memory", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        await fetchFacts();
+        return { success: false };
+      }
+      return { success: true };
+    },
+    [fetchFacts],
+  );
 
   return { facts, isLoading, error, addFact, deleteFact, refresh: fetchFacts };
 }

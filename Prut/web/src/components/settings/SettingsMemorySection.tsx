@@ -58,7 +58,7 @@ export function SettingsMemorySection() {
           <Brain className="w-5 h-5 text-purple-400" />
           זיכרון AI
         </h2>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-sm text-slate-400 mt-1 leading-relaxed">
           עובדות שה-AI יודע עליך — מוחלות אוטומטית על כל שיפור פרומפט החל מהפרומפט הראשון.
         </p>
       </div>
@@ -67,46 +67,48 @@ export function SettingsMemorySection() {
       <div className="flex items-start gap-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
         <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
         <p className="text-xs text-slate-400 leading-relaxed">
-          הזיכרון נבנה אוטומטית מהפרומפטים שאתה כותב. ניתן להוסיף עובדות ידנית או למחוק עובדות
-          שאינן מדויקות. מקסימום 100 עובדות.
+          הזיכרון נבנה אוטומטית מהפרומפטים שאתה כותב. ניתן להוסיף עובדות ידנית או למחוק עובדות שאינן
+          מדויקות. מקסימום 100 עובדות.
         </p>
       </div>
 
       {/* Manual add */}
       <div className="space-y-2">
         <label className="text-xs font-medium text-slate-400">הוסף עובדה ידנית</label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={newFact}
             onChange={(e) => setNewFact(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="למשל: מנהל מוצר ב-B2B SaaS"
-            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/30"
+            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
             maxLength={300}
           />
-          <select
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-sm text-slate-300 focus:outline-none focus:border-purple-500/30"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleAdd}
-            disabled={!newFact.trim() || isAdding || facts.length >= 100}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-          >
-            {isAdding ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-            הוסף
-          </button>
+          <div className="flex gap-2">
+            <select
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              className="flex-1 sm:flex-none sm:min-w-[110px] bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-sm text-slate-300 focus:outline-none focus:border-purple-500/60 transition-colors cursor-pointer"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAdd}
+              disabled={!newFact.trim() || isAdding || facts.length >= 100}
+              className="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            >
+              {isAdding ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              הוסף
+            </button>
+          </div>
         </div>
       </div>
 
@@ -117,9 +119,9 @@ export function SettingsMemorySection() {
         </div>
       ) : facts.length === 0 ? (
         <div className="text-center py-10 space-y-2">
-          <Brain className="w-10 h-10 text-slate-700 mx-auto" />
-          <p className="text-sm text-slate-500">AI ילמד עליך בהדרגה תוך כדי שימוש</p>
-          <p className="text-xs text-slate-600">
+          <Brain className="w-10 h-10 text-slate-600 mx-auto" />
+          <p className="text-sm text-slate-400">AI ילמד עליך בהדרגה תוך כדי שימוש</p>
+          <p className="text-xs text-slate-500">
             גם פרומפט אחד יכול לחשוף מידע שישתמר לכל השיפורים הבאים
           </p>
         </div>
@@ -138,19 +140,21 @@ export function SettingsMemorySection() {
                   <div
                     key={fact.id}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs",
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs max-w-[260px]",
                       CATEGORY_COLORS[fact.category] ?? CATEGORY_COLORS.general,
                     )}
                   >
-                    <span>{fact.fact}</span>
+                    <span className="truncate" title={fact.fact}>
+                      {fact.fact}
+                    </span>
                     {fact.source === "manual" && (
                       <span className="text-[9px] opacity-60">ידני</span>
                     )}
                     <button
                       onClick={() => handleDelete(fact.id)}
                       disabled={deletingId === fact.id}
-                      className="opacity-50 hover:opacity-100 transition-opacity ml-0.5"
-                      title="מחק עובדה"
+                      className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity ml-0.5"
+                      aria-label="מחק עובדה"
                     >
                       {deletingId === fact.id ? (
                         <Loader2 className="w-3 h-3 animate-spin" />

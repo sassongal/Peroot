@@ -27,8 +27,26 @@ type SubStatus = "healthy" | "warning" | "critical";
 interface HourlyBucket {
   hour: string;
   callCount: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
   totalTokens: number;
   totalCost: number;
+  avgDurationMs: number;
+}
+
+interface ProviderStat {
+  calls: number;
+  inputTokens: number;
+  outputTokens: number;
+  cost: number;
+  avgDurationMs: number;
+}
+
+interface ModelStat {
+  calls: number;
+  inputTokens: number;
+  outputTokens: number;
+  cost: number;
 }
 
 interface StorageTable {
@@ -49,6 +67,14 @@ interface HealthData {
     status: SubStatus;
     totalCallsLast24h: number;
     avgCallsPerHour: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+    avgDurationMs: number;
+    cacheHits: number;
+    cacheHitRate: number;
+    providerBreakdown: Record<string, ProviderStat>;
+    modelBreakdown: Record<string, ModelStat>;
     hourlyBuckets: HourlyBucket[];
   };
   errorRate: {
@@ -136,22 +162,16 @@ function CircularGauge({ score }: { score: number }) {
   const filled = arcLen * (score / 100);
   const { stroke: strokeColor, glow } = statusGaugeColor(score);
 
-  const statusLabel =
-    score >= 80 ? "מערכת תקינה" : score >= 50 ? "דרוש מעקב" : "בעיה קריטית";
+  const statusLabel = score >= 80 ? "מערכת תקינה" : score >= 50 ? "דרוש מעקב" : "בעיה קריטית";
 
   return (
     <div
       className={cn(
         "relative flex items-center justify-center w-48 h-48 rounded-full shadow-2xl",
-        glow
+        glow,
       )}
     >
-      <svg
-        width="192"
-        height="192"
-        viewBox="0 0 192 192"
-        className="-rotate-135"
-      >
+      <svg width="192" height="192" viewBox="0 0 192 192" className="-rotate-135">
         {/* Track */}
         <circle
           cx="96"
@@ -200,10 +220,7 @@ function ApiChart({ buckets }: { buckets: HourlyBucket[] }) {
   return (
     <div className="flex items-end gap-1 h-24">
       {buckets.map((b) => {
-        const pct = Math.max(
-          (b.callCount / maxCalls) * 100,
-          b.callCount > 0 ? 6 : 2
-        );
+        const pct = Math.max((b.callCount / maxCalls) * 100, b.callCount > 0 ? 6 : 2);
         return (
           <div
             key={b.hour}
@@ -249,7 +266,7 @@ function SubsystemCard({
       className={cn(
         "group p-6 rounded-[28px] border flex flex-col gap-4 transition-all duration-500",
         cfg.bg,
-        cfg.border
+        cfg.border,
       )}
     >
       <div className="flex justify-between items-start">
@@ -273,7 +290,7 @@ function SubsystemCard({
           "text-[8px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full self-start border",
           cfg.bg,
           cfg.border,
-          cfg.color
+          cfg.color,
         )}
       >
         {cfg.label}
@@ -290,7 +307,7 @@ function StatusBadge({ status }: { status: SubStatus }) {
         "inline-flex items-center gap-2 px-4 py-2 rounded-2xl border text-[9px] font-black uppercase tracking-wider",
         cfg.bg,
         cfg.border,
-        cfg.color
+        cfg.color,
       )}
     >
       <cfg.icon className="w-3.5 h-3.5" />
@@ -325,9 +342,7 @@ function SectionTitle({
       </div>
       <div>
         <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
-        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">
-          {sub}
-        </p>
+        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">{sub}</p>
       </div>
     </div>
   );
@@ -362,9 +377,7 @@ export function HealthTab() {
     };
   }, [fetchData]);
 
-  const overallConfig = data
-    ? STATUS_CONFIG[data.overallStatus]
-    : STATUS_CONFIG["healthy"];
+  const overallConfig = data ? STATUS_CONFIG[data.overallStatus] : STATUS_CONFIG["healthy"];
 
   const storageRows: {
     key: keyof HealthData["storage"];
@@ -378,7 +391,6 @@ export function HealthTab() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000 pb-24 select-none" dir="rtl">
-
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -405,7 +417,7 @@ export function HealthTab() {
                 "flex items-center gap-2 px-5 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest",
                 overallConfig.bg,
                 overallConfig.border,
-                overallConfig.color
+                overallConfig.color,
               )}
             >
               <overallConfig.icon className="w-3.5 h-3.5" />
@@ -425,7 +437,6 @@ export function HealthTab() {
 
       {/* ── Health score + Subsystem cards ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 px-2">
-
         {/* Gauge */}
         <div className="lg:col-span-1 flex flex-col items-center justify-center gap-6 p-8 rounded-[36px] bg-zinc-950/80 border border-white/5 backdrop-blur-3xl">
           <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">
@@ -451,11 +462,7 @@ export function HealthTab() {
           />
           <SubsystemCard
             title="API"
-            sub={
-              data
-                ? `${data.apiPerformance.totalCallsLast24h} calls/24h`
-                : "…"
-            }
+            sub={data ? `${data.apiPerformance.totalCallsLast24h} calls/24h` : "…"}
             status={data?.apiPerformance.status ?? "healthy"}
             icon={Zap}
             loading={loading && !data}
@@ -469,9 +476,7 @@ export function HealthTab() {
           />
           <SubsystemCard
             title="Storage"
-            sub={
-              data ? `${fmt(data.storage.profiles.total)} users` : "…"
-            }
+            sub={data ? `${fmt(data.storage.profiles.total)} users` : "…"}
             status="healthy"
             icon={HardDrive}
             loading={loading && !data}
@@ -494,7 +499,7 @@ export function HealthTab() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center gap-6 mb-4">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-4">
                 <div>
                   <span className="text-3xl font-black text-white tabular-nums">
                     {fmt(data?.apiPerformance.totalCallsLast24h ?? 0)}
@@ -503,7 +508,7 @@ export function HealthTab() {
                     סה״כ קריאות
                   </span>
                 </div>
-                <div className="w-px h-8 bg-white/5" />
+                <div className="w-px h-8 bg-white/5 hidden sm:block" />
                 <div>
                   <span className="text-xl font-black text-zinc-400 tabular-nums">
                     {fmt(data?.apiPerformance.avgCallsPerHour ?? 0)}
@@ -512,16 +517,123 @@ export function HealthTab() {
                     ממוצע/שעה
                   </span>
                 </div>
+                <div className="w-px h-8 bg-white/5 hidden sm:block" />
+                <div>
+                  <span className="text-xl font-black text-indigo-300 tabular-nums">
+                    {fmt(data?.apiPerformance.totalTokens ?? 0)}
+                  </span>
+                  <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ms-2">
+                    טוקנים
+                  </span>
+                </div>
+                <div className="w-px h-8 bg-white/5 hidden sm:block" />
+                <div>
+                  <span className="text-xl font-black text-zinc-400 tabular-nums">
+                    {data?.apiPerformance.avgDurationMs ?? 0}ms
+                  </span>
+                  <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ms-2">
+                    זמן ממוצע
+                  </span>
+                </div>
+                <div className="w-px h-8 bg-white/5 hidden sm:block" />
+                <div>
+                  <span className="text-xl font-black text-emerald-400 tabular-nums">
+                    {data?.apiPerformance.cacheHitRate ?? 0}%
+                  </span>
+                  <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ms-2">
+                    cache hit
+                  </span>
+                </div>
               </div>
+
+              {/* Token input/output split */}
+              <div className="flex gap-4 mb-4">
+                <div className="flex-1 rounded-2xl bg-zinc-900/60 border border-white/5 p-3">
+                  <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">
+                    Input Tokens
+                  </div>
+                  <div className="text-lg font-black text-zinc-300 tabular-nums">
+                    {fmt(data?.apiPerformance.totalInputTokens ?? 0)}
+                  </div>
+                </div>
+                <div className="flex-1 rounded-2xl bg-zinc-900/60 border border-white/5 p-3">
+                  <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">
+                    Output Tokens
+                  </div>
+                  <div className="text-lg font-black text-zinc-300 tabular-nums">
+                    {fmt(data?.apiPerformance.totalOutputTokens ?? 0)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Provider breakdown */}
+              {data?.apiPerformance.providerBreakdown &&
+                Object.keys(data.apiPerformance.providerBreakdown).length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                      Provider Breakdown
+                    </div>
+                    {Object.entries(data.apiPerformance.providerBreakdown).map(
+                      ([provider, stat]) => (
+                        <div key={provider} className="flex items-center gap-3 text-xs">
+                          <span className="w-20 font-black text-zinc-300 capitalize truncate">
+                            {provider}
+                          </span>
+                          <span className="text-zinc-500 tabular-nums">
+                            {fmt(stat.calls)} calls
+                          </span>
+                          <span className="text-zinc-600">·</span>
+                          <span className="text-indigo-400 tabular-nums">
+                            {fmt(stat.inputTokens + stat.outputTokens)} tok
+                          </span>
+                          <span className="text-zinc-600">·</span>
+                          <span className="text-emerald-400 tabular-nums">
+                            {fmtCost(stat.cost)}
+                          </span>
+                          <span className="text-zinc-600">·</span>
+                          <span className="text-zinc-500 tabular-nums">
+                            {stat.avgDurationMs}ms avg
+                          </span>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                )}
+
+              {/* Model breakdown */}
+              {data?.apiPerformance.modelBreakdown &&
+                Object.keys(data.apiPerformance.modelBreakdown).length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                      Model Breakdown
+                    </div>
+                    {Object.entries(data.apiPerformance.modelBreakdown)
+                      .sort((a, b) => b[1].calls - a[1].calls)
+                      .map(([model, stat]) => (
+                        <div key={model} className="flex items-center gap-3 text-xs">
+                          <span className="w-44 font-black text-zinc-300 truncate">{model}</span>
+                          <span className="text-zinc-500 tabular-nums">
+                            {fmt(stat.calls)} calls
+                          </span>
+                          <span className="text-zinc-600">·</span>
+                          <span className="text-indigo-400 tabular-nums">
+                            {fmt(stat.inputTokens + stat.outputTokens)} tok
+                          </span>
+                          <span className="text-zinc-600">·</span>
+                          <span className="text-emerald-400 tabular-nums">
+                            {fmtCost(stat.cost)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
               <ApiChart buckets={data?.apiPerformance.hourlyBuckets ?? []} />
               {/* Hour labels */}
               <div className="flex gap-1">
                 {(data?.apiPerformance.hourlyBuckets ?? []).map((b, i) => (
                   <div key={b.hour} className="flex-1 text-center">
                     {i % 6 === 0 && (
-                      <span className="text-[8px] font-black text-zinc-800">
-                        {b.hour}
-                      </span>
+                      <span className="text-[8px] font-black text-zinc-800">{b.hour}</span>
                     )}
                   </div>
                 ))}
@@ -533,7 +645,6 @@ export function HealthTab() {
 
       {/* ── Error rate + Cost burn rate ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
-
         {/* Error rate */}
         <div className="space-y-4">
           <SectionTitle
@@ -556,8 +667,8 @@ export function HealthTab() {
                       (data?.errorRate.ratePct ?? 0) < 1
                         ? "text-emerald-400"
                         : (data?.errorRate.ratePct ?? 0) < 5
-                        ? "text-amber-400"
-                        : "text-rose-400"
+                          ? "text-amber-400"
+                          : "text-rose-400",
                     )}
                   >
                     {data?.errorRate.ratePct?.toFixed(2) ?? "0.00"}%
@@ -575,8 +686,8 @@ export function HealthTab() {
                       (data?.errorRate.ratePct ?? 0) < 1
                         ? "bg-emerald-500"
                         : (data?.errorRate.ratePct ?? 0) < 5
-                        ? "bg-amber-500"
-                        : "bg-rose-500"
+                          ? "bg-amber-500"
+                          : "bg-rose-500",
                     )}
                     style={{
                       width: `${Math.min(data?.errorRate.ratePct ?? 0, 100)}%`,
@@ -632,23 +743,15 @@ export function HealthTab() {
                       data?.costBurnRate.today ?? 0,
                       data?.costBurnRate.yesterday ?? 0,
                       data?.costBurnRate.sevenDayAvg ?? 0,
-                      0.0001
+                      0.0001,
                     );
                     return (
                       <div key={row.label} className="space-y-1.5">
                         <div className="flex justify-between text-[10px] font-black uppercase tracking-wider">
-                          <span
-                            className={
-                              row.highlight ? "text-white" : "text-zinc-600"
-                            }
-                          >
+                          <span className={row.highlight ? "text-white" : "text-zinc-600"}>
                             {row.label}
                           </span>
-                          <span
-                            className={
-                              row.highlight ? "text-amber-400" : "text-zinc-500"
-                            }
-                          >
+                          <span className={row.highlight ? "text-amber-400" : "text-zinc-500"}>
                             {fmtCost(row.value)}
                           </span>
                         </div>
@@ -656,7 +759,7 @@ export function HealthTab() {
                           <div
                             className={cn(
                               "h-full rounded-full transition-all duration-1000",
-                              row.highlight ? "bg-amber-500" : "bg-zinc-700"
+                              row.highlight ? "bg-amber-500" : "bg-zinc-700",
                             )}
                             style={{ width: `${(row.value / maxVal) * 100}%` }}
                           />
@@ -682,8 +785,8 @@ export function HealthTab() {
                         data.costBurnRate.trend > 0
                           ? "text-rose-400"
                           : data.costBurnRate.trend < 0
-                          ? "text-emerald-400"
-                          : "text-zinc-600"
+                            ? "text-emerald-400"
+                            : "text-zinc-600",
                       )}
                     >
                       {data.costBurnRate.trend > 0 ? "+" : ""}
@@ -709,16 +812,14 @@ export function HealthTab() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-white/5">
-                {['טבלה', 'סה"כ שורות', "24 שעות אחרונות", "צמיחה"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.25em] text-zinc-600"
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                {["טבלה", 'סה"כ שורות', "24 שעות אחרונות", "צמיחה"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.25em] text-zinc-600"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/4">
@@ -733,14 +834,9 @@ export function HealthTab() {
                   const row = data?.storage[key];
                   const growth = row?.growth ?? 0;
                   return (
-                    <tr
-                      key={key}
-                      className="group hover:bg-white/2 transition-colors"
-                    >
+                    <tr key={key} className="group hover:bg-white/2 transition-colors">
                       <td className="px-8 py-5">
-                        <span className="text-sm font-bold text-zinc-300">
-                          {label}
-                        </span>
+                        <span className="text-sm font-bold text-zinc-300">{label}</span>
                       </td>
                       <td className="px-8 py-5">
                         <span className="text-base font-black text-white tabular-nums">
@@ -759,8 +855,8 @@ export function HealthTab() {
                             growth > 0
                               ? "text-emerald-400"
                               : growth < 0
-                              ? "text-rose-400"
-                              : "text-zinc-700"
+                                ? "text-rose-400"
+                                : "text-zinc-700",
                           )}
                         >
                           {growth > 0 ? (

@@ -21,12 +21,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { getCapabilityLabel } from "@/lib/capability-mode";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface ProductData {
   promptsPerDay: Array<{ date: string; count: number }>;
   topCategories: Array<{ category: string; count: number }>;
+  engineBreakdown: Array<{ mode: string; count: number }>;
+  dau: number;
+  wau: number;
+  mau: number;
   summary: {
     totalPrompts: number;
     activeCreators: number;
@@ -80,18 +85,41 @@ function DeltaBadge({ value }: { value: number | null | undefined }) {
   if (value === null || value === undefined) return null;
   const isPositive = value > 0;
   return (
-    <div className={cn(
-      "flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded-md",
-      isPositive ? "bg-emerald-500/10 text-emerald-400" : value === 0 ? "bg-zinc-500/10 text-zinc-500" : "bg-rose-500/10 text-rose-400"
-    )}>
-      {isPositive ? <TrendingUp className="w-2.5 h-2.5" /> : value < 0 ? <TrendingDown className="w-2.5 h-2.5" /> : null}
-      {value > 0 ? "+" : ""}{value}%
+    <div
+      className={cn(
+        "flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded-md",
+        isPositive
+          ? "bg-emerald-500/10 text-emerald-400"
+          : value === 0
+            ? "bg-zinc-500/10 text-zinc-500"
+            : "bg-rose-500/10 text-rose-400",
+      )}
+    >
+      {isPositive ? (
+        <TrendingUp className="w-2.5 h-2.5" />
+      ) : value < 0 ? (
+        <TrendingDown className="w-2.5 h-2.5" />
+      ) : null}
+      {value > 0 ? "+" : ""}
+      {value}%
     </div>
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color, delta, sub }: {
-  label: string; value: string; icon: LucideIcon; color: string; delta?: number | null; sub?: string;
+function MetricCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+  delta,
+  sub,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  color: string;
+  delta?: number | null;
+  sub?: string;
 }) {
   const colors: Record<string, string> = {
     blue: "from-blue-600/10 to-blue-900/5 text-blue-400 border-blue-500/10",
@@ -100,7 +128,12 @@ function MetricCard({ label, value, icon: Icon, color, delta, sub }: {
     amber: "from-amber-600/10 to-amber-900/5 text-amber-400 border-amber-500/10",
   };
   return (
-    <div className={cn("p-5 rounded-2xl border bg-linear-to-br transition-all duration-500 group cursor-default", colors[color])}>
+    <div
+      className={cn(
+        "p-5 rounded-2xl border bg-linear-to-br transition-all duration-500 group cursor-default",
+        colors[color],
+      )}
+    >
       <div className="flex justify-between items-start mb-4">
         <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
           <Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -155,7 +188,18 @@ export default function AnalyticsOverviewTab() {
   const [product, setProduct] = useState<ProductData>({
     promptsPerDay: [],
     topCategories: [],
-    summary: { totalPrompts: 0, activeCreators: 0, avgPerDay: 0, conversionRate: "0%", totalProfiles: 0, enhanceUsers: 0 },
+    engineBreakdown: [],
+    dau: 0,
+    wau: 0,
+    mau: 0,
+    summary: {
+      totalPrompts: 0,
+      activeCreators: 0,
+      avgPerDay: 0,
+      conversionRate: "0%",
+      totalProfiles: 0,
+      enhanceUsers: 0,
+    },
   });
   const [traffic, setTraffic] = useState<TrafficSummary | null>(null);
   const [trafficDeltas, setTrafficDeltas] = useState<TrafficDeltas | null>(null);
@@ -199,12 +243,30 @@ export default function AnalyticsOverviewTab() {
       { data: allPrompts },
       { count: totalProfilesCount },
       { data: enhanceUsers },
+      analyticsRes,
     ] = await Promise.all([
-      supabase.from("personal_library").select("created_at, user_id").gte("created_at", startDate.toISOString()),
+      supabase
+        .from("personal_library")
+        .select("created_at, user_id")
+        .gte("created_at", startDate.toISOString()),
       supabase.from("personal_library").select("personal_category"),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("prompt_usage_events").select("user_id").in("event_type", ["enhance", "refine"]),
+      supabase
+        .from("prompt_usage_events")
+        .select("user_id")
+        .in("event_type", ["enhance", "refine"]),
+      fetch(getApiPath(`/api/admin/analytics?range=${daysToFetch}`)).catch(() => null),
     ]);
+
+    const analytics: {
+      engineBreakdown: Array<{ mode: string; count: number }>;
+      dau: number;
+      wau: number;
+      mau: number;
+    } =
+      analyticsRes && analyticsRes.ok
+        ? await analyticsRes.json()
+        : { engineBreakdown: [], dau: 0, wau: 0, mau: 0 };
 
     const promptsByDay: Record<string, number> = {};
     const dates: string[] = [];
@@ -236,11 +298,18 @@ export default function AnalyticsOverviewTab() {
     const conversionPct = ((distinctEnhance / totalProfiles) * 100).toFixed(1);
 
     const totalPrompts = promptsData?.length || 0;
-    const activeCreators = new Set(promptsData?.map((p: { user_id: string }) => p.user_id)).size || 0;
+    const activeCreators =
+      new Set(promptsData?.map((p: { user_id: string }) => p.user_id)).size || 0;
+
+    const { engineBreakdown, dau, wau, mau } = analytics;
 
     return {
       promptsPerDay,
       topCategories: topCategories.length > 0 ? topCategories : [{ category: "None", count: 0 }],
+      engineBreakdown,
+      dau,
+      wau,
+      mau,
       summary: {
         totalPrompts,
         activeCreators,
@@ -252,7 +321,9 @@ export default function AnalyticsOverviewTab() {
     };
   }
 
-  async function loadTrafficData(days: number): Promise<{ overview: TrafficSummary; deltas: TrafficDeltas } | null> {
+  async function loadTrafficData(
+    days: number,
+  ): Promise<{ overview: TrafficSummary; deltas: TrafficDeltas } | null> {
     try {
       const res = await fetch(getApiPath(`/api/admin/google-analytics?range=${days}`));
       if (!res.ok) return null;
@@ -271,7 +342,9 @@ export default function AnalyticsOverviewTab() {
     }
   }
 
-  useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   const maxVal = Math.max(...product.promptsPerDay.map((d) => d.count), 1);
   const totalCatCount = product.topCategories.reduce((s, c) => s + c.count, 0) || 1;
@@ -287,14 +360,20 @@ export default function AnalyticsOverviewTab() {
               onClick={() => setTimeRange(r)}
               className={cn(
                 "px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all",
-                timeRange === r ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-slate-500 hover:text-slate-300"
+                timeRange === r
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  : "text-slate-500 hover:text-slate-300",
               )}
             >
               {r === "week" ? "שבוע" : r === "month" ? "חודש" : "שנה"}
             </button>
           ))}
         </div>
-        <button onClick={loadAnalytics} disabled={loading} className="p-2 rounded-lg hover:bg-white/5 text-zinc-500 hover:text-white transition-colors">
+        <button
+          onClick={loadAnalytics}
+          disabled={loading}
+          className="p-2 rounded-lg hover:bg-white/5 text-zinc-500 hover:text-white transition-colors"
+        >
           <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
         </button>
       </div>
@@ -303,8 +382,12 @@ export default function AnalyticsOverviewTab() {
       {error && (
         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5 flex items-center justify-between">
           <span className="text-sm text-red-400">{error}</span>
-          <button onClick={loadAnalytics} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-colors">
-            <RefreshCw className="w-3.5 h-3.5" />נסה שוב
+          <button
+            onClick={loadAnalytics}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            נסה שוב
           </button>
         </div>
       )}
@@ -314,13 +397,41 @@ export default function AnalyticsOverviewTab() {
         <>
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Website Traffic</span>
+            <span className="text-xs font-black uppercase tracking-widest text-zinc-500">
+              Website Traffic
+            </span>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard label="Visitors" value={fmtNum(traffic.activeUsers)} icon={Users} color="blue" delta={trafficDeltas?.activeUsers} sub={`${fmtNum(traffic.newUsers)} חדשים`} />
-            <MetricCard label="Sessions" value={fmtNum(traffic.sessions)} icon={Eye} color="emerald" delta={trafficDeltas?.sessions} />
-            <MetricCard label="Page Views" value={fmtNum(traffic.pageViews)} icon={MousePointerClick} color="purple" delta={trafficDeltas?.pageViews} sub={`${traffic.pagesPerSession?.toFixed(1) || "-"} per session`} />
-            <MetricCard label="Engagement" value={fmtPct(traffic.engagementRate || 0)} icon={Zap} color="amber" sub={`Avg: ${fmtDur(traffic.avgSessionDuration)}`} />
+            <MetricCard
+              label="Visitors"
+              value={fmtNum(traffic.activeUsers)}
+              icon={Users}
+              color="blue"
+              delta={trafficDeltas?.activeUsers}
+              sub={`${fmtNum(traffic.newUsers)} חדשים`}
+            />
+            <MetricCard
+              label="Sessions"
+              value={fmtNum(traffic.sessions)}
+              icon={Eye}
+              color="emerald"
+              delta={trafficDeltas?.sessions}
+            />
+            <MetricCard
+              label="Page Views"
+              value={fmtNum(traffic.pageViews)}
+              icon={MousePointerClick}
+              color="purple"
+              delta={trafficDeltas?.pageViews}
+              sub={`${traffic.pagesPerSession?.toFixed(1) || "-"} per session`}
+            />
+            <MetricCard
+              label="Engagement"
+              value={fmtPct(traffic.engagementRate || 0)}
+              icon={Zap}
+              color="amber"
+              sub={`Avg: ${fmtDur(traffic.avgSessionDuration)}`}
+            />
           </div>
         </>
       )}
@@ -328,14 +439,100 @@ export default function AnalyticsOverviewTab() {
       {/* Product Metrics (from Supabase) */}
       <div className="flex items-center gap-2">
         <Brain className="w-4 h-4 text-blue-400" />
-        <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Product Metrics</span>
+        <span className="text-xs font-black uppercase tracking-widest text-zinc-500">
+          Product Metrics
+        </span>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard label="Total Generations" value={product.summary.totalPrompts.toLocaleString()} icon={Brain} color="blue" />
-        <MetricCard label="Active Creators" value={product.summary.activeCreators.toLocaleString()} icon={Users} color="purple" />
-        <MetricCard label="Daily Average" value={product.summary.avgPerDay.toString()} icon={TrendingUp} color="emerald" />
-        <MetricCard label="Enhancement Rate" value={product.summary.conversionRate} icon={Zap} color="amber" sub={`${product.summary.enhanceUsers} of ${product.summary.totalProfiles} users`} />
+        <MetricCard
+          label="Total Generations"
+          value={product.summary.totalPrompts.toLocaleString()}
+          icon={Brain}
+          color="blue"
+        />
+        <MetricCard
+          label="Active Creators"
+          value={product.summary.activeCreators.toLocaleString()}
+          icon={Users}
+          color="purple"
+        />
+        <MetricCard
+          label="Daily Average"
+          value={product.summary.avgPerDay.toString()}
+          icon={TrendingUp}
+          color="emerald"
+        />
+        <MetricCard
+          label="Enhancement Rate"
+          value={product.summary.conversionRate}
+          icon={Zap}
+          color="amber"
+          sub={`${product.summary.enhanceUsers} of ${product.summary.totalProfiles} users`}
+        />
       </div>
+
+      {/* DAU / WAU / MAU */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
+          <div className="text-2xl font-black text-white tabular-nums">
+            {product.dau.toLocaleString()}
+          </div>
+          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            DAU — יום
+          </div>
+        </div>
+        <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
+          <div className="text-2xl font-black text-white tabular-nums">
+            {product.wau.toLocaleString()}
+          </div>
+          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            WAU — שבוע
+          </div>
+        </div>
+        <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
+          <div className="text-2xl font-black text-white tabular-nums">
+            {product.mau.toLocaleString()}
+          </div>
+          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            MAU — חודש
+          </div>
+        </div>
+      </div>
+
+      {/* Engine breakdown */}
+      {product.engineBreakdown.length > 0 && (
+        <>
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-black uppercase tracking-widest text-zinc-500">
+              Engine Breakdown
+            </span>
+          </div>
+          <div className="rounded-3xl border border-white/5 bg-zinc-950 p-6 space-y-4">
+            {product.engineBreakdown.map(({ mode, count }) => {
+              const total = product.engineBreakdown.reduce((s, e) => s + e.count, 0) || 1;
+              const pct = Math.round((count / total) * 100);
+              return (
+                <div key={mode} className="space-y-1 group cursor-default">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-bold text-zinc-300">{getCapabilityLabel(mode)}</span>
+                    <div className="flex gap-2 text-zinc-500 text-xs font-bold">
+                      <span>{count.toLocaleString()}</span>
+                      <span>{pct}%</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-linear-to-r from-purple-600 to-blue-500 rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -347,7 +544,9 @@ export default function AnalyticsOverviewTab() {
             </div>
             <div>
               <h3 className="text-base font-black text-white tracking-tight">נפח פעילות יומי</h3>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Generations Volume</p>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                Generations Volume
+              </p>
             </div>
           </div>
 
@@ -360,14 +559,17 @@ export default function AnalyticsOverviewTab() {
               product.promptsPerDay.map((day, i) => {
                 const isLast = i === product.promptsPerDay.length - 1;
                 return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end min-w-0">
+                  <div
+                    key={i}
+                    className="flex-1 flex flex-col items-center gap-2 group h-full justify-end min-w-0"
+                  >
                     <div className="w-full relative">
                       <div
                         className={cn(
                           "w-full rounded-t-md transition-all duration-500",
                           isLast
                             ? "bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                            : "bg-linear-to-t from-blue-600 to-blue-400 group-hover:from-blue-400 group-hover:to-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                            : "bg-linear-to-t from-blue-600 to-blue-400 group-hover:from-blue-400 group-hover:to-white group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]",
                         )}
                         style={{ height: `${(day.count / maxVal) * 100}%`, minHeight: "3px" }}
                       />
@@ -375,9 +577,13 @@ export default function AnalyticsOverviewTab() {
                         {day.count}
                       </div>
                     </div>
-                    {(i % Math.max(Math.floor(product.promptsPerDay.length / 7), 1) === 0 || isLast) && (
+                    {(i % Math.max(Math.floor(product.promptsPerDay.length / 7), 1) === 0 ||
+                      isLast) && (
                       <div className="text-[8px] font-black text-slate-600 group-hover:text-slate-300 transition-colors">
-                        {new Date(day.date).toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+                        {new Date(day.date).toLocaleDateString("he-IL", {
+                          day: "numeric",
+                          month: "short",
+                        })}
                       </div>
                     )}
                   </div>
@@ -395,7 +601,9 @@ export default function AnalyticsOverviewTab() {
             </div>
             <div>
               <h3 className="text-base font-black text-white tracking-tight">פילוח קטגוריות</h3>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Usage Distribution</p>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                Usage Distribution
+              </p>
             </div>
           </div>
 
@@ -407,7 +615,9 @@ export default function AnalyticsOverviewTab() {
                   <div className="flex justify-between items-end">
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                      <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">{c.category}</span>
+                      <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">
+                        {c.category}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold text-zinc-600">{c.count}</span>
@@ -445,27 +655,62 @@ export default function AnalyticsOverviewTab() {
           </div>
           <div>
             <h3 className="text-base font-black text-white tracking-tight">Conversion Funnel</h3>
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">From visit to enhancement</p>
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+              From visit to enhancement
+            </p>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row items-stretch gap-3">
           {[
-            { label: "מבקרים", value: traffic?.activeUsers ?? "-", color: "from-blue-600/20 to-blue-600/5 border-blue-500/20" },
-            { label: "נרשמו", value: product.summary.totalProfiles, color: "from-purple-600/20 to-purple-600/5 border-purple-500/20" },
-            { label: "יצרו פרומפט", value: product.summary.activeCreators, color: "from-emerald-600/20 to-emerald-600/5 border-emerald-500/20" },
-            { label: "השתמשו בשדרוג", value: product.summary.enhanceUsers, color: "from-amber-600/20 to-amber-600/5 border-amber-500/20" },
+            {
+              label: "מבקרים",
+              value: traffic?.activeUsers ?? "-",
+              color: "from-blue-600/20 to-blue-600/5 border-blue-500/20",
+            },
+            {
+              label: "נרשמו",
+              value: product.summary.totalProfiles,
+              color: "from-purple-600/20 to-purple-600/5 border-purple-500/20",
+            },
+            {
+              label: "יצרו פרומפט",
+              value: product.summary.activeCreators,
+              color: "from-emerald-600/20 to-emerald-600/5 border-emerald-500/20",
+            },
+            {
+              label: "השתמשו בשדרוג",
+              value: product.summary.enhanceUsers,
+              color: "from-amber-600/20 to-amber-600/5 border-amber-500/20",
+            },
           ].map((step, i, arr) => {
-            const prevValue = i === 0 ? (typeof step.value === "number" ? step.value : 0) : (typeof arr[i - 1].value === "number" ? arr[i - 1].value as number : 0);
+            const prevValue =
+              i === 0
+                ? typeof step.value === "number"
+                  ? step.value
+                  : 0
+                : typeof arr[i - 1].value === "number"
+                  ? (arr[i - 1].value as number)
+                  : 0;
             const currentValue = typeof step.value === "number" ? step.value : 0;
-            const dropoff = i > 0 && prevValue > 0 ? Math.round((currentValue / prevValue) * 100) : null;
+            const dropoff =
+              i > 0 && prevValue > 0 ? Math.round((currentValue / prevValue) * 100) : null;
             return (
               <div key={i} className="flex-1 flex items-center gap-2">
-                <div className={cn("flex-1 p-5 rounded-2xl border bg-linear-to-b text-center", step.color)}>
-                  <div className="text-2xl font-black text-white tabular-nums">{typeof step.value === "number" ? fmtNum(step.value) : step.value}</div>
+                <div
+                  className={cn(
+                    "flex-1 p-5 rounded-2xl border bg-linear-to-b text-center",
+                    step.color,
+                  )}
+                >
+                  <div className="text-2xl font-black text-white tabular-nums">
+                    {typeof step.value === "number" ? fmtNum(step.value) : step.value}
+                  </div>
                   <div className="text-[10px] font-bold text-zinc-400 mt-1">{step.label}</div>
                   {dropoff !== null && (
-                    <div className="text-[9px] font-black text-zinc-600 mt-1">{dropoff}% מהשלב הקודם</div>
+                    <div className="text-[9px] font-black text-zinc-600 mt-1">
+                      {dropoff}% מהשלב הקודם
+                    </div>
                   )}
                 </div>
                 {i < arr.length - 1 && (

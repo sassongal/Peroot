@@ -4,17 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
-import {
-  Activity,
-  Users,
-  Zap,
-  Eye,
-  Server,
-  Pause,
-  Play,
-  RefreshCw,
-  Radio,
-} from "lucide-react";
+import { Activity, Users, Zap, Eye, Server, Pause, Play, RefreshCw, Radio } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -40,6 +30,8 @@ interface HeatmapSlot {
 
 interface TopUser {
   userId: string;
+  email: string | null;
+  displayName: string;
   eventCount: number;
 }
 
@@ -63,21 +55,19 @@ interface RealtimeData {
 // ── Action colour coding ──────────────────────────────────────────────────────
 
 const ACTION_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  create:   { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-500" },
-  update:   { bg: "bg-blue-500/10",    text: "text-blue-400",    dot: "bg-blue-500"    },
-  delete:   { bg: "bg-rose-500/10",    text: "text-rose-400",    dot: "bg-rose-500"    },
-  view:     { bg: "bg-zinc-500/10",    text: "text-zinc-400",    dot: "bg-zinc-500"    },
-  login:    { bg: "bg-purple-500/10",  text: "text-purple-400",  dot: "bg-purple-500"  },
-  logout:   { bg: "bg-amber-500/10",   text: "text-amber-400",   dot: "bg-amber-500"   },
-  api:      { bg: "bg-cyan-500/10",    text: "text-cyan-400",    dot: "bg-cyan-500"    },
-  error:    { bg: "bg-red-500/10",     text: "text-red-400",     dot: "bg-red-500"     },
-  generate: { bg: "bg-indigo-500/10",  text: "text-indigo-400",  dot: "bg-indigo-500"  },
+  create: { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-500" },
+  update: { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-500" },
+  delete: { bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-500" },
+  view: { bg: "bg-zinc-500/10", text: "text-zinc-400", dot: "bg-zinc-500" },
+  login: { bg: "bg-purple-500/10", text: "text-purple-400", dot: "bg-purple-500" },
+  logout: { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-500" },
+  api: { bg: "bg-cyan-500/10", text: "text-cyan-400", dot: "bg-cyan-500" },
+  error: { bg: "bg-red-500/10", text: "text-red-400", dot: "bg-red-500" },
+  generate: { bg: "bg-indigo-500/10", text: "text-indigo-400", dot: "bg-indigo-500" },
 };
 
 function actionColor(action: string) {
-  const key = Object.keys(ACTION_COLORS).find((k) =>
-    action.toLowerCase().includes(k)
-  );
+  const key = Object.keys(ACTION_COLORS).find((k) => action.toLowerCase().includes(k));
   return (
     ACTION_COLORS[key ?? ""] ?? {
       bg: "bg-zinc-800/50",
@@ -151,7 +141,7 @@ function CounterCard({
         <div
           className={cn(
             "text-4xl font-black tracking-tighter leading-none transition-transform duration-700 group-hover:scale-110 group-hover:-translate-x-1 origin-right",
-            c.text
+            c.text,
           )}
         >
           {value}
@@ -188,9 +178,7 @@ function SectionTitle({
       </div>
       <div>
         <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
-        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">
-          {sub}
-        </p>
+        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider">{sub}</p>
       </div>
     </div>
   );
@@ -256,7 +244,6 @@ export function RealtimeTab() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000 pb-24 select-none" dir="rtl">
-
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -283,13 +270,13 @@ export function RealtimeTab() {
               "flex items-center gap-2 px-5 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all",
               paused
                 ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
             )}
           >
             <span
               className={cn(
                 "w-1.5 h-1.5 rounded-full",
-                paused ? "bg-amber-500" : "bg-emerald-500 animate-pulse"
+                paused ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
               )}
             />
             {paused ? "מושהה" : "חי"}
@@ -302,7 +289,7 @@ export function RealtimeTab() {
               "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border",
               paused
                 ? "bg-emerald-600 text-white border-transparent hover:bg-emerald-500 shadow-2xl shadow-emerald-600/20"
-                : "bg-white/3 border-white/5 text-zinc-400 hover:text-white"
+                : "bg-white/3 border-white/5 text-zinc-400 hover:text-white",
             )}
           >
             {paused ? (
@@ -412,7 +399,6 @@ export function RealtimeTab() {
 
       {/* ── Main two-column section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2">
-
         {/* Live feed (2/3 width) */}
         <div className="lg:col-span-2 space-y-4">
           <SectionTitle
@@ -439,15 +425,12 @@ export function RealtimeTab() {
                       key={event.id}
                       className={cn(
                         "flex items-start gap-4 px-6 py-4 transition-all duration-500",
-                        isNew &&
-                          "bg-white/4 animate-in slide-in-from-top-1 fade-in"
+                        isNew && "bg-white/4 animate-in slide-in-from-top-1 fade-in",
                       )}
                     >
                       {/* Action dot */}
                       <div className="mt-1.5 shrink-0">
-                        <span
-                          className={cn("w-2 h-2 rounded-full block", colors.dot)}
-                        />
+                        <span className={cn("w-2 h-2 rounded-full block", colors.dot)} />
                       </div>
 
                       {/* Action badge */}
@@ -455,7 +438,7 @@ export function RealtimeTab() {
                         className={cn(
                           "shrink-0 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-white/5",
                           colors.bg,
-                          colors.text
+                          colors.text,
                         )}
                       >
                         {event.action.slice(0, 18)}
@@ -499,15 +482,9 @@ export function RealtimeTab() {
 
         {/* Right column: Active Pages + Top Users */}
         <div className="space-y-6">
-
           {/* Active pages */}
           <div className="space-y-4">
-            <SectionTitle
-              icon={Eye}
-              color="purple"
-              title="Active Actions"
-              sub="השעה האחרונה"
-            />
+            <SectionTitle icon={Eye} color="purple" title="Active Actions" sub="השעה האחרונה" />
             <div className="rounded-[36px] bg-zinc-950/80 border border-white/5 backdrop-blur-3xl p-6 space-y-3">
               {(data?.activePages ?? []).length === 0 ? (
                 <p className="text-[9px] text-zinc-800 font-black uppercase tracking-widest text-center py-6">
@@ -523,7 +500,7 @@ export function RealtimeTab() {
                         className={cn(
                           "shrink-0 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider w-28 truncate text-center",
                           colors.bg,
-                          colors.text
+                          colors.text,
                         )}
                       >
                         {page.action.slice(0, 14)}
@@ -532,7 +509,7 @@ export function RealtimeTab() {
                         <div
                           className={cn(
                             "h-full rounded-full transition-all duration-700",
-                            colors.dot
+                            colors.dot,
                           )}
                           style={{
                             width: `${(page.count / maxCount) * 100}%`,
@@ -551,12 +528,7 @@ export function RealtimeTab() {
 
           {/* Top users */}
           <div className="space-y-4">
-            <SectionTitle
-              icon={Users}
-              color="amber"
-              title="Top Users"
-              sub="30 דקות אחרונות"
-            />
+            <SectionTitle icon={Users} color="amber" title="Top Users" sub="30 דקות אחרונות" />
             <div className="rounded-[36px] bg-zinc-950/80 border border-white/5 backdrop-blur-3xl p-6 space-y-3">
               {(data?.topUsers ?? []).length === 0 ? (
                 <p className="text-[9px] text-zinc-800 font-black uppercase tracking-widest text-center py-6">
@@ -568,9 +540,11 @@ export function RealtimeTab() {
                     <span className="text-[9px] font-black text-zinc-700 w-4 text-center">
                       {i + 1}
                     </span>
-                    <span className="text-[10px] font-black text-zinc-400 font-mono flex-1 truncate">
-                      {u.userId}
-                    </span>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="text-[10px] font-black text-zinc-300 truncate">
+                        {u.email ?? u.displayName}
+                      </span>
+                    </div>
                     <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-500 rounded-full transition-all duration-700"
@@ -593,8 +567,7 @@ export function RealtimeTab() {
       {/* ── Last updated ── */}
       {data?.fetchedAt && (
         <div className="text-center text-[9px] font-black text-zinc-800 uppercase tracking-[0.3em]">
-          עודכן לאחרונה:{" "}
-          {new Date(data.fetchedAt).toLocaleTimeString("he-IL")}
+          עודכן לאחרונה: {new Date(data.fetchedAt).toLocaleTimeString("he-IL")}
         </div>
       )}
     </div>

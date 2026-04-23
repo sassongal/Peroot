@@ -1,6 +1,9 @@
-import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
-import { logger } from '@/lib/logger';
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
+import { logger } from "@/lib/logger";
+import { redis } from "@/lib/redis";
+
+const ACKED_REDIS_KEY = "admin:notifications:acked";
 
 /**
  * GET /api/admin/notifications
@@ -21,7 +24,7 @@ import { logger } from '@/lib/logger';
  * clamped to [0, 100].
  */
 
-type NotificationType = 'critical' | 'warning' | 'info';
+type NotificationType = "critical" | "warning" | "info";
 
 interface Notification {
   id: string;
@@ -50,9 +53,9 @@ interface NotificationResponse {
 
 function makeId(...parts: (string | number)[]): string {
   return parts
-    .join('-')
+    .join("-")
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-');
+    .replace(/[^a-z0-9-]/g, "-");
 }
 
 function todayRange() {
@@ -84,15 +87,15 @@ export const GET = withAdmin(async (_req, supabase) => {
     try {
       const [todayActivity, weekActivity] = await Promise.all([
         supabase
-          .from('activity_logs')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', todayStart)
-          .lte('created_at', todayEnd),
+          .from("activity_logs")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", todayStart)
+          .lte("created_at", todayEnd),
         supabase
-          .from('activity_logs')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', sevenDaysAgo)
-          .lt('created_at', todayStart),
+          .from("activity_logs")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", sevenDaysAgo)
+          .lt("created_at", todayStart),
       ]);
 
       const todayCount = todayActivity.count ?? 0;
@@ -103,50 +106,50 @@ export const GET = withAdmin(async (_req, supabase) => {
         const ratio = todayCount / dailyAvg;
         if (ratio >= 3) {
           notifications.push({
-            id: makeId('traffic-spike', todayStart.slice(0, 10)),
-            type: 'critical',
-            title: 'Traffic Spike Detected',
+            id: makeId("traffic-spike", todayStart.slice(0, 10)),
+            type: "critical",
+            title: "Traffic Spike Detected",
             message: `פעילות היום גבוהה פי ${ratio.toFixed(1)} מהממוצע היומי. ייתכן עומס חריג, בוט, או גל משתמשים.`,
             timestamp: now,
             metric: {
-              label: 'פעילות יומית',
+              label: "פעילות יומית",
               current: todayCount,
               baseline: Math.round(dailyAvg),
-              unit: 'events',
+              unit: "events",
             },
           });
         } else if (ratio >= 2) {
           notifications.push({
-            id: makeId('traffic-spike', todayStart.slice(0, 10)),
-            type: 'warning',
-            title: 'Elevated Activity',
+            id: makeId("traffic-spike", todayStart.slice(0, 10)),
+            type: "warning",
+            title: "Elevated Activity",
             message: `פעילות היום גבוהה פי ${ratio.toFixed(1)} מהממוצע היומי של 7 הימים האחרונים.`,
             timestamp: now,
             metric: {
-              label: 'פעילות יומית',
+              label: "פעילות יומית",
               current: todayCount,
               baseline: Math.round(dailyAvg),
-              unit: 'events',
+              unit: "events",
             },
           });
         }
       } else if (todayCount > 50) {
         notifications.push({
-          id: makeId('traffic-new', todayStart.slice(0, 10)),
-          type: 'info',
-          title: 'First Activity Detected',
+          id: makeId("traffic-new", todayStart.slice(0, 10)),
+          type: "info",
+          title: "First Activity Detected",
           message: `נרשמו ${todayCount} אירועי פעילות היום (אין מספיק נתוני עבר להשוואה).`,
           timestamp: now,
           metric: {
-            label: 'אירועים היום',
+            label: "אירועים היום",
             current: todayCount,
             baseline: 0,
-            unit: 'events',
+            unit: "events",
           },
         });
       }
     } catch (e) {
-      logger.warn('[Notifications] Traffic spike check failed:', e);
+      logger.warn("[Notifications] Traffic spike check failed:", e);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -155,24 +158,24 @@ export const GET = withAdmin(async (_req, supabase) => {
     try {
       const [todayCostData, weekCostData] = await Promise.all([
         supabase
-          .from('api_usage_logs')
-          .select('estimated_cost_usd')
-          .gte('created_at', todayStart)
-          .lte('created_at', todayEnd),
+          .from("api_usage_logs")
+          .select("estimated_cost_usd")
+          .gte("created_at", todayStart)
+          .lte("created_at", todayEnd),
         supabase
-          .from('api_usage_logs')
-          .select('estimated_cost_usd')
-          .gte('created_at', sevenDaysAgo)
-          .lt('created_at', todayStart),
+          .from("api_usage_logs")
+          .select("estimated_cost_usd")
+          .gte("created_at", sevenDaysAgo)
+          .lt("created_at", todayStart),
       ]);
 
       const todayCost = (todayCostData.data ?? []).reduce(
         (s, r) => s + (r.estimated_cost_usd ?? 0),
-        0
+        0,
       );
       const weekCost = (weekCostData.data ?? []).reduce(
         (s, r) => s + (r.estimated_cost_usd ?? 0),
-        0
+        0,
       );
       const dailyCostAvg = weekCost / 7;
 
@@ -180,36 +183,36 @@ export const GET = withAdmin(async (_req, supabase) => {
         const ratio = todayCost / dailyCostAvg;
         if (ratio >= 2.5) {
           notifications.push({
-            id: makeId('cost-overrun-critical', todayStart.slice(0, 10)),
-            type: 'critical',
-            title: 'Critical Cost Overrun',
+            id: makeId("cost-overrun-critical", todayStart.slice(0, 10)),
+            type: "critical",
+            title: "Critical Cost Overrun",
             message: `עלויות API היום ($${todayCost.toFixed(4)}) גבוהות פי ${ratio.toFixed(1)} מהממוצע היומי. בדוק מיד אם יש שימוש חריג.`,
             timestamp: now,
             metric: {
-              label: 'עלות API היום',
+              label: "עלות API היום",
               current: `$${todayCost.toFixed(4)}`,
               baseline: `$${dailyCostAvg.toFixed(4)}`,
-              unit: 'USD',
+              unit: "USD",
             },
           });
         } else if (ratio >= 1.5) {
           notifications.push({
-            id: makeId('cost-overrun-warning', todayStart.slice(0, 10)),
-            type: 'warning',
-            title: 'Cost Overrun Warning',
+            id: makeId("cost-overrun-warning", todayStart.slice(0, 10)),
+            type: "warning",
+            title: "Cost Overrun Warning",
             message: `עלויות API היום ($${todayCost.toFixed(4)}) גבוהות בכ-${Math.round((ratio - 1) * 100)}% מהממוצע היומי.`,
             timestamp: now,
             metric: {
-              label: 'עלות API היום',
+              label: "עלות API היום",
               current: `$${todayCost.toFixed(4)}`,
               baseline: `$${dailyCostAvg.toFixed(4)}`,
-              unit: 'USD',
+              unit: "USD",
             },
           });
         }
       }
     } catch (e) {
-      logger.warn('[Notifications] Cost overrun check failed:', e);
+      logger.warn("[Notifications] Cost overrun check failed:", e);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -218,15 +221,15 @@ export const GET = withAdmin(async (_req, supabase) => {
     try {
       const [todaySignups, weekSignups] = await Promise.all([
         supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', todayStart)
-          .lte('created_at', todayEnd),
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", todayStart)
+          .lte("created_at", todayEnd),
         supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', sevenDaysAgo)
-          .lt('created_at', todayStart),
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", sevenDaysAgo)
+          .lt("created_at", todayStart),
       ]);
 
       const signupsToday = todaySignups.count ?? 0;
@@ -237,50 +240,50 @@ export const GET = withAdmin(async (_req, supabase) => {
         const ratio = signupsToday / dailySignupAvg;
         if (ratio >= 5) {
           notifications.push({
-            id: makeId('signup-burst-critical', todayStart.slice(0, 10)),
-            type: 'critical',
-            title: 'Massive Signup Burst',
+            id: makeId("signup-burst-critical", todayStart.slice(0, 10)),
+            type: "critical",
+            title: "Massive Signup Burst",
             message: `${signupsToday} הרשמות חדשות היום - פי ${ratio.toFixed(1)} מהממוצע. בדוק אם זה ויראלי, קמפיין, או בוט.`,
             timestamp: now,
             metric: {
-              label: 'הרשמות היום',
+              label: "הרשמות היום",
               current: signupsToday,
               baseline: Math.round(dailySignupAvg),
-              unit: 'users',
+              unit: "users",
             },
           });
         } else if (ratio >= 3) {
           notifications.push({
-            id: makeId('signup-burst-warning', todayStart.slice(0, 10)),
-            type: 'warning',
-            title: 'New User Burst',
+            id: makeId("signup-burst-warning", todayStart.slice(0, 10)),
+            type: "warning",
+            title: "New User Burst",
             message: `${signupsToday} הרשמות חדשות היום - פי ${ratio.toFixed(1)} מהממוצע היומי של שבוע אחרון.`,
             timestamp: now,
             metric: {
-              label: 'הרשמות היום',
+              label: "הרשמות היום",
               current: signupsToday,
               baseline: Math.round(dailySignupAvg),
-              unit: 'users',
+              unit: "users",
             },
           });
         }
       } else if (signupsToday > 10) {
         notifications.push({
-          id: makeId('signup-info', todayStart.slice(0, 10)),
-          type: 'info',
-          title: 'New User Activity',
+          id: makeId("signup-info", todayStart.slice(0, 10)),
+          type: "info",
+          title: "New User Activity",
           message: `${signupsToday} הרשמות חדשות היום.`,
           timestamp: now,
           metric: {
-            label: 'הרשמות היום',
+            label: "הרשמות היום",
             current: signupsToday,
             baseline: 0,
-            unit: 'users',
+            unit: "users",
           },
         });
       }
     } catch (e) {
-      logger.warn('[Notifications] Signup burst check failed:', e);
+      logger.warn("[Notifications] Signup burst check failed:", e);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -288,44 +291,44 @@ export const GET = withAdmin(async (_req, supabase) => {
     // ─────────────────────────────────────────────────────────────────────────
     try {
       const { count: errorCount } = await supabase
-        .from('activity_logs')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', oneDayAgo)
-        .or('action.ilike.%error%,action.ilike.%fail%,action.ilike.%denied%');
+        .from("activity_logs")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", oneDayAgo)
+        .or("action.ilike.%error%,action.ilike.%fail%,action.ilike.%denied%");
 
       const errors = errorCount ?? 0;
 
       if (errors >= 50) {
         notifications.push({
-          id: makeId('error-pattern-critical', todayStart.slice(0, 10)),
-          type: 'critical',
-          title: 'High Error Rate Detected',
+          id: makeId("error-pattern-critical", todayStart.slice(0, 10)),
+          type: "critical",
+          title: "High Error Rate Detected",
           message: `${errors} פעולות כושלות/שגיאות ב-24 שעות האחרונות. ייתכן בעיה בשירות או ניסיון תקיפה.`,
           timestamp: now,
           metric: {
-            label: 'שגיאות (24h)',
+            label: "שגיאות (24h)",
             current: errors,
             baseline: 10,
-            unit: 'errors',
+            unit: "errors",
           },
         });
       } else if (errors >= 10) {
         notifications.push({
-          id: makeId('error-pattern-warning', todayStart.slice(0, 10)),
-          type: 'warning',
-          title: 'Elevated Error Rate',
+          id: makeId("error-pattern-warning", todayStart.slice(0, 10)),
+          type: "warning",
+          title: "Elevated Error Rate",
           message: `${errors} פעולות כושלות ב-24 שעות האחרונות - מעל הסף הרגיל.`,
           timestamp: now,
           metric: {
-            label: 'שגיאות (24h)',
+            label: "שגיאות (24h)",
             current: errors,
             baseline: 10,
-            unit: 'errors',
+            unit: "errors",
           },
         });
       }
     } catch (e) {
-      logger.warn('[Notifications] Error pattern check failed:', e);
+      logger.warn("[Notifications] Error pattern check failed:", e);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -333,18 +336,18 @@ export const GET = withAdmin(async (_req, supabase) => {
     // ─────────────────────────────────────────────────────────────────────────
     try {
       const { data: proProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .in('plan_tier', ['pro', 'premium', 'paid']);
+        .from("profiles")
+        .select("id")
+        .in("plan_tier", ["pro", "premium", "paid"]);
 
       if (proProfiles && proProfiles.length > 0) {
         const proIds = proProfiles.map((p) => p.id);
 
         const { data: recentActiveUsers } = await supabase
-          .from('activity_logs')
-          .select('user_id')
-          .in('user_id', proIds)
-          .gte('created_at', sevenDaysAgo);
+          .from("activity_logs")
+          .select("user_id")
+          .in("user_id", proIds)
+          .gte("created_at", sevenDaysAgo);
 
         const activeSet = new Set((recentActiveUsers ?? []).map((r) => r.user_id));
         const inactiveProCount = proIds.filter((id) => !activeSet.has(id)).length;
@@ -352,50 +355,50 @@ export const GET = withAdmin(async (_req, supabase) => {
 
         if (inactivePct >= 40 && inactiveProCount >= 5) {
           notifications.push({
-            id: makeId('inactive-pro-critical', todayStart.slice(0, 10)),
-            type: 'critical',
-            title: 'High Pro User Inactivity',
+            id: makeId("inactive-pro-critical", todayStart.slice(0, 10)),
+            type: "critical",
+            title: "High Pro User Inactivity",
             message: `${inactiveProCount} ממשתמשי ה-Pro (${inactivePct}%) לא היו פעילים ב-7 ימים האחרונים. סיכון גבוה לנטישה.`,
             timestamp: now,
             metric: {
-              label: 'Pro משתמשים לא פעילים',
+              label: "Pro משתמשים לא פעילים",
               current: inactiveProCount,
               baseline: proIds.length,
-              unit: 'users',
+              unit: "users",
             },
           });
         } else if (inactivePct >= 20 && inactiveProCount >= 3) {
           notifications.push({
-            id: makeId('inactive-pro-warning', todayStart.slice(0, 10)),
-            type: 'warning',
-            title: 'Pro Users Inactive',
+            id: makeId("inactive-pro-warning", todayStart.slice(0, 10)),
+            type: "warning",
+            title: "Pro Users Inactive",
             message: `${inactiveProCount} ממשתמשי ה-Pro (${inactivePct}%) לא היו פעילים ב-7 ימים - שקול לשלוח קמפיין re-engagement.`,
             timestamp: now,
             metric: {
-              label: 'Pro משתמשים לא פעילים',
+              label: "Pro משתמשים לא פעילים",
               current: inactiveProCount,
               baseline: proIds.length,
-              unit: 'users',
+              unit: "users",
             },
           });
         } else if (inactiveProCount > 0) {
           notifications.push({
-            id: makeId('inactive-pro-info', todayStart.slice(0, 10)),
-            type: 'info',
-            title: 'Pro User Activity Report',
+            id: makeId("inactive-pro-info", todayStart.slice(0, 10)),
+            type: "info",
+            title: "Pro User Activity Report",
             message: `${inactiveProCount} ממשתמשי ה-Pro לא היו פעילים ב-7 ימים האחרונים (${100 - inactivePct}% פעילים).`,
             timestamp: now,
             metric: {
-              label: 'Pro משתמשים לא פעילים',
+              label: "Pro משתמשים לא פעילים",
               current: inactiveProCount,
               baseline: proIds.length,
-              unit: 'users',
+              unit: "users",
             },
           });
         }
       }
     } catch (e) {
-      logger.warn('[Notifications] Inactive pro check failed:', e);
+      logger.warn("[Notifications] Inactive pro check failed:", e);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -403,10 +406,10 @@ export const GET = withAdmin(async (_req, supabase) => {
     // ─────────────────────────────────────────────────────────────────────────
     if (notifications.length === 0) {
       notifications.push({
-        id: makeId('system-healthy', todayStart.slice(0, 10)),
-        type: 'info',
-        title: 'All Systems Nominal',
-        message: 'לא זוהו אנומליות. המערכת פועלת בצורה תקינה.',
+        id: makeId("system-healthy", todayStart.slice(0, 10)),
+        type: "info",
+        title: "All Systems Nominal",
+        message: "לא זוהו אנומליות. המערכת פועלת בצורה תקינה.",
         timestamp: now,
       });
     }
@@ -424,12 +427,12 @@ export const GET = withAdmin(async (_req, supabase) => {
     });
 
     // ── Summary ──────────────────────────────────────────────────────────────
-    const criticalCount = notifications.filter((n) => n.type === 'critical').length;
-    const warningCount = notifications.filter((n) => n.type === 'warning').length;
-    const infoCount = notifications.filter((n) => n.type === 'info').length;
+    const criticalCount = notifications.filter((n) => n.type === "critical").length;
+    const warningCount = notifications.filter((n) => n.type === "warning").length;
+    const infoCount = notifications.filter((n) => n.type === "info").length;
     const healthScore = Math.max(
       0,
-      Math.min(100, 100 - criticalCount * 30 - warningCount * 10 - infoCount * 5)
+      Math.min(100, 100 - criticalCount * 30 - warningCount * 10 - infoCount * 5),
     );
 
     const response: NotificationResponse = {
@@ -443,9 +446,35 @@ export const GET = withAdmin(async (_req, supabase) => {
       },
     };
 
-    return NextResponse.json(response);
+    // Merge server-side acknowledged IDs (Redis-backed, cross-browser persistent)
+    try {
+      const serverAcked: string[] = (await redis.get<string[]>(ACKED_REDIS_KEY)) ?? [];
+      return NextResponse.json({ ...response, ackedIds: serverAcked });
+    } catch {
+      return NextResponse.json({ ...response, ackedIds: [] });
+    }
   } catch (err) {
-    logger.error('[Admin Notifications] GET error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error("[Admin Notifications] GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+});
+
+/**
+ * POST /api/admin/notifications
+ * Body: { ackedIds: string[] }
+ * Persists acknowledged notification IDs to site_settings (DB-backed, cross-browser).
+ */
+export const POST = withAdmin(async (req, _supabase) => {
+  try {
+    const body = await req.json();
+    const incoming: string[] = Array.isArray(body?.ackedIds) ? body.ackedIds : [];
+
+    // Persist to Redis with 30-day TTL
+    await redis.set(ACKED_REDIS_KEY, incoming, { ex: 30 * 24 * 60 * 60 });
+
+    return NextResponse.json({ ok: true, count: incoming.length });
+  } catch (err) {
+    logger.error("[Admin Notifications] POST error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 });

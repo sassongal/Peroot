@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -11,19 +12,39 @@ const Schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Support Bearer token auth for Chrome extension, fall back to cookie auth
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+
+    let userId: string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let insertClient: any;
+
+    if (bearerToken) {
+      const svc = createServiceClient();
+      const {
+        data: { user },
+      } = await svc.auth.getUser(bearerToken);
+      userId = user?.id;
+      insertClient = svc;
+    } else {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      userId = user?.id;
+      insertClient = supabase;
+    }
+
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
     const parsed = Schema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 422 });
 
     const { rating, input_text, enhanced_text, capability_mode } = parsed.data;
-    const { error } = await supabase.from("prompt_feedback").insert({
-      user_id: user.id,
+    const { error } = await insertClient.from("prompt_feedback").insert({
+      user_id: userId,
       rating,
       input_text: input_text?.slice(0, 10_000),
       enhanced_text: enhanced_text?.slice(0, 50_000),

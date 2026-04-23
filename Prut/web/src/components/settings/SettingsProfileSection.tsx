@@ -3,16 +3,7 @@
 
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import {
-  BookOpen,
-  Check,
-  Crown,
-  History,
-  Loader2,
-  Mail,
-  Star,
-  Zap,
-} from "lucide-react";
+import { BookOpen, Check, Crown, History, Loader2, Mail, Star, Zap } from "lucide-react";
 import type { CreditsState } from "./settings-types";
 
 interface SettingsProfileSectionProps {
@@ -46,12 +37,15 @@ export function SettingsProfileSection({
   isPro,
 }: SettingsProfileSectionProps) {
   return (
-    <section className="space-y-6 animate-in fade-in duration-300" aria-labelledby="settings-profile-heading">
+    <section
+      className="space-y-6 animate-in fade-in duration-300"
+      aria-labelledby="settings-profile-heading"
+    >
       <header className="space-y-1">
         <h2 id="settings-profile-heading" className="text-xl font-bold">
           פרופיל
         </h2>
-        <p className="text-sm text-slate-500">פרטי החשבון שלך</p>
+        <p className="text-sm text-slate-400">פרטי החשבון שלך</p>
       </header>
 
       <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
@@ -90,52 +84,62 @@ export function SettingsProfileSection({
               onChange={(e) => setDisplayName(e.target.value)}
               dir="rtl"
               placeholder="שם תצוגה"
-              className="bg-white/5 border border-white/10 focus:border-purple-500/50 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
+              className="bg-white/5 border border-white/10 focus:border-purple-500/60 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
             />
             <button
               type="button"
               onClick={onSaveDisplayName}
               disabled={isSavingName || !displayName.trim()}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSavingName ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              {isSavingName ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Check className="w-3.5 h-3.5" />
+              )}
               <span>שמור</span>
             </button>
           </div>
-          <p className="text-sm text-slate-500 mt-1">תמונת פרופיל מחשבון Google</p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-          <Mail className="w-4 h-4" />
-          כתובת אימייל
-        </label>
-        <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-          <span className="text-white">{user.email}</span>
-          {user.email_confirmed_at ? (
-            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">מאומת</span>
-          ) : (
-            <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-medium rounded-full">לא מאומת</span>
+          {user.app_metadata?.provider === "google" && (
+            <p className="text-sm text-slate-500 mt-1">תמונת פרופיל מחשבון Google</p>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-          <History className="w-5 h-5 text-amber-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold">{historyLength}</p>
-          <p className="text-xs text-slate-400">היסטוריה</p>
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-slate-400 flex items-center gap-2">
+          <Mail className="w-4 h-4" />
+          כתובת אימייל
+        </p>
+        <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+          <span className="text-white">{user.email}</span>
+          {user.email_confirmed_at ? (
+            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+              מאומת
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-medium rounded-full">
+              לא מאומת
+            </span>
+          )}
         </div>
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-          <BookOpen className="w-5 h-5 text-blue-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold">{personalLibraryLength}</p>
-          <p className="text-xs text-slate-400">ספריה אישית</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+          <History className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1.5 sm:mb-2" />
+          <p className="text-xl sm:text-2xl font-bold">{historyLength}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400">היסטוריה</p>
         </div>
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-          <Star className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold">{favoritesLength}</p>
-          <p className="text-xs text-slate-400">מועדפים</p>
+        <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+          <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mx-auto mb-1.5 sm:mb-2" />
+          <p className="text-xl sm:text-2xl font-bold">{personalLibraryLength}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400">ספריה</p>
+        </div>
+        <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+          <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 mx-auto mb-1.5 sm:mb-2" />
+          <p className="text-xl sm:text-2xl font-bold">{favoritesLength}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400">מועדפים</p>
         </div>
       </div>
 
@@ -151,7 +155,14 @@ export function SettingsProfileSection({
             </span>
           </div>
           <div className="space-y-2">
-            <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="w-full h-3 bg-white/10 rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={credits.dailyLimit - credits.balance}
+              aria-valuemin={0}
+              aria-valuemax={credits.dailyLimit}
+              aria-label={`ניצלת ${credits.dailyLimit - credits.balance} מתוך ${credits.dailyLimit} קרדיטים`}
+            >
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -167,17 +178,26 @@ export function SettingsProfileSection({
             </div>
             <div className="flex justify-between text-xs text-slate-500">
               <span>
-                ניצולת: {credits.dailyLimit > 0 ? Math.round(((credits.dailyLimit - credits.balance) / credits.dailyLimit) * 100) : 0}%
+                ניצולת:{" "}
+                {credits.dailyLimit > 0
+                  ? Math.round(((credits.dailyLimit - credits.balance) / credits.dailyLimit) * 100)
+                  : 0}
+                %
               </span>
               <span>
-                {credits.balance === 0 ? "נגמרו הקרדיטים להיום" : `${credits.balance} שימושים נותרו`}
+                {credits.balance === 0
+                  ? "נגמרו הקרדיטים להיום"
+                  : `${credits.balance} שימושים נותרו`}
               </span>
             </div>
           </div>
           {credits.balance === 0 && (
             <div className="flex items-center justify-between gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-xs text-amber-300">הקרדיטים מתחדשים מדי יום. רוצה ללא הגבלה?</p>
-              <Link href="/pricing" className="shrink-0 px-3 py-1.5 rounded-lg accent-gradient text-black text-xs font-bold">
+              <Link
+                href="/pricing"
+                className="shrink-0 px-3 py-1.5 rounded-lg accent-gradient text-black text-xs font-bold"
+              >
                 שדרג ל-Pro
               </Link>
             </div>

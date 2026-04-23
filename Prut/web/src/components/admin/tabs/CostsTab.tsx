@@ -32,6 +32,7 @@ interface ProviderRow {
 
 interface UserCostRow {
   user_id: string;
+  email: string | null;
   totalCost: number;
   requestCount: number;
 }
@@ -127,7 +128,7 @@ function exportToCSV(data: Record<string, unknown>[], filename: string) {
   const rows = data.map((row) =>
     Object.values(row)
       .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)
-      .join(",")
+      .join(","),
   );
   const csv = BOM + [headers, ...rows].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -142,7 +143,13 @@ function exportToCSV(data: Record<string, unknown>[], filename: string) {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function UntrackedEndpointsWarning({ untracked, windowHours }: { untracked: string[]; windowHours: number }) {
+function UntrackedEndpointsWarning({
+  untracked,
+  windowHours,
+}: {
+  untracked: string[];
+  windowHours: number;
+}) {
   if (untracked.length === 0) return null;
   return (
     <div className="p-6 rounded-[32px] bg-amber-950/20 border border-amber-500/20 flex items-start gap-4">
@@ -154,11 +161,16 @@ function UntrackedEndpointsWarning({ untracked, windowHours }: { untracked: stri
           Untracked Endpoints
         </div>
         <div className="text-sm text-amber-200/80 font-medium">
-          No <code className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 text-xs">api_usage_logs</code> rows in the last {windowHours}h for:{" "}
+          No{" "}
+          <code className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 text-xs">
+            api_usage_logs
+          </code>{" "}
+          rows in the last {windowHours}h for:{" "}
           <span className="font-bold">{untracked.join(", ")}</span>
         </div>
         <div className="text-[11px] text-amber-500/60">
-          Either nobody used the feature, or <code>trackApiUsage()</code> is not wired up. Cost dashboard may undercount.
+          Either nobody used the feature, or <code>trackApiUsage()</code> is not wired up. Cost
+          dashboard may undercount.
         </div>
       </div>
     </div>
@@ -186,7 +198,8 @@ function CacheHitRateCard({ stats }: { stats: CoverageData["cacheStats"] }) {
           Cache Hit Rate
         </div>
         <div className="text-[9px] text-zinc-800 font-bold">
-          {stats.cacheHits.toLocaleString()}/{stats.totalRequests.toLocaleString()} requests · ~{tokensSaved.toLocaleString()} tokens saved
+          {stats.cacheHits.toLocaleString()}/{stats.totalRequests.toLocaleString()} requests · ~
+          {tokensSaved.toLocaleString()} tokens saved
         </div>
       </div>
     </div>
@@ -222,7 +235,7 @@ function CostCard({
         <div
           className={cn(
             "p-4 rounded-2xl border transition-all duration-700 shadow-2xl",
-            colors[color]
+            colors[color],
           )}
         >
           <Icon className="w-6 h-6" />
@@ -416,16 +429,10 @@ export default function CostsTab() {
     }
   }
 
-  const maxMonthly = Math.max(
-    ...(data?.monthly ?? []).map((m) => m.llmCost + m.manualCost),
-    0.001
-  );
+  const maxMonthly = Math.max(...(data?.monthly ?? []).map((m) => m.llmCost + m.manualCost), 0.001);
 
   return (
-    <div
-      className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none"
-      dir="rtl"
-    >
+    <div className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none" dir="rtl">
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -451,13 +458,13 @@ export default function CostsTab() {
                 ספק: r.provider,
                 מודל: r.model,
                 בקשות: r.requestCount,
-                "טוקנים_קלט": r.totalInputTokens,
-                "טוקנים_פלט": r.totalOutputTokens,
-                "עלות_כוללת_$": r.totalCost.toFixed(4),
+                טוקנים_קלט: r.totalInputTokens,
+                טוקנים_פלט: r.totalOutputTokens,
+                עלות_כוללת_$: r.totalCost.toFixed(4),
               }));
               exportToCSV(
                 rows as Record<string, unknown>[],
-                `peroot_costs_${new Date().toISOString().slice(0, 10)}.csv`
+                `peroot_costs_${new Date().toISOString().slice(0, 10)}.csv`,
               );
             }}
             disabled={!data || sortedByProvider.length === 0}
@@ -483,7 +490,10 @@ export default function CostsTab() {
       {/* ── Coverage / Cache health ── */}
       {coverage && (
         <div className="space-y-6 px-2">
-          <UntrackedEndpointsWarning untracked={coverage.untracked} windowHours={coverage.windowHours} />
+          <UntrackedEndpointsWarning
+            untracked={coverage.untracked}
+            windowHours={coverage.windowHours}
+          />
         </div>
       )}
 
@@ -567,7 +577,12 @@ export default function CostsTab() {
 
       {/* ── LLM Cost Breakdown Table ── */}
       <div className="space-y-4 px-2">
-        <SectionTitle icon={Zap} color="blue" title="LLM Cost Breakdown" sub="By provider and model" />
+        <SectionTitle
+          icon={Zap}
+          color="blue"
+          title="LLM Cost Breakdown"
+          sub="By provider and model"
+        />
 
         <div className="rounded-[48px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto min-w-full">
@@ -637,9 +652,7 @@ export default function CostsTab() {
                           {row.provider}
                         </span>
                       </td>
-                      <td className="px-8 py-5 text-zinc-300 font-bold text-sm">
-                        {row.model}
-                      </td>
+                      <td className="px-8 py-5 text-zinc-300 font-bold text-sm">{row.model}</td>
                       <td className="px-8 py-5 text-zinc-400 font-bold text-sm tabular-nums">
                         {fmt(row.requestCount)}
                       </td>
@@ -684,12 +697,10 @@ export default function CostsTab() {
           ) : (
             (data?.byUser ?? []).map((u, i) => (
               <div key={u.user_id} className="flex items-center gap-6 group">
-                <span className="text-[9px] font-black text-zinc-700 w-5 text-center">
-                  {i + 1}
-                </span>
+                <span className="text-[9px] font-black text-zinc-700 w-5 text-center">{i + 1}</span>
                 <div className="flex flex-col gap-0.5 w-52 shrink-0">
                   <span className="text-xs font-black text-zinc-300 truncate">
-                    {u.user_id.slice(0, 24)}…
+                    {u.email ?? u.user_id.slice(0, 20) + "…"}
                   </span>
                   <span className="text-[9px] text-zinc-700 font-bold uppercase">
                     {fmt(u.requestCount)} requests
@@ -726,16 +737,16 @@ export default function CostsTab() {
               onClick={() => {
                 const rows = manualEntries.map((e) => ({
                   שירות: e.service_name,
-                  "סכום_$": e.amount_usd.toFixed(2),
+                  סכום_$: e.amount_usd.toFixed(2),
                   תקופה: e.billing_period,
                   הערות: e.notes || "",
-                  "נוסף_בתאריך": e.created_at
+                  נוסף_בתאריך: e.created_at
                     ? new Date(e.created_at).toLocaleDateString("he-IL")
                     : "",
                 }));
                 exportToCSV(
                   rows as Record<string, unknown>[],
-                  `peroot_manual_costs_${new Date().toISOString().slice(0, 10)}.csv`
+                  `peroot_manual_costs_${new Date().toISOString().slice(0, 10)}.csv`,
                 );
               }}
               disabled={manualEntries.length === 0}
@@ -750,7 +761,7 @@ export default function CostsTab() {
                 "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
                 showAddForm
                   ? "bg-white/5 border border-white/10 text-zinc-400 hover:text-white"
-                  : "bg-purple-600 text-white hover:bg-purple-500 shadow-2xl shadow-purple-600/20"
+                  : "bg-purple-600 text-white hover:bg-purple-500 shadow-2xl shadow-purple-600/20",
               )}
             >
               {showAddForm ? (

@@ -18,22 +18,22 @@
 
 function readBoolFlag(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
-  if (raw === undefined || raw === '') return defaultValue;
-  return raw === '1' || raw.toLowerCase() === 'true';
+  if (raw === undefined || raw === "") return defaultValue;
+  return raw === "1" || raw.toLowerCase() === "true";
 }
 
 export const memoryFlags = {
   /** L0 — inject `[USER_KNOWN_FACTS]` block. Default: ON. */
   get factsEnabled(): boolean {
-    return !readBoolFlag('PEROOT_DISABLE_FACTS_INJECTION', false);
+    return !readBoolFlag("PEROOT_DISABLE_FACTS_INJECTION", false);
   },
   /** L3 — inject `[USER_PERSONALITY_TRAITS]` block. Default: ON. */
   get personalityEnabled(): boolean {
-    return !readBoolFlag('PEROOT_DISABLE_PERSONALITY_INJECTION', false);
+    return !readBoolFlag("PEROOT_DISABLE_PERSONALITY_INJECTION", false);
   },
   /** L2 — inject `[USER_STYLE_CONTEXT]` block. Default: ON. */
   get historyEnabled(): boolean {
-    return !readBoolFlag('PEROOT_DISABLE_HISTORY_INJECTION', false);
+    return !readBoolFlag("PEROOT_DISABLE_HISTORY_INJECTION", false);
   },
   /**
    * Use the `history` table (recent successful enhances with
@@ -42,6 +42,6 @@ export const memoryFlags = {
    * `PEROOT_LEGACY_HISTORY_RECALL=1` to revert without a deploy.
    */
   get useHistoryTableForRecall(): boolean {
-    return !readBoolFlag('PEROOT_LEGACY_HISTORY_RECALL', false);
+    return !readBoolFlag("PEROOT_LEGACY_HISTORY_RECALL", false);
   },
 };

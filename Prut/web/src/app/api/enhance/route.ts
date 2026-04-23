@@ -278,7 +278,13 @@ export async function POST(req: Request) {
                 .limit(20)
             : Promise.resolve({ data: null }),
         ])
-      : Promise.resolve([{ data: null }, { data: null }, { data: null }, { data: null }, { data: null }]);
+      : Promise.resolve([
+          { data: null },
+          { data: null },
+          { data: null },
+          { data: null },
+          { data: null },
+        ]);
 
     const [profileRes, historyRes, personalityRes, adminRoleRes, factsRes] = await contextPromise;
 

@@ -298,7 +298,7 @@ export function EmailCampaignsTab() {
         <SummaryCard
           label="Active Segments"
           sublabel="סגמנטים זמינים"
-          value="4"
+          value={String(SEGMENT_OPTIONS.length)}
           icon={Layers}
           color="emerald"
           loading={false}
@@ -538,7 +538,7 @@ export function EmailCampaignsTab() {
                 const d = c.details ?? {};
                 const subjectText = d.subject ?? "-";
                 const seg = d.segment ?? "-";
-                const sent = d.sent_count ?? 1;
+                const sent = d.sent_count ?? 0;
                 const failed = d.failed_count ?? 0;
                 const segInfo = SEGMENT_OPTIONS.find((s) => s.value === seg);
 

@@ -428,260 +428,260 @@ export function PromptNodeCard({
       {/* Body + Footer — hidden in edit mode */}
       {!editMode && (
         <>
-      <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto" dir="rtl">
-        {/* Editable title */}
-        {editingTitle ? (
-          <div className="flex items-center gap-1.5">
-            <input
-              ref={titleRef}
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveTitle();
-                if (e.key === "Escape") setEditingTitle(false);
-              }}
-              className="flex-1 min-w-0 text-sm font-semibold text-white bg-white/10 rounded-md px-2 py-1 outline-none border border-white/20 focus:border-amber-400/60"
-              disabled={savingTitle}
-              dir="auto"
-            />
-            <button
-              onClick={handleSaveTitle}
-              disabled={savingTitle}
-              className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-white/10"
-            >
-              <Check className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setEditingTitle(false)}
-              className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ) : (
-          <h3
-            className="text-base font-semibold text-white cursor-pointer hover:text-amber-300 transition-colors"
-            title="לחץ לעריכת כותרת"
-            onClick={() => setEditingTitle(true)}
-          >
-            {prompt.title}
-          </h3>
-        )}
-
-        {/* Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {prompt.is_template && (
-            <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-cyan-400/40 text-cyan-300 bg-cyan-400/10">
-              <BookTemplate className="w-3 h-3" />
-              תבנית
-            </span>
-          )}
-          {isPinned && (
-            <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-amber-400/40 text-amber-300 bg-amber-400/10">
-              <Pin className="w-3 h-3" />
-              מוצמד
-            </span>
-          )}
-          {prompt.use_count > 0 && (
-            <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-white/10 text-slate-300 bg-white/5">
-              <Star className="w-3 h-3" />
-              {prompt.use_count} שימושים
-            </span>
-          )}
-        </div>
-
-        {/* Prompt text */}
-        <p className="text-xs text-slate-300 leading-relaxed line-clamp-8 whitespace-pre-line bg-white/4 rounded-lg p-2.5">
-          {prompt.prompt}
-        </p>
-
-        {/* Tags */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-1 flex-wrap">
-            <Tag className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-            {(prompt.tags ?? []).slice(0, 15).map((tag) => (
-              <button
-                key={tag}
-                onClick={() => !savingTags && handleRemoveTag(tag)}
-                disabled={savingTags}
-                className="group flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/8 text-slate-300 text-[10px] border border-white/8 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition-colors"
-                title="הסר תגית"
+          <div className="px-4 py-3 flex-1 flex flex-col gap-3 overflow-y-auto" dir="rtl">
+            {/* Editable title */}
+            {editingTitle ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  ref={titleRef}
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveTitle();
+                    if (e.key === "Escape") setEditingTitle(false);
+                  }}
+                  className="flex-1 min-w-0 text-sm font-semibold text-white bg-white/10 rounded-md px-2 py-1 outline-none border border-white/20 focus:border-amber-400/60"
+                  disabled={savingTitle}
+                  dir="auto"
+                />
+                <button
+                  onClick={handleSaveTitle}
+                  disabled={savingTitle}
+                  className="p-1 rounded text-green-400 hover:text-green-300 hover:bg-white/10"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setEditingTitle(false)}
+                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <h3
+                className="text-base font-semibold text-white cursor-pointer hover:text-amber-300 transition-colors"
+                title="לחץ לעריכת כותרת"
+                onClick={() => setEditingTitle(true)}
               >
-                {tag}
-                <X className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            <input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddTag();
-              }}
-              placeholder="+ תגית חדשה"
-              disabled={savingTags}
-              dir="auto"
-              className="flex-1 text-[11px] bg-white/5 border border-white/10 rounded-md px-2 py-1 text-slate-300 placeholder-slate-600 outline-none focus:border-amber-400/40 transition-colors"
-            />
-            {tagInput.trim() && (
-              <button
-                onClick={handleAddTag}
-                disabled={savingTags}
-                className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
+                {prompt.title}
+              </h3>
             )}
-          </div>
-        </div>
 
-        {/* Variables */}
-        {prompt.template_variables && prompt.template_variables.length > 0 && (
-          <div className="flex items-start gap-1.5 flex-wrap">
-            <span className="text-[10px] text-cyan-400 shrink-0 mt-0.5">משתנים:</span>
-            {prompt.template_variables.map((v) => (
-              <span
-                key={v}
-                className="px-1.5 py-0.5 rounded-md bg-cyan-400/10 text-cyan-300 text-[10px] border border-cyan-400/20"
-              >
-                {"{{"}
-                {v}
-                {"}}"}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Stats */}
-        <div className="flex items-center gap-4 text-[11px] text-slate-500 flex-wrap">
-          {prompt.use_count > 0 && (
-            <div className="flex items-center gap-1">
-              <BarChart2 className="w-3 h-3" />
-              <span>{prompt.use_count} שימושים</span>
-            </div>
-          )}
-          {successPct !== null && (
-            <div
-              className="flex items-center gap-1"
-              style={{
-                color: successPct > 70 ? "#22c55e" : successPct > 40 ? "#f59e0b" : "#ef4444",
-              }}
-            >
-              <span>{successPct}% הצלחה</span>
-            </div>
-          )}
-          {prompt.last_used_at && (
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{new Date(prompt.last_used_at).toLocaleDateString("he-IL")}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Folder — inline picker */}
-        <div ref={folderPickerRef} className="relative">
-          <button
-            onClick={() => setFolderPickerOpen((v) => !v)}
-            className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors group"
-          >
-            <FolderInput className="w-3.5 h-3.5 shrink-0" />
-            <span>
-              תיקייה:{" "}
-              <span className="text-slate-200 group-hover:text-amber-300 transition-colors">
-                {prompt.personal_category || "ללא תיקייה"}
-              </span>
-            </span>
-            <ChevronDown
-              className={`w-3 h-3 transition-transform ${folderPickerOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-          {folderPickerOpen && (
-            <div className="absolute top-full mt-1 right-0 w-52 rounded-xl border border-white/15 bg-slate-900/98 backdrop-blur-md shadow-2xl z-20 overflow-hidden">
-              {personalCategories.length === 0 ? (
-                <div className="px-4 py-3 text-[11px] text-slate-500">אין תיקיות</div>
-              ) : (
-                personalCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      handleMove(cat);
-                      setFolderPickerOpen(false);
-                    }}
-                    disabled={cat === prompt.personal_category}
-                    className="w-full px-4 py-2 text-[11px] text-right text-slate-300 hover:bg-white/8 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-between"
-                  >
-                    {cat}
-                    {cat === prompt.personal_category && (
-                      <Check className="w-3 h-3 text-amber-400" />
-                    )}
-                  </button>
-                ))
+            {/* Badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {prompt.is_template && (
+                <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-cyan-400/40 text-cyan-300 bg-cyan-400/10">
+                  <BookTemplate className="w-3 h-3" />
+                  תבנית
+                </span>
+              )}
+              {isPinned && (
+                <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-amber-400/40 text-amber-300 bg-amber-400/10">
+                  <Pin className="w-3 h-3" />
+                  מוצמד
+                </span>
+              )}
+              {prompt.use_count > 0 && (
+                <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-white/10 text-slate-300 bg-white/5">
+                  <Star className="w-3 h-3" />
+                  {prompt.use_count} שימושים
+                </span>
               )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Footer — primary + secondary actions */}
-      <div
-        className="px-4 pb-4 pt-3 shrink-0 border-t border-white/10 flex flex-col gap-2"
-        dir="rtl"
-      >
-        {/* Primary row */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onUse(prompt)}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-black transition-all shadow-lg hover:scale-[1.01] active:scale-[0.98]"
-            style={{ backgroundColor: color }}
+            {/* Prompt text */}
+            <p className="text-xs text-slate-300 leading-relaxed line-clamp-8 whitespace-pre-line bg-white/4 rounded-lg p-2.5">
+              {prompt.prompt}
+            </p>
+
+            {/* Tags */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1 flex-wrap">
+                <Tag className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                {(prompt.tags ?? []).slice(0, 15).map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => !savingTags && handleRemoveTag(tag)}
+                    disabled={savingTags}
+                    className="group flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/8 text-slate-300 text-[10px] border border-white/8 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-300 transition-colors"
+                    title="הסר תגית"
+                  >
+                    {tag}
+                    <X className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddTag();
+                  }}
+                  placeholder="+ תגית חדשה"
+                  disabled={savingTags}
+                  dir="auto"
+                  className="flex-1 text-[11px] bg-white/5 border border-white/10 rounded-md px-2 py-1 text-slate-300 placeholder-slate-600 outline-none focus:border-amber-400/40 transition-colors"
+                />
+                {tagInput.trim() && (
+                  <button
+                    onClick={handleAddTag}
+                    disabled={savingTags}
+                    className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Variables */}
+            {prompt.template_variables && prompt.template_variables.length > 0 && (
+              <div className="flex items-start gap-1.5 flex-wrap">
+                <span className="text-[10px] text-cyan-400 shrink-0 mt-0.5">משתנים:</span>
+                {prompt.template_variables.map((v) => (
+                  <span
+                    key={v}
+                    className="px-1.5 py-0.5 rounded-md bg-cyan-400/10 text-cyan-300 text-[10px] border border-cyan-400/20"
+                  >
+                    {"{{"}
+                    {v}
+                    {"}}"}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div className="flex items-center gap-4 text-[11px] text-slate-500 flex-wrap">
+              {prompt.use_count > 0 && (
+                <div className="flex items-center gap-1">
+                  <BarChart2 className="w-3 h-3" />
+                  <span>{prompt.use_count} שימושים</span>
+                </div>
+              )}
+              {successPct !== null && (
+                <div
+                  className="flex items-center gap-1"
+                  style={{
+                    color: successPct > 70 ? "#22c55e" : successPct > 40 ? "#f59e0b" : "#ef4444",
+                  }}
+                >
+                  <span>{successPct}% הצלחה</span>
+                </div>
+              )}
+              {prompt.last_used_at && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{new Date(prompt.last_used_at).toLocaleDateString("he-IL")}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Folder — inline picker */}
+            <div ref={folderPickerRef} className="relative">
+              <button
+                onClick={() => setFolderPickerOpen((v) => !v)}
+                className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors group"
+              >
+                <FolderInput className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  תיקייה:{" "}
+                  <span className="text-slate-200 group-hover:text-amber-300 transition-colors">
+                    {prompt.personal_category || "ללא תיקייה"}
+                  </span>
+                </span>
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform ${folderPickerOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {folderPickerOpen && (
+                <div className="absolute top-full mt-1 right-0 w-52 rounded-xl border border-white/15 bg-slate-900/98 backdrop-blur-md shadow-2xl z-20 overflow-hidden">
+                  {personalCategories.length === 0 ? (
+                    <div className="px-4 py-3 text-[11px] text-slate-500">אין תיקיות</div>
+                  ) : (
+                    personalCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          handleMove(cat);
+                          setFolderPickerOpen(false);
+                        }}
+                        disabled={cat === prompt.personal_category}
+                        className="w-full px-4 py-2 text-[11px] text-right text-slate-300 hover:bg-white/8 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-between"
+                      >
+                        {cat}
+                        {cat === prompt.personal_category && (
+                          <Check className="w-3 h-3 text-amber-400" />
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer — primary + secondary actions */}
+          <div
+            className="px-4 pb-4 pt-3 shrink-0 border-t border-white/10 flex flex-col gap-2"
+            dir="rtl"
           >
-            <Zap className="w-4 h-4" />
-            השתמש בפרומפט
-          </button>
-          <button
-            onClick={handleOpenEdit}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-medium text-sm text-white/90 border border-white/15 hover:bg-white/8 hover:border-white/25 transition-all"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-            ערוך
-          </button>
-        </div>
-        {/* Secondary row */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCopy}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-slate-300 hover:text-white border border-white/10 hover:bg-white/6 transition-colors"
-            title="העתק טקסט"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            העתק
-          </button>
-          <button
-            onClick={handleToggleFav}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] border transition-colors ${
-              isFavorite
-                ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
-                : "text-slate-300 hover:text-white border-white/10 hover:bg-white/6"
-            }`}
-            title="הוסף למועדפים"
-          >
-            <Star className={`w-3.5 h-3.5 ${isFavorite ? "fill-current" : ""}`} />
-            {isFavorite ? "מועדף" : "מועדף"}
-          </button>
-          <button
-            onClick={handlePin}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] border transition-colors ${
-              isPinned
-                ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
-                : "text-slate-300 hover:text-white border-white/10 hover:bg-white/6"
-            }`}
-            title="הצמד"
-          >
-            <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current" : ""}`} />
-            {isPinned ? "מוצמד" : "הצמד"}
-          </button>
-        </div>
-      </div>
+            {/* Primary row */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onUse(prompt)}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-black transition-all shadow-lg hover:scale-[1.01] active:scale-[0.98]"
+                style={{ backgroundColor: color }}
+              >
+                <Zap className="w-4 h-4" />
+                השתמש בפרומפט
+              </button>
+              <button
+                onClick={handleOpenEdit}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-medium text-sm text-white/90 border border-white/15 hover:bg-white/8 hover:border-white/25 transition-all"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                ערוך
+              </button>
+            </div>
+            {/* Secondary row */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopy}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-slate-300 hover:text-white border border-white/10 hover:bg-white/6 transition-colors"
+                title="העתק טקסט"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                העתק
+              </button>
+              <button
+                onClick={handleToggleFav}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] border transition-colors ${
+                  isFavorite
+                    ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
+                    : "text-slate-300 hover:text-white border-white/10 hover:bg-white/6"
+                }`}
+                title="הוסף למועדפים"
+              >
+                <Star className={`w-3.5 h-3.5 ${isFavorite ? "fill-current" : ""}`} />
+                {isFavorite ? "מועדף" : "מועדף"}
+              </button>
+              <button
+                onClick={handlePin}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] border transition-colors ${
+                  isPinned
+                    ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
+                    : "text-slate-300 hover:text-white border-white/10 hover:bg-white/6"
+                }`}
+                title="הצמד"
+              >
+                <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current" : ""}`} />
+                {isPinned ? "מוצמד" : "הצמד"}
+              </button>
+            </div>
+          </div>
         </>
       )}
 

@@ -87,11 +87,15 @@ export default function SettingsPage() {
         setIsAdmin(!!roleRow);
 
         const [{ data: profile }, { data: settings }] = await Promise.all([
-          supabase.from("profiles").select("display_name, credits_balance, credits_refreshed_at").eq("id", user.id).single(),
+          supabase
+            .from("profiles")
+            .select("display_name, credits_balance, credits_refreshed_at")
+            .eq("id", user.id)
+            .single(),
           supabase.from("site_settings").select("daily_free_limit").single(),
         ]);
         setDisplayName(
-          profile?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || ""
+          profile?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "",
         );
         setCredits({
           balance: profile?.credits_balance ?? 0,
@@ -103,44 +107,50 @@ export default function SettingsPage() {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        const [{ count: totalCount }, { count: monthCount }, { count: weekCount }, { data: recentActivity }] =
-          await Promise.all([
-            supabase
-              .from("activity_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"]),
-            supabase
-              .from("activity_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-              .gte("created_at", startOfMonth),
-            supabase
-              .from("activity_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-              .gte("created_at", startOfWeek),
-            supabase
-              .from("activity_logs")
-              .select("created_at, details")
-              .eq("user_id", user.id)
-              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-              .order("created_at", { ascending: false })
-              .limit(100),
-          ]);
+        const [
+          { count: totalCount },
+          { count: monthCount },
+          { count: weekCount },
+          { data: recentActivity },
+        ] = await Promise.all([
+          supabase
+            .from("activity_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .in("action", ["Prmpt Enhance", "Prmpt Refine"]),
+          supabase
+            .from("activity_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+            .gte("created_at", startOfMonth),
+          supabase
+            .from("activity_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+            .gte("created_at", startOfWeek),
+          supabase
+            .from("activity_logs")
+            .select("created_at, details")
+            .eq("user_id", user.id)
+            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+            .order("created_at", { ascending: false })
+            .limit(100),
+        ]);
 
         const catCounts: Record<string, number> = {};
         const dayCounts: Record<string, number> = {};
         let streak = 0;
 
-        (recentActivity || []).forEach((log: { created_at: string; details: { mode?: string } | null }) => {
-          const mode = log.details?.mode || "standard";
-          catCounts[mode] = (catCounts[mode] || 0) + 1;
-          const day = log.created_at.slice(0, 10);
-          dayCounts[day] = (dayCounts[day] || 0) + 1;
-        });
+        (recentActivity || []).forEach(
+          (log: { created_at: string; details: { mode?: string } | null }) => {
+            const mode = log.details?.mode || "standard";
+            catCounts[mode] = (catCounts[mode] || 0) + 1;
+            const day = log.created_at.slice(0, 10);
+            dayCounts[day] = (dayCounts[day] || 0) + 1;
+          },
+        );
 
         const today = new Date();
         for (let i = 0; i < 30; i++) {
@@ -335,7 +345,10 @@ export default function SettingsPage() {
     if (!user || !displayName.trim()) return;
     setIsSavingName(true);
     try {
-      const { error } = await supabase.from("profiles").update({ display_name: displayName.trim() }).eq("id", user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: displayName.trim() })
+        .eq("id", user.id);
       if (error) throw error;
       toast.success("השם עודכן בהצלחה");
     } catch {
@@ -373,44 +386,81 @@ export default function SettingsPage() {
             href="/"
             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
           >
-            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <ChevronLeft className="w-5 h-5 group-hover:translate-x-[-4px] transition-transform" />
             <span>חזרה</span>
           </Link>
           <div className="h-6 w-px bg-white/10" />
           <h1 className="text-2xl font-bold">הגדרות חשבון</h1>
         </div>
 
-        <div className="grid md:grid-cols-[240px_1fr] gap-6">
-          <nav className="space-y-1" aria-label="מקטעי הגדרות">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all ${
-                    activeSection === section.id
-                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{section.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
+        {/* Mobile horizontal scroll nav */}
+        <nav
+          className="flex md:hidden gap-1 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
+          aria-label="מקטעי הגדרות"
+        >
+          {sections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                className={`cursor-pointer shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  activeSection === section.id
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{section.label}</span>
+              </button>
+            );
+          })}
           {isAdmin && (
             <Link
               href="/admin"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 mt-2"
+              className="cursor-pointer shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 whitespace-nowrap"
             >
-              <LayoutDashboard className="w-5 h-5" />
-              <span className="font-medium">פאנל ניהול</span>
+              <LayoutDashboard className="w-4 h-4" />
+              <span>ניהול</span>
             </Link>
           )}
+        </nav>
+
+        <div className="grid md:grid-cols-[240px_1fr] gap-6 mt-4 md:mt-0">
+          {/* Desktop sidebar */}
+          <div className="hidden md:flex flex-col gap-1">
+            <nav className="space-y-1" aria-label="מקטעי הגדרות">
+              {sections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => setActiveSection(section.id)}
+                    className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all ${
+                      activeSection === section.id
+                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{section.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-start transition-all text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 mt-1"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                <span className="font-medium">פאנל ניהול</span>
+              </Link>
+            )}
+          </div>
 
           <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
             {activeSection === "profile" && (

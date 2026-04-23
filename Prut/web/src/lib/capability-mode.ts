@@ -1,28 +1,28 @@
 /**
  * Capability Mode System
- * 
+ *
  * Defines the behavioral modes for prompts - each mode triggers
  * specific AI pipelines, input requirements, and output rendering.
  */
 
 export enum CapabilityMode {
   /** Default LLM text generation/chat */
-  STANDARD = 'STANDARD',
+  STANDARD = "STANDARD",
   /** Web connectivity, citations, reasoning steps */
-  DEEP_RESEARCH = 'DEEP_RESEARCH',
+  DEEP_RESEARCH = "DEEP_RESEARCH",
   /** DALL-E/Midjourney targeting with specific parameters */
-  IMAGE_GENERATION = 'IMAGE_GENERATION',
+  IMAGE_GENERATION = "IMAGE_GENERATION",
   /** Meta-prompting for custom GPTs or AI Agents */
-  AGENT_BUILDER = 'AGENT_BUILDER',
+  AGENT_BUILDER = "AGENT_BUILDER",
   /** AI video prompt generation */
-  VIDEO_GENERATION = 'VIDEO_GENERATION',
+  VIDEO_GENERATION = "VIDEO_GENERATION",
 }
 
 /** Icon names from lucide-react */
-export type IconName = 'MessageSquare' | 'Globe' | 'Palette' | 'Bot' | 'Video';
+export type IconName = "MessageSquare" | "Globe" | "Palette" | "Bot" | "Video";
 
 /** Tailwind color names for theming */
-type ColorName = 'sky' | 'emerald' | 'purple' | 'amber' | 'rose';
+type ColorName = "sky" | "emerald" | "purple" | "amber" | "rose";
 
 interface CapabilityConfig {
   mode: CapabilityMode;
@@ -41,52 +41,52 @@ interface CapabilityConfig {
 export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
   [CapabilityMode.STANDARD]: {
     mode: CapabilityMode.STANDARD,
-    label: 'Standard',
-    labelHe: 'סטנדרטי',
-    icon: 'MessageSquare',
-    color: 'sky',
-    description: 'Standard LLM text generation and chat',
-    descriptionHe: 'יצירת טקסט וצ׳אט רגיל',
+    label: "Standard",
+    labelHe: "סטנדרטי",
+    icon: "MessageSquare",
+    color: "sky",
+    description: "Standard LLM text generation and chat",
+    descriptionHe: "יצירת טקסט וצ׳אט רגיל",
   },
   [CapabilityMode.DEEP_RESEARCH]: {
     mode: CapabilityMode.DEEP_RESEARCH,
-    label: 'Deep Research',
-    labelHe: 'מחקר מעמיק',
-    icon: 'Globe',
-    color: 'emerald',
-    description: 'Web search with citations and reasoning',
-    descriptionHe: 'חיפוש ברשת עם מקורות ושרשרת חשיבה',
+    label: "Deep Research",
+    labelHe: "מחקר מעמיק",
+    icon: "Globe",
+    color: "emerald",
+    description: "Web search with citations and reasoning",
+    descriptionHe: "חיפוש ברשת עם מקורות ושרשרת חשיבה",
   },
   [CapabilityMode.IMAGE_GENERATION]: {
     mode: CapabilityMode.IMAGE_GENERATION,
-    label: 'Image Generation',
-    labelHe: 'יצירת תמונה',
-    icon: 'Palette',
-    color: 'purple',
-    description: 'Generate images with DALL-E or Midjourney',
-    descriptionHe: 'יצירת תמונות עם DALL-E או Midjourney',
-    optionalFields: ['aspect_ratio', 'style'],
+    label: "Image Generation",
+    labelHe: "יצירת תמונה",
+    icon: "Palette",
+    color: "purple",
+    description: "Generate images with DALL-E or Midjourney",
+    descriptionHe: "יצירת תמונות עם DALL-E או Midjourney",
+    optionalFields: ["aspect_ratio", "style"],
   },
   [CapabilityMode.AGENT_BUILDER]: {
     mode: CapabilityMode.AGENT_BUILDER,
-    label: 'Agent Builder',
-    labelHe: 'בונה סוכנים',
-    icon: 'Bot',
-    color: 'amber',
-    description: 'Configure custom GPTs and AI agents',
-    descriptionHe: 'הגדרת GPT מותאמים וסוכני AI',
-    requiredFields: ['system_instructions'],
+    label: "Agent Builder",
+    labelHe: "בונה סוכנים",
+    icon: "Bot",
+    color: "amber",
+    description: "Configure custom GPTs and AI agents",
+    descriptionHe: "הגדרת GPT מותאמים וסוכני AI",
+    requiredFields: ["system_instructions"],
   },
   [CapabilityMode.VIDEO_GENERATION]: {
     mode: CapabilityMode.VIDEO_GENERATION,
-    label: 'Video Generation',
-    labelHe: 'יצירת סרטון',
-    icon: 'Video',
-    color: 'rose',
-    description: 'Generate prompts for AI video platforms',
-    descriptionHe: 'יצירת פרומפטים לסרטוני AI',
-    requiredFields: ['camera_movement', 'duration'],
-    optionalFields: ['style', 'mood'],
+    label: "Video Generation",
+    labelHe: "יצירת סרטון",
+    icon: "Video",
+    color: "rose",
+    description: "Generate prompts for AI video platforms",
+    descriptionHe: "יצירת פרומפטים לסרטוני AI",
+    requiredFields: ["camera_movement", "duration"],
+    optionalFields: ["style", "mood"],
   },
 };
 
@@ -121,6 +121,20 @@ const CAPABILITIES_WITH_TARGET_MODEL = new Set<CapabilityMode>([
 /** Whether this capability shows the target-model control and passes hints through to engines. */
 export function capabilitySupportsTargetModel(mode: CapabilityMode): boolean {
   return CAPABILITIES_WITH_TARGET_MODEL.has(mode);
+}
+
+/** Get Hebrew label for a mode string (enum value or DB alias). Returns the original string if unknown. */
+export function getCapabilityLabelHe(value: string | null | undefined): string {
+  if (!value) return "לא צוין";
+  const mode = parseCapabilityMode(value);
+  return CAPABILITY_CONFIGS[mode]?.labelHe ?? value;
+}
+
+/** Get English label for a mode string (enum value or DB alias). Returns the original string if unknown. */
+export function getCapabilityLabel(value: string | null | undefined): string {
+  if (!value) return "Unknown";
+  const mode = parseCapabilityMode(value);
+  return CAPABILITY_CONFIGS[mode]?.label ?? value;
 }
 
 /** Parse capability mode from user/API/DB strings with fallback to STANDARD. Accepts enum values and snake_case DB aliases. */

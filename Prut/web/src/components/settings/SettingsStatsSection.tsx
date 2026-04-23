@@ -16,12 +16,15 @@ interface SettingsStatsSectionProps {
 
 export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) {
   return (
-    <section className="space-y-6 animate-in fade-in duration-300" aria-labelledby="settings-stats-heading">
+    <section
+      className="space-y-6 animate-in fade-in duration-300"
+      aria-labelledby="settings-stats-heading"
+    >
       <header className="space-y-1">
         <h2 id="settings-stats-heading" className="text-xl font-bold">
           סטטיסטיקות שימוש
         </h2>
-        <p className="text-sm text-slate-500">מעקב אחר הפעילות שלך</p>
+        <p className="text-sm text-slate-400">מעקב אחר הפעילות שלך</p>
       </header>
 
       {usageStats ? (
@@ -51,11 +54,17 @@ export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) 
 
           <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
             <h3 className="font-semibold text-white text-sm">פעילות ב-7 ימים אחרונים</h3>
-            <div className="flex items-end gap-2 h-24">
+            <div
+              className="flex items-end gap-2 h-24"
+              role="img"
+              aria-label={`תרשים פעילות 7 ימים אחרונים: ${usageStats.recentDays.map((d) => `${new Date(d.date).toLocaleDateString("he-IL", { weekday: "short" })}: ${d.count}`).join(", ")}`}
+            >
               {usageStats.recentDays.map((day) => {
                 const maxCount = Math.max(...usageStats.recentDays.map((d) => d.count), 1);
                 const height = day.count > 0 ? Math.max(12, (day.count / maxCount) * 100) : 4;
-                const dayName = new Date(day.date).toLocaleDateString("he-IL", { weekday: "short" });
+                const dayName = new Date(day.date).toLocaleDateString("he-IL", {
+                  weekday: "short",
+                });
                 return (
                   <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
                     <span className="text-[10px] text-slate-500">{day.count || ""}</span>
@@ -80,13 +89,25 @@ export function SettingsStatsSection({ usageStats }: SettingsStatsSectionProps) 
                   return (
                     <div key={cat.category} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-300">{MODE_LABELS[cat.category] || cat.category}</span>
+                        <span className="text-slate-300">
+                          {MODE_LABELS[cat.category] || cat.category}
+                        </span>
                         <span className="text-slate-500 text-xs">
                           {cat.count} ({pct}%)
                         </span>
                       </div>
-                      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500/60 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      <div
+                        className="w-full h-2 bg-white/10 rounded-full overflow-hidden"
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${MODE_LABELS[cat.category] || cat.category}: ${pct}%`}
+                      >
+                        <div
+                          className="h-full bg-amber-500/60 rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                     </div>
                   );

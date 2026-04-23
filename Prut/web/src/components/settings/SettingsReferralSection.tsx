@@ -33,12 +33,15 @@ export function SettingsReferralSection({
   setIsRedeeming,
 }: SettingsReferralSectionProps) {
   return (
-    <section className="space-y-6 animate-in fade-in duration-300" aria-labelledby="settings-referral-heading">
+    <section
+      className="space-y-6 animate-in fade-in duration-300"
+      aria-labelledby="settings-referral-heading"
+    >
       <header className="space-y-1">
         <h2 id="settings-referral-heading" className="text-xl font-bold">
           הזמן חברים
         </h2>
-        <p className="text-sm text-slate-500">שתף את הקוד שלך וקבלו שניכם 5 קרדיטים בונוס</p>
+        <p className="text-sm text-slate-400">שתף את הקוד שלך וקבלו שניכם 5 קרדיטים בונוס</p>
       </header>
 
       <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
@@ -86,7 +89,7 @@ export function SettingsReferralSection({
                 setTimeout(() => onReferralCopied(false), 2000);
                 toast.success("הועתק ללוח");
               }}
-              className="shrink-0 p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg transition-colors"
+              className="cursor-pointer shrink-0 p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg transition-colors"
             >
               {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
             </button>
@@ -110,11 +113,11 @@ export function SettingsReferralSection({
               type="button"
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://www.peroot.space`
+                  `הצטרף ל-Peroot! השתמש בקוד ${referral.code} וקבל 5 קרדיטים בונוס: https://www.peroot.space`,
                 );
                 toast.success("הועתק ללוח");
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"
+              className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/10"
             >
               <Copy className="w-3.5 h-3.5" />
               העתק הודעה
@@ -140,7 +143,7 @@ export function SettingsReferralSection({
             onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
             placeholder="הזן קוד הפניה"
             dir="ltr"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50 transition-colors"
           />
           <button
             type="button"
@@ -167,7 +170,7 @@ export function SettingsReferralSection({
               }
             }}
             disabled={isRedeeming || !redeemCode.trim()}
-            className="shrink-0 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 border border-amber-500/30"
+            className="cursor-pointer shrink-0 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/30"
           >
             {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "מימוש"}
           </button>

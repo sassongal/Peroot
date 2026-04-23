@@ -94,7 +94,7 @@ export const GET = withAdmin(async (req, supabase) => {
         const { data: enhanceUsers } = await supabase
           .from('activity_logs')
           .select('user_id')
-          .eq('action', 'Prmpt Enhance')
+          .in('action', ['Prmpt Enhance', 'Prmpt Refine'])
           .in('user_id', cohortUserIds);
         enhanceCount = new Set(
           (enhanceUsers ?? []).map((r: { user_id: string }) => r.user_id)
@@ -104,7 +104,7 @@ export const GET = withAdmin(async (req, supabase) => {
       const { data: enhanceUsers } = await supabase
         .from('activity_logs')
         .select('user_id')
-        .eq('action', 'Prmpt Enhance');
+        .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
       enhanceCount = new Set(
         (enhanceUsers ?? []).map((r: { user_id: string }) => r.user_id)
       ).size;

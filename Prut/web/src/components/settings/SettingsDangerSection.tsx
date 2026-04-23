@@ -28,7 +28,7 @@ export function SettingsDangerSection({
         <h2 id="settings-danger-heading" className="text-xl font-bold text-red-400">
           אזור מסוכן
         </h2>
-        <p className="text-sm text-slate-500">פעולות שלא ניתן לבטל</p>
+        <p className="text-sm text-slate-400">פעולות שלא ניתן לבטל</p>
       </header>
 
       <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20 space-y-4">
@@ -37,7 +37,8 @@ export function SettingsDangerSection({
           <div className="flex-1">
             <h3 className="font-semibold text-red-400">מחיקת חשבון</h3>
             <p className="text-sm text-slate-400">
-              מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך כולל היסטוריה, ספריה אישית ומועדפים. פעולה זו לא ניתנת לביטול.
+              מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך כולל היסטוריה, ספריה אישית ומועדפים. פעולה
+              זו לא ניתנת לביטול.
             </p>
           </div>
         </div>
@@ -46,7 +47,7 @@ export function SettingsDangerSection({
           <button
             type="button"
             onClick={() => onShowDeleteConfirm(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 font-medium rounded-xl transition-colors"
+            className="cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 font-medium rounded-xl transition-colors"
           >
             <Trash2 className="w-4 h-4" />
             <span>מחק את החשבון שלי</span>
@@ -61,7 +62,7 @@ export function SettingsDangerSection({
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder="הקלד כאן..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-red-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/50 transition-colors"
               dir="rtl"
             />
             <div className="flex gap-2">
@@ -71,7 +72,7 @@ export function SettingsDangerSection({
                   onShowDeleteConfirm(false);
                   setDeleteConfirmText("");
                 }}
-                className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-medium rounded-xl transition-colors"
+                className="cursor-pointer flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-medium rounded-xl transition-colors"
               >
                 ביטול
               </button>
@@ -79,9 +80,13 @@ export function SettingsDangerSection({
                 type="button"
                 onClick={onDeleteAccount}
                 disabled={isDeleting || deleteConfirmText !== "מחק את החשבון"}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
                 <span>מחק לצמיתות</span>
               </button>
             </div>

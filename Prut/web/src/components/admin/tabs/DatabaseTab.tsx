@@ -16,12 +16,7 @@ interface BackupData {
 interface DbStats {
   tableCount: number;
   health: "Healthy" | "Error" | "Checking...";
-  rowCounts: {
-    profiles: number;
-    personal_library: number;
-    activity_logs: number;
-    api_usage_logs: number;
-  };
+  rowCounts: Record<string, number>;
   statsLoading: boolean;
 }
 
@@ -98,6 +93,13 @@ export function DatabaseTab() {
       personal_library: 0,
       activity_logs: 0,
       api_usage_logs: 0,
+      subscriptions: 0,
+      credit_ledger: 0,
+      newsletter_subscribers: 0,
+      prompt_favorites: 0,
+      prompt_usage_events: 0,
+      prompt_feedback: 0,
+      webhook_events: 0,
     },
     statsLoading: true,
   });
@@ -116,12 +118,7 @@ export function DatabaseTab() {
       setDbStats({
         tableCount: data.tableCount ?? 0,
         health: data.health ?? "Error",
-        rowCounts: {
-          profiles: data.rowCounts?.profiles ?? 0,
-          personal_library: data.rowCounts?.personal_library ?? 0,
-          activity_logs: data.rowCounts?.activity_logs ?? 0,
-          api_usage_logs: data.rowCounts?.api_usage_logs ?? 0,
-        },
+        rowCounts: data.rowCounts ?? {},
         statsLoading: false,
       });
     } catch (err) {
@@ -160,13 +157,24 @@ export function DatabaseTab() {
     }
   }
 
-  const totalRows =
-    dbStats.rowCounts.profiles +
-    dbStats.rowCounts.personal_library +
-    dbStats.rowCounts.activity_logs +
-    dbStats.rowCounts.api_usage_logs;
+  const totalRows = Object.values(dbStats.rowCounts).reduce((s, n) => s + n, 0);
+  // Use largest single table as the bar scale max (not total) so bars are meaningful
+  const maxSingleTable = Math.max(...Object.values(dbStats.rowCounts), 1);
 
-  const maxRows = Math.max(totalRows, 1);
+  const TABLE_COLORS = ["blue","purple","emerald","amber","blue","purple","emerald","amber","blue","purple","emerald"] as const;
+  const TABLE_LABELS: Record<string, string> = {
+    profiles: "Profiles",
+    personal_library: "Personal Library",
+    activity_logs: "Activity Logs",
+    api_usage_logs: "API Usage Logs",
+    subscriptions: "Subscriptions",
+    credit_ledger: "Credit Ledger",
+    newsletter_subscribers: "Newsletter",
+    prompt_favorites: "Favorites",
+    prompt_usage_events: "Usage Events",
+    prompt_feedback: "Feedback",
+    webhook_events: "Webhook Events",
+  };
 
   return (
     <div
@@ -309,7 +317,7 @@ export function DatabaseTab() {
                 value={
                   dbStats.statsLoading
                     ? "..."
-                    : `${dbStats.rowCounts.profiles.toLocaleString()} rows`
+                    : `${(dbStats.rowCounts.profiles ?? 0).toLocaleString()} rows`
                 }
               />
               <Metric
@@ -317,7 +325,7 @@ export function DatabaseTab() {
                 value={
                   dbStats.statsLoading
                     ? "..."
-                    : `${dbStats.rowCounts.personal_library.toLocaleString()} rows`
+                    : `${(dbStats.rowCounts.personal_library ?? 0).toLocaleString()} rows`
                 }
               />
             </div>
@@ -351,68 +359,17 @@ export function DatabaseTab() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <ResourceBar
-              label="Profiles"
-              pct={
-                dbStats.statsLoading
-                  ? 0
-                  : Math.round((dbStats.rowCounts.profiles / maxRows) * 100)
-              }
-              color="blue"
-              value={
-                dbStats.statsLoading
-                  ? "..."
-                  : `${dbStats.rowCounts.profiles.toLocaleString()} ROWS`
-              }
-            />
-            <ResourceBar
-              label="Personal Library"
-              pct={
-                dbStats.statsLoading
-                  ? 0
-                  : Math.round(
-                      (dbStats.rowCounts.personal_library / maxRows) * 100
-                    )
-              }
-              color="purple"
-              value={
-                dbStats.statsLoading
-                  ? "..."
-                  : `${dbStats.rowCounts.personal_library.toLocaleString()} ROWS`
-              }
-            />
-            <ResourceBar
-              label="Activity Logs"
-              pct={
-                dbStats.statsLoading
-                  ? 0
-                  : Math.round(
-                      (dbStats.rowCounts.activity_logs / maxRows) * 100
-                    )
-              }
-              color="emerald"
-              value={
-                dbStats.statsLoading
-                  ? "..."
-                  : `${dbStats.rowCounts.activity_logs.toLocaleString()} ROWS`
-              }
-            />
-            <ResourceBar
-              label="API Usage Logs"
-              pct={
-                dbStats.statsLoading
-                  ? 0
-                  : Math.round(
-                      (dbStats.rowCounts.api_usage_logs / maxRows) * 100
-                    )
-              }
-              color="amber"
-              value={
-                dbStats.statsLoading
-                  ? "..."
-                  : `${dbStats.rowCounts.api_usage_logs.toLocaleString()} ROWS`
-              }
-            />
+            {Object.entries(dbStats.rowCounts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([table, count], idx) => (
+                <ResourceBar
+                  key={table}
+                  label={TABLE_LABELS[table] ?? table}
+                  pct={dbStats.statsLoading ? 0 : Math.round((count / maxSingleTable) * 100)}
+                  color={TABLE_COLORS[idx % TABLE_COLORS.length]}
+                  value={dbStats.statsLoading ? "..." : `${count.toLocaleString()} ROWS`}
+                />
+              ))}
           </div>
         </div>
       </div>

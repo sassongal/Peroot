@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
-import { logger } from '@/lib/logger';
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/experiments
@@ -10,27 +10,30 @@ import { logger } from '@/lib/logger';
  *  - Compares pro vs free user engagement segments
  *  - Returns feature adoption rates based on last 30 days of activity
  */
-export const GET = withAdmin(async (_req, supabase) => {
+export const GET = withAdmin(async (req, supabase) => {
   try {
+    const url = new URL(req.url);
+    const rangeParam = parseInt(url.searchParams.get("range") ?? "30", 10);
+    const periodDays = [7, 30, 90].includes(rangeParam) ? rangeParam : 30;
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000).toISOString();
 
     // ── 1. Total user count ──────────────────────────────────────────────────
     const { count: totalUsers } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
 
     const totalUserCount = totalUsers ?? 1;
 
     // ── 2. Fetch all activity logs in last 30 days ───────────────────────────
     const { data: activityLogs, error: logsError } = await supabase
-      .from('activity_logs')
-      .select('user_id, action, entity_type, details, created_at')
-      .gte('created_at', thirtyDaysAgo);
+      .from("activity_logs")
+      .select("user_id, action, entity_type, details, created_at")
+      .gte("created_at", thirtyDaysAgo);
 
     if (logsError) {
-      logger.error('[Admin Experiments] activity_logs query error:', logsError);
-      return NextResponse.json({ error: 'Failed to fetch activity logs' }, { status: 500 });
+      logger.error("[Admin Experiments] activity_logs query error:", logsError);
+      return NextResponse.json({ error: "Failed to fetch activity logs" }, { status: 500 });
     }
 
     const logs = activityLogs ?? [];
@@ -39,7 +42,7 @@ export const GET = withAdmin(async (_req, supabase) => {
     const actionUserMap = new Map<string, Set<string>>();
 
     for (const log of logs) {
-      const action = (log.action as string) ?? 'unknown';
+      const action = (log.action as string) ?? "unknown";
       if (!actionUserMap.has(action)) {
         actionUserMap.set(action, new Set());
       }
@@ -57,18 +60,16 @@ export const GET = withAdmin(async (_req, supabase) => {
       .slice(0, 20); // top 20 features
 
     // ── 4. Experiment / feature-flag specific events ─────────────────────────
-    const experimentKeywords = ['experiment', 'ab_test', 'feature_flag', 'variant'];
+    const experimentKeywords = ["experiment", "ab_test", "feature_flag", "variant"];
     const experimentEvents = logs.filter((log) => {
-      const action = (log.action as string ?? '').toLowerCase();
-      const detailsStr = JSON.stringify(log.details ?? '').toLowerCase();
-      return experimentKeywords.some(
-        (kw) => action.includes(kw) || detailsStr.includes(kw)
-      );
+      const action = ((log.action as string) ?? "").toLowerCase();
+      const detailsStr = JSON.stringify(log.details ?? "").toLowerCase();
+      return experimentKeywords.some((kw) => action.includes(kw) || detailsStr.includes(kw));
     });
 
     const experimentActionMap = new Map<string, Set<string>>();
     for (const ev of experimentEvents) {
-      const action = (ev.action as string) ?? 'unknown';
+      const action = (ev.action as string) ?? "unknown";
       if (!experimentActionMap.has(action)) {
         experimentActionMap.set(action, new Set());
       }
@@ -80,25 +81,21 @@ export const GET = withAdmin(async (_req, supabase) => {
         action,
         distinctUsers: userSet.size,
         adoptionRate: parseFloat(((userSet.size / totalUserCount) * 100).toFixed(1)),
-      })
+      }),
     );
 
     // ── 5. Pro vs Free segment comparison ───────────────────────────────────
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, plan_tier');
+    const { data: profiles } = await supabase.from("profiles").select("id, plan_tier");
 
     const proUserIds = new Set(
       (profiles ?? [])
-        .filter((p: { plan_tier: string | null }) => p.plan_tier && p.plan_tier !== 'free')
-        .map((p: { id: string }) => p.id)
+        .filter((p: { plan_tier: string | null }) => p.plan_tier && p.plan_tier !== "free")
+        .map((p: { id: string }) => p.id),
     );
     const freeUserIds = new Set(
       (profiles ?? [])
-        .filter(
-          (p: { plan_tier: string | null }) => !p.plan_tier || p.plan_tier === 'free'
-        )
-        .map((p: { id: string }) => p.id)
+        .filter((p: { plan_tier: string | null }) => !p.plan_tier || p.plan_tier === "free")
+        .map((p: { id: string }) => p.id),
     );
 
     const proCount = proUserIds.size || 1;
@@ -188,10 +185,10 @@ export const GET = withAdmin(async (_req, supabase) => {
       segmentBreakdown,
       posthogConnected,
       generatedAt: now.toISOString(),
-      periodDays: 30,
+      periodDays,
     });
   } catch (err) {
-    logger.error('[Admin Experiments] Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error("[Admin Experiments] Unexpected error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 });
