@@ -89,14 +89,18 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
       .from("history")
       .select("*", { count: "exact", head: true })
       .gte("created_at", firstOfMonth),
-    // DAU: distinct users with activity today — use history count (exact, no cap needed)
-    supabase.from("history").select("user_id").gte("created_at", todayMidnight),
-    // WAU: distinct users in last 7 days
-    supabase.from("history").select("user_id").gte("created_at", sevenDaysAgo),
-    // MAU: distinct users in last 30 days
-    supabase.from("history").select("user_id").gte("created_at", thirtyDaysAgo),
-    // Engine mode breakdown from history (has capability_mode column, no cap)
-    supabase.from("history").select("capability_mode").gte("created_at", firstOfMonth),
+    // DAU/WAU/MAU: distinct users with activity in window. Supabase default row
+    // cap is 1000 — raise explicitly so distinct-user counts don't silently
+    // truncate as the product grows.
+    supabase.from("history").select("user_id").gte("created_at", todayMidnight).limit(100000),
+    supabase.from("history").select("user_id").gte("created_at", sevenDaysAgo).limit(100000),
+    supabase.from("history").select("user_id").gte("created_at", thirtyDaysAgo).limit(100000),
+    // Engine mode breakdown from history (has capability_mode column)
+    supabase
+      .from("history")
+      .select("capability_mode")
+      .gte("created_at", firstOfMonth)
+      .limit(100000),
     // Error count (failed generations)
     supabase
       .from("api_usage_logs")
@@ -141,7 +145,8 @@ export const GET = withAdmin(async (_req, supabase, _user) => {
   const { data: trendProfiles } = await supabase
     .from("profiles")
     .select("created_at")
-    .gte("created_at", sixMonthsAgo);
+    .gte("created_at", sixMonthsAgo)
+    .limit(100000);
 
   const monthlyTrend: { month: string; newUsers: number }[] = [];
   for (let i = 5; i >= 0; i--) {

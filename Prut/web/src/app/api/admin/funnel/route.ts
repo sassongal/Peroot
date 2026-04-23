@@ -1,6 +1,10 @@
-import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
-import { logger } from '@/lib/logger';
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
+import { logger } from "@/lib/logger";
+import { redis } from "@/lib/redis";
+
+const CACHE_KEY_PREFIX = "admin:funnel:v1:";
+const CACHE_TTL = 300; // 5 minutes
 
 export interface FunnelStage {
   key: string;
@@ -19,11 +23,11 @@ export interface FunnelResponse {
 function getStartDate(range: string): Date | null {
   const now = new Date();
   switch (range) {
-    case '7d':
+    case "7d":
       return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    case '30d':
+    case "30d":
       return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    case '90d':
+    case "90d":
       return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
     default:
       return null; // all time
@@ -33,147 +37,154 @@ function getStartDate(range: string): Date | null {
 export const GET = withAdmin(async (req, supabase) => {
   try {
     const { searchParams } = new URL(req.url);
-    const range = searchParams.get('range') || 'all';
+    const range = searchParams.get("range") || "all";
     const startDate = getStartDate(range);
 
-    // ── Stage 1: Signups ───────────────────────────────────────────────────────
-    let signupQuery = supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true });
-    if (startDate) {
-      signupQuery = signupQuery.gte('created_at', startDate.toISOString());
-    }
-    const { count: signupCount, error: signupError } = await signupQuery;
-
-    if (signupError) {
-      logger.error('[Admin Funnel] Signup query error:', signupError);
+    const cacheKey = `${CACHE_KEY_PREFIX}${range}`;
+    try {
+      const cached = await redis.get<FunnelResponse>(cacheKey);
+      if (cached) return NextResponse.json(cached);
+    } catch (err) {
+      logger.warn("[Admin Funnel] Redis cache read failed:", err);
     }
 
-    // When filtering by time range, we need the set of user IDs who signed up
-    // in that window so the downstream stages stay cohort-consistent.
+    // ── Stage 1: Signups + cohort user IDs (parallel) ──────────────────────────
+    // When filtering by time range, we need the cohort of user IDs so downstream
+    // stages stay cohort-consistent. Signup count is the same cohort size — we
+    // derive it from the cohort list when filtered, or a head:true count otherwise.
+    let signupCount: number;
     let cohortUserIds: string[] | null = null;
+
     if (startDate) {
-      const { data: cohortProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .gte('created_at', startDate.toISOString());
+      // Cap cohort size — both to lift Supabase's silent 1000-row default and
+      // to keep the downstream `.in(user_id, cohort)` URL length bounded
+      // (gateway URI limits start biting ~10k UUIDs).
+      const COHORT_CAP = 50000;
+      const { data: cohortProfiles, error: cohortErr } = await supabase
+        .from("profiles")
+        .select("id")
+        .gte("created_at", startDate.toISOString())
+        .limit(COHORT_CAP);
+      if (cohortErr) logger.error("[Admin Funnel] Cohort query error:", cohortErr);
       cohortUserIds = (cohortProfiles ?? []).map((p: { id: string }) => p.id);
+      signupCount = cohortUserIds.length;
+    } else {
+      const { count, error: signupError } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
+      if (signupError) logger.error("[Admin Funnel] Signup query error:", signupError);
+      signupCount = count ?? 0;
     }
 
-    // ── Stage 2: First Prompt Created ─────────────────────────────────────────
-    let firstPromptCount = 0;
-    if (cohortUserIds !== null) {
-      if (cohortUserIds.length === 0) {
-        firstPromptCount = 0;
-      } else {
-        // Count distinct users from the cohort who have at least 1 library entry
-        const { data: promptUsers } = await supabase
-          .from('personal_library')
-          .select('user_id')
-          .in('user_id', cohortUserIds);
-        firstPromptCount = new Set(
-          (promptUsers ?? []).map((r: { user_id: string }) => r.user_id)
-        ).size;
-      }
-    } else {
-      // All-time: count distinct users who have at least 1 entry
-      const { data: promptUsers } = await supabase
-        .from('personal_library')
-        .select('user_id');
-      firstPromptCount = new Set(
-        (promptUsers ?? []).map((r: { user_id: string }) => r.user_id)
-      ).size;
-    }
+    // ── Stages 2, 3, 4 run in parallel once cohort is known ────────────────────
+    const emptyCohort = cohortUserIds !== null && cohortUserIds.length === 0;
 
-    // ── Stage 3: Used AI Enhance ───────────────────────────────────────────────
-    let enhanceCount = 0;
-    if (cohortUserIds !== null) {
-      if (cohortUserIds.length === 0) {
-        enhanceCount = 0;
-      } else {
-        const { data: enhanceUsers } = await supabase
-          .from('activity_logs')
-          .select('user_id')
-          .in('action', ['Prmpt Enhance', 'Prmpt Refine'])
-          .in('user_id', cohortUserIds);
-        enhanceCount = new Set(
-          (enhanceUsers ?? []).map((r: { user_id: string }) => r.user_id)
-        ).size;
-      }
-    } else {
-      const { data: enhanceUsers } = await supabase
-        .from('activity_logs')
-        .select('user_id')
-        .in('action', ['Prmpt Enhance', 'Prmpt Refine']);
-      enhanceCount = new Set(
-        (enhanceUsers ?? []).map((r: { user_id: string }) => r.user_id)
-      ).size;
-    }
+    // Raise the per-query row cap so the distinct-user sets below don't
+    // silently top out at Supabase's 1000-row default on a growing product.
+    const ROW_CAP = 200000;
 
-    // ── Stage 4: Became Pro ────────────────────────────────────────────────────
-    let proCount = 0;
-    if (cohortUserIds !== null) {
-      if (cohortUserIds.length === 0) {
-        proCount = 0;
-      } else {
-        const { count } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .neq('plan_tier', 'free')
-          .in('id', cohortUserIds);
-        proCount = count ?? 0;
-      }
-    } else {
-      const { count } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .neq('plan_tier', 'free');
-      proCount = count ?? 0;
-    }
+    const firstPromptPromise = emptyCohort
+      ? Promise.resolve({ data: [] as Array<{ user_id: string }> })
+      : cohortUserIds !== null
+        ? supabase
+            .from("personal_library")
+            .select("user_id")
+            .in("user_id", cohortUserIds)
+            .limit(ROW_CAP)
+        : supabase.from("personal_library").select("user_id").limit(ROW_CAP);
+
+    const enhancePromise = emptyCohort
+      ? Promise.resolve({ data: [] as Array<{ user_id: string }> })
+      : cohortUserIds !== null
+        ? supabase
+            .from("activity_logs")
+            .select("user_id")
+            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+            .in("user_id", cohortUserIds)
+            .limit(ROW_CAP)
+        : supabase
+            .from("activity_logs")
+            .select("user_id")
+            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+            .limit(ROW_CAP);
+
+    const proPromise = emptyCohort
+      ? Promise.resolve({ count: 0 })
+      : cohortUserIds !== null
+        ? supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .neq("plan_tier", "free")
+            .in("id", cohortUserIds)
+        : supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .neq("plan_tier", "free");
+
+    const [firstPromptRes, enhanceRes, proRes] = await Promise.all([
+      firstPromptPromise,
+      enhancePromise,
+      proPromise,
+    ]);
+
+    const firstPromptCount = new Set(
+      (firstPromptRes.data ?? []).map((r: { user_id: string }) => r.user_id),
+    ).size;
+    const enhanceCount = new Set((enhanceRes.data ?? []).map((r: { user_id: string }) => r.user_id))
+      .size;
+    const proCount = proRes.count ?? 0;
 
     const stages: FunnelStage[] = [
       {
-        key: 'signup',
-        label: 'Signed Up',
-        labelHe: 'נרשמו',
+        key: "signup",
+        label: "Signed Up",
+        labelHe: "נרשמו",
         count: signupCount ?? 0,
-        color: 'blue',
+        color: "blue",
       },
       {
-        key: 'first_prompt',
-        label: 'First Prompt',
-        labelHe: 'פרומפט ראשון',
+        key: "first_prompt",
+        label: "First Prompt",
+        labelHe: "פרומפט ראשון",
         count: firstPromptCount,
-        color: 'indigo',
+        color: "indigo",
       },
       {
-        key: 'ai_enhance',
-        label: 'Used AI Enhance',
-        labelHe: 'השתמשו ב-AI Enhance',
+        key: "ai_enhance",
+        label: "Used AI Enhance",
+        labelHe: "השתמשו ב-AI Enhance",
         count: enhanceCount,
-        color: 'purple',
+        color: "purple",
       },
       {
-        key: 'became_pro',
-        label: 'Became Pro',
-        labelHe: 'שדרגו לפרו',
+        key: "became_pro",
+        label: "Became Pro",
+        labelHe: "שדרגו לפרו",
         count: proCount,
-        color: 'emerald',
+        color: "emerald",
       },
     ];
 
-    logger.info('[Admin Funnel] Query complete', {
+    logger.info("[Admin Funnel] Query complete", {
       range,
       stages: stages.map((s) => ({ key: s.key, count: s.count })),
     });
 
-    return NextResponse.json({
+    const payload: FunnelResponse = {
       stages,
       timeRange: range,
       generatedAt: new Date().toISOString(),
-    } satisfies FunnelResponse);
+    };
+
+    try {
+      await redis.set(cacheKey, payload, { ex: CACHE_TTL });
+    } catch (err) {
+      logger.warn("[Admin Funnel] Redis cache write failed:", err);
+    }
+
+    return NextResponse.json(payload);
   } catch (err) {
-    logger.error('[Admin Funnel] Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error("[Admin Funnel] Unexpected error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 });

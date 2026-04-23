@@ -103,8 +103,10 @@ export async function GET() {
       // Total users for conversion rate
       supabase.from("profiles").select("*", { count: "exact", head: true }),
 
-      // Plan tier breakdown from profiles (include id, email for pro user matching)
-      supabase.from("profiles").select("id, plan_tier, email, full_name, created_at"),
+      // Plan tier breakdown from profiles (include id, email for pro user matching).
+      // Explicit limit lifts Supabase's 1000-row default so plan counts stay
+      // accurate as the user base grows.
+      supabase.from("profiles").select("id, plan_tier, email, full_name, created_at").limit(100000),
 
       // Recent subscription events from activity_logs
       supabase
@@ -231,7 +233,8 @@ export async function GET() {
     const { data: costLogs30d } = await supabase
       .from("api_usage_logs")
       .select("user_id, estimated_cost_usd")
-      .gte("created_at", minus30d);
+      .gte("created_at", minus30d)
+      .limit(200000);
 
     let proCost = 0;
     let freeCost = 0;

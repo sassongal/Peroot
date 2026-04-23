@@ -24,6 +24,7 @@ import {
   Plug,
   Factory,
   Sparkles,
+  SearchCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -48,6 +49,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
     { name: t.admin.layout.users, href: "/admin/users", icon: Users },
     { name: "אנליטיקס", href: "/admin/analytics", icon: TrendingUp },
+    { name: "SEO Console", href: "/admin/seo-console", icon: SearchCheck },
     { name: "פיננסים", href: "/admin/finance", icon: DollarSign },
     // ── Content ──
     { name: "תוכן", href: "/admin/content", icon: Factory },
@@ -63,14 +65,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const checkAdminStatus = useCallback(async () => {
     try {
-      const response = await fetch(getApiPath('/api/admin/is-admin'), {
-        credentials: 'same-origin',
-        cache: 'no-store',
+      const response = await fetch(getApiPath("/api/admin/is-admin"), {
+        credentials: "same-origin",
+        cache: "no-store",
       });
 
       if (response.status === 401) {
         // Not logged in — send to login, not home
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
@@ -82,7 +84,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       if (!response.ok) {
         // Server error — don't redirect, retry once
-        logger.error('Admin status check failed:', response.status);
+        logger.error("Admin status check failed:", response.status);
         setIsAdmin(false);
         return;
       }
@@ -94,7 +96,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         setIsAdmin(false);
       }
     } catch (error) {
-      logger.error('Failed to verify admin status:', error);
+      logger.error("Failed to verify admin status:", error);
       setIsAdmin(false);
     }
   }, [router]);
@@ -107,7 +109,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
         <Layers className="w-12 h-12 text-blue-500 animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700">{t.admin.dashboard.loading}</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700">
+          {t.admin.dashboard.loading}
+        </span>
       </div>
     );
   }
@@ -120,12 +124,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <AlertCircle className="w-12 h-12 text-red-500" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">Access Denied</h1>
-          <p className="text-slate-500 font-medium">המזהה שלך אינו מורשה לגשת לאזור הניהול של Peroot.</p>
+          <p className="text-slate-500 font-medium">
+            המזהה שלך אינו מורשה לגשת לאזור הניהול של Peroot.
+          </p>
           <div className="flex flex-col gap-3">
-            <Link href="/login" className="inline-block px-8 py-3 bg-white text-black rounded-xl font-bold transition-all hover:bg-slate-200">
+            <Link
+              href="/login"
+              className="inline-block px-8 py-3 bg-white text-black rounded-xl font-bold transition-all hover:bg-slate-200"
+            >
               התחבר עם חשבון אחר
             </Link>
-            <Link href="/" className="inline-block px-8 py-3 bg-zinc-800 text-white rounded-xl font-bold transition-all hover:bg-zinc-700">
+            <Link
+              href="/"
+              className="inline-block px-8 py-3 bg-zinc-800 text-white rounded-xl font-bold transition-all hover:bg-zinc-700"
+            >
               {t.common.back || "חזרה לדף הבית"}
             </Link>
           </div>
@@ -136,7 +148,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-blue-500">
-
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
@@ -147,12 +158,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Sidebar Nexus */}
-      <div className={cn(
-        "fixed inset-y-0 end-0 z-50 w-80 bg-zinc-950 border-s border-white/5 flex flex-col transition-transform duration-300",
-        "lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-      )}>
-
+      <div
+        className={cn(
+          "fixed inset-y-0 end-0 z-50 w-80 bg-zinc-950 border-s border-white/5 flex flex-col transition-transform duration-300",
+          "lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0",
+        )}
+      >
         {/* Header Section */}
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-4 group cursor-default">
@@ -163,7 +175,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <h1 className="text-xl font-black tracking-tighter text-white">Peroot — ניהול</h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">v2.1 Stable</span>
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                  v2.1 Stable
+                </span>
               </div>
             </div>
             {/* Close button - mobile only */}
@@ -179,10 +193,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Navigation Core */}
         <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
-          <div className="px-4 mb-4 text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Core Subsystems</div>
+          <div className="px-4 mb-4 text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">
+            Core Subsystems
+          </div>
           {navigation.map((item) => {
-            const isActive = pathname === item.href ||
-              (item.href !== "/admin" && pathname?.startsWith(item.href));
+            const isActive =
+              pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href));
 
             return (
               <Link
@@ -193,16 +209,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   "group flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 relative overflow-hidden",
                   isActive
                     ? "bg-blue-600 text-white shadow-3xl shadow-blue-600/20"
-                    : "text-zinc-500 hover:text-zinc-200 hover:bg-white/3"
+                    : "text-zinc-500 hover:text-zinc-200 hover:bg-white/3",
                 )}
               >
                 <div className="flex items-center gap-4 relative z-10">
-                  <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "group-hover:text-blue-400")} />
+                  <item.icon
+                    className={cn(
+                      "w-5 h-5 transition-colors",
+                      isActive ? "text-white" : "group-hover:text-blue-400",
+                    )}
+                  />
                   <span className="text-sm font-bold tracking-tight">{item.name}</span>
                 </div>
-                {isActive && (
-                  <div className="absolute end-0 top-0 bottom-0 w-1 bg-white/20" />
-                )}
+                {isActive && <div className="absolute end-0 top-0 bottom-0 w-1 bg-white/20" />}
                 {!isActive && (
                   <ChevronLeft className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-all -translate-x-2 group-hover:translate-x-0" />
                 )}
@@ -223,7 +242,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </Link>
             <button
               className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all text-sm font-bold border border-rose-500/0 hover:border-rose-500/20"
-              onClick={() => fetch(getApiPath('/api/auth/signout'), { method: 'POST' }).then(() => window.location.href = "/")}
+              onClick={() =>
+                fetch(getApiPath("/api/auth/signout"), { method: "POST" }).then(
+                  () => (window.location.href = "/"),
+                )
+              }
             >
               <LogOut className="w-4 h-4" />
               {t.admin.layout.logout}
@@ -249,9 +272,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <main className="max-w-6xl mx-auto p-6 lg:p-12 min-h-screen">
           {/* View Transition Effect */}
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-700">
-            <ErrorBoundary name="AdminContent">
-              {children}
-            </ErrorBoundary>
+            <ErrorBoundary name="AdminContent">{children}</ErrorBoundary>
           </div>
         </main>
       </div>
