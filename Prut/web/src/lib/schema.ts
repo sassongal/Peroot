@@ -21,10 +21,7 @@ export function organizationSchema() {
       "@type": "Person",
       name: "Gal Sasson",
       jobTitle: "Founder & Developer",
-      sameAs: [
-        "https://github.com/sassongal",
-        "https://www.linkedin.com/in/sassongal/",
-      ],
+      sameAs: ["https://github.com/sassongal", "https://www.linkedin.com/in/sassongal/"],
     },
     parentOrganization: {
       "@type": "Organization",
@@ -63,10 +60,7 @@ export function articleSchema(post: {
       "@type": "Person",
       name: post.author || "Gal Sasson",
       url: SITE_URL,
-      sameAs: [
-        "https://www.linkedin.com/in/sassongal/",
-        "https://github.com/sassongal",
-      ],
+      sameAs: ["https://www.linkedin.com/in/sassongal/", "https://github.com/sassongal"],
     },
     publisher: {
       "@type": "Organization",
@@ -108,8 +102,7 @@ export function softwareAppSchema() {
     name: "Peroot",
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web",
-    description:
-      "מחולל פרומפטים מקצועי בעברית - שדרג כל פרומפט באמצעות AI מתקדם",
+    description: "מחולל פרומפטים מקצועי בעברית - שדרג כל פרומפט באמצעות AI מתקדם",
     url: SITE_URL,
     inLanguage: "he",
     author: {
@@ -136,7 +129,8 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Free",
-        description: "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
+        description:
+          "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
         image: `${SITE_URL}/assets/branding/logo.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
@@ -150,7 +144,8 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Pro",
-        description: "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה",
+        description:
+          "150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור איטרטיבי, ספריה אישית ומועדפים ללא הגבלה, תוסף Chrome עם סנכרון מלא, יום ניסיון במתנה",
         image: `${SITE_URL}/assets/branding/logo.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
@@ -177,9 +172,7 @@ export function pricingSchema() {
   };
 }
 
-export function faqSchema(
-  items: { question: string; answer: string }[]
-) {
+export function faqSchema(items: { question: string; answer: string }[]) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -221,6 +214,9 @@ export function promptCreativeWorkSchema(prompt: {
   description: string;
   category: string;
   url: string;
+  datePublished?: string | null;
+  dateModified?: string | null;
+  keywords?: string;
 }) {
   return {
     "@context": "https://schema.org",
@@ -231,7 +227,13 @@ export function promptCreativeWorkSchema(prompt: {
     genre: prompt.category,
     url: prompt.url,
     creator: { "@type": "Organization", name: "Peroot" },
-    datePublished: new Date().toISOString().split("T")[0],
+    datePublished: prompt.datePublished
+      ? new Date(prompt.datePublished).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    ...(prompt.dateModified
+      ? { dateModified: new Date(prompt.dateModified).toISOString().split("T")[0] }
+      : {}),
+    ...(prompt.keywords ? { keywords: prompt.keywords } : {}),
   };
 }
 

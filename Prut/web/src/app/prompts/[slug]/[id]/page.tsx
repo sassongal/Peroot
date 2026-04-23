@@ -29,6 +29,8 @@ interface PromptRow {
   category_id: string | null;
   preview_image_url: string | null;
   capability_mode: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface RelatedRow {
@@ -56,7 +58,26 @@ const CAPABILITY_BADGE: Record<string, { label: string; className: string }> = {
   },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400; // 24h ISR — prompt content is stable
+
+export async function generateStaticParams() {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("public_library_prompts")
+    .select("id, category_id")
+    .eq("is_active", true);
+
+  const categoryIdToSlug = Object.fromEntries(
+    Object.entries(CATEGORY_SLUG_MAP).map(([slug, d]) => [d.id.toLowerCase(), slug]),
+  );
+
+  return (data ?? [])
+    .filter((p) => p.category_id && categoryIdToSlug[p.category_id.toLowerCase()])
+    .map((p) => ({
+      slug: categoryIdToSlug[p.category_id!.toLowerCase()],
+      id: String(p.id),
+    }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, id } = await params;
@@ -73,11 +94,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!prompt || !categoryData) return { title: "פרומפט לא נמצא" };
 
   const title = `${prompt.title} — ${categoryData.labelHe} | Peroot`;
-  const description = (
-    prompt.use_case ||
-    prompt.prompt?.slice(0, 160) ||
-    ""
-  ).slice(0, 160);
+  const baseDesc = (prompt.use_case?.trim() || prompt.prompt?.slice(0, 100)?.trim() || "");
+  const description = `${baseDesc.slice(0, 100)} — פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`;
   const canonicalUrl = `/prompts/${slug}/${id}`;
   const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
 
@@ -111,7 +129,7 @@ export default async function PromptPage({ params }: Props) {
     supabase
       .from("public_library_prompts")
       .select(
-        "id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode"
+        "id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode, created_at, updated_at"
       )
       .eq("id", id)
       .eq("is_active", true)
@@ -122,7 +140,7 @@ export default async function PromptPage({ params }: Props) {
       .eq("is_active", true)
       .ilike("category_id", categoryData.id.toLowerCase())
       .neq("id", id)
-      .limit(3),
+      .limit(6),
   ]);
 
   if (error || !prompt) notFound();
@@ -148,9 +166,12 @@ export default async function PromptPage({ params }: Props) {
       <JsonLd
         data={promptCreativeWorkSchema({
           title: p.title,
-          description: (p.use_case || p.prompt.slice(0, 160)).slice(0, 160),
+          description: `${(p.use_case?.trim() || p.prompt.slice(0, 100).trim()).slice(0, 100)} — פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`,
           category: categoryData.labelHe,
           url: pageUrl,
+          datePublished: p.created_at,
+          dateModified: p.updated_at || p.created_at,
+          keywords: `פרומפט, ${categoryData.labelHe}, ChatGPT, Claude, Gemini, AI בעברית`,
         })}
       />
 
@@ -286,7 +307,7 @@ export default async function PromptPage({ params }: Props) {
               <h2 className="text-lg font-serif text-foreground mb-4">
                 פרומפטים נוספים ב{categoryData.labelHe}
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {rel.map((r) => (
                   <Link
                     key={r.id}
