@@ -30,7 +30,12 @@ const credentials = JSON.parse(raw);
 const args = process.argv.slice(2);
 const dry = args.includes("--dry");
 const limitArg = args.find((a) => a.startsWith("--limit"));
-const limit = limitArg ? parseInt(limitArg.split("=")[1] ?? args[args.indexOf(limitArg) + 1], 10) : 200;
+const limitRaw = limitArg ? (limitArg.split("=")[1] ?? args[args.indexOf(limitArg) + 1]) : undefined;
+const limit = limitArg ? parseInt(limitRaw, 10) : 200;
+if (limitArg && (!Number.isFinite(limit) || limit <= 0)) {
+  console.error(`Invalid --limit value: "${limitRaw}". Must be a positive integer.`);
+  process.exit(1);
+}
 
 const auth = new google.auth.GoogleAuth({
   credentials,

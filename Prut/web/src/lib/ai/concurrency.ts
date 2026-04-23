@@ -45,9 +45,11 @@ export function acquireSlot(): Promise<void> {
  * Must always be called in a finally block.
  */
 export function releaseSlot(): void {
-  active--;
+  // Floor at 0: a double-release (e.g. both stream onFinish and safety timer firing)
+  // would otherwise underflow and permanently inflate effective capacity above MAX_CONCURRENT.
+  active = Math.max(0, active - 1);
 
-  if (queue.length > 0) {
+  if (queue.length > 0 && active < MAX_CONCURRENT) {
     const next = queue.shift()!;
     clearTimeout(next.timer);
     active++;

@@ -19,6 +19,27 @@ interface LighthouseAudit {
 const PAGESPEED_API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 const VALID_STRATEGIES = new Set(["mobile", "desktop"]);
 
+// SSRF defense: reject hosts that resolve to private/link-local/loopback space or
+// look like raw metadata endpoints. We block by hostname pattern BEFORE forwarding
+// to PageSpeed — PageSpeed itself fetches the URL, so an attacker could otherwise
+// point it at http://169.254.169.254 or internal container IPs.
+function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "localhost" || h === "0.0.0.0" || h.endsWith(".local") || h.endsWith(".internal")) return true;
+  const ipv4 = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (ipv4) {
+    const [a, b] = ipv4.slice(1).map(Number);
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 0) return true;
+  }
+  if (h.startsWith("[") && (h.includes("::1") || h.startsWith("[fc") || h.startsWith("[fd") || h.startsWith("[fe80"))) return true;
+  return false;
+}
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   const strategy = req.nextUrl.searchParams.get("strategy") || "mobile";
@@ -27,11 +48,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing url parameter" }, { status: 400 });
   }
 
-  // Validate URL format
+  // Validate URL format + block SSRF targets
   try {
     const parsed = new URL(url);
     if (!["http:", "https:"].includes(parsed.protocol)) {
       return NextResponse.json({ error: "URL must use http or https" }, { status: 400 });
+    }
+    if (isBlockedHost(parsed.hostname)) {
+      return NextResponse.json({ error: "URL host is not allowed" }, { status: 400 });
     }
   } catch {
     return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
