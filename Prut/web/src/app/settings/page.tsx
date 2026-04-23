@@ -13,6 +13,7 @@ import {
   Gift,
   AlertTriangle,
   LayoutDashboard,
+  Brain,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -28,6 +29,7 @@ import { SettingsReferralSection } from "@/components/settings/SettingsReferralS
 import { SettingsBillingSection } from "@/components/settings/SettingsBillingSection";
 import { SettingsDataSection } from "@/components/settings/SettingsDataSection";
 import { SettingsDangerSection } from "@/components/settings/SettingsDangerSection";
+import { SettingsMemorySection } from "@/components/settings/SettingsMemorySection";
 import { resolveAvatarUrl, avatarFallbackUrl as uiAvatarsFallback } from "@/lib/user-avatar";
 
 export default function SettingsPage() {
@@ -351,6 +353,7 @@ export default function SettingsPage() {
   const sections = [
     { id: "profile", label: "פרופיל", icon: UserIcon },
     { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
+    { id: "memory", label: "זיכרון AI", icon: Brain },
     { id: "referral", label: "הזמן חברים", icon: Gift },
     { id: "billing", label: "מנוי וחיוב", icon: CreditCard },
     { id: "data", label: "נתונים ופרטיות", icon: Shield },
@@ -427,6 +430,7 @@ export default function SettingsPage() {
               />
             )}
             {activeSection === "stats" && <SettingsStatsSection usageStats={usageStats} />}
+            {activeSection === "memory" && <SettingsMemorySection />}
             {activeSection === "referral" && (
               <SettingsReferralSection
                 referral={referral}

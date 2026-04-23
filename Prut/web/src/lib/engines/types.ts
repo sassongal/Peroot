@@ -32,6 +32,8 @@ export interface EngineInput {
    */
   userHistory?: { title: string; prompt: string; enhanced?: string }[];
   userPersonality?: { tokens: string[]; brief?: string; format?: string };
+  /** L0 — atomic facts extracted from prior prompts, injected before L2/L3. */
+  userFacts?: { fact: string; category: string }[];
   /** Which refinement round this is (1 = first refinement, 2 = second, etc.) */
   iteration?: number;
   /** Target model for prompt optimization */
@@ -57,6 +59,8 @@ export interface EngineInput {
  * impact on the EnhancedScorer score before investing in pgvector.
  */
 export interface InjectionStats {
+  /** L0 — number of atomic facts injected */
+  factsCount?: number;
   /** L3 — `user_style_personality` was injected */
   personalityInjected: boolean;
   /** L2 — number of historical examples injected (0-3) */

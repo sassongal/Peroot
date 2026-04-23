@@ -19,6 +19,7 @@ import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
+import { extractFacts, mergeFactsForUser } from "@/lib/intelligence/fact-extractor";
 
 export const maxDuration = 30;
 
@@ -267,10 +268,19 @@ export async function POST(req: Request) {
                 .eq("user_id", userId)
                 .eq("role", "admin")
                 .maybeSingle(),
+          !isRefinement && memoryFlags.factsEnabled
+            ? queryClient
+                .from("user_memory_facts")
+                .select("fact, category")
+                .eq("user_id", userId)
+                .gte("confidence", 0.6)
+                .order("updated_at", { ascending: false })
+                .limit(20)
+            : Promise.resolve({ data: null }),
         ])
-      : Promise.resolve([{ data: null }, { data: null }, { data: null }, { data: null }]);
+      : Promise.resolve([{ data: null }, { data: null }, { data: null }, { data: null }, { data: null }]);
 
-    const [profileRes, historyRes, personalityRes, adminRoleRes] = await contextPromise;
+    const [profileRes, historyRes, personalityRes, adminRoleRes, factsRes] = await contextPromise;
 
     // 1.1 Process Profile & Tier (from DB if not cached)
     if (!cachedHit && profileRes.data) {
@@ -370,6 +380,7 @@ export async function POST(req: Request) {
     let userHistory: { title: string; prompt: string; enhanced?: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined =
       undefined;
+    let userFacts: { fact: string; category: string }[] | undefined = undefined;
 
     if (userId && !isGuest && !isRefinement) {
       if (historyRes.data) {
@@ -399,6 +410,10 @@ export async function POST(req: Request) {
           format: personalityRes.data.preferred_format,
         };
       }
+
+      if (factsRes?.data && factsRes.data.length > 0) {
+        userFacts = factsRes.data as { fact: string; category: string }[];
+      }
     }
 
     const engineInput: EngineInput = {
@@ -412,6 +427,7 @@ export async function POST(req: Request) {
       answers,
       userHistory,
       userPersonality,
+      userFacts,
       iteration,
       // Cast to satisfy EngineInput — name/content may be absent on new ContextBlock shape;
       // BaseEngine.buildContextSummaryForUserPrompt handles both shapes defensively.
@@ -820,6 +836,15 @@ export async function POST(req: Request) {
                 .then(({ error: actErr }) => {
                   if (actErr) logger.warn("[Enhance] Activity log insert failed:", actErr.message);
                 });
+
+              // L0 fact extraction — fire-and-forget, never blocks response
+              if (!isRefinement && textCopy.length > 0) {
+                extractFacts(prompt)
+                  .then((facts) => {
+                    if (facts.length > 0) mergeFactsForUser(userId!, facts);
+                  })
+                  .catch(() => {});
+              }
 
               try {
                 const { count } = await queryClient

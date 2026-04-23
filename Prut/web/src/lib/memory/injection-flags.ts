@@ -23,6 +23,10 @@ function readBoolFlag(name: string, defaultValue: boolean): boolean {
 }
 
 export const memoryFlags = {
+  /** L0 — inject `[USER_KNOWN_FACTS]` block. Default: ON. */
+  get factsEnabled(): boolean {
+    return !readBoolFlag('PEROOT_DISABLE_FACTS_INJECTION', false);
+  },
   /** L3 — inject `[USER_PERSONALITY_TRAITS]` block. Default: ON. */
   get personalityEnabled(): boolean {
     return !readBoolFlag('PEROOT_DISABLE_PERSONALITY_INJECTION', false);

@@ -228,6 +228,12 @@ ${alignment}
     };
     const startLen = contextInjected.length;
 
+    if (memoryFlags.factsEnabled && input.userFacts && input.userFacts.length > 0) {
+      const factsBlock = input.userFacts.map((f) => `- ${f.fact}`).join("\n");
+      contextInjected += `\n\n[USER_KNOWN_FACTS]\nThese are confirmed facts about the user. Apply them to personalize the output:\n${factsBlock}\n`;
+      injectionStats.factsCount = input.userFacts.length;
+    }
+
     if (memoryFlags.historyEnabled && input.userHistory && input.userHistory.length > 0) {
       // When `enhanced` is present we render before→after pairs, which
       // teach the model the desired transformation, not just the user's
