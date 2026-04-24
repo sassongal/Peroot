@@ -32,14 +32,17 @@ export const GET = withAdmin(async () => {
     { data: mauData },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("personal_library").select("*", { count: "exact", head: true }),
+    // Append-only tables — use planner estimate (reltuples) for global totals.
+    // Filtered counts below still use "exact" because the planner estimate is
+    // row-total only, not filter-aware.
+    supabase.from("personal_library").select("*", { count: "estimated", head: true }),
     supabase
       .from("personal_library")
       .select("*", { count: "exact", head: true })
       .gte("created_at", todayMidnight),
-    supabase.from("activity_logs").select("*", { count: "exact", head: true }),
+    supabase.from("activity_logs").select("*", { count: "estimated", head: true }),
     supabase.from("user_style_personality").select("*", { count: "exact", head: true }),
-    supabase.from("history").select("*", { count: "exact", head: true }),
+    supabase.from("history").select("*", { count: "estimated", head: true }),
     supabase
       .from("history")
       .select("*", { count: "exact", head: true })

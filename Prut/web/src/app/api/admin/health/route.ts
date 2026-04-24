@@ -47,9 +47,12 @@ export const GET = withAdmin(async () => {
     { count: activityLogsCount },
     { count: apiUsageLogsCount },
   ] = await Promise.all([
-    supabase.from("personal_library").select("id", { count: "exact", head: true }),
-    supabase.from("activity_logs").select("id", { count: "exact", head: true }),
-    supabase.from("api_usage_logs").select("id", { count: "exact", head: true }),
+    // These three tables are append-only and can grow into the millions.
+    // `count: "estimated"` uses the Postgres planner's reltuples — much cheaper
+    // and accurate within ~a few percent for admin dashboard numbers.
+    supabase.from("personal_library").select("id", { count: "estimated", head: true }),
+    supabase.from("activity_logs").select("id", { count: "estimated", head: true }),
+    supabase.from("api_usage_logs").select("id", { count: "estimated", head: true }),
   ]);
 
   // Growth indicators: compare last 24h new rows vs previous 24h

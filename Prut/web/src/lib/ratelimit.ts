@@ -104,9 +104,17 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(60, '1 m'),
     prefix: '@peroot/ratelimit:site-search-user',
   }),
+  // Generic admin state-changing operations (ban/moderate/credits/etc).
+  // Guards against a compromised admin token or runaway script; legit
+  // admin usage will never approach 120 writes/min.
+  adminWrite: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(120, '1 m'),
+    prefix: '@peroot/ratelimit:admin-write',
+  }),
 };
 
-type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro' | 'speedTest' | 'siteSearchGuest' | 'siteSearchUser';
+type RateLimitTier = 'guest' | 'free' | 'pro' | 'adminTestEngine' | 'adminEmailCampaign' | 'adminWrite' | 'share' | 'referral' | 'folders' | 'history' | 'favorites' | 'personalLibrary' | 'subscription' | 'me' | 'chainGuest' | 'chainFree' | 'chainPro' | 'speedTest' | 'siteSearchGuest' | 'siteSearchUser';
 
 interface RateLimitResult {
   success: boolean;

@@ -39,8 +39,8 @@ export const GET = withAdmin(async () => {
         .gte("created_at", thirtyDaysAgo)
         .order("created_at", { ascending: true }),
 
-      // Total
-      supabase.from("history").select("*", { count: "exact", head: true }),
+      // Total — estimated (reltuples); unfiltered count on append-only table.
+      supabase.from("history").select("*", { count: "estimated", head: true }),
     ]);
 
   // Count by column helper

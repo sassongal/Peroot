@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logAdminAction } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
@@ -65,9 +65,7 @@ export const GET = withAdmin(async (req) => {
   // query grew unbounded with activity_logs and dominated the page's TTFB.
   const MOD_LOG_CAP = 5000;
   const MOD_WINDOW_DAYS = 180;
-  const modWindowStart = new Date(
-    Date.now() - MOD_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const modWindowStart = new Date(Date.now() - MOD_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { data: removedLogs } = await supabase
     .from("activity_logs")
     .select("details, created_at")
@@ -182,7 +180,7 @@ export const GET = withAdmin(async (req) => {
 
 // ─── POST ────────────────────────────────────────────────────────────────────
 
-export const POST = withAdmin(async (req, _ssrClient, user) => {
+export const POST = withAdminWrite(async (req, _ssrClient, user) => {
   // Moderation writes to rows owned by OTHER users (personal_library RLS
   // blocks cross-user updates), so we must use the service client to
   // bypass RLS. The withAdmin HOF already verified caller is admin.

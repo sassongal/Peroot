@@ -81,8 +81,9 @@ export const GET = withAdmin(async () => {
       .select("id, user_id, action, created_at, details")
       .order("created_at", { ascending: false })
       .limit(10),
-    // Total generation history count
-    supabase.from("history").select("*", { count: "exact", head: true }),
+    // Total generation history count — estimated (reltuples); append-only
+    // table grows into millions and exact count costs a full index scan.
+    supabase.from("history").select("*", { count: "estimated", head: true }),
     // Generations today
     supabase
       .from("history")

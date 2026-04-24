@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdminWrite } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logAdminAction, parseAdminInput } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
@@ -24,7 +24,7 @@ const bulkSchema = z.object({
   ids: z.array(z.string().regex(UUID_RE)).min(1).max(100),
 });
 
-export const POST = withAdmin(async (req, _ssrClient, adminUser) => {
+export const POST = withAdminWrite(async (req, _ssrClient, adminUser) => {
   const supabase = createServiceClient();
   const { data: body, error: parseError } = await parseAdminInput(req, bulkSchema);
   if (parseError) return parseError;

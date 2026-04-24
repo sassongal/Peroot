@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { logAdminAction, parseAdminInput } from "@/lib/admin/admin-security";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { adminAdjustCredits } from "@/lib/services/credit-service";
 import { logger } from "@/lib/logger";
@@ -191,7 +191,7 @@ export const GET = withAdmin(
  * Performs an admin action on the target user.
  * Body: { action, value? }
  */
-export const POST = withAdmin(
+export const POST = withAdminWrite(
   async (req, _ssrClient, adminUser, { params }: { params: Promise<{ id: string }> }) => {
     const supabase = createServiceClient();
     try {
