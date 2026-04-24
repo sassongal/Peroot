@@ -49,11 +49,15 @@ export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
             className={[
               "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
               isReadyPillWarning && "bg-amber-100 text-amber-700 border border-amber-300",
-              !isReadyPillWarning && state === "complete" && "bg-green-100 text-green-700",
+              !isReadyPillWarning &&
+                state === "complete" &&
+                "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
               !isReadyPillWarning &&
                 state === "active" &&
-                "bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 text-white shadow-md",
-              !isReadyPillWarning && state === "pending" && "bg-zinc-100 text-zinc-400",
+                "bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-white shadow-md",
+              !isReadyPillWarning &&
+                state === "pending" &&
+                "bg-(--glass-bg) text-(--text-muted) opacity-60",
             ]
               .filter(Boolean)
               .join(" ")}

@@ -15,7 +15,40 @@ const ACCEPTED_FILE_TYPES = [
   "text/plain",
   "text/csv",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
 ];
+
+const ACCEPTED_FILE_EXTENSIONS = new Set(["pdf", "docx", "txt", "csv", "xlsx", "xls"]);
+
+// Windows/Safari frequently ship files with empty or wrong `file.type`. Fall
+// back to the filename extension so legitimate uploads are not rejected client-side.
+function isAcceptedFile(file: File): boolean {
+  if (file.type && ACCEPTED_FILE_TYPES.includes(file.type)) return true;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return ACCEPTED_FILE_EXTENSIONS.has(ext);
+}
+
+// Normalize URLs: accept bare hostnames like "peroot.space" or "www.peroot.space"
+// by adding https:// when no scheme is present. Throws on anything that still
+// doesn't parse or whose host lacks a dot.
+function normalizeUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) throw new Error("כתובת URL לא תקינה");
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  let parsed: URL;
+  try {
+    parsed = new URL(withScheme);
+  } catch {
+    throw new Error("כתובת URL לא תקינה");
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("כתובת URL לא תקינה");
+  }
+  if (!parsed.hostname.includes(".")) {
+    throw new Error("כתובת URL לא תקינה");
+  }
+  return parsed.toString();
+}
 
 function generateId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -102,7 +135,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       if (file.size > MAX_FILE_SIZE) {
         throw new Error("הקובץ גדול מדי (מקסימום 10MB)");
       }
-      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      if (!isAcceptedFile(file)) {
         throw new Error("פורמט קובץ לא נתמך");
       }
       pendingCounts.current.file++;
@@ -175,21 +208,17 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
       ) {
         throw new Error(`ניתן לצרף עד ${limits.maxUrls} כתובות URL`);
       }
-      try {
-        new URL(url);
-      } catch {
-        throw new Error("כתובת URL לא תקינה");
-      }
+      const normalizedUrl = normalizeUrl(url);
       pendingCounts.current.url++;
 
       const id = generateId();
-      const parsed = new URL(url);
+      const parsed = new URL(normalizedUrl);
       const displayName = parsed.hostname.replace(/^www\./, "");
       const attachment: ContextAttachment = {
         id,
         type: "url",
         name: displayName,
-        url,
+        url: normalizedUrl,
         status: "loading",
         stage: "extracting",
       };
@@ -200,7 +229,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         const res = await fetch(getApiPath("/api/context/extract-url"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ url: normalizedUrl }),
         });
 
         if (!res.ok) {

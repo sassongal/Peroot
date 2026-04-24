@@ -541,7 +541,7 @@ export function PromptInput({
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".pdf,.docx,.txt,.csv,.xlsx"
+                        accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
