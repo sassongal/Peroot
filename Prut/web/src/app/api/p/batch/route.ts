@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { logger } from "@/lib/logger";
 
 /**
@@ -19,6 +20,11 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const rl = await checkRateLimit(user.id, "publicPromptFetch");
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     const raw = req.nextUrl.searchParams.get("ids") ?? "";
