@@ -57,7 +57,7 @@ const MODES = [
   },
 ];
 
-const YT_ID = "iNXX5wZfMJA";
+const YT_ID = "B8_n6uO3Qy4";
 
 export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
