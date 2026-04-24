@@ -118,6 +118,12 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(300, "1 m"),
     prefix: "@peroot/ratelimit:public-prompt-fetch",
   }),
+  // Password reset requests — keyed by email, 3 per hour prevents spam.
+  passwordReset: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, "1 h"),
+    prefix: "@peroot/ratelimit:password-reset",
+  }),
 };
 
 type RateLimitTier =
@@ -141,7 +147,8 @@ type RateLimitTier =
   | "speedTest"
   | "siteSearchGuest"
   | "siteSearchUser"
-  | "publicPromptFetch";
+  | "publicPromptFetch"
+  | "passwordReset";
 
 interface RateLimitResult {
   success: boolean;

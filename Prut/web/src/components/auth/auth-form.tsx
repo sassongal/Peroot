@@ -37,12 +37,14 @@ export function AuthForm() {
         return;
       }
       startTransition(async () => {
-        const supabase = createClient();
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + "/auth/callback?type=recovery",
+        const res = await fetch("/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
         });
-        if (error) {
-          toast.error("שגיאה בשליחת קישור איפוס: " + error.message);
+        const json = await res.json();
+        if (!res.ok) {
+          toast.error(json.error || "שגיאה בשליחת קישור איפוס");
         } else {
           setShowResetSent(true);
         }
