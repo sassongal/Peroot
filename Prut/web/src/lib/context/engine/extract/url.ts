@@ -35,11 +35,12 @@ const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
 const BLOCKED_IP_RE =
   /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|::1$|fc00|fd|fe80|::ffff:127\.|::ffff:10\.|::ffff:172\.(1[6-9]|2\d|3[01])\.|::ffff:192\.168\.|::ffff:169\.254\.)/i;
 
-// Dev-mode escape hatch: allow localhost/intranet URLs when not in production,
-// or when CONTEXT_ALLOW_PRIVATE_URLS=1 is explicitly set. Never enabled in prod
-// unless the flag is set by an operator who accepts the SSRF risk.
-const SSRF_BYPASS =
-  process.env.CONTEXT_ALLOW_PRIVATE_URLS === "1" || process.env.NODE_ENV !== "production";
+// SSRF escape hatch: private/loopback URLs are blocked unless an operator
+// explicitly sets CONTEXT_ALLOW_PRIVATE_URLS=1. Previously this also fell back
+// to `NODE_ENV !== "production"`, which silently opened private IPs on any
+// non-production deployment (including misconfigured previews). Now the flag
+// must be set deliberately.
+const SSRF_BYPASS = process.env.CONTEXT_ALLOW_PRIVATE_URLS === "1";
 
 function assertPublicUrl(raw: string): URL {
   const parsed = new URL(raw);

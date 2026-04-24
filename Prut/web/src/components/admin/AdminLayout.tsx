@@ -25,6 +25,7 @@ import {
   Factory,
   Sparkles,
   SearchCheck,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getApiPath } from "@/lib/api-path";
@@ -48,6 +49,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     // ── Core ──
     { name: t.admin.layout.dashboard, href: "/admin", icon: LayoutDashboard },
     { name: t.admin.layout.users, href: "/admin/users", icon: Users },
+    { name: "פרומפטים", href: "/admin/prompts-feed", icon: MessageSquare },
     { name: "אנליטיקס", href: "/admin/analytics", icon: TrendingUp },
     { name: "SEO Console", href: "/admin/seo-console", icon: SearchCheck },
     { name: "פיננסים", href: "/admin/finance", icon: DollarSign },

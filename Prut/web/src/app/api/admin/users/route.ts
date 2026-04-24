@@ -42,6 +42,29 @@ export const GET = withAdmin(async (req, supabase) => {
       .limit(1000),
   ]);
 
+  // Real activity: aggregate history counts + latest activity per user returned
+  const userIds = (profiles ?? []).map((p) => p.id);
+  let promptCountByUser = new Map<string, number>();
+  let latestHistoryByUser = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: historyRows, error: historyErr } = await supabase
+      .from("history")
+      .select("user_id, created_at")
+      .in("user_id", userIds)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (historyErr) {
+      logger.warn("[admin/users] history aggregation warning:", historyErr);
+    } else {
+      for (const row of historyRows ?? []) {
+        const uid = (row as { user_id: string }).user_id;
+        const ts = (row as { created_at: string }).created_at;
+        promptCountByUser.set(uid, (promptCountByUser.get(uid) ?? 0) + 1);
+        if (!latestHistoryByUser.has(uid)) latestHistoryByUser.set(uid, ts);
+      }
+    }
+  }
+
   if (profileError) {
     logger.error("[admin/users] profiles error:", profileError);
     return NextResponse.json(
@@ -60,6 +83,18 @@ export const GET = withAdmin(async (req, supabase) => {
     const sub = (subscriptions ?? []).find(
       (s: { user_id: string }) => s.user_id === p.id
     );
+    const lastPromptAt = (p as { last_prompt_at?: string | null }).last_prompt_at ?? null;
+    const latestHistory = latestHistoryByUser.get(p.id) ?? null;
+    // last_activity_at = max(last_prompt_at, latest history row, last_sign_in_at)
+    const candidates = [
+      lastPromptAt,
+      latestHistory,
+      (p as { last_sign_in_at?: string | null }).last_sign_in_at ?? null,
+    ].filter((v): v is string => !!v);
+    const lastActivityAt =
+      candidates.length > 0
+        ? candidates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b))
+        : null;
     return {
       ...p,
       role:
@@ -68,6 +103,9 @@ export const GET = withAdmin(async (req, supabase) => {
         )?.role ?? "user",
       plan_tier: sub?.plan_name ?? p.plan_tier ?? "free",
       customer_name: sub?.customer_name ?? null,
+      prompt_count: promptCountByUser.get(p.id) ?? 0,
+      last_prompt_at: lastPromptAt,
+      last_activity_at: lastActivityAt,
     };
   });
 

@@ -209,23 +209,41 @@ export const POST = withAdmin(async (req, supabase, user) => {
       }
     }
 
-    // Filter out users who have unsubscribed from email sequences
+    // Filter out users who have unsubscribed — check BOTH consent layers:
+    //   1. email_sequences.status = 'unsubscribed' (transactional sequences)
+    //   2. newsletter_subscribers.unsubscribed_at IS NOT NULL (marketing list)
+    // These were previously checked independently, which let newsletter
+    // unsubs still receive campaign emails. Unify into a single exclusion set.
     if (emails.length > 0) {
-      const { data: unsubscribed } = await supabase
-        .from('email_sequences')
-        .select('user_id')
-        .eq('status', 'unsubscribed');
+      const exclude = new Set<string>();
 
-      if (unsubscribed && unsubscribed.length > 0) {
-        // Get emails of unsubscribed users
-        const unsubIds = new Set(unsubscribed.map((u) => u.user_id));
+      const [{ data: unsubSeq }, { data: unsubNewsletter }] = await Promise.all([
+        supabase.from('email_sequences').select('user_id').eq('status', 'unsubscribed'),
+        supabase
+          .from('newsletter_subscribers')
+          .select('email')
+          .not('unsubscribed_at', 'is', null),
+      ]);
+
+      if (unsubSeq && unsubSeq.length > 0) {
+        const unsubIds = new Set(unsubSeq.map((u) => u.user_id));
         const { data: unsubProfiles } = await supabase
           .from('profiles')
           .select('email')
           .in('id', [...unsubIds])
           .not('email', 'is', null);
-        const unsubEmails = new Set((unsubProfiles ?? []).map((p) => p.email));
-        emails = emails.filter((e) => !unsubEmails.has(e));
+        for (const p of unsubProfiles ?? []) {
+          if (p.email) exclude.add(p.email.toLowerCase());
+        }
+      }
+
+      for (const row of unsubNewsletter ?? []) {
+        const e = (row as { email: string }).email;
+        if (e) exclude.add(e.toLowerCase());
+      }
+
+      if (exclude.size > 0) {
+        emails = emails.filter((e) => !exclude.has(e.toLowerCase()));
       }
     }
 

@@ -283,9 +283,14 @@ export const POST = withAdmin(async (
       }
 
       case 'grant_admin': {
+        // The user_roles table has UNIQUE(user_id, role) — not a single-column
+        // constraint on user_id — so onConflict must list both columns.
         const { error: upsertError } = await supabase
           .from('user_roles')
-          .upsert({ user_id: id, role: 'admin' }, { onConflict: 'user_id' });
+          .upsert(
+            { user_id: id, role: 'admin' },
+            { onConflict: 'user_id,role', ignoreDuplicates: true },
+          );
 
         if (upsertError) {
           logger.error('[Admin User POST] grant_admin error:', upsertError);

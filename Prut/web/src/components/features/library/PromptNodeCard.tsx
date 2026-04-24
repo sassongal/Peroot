@@ -325,6 +325,17 @@ export function PromptNodeCard({
                   )}
                 </div>
               )}
+              {/* Pin / Unpin */}
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  handlePin();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-white/8 transition-colors border-t border-white/8"
+              >
+                <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current text-amber-300" : ""}`} />
+                <span className="flex-1 text-right">{isPinned ? "בטל הצמדה" : "הצמד"}</span>
+              </button>
               {/* Version history */}
               <button
                 onClick={() => {

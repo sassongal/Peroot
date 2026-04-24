@@ -34,6 +34,10 @@ interface User {
   plan_tier?: string;
   customer_name?: string | null;
   tags?: string[];
+  // real activity (from /api/admin/users enrichment)
+  prompt_count?: number;
+  last_prompt_at?: string | null;
+  last_activity_at?: string | null;
 }
 
 export default function UsersPage() {
@@ -449,12 +453,16 @@ export default function UsersPage() {
                         </div>
                       </td>
 
-                      {/* Last Active */}
+                      {/* Last Active — prefer real prompt activity over login */}
                       <td className="px-10 py-7">
                         <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-zinc-400 font-bold text-sm">
-                            <Clock className="w-3.5 h-3.5 text-zinc-700" />
-                            {lastActiveLabel(user.last_sign_in_at)}
+                          <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm" title="פעילות אמיתית אחרונה (פרומפט / כניסה)">
+                            <Zap className="w-3.5 h-3.5 text-emerald-500/70" />
+                            {lastActiveLabel(user.last_activity_at ?? user.last_prompt_at ?? user.last_sign_in_at)}
+                          </div>
+                          <div className="flex items-center gap-2 text-zinc-500 font-bold text-xs" title="סה״כ פרומפטים שהורצו">
+                            <span className="text-zinc-700">•</span>
+                            <span>{user.prompt_count ?? 0} פרומפטים</span>
                           </div>
                           <div className="flex items-center gap-2 text-zinc-600 font-bold text-xs">
                             <Calendar className="w-3 h-3 text-zinc-800" />

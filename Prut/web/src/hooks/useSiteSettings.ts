@@ -31,7 +31,7 @@ const defaultSettings: SiteSettings = {
   max_free_prompts: 1, // Guest gets 1 free trial
   default_credits: 2, // Registration bonus credits
   daily_free_limit: 2, // Free users get 2/day
-  registration_bonus: 2, // Bonus credits on registration
+  registration_bonus: 0, // Rolling 24h window: no registration bonus (see 20260424_rolling_credits.sql)
   theme_primary_color: '#F59E0B', // Amber/Orange from site
   theme_secondary_color: '#EAB308', // Yellow from site
   maintenance_mode: false,

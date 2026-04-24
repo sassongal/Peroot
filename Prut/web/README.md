@@ -63,7 +63,7 @@ Peroot (פירות) is a Hebrew-first AI prompt enhancement platform that transf
 | Language        | TypeScript 5                                            |
 | Database        | Supabase (PostgreSQL + Auth + Realtime)                 |
 | AI SDK          | Vercel AI SDK 6 (`ai`, `@ai-sdk/google`, `@ai-sdk/groq`, `@ai-sdk/openai`) |
-| AI Models       | Gemini 2.5 Flash (primary), Gemini 2.0 Flash Lite, Llama 3 70B (Groq), DeepSeek Chat |
+| AI Models       | Gemini 2.5 Flash (primary), Gemini 2.0 Flash Lite, Mistral Small, Llama 3 70B (Groq) |
 | Caching         | Upstash Redis (rate limiting, maintenance mode)         |
 | Payments        | LemonSqueezy                                            |
 | Email           | Resend                                                  |
@@ -172,7 +172,7 @@ SUPABASE_ACCESS_TOKEN=your-supabase-access-token
 # AI Providers
 GOOGLE_GENERATIVE_AI_API_KEY=your-google-ai-key
 GROQ_API_KEY=your-groq-api-key
-DEEPSEEK_API_KEY=your-deepseek-api-key
+MISTRAL_API_KEY=your-mistral-api-key
 
 # Redis (Upstash HTTP)
 REDIS_URL=https://your-redis.upstash.io
@@ -435,8 +435,8 @@ Models are tried in order based on task type:
 
 | Task     | Model Priority |
 |----------|---------------|
-| enhance  | Gemini 2.5 Flash -> DeepSeek Chat -> Llama 3 70B |
-| research | DeepSeek Chat -> Gemini 2.5 Flash |
+| enhance  | Gemini 2.5 Flash -> Mistral Small -> Gemini 2.5 Flash Lite -> Llama 4 Scout |
+| research | Gemini 2.5 Flash -> Mistral Small |
 | agent    | Gemini 2.5 Flash -> Llama 3 70B |
 | image    | Gemini 2.5 Flash -> Gemini 2.0 Flash Lite |
 
