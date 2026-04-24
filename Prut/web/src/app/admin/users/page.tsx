@@ -47,6 +47,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "admin" | "active" | "banned" | "churn">("all");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -98,12 +100,7 @@ export default function UsersPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(
-          t.admin.users.toasts.sync_success.replace(
-            "{count}",
-            data.synced.toString()
-          )
-        );
+        toast.success(t.admin.users.toasts.sync_success.replace("{count}", data.synced.toString()));
         loadUsers(search);
       } else {
         toast.error(t.admin.users.toasts.sync_error);
@@ -115,18 +112,73 @@ export default function UsersPage() {
     }
   }
 
+  function toggleSelect(userId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }
+
+  function toggleSelectAllVisible(visibleIds: string[]) {
+    setSelected((prev) => {
+      const allSelected = visibleIds.length > 0 && visibleIds.every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (allSelected) {
+        for (const id of visibleIds) next.delete(id);
+      } else {
+        for (const id of visibleIds) next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function runBulk(action: "ban" | "unban" | "grant_admin" | "revoke_admin") {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const labels: Record<string, string> = {
+      ban: "לחסום",
+      unban: "לשחרר חסימה של",
+      grant_admin: "להפוך למנהלים את",
+      revoke_admin: "לבטל הרשאת מנהל של",
+    };
+    if (!confirm(`${labels[action]} ${ids.length} משתמשים?`)) return;
+    setBulkBusy(true);
+    let ok = 0;
+    let fail = 0;
+    try {
+      // Sequential to avoid hammering — there's no bulk endpoint and the list
+      // is usually small (a handful of rows).
+      for (const id of ids) {
+        try {
+          const res = await fetch(getApiPath(`/api/admin/users/${id}`), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action }),
+          });
+          if (res.ok) ok++;
+          else fail++;
+        } catch {
+          fail++;
+        }
+      }
+      if (ok > 0) toast.success(`הצליח על ${ok} משתמשים${fail > 0 ? ` · נכשל על ${fail}` : ""}`);
+      if (ok === 0 && fail > 0) toast.error(`נכשל על כל ${fail} המשתמשים`);
+      setSelected(new Set());
+      loadUsers(search);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   async function toggleAdmin(userId: string, currentRole: string | null) {
     const isNowAdmin = currentRole === "admin";
     const actionText = isNowAdmin
       ? t.admin.users.toasts.action_remove
       : t.admin.users.toasts.action_add;
 
-    if (
-      !confirm(
-        t.admin.users.toasts.admin_confirm.replace("{action}", actionText)
-      )
-    )
-      return;
+    if (!confirm(t.admin.users.toasts.admin_confirm.replace("{action}", actionText))) return;
 
     try {
       const action = isNowAdmin ? "revoke_admin" : "grant_admin";
@@ -149,12 +201,10 @@ export default function UsersPage() {
   const filteredUsers = users.filter((user) => {
     if (filter === "admin") return user.role === "admin";
     if (filter === "banned") return user.is_banned;
-    if (filter === "active")
-      return (
-        !!user.last_sign_in_at &&
-        new Date(user.last_sign_in_at) >
-          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      );
+    if (filter === "active") {
+      const activeAt = user.last_activity_at ?? user.last_prompt_at ?? user.last_sign_in_at;
+      return !!activeAt && new Date(activeAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    }
     if (filter === "churn") return user.tags?.includes("churn");
     return true;
   });
@@ -177,9 +227,7 @@ export default function UsersPage() {
           String(u.credits_balance ?? 0),
           u.is_banned ? "חסום" : "פעיל",
           new Date(u.created_at).toLocaleDateString("he-IL"),
-          u.last_sign_in_at
-            ? new Date(u.last_sign_in_at).toLocaleDateString("he-IL")
-            : "",
+          u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("he-IL") : "",
         ];
         return cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
       })
@@ -219,10 +267,7 @@ export default function UsersPage() {
 
   return (
     <AdminLayout>
-      <div
-        className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none"
-        dir="rtl"
-      >
+      <div className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none" dir="rtl">
         {/* Header Area */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
           <div className="space-y-4">
@@ -283,7 +328,7 @@ export default function UsersPage() {
                   "px-6 py-3 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-3",
                   filter === f
                     ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
-                    : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5"
+                    : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5",
                 )}
               >
                 {t.admin.users.filters[f]}
@@ -309,26 +354,68 @@ export default function UsersPage() {
           <SimpleStat
             label={t.admin.users.stats.active}
             value={
-              users.filter(
-                (u) =>
-                  u.last_sign_in_at &&
-                  new Date(u.last_sign_in_at) >
-                    new Date(Date.now() - 24 * 60 * 60 * 1000)
-              ).length
+              users.filter((u) => {
+                const activeAt = u.last_activity_at ?? u.last_prompt_at ?? u.last_sign_in_at;
+                return (
+                  !!activeAt && new Date(activeAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+                );
+              }).length
             }
             icon={Zap}
             color="emerald"
           />
           <SimpleStat
             label={t.admin.users.stats.credits}
-            value={users.reduce(
-              (acc, curr) => acc + (curr.credits_balance || 0),
-              0
-            )}
+            value={users.reduce((acc, curr) => acc + (curr.credits_balance || 0), 0)}
             icon={Clock}
             color="amber"
           />
         </div>
+
+        {/* Bulk Actions Toolbar */}
+        {selected.size > 0 && (
+          <div className="mx-2 flex flex-wrap items-center justify-between gap-4 px-6 py-4 rounded-3xl bg-blue-500/5 border border-blue-500/20 sticky top-4 z-30 backdrop-blur-xl">
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
+              <span className="text-blue-300">{selected.size} נבחרו</span>
+              <button
+                onClick={() => setSelected(new Set())}
+                className="text-zinc-500 hover:text-white transition-colors"
+              >
+                נקה
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => runBulk("ban")}
+                disabled={bulkBusy}
+                className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+              >
+                חסום
+              </button>
+              <button
+                onClick={() => runBulk("unban")}
+                disabled={bulkBusy}
+                className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+              >
+                בטל חסימה
+              </button>
+              <button
+                onClick={() => runBulk("grant_admin")}
+                disabled={bulkBusy}
+                className="px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+              >
+                הפוך למנהל
+              </button>
+              <button
+                onClick={() => runBulk("revoke_admin")}
+                disabled={bulkBusy}
+                className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+              >
+                בטל מנהל
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Unified Identity Table */}
         <div className="rounded-[48px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl mx-2">
@@ -336,6 +423,17 @@ export default function UsersPage() {
             <table className="w-full border-collapse border-none">
               <thead>
                 <tr className="border-b border-white/5">
+                  <th className="px-6 py-8 text-center w-12">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredUsers.length > 0 && filteredUsers.every((u) => selected.has(u.id))
+                      }
+                      onChange={() => toggleSelectAllVisible(filteredUsers.map((u) => u.id))}
+                      className="accent-blue-500 w-4 h-4 cursor-pointer"
+                      aria-label="Select all visible"
+                    />
+                  </th>
                   <th className="px-10 py-8 text-right text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">
                     {t.admin.users.table.identity}
                   </th>
@@ -359,7 +457,7 @@ export default function UsersPage() {
               <tbody className="divide-y divide-white/5">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-10 py-40 text-center">
+                    <td colSpan={7} className="px-10 py-40 text-center">
                       <div className="flex flex-col items-center gap-6">
                         <RefreshCw className="w-12 h-12 animate-spin text-blue-500/20" />
                         <span className="text-zinc-700 font-black uppercase tracking-[0.4em] text-[10px]">
@@ -371,7 +469,7 @@ export default function UsersPage() {
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-10 py-40 text-center text-zinc-800 font-black uppercase tracking-widest text-[9px]"
                     >
                       {t.admin.users.table.empty}
@@ -383,17 +481,29 @@ export default function UsersPage() {
                       key={user.id}
                       className="group hover:bg-white/2 transition-all duration-500 overflow-hidden relative cursor-pointer"
                     >
+                      {/* Select */}
+                      <td
+                        className="px-6 py-7 text-center w-12"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected.has(user.id)}
+                          onChange={() => toggleSelect(user.id)}
+                          className="accent-blue-500 w-4 h-4 cursor-pointer"
+                          aria-label={`Select ${user.email}`}
+                        />
+                      </td>
                       {/* Identity */}
                       <td className="px-10 py-7">
-                        <Link
-                          href={`/admin/users/${user.id}`}
-                          className="flex items-center gap-6"
-                        >
+                        <Link href={`/admin/users/${user.id}`} className="flex items-center gap-6">
                           <div className="relative">
                             <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-500 font-black group-hover:scale-110 group-hover:bg-zinc-800 transition-all duration-700 shadow-2xl">
                               {user.email?.[0]?.toUpperCase() || "U"}
                             </div>
-                            {user.last_sign_in_at && (
+                            {(user.last_activity_at ??
+                              user.last_prompt_at ??
+                              user.last_sign_in_at) && (
                               <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-zinc-950 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
                             )}
                           </div>
@@ -419,7 +529,7 @@ export default function UsersPage() {
                           <span
                             className={cn(
                               "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                              tierColor(user.plan_tier)
+                              tierColor(user.plan_tier),
                             )}
                           >
                             {user.plan_tier?.toUpperCase() || "FREE"}
@@ -440,7 +550,7 @@ export default function UsersPage() {
                               "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
                               user.role === "admin"
                                 ? "bg-blue-500/10 border-blue-500/20 text-blue-500"
-                                : "bg-white/5 border-white/5 text-zinc-500"
+                                : "bg-white/5 border-white/5 text-zinc-500",
                             )}
                           >
                             {user.role?.toUpperCase() || "USER"}
@@ -456,19 +566,25 @@ export default function UsersPage() {
                       {/* Last Active — prefer real prompt activity over login */}
                       <td className="px-10 py-7">
                         <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm" title="פעילות אמיתית אחרונה (פרומפט / כניסה)">
+                          <div
+                            className="flex items-center gap-2 text-emerald-300 font-bold text-sm"
+                            title="פעילות אמיתית אחרונה (פרומפט / כניסה)"
+                          >
                             <Zap className="w-3.5 h-3.5 text-emerald-500/70" />
-                            {lastActiveLabel(user.last_activity_at ?? user.last_prompt_at ?? user.last_sign_in_at)}
+                            {lastActiveLabel(
+                              user.last_activity_at ?? user.last_prompt_at ?? user.last_sign_in_at,
+                            )}
                           </div>
-                          <div className="flex items-center gap-2 text-zinc-500 font-bold text-xs" title="סה״כ פרומפטים שהורצו">
+                          <div
+                            className="flex items-center gap-2 text-zinc-500 font-bold text-xs"
+                            title="סה״כ פרומפטים שהורצו"
+                          >
                             <span className="text-zinc-700">•</span>
                             <span>{user.prompt_count ?? 0} פרומפטים</span>
                           </div>
                           <div className="flex items-center gap-2 text-zinc-600 font-bold text-xs">
                             <Calendar className="w-3 h-3 text-zinc-800" />
-                            {new Date(user.created_at).toLocaleDateString(
-                              "en-US"
-                            )}
+                            {new Date(user.created_at).toLocaleDateString("en-US")}
                           </div>
                         </div>
                       </td>
@@ -492,11 +608,7 @@ export default function UsersPage() {
                               toggleAdmin(user.id, user.role);
                             }}
                             className="p-3 bg-zinc-900 border border-white/5 text-zinc-600 rounded-2xl hover:text-white hover:bg-blue-600 hover:border-blue-500 transition-all duration-500 scale-90 group-hover:scale-100"
-                            title={
-                              user.role === "admin"
-                                ? "Remove Admin"
-                                : "Grant Admin"
-                            }
+                            title={user.role === "admin" ? "Remove Admin" : "Grant Admin"}
                           >
                             <Crown className="w-5 h-5" />
                           </button>
@@ -544,12 +656,9 @@ function SimpleStat({
 }) {
   const colors: Record<string, string> = {
     blue: "text-blue-500 bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500",
-    purple:
-      "text-purple-500 bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500",
-    emerald:
-      "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500",
-    amber:
-      "text-amber-500 bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500",
+    purple: "text-purple-500 bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500",
+    emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500",
+    amber: "text-amber-500 bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500",
   };
 
   return (
@@ -558,7 +667,7 @@ function SimpleStat({
         <div
           className={cn(
             "p-4 rounded-2xl border transition-all duration-700 group-hover:text-white shadow-2xl",
-            colors[color]
+            colors[color],
           )}
         >
           <Icon className="w-6 h-6" />

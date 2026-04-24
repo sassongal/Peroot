@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
-import { logger } from '@/lib/logger';
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/admin/webhooks
@@ -20,34 +21,35 @@ import { logger } from '@/lib/logger';
 const MAX_LIMIT = 500;
 const DEFAULT_LIMIT = 100;
 
-export const GET = withAdmin(async (req, supabase, _user) => {
-        const { searchParams } = new URL(req.url);
-        const limitRaw = parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT), 10);
-        const limit = Math.min(MAX_LIMIT, Math.max(1, isNaN(limitRaw) ? DEFAULT_LIMIT : limitRaw));
-        const status = searchParams.get('status') || 'all';
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
+  const { searchParams } = new URL(req.url);
+  const limitRaw = parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10);
+  const limit = Math.min(MAX_LIMIT, Math.max(1, isNaN(limitRaw) ? DEFAULT_LIMIT : limitRaw));
+  const status = searchParams.get("status") || "all";
 
-        let query = supabase
-            .from('webhook_events')
-            .select('id, event_name, processed, processing_error, created_at')
-            .order('created_at', { ascending: false })
-            .limit(limit);
+  let query = supabase
+    .from("webhook_events")
+    .select("id, event_name, processed, processing_error, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
 
-        if (status === 'processed') {
-            query = query.eq('processed', true);
-        } else if (status === 'failed') {
-            // "Failed" = either processed=false OR has a processing_error
-            query = query.or('processed.eq.false,processing_error.not.is.null');
-        }
+  if (status === "processed") {
+    query = query.eq("processed", true);
+  } else if (status === "failed") {
+    // "Failed" = either processed=false OR has a processing_error
+    query = query.or("processed.eq.false,processing_error.not.is.null");
+  }
 
-        const { data, error: qErr } = await query;
-        if (qErr) {
-            logger.warn('[admin/webhooks] query failed:', qErr.message);
-            return NextResponse.json({ error: 'Query failed' }, { status: 500 });
-        }
+  const { data, error: qErr } = await query;
+  if (qErr) {
+    logger.warn("[admin/webhooks] query failed:", qErr.message);
+    return NextResponse.json({ error: "Query failed" }, { status: 500 });
+  }
 
-        return NextResponse.json({
-            events: data ?? [],
-            limit,
-            status,
-        });
+  return NextResponse.json({
+    events: data ?? [],
+    limit,
+    status,
+  });
 });

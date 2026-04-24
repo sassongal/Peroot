@@ -74,8 +74,7 @@ export const GET = withAdmin(async (req) => {
             break;
           }
           const users = data?.users ?? [];
-          for (const u of users)
-            out.push({ id: u.id, last_sign_in_at: u.last_sign_in_at ?? null });
+          for (const u of users) out.push({ id: u.id, last_sign_in_at: u.last_sign_in_at ?? null });
           if (users.length < 1000) break;
         }
         return out;
@@ -107,9 +106,7 @@ export const GET = withAdmin(async (req) => {
     const lastPromptAt = (p as { last_prompt_at?: string | null }).last_prompt_at ?? null;
     const latestHistory = latestHistoryByUser.get(p.id) ?? null;
 
-    const candidates = [lastPromptAt, latestHistory, lastSignInAt].filter(
-      (v): v is string => !!v,
-    );
+    const candidates = [lastPromptAt, latestHistory, lastSignInAt].filter((v): v is string => !!v);
     const lastActivityAt =
       candidates.length > 0
         ? candidates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b))

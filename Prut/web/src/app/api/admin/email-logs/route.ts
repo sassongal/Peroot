@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
 /**
@@ -8,9 +9,13 @@ import { logger } from "@/lib/logger";
  * Returns paginated global email logs with optional filters.
  * Query params: ?page=1&limit=50&source=resend&type=campaign&search=user@email.com
  */
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
   const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") || "1") || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") || "50") || 50));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") || "50") || 50),
+  );
   const source = req.nextUrl.searchParams.get("source") || "";
   const emailType = req.nextUrl.searchParams.get("type") || "";
   const search = req.nextUrl.searchParams.get("search") || "";
@@ -19,7 +24,10 @@ export const GET = withAdmin(async (req, supabase) => {
   try {
     let query = supabase
       .from("email_logs")
-      .select("id, user_id, email_to, source, email_type, subject, status, resend_id, metadata, created_at", { count: "exact" })
+      .select(
+        "id, user_id, email_to, source, email_type, subject, status, resend_id, metadata, created_at",
+        { count: "exact" },
+      )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -30,7 +38,7 @@ export const GET = withAdmin(async (req, supabase) => {
       query = query.eq("email_type", emailType);
     }
     if (search.trim()) {
-      const escaped = search.trim().replace(/%/g, '\\%').replace(/_/g, '\\_');
+      const escaped = search.trim().replace(/%/g, "\\%").replace(/_/g, "\\_");
       query = query.ilike("email_to", `%${escaped}%`);
     }
 
@@ -45,16 +53,10 @@ export const GET = withAdmin(async (req, supabase) => {
     let uniqueSources: string[] = [];
     let uniqueTypes: string[] = [];
     if (page === 1) {
-      const { data: sources } = await supabase
-        .from("email_logs")
-        .select("source")
-        .limit(1000);
-      const { data: types } = await supabase
-        .from("email_logs")
-        .select("email_type")
-        .limit(1000);
-      uniqueSources = [...new Set((sources ?? []).map(s => s.source))].sort();
-      uniqueTypes = [...new Set((types ?? []).map(t => t.email_type))].sort();
+      const { data: sources } = await supabase.from("email_logs").select("source").limit(1000);
+      const { data: types } = await supabase.from("email_logs").select("email_type").limit(1000);
+      uniqueSources = [...new Set((sources ?? []).map((s) => s.source))].sort();
+      uniqueTypes = [...new Set((types ?? []).map((t) => t.email_type))].sort();
     }
 
     return NextResponse.json({

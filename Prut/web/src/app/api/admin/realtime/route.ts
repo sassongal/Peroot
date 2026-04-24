@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
 /**
@@ -14,7 +15,8 @@ import { logger } from "@/lib/logger";
  *  - topUsers: most active users in the last 30 minutes
  *  - counters: { activeNow, eventsPerMin, pagesLastHour, apiCallsLastHour }
  */
-export const GET = withAdmin(async (_req, supabase) => {
+export const GET = withAdmin(async () => {
+  const supabase = createServiceClient();
   try {
     const now = new Date();
     const minus5m = new Date(now.getTime() - 5 * 60 * 1000).toISOString();

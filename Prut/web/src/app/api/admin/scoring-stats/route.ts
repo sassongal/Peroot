@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 
 /**
  * GET /api/admin/scoring-stats
@@ -11,7 +12,8 @@ import { withAdmin } from "@/lib/api-middleware";
  * - Recent prompts sample (for client-side scoring)
  * - Daily enhancement counts (last 30 days)
  */
-export const GET = withAdmin(async (_req, supabase) => {
+export const GET = withAdmin(async () => {
+  const supabase = createServiceClient();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 

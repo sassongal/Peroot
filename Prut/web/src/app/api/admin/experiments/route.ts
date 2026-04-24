@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
 /**
@@ -10,7 +11,8 @@ import { logger } from "@/lib/logger";
  *  - Compares pro vs free user engagement segments
  *  - Returns feature adoption rates based on last 30 days of activity
  */
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
   try {
     const url = new URL(req.url);
     const rangeParam = parseInt(url.searchParams.get("range") ?? "30", 10);

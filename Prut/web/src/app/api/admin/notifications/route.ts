@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
@@ -72,7 +73,8 @@ function daysAgoISO(n: number) {
   return d.toISOString();
 }
 
-export const GET = withAdmin(async (_req, supabase) => {
+export const GET = withAdmin(async () => {
+  const supabase = createServiceClient();
   try {
     const now = new Date().toISOString();
     const { start: todayStart, end: todayEnd } = todayRange();

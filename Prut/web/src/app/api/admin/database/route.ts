@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
 const BACKUP_TABLES = [
@@ -33,7 +34,8 @@ const STATS_TABLES = [
  * stats  - returns row counts and health status
  * backup - returns full table dumps for all key tables
  */
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
   try {
     const action = req.nextUrl.searchParams.get("action") || "stats";
 

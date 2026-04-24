@@ -61,9 +61,7 @@ export const GET = withAdmin(async (req) => {
 
     if (search) {
       const esc = escapePostgrestValue(search);
-      query = query.or(
-        `prompt.ilike.%${esc}%,enhanced_prompt.ilike.%${esc}%,title.ilike.%${esc}%`,
-      );
+      query = query.or(`prompt.ilike.%${esc}%,enhanced_prompt.ilike.%${esc}%,title.ilike.%${esc}%`);
     }
     if (mode) query = query.eq("capability_mode", mode);
     if (from) query = query.gte("created_at", from);

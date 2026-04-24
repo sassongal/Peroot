@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { toast } from 'sonner';
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
 interface SiteSettings {
@@ -23,20 +23,20 @@ interface SiteSettings {
 
 // REAL site defaults from actual usage
 const defaultSettings: SiteSettings = {
-  id: '',
-  site_name: 'Peroot',
-  site_description: 'מחולל פרומפטים מקצועי מבוסס AI',
-  contact_email: 'gal@joya-tech.net',
-  support_url: 'https://www.peroot.space/faq',
+  id: "",
+  site_name: "Peroot",
+  site_description: "מחולל פרומפטים מקצועי מבוסס AI",
+  contact_email: "gal@joya-tech.net",
+  support_url: "https://www.peroot.space/faq",
   max_free_prompts: 1, // Guest gets 1 free trial
   default_credits: 2, // Registration bonus credits
   daily_free_limit: 2, // Free users get 2/day
   registration_bonus: 0, // Rolling 24h window: no registration bonus (see 20260424_rolling_credits.sql)
-  theme_primary_color: '#F59E0B', // Amber/Orange from site
-  theme_secondary_color: '#EAB308', // Yellow from site
+  theme_primary_color: "#F59E0B", // Amber/Orange from site
+  theme_secondary_color: "#EAB308", // Yellow from site
   maintenance_mode: false,
   allow_guest_access: true,
-  updated_at: new Date().toISOString()
+  updated_at: new Date().toISOString(),
 };
 
 let settingsCache: SiteSettings | null = null;
@@ -63,12 +63,12 @@ export function useSiteSettings() {
       subscribedRef.current = true;
 
       channel = supabase
-        .channel('site_settings_changes')
+        .channel("site_settings_changes")
         .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'site_settings' },
+          "postgres_changes",
+          { event: "*", schema: "public", table: "site_settings" },
           (payload: RealtimePostgresChangesPayload<SiteSettings>) => {
-            logger.info('[Settings] Real-time update received:', payload);
+            logger.info("[Settings] Real-time update received:", payload);
             if (payload.new) {
               const newSettings = payload.new as SiteSettings;
               setSettings(newSettings);
@@ -76,12 +76,12 @@ export function useSiteSettings() {
               applyThemeColors(newSettings);
 
               // Show toast notification
-              toast.success('הגדרות האתר עודכנו מהשרת');
+              toast.success("הגדרות האתר עודכנו מהשרת");
             }
-          }
+          },
         )
         .subscribe((status) => {
-          logger.info('[Settings] Subscription status:', status);
+          logger.info("[Settings] Subscription status:", status);
         });
     });
 
@@ -96,22 +96,19 @@ export function useSiteSettings() {
 
   async function loadSettings() {
     try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('*')
-        .maybeSingle();
+      const { data, error } = await supabase.from("site_settings").select("*").maybeSingle();
 
       if (data) {
-        logger.info('[Settings] Loaded from DB:', data);
+        logger.info("[Settings] Loaded from DB:", data);
         setSettings(data);
         settingsCache = data;
         applyThemeColors(data);
       } else if (error) {
-        logger.error('[Settings] Failed to load:', error);
+        logger.error("[Settings] Failed to load:", error);
         applyThemeColors(defaultSettings);
       }
     } catch (error) {
-      logger.error('[Settings] Error:', error);
+      logger.error("[Settings] Error:", error);
       applyThemeColors(defaultSettings);
     } finally {
       setLoading(false);
@@ -119,19 +116,19 @@ export function useSiteSettings() {
   }
 
   function applyThemeColors(settings: SiteSettings) {
-    if (typeof document !== 'undefined') {
+    if (typeof document !== "undefined") {
       const root = document.documentElement;
-      
+
       // Apply primary color
-      root.style.setProperty('--color-primary', settings.theme_primary_color);
-      root.style.setProperty('--color-secondary', settings.theme_secondary_color);
-      
+      root.style.setProperty("--color-primary", settings.theme_primary_color);
+      root.style.setProperty("--color-secondary", settings.theme_secondary_color);
+
       // Also update the glow color for yellow theme
-      root.style.setProperty('--glow-color', `45 95% 65%`); // HSL for yellow glow
-      
-      logger.info('[Settings] Applied theme colors:', {
+      root.style.setProperty("--glow-color", `45 95% 65%`); // HSL for yellow glow
+
+      logger.info("[Settings] Applied theme colors:", {
         primary: settings.theme_primary_color,
-        secondary: settings.theme_secondary_color
+        secondary: settings.theme_secondary_color,
       });
     }
   }

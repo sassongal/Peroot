@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
@@ -34,7 +35,8 @@ function getStartDate(range: string): Date | null {
   }
 }
 
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
   try {
     const { searchParams } = new URL(req.url);
     const range = searchParams.get("range") || "all";

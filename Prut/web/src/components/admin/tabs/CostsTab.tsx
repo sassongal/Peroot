@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { getApiPath } from "@/lib/api-path";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -695,30 +696,48 @@ export default function CostsTab() {
               No user data in this period
             </p>
           ) : (
-            (data?.byUser ?? []).map((u, i) => (
-              <div key={u.user_id} className="flex items-center gap-6 group">
-                <span className="text-[9px] font-black text-zinc-700 w-5 text-center">{i + 1}</span>
-                <div className="flex flex-col gap-0.5 w-52 shrink-0">
-                  <span className="text-xs font-black text-zinc-300 truncate">
-                    {u.email ?? u.user_id.slice(0, 20) + "…"}
+            (data?.byUser ?? []).map((u, i) => {
+              const isUnknown = u.user_id === "unknown";
+              const content = (
+                <>
+                  <span className="text-[9px] font-black text-zinc-700 w-5 text-center">
+                    {i + 1}
                   </span>
-                  <span className="text-[9px] text-zinc-700 font-bold uppercase">
-                    {fmt(u.requestCount)} requests
+                  <div className="flex flex-col gap-0.5 w-52 shrink-0">
+                    <span className="text-xs font-black text-zinc-300 truncate group-hover:text-amber-200 transition-colors">
+                      {u.email ?? u.user_id.slice(0, 20) + "…"}
+                    </span>
+                    <span className="text-[9px] text-zinc-700 font-bold uppercase">
+                      {fmt(u.requestCount)} requests
+                    </span>
+                  </div>
+                  <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 rounded-full transition-all duration-700"
+                      style={{
+                        width: `${(u.totalCost / maxUserCost) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-amber-400 font-black text-sm tabular-nums w-24 text-right shrink-0">
+                    {fmtCost(u.totalCost)}
                   </span>
+                </>
+              );
+              return isUnknown ? (
+                <div key={u.user_id} className="flex items-center gap-6 group opacity-60">
+                  {content}
                 </div>
-                <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-amber-500 rounded-full transition-all duration-700"
-                    style={{
-                      width: `${(u.totalCost / maxUserCost) * 100}%`,
-                    }}
-                  />
-                </div>
-                <span className="text-amber-400 font-black text-sm tabular-nums w-24 text-right shrink-0">
-                  {fmtCost(u.totalCost)}
-                </span>
-              </div>
-            ))
+              ) : (
+                <Link
+                  key={u.user_id}
+                  href={`/admin/users/${u.user_id}`}
+                  className="flex items-center gap-6 group hover:bg-white/[0.02] rounded-lg -mx-2 px-2 py-1 transition-colors"
+                >
+                  {content}
+                </Link>
+              );
+            })
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
@@ -13,7 +14,10 @@ const CACHE_TTL = 300; // 5 minutes
  * Cached in Redis for 5 minutes to avoid re-running 17 parallel Supabase
  * queries on every admin page load.
  */
-export const GET = withAdmin(async (_req, supabase, _user) => {
+export const GET = withAdmin(async () => {
+  // Use service client so RLS does not scope cross-user aggregations
+  // (history, profiles, subscriptions, personal_library) to the requesting admin.
+  const supabase = createServiceClient();
   try {
     const cached = await redis.get<Record<string, unknown>>(CACHE_KEY);
     if (cached) return NextResponse.json(cached);

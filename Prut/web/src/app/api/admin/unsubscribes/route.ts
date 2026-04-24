@@ -9,7 +9,8 @@ import { logger } from "@/lib/logger";
  *
  * Returns unsubscribe stats + recent unsubscribes for admin monitoring.
  */
-export const GET = withAdmin(async (_req, supabase) => {
+export const GET = withAdmin(async () => {
+  const supabase = createServiceClient();
   try {
     // Unsubscribed from email_sequences
     const { data: seqUnsubscribed, count: seqCount } = await supabase
@@ -49,7 +50,7 @@ export const GET = withAdmin(async (_req, supabase) => {
           email: userData?.user?.email || "unknown",
           source: "email_sequences" as const,
         };
-      })
+      }),
     );
 
     return NextResponse.json({
@@ -71,7 +72,9 @@ export const GET = withAdmin(async (_req, supabase) => {
           source: "newsletter" as const,
           date: n.unsubscribed_at,
         })),
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 50),
+      ]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 50),
     });
   } catch (err) {
     logger.error("[admin/unsubscribes] Error:", err);

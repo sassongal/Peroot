@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
@@ -17,7 +18,8 @@ const CACHE_TTL = 300; // 5 minutes
  * Returns cost summary, breakdown by provider/model, top users by cost,
  * and a 12-month rolling cost trend.
  */
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
   try {
     const { searchParams } = new URL(req.url);
     const now = new Date();

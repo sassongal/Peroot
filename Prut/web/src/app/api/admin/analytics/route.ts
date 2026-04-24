@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
@@ -23,7 +24,8 @@ interface CachedAnalytics {
  *
  * Cached in Redis for 5 minutes to reduce Supabase load.
  */
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const supabase = createServiceClient();
   const url = new URL(req.url);
   const range = parseInt(url.searchParams.get("range") ?? "30", 10);
   const rangeKey = [7, 30, 90].includes(range) ? range : 30;

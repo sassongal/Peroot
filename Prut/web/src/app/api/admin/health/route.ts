@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 
 /**
  * GET /api/admin/health
@@ -13,7 +14,8 @@ import { withAdmin } from "@/lib/api-middleware";
  *  - uptime: whether last 10 API calls succeeded
  *  - healthScore: 0-100 composite score
  */
-export const GET = withAdmin(async (_req, supabase) => {
+export const GET = withAdmin(async () => {
+  const supabase = createServiceClient();
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const startOfYesterday = new Date(

@@ -51,6 +51,10 @@ export default function AdminPromptsFeedPage() {
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("");
+  const [userFilter, setUserFilter] = useState("");
+  const [knownUsers, setKnownUsers] = useState<
+    Map<string, { label: string; email: string | null }>
+  >(new Map());
   const [loading, setLoading] = useState(true);
   const [includeAdmins, setIncludeAdmins] = useState(false);
   const [excludedAdmins, setExcludedAdmins] = useState(0);
@@ -58,12 +62,15 @@ export default function AdminPromptsFeedPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(
-    async (opts: {
-      search?: string;
-      mode?: string;
-      offset?: number;
-      includeAdmins?: boolean;
-    } = {}) => {
+    async (
+      opts: {
+        search?: string;
+        mode?: string;
+        offset?: number;
+        includeAdmins?: boolean;
+        user?: string;
+      } = {},
+    ) => {
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -73,15 +80,29 @@ export default function AdminPromptsFeedPage() {
         if (opts.search?.trim()) params.set("search", opts.search.trim());
         if (opts.mode) params.set("mode", opts.mode);
         if (opts.includeAdmins) params.set("includeAdmins", "1");
+        if (opts.user) params.set("user", opts.user);
         const res = await fetch(getApiPath(`/api/admin/prompts-feed?${params}`), {
           credentials: "same-origin",
           cache: "no-store",
         });
         if (!res.ok) throw new Error(`status ${res.status}`);
         const data = await res.json();
-        setItems(data.items ?? []);
+        const nextItems: PromptFeedItem[] = data.items ?? [];
+        setItems(nextItems);
         setTotal(data.total ?? 0);
         setExcludedAdmins(data.excludedAdmins ?? 0);
+        // Accumulate known users across fetches so the dropdown keeps options
+        // even after filtering narrows the result set to one user.
+        setKnownUsers((prev) => {
+          const next = new Map(prev);
+          for (const it of nextItems) {
+            if (!it.user_id) continue;
+            if (!next.has(it.user_id)) {
+              next.set(it.user_id, { label: it.user_display, email: it.user_email });
+            }
+          }
+          return next;
+        });
       } catch (e) {
         logger.error("[admin/prompts-feed] load failed:", e);
         toast.error("שגיאה בטעינת הפיד");
@@ -96,17 +117,17 @@ export default function AdminPromptsFeedPage() {
     load({ search: "", mode: "", offset: 0, includeAdmins: false });
   }, [load]);
 
-  // Debounced search + mode + admin toggle
+  // Debounced search + mode + admin toggle + user filter
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setOffset(0);
-      load({ search, mode, offset: 0, includeAdmins });
+      load({ search, mode, offset: 0, includeAdmins, user: userFilter });
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, mode, includeAdmins, load]);
+  }, [search, mode, includeAdmins, userFilter, load]);
 
   const page = Math.floor(offset / PAGE_SIZE) + 1;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -143,7 +164,7 @@ export default function AdminPromptsFeedPage() {
                 כולל מנהלים
               </label>
               <button
-                onClick={() => load({ search, mode, offset, includeAdmins })}
+                onClick={() => load({ search, mode, offset, includeAdmins, user: userFilter })}
                 disabled={loading}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors disabled:opacity-50"
               >
@@ -179,6 +200,24 @@ export default function AdminPromptsFeedPage() {
                 ))}
               </select>
             </div>
+            <div className="relative">
+              <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
+              <select
+                value={userFilter}
+                onChange={(e) => setUserFilter(e.target.value)}
+                className="bg-zinc-950 border border-white/10 rounded-lg pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:border-amber-500/50 appearance-none cursor-pointer min-w-[200px] max-w-[260px]"
+              >
+                <option value="">כל המשתמשים</option>
+                {Array.from(knownUsers.entries())
+                  .sort((a, b) => a[1].label.localeCompare(b[1].label, "he"))
+                  .map(([id, info]) => (
+                    <option key={id} value={id}>
+                      {info.label}
+                      {info.email && info.email !== info.label ? ` (${info.email})` : ""}
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
 
           {/* Counts */}
@@ -194,7 +233,7 @@ export default function AdminPromptsFeedPage() {
                 onClick={() => {
                   const next = Math.max(0, offset - PAGE_SIZE);
                   setOffset(next);
-                  load({ search, mode, offset: next, includeAdmins });
+                  load({ search, mode, offset: next, includeAdmins, user: userFilter });
                 }}
                 disabled={offset === 0 || loading}
                 className="p-1.5 rounded hover:bg-white/5 disabled:opacity-30"
@@ -210,7 +249,7 @@ export default function AdminPromptsFeedPage() {
                   const next = offset + PAGE_SIZE;
                   if (next >= total) return;
                   setOffset(next);
-                  load({ search, mode, offset: next, includeAdmins });
+                  load({ search, mode, offset: next, includeAdmins, user: userFilter });
                 }}
                 disabled={offset + PAGE_SIZE >= total || loading}
                 className="p-1.5 rounded hover:bg-white/5 disabled:opacity-30"

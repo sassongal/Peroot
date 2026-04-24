@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
-import { useSiteSettings } from './useSiteSettings';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useSiteSettings } from "./useSiteSettings";
 import { logger } from "@/lib/logger";
 
 interface PromptUsage {
@@ -9,11 +9,11 @@ interface PromptUsage {
   lastReset: string;
 }
 
-const USAGE_STORAGE_KEY = 'peroot_guest_usage';
+const USAGE_STORAGE_KEY = "peroot_guest_usage";
 
 /** Returns today's date string in Israel timezone (YYYY-MM-DD) */
 function getIsraelDateString(): string {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" });
 }
 
 interface PromptLimitsShape {
@@ -25,7 +25,7 @@ interface PromptLimitsShape {
 }
 
 interface QuotaResponse {
-  plan_tier: 'free' | 'pro' | 'admin';
+  plan_tier: "free" | "pro" | "admin";
   credits_balance: number;
   daily_limit: number;
   refresh_at: string | null;
@@ -44,17 +44,19 @@ export function usePromptLimits() {
 
   const fetchQuota = useCallback(async () => {
     try {
-      const res = await fetch('/api/me/quota', { credentials: 'include' });
+      const res = await fetch("/api/me/quota", { credentials: "include" });
       if (!res.ok) return null;
       return (await res.json()) as QuotaResponse;
     } catch (e) {
-      logger.error('[usePromptLimits] quota fetch failed:', e);
+      logger.error("[usePromptLimits] quota fetch failed:", e);
       return null;
     }
   }, []);
 
   const checkUser = useCallback(async () => {
-    const { data: { user: activeUser } } = await supabase.auth.getUser();
+    const {
+      data: { user: activeUser },
+    } = await supabase.auth.getUser();
     setUser(activeUser);
 
     if (activeUser) {
@@ -62,20 +64,20 @@ export function usePromptLimits() {
       const q = await fetchQuota();
       if (q) {
         setQuota(q);
-        setIsPro(q.plan_tier === 'pro' || q.plan_tier === 'admin');
-        setIsAdmin(q.plan_tier === 'admin');
+        setIsPro(q.plan_tier === "pro" || q.plan_tier === "admin");
+        setIsAdmin(q.plan_tier === "admin");
       }
 
       // Secondary: user_roles admin check (app_metadata or explicit row)
-      const hasAdminMetadata = activeUser.app_metadata?.role === 'admin';
+      const hasAdminMetadata = activeUser.app_metadata?.role === "admin";
       if (hasAdminMetadata) {
         setIsAdmin(true);
       } else {
         const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', activeUser.id)
-          .eq('role', 'admin')
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", activeUser.id)
+          .eq("role", "admin")
           .maybeSingle();
         if (roleData) setIsAdmin(true);
       }
@@ -86,9 +88,12 @@ export function usePromptLimits() {
           const parsed: PromptUsage = JSON.parse(stored);
 
           const todayIsrael = getIsraelDateString();
-          const storedDate = parsed.lastReset.length === 10
-            ? parsed.lastReset
-            : new Date(parsed.lastReset).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+          const storedDate =
+            parsed.lastReset.length === 10
+              ? parsed.lastReset
+              : new Date(parsed.lastReset).toLocaleDateString("en-CA", {
+                  timeZone: "Asia/Jerusalem",
+                });
 
           if (storedDate !== todayIsrael) {
             const freshUsage: PromptUsage = { count: 0, lastReset: todayIsrael };
@@ -98,7 +103,7 @@ export function usePromptLimits() {
             setUsage(parsed);
           }
         } catch (e) {
-          logger.error('Failed to parse usage:', e);
+          logger.error("Failed to parse usage:", e);
         }
       }
     }
@@ -153,13 +158,13 @@ export function usePromptLimits() {
     return Math.max(0, settings.max_free_prompts - usage.count);
   }
 
-  function getRequiredAction(): 'login' | 'upgrade' | null {
+  function getRequiredAction(): "login" | "upgrade" | null {
     if (user) {
       if (isAdmin) return null;
-      return (quota !== null && quota.credits_balance < 1) ? 'upgrade' : null;
+      return quota !== null && quota.credits_balance < 1 ? "upgrade" : null;
     }
-    if (!user && !settings.allow_guest_access) return 'login';
-    if (!user && usage.count >= settings.max_free_prompts) return 'login';
+    if (!user && !settings.allow_guest_access) return "login";
+    if (!user && usage.count >= settings.max_free_prompts) return "login";
     return null;
   }
 
@@ -171,13 +176,13 @@ export function usePromptLimits() {
 
   function getCreditDisplayShape(): PromptLimitsShape {
     if (isAdmin) {
-      return { remaining: 0, total: null, tierLabel: 'מנהל', isUnlimited: true, refreshAt: null };
+      return { remaining: 0, total: null, tierLabel: "מנהל", isUnlimited: true, refreshAt: null };
     }
     if (user && isPro) {
       return {
         remaining: quota?.credits_balance ?? 0,
         total: null,
-        tierLabel: 'Pro',
+        tierLabel: "Pro",
         isUnlimited: true,
         refreshAt: null,
       };
@@ -186,7 +191,7 @@ export function usePromptLimits() {
       return {
         remaining: quota?.credits_balance ?? 0,
         total: quota?.daily_limit ?? settings.daily_free_limit ?? 2,
-        tierLabel: 'חינמי',
+        tierLabel: "חינמי",
         isUnlimited: false,
         refreshAt: quota?.refresh_at ?? null,
       };
@@ -194,7 +199,7 @@ export function usePromptLimits() {
     return {
       remaining: Math.max(0, settings.max_free_prompts - usage.count),
       total: settings.max_free_prompts,
-      tierLabel: 'אורח',
+      tierLabel: "אורח",
       isUnlimited: false,
       refreshAt: null,
     };
