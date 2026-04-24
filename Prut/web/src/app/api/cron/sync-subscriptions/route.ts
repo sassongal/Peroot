@@ -67,19 +67,14 @@ export async function GET(req: Request) {
       }
     }
 
-    if (userIdsToFix.size === 0) {
-      logger.info("[sync-subscriptions] All subscriptions in sync");
-      return NextResponse.json({ fixed: 0 });
-    }
-
-    // Fetch daily_free_limit
+    // Fetch daily_free_limit (needed for churn resets)
     const { data: settings } = await supabase
       .from("site_settings")
       .select("daily_free_limit, contact_email")
       .single();
     const dailyFreeLimit = settings?.daily_free_limit ?? 2;
 
-    // Fix each user
+    // Pro → Free: fix churned users
     for (const userId of userIdsToFix) {
       // Get current profile
       const { data: profile } = await supabase
