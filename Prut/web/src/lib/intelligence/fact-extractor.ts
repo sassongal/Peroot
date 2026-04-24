@@ -24,6 +24,46 @@ Return ONLY valid JSON with no extra text:
 
 If no useful facts, return: {"facts": []}`;
 
+const MAX_FACT_LEN = 200;
+
+// Reject facts that look like instructions/commands rather than descriptive
+// metadata about the user. These words flag a probable prompt-injection
+// attempt that slipped through the LLM extractor.
+const IMPERATIVE_DENYLIST = [
+  "ignore",
+  "disregard",
+  "forget",
+  "override",
+  "bypass",
+  "you must",
+  "you should",
+  "you are now",
+  "act as",
+  "pretend",
+  "system:",
+  "assistant:",
+  "instruction:",
+  "prompt:",
+  "reveal",
+  "disclose",
+  "leak",
+  "output",
+  "print",
+  "delete",
+  "drop table",
+  "<script",
+  "</script",
+  "http://",
+  "https://",
+  "javascript:",
+  "data:",
+];
+
+function looksLikeInjection(fact: string): boolean {
+  const lower = fact.toLowerCase();
+  return IMPERATIVE_DENYLIST.some((needle) => lower.includes(needle));
+}
+
 export async function extractFacts(promptText: string): Promise<ExtractedFact[]> {
   if (promptText.trim().length < 20) return [];
 
@@ -47,10 +87,13 @@ export async function extractFacts(promptText: string): Promise<ExtractedFact[]>
           f &&
           typeof f.fact === "string" &&
           f.fact.length > 5 &&
+          f.fact.length <= MAX_FACT_LEN &&
           typeof f.category === "string" &&
           typeof f.confidence === "number" &&
-          f.confidence >= 0.65,
+          f.confidence >= 0.65 &&
+          !looksLikeInjection(f.fact),
       )
+      .map((f) => ({ ...f, fact: f.fact.slice(0, MAX_FACT_LEN) }))
       .slice(0, 5);
   } catch {
     return [];

@@ -145,28 +145,32 @@ export default function UsersPage() {
     };
     if (!confirm(`${labels[action]} ${ids.length} משתמשים?`)) return;
     setBulkBusy(true);
-    let ok = 0;
-    let fail = 0;
     try {
-      // Sequential to avoid hammering — there's no bulk endpoint and the list
-      // is usually small (a handful of rows).
-      for (const id of ids) {
-        try {
-          const res = await fetch(getApiPath(`/api/admin/users/${id}`), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action }),
-          });
-          if (res.ok) ok++;
-          else fail++;
-        } catch {
-          fail++;
-        }
+      const res = await fetch(getApiPath(`/api/admin/users/bulk`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: number;
+        failed?: string[];
+        self_blocked?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        toast.error(json.error || `נכשל (${res.status})`);
+      } else {
+        const ok = json.ok ?? 0;
+        const fail = json.failed?.length ?? 0;
+        if (ok > 0) toast.success(`הצליח על ${ok} משתמשים${fail > 0 ? ` · נכשל על ${fail}` : ""}`);
+        if (ok === 0 && fail > 0) toast.error(`נכשל על כל ${fail} המשתמשים`);
+        if (json.self_blocked) toast.message("דולג על עצמך (הגנה)");
+        setSelected(new Set());
+        loadUsers(search);
       }
-      if (ok > 0) toast.success(`הצליח על ${ok} משתמשים${fail > 0 ? ` · נכשל על ${fail}` : ""}`);
-      if (ok === 0 && fail > 0) toast.error(`נכשל על כל ${fail} המשתמשים`);
-      setSelected(new Set());
-      loadUsers(search);
+    } catch (err) {
+      logger.error("[admin] runBulk failed:", err);
+      toast.error("שגיאה בפעולה קבוצתית");
     } finally {
       setBulkBusy(false);
     }

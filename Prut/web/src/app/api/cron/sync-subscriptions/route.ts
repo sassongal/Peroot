@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
 import { EmailService } from "@/lib/emails/service";
 import { adminCronChurnAlertEmail } from "@/lib/emails/templates/admin-alerts";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 /**
  * GET /api/cron/sync-subscriptions
@@ -16,11 +17,8 @@ import { adminCronChurnAlertEmail } from "@/lib/emails/templates/admin-alerts";
  * - Resets them to free tier with daily credit limit and adds 'churn' tag
  */
 export async function GET(req: Request) {
-  // Verify cron secret
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authFailure = verifyCronSecret(req);
+  if (authFailure) return authFailure;
 
   const supabase = createServiceClient();
   const now = new Date().toISOString();

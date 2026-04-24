@@ -6,31 +6,24 @@ import { isReengagementEmailAutomationEnabled } from "@/lib/emails/automation-en
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export const maxDuration = 30;
 
-function verifyCronAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return false;
-  return authHeader === `Bearer ${cronSecret}`;
-}
-
 export async function GET(request: NextRequest) {
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authFailure = verifyCronSecret(request);
+  if (authFailure) return authFailure;
 
   if (!isReengagementEmailAutomationEnabled()) {
     logger.info(
-      "[Cron/Reengagement] Skipped — set REENGAGEMENT_EMAILS_ENABLED=true to enable drip"
+      "[Cron/Reengagement] Skipped — set REENGAGEMENT_EMAILS_ENABLED=true to enable drip",
     );
     return NextResponse.json({ skipped: true, reason: "Reengagement emails disabled" });
   }
 
-  const locked = await acquireCronLock('cron:reengagement', 35);
+  const locked = await acquireCronLock("cron:reengagement", 35);
   if (!locked) {
-    return NextResponse.json({ skipped: true, reason: 'Another instance is running' });
+    return NextResponse.json({ skipped: true, reason: "Another instance is running" });
   }
 
   const supabase = createServiceClient();
@@ -84,19 +77,18 @@ export async function GET(request: NextRequest) {
     const { data: alreadySent } = await supabase
       .from("email_logs")
       .select("user_id, email_type")
-      .in("email_type", REENGAGEMENT_TEMPLATES.map((t) => t.id));
-    const sentKeys = new Set(
-      (alreadySent ?? []).map((e) => `${e.user_id}:${e.email_type}`)
-    );
+      .in(
+        "email_type",
+        REENGAGEMENT_TEMPLATES.map((t) => t.id),
+      );
+    const sentKeys = new Set((alreadySent ?? []).map((e) => `${e.user_id}:${e.email_type}`));
 
     // Get email_sequences for unsubscribe tokens (keyed by user_id)
     const { data: sequences } = await supabase
       .from("email_sequences")
       .select("id, user_id")
       .eq("sequence_type", "onboarding");
-    const sequenceByUser = new Map(
-      (sequences ?? []).map((s) => [s.user_id, s.id])
-    );
+    const sequenceByUser = new Map((sequences ?? []).map((s) => [s.user_id, s.id]));
 
     // Get last activity only for the candidate profiles (not all 50K rows)
     const candidateIds = filteredProfiles.map((p) => p.id);
@@ -121,7 +113,7 @@ export async function GET(request: NextRequest) {
     for (const profile of filteredProfiles) {
       const lastActiveDate = lastActivityMap.get(profile.id) ?? new Date(profile.created_at);
       const daysSinceActive = Math.floor(
-        (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24)
+        (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       // Skip recently active users (< 7 days)
@@ -131,8 +123,9 @@ export async function GET(request: NextRequest) {
       }
 
       // Find the highest-tier template they qualify for but haven't received
-      const eligibleTemplate = REENGAGEMENT_TEMPLATES
-        .filter((t) => daysSinceActive >= t.inactiveDays)
+      const eligibleTemplate = REENGAGEMENT_TEMPLATES.filter(
+        (t) => daysSinceActive >= t.inactiveDays,
+      )
         .filter((t) => !sentKeys.has(`${profile.id}:${t.id}`))
         .sort((a, b) => b.inactiveDays - a.inactiveDays)[0];
 
@@ -167,11 +160,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    await releaseCronLock('cron:reengagement');
-    await recordCronSuccess('reengagement');
-    return NextResponse.json({ sent, skipped, errors, total: filteredProfiles.length, excludedActive: recentlyActiveIds.size });
+    await releaseCronLock("cron:reengagement");
+    await recordCronSuccess("reengagement");
+    return NextResponse.json({
+      sent,
+      skipped,
+      errors,
+      total: filteredProfiles.length,
+      excludedActive: recentlyActiveIds.size,
+    });
   } catch (err) {
-    await releaseCronLock('cron:reengagement');
+    await releaseCronLock("cron:reengagement");
     logger.error("[Reengagement] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

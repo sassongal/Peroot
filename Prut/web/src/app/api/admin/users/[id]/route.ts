@@ -207,6 +207,33 @@ export const POST = withAdmin(
 
       const { action, value } = body;
 
+      // ── Guardrails: self-lockout + last-admin protection ───────────────────
+      // An admin banning themselves or revoking their own admin role can
+      // brick the panel. Revoking the final admin leaves the system without
+      // anyone who can flip maintenance mode / grant access to recover.
+      if (id === adminUser.id && (action === "ban" || action === "revoke_admin")) {
+        return NextResponse.json(
+          { error: `Refusing ${action}: admin cannot ${action} themselves` },
+          { status: 400 },
+        );
+      }
+      if (action === "revoke_admin") {
+        const { count: adminCount, error: countErr } = await supabase
+          .from("user_roles")
+          .select("user_id", { count: "exact", head: true })
+          .eq("role", "admin");
+        if (countErr) {
+          logger.error("[Admin User POST] revoke_admin precheck failed:", countErr);
+          return NextResponse.json({ error: "Failed to verify admin count" }, { status: 500 });
+        }
+        if ((adminCount ?? 0) <= 1) {
+          return NextResponse.json(
+            { error: "Refusing: this would remove the last remaining admin" },
+            { status: 400 },
+          );
+        }
+      }
+
       switch (action) {
         case "change_tier": {
           const validTiers = ["free", "pro", "premium"];

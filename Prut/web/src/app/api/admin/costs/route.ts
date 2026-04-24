@@ -43,14 +43,20 @@ export const GET = withAdmin(async (req) => {
       logger.warn("[Admin Costs] Redis cache read failed:", err);
     }
 
-    // Build base query for the selected window
+    // Cap the result set. api_usage_logs grows unbounded; the 90-day retention
+    // cron only trims >30-day rows, so an admin opening this page with the
+    // default 30-day window can pull every row. Hard cap prevents OOM; when
+    // the cap is hit we surface a `truncated` flag so the UI can warn.
+    const ROW_LIMIT = 50_000;
     let baseQuery = supabase
       .from("api_usage_logs")
       .select(
         "estimated_cost_usd, input_tokens, output_tokens, provider, model, user_id, created_at",
       )
       .gte("created_at", from)
-      .lte("created_at", to);
+      .lte("created_at", to)
+      .order("created_at", { ascending: false })
+      .limit(ROW_LIMIT);
 
     if (provider) {
       baseQuery = baseQuery.eq("provider", provider);
@@ -64,6 +70,12 @@ export const GET = withAdmin(async (req) => {
     }
 
     const rows = logs ?? [];
+    const truncated = rows.length >= ROW_LIMIT;
+    if (truncated) {
+      logger.warn(
+        `[Admin Costs] Query hit ROW_LIMIT (${ROW_LIMIT}); results are partial for range ${from}..${to}`,
+      );
+    }
 
     // --- Summary ---
     const totalCost = rows.reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0);
@@ -165,11 +177,14 @@ export const GET = withAdmin(async (req) => {
     const trendEndLabel = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const trendStartLabel = trendStart.slice(0, 7);
 
+    const TREND_ROW_LIMIT = 200_000;
     const [{ data: trendLogs }, { data: trendManual }] = await Promise.all([
       supabase
         .from("api_usage_logs")
         .select("estimated_cost_usd, created_at")
-        .gte("created_at", trendStart),
+        .gte("created_at", trendStart)
+        .order("created_at", { ascending: false })
+        .limit(TREND_ROW_LIMIT),
       supabase
         .from("manual_costs")
         .select("amount_usd, billing_period")
@@ -202,7 +217,7 @@ export const GET = withAdmin(async (req) => {
       });
     }
 
-    const payload = { summary, byProvider, byUser, monthly };
+    const payload = { summary, byProvider, byUser, monthly, truncated };
 
     try {
       await redis.set(cacheKey, payload, { ex: CACHE_TTL });

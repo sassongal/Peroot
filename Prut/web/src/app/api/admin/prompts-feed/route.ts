@@ -44,9 +44,10 @@ export const GET = withAdmin(async (req) => {
       if (rolesErr) {
         logger.warn("[admin/prompts-feed] roles query warning:", rolesErr);
       } else {
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         adminIds = (adminRoleRows ?? [])
           .map((r) => (r as { user_id: string }).user_id)
-          .filter(Boolean);
+          .filter((v): v is string => typeof v === "string" && uuidRe.test(v));
       }
     }
 
@@ -66,7 +67,7 @@ export const GET = withAdmin(async (req) => {
     if (mode) query = query.eq("capability_mode", mode);
     if (from) query = query.gte("created_at", from);
     if (to) query = query.lte("created_at", to);
-    if (userId && /^[0-9a-f-]{36}$/i.test(userId)) {
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
       query = query.eq("user_id", userId);
     } else if (!includeAdmins && adminIds.length > 0) {
       // PostgREST `in` syntax: (uuid1,uuid2,...)

@@ -174,12 +174,20 @@ export const GET = withAdmin(async (req) => {
 
 // ─── POST ────────────────────────────────────────────────────────────────────
 
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdmin(async (req, _ssrClient, user) => {
+  // Moderation writes to rows owned by OTHER users (personal_library RLS
+  // blocks cross-user updates), so we must use the service client to
+  // bypass RLS. The withAdmin HOF already verified caller is admin.
+  const supabase = createServiceClient();
+
   const body = await req.json();
   const { action, prompt_id } = body as { action: string; prompt_id: string };
 
   if (!action || !prompt_id) {
     return NextResponse.json({ error: "action and prompt_id are required" }, { status: 400 });
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(prompt_id)) {
+    return NextResponse.json({ error: "Invalid prompt_id format" }, { status: 400 });
   }
 
   const validActions = ["approve", "remove", "flag"];
@@ -205,17 +213,26 @@ export const POST = withAdmin(async (req, supabase, user) => {
   const statusLabel =
     action === "approve" ? "approved" : action === "remove" ? "removed" : "flagged";
 
-  // If removing: set is_public = false
+  // If removing: set is_public = false and verify the update actually took effect
   if (action === "remove") {
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("personal_library")
       .update({ is_public: false })
-      .eq("id", prompt_id);
+      .eq("id", prompt_id)
+      .select("id");
 
     if (updateError) {
       logger.error("[Admin Moderation] Failed to update is_public:", updateError);
       return NextResponse.json(
         { error: "Failed to remove prompt from public library" },
+        { status: 500 },
+      );
+    }
+    if (!updated || updated.length === 0) {
+      // Silent RLS denial or row vanished — fail loud instead of logging success.
+      logger.error("[Admin Moderation] Remove updated 0 rows for prompt", prompt_id);
+      return NextResponse.json(
+        { error: "Remove did not apply — prompt not updated" },
         { status: 500 },
       );
     }

@@ -30,9 +30,7 @@ export async function POST(request: Request) {
 
   // Verify HMAC-SHA256 signature before touching the body
   const rawBody = await request.text();
-  if (
-    !verifyWebhookSignature(rawBody, request.headers.get("X-Signature") || "", secret)
-  ) {
+  if (!verifyWebhookSignature(rawBody, request.headers.get("X-Signature") || "", secret)) {
     logger.error("[LemonSqueezy Webhook] Invalid signature");
     return new NextResponse("Invalid signature", { status: 401 });
   }
@@ -64,12 +62,18 @@ export async function POST(request: Request) {
     processed: false,
   });
   if (dedupError) {
-    // Unique constraint violation = duplicate event; any other DB error = retry later
-    logger.info(
-      `[LemonSqueezy Webhook] Skipping event (dedup): ${dedupKey}`,
-      dedupError.code,
+    // Only treat the unique-violation (23505) as "already processed".
+    // Any other DB error (RLS denial, table locked, etc.) must return 5xx
+    // so LemonSqueezy retries — otherwise we silently lose events.
+    if (dedupError.code === "23505") {
+      logger.info(`[LemonSqueezy Webhook] Skipping duplicate event: ${dedupKey}`);
+      return new NextResponse("Already processed", { status: 200 });
+    }
+    logger.error(
+      `[LemonSqueezy Webhook] Dedup insert failed (will retry): ${dedupKey}`,
+      dedupError,
     );
-    return new NextResponse("Already processed", { status: 200 });
+    return new NextResponse("Dedup insert failed", { status: 500 });
   }
 
   try {
@@ -86,10 +90,7 @@ export async function POST(request: Request) {
     }
 
     // Mark event as processed
-    await supabase
-      .from("webhook_events")
-      .update({ processed: true })
-      .eq("event_name", dedupKey);
+    await supabase.from("webhook_events").update({ processed: true }).eq("event_name", dedupKey);
 
     // Log LemonSqueezy-sent emails (LS sends receipts/confirmations automatically)
     const lsEmailEvents: Record<string, string> = {

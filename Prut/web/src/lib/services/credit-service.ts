@@ -89,11 +89,27 @@ export async function checkAndDecrementCredits(
   }
 
   // --- Legacy fallback: function doesn't exist yet -------------------------
+  // This is an ops incident — the atomic RPC must exist in prod. The non-atomic
+  // fallback has a known double-spend race under concurrent requests, so we
+  // only allow it when an explicit opt-in env flag is set. Otherwise fail closed.
   const isNotFound =
     rpcError?.message?.includes("function") && rpcError?.message?.includes("does not exist");
 
   if (isNotFound) {
-    return legacyCheckAndDecrement(userId, tier, queryClient, amount);
+    if (process.env.ALLOW_LEGACY_CREDIT_FALLBACK === "1") {
+      logger.error(
+        "[CreditService] Atomic RPC missing — using legacy non-atomic fallback (double-spend risk)",
+      );
+      return legacyCheckAndDecrement(userId, tier, queryClient, amount);
+    }
+    logger.error(
+      "[CreditService] Atomic RPC refresh_and_decrement_credits not found in DB — failing closed",
+    );
+    return {
+      allowed: false,
+      remaining: 0,
+      error: "Credit service unavailable",
+    };
   }
 
   // --- Genuine error or insufficient credits ------------------------------

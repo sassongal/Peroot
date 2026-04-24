@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
-import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
-import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
+import {
+  generateBlogPost,
+  generatePromptBatch,
+  getGenerationContext,
+} from "@/lib/content-factory/generate";
+import {
+  generateSlugPair,
+  ensureUniqueSlug,
+  calculateReadTime,
+} from "@/lib/content-factory/slug-utils";
 import { findDuplicate, filterDuplicates } from "@/lib/content-factory/dedup";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export const maxDuration = 120;
-
-function verifyCronAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return false;
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 /**
  * GET /api/cron/content-factory
@@ -25,9 +27,8 @@ function verifyCronAuth(request: NextRequest): boolean {
  * Auth: Bearer CRON_SECRET
  */
 export async function GET(request: NextRequest) {
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authFailure = verifyCronSecret(request);
+  if (authFailure) return authFailure;
 
   const supabase = createServiceClient();
 
@@ -79,7 +80,11 @@ export async function GET(request: NextRequest) {
         if (blogLogId) {
           await supabase
             .from("content_generation_log")
-            .update({ status: "failed", error_message: msg, completed_at: new Date().toISOString() })
+            .update({
+              status: "failed",
+              error_message: msg,
+              completed_at: new Date().toISOString(),
+            })
             .eq("id", blogLogId);
         }
       } else {
@@ -121,7 +126,11 @@ export async function GET(request: NextRequest) {
           if (blogLogId) {
             await supabase
               .from("content_generation_log")
-              .update({ status: "failed", error_message: msg, completed_at: new Date().toISOString() })
+              .update({
+                status: "failed",
+                error_message: msg,
+                completed_at: new Date().toISOString(),
+              })
               .eq("id", blogLogId);
           }
         } else {
@@ -139,7 +148,9 @@ export async function GET(request: NextRequest) {
               .eq("id", blogLogId);
           }
 
-          logger.info(`[Cron/ContentFactory] Blog draft created: "${generatedBlog.title}" (id: ${blogPost.id})`);
+          logger.info(
+            `[Cron/ContentFactory] Blog draft created: "${generatedBlog.title}" (id: ${blogPost.id})`,
+          );
         }
       }
     } catch (blogErr) {
@@ -197,10 +208,22 @@ export async function GET(request: NextRequest) {
 
         // Generate unique ID + validate category
         const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-        const validCategoryIds = context.existingCategories.map((c: { id: string; name_he: string }) => c.id);
-        const safeCategoryId = validCategoryIds.includes(promptData.category_id) ? promptData.category_id : "general";
-        const validModes = ["STANDARD", "DEEP_RESEARCH", "IMAGE_GENERATION", "AGENT_BUILDER", "VIDEO_GENERATION"];
-        const safeMode = validModes.includes(promptData.capability_mode) ? promptData.capability_mode : "STANDARD";
+        const validCategoryIds = context.existingCategories.map(
+          (c: { id: string; name_he: string }) => c.id,
+        );
+        const safeCategoryId = validCategoryIds.includes(promptData.category_id)
+          ? promptData.category_id
+          : "general";
+        const validModes = [
+          "STANDARD",
+          "DEEP_RESEARCH",
+          "IMAGE_GENERATION",
+          "AGENT_BUILDER",
+          "VIDEO_GENERATION",
+        ];
+        const safeMode = validModes.includes(promptData.capability_mode)
+          ? promptData.capability_mode
+          : "STANDARD";
 
         const { data: insertedPrompt, error: promptInsertError } = await supabase
           .from("public_library_prompts")
@@ -211,7 +234,9 @@ export async function GET(request: NextRequest) {
             use_case: promptData.use_case || "",
             variables: Array.isArray(promptData.variables) ? promptData.variables : [],
             output_format: promptData.output_format || "",
-            quality_checks: Array.isArray(promptData.quality_checks) ? promptData.quality_checks : [],
+            quality_checks: Array.isArray(promptData.quality_checks)
+              ? promptData.quality_checks
+              : [],
             category_id: safeCategoryId,
             capability_mode: safeMode,
             is_active: false,
@@ -228,8 +253,13 @@ export async function GET(request: NextRequest) {
           .single();
 
         if (promptInsertError) {
-          logger.error(`[Cron/ContentFactory] Prompt insert error for "${promptData.title}":`, promptInsertError);
-          result.errors.push(`Prompt insert failed: "${promptData.title}" — ${promptInsertError.message}`);
+          logger.error(
+            `[Cron/ContentFactory] Prompt insert error for "${promptData.title}":`,
+            promptInsertError,
+          );
+          result.errors.push(
+            `Prompt insert failed: "${promptData.title}" — ${promptInsertError.message}`,
+          );
         } else {
           insertedTitles.push(insertedPrompt.title as string);
         }
@@ -263,9 +293,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    logger.info(`[Cron/ContentFactory] Run ${runId} complete. Blog: ${result.blog?.title ?? "none"}, Prompts: ${result.prompts.count}, Errors: ${result.errors.length}`);
+    logger.info(
+      `[Cron/ContentFactory] Run ${runId} complete. Blog: ${result.blog?.title ?? "none"}, Prompts: ${result.prompts.count}, Errors: ${result.errors.length}`,
+    );
 
-    await recordCronSuccess('content-factory');
+    await recordCronSuccess("content-factory");
 
     return NextResponse.json({
       runId,

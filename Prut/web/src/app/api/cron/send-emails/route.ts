@@ -9,32 +9,22 @@ import {
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export const maxDuration = 30;
 
-// Verify cron secret to prevent unauthorized access
-function verifyCronAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return false;
-  return authHeader === `Bearer ${cronSecret}`;
-}
-
 export async function GET(request: NextRequest) {
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authFailure = verifyCronSecret(request);
+  if (authFailure) return authFailure;
 
   if (!isOnboardingEmailAutomationEnabled()) {
-    logger.info(
-      "[Cron/Emails] Skipped — set ONBOARDING_EMAILS_ENABLED=true for signup welcome"
-    );
+    logger.info("[Cron/Emails] Skipped — set ONBOARDING_EMAILS_ENABLED=true for signup welcome");
     return NextResponse.json({ skipped: true, reason: "Onboarding emails disabled" });
   }
 
   if (!isOnboardingCronFallbackEnabled()) {
     logger.info(
-      "[Cron/Emails] Skipped — ONBOARDING_CRON_FALLBACK_ENABLED is not true (callback-only onboarding; enable for stuck-sequence recovery)"
+      "[Cron/Emails] Skipped — ONBOARDING_CRON_FALLBACK_ENABLED is not true (callback-only onboarding; enable for stuck-sequence recovery)",
     );
     return NextResponse.json({
       skipped: true,
@@ -42,9 +32,9 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const locked = await acquireCronLock('cron:send-emails', 35);
+  const locked = await acquireCronLock("cron:send-emails", 35);
   if (!locked) {
-    return NextResponse.json({ skipped: true, reason: 'Another instance is running' });
+    return NextResponse.json({ skipped: true, reason: "Another instance is running" });
   }
 
   const supabase = createServiceClient();
@@ -70,10 +60,7 @@ export async function GET(request: NextRequest) {
       const step = ONBOARDING_STEPS[seq.current_step];
       if (!step) {
         // All steps done - mark completed
-        await supabase
-          .from("email_sequences")
-          .update({ status: "completed" })
-          .eq("id", seq.id);
+        await supabase.from("email_sequences").update({ status: "completed" }).eq("id", seq.id);
         continue;
       }
 
@@ -88,7 +75,8 @@ export async function GET(request: NextRequest) {
       const email = userData?.user?.email;
       if (!email) continue;
 
-      const name = userData?.user?.user_metadata?.full_name || userData?.user?.user_metadata?.name || "";
+      const name =
+        userData?.user?.user_metadata?.full_name || userData?.user?.user_metadata?.name || "";
       const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?token=${seq.id}`;
 
       try {
@@ -117,11 +105,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    await releaseCronLock('cron:send-emails');
-    await recordCronSuccess('send-emails');
+    await releaseCronLock("cron:send-emails");
+    await recordCronSuccess("send-emails");
     return NextResponse.json({ sent, errors, total: sequences?.length || 0 });
   } catch (err) {
-    await releaseCronLock('cron:send-emails');
+    await releaseCronLock("cron:send-emails");
     logger.error("[Cron/Emails] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

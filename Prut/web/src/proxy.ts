@@ -68,14 +68,22 @@ export function isCsrfExempt(pathname: string, request: NextRequest): boolean {
   if (CSRF_EXEMPT_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return true;
   }
-  // Bearer-authenticated requests (Chrome extension JWT or prk_ API keys)
+  // Bearer-authenticated requests (Chrome extension JWT or prk_ API keys).
   // Only exempt when there is no browser origin (programmatic API calls) or
   // the origin is a Chrome extension (chrome-extension:// can't be spoofed cross-origin).
   // Requests from http/https origins with a Bearer header are NOT exempt — a forged
   // "Authorization: Bearer invalid" header from evil.com must still fail CSRF.
+  //
+  // Additional guard: if a Supabase auth cookie is present, the user is
+  // cookie-authenticated — Bearer must not exempt them or an attacker-controlled
+  // site could strip Origin, add a junk Bearer, and ride the victim's session.
   const authHeader = request.headers.get("authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const origin = request.headers.get("origin") || "";
+    const hasSessionCookie = request.cookies
+      .getAll()
+      .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+    if (hasSessionCookie) return false;
     if (!origin || origin.startsWith("chrome-extension://")) {
       return true;
     }

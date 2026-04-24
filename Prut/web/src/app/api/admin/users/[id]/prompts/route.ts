@@ -14,6 +14,9 @@ export const GET = withAdmin(
     const supabase = createServiceClient();
     try {
       const { id } = await params;
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+        return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 });
+      }
       const tab = req.nextUrl.searchParams.get("tab") || "prompts";
       const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "50") || 50, 200);
       const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get("offset") || "0") || 0);

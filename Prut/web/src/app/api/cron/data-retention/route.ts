@@ -3,24 +3,17 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export const maxDuration = 30;
-
-function verifyCronAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return false;
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 /**
  * Monthly data retention cron.
  * Deletes old log data to prevent unbounded table growth.
  */
 export async function GET(request: NextRequest) {
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authFailure = verifyCronSecret(request);
+  if (authFailure) return authFailure;
 
   const locked = await acquireCronLock("cron:data-retention", 60);
   if (!locked) {
@@ -64,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     logger.info("[DataRetention] Cleanup complete:", results);
     await releaseCronLock("cron:data-retention");
-    await recordCronSuccess('data-retention');
+    await recordCronSuccess("data-retention");
     return NextResponse.json({ success: true, deleted: results });
   } catch (err) {
     await releaseCronLock("cron:data-retention");
