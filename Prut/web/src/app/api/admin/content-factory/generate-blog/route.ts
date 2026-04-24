@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateBlogPost, getGenerationContext } from "@/lib/content-factory/generate";
@@ -22,7 +22,7 @@ const GenerateBlogSchema = z.object({
  * Logs the generation attempt in content_generation_log.
  * Performs dedup check before inserting into blog_posts.
  */
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdminWrite(async (req, supabase, user) => {
   let logId: string | null = null;
 
   try {

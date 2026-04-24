@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
@@ -466,7 +466,7 @@ export const GET = withAdmin(async () => {
  * Body: { ackedIds: string[] }
  * Persists acknowledged notification IDs to site_settings (DB-backed, cross-browser).
  */
-export const POST = withAdmin(async (req, _supabase) => {
+export const POST = withAdminWrite(async (req, _supabase) => {
   try {
     const body = await req.json();
     const incoming: string[] = Array.isArray(body?.ackedIds) ? body.ackedIds : [];

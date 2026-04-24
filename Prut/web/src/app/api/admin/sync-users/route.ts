@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
+import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from '@/lib/logger';
 
 /**
@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
  * Since Supabase automatically syncs auth.users to profiles via triggers,
  * we don't need admin API access
  */
-export const POST = withAdmin(async (_req, supabase, _user) => {
+export const POST = withAdminWrite(async (_req, supabase, _user) => {
     // Count profiles (automatically synced from auth.users via triggers)
     const { count, error: dbError } = await supabase
       .from('profiles')

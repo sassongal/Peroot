@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
+import { withAdmin, withAdminWrite } from '@/lib/api-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -35,7 +35,7 @@ export const GET = withAdmin(async (_req, supabase) => {
  * 
  * Create or update a category
  */
-export const POST = withAdmin(async (req, supabase) => {
+export const POST = withAdminWrite(async (req, supabase) => {
     try {
         const body = await req.json();
         const parseResult = CategorySchema.safeParse(body);

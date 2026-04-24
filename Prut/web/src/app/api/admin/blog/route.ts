@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { pingGoogle } from "@/lib/google-ping";
 import { z } from "zod";
@@ -45,7 +45,7 @@ export const GET = withAdmin(async (_req, supabase) => {
 });
 
 // POST - create new post
-export const POST = withAdmin(async (req, supabase) => {
+export const POST = withAdminWrite(async (req, supabase) => {
   try {
     const raw = await req.json();
     const parsed = BlogPostSchema.safeParse(raw);
@@ -70,7 +70,7 @@ export const POST = withAdmin(async (req, supabase) => {
 });
 
 // PUT - update existing post
-export const PUT = withAdmin(async (req, supabase) => {
+export const PUT = withAdminWrite(async (req, supabase) => {
   try {
     const body = await req.json();
     const parsed = BlogPostUpdateSchema.safeParse(body);
@@ -108,7 +108,7 @@ export const PUT = withAdmin(async (req, supabase) => {
 });
 
 // DELETE - delete a post
-export const DELETE = withAdmin(async (req, supabase) => {
+export const DELETE = withAdminWrite(async (req, supabase) => {
   try {
     const body = await req.json();
     const parsed = BlogPostDeleteSchema.safeParse(body);

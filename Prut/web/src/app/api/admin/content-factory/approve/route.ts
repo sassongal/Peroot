@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { pingGoogle } from "@/lib/google-ping";
 import { z } from "zod";
@@ -16,7 +16,7 @@ const ApproveSchema = z.object({
  * - blog: sets status='published' and published_at
  * - prompt: sets is_active=true
  */
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdminWrite(async (req, supabase, user) => {
   try {
     const body = await req.json();
     const parsed = ApproveSchema.safeParse(body);

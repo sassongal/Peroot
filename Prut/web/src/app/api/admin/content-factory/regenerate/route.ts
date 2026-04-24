@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
@@ -20,7 +20,7 @@ const RegenerateSchema = z.object({
  * Fetches the original item's topic/category for context,
  * deletes the old draft, then generates and inserts a fresh one.
  */
-export const POST = withAdmin(async (req, supabase, _user) => {
+export const POST = withAdminWrite(async (req, supabase, _user) => {
   try {
     const body = await req.json();
     const parsed = RegenerateSchema.safeParse(body);

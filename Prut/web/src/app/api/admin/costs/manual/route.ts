@@ -4,7 +4,7 @@ import {
   logAdminAction,
   parseAdminInput,
 } from '@/lib/admin/admin-security';
-import { withAdmin } from '@/lib/api-middleware';
+import { withAdmin, withAdminWrite } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
 
 const manualCostSchema = z.object({
@@ -56,7 +56,7 @@ export const GET = withAdmin(async (req, supabase) => {
  * Creates or updates a manual cost entry for a given service_name + billing_period.
  * Body: { service_name, amount_usd, billing_period, notes? }
  */
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdminWrite(async (req, supabase, user) => {
   try {
     const { data: body, error: parseError } = await parseAdminInput(req, manualCostSchema);
     if (parseError) return parseError;

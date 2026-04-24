@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -49,7 +49,7 @@ export const GET = withAdmin(async (_req, supabase) => {
  * Create a new content-factory preset.
  * Body: { name, type, config: { topic?, category?, template? } }
  */
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdminWrite(async (req, supabase, user) => {
   try {
     const body = await req.json();
     const parsed = CreatePresetSchema.safeParse(body);
@@ -95,7 +95,7 @@ export const POST = withAdmin(async (req, supabase, user) => {
  * Delete a preset by id.
  * Body: { id }
  */
-export const DELETE = withAdmin(async (req, supabase, user) => {
+export const DELETE = withAdminWrite(async (req, supabase, user) => {
   try {
     const body = await req.json();
     const parsed = DeletePresetSchema.safeParse(body);

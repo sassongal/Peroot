@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
@@ -20,7 +20,7 @@ const GeneratePromptsSchema = z.object({
  * Each prompt is dedup-checked before insertion.
  * Inserts into public_library_prompts with is_active=false.
  */
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdminWrite(async (req, supabase, user) => {
   let logId: string | null = null;
 
   try {

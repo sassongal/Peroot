@@ -5,7 +5,7 @@ import { google } from '@ai-sdk/google';
 import { getEngine, EngineInput } from '@/lib/engines';
 import { parseCapabilityMode, capabilityModeToDbMode } from '@/lib/capability-mode';
 import { logAdminAction, parseAdminInput } from '@/lib/admin/admin-security';
-import { withAdmin } from '@/lib/api-middleware';
+import { withAdminWrite } from "@/lib/api-middleware";
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/ratelimit';
@@ -27,7 +27,7 @@ const TestEngineSchema = z.object({
  * 
  * Secure endpoint for admins to test engine prompts with Zod validation and Audit Logging.
  */
-export const POST = withAdmin(async (req, _supabase, user) => {
+export const POST = withAdminWrite(async (req, _supabase, user) => {
   try {
     // 1. Rate limit
     const rateLimit = await checkRateLimit(user.id, 'adminTestEngine');

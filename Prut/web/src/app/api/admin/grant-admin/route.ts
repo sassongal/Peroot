@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logAdminAction } from '@/lib/admin/admin-security';
-import { withAdmin } from '@/lib/api-middleware';
+import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from '@/lib/logger';
 
 /**
@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
  * Note: Only an existing admin can grant admin to themselves or others.
  * For initial setup, use the SQL editor.
  */
-export const POST = withAdmin(async (_req, supabase, user) => {
+export const POST = withAdminWrite(async (_req, supabase, user) => {
   const { data, error: dbError } = await supabase
     .from('user_roles')
     .upsert({

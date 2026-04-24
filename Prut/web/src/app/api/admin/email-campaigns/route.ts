@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { withAdmin } from "@/lib/api-middleware";
+import { withAdmin, withAdminWrite } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EmailService } from "@/lib/emails/service";
 import { logger } from "@/lib/logger";
@@ -105,7 +105,7 @@ export const GET = withAdmin(async () => {
  * Fetches recipient emails based on segment, sends via Resend,
  * logs result to activity_logs, returns success/failure counts.
  */
-export const POST = withAdmin(async (req, _ssrClient, user) => {
+export const POST = withAdminWrite(async (req, _ssrClient, user) => {
   const supabase = createServiceClient();
   try {
     // Rate limit

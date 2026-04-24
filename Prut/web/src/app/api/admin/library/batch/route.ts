@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
+import { withAdminWrite } from "@/lib/api-middleware";
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -31,7 +31,7 @@ const BatchImportSchema = z.array(PromptSchema);
  * 
  * Batch import/update public library prompts
  */
-export const POST = withAdmin(async (req, supabase, user) => {
+export const POST = withAdminWrite(async (req, supabase, user) => {
     try {
         const body = await req.json();
         const parseResult = BatchImportSchema.safeParse(body);
