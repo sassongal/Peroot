@@ -12,6 +12,7 @@ import { registerAiPromptTools } from "./tools/ai-prompts.js";
 import { registerRedisTools } from "./tools/redis-tools.js";
 import { registerContextTools } from "./tools/context.js";
 import { registerLifecycleTools } from "./tools/lifecycle.js";
+import { registerGscTools } from "./tools/gsc.js";
 
 // Load .env.local from the project root (one level up from dist/)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,7 @@ registerAiPromptTools(server);
 registerRedisTools(server);
 registerContextTools(server);
 registerLifecycleTools(server);
+registerGscTools(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

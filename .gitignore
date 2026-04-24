@@ -46,3 +46,14 @@ Prut/web/.git.bak/
 # instead of cwd (e.g., a previous crewai run created a recursive
 # Users/galsasson/Peirutech/... nesting inside the tool dir).
 Prut/web/tools/*/Users/
+
+# IDE and tool caches (local per-dev state, not for the repo)
+**/.cursor/
+**/.opencode/
+**/.playwright-mcp/
+
+# MCP server build output
+peroot-mcp-server/dist/
+
+# Windows PowerShell redirect artifact (> NUL creates a literal "nul" file)
+**/nul
