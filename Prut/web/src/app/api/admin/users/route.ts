@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import { withAdmin } from "@/lib/api-middleware";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { escapePostgrestValue } from "@/lib/sanitize";
 
 /**
  * GET /api/admin/users
  *
- * Returns merged user list (profiles + roles + subscriptions).
- * Supports optional ?search= query param for server-side filtering.
+ * Returns merged user list (profiles + roles + subscriptions + real activity).
+ *
+ * IMPORTANT: admin cross-user aggregations run on the service client so RLS
+ * does not scope results to the requesting admin. The SSR client from
+ * withAdmin() is only used for auth — all data queries below use `svc`.
  */
-export const GET = withAdmin(async (req, supabase) => {
+export const GET = withAdmin(async (req) => {
+  const svc = createServiceClient();
   const searchTerm = req.nextUrl.searchParams.get("search") || "";
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "100") || 100, 500);
   const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get("offset") || "0") || 0);
 
-  // Build profiles query with optional server-side search and pagination
-  let profilesQuery = supabase
+  let profilesQuery = svc
     .from("profiles")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
@@ -24,83 +28,99 @@ export const GET = withAdmin(async (req, supabase) => {
   if (searchTerm.trim()) {
     const escaped = escapePostgrestValue(searchTerm);
     profilesQuery = profilesQuery.or(
-      `email.ilike.%${escaped}%,full_name.ilike.%${escaped}%,id.eq.${escaped}`
+      `email.ilike.%${escaped}%,full_name.ilike.%${escaped}%,id.eq.${escaped}`,
     );
   }
 
-  // Profiles + roles + subscriptions in parallel
   const [
     { data: profiles, count: totalCount, error: profileError },
     { data: roles, error: roleError },
     { data: subscriptions, error: subError },
   ] = await Promise.all([
     profilesQuery,
-    supabase.from("user_roles").select("user_id, role").limit(1000),
-    supabase
-      .from("subscriptions")
-      .select("user_id, plan_name, status, customer_name")
-      .limit(1000),
+    svc.from("user_roles").select("user_id, role").limit(1000),
+    svc.from("subscriptions").select("user_id, plan_name, status, customer_name").limit(1000),
   ]);
 
-  // Real activity: aggregate history counts + latest activity per user returned
+  if (profileError) {
+    logger.error("[admin/users] profiles error:", profileError);
+    return NextResponse.json({ error: "Failed to load profiles" }, { status: 500 });
+  }
+  if (roleError) logger.error("[admin/users] roles error:", roleError);
+  if (subError) logger.warn("[admin/users] subscriptions warning:", subError);
+
   const userIds = (profiles ?? []).map((p) => p.id);
-  let promptCountByUser = new Map<string, number>();
-  let latestHistoryByUser = new Map<string, string>();
+
+  // Aggregate real activity from history + auth.users last_sign_in_at
+  const promptCountByUser = new Map<string, number>();
+  const latestHistoryByUser = new Map<string, string>();
+  const lastSignInByUser = new Map<string, string>();
+
   if (userIds.length > 0) {
-    const { data: historyRows, error: historyErr } = await supabase
-      .from("history")
-      .select("user_id, created_at")
-      .in("user_id", userIds)
-      .order("created_at", { ascending: false })
-      .limit(5000);
+    const [{ data: historyRows, error: historyErr }, authList] = await Promise.all([
+      svc
+        .from("history")
+        .select("user_id, created_at")
+        .in("user_id", userIds)
+        .order("created_at", { ascending: false })
+        .limit(20000),
+      // auth.admin.listUsers is paginated (max 1000/page); pull up to 5 pages.
+      (async () => {
+        const out: Array<{ id: string; last_sign_in_at?: string | null }> = [];
+        for (let page = 1; page <= 5; page++) {
+          const { data, error } = await svc.auth.admin.listUsers({ page, perPage: 1000 });
+          if (error) {
+            logger.warn("[admin/users] auth.listUsers warning:", error);
+            break;
+          }
+          const users = data?.users ?? [];
+          for (const u of users)
+            out.push({ id: u.id, last_sign_in_at: u.last_sign_in_at ?? null });
+          if (users.length < 1000) break;
+        }
+        return out;
+      })(),
+    ]);
+
     if (historyErr) {
       logger.warn("[admin/users] history aggregation warning:", historyErr);
     } else {
       for (const row of historyRows ?? []) {
         const uid = (row as { user_id: string }).user_id;
         const ts = (row as { created_at: string }).created_at;
+        if (!uid) continue;
         promptCountByUser.set(uid, (promptCountByUser.get(uid) ?? 0) + 1);
         if (!latestHistoryByUser.has(uid)) latestHistoryByUser.set(uid, ts);
       }
     }
-  }
 
-  if (profileError) {
-    logger.error("[admin/users] profiles error:", profileError);
-    return NextResponse.json(
-      { error: "Failed to load profiles" },
-      { status: 500 }
-    );
-  }
-  if (roleError) {
-    logger.error("[admin/users] roles error:", roleError);
-  }
-  if (subError) {
-    logger.warn("[admin/users] subscriptions warning:", subError);
+    for (const u of authList) {
+      if (u.last_sign_in_at) lastSignInByUser.set(u.id, u.last_sign_in_at);
+    }
   }
 
   const users = (profiles ?? []).map((p) => {
-    const sub = (subscriptions ?? []).find(
-      (s: { user_id: string }) => s.user_id === p.id
-    );
+    const sub = (subscriptions ?? []).find((s: { user_id: string }) => s.user_id === p.id);
+    const authLastSignIn = lastSignInByUser.get(p.id) ?? null;
+    const profileLastSignIn = (p as { last_sign_in_at?: string | null }).last_sign_in_at ?? null;
+    const lastSignInAt = authLastSignIn ?? profileLastSignIn;
     const lastPromptAt = (p as { last_prompt_at?: string | null }).last_prompt_at ?? null;
     const latestHistory = latestHistoryByUser.get(p.id) ?? null;
-    // last_activity_at = max(last_prompt_at, latest history row, last_sign_in_at)
-    const candidates = [
-      lastPromptAt,
-      latestHistory,
-      (p as { last_sign_in_at?: string | null }).last_sign_in_at ?? null,
-    ].filter((v): v is string => !!v);
+
+    const candidates = [lastPromptAt, latestHistory, lastSignInAt].filter(
+      (v): v is string => !!v,
+    );
     const lastActivityAt =
       candidates.length > 0
         ? candidates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b))
         : null;
+
     return {
       ...p,
+      last_sign_in_at: lastSignInAt,
       role:
-        (roles ?? []).find(
-          (r: { user_id: string; role: string }) => r.user_id === p.id
-        )?.role ?? "user",
+        (roles ?? []).find((r: { user_id: string; role: string }) => r.user_id === p.id)?.role ??
+        "user",
       plan_tier: sub?.plan_name ?? p.plan_tier ?? "free",
       customer_name: sub?.customer_name ?? null,
       prompt_count: promptCountByUser.get(p.id) ?? 0,
@@ -111,7 +131,7 @@ export const GET = withAdmin(async (req, supabase) => {
 
   return NextResponse.json(users, {
     headers: {
-      'X-Total-Count': String(totalCount ?? 0),
+      "X-Total-Count": String(totalCount ?? 0),
     },
   });
 });

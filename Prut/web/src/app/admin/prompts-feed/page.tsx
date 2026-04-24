@@ -31,6 +31,7 @@ interface PromptFeedItem {
   source: string | null;
   created_at: string;
   user_display: string;
+  user_email: string | null;
 }
 
 const MODES = [
@@ -51,11 +52,18 @@ export default function AdminPromptsFeedPage() {
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("");
   const [loading, setLoading] = useState(true);
+  const [includeAdmins, setIncludeAdmins] = useState(false);
+  const [excludedAdmins, setExcludedAdmins] = useState(0);
   const [selected, setSelected] = useState<PromptFeedItem | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(
-    async (opts: { search?: string; mode?: string; offset?: number } = {}) => {
+    async (opts: {
+      search?: string;
+      mode?: string;
+      offset?: number;
+      includeAdmins?: boolean;
+    } = {}) => {
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -64,6 +72,7 @@ export default function AdminPromptsFeedPage() {
         });
         if (opts.search?.trim()) params.set("search", opts.search.trim());
         if (opts.mode) params.set("mode", opts.mode);
+        if (opts.includeAdmins) params.set("includeAdmins", "1");
         const res = await fetch(getApiPath(`/api/admin/prompts-feed?${params}`), {
           credentials: "same-origin",
           cache: "no-store",
@@ -72,6 +81,7 @@ export default function AdminPromptsFeedPage() {
         const data = await res.json();
         setItems(data.items ?? []);
         setTotal(data.total ?? 0);
+        setExcludedAdmins(data.excludedAdmins ?? 0);
       } catch (e) {
         logger.error("[admin/prompts-feed] load failed:", e);
         toast.error("שגיאה בטעינת הפיד");
@@ -83,20 +93,20 @@ export default function AdminPromptsFeedPage() {
   );
 
   useEffect(() => {
-    load({ search: "", mode: "", offset: 0 });
+    load({ search: "", mode: "", offset: 0, includeAdmins: false });
   }, [load]);
 
-  // Debounced search + mode
+  // Debounced search + mode + admin toggle
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setOffset(0);
-      load({ search, mode, offset: 0 });
+      load({ search, mode, offset: 0, includeAdmins });
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, mode, load]);
+  }, [search, mode, includeAdmins, load]);
 
   const page = Math.floor(offset / PAGE_SIZE) + 1;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -118,17 +128,29 @@ export default function AdminPromptsFeedPage() {
                 פיד פרומפטים
               </h1>
               <p className="text-sm text-zinc-500 mt-1">
-                נתונים אמיתיים מטבלת <code className="text-amber-300">history</code> — מה המשתמש כתב ומה המערכת יצרה
+                נתונים אמיתיים מטבלת <code className="text-amber-300">history</code> — מה המשתמש כתב
+                ומה המערכת יצרה
               </p>
             </div>
-            <button
-              onClick={() => load({ search, mode, offset })}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              רענן
-            </button>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-medium cursor-pointer hover:bg-white/10">
+                <input
+                  type="checkbox"
+                  checked={includeAdmins}
+                  onChange={(e) => setIncludeAdmins(e.target.checked)}
+                  className="accent-amber-400"
+                />
+                כולל מנהלים
+              </label>
+              <button
+                onClick={() => load({ search, mode, offset, includeAdmins })}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                רענן
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -163,13 +185,16 @@ export default function AdminPromptsFeedPage() {
           <div className="flex items-center justify-between text-xs text-zinc-500">
             <span>
               מציג {items.length} מתוך {total.toLocaleString("he-IL")} · {modeLabel}
+              {!includeAdmins && excludedAdmins > 0 && (
+                <span className="text-zinc-600"> · {excludedAdmins} מנהלים הוסתרו</span>
+              )}
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
                   const next = Math.max(0, offset - PAGE_SIZE);
                   setOffset(next);
-                  load({ search, mode, offset: next });
+                  load({ search, mode, offset: next, includeAdmins });
                 }}
                 disabled={offset === 0 || loading}
                 className="p-1.5 rounded hover:bg-white/5 disabled:opacity-30"
@@ -185,7 +210,7 @@ export default function AdminPromptsFeedPage() {
                   const next = offset + PAGE_SIZE;
                   if (next >= total) return;
                   setOffset(next);
-                  load({ search, mode, offset: next });
+                  load({ search, mode, offset: next, includeAdmins });
                 }}
                 disabled={offset + PAGE_SIZE >= total || loading}
                 className="p-1.5 rounded hover:bg-white/5 disabled:opacity-30"
@@ -219,6 +244,11 @@ export default function AdminPromptsFeedPage() {
                         <User className="w-3 h-3" />
                         <span className="truncate max-w-[200px]">{it.user_display}</span>
                       </Link>
+                      {it.user_email && it.user_email !== it.user_display && (
+                        <span className="text-[11px] text-zinc-600 truncate max-w-[200px]">
+                          {it.user_email}
+                        </span>
+                      )}
                       {it.capability_mode && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-zinc-400 font-medium uppercase tracking-wider">
                           {it.capability_mode}
