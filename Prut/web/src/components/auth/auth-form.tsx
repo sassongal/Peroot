@@ -23,7 +23,6 @@ export function AuthForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [showEmailSent, setShowEmailSent] = useState(false);
   const [showResetSent, setShowResetSent] = useState(false);
 
   const isLogin = mode === "login";
@@ -78,28 +77,40 @@ export function AuthForm() {
           router.push(dest);
         }
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Server-side signup: creates user with email pre-confirmed (no verification link)
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, fullName }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          toast.error(json.error || "שגיאה בהרשמה");
+          return;
+        }
+        // Sign in immediately after account creation
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
         });
-        if (error) {
-          toast.error("שגיאה בהרשמה: " + error.message);
-        } else {
-          trackSignUp("email");
-          setShowEmailSent(true);
+        if (signInError) {
+          toast.error("החשבון נוצר אך ההתחברות נכשלה: " + signInError.message);
+          return;
         }
+        trackSignUp("email");
+        toast.success("ברוכים הבאים לפירוט!");
+        const nextParam = new URLSearchParams(window.location.search).get("next");
+        let dest =
+          nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+        if (dest.length > 2048) dest = "/";
+        router.refresh();
+        router.push(dest);
       }
     });
   };
 
-  // --- Success states (email sent / reset sent) ---
-  if (showEmailSent || showResetSent) {
+  // --- Reset sent success state ---
+  if (showResetSent) {
     return (
       <div className="space-y-5 animate-in fade-in zoom-in-95 duration-500 text-center" dir="rtl">
         <div className="flex justify-center">
@@ -110,19 +121,16 @@ export function AuthForm() {
         <div className="space-y-2">
           <h2 className="text-xl font-bold text-white">בדוק את האימייל שלך</h2>
           <p className="text-sm text-white/50 leading-relaxed">
-            {showEmailSent ? "שלחנו קישור אימות לכתובת:" : "קישור לאיפוס סיסמה נשלח לאימייל שלך"}
+            קישור לאיפוס סיסמה נשלח לאימייל שלך
             <br />
             <span className="font-semibold text-amber-400/80">{email}</span>
           </p>
           <p className="text-xs text-white/30 leading-relaxed">
-            {showEmailSent
-              ? "יש ללחוץ על הקישור באימייל כדי להפעיל את החשבון."
-              : "יש ללחוץ על הקישור באימייל כדי לאפס את הסיסמה."}
+            יש ללחוץ על הקישור באימייל כדי לאפס את הסיסמה.
           </p>
         </div>
         <button
           onClick={() => {
-            setShowEmailSent(false);
             setShowResetSent(false);
             setMode("login");
             setEmail("");
