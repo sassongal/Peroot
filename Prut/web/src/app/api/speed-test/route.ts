@@ -25,7 +25,8 @@ const VALID_STRATEGIES = new Set(["mobile", "desktop"]);
 // point it at http://169.254.169.254 or internal container IPs.
 function isBlockedHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
-  if (h === "localhost" || h === "0.0.0.0" || h.endsWith(".local") || h.endsWith(".internal")) return true;
+  if (h === "localhost" || h === "0.0.0.0" || h.endsWith(".local") || h.endsWith(".internal"))
+    return true;
   const ipv4 = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (ipv4) {
     const [a, b] = ipv4.slice(1).map(Number);
@@ -36,7 +37,11 @@ function isBlockedHost(hostname: string): boolean {
     if (a === 192 && b === 168) return true;
     if (a === 0) return true;
   }
-  if (h.startsWith("[") && (h.includes("::1") || h.startsWith("[fc") || h.startsWith("[fd") || h.startsWith("[fe80"))) return true;
+  if (
+    h.startsWith("[") &&
+    (h.includes("::1") || h.startsWith("[fc") || h.startsWith("[fd") || h.startsWith("[fe80"))
+  )
+    return true;
   return false;
 }
 
@@ -72,7 +77,7 @@ export async function GET(req: NextRequest) {
   if (!rl.success) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a minute." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -91,7 +96,7 @@ export async function GET(req: NextRequest) {
     if (!response.ok) {
       return NextResponse.json(
         { error: `PageSpeed API returned status ${response.status}` },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -128,7 +133,13 @@ export async function GET(req: NextRequest) {
         tti: audits["interactive"]?.score,
       },
       opportunities: Object.values(audits)
-        .filter((a) => a.details?.type === "opportunity" && a.score !== null && a.score !== undefined && a.score < 0.9)
+        .filter(
+          (a) =>
+            a.details?.type === "opportunity" &&
+            a.score !== null &&
+            a.score !== undefined &&
+            a.score < 0.9,
+        )
         .map((a) => ({
           title: a.title,
           description: a.description,
@@ -142,9 +153,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     Sentry.captureException(err, { tags: { route: "api/speed-test" } });
-    return NextResponse.json(
-      { error: "Failed to fetch PageSpeed data" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch PageSpeed data" }, { status: 500 });
   }
 }

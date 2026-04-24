@@ -9,9 +9,11 @@ import { CATEGORY_LABELS } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCollectionSchema, howToSchema, faqSchema } from "@/lib/schema";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
-import { CopyButton } from "./CopyButton";
-import { UsePromptButton } from "./UsePromptButton";
 import { PromptCardBodyGate } from "./PromptCardBodyGate";
+
+// Max chars of prompt body to render in public HTML. Guests see a preview;
+// authed clients fetch full text via /api/p/batch after mount.
+const PUBLIC_PREVIEW_CHARS = 160;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -255,55 +257,18 @@ export default async function CategoryPage({ params }: Props) {
                     )}
 
                     <PromptCardBodyGate
-                      actions={
-                        <>
-                          <CopyButton text={prompt.prompt} />
-                          <UsePromptButton
-                            id={prompt.id}
-                            title={prompt.title}
-                            prompt={prompt.prompt}
-                            category={slug}
-                          />
-                          <Link
-                            href={`/prompts/${slug}/${prompt.id}`}
-                            className="mr-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            פרטים ←
-                          </Link>
-                        </>
+                      promptId={prompt.id}
+                      title={prompt.title}
+                      slug={slug}
+                      capabilityMode={prompt.capability_mode}
+                      variables={prompt.variables}
+                      detailHref={`/prompts/${slug}/${prompt.id}`}
+                      previewText={
+                        prompt.prompt.length > PUBLIC_PREVIEW_CHARS
+                          ? prompt.prompt.slice(0, PUBLIC_PREVIEW_CHARS).trimEnd() + "…"
+                          : prompt.prompt
                       }
-                    >
-                      {/* Prompt preview */}
-                      <div
-                        className={`text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-4 bg-secondary rounded-xl p-3 border border-border ${
-                          prompt.capability_mode === "IMAGE_GENERATION"
-                            ? "font-mono text-left dir-ltr"
-                            : ""
-                        }`}
-                        dir={prompt.capability_mode === "IMAGE_GENERATION" ? "ltr" : undefined}
-                      >
-                        {prompt.prompt}
-                      </div>
-
-                      {/* Variables */}
-                      {prompt.variables && prompt.variables.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {prompt.variables.slice(0, 4).map((v) => (
-                            <span
-                              key={v}
-                              className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground"
-                            >
-                              {v}
-                            </span>
-                          ))}
-                          {prompt.variables.length > 4 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground">
-                              +{prompt.variables.length - 4}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </PromptCardBodyGate>
+                    />
                   </article>
                 ))}
               </div>

@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         .select("plan_tier, credits_balance, last_prompt_at")
         .eq("id", user.id)
         .maybeSingle(),
-      queryClient.from("site_settings").select("daily_free_limit").single(),
+      queryClient.from("site_settings").select("daily_free_limit").maybeSingle(),
     ]);
 
     const tier = (profile?.plan_tier as "free" | "pro" | "admin") || "free";

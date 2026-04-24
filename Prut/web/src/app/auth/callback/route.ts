@@ -68,7 +68,12 @@ export async function GET(request: Request) {
     });
 
     const encoded = Buffer.from(sessionStr).toString("base64");
-    const cookieName = "sb-ravinxlujmlvxhgbjxti-auth-token";
+    // Derive the Supabase cookie name from the project URL so the fallback
+    // keeps working if the project is ever migrated to a new ref.
+    // Format: sb-<project-ref>-auth-token (Supabase SSR convention).
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/i)?.[1];
+    const cookieName = projectRef ? `sb-${projectRef}-auth-token` : "sb-auth-token";
     const chunkSize = 3500;
 
     const cookieOptions = {

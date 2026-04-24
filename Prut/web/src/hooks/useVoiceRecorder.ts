@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 import { logger } from "@/lib/logger";
 
-
 export const VOICE_LANGUAGES = [
-  { code: 'he-IL', label: 'עברית', flag: '🇮🇱', short: 'HE' },
-  { code: 'en-US', label: 'English', flag: '🇺🇸', short: 'EN' },
-  { code: 'ar-SA', label: 'العربية', flag: '🇸🇦', short: 'AR' },
-  { code: 'ru-RU', label: 'Русский', flag: '🇷🇺', short: 'RU' },
+  { code: "he-IL", label: "עברית", flag: "🇮🇱", short: "HE" },
+  { code: "en-US", label: "English", flag: "🇺🇸", short: "EN" },
+  { code: "ar-SA", label: "العربية", flag: "🇸🇦", short: "AR" },
+  { code: "ru-RU", label: "Русский", flag: "🇷🇺", short: "RU" },
 ] as const;
 
-export type VoiceLang = typeof VOICE_LANGUAGES[number]['code'];
+export type VoiceLang = (typeof VOICE_LANGUAGES)[number]["code"];
 
 interface UseVoiceRecorderProps {
   /**
@@ -24,7 +23,7 @@ interface UseVoiceRecorderProps {
   lang?: VoiceLang;
 }
 
-export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoiceRecorderProps) {
+export function useVoiceRecorder({ onResult, onError, lang = "he-IL" }: UseVoiceRecorderProps) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
@@ -42,7 +41,7 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
   const committedIndicesRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       logger.warn("Speech Recognition API not supported in this browser.");
@@ -71,9 +70,11 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
       if (onErrorRef.current) onErrorRef.current(event.error);
     };
 
-    recognition.onresult = (event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => {
-      let interimTranscript = '';
-      let newFinalTranscript = '';
+    recognition.onresult = (
+      event: Event & { resultIndex: number; results: SpeechRecognitionResultList },
+    ) => {
+      let interimTranscript = "";
+      let newFinalTranscript = "";
 
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         const result = event.results[i];
@@ -102,7 +103,7 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
         onResultRef.current(interimTranscript, false);
       } else if (newFinalTranscript) {
         // Clear interim when final arrives with no remaining interim
-        onResultRef.current('', false);
+        onResultRef.current("", false);
       }
     };
 
@@ -154,7 +155,10 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
 
   useEffect(() => {
     queueMicrotask(() =>
-      setIsSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition))
+      setIsSupported(
+        typeof window !== "undefined" &&
+          !!(window.SpeechRecognition || window.webkitSpeechRecognition),
+      ),
     );
   }, []);
 
@@ -163,7 +167,7 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
     startListening,
     stopListening,
     toggleListening,
-    isSupported
+    isSupported,
   };
 }
 
@@ -175,7 +179,9 @@ interface SpeechRecognitionInstance {
   onstart: (() => void) | null;
   onend: (() => void) | null;
   onerror: ((event: Event & { error: string }) => void) | null;
-  onresult: ((event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => void) | null;
+  onresult:
+    | ((event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => void)
+    | null;
   start: () => void;
   stop: () => void;
   abort: () => void;

@@ -18,12 +18,7 @@ function formatTokenCount(count: number): string {
   return String(count);
 }
 
-export function ContextChips({
-  attachments,
-  onRemove,
-  onRetry,
-  tokenLimit,
-}: ContextChipsProps) {
+export function ContextChips({ attachments, onRemove, onRetry, tokenLimit }: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(

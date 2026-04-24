@@ -21,7 +21,7 @@ export function useHomeScoring({
   const handleInterimChange = useCallback((text: string) => setInterimText(text), []);
 
   const scoringText = interimText
-    ? input + (input && !input.endsWith(' ') ? ' ' : '') + interimText
+    ? input + (input && !input.endsWith(" ") ? " " : "") + interimText
     : input;
 
   const debouncedInput = useDebouncedValue(scoringText, 300);
@@ -29,12 +29,12 @@ export function useHomeScoring({
 
   const inputScore = useMemo(
     () => BaseEngine.scorePrompt(debouncedInput, selectedCapability),
-    [debouncedInput, selectedCapability]
+    [debouncedInput, selectedCapability],
   );
 
   const rawInputScore = useMemo(
     () => scoreInput(debouncedInput, selectedCapability),
-    [debouncedInput, selectedCapability]
+    [debouncedInput, selectedCapability],
   );
 
   // EMA smoothing: prevents jumpy scores during rapid typing.
@@ -45,7 +45,7 @@ export function useHomeScoring({
   useEffect(() => {
     queueMicrotask(() => {
       setLiveInputScore((prev) => {
-        if (!rawInputScore || rawInputScore.level === 'empty') return rawInputScore;
+        if (!rawInputScore || rawInputScore.level === "empty") return rawInputScore;
         const prevTotal = prev?.total ?? 0;
         const smoothed = Math.round(prevTotal * 0.3 + rawInputScore.total * 0.7);
         return { ...rawInputScore, total: smoothed };
@@ -58,14 +58,18 @@ export function useHomeScoring({
   const completionScore = useMemo(() => {
     const trimmed = debouncedCompletion.trim();
     if (!trimmed) {
-      return { score: 0, baseScore: 0, level: 'empty' as const, label: 'חסר', tips: [], usageBoost: 0 };
+      return {
+        score: 0,
+        baseScore: 0,
+        level: "empty" as const,
+        label: "חסר",
+        tips: [],
+        usageBoost: 0,
+      };
     }
     const enhanced = EnhancedScorer.score(debouncedCompletion, selectedCapability);
-    const level: 'low' | 'medium' | 'high' = enhanced.total >= 70
-      ? 'high'
-      : enhanced.total >= 40
-        ? 'medium'
-        : 'low';
+    const level: "low" | "medium" | "high" =
+      enhanced.total >= 70 ? "high" : enhanced.total >= 40 ? "medium" : "low";
     return {
       score: enhanced.total,
       baseScore: enhanced.total,
@@ -76,7 +80,10 @@ export function useHomeScoring({
     };
   }, [debouncedCompletion, selectedCapability]);
 
-  const placeholders = useMemo(() => extractPlaceholders(debouncedCompletion), [debouncedCompletion]);
+  const placeholders = useMemo(
+    () => extractPlaceholders(debouncedCompletion),
+    [debouncedCompletion],
+  );
   const inputVariables = useMemo(() => extractPlaceholders(debouncedInput), [debouncedInput]);
 
   return {

@@ -7,9 +7,13 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCreativeWorkSchema } from "@/lib/schema";
-import { CopyButton } from "../CopyButton";
-import { UsePromptButton } from "../UsePromptButton";
 import { PromptBodyGate } from "./PromptBodyGate";
+
+// Max chars of prompt body to render in public HTML. Keeps SEO-useful text
+// available while preventing the full prompt from leaking to guests via
+// view-source or the ISR cache. Authed clients fetch the full text via
+// /api/p/[id] after mount.
+const PUBLIC_PREVIEW_CHARS = 160;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -242,25 +246,19 @@ export default async function PromptPage({ params }: Props) {
             </div>
           )}
 
-          {/* Prompt text block */}
+          {/* Prompt text block — full body served only to authed users via /api/p/[id] */}
           <section aria-label="תוכן הפרומפט" className="mb-8">
             <PromptBodyGate
-              actions={
-                <>
-                  <CopyButton text={p.prompt} />
-                  <UsePromptButton id={p.id} title={p.title} prompt={p.prompt} category={slug} />
-                </>
+              promptId={p.id}
+              title={p.title}
+              slug={slug}
+              capabilityMode={p.capability_mode}
+              previewText={
+                p.prompt.length > PUBLIC_PREVIEW_CHARS
+                  ? p.prompt.slice(0, PUBLIC_PREVIEW_CHARS).trimEnd() + "…"
+                  : p.prompt
               }
-            >
-              <div
-                className={`p-5 text-sm leading-relaxed text-foreground whitespace-pre-wrap ${
-                  p.capability_mode === "IMAGE_GENERATION" ? "font-mono dir-ltr text-left" : ""
-                }`}
-                dir={p.capability_mode === "IMAGE_GENERATION" ? "ltr" : undefined}
-              >
-                {p.prompt}
-              </div>
-            </PromptBodyGate>
+            />
           </section>
 
           {/* Variables */}

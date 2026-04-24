@@ -3,18 +3,48 @@
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Lock } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { CopyButton } from "../CopyButton";
+import { UsePromptButton } from "../UsePromptButton";
 
 interface Props {
-  children: ReactNode;
-  actions: ReactNode;
+  promptId: string;
+  previewText: string;
+  title: string;
+  slug: string;
+  capabilityMode: string | null;
 }
 
-export function PromptBodyGate({ children, actions }: Props) {
+/**
+ * Client-side gate for the full prompt body. The server only renders a
+ * short `previewText` — the full prompt is fetched from the authed
+ * /api/p/[id] endpoint on mount for logged-in users. Guests never see
+ * the full text (no HTML/ISR leak).
+ */
+export function PromptBodyGate({ promptId, previewText, title, slug, capabilityMode }: Props) {
   const { user, isLoading } = useAuth();
-  // Treat "still loading" as guest so the unauthenticated-hydration flash
-  // stays blurred; flips to unblurred only after we confirm an auth'd user.
   const isGuest = isLoading || !user;
+  const [fullText, setFullText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isGuest || fullText) return;
+    let cancelled = false;
+    fetch(`/api/p/${encodeURIComponent(promptId)}`, {
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { prompt?: string } | null) => {
+        if (!cancelled && d?.prompt) setFullText(d.prompt);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isGuest, promptId, fullText]);
+
+  const displayText = !isGuest && fullText ? fullText : previewText;
+  const isImage = capabilityMode === "IMAGE_GENERATION";
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden relative">
@@ -28,8 +58,13 @@ export function PromptBodyGate({ children, actions }: Props) {
             >
               התחבר לצפייה
             </Link>
+          ) : fullText ? (
+            <>
+              <CopyButton text={fullText} />
+              <UsePromptButton id={promptId} title={title} prompt={fullText} category={slug} />
+            </>
           ) : (
-            actions
+            <span className="text-xs text-muted-foreground">טוען...</span>
           )}
         </div>
       </div>
@@ -41,7 +76,14 @@ export function PromptBodyGate({ children, actions }: Props) {
           }
           aria-hidden={isGuest}
         >
-          {children}
+          <div
+            className={`p-5 text-sm leading-relaxed text-foreground whitespace-pre-wrap ${
+              isImage ? "font-mono dir-ltr text-left" : ""
+            }`}
+            dir={isImage ? "ltr" : undefined}
+          >
+            {displayText}
+          </div>
         </div>
 
         {isGuest && (

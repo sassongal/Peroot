@@ -20,6 +20,7 @@ import {
   applyGuestCookie,
   buildGuestCookieHeader,
   checkAndDecrementGuestCredits,
+  refundGuestCredit,
 } from "@/lib/guest-service";
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
@@ -34,6 +35,23 @@ export const maxDuration = 30;
 const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: number }>();
 const profileInflight = new Map<string, Promise<{ tier: string; isAdmin: boolean }>>();
 const PROFILE_CACHE_TTL = 15_000; // 15 seconds
+const PROFILE_CACHE_MAX = 10_000;
+const PROFILE_CACHE_EVICT = 1_000;
+
+/**
+ * Bounded-size eviction. Map iteration order is insertion order, so dropping
+ * the oldest N entries approximates LRU without the overhead of an
+ * access-list update on every hit. Prevents the thundering-herd DB refetch
+ * that a full `.clear()` would cause at the 10k threshold.
+ */
+function evictProfileCacheIfFull(): void {
+  if (profileCache.size < PROFILE_CACHE_MAX) return;
+  let dropped = 0;
+  for (const key of profileCache.keys()) {
+    profileCache.delete(key);
+    if (++dropped >= PROFILE_CACHE_EVICT) break;
+  }
+}
 
 const RequestSchema = z.object({
   prompt: z.string().min(1).max(10000),
@@ -117,6 +135,10 @@ export async function POST(req: Request) {
   // Declare outside try so catch block can access for credit refund
   let userId: string | undefined;
   let supabase: Awaited<ReturnType<typeof createClient>> | undefined;
+  // Guest credit refund path — mirrors `userId` hoisting above. Without this,
+  // a mid-request exception would charge a guest without refund.
+  let guestId: string | null = null;
+  let isRefinementOuter = false;
   // Declared here so catch block can release the in-flight lock on any
   // error path, not just the happy path that reaches after().
   let releaseInflightLock: (() => Promise<void>) | null = null;
@@ -148,6 +170,7 @@ export async function POST(req: Request) {
     // Determine if this is a refinement request
     const hasAnswers = answers && Object.values(answers).some((a) => a.trim());
     const isRefinement = !!previousResult && (!!refinementInstruction || !!hasAnswers);
+    isRefinementOuter = isRefinement;
 
     supabase = await createClient();
 
@@ -212,7 +235,7 @@ export async function POST(req: Request) {
             ]);
             const t = (pRes.data?.plan_tier as "free" | "pro" | "admin") || "free";
             const a = !!arRes.data;
-            if (profileCache.size > 10_000) profileCache.clear();
+            evictProfileCacheIfFull();
             profileCache.set(userId!, { tier: t, isAdmin: a, ts: Date.now() });
             return { tier: t, isAdmin: a };
           })().finally(() => profileInflight.delete(userId!));
@@ -302,7 +325,7 @@ export async function POST(req: Request) {
 
       // Store in cache
       if (userId) {
-        if (profileCache.size > 10000) profileCache.clear();
+        evictProfileCacheIfFull();
         profileCache.set(userId, { tier, isAdmin, ts: Date.now() });
       }
     }
@@ -326,7 +349,6 @@ export async function POST(req: Request) {
     }
 
     // Guest id resolution (only when we'll actually spend a credit below).
-    let guestId: string | null = null;
     let guestNeedsCookie = false;
 
     if (!isAdmin) {
@@ -413,6 +435,8 @@ export async function POST(req: Request) {
       // Refund the credit we just decremented — this request never ran.
       if (userId) {
         await refundCredit(userId);
+      } else if (guestId && !isRefinement) {
+        await refundGuestCredit(guestId);
       }
       return NextResponse.json(
         { error: "בקשה זהה כבר בתהליך. נסה שוב בעוד רגע." },
@@ -553,10 +577,12 @@ export async function POST(req: Request) {
 
         // Fix #3: refund the credit we decremented above. Cache hits cost
         // Peroot zero LLM tokens, so the user should not pay a quota unit
-        // for them either. Guests have no credit, admins were never
-        // charged; both are no-ops in refundCredit.
+        // for them either. Guests get their rolling-window slot restored
+        // via the Lua-bounded refundGuestCredit; admins were never charged.
         if (userId) {
           await refundCredit(userId);
+        } else if (guestId && !isRefinement) {
+          await refundGuestCredit(guestId);
         }
 
         // Cache-hit side effects run AFTER the response is sent so the
@@ -811,10 +837,17 @@ export async function POST(req: Request) {
             // charged for that. Short valid responses with finishReason
             // === 'stop' are legitimate and do NOT trigger a refund.
             const isTruncated = finishReasonCopy === "length";
-            if (userId && (textCopy.length === 0 || finishReasonCopy === "error" || isTruncated)) {
-              await refundCredit(userId);
+            const shouldRefund =
+              textCopy.length === 0 || finishReasonCopy === "error" || isTruncated;
+            if (shouldRefund) {
+              if (userId) {
+                await refundCredit(userId);
+              } else if (guestId && !isRefinement) {
+                await refundGuestCredit(guestId);
+              }
               logger.warn("[Enhance] Failed/truncated generation, refunding credit", {
                 userId,
+                guestId,
                 length: textCopy.length,
                 finishReason: finishReasonCopy,
                 truncated: isTruncated,
@@ -941,6 +974,8 @@ export async function POST(req: Request) {
       // Refund credit since we never called AI
       if (userId) {
         await refundCredit(userId);
+      } else if (guestId && !isRefinementOuter) {
+        await refundGuestCredit(guestId);
       }
       return NextResponse.json(
         { error: "השרת עמוס כרגע. נסה שוב בעוד כמה שניות." },
@@ -952,6 +987,8 @@ export async function POST(req: Request) {
     // Best-effort credit refund on failure
     if (userId) {
       await refundCredit(userId);
+    } else if (guestId && !isRefinementOuter) {
+      await refundGuestCredit(guestId);
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

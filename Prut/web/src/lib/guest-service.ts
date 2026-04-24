@@ -37,12 +37,25 @@ interface GuestCheckResult {
 // IP helpers
 // ---------------------------------------------------------------------------
 
+// Minimal sanity check — ipv4 or ipv6 shape. Rejects obviously malformed
+// values from untrusted proxy headers.
+const IP_SHAPE_RE = /^(?:\d{1,3}\.){3}\d{1,3}$|^[0-9a-f:]+$/i;
+
 function getRequestIp(request: NextRequest | Request): string | null {
   const headers = request.headers;
-  const fwd = headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]?.trim() || null;
+  // On Vercel, x-real-ip is set by the platform edge and is not forwarded
+  // from the client — prefer it over x-forwarded-for which is a
+  // client-controllable header on non-Vercel deployments.
   const real = headers.get("x-real-ip");
-  if (real) return real.trim();
+  if (real) {
+    const trimmed = real.trim();
+    if (IP_SHAPE_RE.test(trimmed)) return trimmed;
+  }
+  const fwd = headers.get("x-forwarded-for");
+  if (fwd) {
+    const first = fwd.split(",")[0]?.trim();
+    if (first && IP_SHAPE_RE.test(first)) return first;
+  }
   return null;
 }
 
@@ -84,16 +97,35 @@ export async function resolveGuestId(
 
   const ip = getRequestIp(request);
   if (ip) {
+    const ipKey = `guest:ip:${hashIp(ip)}`;
     try {
-      const existing = await redis.get<string>(`guest:ip:${hashIp(ip)}`);
+      const existing = await redis.get<string>(ipKey);
       if (existing) {
         return { id: existing, needsCookie: true };
+      }
+
+      // TOCTOU guard: two concurrent requests from the same IP with no
+      // cookie could both mint a fresh UUID and each get their own quota.
+      // Use SET NX EX to atomically claim the slot — whoever loses the
+      // race reads the winner's UUID and reuses it.
+      const candidate = randomUUID();
+      const set = (await redis.set(ipKey, candidate, {
+        nx: true,
+        ex: IP_BACKUP_TTL,
+      })) as "OK" | null;
+      if (set === "OK") {
+        return { id: candidate, needsCookie: true };
+      }
+      const winner = await redis.get<string>(ipKey);
+      if (winner) {
+        return { id: winner, needsCookie: true };
       }
     } catch (e) {
       logger.error("[guest-service] IP backup lookup failed:", e);
     }
   }
 
+  // Fall-through: no IP available or Redis failure — fresh id, best-effort write.
   const id = randomUUID();
   refreshIpBackup(request, id).catch(() => {});
   return { id, needsCookie: true };
@@ -288,6 +320,39 @@ export async function getGuestQuotaStatus(
     refreshAt: state.credits_balance > 0 ? null : refreshAt,
     dailyLimit: GUEST_DAILY_LIMIT,
   };
+}
+
+/**
+ * Refund one credit to a guest, bounded by DAILY_LIMIT so a runaway refund
+ * path can't grant unlimited quota. Mirrors refundCredit() for authed users
+ * — called on cache hits and truncated/failed generations where the guest
+ * was charged but no useful work was done.
+ */
+const REFUND_SCRIPT = `
+local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local ttl = tonumber(ARGV[2])
+
+local b_raw = redis.call('HGET', key, 'b')
+local b = tonumber(b_raw)
+if b == nil then b = 0 end
+b = b + 1
+if b > limit then b = limit end
+redis.call('HSET', key, 'b', b)
+redis.call('EXPIRE', key, ttl)
+return b
+`;
+
+export async function refundGuestCredit(guestId: string): Promise<void> {
+  try {
+    await redis.eval(
+      REFUND_SCRIPT,
+      [`guest:${guestId}`],
+      [String(GUEST_DAILY_LIMIT), String(GUEST_KEY_TTL)],
+    );
+  } catch (e) {
+    logger.error("[guest-service] refundGuestCredit failed:", e);
+  }
 }
 
 export const GUEST_CONSTANTS = {

@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { X, Sparkles, MessageSquare, Globe, Palette, Video, Bot, ArrowLeft, Play } from "lucide-react";
+import {
+  X,
+  Sparkles,
+  MessageSquare,
+  Globe,
+  Palette,
+  Video,
+  Bot,
+  ArrowLeft,
+  Play,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface WhatIsThisModalProps {
@@ -10,11 +20,41 @@ interface WhatIsThisModalProps {
 }
 
 const MODES = [
-  { icon: MessageSquare, title: "טקסט", desc: "פרומפטים ל-ChatGPT, Claude, Gemini", color: "text-sky-400", bg: "bg-sky-500/10" },
-  { icon: Globe, title: "מחקר מעמיק", desc: "חיפוש ברשת עם מקורות וציטוטים", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: Palette, title: "תמונות", desc: "Midjourney, DALL-E, Flux ועוד", color: "text-purple-400", bg: "bg-purple-500/10" },
-  { icon: Video, title: "סרטונים", desc: "Runway, Kling, Sora, Veo ועוד", color: "text-rose-400", bg: "bg-rose-500/10" },
-  { icon: Bot, title: "סוכני AI", desc: "בניית GPT מותאמים וסוכנים חכמים", color: "text-amber-400", bg: "bg-amber-500/10" },
+  {
+    icon: MessageSquare,
+    title: "טקסט",
+    desc: "פרומפטים ל-ChatGPT, Claude, Gemini",
+    color: "text-sky-400",
+    bg: "bg-sky-500/10",
+  },
+  {
+    icon: Globe,
+    title: "מחקר מעמיק",
+    desc: "חיפוש ברשת עם מקורות וציטוטים",
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+  },
+  {
+    icon: Palette,
+    title: "תמונות",
+    desc: "Midjourney, DALL-E, Flux ועוד",
+    color: "text-purple-400",
+    bg: "bg-purple-500/10",
+  },
+  {
+    icon: Video,
+    title: "סרטונים",
+    desc: "Runway, Kling, Sora, Veo ועוד",
+    color: "text-rose-400",
+    bg: "bg-rose-500/10",
+  },
+  {
+    icon: Bot,
+    title: "סוכני AI",
+    desc: "בניית GPT מותאמים וסוכנים חכמים",
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+  },
 ];
 
 const YT_ID = "iNXX5wZfMJA";
@@ -95,7 +135,8 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           <div className="text-center space-y-1.5">
             <h2 className="text-xl font-serif font-bold text-(--text-primary)">מה עושים פה?</h2>
             <p className="text-sm text-(--text-muted) leading-relaxed">
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">פירוט</span> משדרג
+              כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
           </div>
 
@@ -133,8 +174,13 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
           {/* 5 Modes */}
           <div className="space-y-1.5">
             {MODES.map(({ icon: Icon, title, desc, color, bg }) => (
-              <div key={title} className="flex items-center gap-3 p-2.5 rounded-xl bg-(--glass-bg) border border-(--glass-border)">
-                <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+              <div
+                key={title}
+                className="flex items-center gap-3 p-2.5 rounded-xl bg-(--glass-bg) border border-(--glass-border)"
+              >
+                <div
+                  className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}
+                >
                   <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="min-w-0">

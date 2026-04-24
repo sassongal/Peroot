@@ -13,7 +13,11 @@ const MAX_QUEUE = 50; // max queued requests before rejecting
 const QUEUE_TIMEOUT_MS = 15_000; // max wait time in queue (15s)
 
 let active = 0;
-const queue: Array<{ resolve: () => void; reject: (err: Error) => void; timer: ReturnType<typeof setTimeout> }> = [];
+const queue: Array<{
+  resolve: () => void;
+  reject: (err: Error) => void;
+  timer: ReturnType<typeof setTimeout>;
+}> = [];
 
 /**
  * Acquire a slot for an AI call. Resolves when a slot is available.
