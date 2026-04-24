@@ -193,7 +193,9 @@ export async function POST(request: NextRequest) {
         .neq("status", "unsubscribed");
     }
 
-    logger.info(`[Unsubscribe POST] Email ${normalizedEmail.slice(0, 3)}*** unsubscribed (one-click)`);
+    logger.info(
+      `[Unsubscribe POST] Email ${normalizedEmail.slice(0, 3)}*** unsubscribed (one-click)`,
+    );
     return new NextResponse(null, { status: 204 });
   }
 

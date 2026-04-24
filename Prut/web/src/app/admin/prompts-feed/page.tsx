@@ -101,6 +101,15 @@ export default function AdminPromptsFeedPage() {
               next.set(it.user_id, { label: it.user_display, email: it.user_email });
             }
           }
+          // Prune to a bounded FIFO — unbounded accumulation across a long
+          // session bloats the dropdown and makes scrolling painful. Drop
+          // oldest insertions past the cap (JS Map preserves insertion order).
+          const CAP = 200;
+          if (next.size > CAP) {
+            const excess = next.size - CAP;
+            const keys = Array.from(next.keys()).slice(0, excess);
+            for (const k of keys) next.delete(k);
+          }
           return next;
         });
       } catch (e) {

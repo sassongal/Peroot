@@ -64,11 +64,22 @@ export const GET = withAdmin(async (req) => {
     .order("created_at", { ascending: false })
     .limit(limit);
 
+  // Validate dates before passing to Postgres; `new Date("garbage").toISOString()`
+  // throws RangeError, turning a 400 into an unhandled 500.
+  const parseDate = (raw: string, endOfDay: boolean): string | null => {
+    if (!/^\d{4}-\d{2}-\d{2}/.test(raw)) return null;
+    const d = new Date(endOfDay ? raw + "T23:59:59" : raw);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  };
   if (from) {
-    query = query.gte("created_at", new Date(from).toISOString());
+    const iso = parseDate(from, false);
+    if (!iso) return NextResponse.json({ error: "Invalid 'from' date" }, { status: 400 });
+    query = query.gte("created_at", iso);
   }
   if (to) {
-    query = query.lte("created_at", new Date(to + "T23:59:59").toISOString());
+    const iso = parseDate(to, true);
+    if (!iso) return NextResponse.json({ error: "Invalid 'to' date" }, { status: 400 });
+    query = query.lte("created_at", iso);
   }
   if (actionSearch) {
     query = query.ilike("action", `%${escapePostgrestValue(actionSearch)}%`);

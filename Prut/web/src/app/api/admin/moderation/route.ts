@@ -60,14 +60,22 @@ export const GET = withAdmin(async (req) => {
 
   const publicPrompts = allPublicPrompts ?? [];
 
-  // ── 2. Fetch all moderation activity logs ──────────────────────────────
-  // Also fetch removed-prompt IDs (is_public was set to false via moderation)
+  // ── 2. Fetch recent moderation activity logs ───────────────────────────
+  // Scan only the last 180 days with a hard cap. Without the bound this
+  // query grew unbounded with activity_logs and dominated the page's TTFB.
+  const MOD_LOG_CAP = 5000;
+  const MOD_WINDOW_DAYS = 180;
+  const modWindowStart = new Date(
+    Date.now() - MOD_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
   const { data: removedLogs } = await supabase
     .from("activity_logs")
     .select("details, created_at")
     .eq("action", "moderation_review")
     .eq("entity_type", "admin_action")
-    .order("created_at", { ascending: false });
+    .gte("created_at", modWindowStart)
+    .order("created_at", { ascending: false })
+    .limit(MOD_LOG_CAP);
 
   // Build a map: prompt_id -> latest moderation status
   const statusMap = new Map<string, { status: string; reviewed_at: string }>();
