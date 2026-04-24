@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCreativeWorkSchema } from "@/lib/schema";
 import { CopyButton } from "../CopyButton";
 import { UsePromptButton } from "../UsePromptButton";
+import { PromptBodyGate } from "./PromptBodyGate";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -243,14 +244,14 @@ export default async function PromptPage({ params }: Props) {
 
           {/* Prompt text block */}
           <section aria-label="תוכן הפרומפט" className="mb-8">
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/50">
-                <span className="text-xs font-medium text-muted-foreground">הפרומפט</span>
-                <div className="flex items-center gap-2">
+            <PromptBodyGate
+              actions={
+                <>
                   <CopyButton text={p.prompt} />
                   <UsePromptButton id={p.id} title={p.title} prompt={p.prompt} category={slug} />
-                </div>
-              </div>
+                </>
+              }
+            >
               <div
                 className={`p-5 text-sm leading-relaxed text-foreground whitespace-pre-wrap ${
                   p.capability_mode === "IMAGE_GENERATION" ? "font-mono dir-ltr text-left" : ""
@@ -259,7 +260,7 @@ export default async function PromptPage({ params }: Props) {
               >
                 {p.prompt}
               </div>
-            </div>
+            </PromptBodyGate>
           </section>
 
           {/* Variables */}

@@ -40,6 +40,9 @@ export async function handleChurnTransition(
     .update({
       credits_balance: dailyFreeLimit,
       credits_refreshed_at: new Date().toISOString(),
+      // Start the rolling window now so a churned user doesn't get a second
+      // fresh daily quota the instant their Pro window ends.
+      last_prompt_at: new Date().toISOString(),
       churned_at: new Date().toISOString(),
     })
     .eq("id", userId);

@@ -15,6 +15,12 @@ import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
 import { validateApiKey } from "@/lib/api-auth";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
+import {
+  resolveGuestId,
+  applyGuestCookie,
+  buildGuestCookieHeader,
+  checkAndDecrementGuestCredits,
+} from "@/lib/guest-service";
 import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
@@ -301,15 +307,30 @@ export async function POST(req: Request) {
       }
     }
 
-    // 1.5 Capability Mode Gating -- advanced modes require Pro (checked before
-    // credit decrement so free users are not charged for gated requests)
+    // 1.5 Capability Mode Gating -- only guests are locked to STANDARD.
+    // Registered users (free + pro + admin) get all modes.
     const mode = parseCapabilityMode(capability_mode);
-    if (mode !== CapabilityMode.STANDARD && tier !== "pro" && !isAdmin) {
-      return NextResponse.json({ error: "שדרג ל-Pro כדי להשתמש במצב זה" }, { status: 403 });
+    if (mode !== CapabilityMode.STANDARD && isGuest) {
+      return NextResponse.json(
+        { error: "התחבר כדי להשתמש במצב זה", code: "login_required" },
+        { status: 403 },
+      );
     }
 
+    // 1.6 Guests cannot use context attachments (minimum cost + registration incentive)
+    if (isGuest && contextAttachments && contextAttachments.length > 0) {
+      return NextResponse.json(
+        { error: "התחבר כדי לצרף קבצים וקישורים", code: "login_required" },
+        { status: 403 },
+      );
+    }
+
+    // Guest id resolution (only when we'll actually spend a credit below).
+    let guestId: string | null = null;
+    let guestNeedsCookie = false;
+
     if (!isAdmin) {
-      // 2. Execute Rate Limiting
+      // 2. Execute Rate Limiting (kept as a coarse abuse guard on top of credits)
       const clientIp =
         req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
       const identifier = userId || clientIp;
@@ -317,8 +338,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
       }
 
-      // Guests get stricter rate limiting (5/hour via 'guest' tier)
-      // Admin tier is treated as 'pro' for rate limiting
       const rateLimitTier = isGuest ? "guest" : tier === "admin" ? "pro" : tier;
       const limitResult = await checkRateLimit(identifier, rateLimitTier);
 
@@ -326,18 +345,41 @@ export async function POST(req: Request) {
         return RateLimitError(limitResult.reset);
       }
 
-      // 3. ATOMIC Credit Enforcement (Prevention of Concurrent Overuse)
-      // Skip credit checks for guests - they are rate-limited by IP instead
-      if (userId) {
-        const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
-        if (!creditResult.allowed) {
-          return NextResponse.json(
-            {
-              error: creditResult.error || "Insufficient credits or profile not found",
-              balance: creditResult.remaining,
-            },
-            { status: 403 },
-          );
+      // 3. ATOMIC Credit Enforcement. GENIUS refinement/answers are absorbed
+      // (the cost of iterating on a question we asked), so skip decrement when
+      // this is a refinement turn.
+      if (!isRefinement) {
+        if (userId) {
+          const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
+          if (!creditResult.allowed) {
+            return NextResponse.json(
+              {
+                error: creditResult.error || "Insufficient credits or profile not found",
+                balance: creditResult.remaining,
+                code: "quota_exhausted",
+              },
+              { status: 403 },
+            );
+          }
+        } else {
+          // Guest path — Redis-backed rolling 24h
+          const resolved = await resolveGuestId(req);
+          guestId = resolved.id;
+          guestNeedsCookie = resolved.needsCookie;
+          const guestResult = await checkAndDecrementGuestCredits(guestId);
+          if (!guestResult.allowed) {
+            const res = NextResponse.json(
+              {
+                error: "מכסת האורח מוצתה. הירשם לקבלת 2 פרומפטים וגישה לכל המנועים.",
+                balance: 0,
+                refresh_at: guestResult.refreshAt?.toISOString() ?? null,
+                code: "guest_quota_exhausted",
+              },
+              { status: 403 },
+            );
+            if (guestNeedsCookie) applyGuestCookie(res, guestId);
+            return res;
+          }
         }
       }
     }
@@ -605,12 +647,14 @@ export async function POST(req: Request) {
             controller.close();
           },
         });
-        return new Response(stream, {
-          headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-            "X-Peroot-Cache": "hit",
-          },
-        });
+        const headers: Record<string, string> = {
+          "Content-Type": "text/plain; charset=utf-8",
+          "X-Peroot-Cache": "hit",
+        };
+        if (guestId && guestNeedsCookie) {
+          headers["Set-Cookie"] = buildGuestCookieHeader(guestId);
+        }
+        return new Response(stream, { headers });
       }
     }
 
@@ -875,7 +919,11 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toTextStreamResponse();
+    const streamResp = result.toTextStreamResponse();
+    if (guestId && guestNeedsCookie) {
+      streamResp.headers.append("Set-Cookie", buildGuestCookieHeader(guestId));
+    }
+    return streamResp;
   } catch (error) {
     // Release the in-flight lock on any error path so the next retry is
     // not blocked by a 10s stale lock. Happy path releases inside after().

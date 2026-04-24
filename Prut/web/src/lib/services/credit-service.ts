@@ -30,11 +30,11 @@ export async function logCreditChange(
   delta: number,
   balanceAfter: number,
   reason: string,
-  source: string = 'system',
+  source: string = "system",
 ): Promise<void> {
   try {
     const client = createServiceClient();
-    await client.rpc('log_credit_change', {
+    await client.rpc("log_credit_change", {
       p_user_id: userId,
       p_delta: delta,
       p_balance_after: balanceAfter,
@@ -43,7 +43,7 @@ export async function logCreditChange(
     });
   } catch (e) {
     // Never block credit operations — ledger is best-effort
-    logger.error('[CreditService] Failed to log credit change:', e);
+    logger.error("[CreditService] Failed to log credit change:", e);
   }
 }
 
@@ -81,7 +81,7 @@ export async function checkAndDecrementCredits(
   );
 
   if (!rpcError && creditRes?.success) {
-    logCreditChange(userId, -amount, creditRes.current_balance ?? 0, 'spend');
+    logCreditChange(userId, -amount, creditRes.current_balance ?? 0, "spend");
     return {
       allowed: true,
       remaining: creditRes.current_balance ?? 0,
@@ -90,8 +90,7 @@ export async function checkAndDecrementCredits(
 
   // --- Legacy fallback: function doesn't exist yet -------------------------
   const isNotFound =
-    rpcError?.message?.includes("function") &&
-    rpcError?.message?.includes("does not exist");
+    rpcError?.message?.includes("function") && rpcError?.message?.includes("does not exist");
 
   if (isNotFound) {
     return legacyCheckAndDecrement(userId, tier, queryClient, amount);
@@ -112,10 +111,7 @@ export async function checkAndDecrementCredits(
  * @param userId  The user to refund.
  * @param amount  Number of credits to restore (defaults to 1).
  */
-export async function refundCredit(
-  userId: string,
-  amount = 1,
-): Promise<void> {
+export async function refundCredit(userId: string, amount = 1): Promise<void> {
   try {
     const client = createServiceClient();
     await client.rpc("refund_credit", {
@@ -124,12 +120,12 @@ export async function refundCredit(
     });
     // Log refund — fetch balance after refund
     const { data: profile } = await client
-      .from('profiles')
-      .select('credits_balance')
-      .eq('id', userId)
+      .from("profiles")
+      .select("credits_balance")
+      .eq("id", userId)
       .single();
     if (profile) {
-      logCreditChange(userId, amount, profile.credits_balance, 'refund');
+      logCreditChange(userId, amount, profile.credits_balance, "refund");
     }
   } catch (e) {
     logger.error("[CreditService] refund failed:", e);
@@ -157,12 +153,18 @@ export async function adminAdjustCredits(
 
     if (!rpcError) {
       const { data: profile } = await client
-        .from('profiles')
-        .select('credits_balance')
-        .eq('id', userId)
+        .from("profiles")
+        .select("credits_balance")
+        .eq("id", userId)
         .single();
       if (profile) {
-        logCreditChange(userId, delta, profile.credits_balance, delta > 0 ? 'admin_grant' : 'admin_revoke', 'admin');
+        logCreditChange(
+          userId,
+          delta,
+          profile.credits_balance,
+          delta > 0 ? "admin_grant" : "admin_revoke",
+          "admin",
+        );
       }
       return { success: true };
     }
@@ -175,12 +177,18 @@ export async function adminAdjustCredits(
 
     if (!fallbackError) {
       const { data: fbProfile } = await client
-        .from('profiles')
-        .select('credits_balance')
-        .eq('id', userId)
+        .from("profiles")
+        .select("credits_balance")
+        .eq("id", userId)
         .single();
       if (fbProfile) {
-        logCreditChange(userId, delta, fbProfile.credits_balance, delta > 0 ? 'admin_grant' : 'admin_revoke', 'admin');
+        logCreditChange(
+          userId,
+          delta,
+          fbProfile.credits_balance,
+          delta > 0 ? "admin_grant" : "admin_revoke",
+          "admin",
+        );
       }
       return { success: true };
     }
@@ -194,8 +202,12 @@ export async function adminAdjustCredits(
 }
 
 // ---------------------------------------------------------------------------
-// Legacy fallback (daily reset + non-atomic decrement)
+// Legacy fallback (rolling 24h reset + non-atomic decrement)
 // ---------------------------------------------------------------------------
+//
+// Used only if the primary `refresh_and_decrement_credits` RPC is missing.
+// Applies the same rolling-24h semantics as the RPC in a best-effort
+// two-step fashion (no row lock). Prod should always use the RPC.
 
 async function legacyCheckAndDecrement(
   userId: string,
@@ -203,7 +215,6 @@ async function legacyCheckAndDecrement(
   queryClient: SupabaseClient,
   amount: number,
 ): Promise<CreditCheckResult> {
-  // Daily credit reset for free-tier users
   if (tier === "free") {
     const { data: siteSettings } = await queryClient
       .from("site_settings")
@@ -214,39 +225,26 @@ async function legacyCheckAndDecrement(
 
     const { data: refreshData } = await queryClient
       .from("profiles")
-      .select("credits_refreshed_at, credits_balance")
+      .select("last_prompt_at, credits_balance")
       .eq("id", userId)
       .single();
 
-    const lastRefresh = refreshData?.credits_refreshed_at
-      ? new Date(refreshData.credits_refreshed_at)
-      : null;
-    const currentBalance = refreshData?.credits_balance ?? 0;
+    const lastPrompt = refreshData?.last_prompt_at ? new Date(refreshData.last_prompt_at) : null;
+    const now = new Date();
+    const msSinceLast = lastPrompt ? now.getTime() - lastPrompt.getTime() : Infinity;
+    const shouldReset = msSinceLast >= 24 * 60 * 60 * 1000;
 
-    // Israel-timezone daily reset at 14:00 local
-    const nowIsrael = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }),
-    );
-    const resetToday = new Date(nowIsrael);
-    resetToday.setHours(14, 0, 0, 0);
-    const resetPoint =
-      nowIsrael >= resetToday
-        ? resetToday
-        : new Date(resetToday.getTime() - 24 * 60 * 60 * 1000);
-
-    if (!lastRefresh || lastRefresh < resetPoint) {
-      const newBalance = Math.max(currentBalance, dailyLimit);
+    if (shouldReset) {
       await queryClient
         .from("profiles")
         .update({
-          credits_balance: newBalance,
-          credits_refreshed_at: new Date().toISOString(),
+          credits_balance: dailyLimit,
+          credits_refreshed_at: now.toISOString(),
         })
         .eq("id", userId);
     }
   }
 
-  // Non-atomic decrement
   const { data: fallbackRes, error: fallbackErr } = await queryClient.rpc(
     "check_and_decrement_credits",
     {
@@ -259,13 +257,46 @@ async function legacyCheckAndDecrement(
     return {
       allowed: false,
       remaining: fallbackRes?.current_balance ?? 0,
-      error:
-        fallbackRes?.error || "Insufficient credits or profile not found",
+      error: fallbackRes?.error || "Insufficient credits or profile not found",
     };
+  }
+
+  // Update last_prompt_at after successful decrement
+  if (tier === "free") {
+    await queryClient
+      .from("profiles")
+      .update({ last_prompt_at: new Date().toISOString() })
+      .eq("id", userId);
   }
 
   return {
     allowed: true,
     remaining: fallbackRes.current_balance ?? 0,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Timer helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * When will the user's rolling quota refill? Returns null if the user has
+ * fresh quota (no timer needed) or is on pro/admin tier.
+ */
+export async function getRefreshAt(userId: string): Promise<Date | null> {
+  const client = createServiceClient();
+  const { data, error } = await client
+    .from("profiles")
+    .select("last_prompt_at, plan_tier")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) return null;
+  if (data.plan_tier !== "free") return null;
+  if (!data.last_prompt_at) return null;
+
+  const last = new Date(data.last_prompt_at).getTime();
+  const refreshAt = last + 24 * 60 * 60 * 1000;
+  if (refreshAt <= Date.now()) return null;
+  return new Date(refreshAt);
 }

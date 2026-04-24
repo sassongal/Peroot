@@ -46,8 +46,10 @@ interface CapabilitySelectorProps {
   onChange: (mode: CapabilityMode) => void;
   disabled?: boolean;
   compact?: boolean;
-  /** Whether user has Pro subscription. Non-Pro users see lock icons on advanced modes. */
+  /** @deprecated Modes are now open to all registered users. Kept for back-compat. */
   isPro?: boolean;
+  /** Guest (unauthenticated) users are locked to STANDARD. */
+  isGuest?: boolean;
 }
 
 export function CapabilitySelector({
@@ -55,18 +57,17 @@ export function CapabilitySelector({
   onChange,
   disabled,
   compact = false,
-  isPro = false,
+  isGuest = false,
 }: CapabilitySelectorProps) {
   const router = useRouter();
   const modes = Object.values(CapabilityMode);
 
-  // Step 3: If a free user somehow has a non-STANDARD mode selected (e.g. from
-  // before the gate was introduced), gracefully reset them to STANDARD on mount.
+  // Guests are locked to STANDARD — reset if somehow they landed on another mode.
   useEffect(() => {
-    if (!isPro && value !== CapabilityMode.STANDARD) {
+    if (isGuest && value !== CapabilityMode.STANDARD) {
       onChange(CapabilityMode.STANDARD);
     }
-  }, [isPro]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally only run when isPro changes
+  }, [isGuest]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isNonStandard = value !== CapabilityMode.STANDARD;
 
@@ -81,7 +82,7 @@ export function CapabilitySelector({
     const isSelected = value === mode;
     const colorClasses = COLOR_CLASSES[config.color];
     const isComingSoon = COMING_SOON_MODES.has(mode);
-    const isLocked = !isPro && mode !== CapabilityMode.STANDARD && !isComingSoon;
+    const isLocked = isGuest && mode !== CapabilityMode.STANDARD && !isComingSoon;
 
     return (
       <button
@@ -94,8 +95,8 @@ export function CapabilitySelector({
             return;
           }
           if (isLocked) {
-            toast("שדרג ל-Pro כדי לפתוח מצבים מתקדמים", { icon: "🔒" });
-            router.push("/pricing");
+            toast("התחבר כדי להשתמש במצב זה", { icon: "🔒" });
+            router.push("/login");
             return;
           }
           onChange(mode);
@@ -109,18 +110,20 @@ export function CapabilitySelector({
             : isLocked
               ? cn(
                   "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) opacity-70",
-                  "hover:opacity-90 hover:border-amber-500/30 cursor-pointer"
+                  "hover:opacity-90 hover:border-amber-500/30 cursor-pointer",
                 )
               : isSelected
                 ? colorClasses.selected
                 : cn(
                     "border-(--glass-border) bg-(--glass-bg) text-(--text-muted)",
-                    colorClasses.default
+                    colorClasses.default,
                   ),
-          disabled && !isComingSoon && !isLocked && "opacity-50 cursor-not-allowed"
+          disabled && !isComingSoon && !isLocked && "opacity-50 cursor-not-allowed",
         )}
         aria-pressed={isComingSoon || isLocked ? false : isSelected}
-        title={isComingSoon ? "בקרוב" : isLocked ? "שדרג ל-Pro" : config.descriptionHe}
+        title={
+          isComingSoon ? "בקרוב" : isLocked ? "התחבר כדי להשתמש במצב זה" : config.descriptionHe
+        }
       >
         <Icon className={cn("shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
         <span className={cn("font-medium", compact ? "text-sm" : "text-base")}>
@@ -135,7 +138,7 @@ export function CapabilitySelector({
         {isLocked && (
           <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
             <Lock className="w-3 h-3" />
-            Pro
+            התחבר
           </span>
         )}
       </button>
@@ -143,10 +146,12 @@ export function CapabilitySelector({
   };
 
   return (
-    <div className={cn(
-      "flex overflow-x-auto scrollbar-none snap-x snap-mandatory min-w-0",
-      compact ? "gap-1.5" : "gap-3"
-    )}>
+    <div
+      className={cn(
+        "flex overflow-x-auto scrollbar-none snap-x snap-mandatory min-w-0",
+        compact ? "gap-1.5" : "gap-3",
+      )}
+    >
       {showExpanded ? (
         <>
           {modes.map((mode) => renderModeButton(mode))}
@@ -158,7 +163,7 @@ export function CapabilitySelector({
               className={cn(
                 "flex items-center rounded-xl border border-(--glass-border) bg-(--glass-bg) text-(--text-muted)",
                 "hover:border-black/20 dark:hover:border-white/20 hover:text-(--text-secondary) transition-all duration-200 shrink-0 snap-start",
-                compact ? "px-2.5 py-2 text-sm" : "px-3 py-3 text-base"
+                compact ? "px-2.5 py-2 text-sm" : "px-3 py-3 text-base",
               )}
               title="סגור"
               aria-label="סגור מצבים נוספים"
@@ -176,14 +181,24 @@ export function CapabilitySelector({
             className={cn(
               "group relative flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-linear-to-l from-amber-500/10 via-orange-500/10 to-rose-500/10",
               "text-amber-700 dark:text-amber-300 hover:border-amber-500/60 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-rose-500/20",
-              "transition-all duration-300 shrink-0 snap-start font-semibold",
-              compact ? "px-3 py-2 text-sm" : "px-4 py-3 text-base"
+              "transition-all duration-300 shrink-0 snap-start font-semibold overflow-hidden peroot-attention-btn",
+              compact ? "px-3 py-2 text-sm" : "px-4 py-3 text-base",
             )}
             title="הצג מצבים נוספים"
             aria-label="הצג מצבים נוספים"
           >
-            עוד מצבים
-            <span className="inline-block transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">✦</span>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-amber-400/60 peroot-attention-ring"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 -inset-x-8 peroot-attention-shimmer bg-linear-to-l from-transparent via-amber-300/40 to-transparent"
+            />
+            <span className="relative">עוד מצבים</span>
+            <span className="relative inline-block transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110 peroot-attention-sparkle">
+              ✦
+            </span>
           </button>
         </>
       )}

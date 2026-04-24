@@ -11,6 +11,7 @@ import { breadcrumbSchema, promptCollectionSchema, howToSchema, faqSchema } from
 import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { CopyButton } from "./CopyButton";
 import { UsePromptButton } from "./UsePromptButton";
+import { PromptCardBodyGate } from "./PromptCardBodyGate";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
@@ -98,13 +99,15 @@ export default async function CategoryPage({ params }: Props) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("public_library_prompts")
-    .select("id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode")
+    .select(
+      "id, title, use_case, prompt, variables, category_id, preview_image_url, capability_mode",
+    )
     .eq("is_active", true)
     .ilike("category_id", categoryData.id.toLowerCase())
     .order("created_at", { ascending: false })
     .limit(60);
 
-  const prompts: LibraryRow[] = error ? [] : (data || []);
+  const prompts: LibraryRow[] = error ? [] : data || [];
 
   // Build category map for the "all categories" section
   const allCategorySlugs = Object.entries(CATEGORY_SLUG_MAP);
@@ -139,22 +142,24 @@ export default async function CategoryPage({ params }: Props) {
               steps: content.tips.map((t) => ({ name: t.title, text: t.body })),
             })}
           />
-          <JsonLd
-            data={faqSchema(
-              content.faqs.map((f) => ({ question: f.q, answer: f.a }))
-            )}
-          />
+          <JsonLd data={faqSchema(content.faqs.map((f) => ({ question: f.q, answer: f.a })))} />
         </>
       )}
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
         <div className="max-w-6xl mx-auto px-4 py-8 md:py-14">
-
           {/* Breadcrumbs */}
-          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
-            <Link href="/" className="hover:text-foreground transition-colors">דף הבית</Link>
+          <nav
+            aria-label="breadcrumb"
+            className="flex items-center gap-2 text-xs text-muted-foreground mb-8"
+          >
+            <Link href="/" className="hover:text-foreground transition-colors">
+              דף הבית
+            </Link>
             <span>/</span>
-            <Link href="/prompts" className="hover:text-foreground transition-colors">ספריית פרומפטים</Link>
+            <Link href="/prompts" className="hover:text-foreground transition-colors">
+              ספריית פרומפטים
+            </Link>
             <span>/</span>
             <span className="text-secondary-foreground">{categoryData.labelHe}</span>
           </nav>
@@ -213,17 +218,25 @@ export default async function CategoryPage({ params }: Props) {
                     </div>
 
                     {/* Capability badge */}
-                    {prompt.capability_mode && prompt.capability_mode !== 'STANDARD' && (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
-                        prompt.capability_mode === 'IMAGE_GENERATION' ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20' :
-                        prompt.capability_mode === 'DEEP_RESEARCH' ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20' :
-                        prompt.capability_mode === 'AGENT_BUILDER' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
-                        'bg-secondary text-muted-foreground border border-border'
-                      }`}>
-                        {prompt.capability_mode === 'IMAGE_GENERATION' ? 'יצירת תמונה' :
-                         prompt.capability_mode === 'DEEP_RESEARCH' ? 'מחקר מעמיק' :
-                         prompt.capability_mode === 'AGENT_BUILDER' ? 'בונה סוכנים' :
-                         prompt.capability_mode}
+                    {prompt.capability_mode && prompt.capability_mode !== "STANDARD" && (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
+                          prompt.capability_mode === "IMAGE_GENERATION"
+                            ? "bg-purple-500/10 text-purple-300 border border-purple-500/20"
+                            : prompt.capability_mode === "DEEP_RESEARCH"
+                              ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
+                              : prompt.capability_mode === "AGENT_BUILDER"
+                                ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                : "bg-secondary text-muted-foreground border border-border"
+                        }`}
+                      >
+                        {prompt.capability_mode === "IMAGE_GENERATION"
+                          ? "יצירת תמונה"
+                          : prompt.capability_mode === "DEEP_RESEARCH"
+                            ? "מחקר מעמיק"
+                            : prompt.capability_mode === "AGENT_BUILDER"
+                              ? "בונה סוכנים"
+                              : prompt.capability_mode}
                       </span>
                     )}
 
@@ -241,51 +254,56 @@ export default async function CategoryPage({ params }: Props) {
                       </div>
                     )}
 
-                    {/* Prompt preview */}
-                    <div
-                      className={`text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-4 bg-secondary rounded-xl p-3 border border-border ${
-                        prompt.capability_mode === 'IMAGE_GENERATION' ? 'font-mono text-left dir-ltr' : ''
-                      }`}
-                      dir={prompt.capability_mode === 'IMAGE_GENERATION' ? 'ltr' : undefined}
-                    >
-                      {prompt.prompt}
-                    </div>
-
-                    {/* Variables */}
-                    {prompt.variables && prompt.variables.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {prompt.variables.slice(0, 4).map((v) => (
-                          <span
-                            key={v}
-                            className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground"
+                    <PromptCardBodyGate
+                      actions={
+                        <>
+                          <CopyButton text={prompt.prompt} />
+                          <UsePromptButton
+                            id={prompt.id}
+                            title={prompt.title}
+                            prompt={prompt.prompt}
+                            category={slug}
+                          />
+                          <Link
+                            href={`/prompts/${slug}/${prompt.id}`}
+                            className="mr-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {v}
-                          </span>
-                        ))}
-                        {prompt.variables.length > 4 && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground">
-                            +{prompt.variables.length - 4}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 mt-auto pt-1">
-                      <CopyButton text={prompt.prompt} />
-                      <UsePromptButton
-                        id={prompt.id}
-                        title={prompt.title}
-                        prompt={prompt.prompt}
-                        category={slug}
-                      />
-                      <Link
-                        href={`/prompts/${slug}/${prompt.id}`}
-                        className="mr-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            פרטים ←
+                          </Link>
+                        </>
+                      }
+                    >
+                      {/* Prompt preview */}
+                      <div
+                        className={`text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-4 bg-secondary rounded-xl p-3 border border-border ${
+                          prompt.capability_mode === "IMAGE_GENERATION"
+                            ? "font-mono text-left dir-ltr"
+                            : ""
+                        }`}
+                        dir={prompt.capability_mode === "IMAGE_GENERATION" ? "ltr" : undefined}
                       >
-                        פרטים ←
-                      </Link>
-                    </div>
+                        {prompt.prompt}
+                      </div>
+
+                      {/* Variables */}
+                      {prompt.variables && prompt.variables.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {prompt.variables.slice(0, 4).map((v) => (
+                            <span
+                              key={v}
+                              className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground"
+                            >
+                              {v}
+                            </span>
+                          ))}
+                          {prompt.variables.length > 4 && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground">
+                              +{prompt.variables.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </PromptCardBodyGate>
                   </article>
                 ))}
               </div>
@@ -316,10 +334,7 @@ export default async function CategoryPage({ params }: Props) {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {content.tips.map((tip, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-border bg-card p-5 flex gap-4"
-                  >
+                  <div key={i} className="rounded-xl border border-border bg-card p-5 flex gap-4">
                     <span className="shrink-0 w-7 h-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center mt-0.5">
                       {i + 1}
                     </span>
@@ -341,10 +356,7 @@ export default async function CategoryPage({ params }: Props) {
               </h2>
               <div className="space-y-3">
                 {content.faqs.map((faq, i) => (
-                  <details
-                    key={i}
-                    className="group rounded-xl border border-border bg-card"
-                  >
+                  <details key={i} className="group rounded-xl border border-border bg-card">
                     <summary className="flex items-center justify-between p-4 cursor-pointer list-none text-sm font-medium text-foreground">
                       {faq.q}
                       <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground group-open:rotate-180 transition-transform ms-2" />
@@ -363,12 +375,15 @@ export default async function CategoryPage({ params }: Props) {
             className="mt-16 md:mt-20 rounded-2xl border border-amber-500/20 bg-linear-to-l from-amber-500/5 to-transparent p-7 md:p-10 text-center"
             aria-label="קריאה לפעולה"
           >
-            <p className="text-sm text-amber-600/70 dark:text-amber-400/70 font-medium mb-2">Peroot - מחולל פרומפטים בעברית</p>
+            <p className="text-sm text-amber-600/70 dark:text-amber-400/70 font-medium mb-2">
+              Peroot - מחולל פרומפטים בעברית
+            </p>
             <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-3">
               רוצים פרומפטים מותאמים אישית?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-              הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספריה אישית וגישה ל-480+ פרומפטים.
+              הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספריה אישית וגישה ל-480+
+              פרומפטים.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
@@ -411,15 +426,24 @@ export default async function CategoryPage({ params }: Props) {
 
           {/* Cross-links to high-value pages */}
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Link href="/guide" className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right">
+            <Link
+              href="/guide"
+              className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right"
+            >
               <p className="font-medium text-foreground text-sm mb-1">המדריך המלא לפרומפטים</p>
               <p className="text-xs text-muted-foreground">5 עקרונות זהב וטכניקות מתקדמות</p>
             </Link>
-            <Link href="/blog" className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right">
+            <Link
+              href="/blog"
+              className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right"
+            >
               <p className="font-medium text-foreground text-sm mb-1">מאמרים ומדריכים</p>
               <p className="text-xs text-muted-foreground">טיפים מקצועיים לשימוש ב-AI</p>
             </Link>
-            <Link href="/examples" className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right">
+            <Link
+              href="/examples"
+              className="p-4 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-right"
+            >
               <p className="font-medium text-foreground text-sm mb-1">דוגמאות לפני ואחרי</p>
               <p className="text-xs text-muted-foreground">ראו איך Peroot משדרג פרומפטים</p>
             </Link>

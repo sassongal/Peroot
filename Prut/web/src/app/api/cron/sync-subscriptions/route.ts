@@ -55,7 +55,7 @@ export async function GET(req: Request) {
         .eq("plan_tier", "pro")
         .in(
           "id",
-          staleProUsers.map((s) => s.user_id)
+          staleProUsers.map((s) => s.user_id),
         );
 
       for (const p of proProfiles ?? []) {
@@ -97,9 +97,7 @@ export async function GET(req: Request) {
       // Only reset credits if they're still on pro tier
       if (profile.plan_tier === "pro") {
         const existingTags: string[] = profile.tags ?? [];
-        const newTags = existingTags.includes("churn")
-          ? existingTags
-          : [...existingTags, "churn"];
+        const newTags = existingTags.includes("churn") ? existingTags : [...existingTags, "churn"];
 
         const newBalance = Math.min(profile.credits_balance, dailyFreeLimit);
         await supabase
@@ -108,6 +106,9 @@ export async function GET(req: Request) {
             plan_tier: "free",
             credits_balance: newBalance,
             credits_refreshed_at: now,
+            // Start the rolling 24h window now so a churned user doesn't get
+            // a free "fresh quota" immediately on downgrade.
+            last_prompt_at: now,
             churned_at: now,
             tags: newTags,
           })
@@ -124,13 +125,20 @@ export async function GET(req: Request) {
               p_reason: "churn_revoke",
               p_source: "system",
             });
-          } catch { /* ledger is best-effort */ }
+          } catch {
+            /* ledger is best-effort */
+          }
         }
 
         try {
           const adminEmail = settings?.contact_email || "gal@joya-tech.net";
-          const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
-          if (authError) logger.warn(`[sync-subscriptions] Could not fetch auth user ${userId}:`, authError.message);
+          const { data: authData, error: authError } =
+            await supabase.auth.admin.getUserById(userId);
+          if (authError)
+            logger.warn(
+              `[sync-subscriptions] Could not fetch auth user ${userId}:`,
+              authError.message,
+            );
           await EmailService.send({
             to: adminEmail,
             subject: `[Peroot Cron] Churn: ${(authData.user?.email || userId).slice(0, 100)}`,
@@ -147,13 +155,13 @@ export async function GET(req: Request) {
 
         fixedCount++;
         logger.info(
-          `[sync-subscriptions] Fixed stale pro user ${userId} → free, credits reset to ${dailyFreeLimit}`
+          `[sync-subscriptions] Fixed stale pro user ${userId} → free, credits reset to ${dailyFreeLimit}`,
         );
       }
     }
 
     logger.info(`[sync-subscriptions] Done. Fixed ${fixedCount} users`);
-    await recordCronSuccess('sync-subscriptions');
+    await recordCronSuccess("sync-subscriptions");
     return NextResponse.json({ fixed: fixedCount });
   } catch (error) {
     logger.error("[sync-subscriptions] Error:", error);

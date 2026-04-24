@@ -1539,3 +1539,44 @@ a:focus-visible,
     filter: none !important;
   }
 }
+
+/* "עוד מצבים" attention animations — pulse ring, shimmer sweep, sparkle spin */
+@keyframes peroot-attention-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    transform: scale(1.02);
+  }
+}
+@keyframes peroot-attention-shimmer {
+  0% { transform: translateX(-120%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+@keyframes peroot-attention-sparkle-spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.25); }
+}
+.peroot-attention-btn {
+  animation: peroot-attention-pulse 2.4s ease-in-out infinite;
+}
+.peroot-attention-ring {
+  animation: peroot-attention-pulse 2.4s ease-in-out infinite;
+}
+.peroot-attention-shimmer {
+  animation: peroot-attention-shimmer 2.8s ease-in-out infinite;
+}
+.peroot-attention-sparkle {
+  animation: peroot-attention-sparkle-spin 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .peroot-attention-btn,
+  .peroot-attention-ring,
+  .peroot-attention-shimmer,
+  .peroot-attention-sparkle {
+    animation: none !important;
+  }
+}
