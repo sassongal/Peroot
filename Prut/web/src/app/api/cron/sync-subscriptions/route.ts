@@ -6,15 +6,20 @@ import { EmailService } from "@/lib/emails/service";
 import { adminCronChurnAlertEmail } from "@/lib/emails/templates/admin-alerts";
 import { verifyCronSecret } from "@/lib/cron-auth";
 
+const PRO_MONTHLY_CREDITS = 150;
+const ACTIVE_STATUSES = ["active", "on_trial", "past_due", "paid"] as const;
+const INACTIVE_STATUSES = ["cancelled", "expired", "unpaid", "paused"] as const;
+
 /**
  * GET /api/cron/sync-subscriptions
  *
- * Daily safety net: catches expired trials and subscriptions that LemonSqueezy
- * may have failed to notify us about via webhook.
+ * Daily safety net: catches subscription drift that LemonSqueezy failed to
+ * notify us about via webhook. Runs in both directions:
  *
- * - Finds users where subscription is expired/cancelled but profile still says 'pro'
- * - Finds users where trial_ends_at has passed but status is still 'on_trial'
- * - Resets them to free tier with daily credit limit and adds 'churn' tag
+ * Pro → Free: expired/cancelled subscriptions where profile still says 'pro'
+ *             + expired trials still marked as on_trial
+ * Free → Pro: active subscriptions where profile still says 'free'
+ *             (missed subscription_created / subscription_payment_success webhook)
  */
 export async function GET(req: Request) {
   const authFailure = verifyCronSecret(req);
@@ -23,6 +28,7 @@ export async function GET(req: Request) {
   const supabase = createServiceClient();
   const now = new Date().toISOString();
   let fixedCount = 0;
+  let upgradedCount = 0;
 
   try {
     // 1. Find expired trials still marked as on_trial
@@ -36,7 +42,7 @@ export async function GET(req: Request) {
     const { data: staleProUsers } = await supabase
       .from("subscriptions")
       .select("user_id, status")
-      .in("status", ["cancelled", "expired", "unpaid", "paused"]);
+      .in("status", [...INACTIVE_STATUSES]);
 
     // Collect all user IDs that need fixing
     const userIdsToFix = new Set<string>();
@@ -158,9 +164,62 @@ export async function GET(req: Request) {
       }
     }
 
-    logger.info(`[sync-subscriptions] Done. Fixed ${fixedCount} users`);
+    // ── Free → Pro reconciliation ─────────────────────────────────────────────
+    // Catch users whose subscription_created / subscription_payment_success
+    // webhook was lost. They paid but still land on the free tier.
+    const { data: activeSubs } = await supabase
+      .from("subscriptions")
+      .select("user_id, status")
+      .in("status", [...ACTIVE_STATUSES]);
+
+    if (activeSubs?.length) {
+      const activeUserIds = activeSubs.map((s) => s.user_id);
+
+      const { data: staleFreePros } = await supabase
+        .from("profiles")
+        .select("id, tags, credits_balance")
+        .eq("plan_tier", "free")
+        .in("id", activeUserIds);
+
+      for (const profile of staleFreePros ?? []) {
+        const existingTags: string[] = profile.tags ?? [];
+        const newTags = existingTags.includes("reconciled")
+          ? existingTags
+          : [...existingTags, "reconciled"];
+
+        await supabase
+          .from("profiles")
+          .update({
+            plan_tier: "pro",
+            credits_balance: PRO_MONTHLY_CREDITS,
+            credits_refreshed_at: now,
+            tags: newTags,
+          })
+          .eq("id", profile.id);
+
+        try {
+          const delta = PRO_MONTHLY_CREDITS - (profile.credits_balance ?? 0);
+          await supabase.rpc("log_credit_change", {
+            p_user_id: profile.id,
+            p_delta: delta,
+            p_balance_after: PRO_MONTHLY_CREDITS,
+            p_reason: "reconciliation_grant",
+            p_source: "system",
+          });
+        } catch {
+          /* ledger is best-effort */
+        }
+
+        upgradedCount++;
+        logger.info(
+          `[sync-subscriptions] Reconciled stale free→pro user ${profile.id}, credits set to ${PRO_MONTHLY_CREDITS}`,
+        );
+      }
+    }
+
+    logger.info(`[sync-subscriptions] Done. Churned: ${fixedCount}, Reconciled: ${upgradedCount}`);
     await recordCronSuccess("sync-subscriptions");
-    return NextResponse.json({ fixed: fixedCount });
+    return NextResponse.json({ fixed: fixedCount, upgraded: upgradedCount });
   } catch (error) {
     logger.error("[sync-subscriptions] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
