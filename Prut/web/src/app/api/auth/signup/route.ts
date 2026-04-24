@@ -64,10 +64,7 @@ export async function POST(req: NextRequest) {
         createError.message.toLowerCase().includes("already been registered") ||
         createError.message.toLowerCase().includes("user already exists")
       ) {
-        return NextResponse.json(
-          { error: "כתובת אימייל זו כבר רשומה במערכת" },
-          { status: 409 },
-        );
+        return NextResponse.json({ error: "כתובת אימייל זו כבר רשומה במערכת" }, { status: 409 });
       }
       return NextResponse.json({ error: createError.message }, { status: 400 });
     }
@@ -131,9 +128,7 @@ export async function POST(req: NextRequest) {
         logger.error("[Signup] Failed to start email sequence:", seqErr);
       } else if (seqRow?.id && user.email) {
         try {
-          const { sendOnboardingWelcomeNow } = await import(
-            "@/lib/emails/onboarding-welcome-send"
-          );
+          const { sendOnboardingWelcomeNow } = await import("@/lib/emails/onboarding-welcome-send");
           await sendOnboardingWelcomeNow({
             userId: user.id,
             email: user.email,

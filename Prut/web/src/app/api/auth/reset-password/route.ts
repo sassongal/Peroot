@@ -7,7 +7,10 @@ import { passwordResetEmail } from "@/lib/emails/templates/password-reset";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.RESEND_FROM_EMAIL || "noreply@joya-tech.net";
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space").replace(
+  /\/$/,
+  "",
+);
 
 /**
  * POST /api/auth/reset-password
@@ -38,10 +41,7 @@ export async function POST(req: NextRequest) {
   // Rate limit: 3 requests per hour per email address
   const rl = await checkRateLimit(email, "passwordReset");
   if (!rl.success) {
-    return NextResponse.json(
-      { error: "יותר מדי בקשות — נסה/י שוב בעוד שעה" },
-      { status: 429 },
-    );
+    return NextResponse.json({ error: "יותר מדי בקשות — נסה/י שוב בעוד שעה" }, { status: 429 });
   }
 
   try {
@@ -60,7 +60,10 @@ export async function POST(req: NextRequest) {
 
     if (linkError || !linkData?.properties?.action_link) {
       // User not found or other error — return 200 to prevent enumeration
-      logger.warn("[Reset Password] generateLink failed (not exposing to client):", linkError?.message);
+      logger.warn(
+        "[Reset Password] generateLink failed (not exposing to client):",
+        linkError?.message,
+      );
       return NextResponse.json({ success: true });
     }
 
