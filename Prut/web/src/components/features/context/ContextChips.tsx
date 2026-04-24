@@ -8,6 +8,7 @@ interface ContextChipsProps {
   attachments: ContextAttachment[];
   onRemove: (id: string) => void;
   onRetry?: (id: string) => void;
+  /** @deprecated — kept for call-site compat; ContextChips no longer enforces file count. */
   maxFiles?: number;
   tokenLimit?: number;
 }
@@ -17,7 +18,12 @@ function formatTokenCount(count: number): string {
   return String(count);
 }
 
-export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsProps) {
+export function ContextChips({
+  attachments,
+  onRemove,
+  onRetry,
+  tokenLimit,
+}: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
@@ -25,7 +31,8 @@ export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsPro
       sum + (a.status === "ready" ? (a.tokenCount ?? a.block?.injected?.tokenCount ?? 0) : 0),
     0,
   );
-  const isOverLimit = totalTokens > 15_000;
+  const effectiveLimit = tokenLimit ?? 15_000;
+  const isOverLimit = totalTokens > effectiveLimit;
   const readyCount = attachments.filter((a) => a.status === "ready").length;
   const loadingCount = attachments.filter((a) => a.status === "loading").length;
   const errorCount = attachments.filter((a) => a.status === "error").length;
@@ -72,7 +79,7 @@ export function ContextChips({ attachments, onRemove, onRetry }: ContextChipsPro
 
         {isOverLimit && (
           <span className="text-red-400 font-bold">
-            יותר מדי context — הסירו קובץ (מקסימום 15K tokens)
+            יותר מדי context — הסירו קובץ (מקסימום {formatTokenCount(effectiveLimit)} tokens)
           </span>
         )}
 

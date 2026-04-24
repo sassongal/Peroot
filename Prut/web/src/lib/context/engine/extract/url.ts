@@ -35,13 +35,19 @@ const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
 const BLOCKED_IP_RE =
   /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|::1$|fc00|fd|fe80|::ffff:127\.|::ffff:10\.|::ffff:172\.(1[6-9]|2\d|3[01])\.|::ffff:192\.168\.|::ffff:169\.254\.)/i;
 
+// Dev-mode escape hatch: allow localhost/intranet URLs when not in production,
+// or when CONTEXT_ALLOW_PRIVATE_URLS=1 is explicitly set. Never enabled in prod
+// unless the flag is set by an operator who accepts the SSRF risk.
+const SSRF_BYPASS =
+  process.env.CONTEXT_ALLOW_PRIVATE_URLS === "1" || process.env.NODE_ENV !== "production";
+
 function assertPublicUrl(raw: string): URL {
   const parsed = new URL(raw);
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     throw userFacingError("רק קישורי HTTP/HTTPS נתמכים");
   }
   // Block IPs directly in hostname
-  if (BLOCKED_IP_RE.test(parsed.hostname)) {
+  if (!SSRF_BYPASS && BLOCKED_IP_RE.test(parsed.hostname)) {
     throw userFacingError("כתובת פנימית חסומה");
   }
   return parsed;
@@ -55,9 +61,11 @@ async function assertPublicDns(hostname: string): Promise<void> {
       ...(v4.status === "fulfilled" ? v4.value : []),
       ...(v6.status === "fulfilled" ? v6.value : []),
     ];
-    for (const ip of ips) {
-      if (BLOCKED_IP_RE.test(ip)) {
-        throw userFacingError(blocked);
+    if (!SSRF_BYPASS) {
+      for (const ip of ips) {
+        if (BLOCKED_IP_RE.test(ip)) {
+          throw userFacingError(blocked);
+        }
       }
     }
   } catch (err) {
@@ -123,7 +131,6 @@ async function fetchText(url: string, timeoutMs: number): Promise<string> {
     // assertPublicDns is called immediately before each fetch to minimise the
     // DNS-rebinding window (TTL-0 attacks require the check and the connect to
     // race; calling them back-to-back shrinks that gap to microseconds).
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       await assertPublicDns(new URL(currentUrl).hostname);
       res = await fetch(currentUrl, {

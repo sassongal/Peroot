@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
+import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 
 interface PromptInputProps {
   inputVal: string;
@@ -168,6 +169,7 @@ export function PromptInput({
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false);
+  const [guestGateFeature, setGuestGateFeature] = useState<string | null>(null);
 
   // Close language picker on click outside
   useEffect(() => {
@@ -532,38 +534,43 @@ export function PromptInput({
                   />
                 )}
 
-                {/* File upload — registered users only */}
-                {onAddFile && !isGuest && (
+                {/* File upload */}
+                {onAddFile && (
                   <>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.docx,.txt,.csv,.xlsx"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          Promise.resolve()
-                            .then(() => onAddFile(file))
-                            .then(() =>
-                              toast.success(`"${file.name}" נוסף — מחלץ תוכן...`),
-                            )
-                            .catch((err: unknown) =>
-                              toast.error(
-                                err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
-                              ),
-                            );
-                        }
-                        e.target.value = "";
-                      }}
-                    />
+                    {!isGuest && (
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.docx,.txt,.csv,.xlsx"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            Promise.resolve()
+                              .then(() => onAddFile(file))
+                              .then(() => toast.success(`"${file.name}" נוסף — מחלץ תוכן...`))
+                              .catch((err: unknown) =>
+                                toast.error(
+                                  err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
+                                ),
+                              );
+                          }
+                          e.target.value = "";
+                        }}
+                      />
+                    )}
                     <button
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => {
+                        if (isGuest) setGuestGateFeature("צירוף קבצים");
+                        else fileInputRef.current?.click();
+                      }}
                       className={cn(
                         "p-2 rounded-lg transition-colors cursor-pointer",
                         "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
                       )}
-                      title="צרף קובץ (PDF, Word, Excel, CSV, TXT)"
+                      title={
+                        isGuest ? "התחבר/י כדי לצרף קובץ" : "צרף קובץ (PDF, Word, Excel, CSV, TXT)"
+                      }
                       aria-label="צרף קובץ"
                       disabled={isLoading}
                     >
@@ -572,24 +579,27 @@ export function PromptInput({
                   </>
                 )}
 
-                {/* URL input — registered users only */}
-                {onAddUrl && !isGuest && (
+                {/* URL input */}
+                {onAddUrl && (
                   <div className="relative">
                     <button
-                      onClick={() => setShowUrlInput((prev) => !prev)}
+                      onClick={() => {
+                        if (isGuest) setGuestGateFeature("צירוף קישור");
+                        else setShowUrlInput((prev) => !prev);
+                      }}
                       className={cn(
                         "p-2 rounded-lg transition-colors cursor-pointer",
                         showUrlInput
                           ? "text-amber-400 bg-amber-500/10"
                           : "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
                       )}
-                      title="צרף קישור URL"
+                      title={isGuest ? "התחבר/י כדי לצרף קישור" : "צרף קישור URL"}
                       aria-label="צרף קישור"
                       disabled={isLoading}
                     >
                       <Globe className="w-4 h-4" />
                     </button>
-                    {showUrlInput && (
+                    {!isGuest && showUrlInput && (
                       <div className="absolute bottom-full end-0 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
                         <input
                           type="url"
@@ -621,38 +631,41 @@ export function PromptInput({
                   </div>
                 )}
 
-                {/* Image upload — registered users only */}
-                {onAddImage && !isGuest && (
+                {/* Image upload */}
+                {onAddImage && (
                   <>
-                    <input
-                      ref={imageInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          Promise.resolve()
-                            .then(() => onAddImage(file))
-                            .then(() =>
-                              toast.success(`"${file.name}" נוספה — מעבד תמונה...`),
-                            )
-                            .catch((err: unknown) =>
-                              toast.error(
-                                err instanceof Error ? err.message : "שגיאה בהוספת תמונה",
-                              ),
-                            );
-                        }
-                        e.target.value = "";
-                      }}
-                    />
+                    {!isGuest && (
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            Promise.resolve()
+                              .then(() => onAddImage(file))
+                              .then(() => toast.success(`"${file.name}" נוספה — מעבד תמונה...`))
+                              .catch((err: unknown) =>
+                                toast.error(
+                                  err instanceof Error ? err.message : "שגיאה בהוספת תמונה",
+                                ),
+                              );
+                          }
+                          e.target.value = "";
+                        }}
+                      />
+                    )}
                     <button
-                      onClick={() => imageInputRef.current?.click()}
+                      onClick={() => {
+                        if (isGuest) setGuestGateFeature("צירוף תמונה");
+                        else imageInputRef.current?.click();
+                      }}
                       className={cn(
                         "p-2 rounded-lg transition-colors cursor-pointer",
                         "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
                       )}
-                      title="צרף תמונה"
+                      title={isGuest ? "התחבר/י כדי לצרף תמונה" : "צרף תמונה"}
                       aria-label="צרף תמונה"
                       disabled={isLoading}
                     >
@@ -822,6 +835,14 @@ export function PromptInput({
       {/* Feature Grid Removed as requested */}
 
       {/* Centered Navigation Tabs */}
+
+      <LoginRequiredModal
+        isOpen={guestGateFeature !== null}
+        onClose={() => setGuestGateFeature(null)}
+        title="נדרשת התחברות"
+        message="כדי לצרף קבצים, תמונות וקישורים לקונטקסט — יש להתחבר לחשבון."
+        feature={guestGateFeature ?? undefined}
+      />
     </div>
   );
 }
