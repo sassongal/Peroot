@@ -115,14 +115,27 @@ export function useVoiceRecorder({ onResult, onError, lang = 'he-IL' }: UseVoice
     };
   }, [lang]);
 
-  const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening) {
-      try {
-        committedIndicesRef.current.clear();
-        recognitionRef.current.start();
-      } catch (e) {
-        logger.error("Failed to start recognition:", e);
+  const startListening = useCallback(async () => {
+    if (!recognitionRef.current || isListening) return;
+    try {
+      // Explicitly request mic permission first. Chrome's SpeechRecognition
+      // otherwise fails with 'not-allowed' if no prior grant exists — never
+      // prompting the user for a real choice.
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((t) => t.stop());
       }
+      committedIndicesRef.current.clear();
+      recognitionRef.current.start();
+    } catch (e) {
+      logger.error("Failed to start recognition:", e);
+      const code =
+        e instanceof DOMException && (e.name === "NotAllowedError" || e.name === "SecurityError")
+          ? "not-allowed"
+          : e instanceof DOMException && e.name === "NotFoundError"
+            ? "audio-capture"
+            : "start-failed";
+      if (onErrorRef.current) onErrorRef.current(code);
     }
   }, [isListening]);
 

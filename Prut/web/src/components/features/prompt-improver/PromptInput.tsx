@@ -23,6 +23,7 @@ import { TargetModelSelect } from "@/components/features/prompt-improver/TargetM
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 
 interface PromptInputProps {
@@ -154,6 +155,8 @@ export function PromptInput({
 }: PromptInputProps) {
     const t = useI18n();
     const { isPro } = useSubscription();
+    const { user } = useAuth();
+    const isGuest = !user;
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
@@ -210,7 +213,16 @@ export function PromptInput({
             }
         },
         onError: (err) => {
-            toast.error("שגיאה בהקלטה: " + err);
+            const messages: Record<string, string> = {
+                "not-allowed": "הגישה למיקרופון נחסמה. אפשר/י גישה בהגדרות הדפדפן ונסה/י שוב.",
+                "service-not-allowed": "שירות ההקלטה חסום בדפדפן. בדוק/י הגדרות פרטיות.",
+                "audio-capture": "לא נמצא מיקרופון. ודא/י שמכשיר הקלטה מחובר.",
+                "no-speech": "לא זוהה דיבור. נסה/י שוב קרוב יותר למיקרופון.",
+                network: "שגיאת רשת בזיהוי דיבור. בדוק/י את החיבור.",
+                aborted: "ההקלטה הופסקה.",
+                "start-failed": "לא ניתן להתחיל הקלטה. נסה/י שוב.",
+            };
+            toast.error(messages[err] ?? `שגיאה בהקלטה: ${err}`);
             setInterimResult("");
             onInterimChange?.("");
         },
@@ -243,7 +255,7 @@ export function PromptInput({
           onChange={setSelectedCapability}
           disabled={isLoading}
           compact
-          isPro={isPro}
+          isGuest={isGuest}
         />
       </div>
 
