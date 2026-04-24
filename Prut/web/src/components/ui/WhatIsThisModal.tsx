@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { X, Sparkles, MessageSquare, Globe, Palette, Video, Bot, ArrowLeft } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { X, Sparkles, MessageSquare, Globe, Palette, Video, Bot, ArrowLeft, Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface WhatIsThisModalProps {
   isOpen: boolean;
@@ -17,8 +17,16 @@ const MODES = [
   { icon: Bot, title: "סוכני AI", desc: "בניית GPT מותאמים וסוכנים חכמים", color: "text-amber-400", bg: "bg-amber-500/10" },
 ];
 
+const YT_ID = "iNXX5wZfMJA";
+
 export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+
+  // Reset video state when modal closes
+  useEffect(() => {
+    if (!isOpen) setVideoPlaying(false);
+  }, [isOpen]);
 
   // Close on Escape key
   useEffect(() => {
@@ -56,11 +64,11 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
         className={[
           // Base
           "fixed z-[81]",
-          // Mobile: bottom sheet, slides up from bottom, ~70% height
-          "bottom-0 left-0 right-0 max-h-[72vh] rounded-t-3xl",
+          // Mobile: bottom sheet, slides up from bottom
+          "bottom-0 left-0 right-0 max-h-[88vh] rounded-t-3xl",
           // Desktop: centered modal with auto-width
           "md:bottom-auto md:left-1/2 md:right-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2",
-          "md:w-full md:max-w-lg md:rounded-3xl md:max-h-[90vh]",
+          "md:w-full md:max-w-xl md:rounded-3xl md:max-h-[92vh]",
           // Shared appearance
           "bg-white dark:bg-zinc-950 border border-[var(--glass-border)] flex flex-col overflow-hidden",
           // Entrance animation
@@ -89,6 +97,37 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
             <p className="text-sm text-(--text-muted) leading-relaxed">
               <span className="text-amber-600 dark:text-amber-400 font-semibold">פירוט</span> משדרג כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
+          </div>
+
+          {/* Intro video */}
+          <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
+            {videoPlaying ? (
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${YT_ID}?autoplay=1&rel=0`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="מה זה פירוט?"
+              />
+            ) : (
+              <button
+                className="absolute inset-0 w-full h-full group cursor-pointer"
+                onClick={() => setVideoPlaying(true)}
+                aria-label="הפעל סרטון - מה זה פירוט?"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://i.ytimg.com/vi/${YT_ID}/hqdefault.jpg`}
+                  alt="מה זה פירוט?"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 text-white fill-white ms-0.5" />
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
 
           {/* 5 Modes */}
