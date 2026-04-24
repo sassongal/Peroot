@@ -345,6 +345,13 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     [limits.maxImages, updateAttachment],
   );
 
+  const addFiles = useCallback(
+    async (files: File[]): Promise<void> => {
+      await Promise.all(files.map((f) => addFile(f)));
+    },
+    [addFile],
+  );
+
   const retryUrl = useCallback(
     async (id: string) => {
       const attachment = attachmentsRef.current.find((a) => a.id === id);
@@ -418,6 +425,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     totalTokens,
     isOverLimit,
     addFile,
+    addFiles,
     addUrl,
     retryUrl,
     addImage,

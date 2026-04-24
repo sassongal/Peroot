@@ -35,10 +35,28 @@ export async function checkExtractionLimit(
 ): Promise<ExtractionLimitResult> {
   const limit = getContextLimits(tier).extractionsPerDay;
   const k = `extract:${userId}:${dayKey()}`;
-  // Ensure the key exists with TTL before incrementing — prevents orphaned keys
-  // if the process crashes between incr and expire.
-  await redis.set(k, 0, { ex: DAY_TTL, nx: true });
-  const count = (await redis.incr(k)) as number;
+
+  let count: number;
+  try {
+    // Ensure the key exists with TTL before incrementing — prevents orphaned keys
+    // if the process crashes between incr and expire.
+    await redis.set(k, 0, { ex: DAY_TTL, nx: true });
+    count = (await redis.incr(k)) as number;
+  } catch {
+    // Redis unavailable (missing env vars in local dev, or transient outage).
+    // Fail open so uploads are not broken when the rate-limit store is down.
+    // A missed count wastes one slot per failed check — acceptable vs total outage.
+    return {
+      allowed: true,
+      remaining: limit,
+      limit,
+      resetIn: secondsUntilEndOfDay(),
+      rollback: async () => {
+        // Nothing to roll back — counter was never incremented.
+      },
+    };
+  }
+
   const allowed = count <= limit;
   return {
     allowed,
