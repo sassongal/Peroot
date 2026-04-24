@@ -1,13 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  useReducedMotion,
-} from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 export function MockupFloatTilt({ children }: { children: ReactNode }) {

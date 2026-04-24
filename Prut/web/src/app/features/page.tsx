@@ -91,8 +91,14 @@ function LibraryMockup() {
               key={p}
               className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${i === 0 ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-secondary/50"}`}
             >
-              <Sparkles className={`w-3 h-3 shrink-0 ${i === 0 ? "text-amber-400" : "text-muted-foreground"}`} />
-              <span className={`truncate ${i === 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>{p}</span>
+              <Sparkles
+                className={`w-3 h-3 shrink-0 ${i === 0 ? "text-amber-400" : "text-muted-foreground"}`}
+              />
+              <span
+                className={`truncate ${i === 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}
+              >
+                {p}
+              </span>
             </div>
           ))}
           <div className="text-muted-foreground/60 text-[10px] mt-2 px-1">+ 9 פרומפטים נוספים</div>
@@ -121,10 +127,14 @@ function ChainsMockup() {
         <div className="flex items-center gap-1 justify-center flex-wrap">
           {steps.map((s, i) => (
             <div key={s.label} className="flex items-center gap-1">
-              <div className={`px-3 py-2 rounded-lg border ${s.color} font-medium text-center min-w-[64px]`}>
+              <div
+                className={`px-3 py-2 rounded-lg border ${s.color} font-medium text-center min-w-[64px]`}
+              >
                 {s.label}
               </div>
-              {i < steps.length - 1 && <ArrowLeft className="w-3 h-3 text-muted-foreground shrink-0" />}
+              {i < steps.length - 1 && (
+                <ArrowLeft className="w-3 h-3 text-muted-foreground shrink-0" />
+              )}
             </div>
           ))}
         </div>
@@ -161,17 +171,60 @@ function GraphMockup() {
       <div className="relative" style={{ height: 220 }}>
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 360 220">
           {nodes.map((n) => (
-            <line key={n.label} x1={center.x} y1={center.y} x2={n.x} y2={n.y}
-              stroke="currentColor" strokeWidth="1" className="text-border" strokeDasharray="3,3" />
+            <line
+              key={n.label}
+              x1={center.x}
+              y1={center.y}
+              x2={n.x}
+              y2={n.y}
+              stroke="currentColor"
+              strokeWidth="1"
+              className="text-border"
+              strokeDasharray="3,3"
+            />
           ))}
           {nodes.map((n) => (
             <g key={n.label}>
-              <circle cx={n.x} cy={n.y} r="20" fill={n.color + "22"} stroke={n.color + "66"} strokeWidth="1.5" />
-              <text x={n.x} y={n.y + 1} textAnchor="middle" dominantBaseline="middle" fontSize="9" fill={n.color} fontWeight="600">{n.label}</text>
+              <circle
+                cx={n.x}
+                cy={n.y}
+                r="20"
+                fill={n.color + "22"}
+                stroke={n.color + "66"}
+                strokeWidth="1.5"
+              />
+              <text
+                x={n.x}
+                y={n.y + 1}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize="9"
+                fill={n.color}
+                fontWeight="600"
+              >
+                {n.label}
+              </text>
             </g>
           ))}
-          <circle cx={center.x} cy={center.y} r="28" fill="#f59e0b22" stroke="#f59e0b66" strokeWidth="2" />
-          <text x={center.x} y={center.y + 1} textAnchor="middle" dominantBaseline="middle" fontSize="11" fill="#f59e0b" fontWeight="700">פירוט</text>
+          <circle
+            cx={center.x}
+            cy={center.y}
+            r="28"
+            fill="#f59e0b22"
+            stroke="#f59e0b66"
+            strokeWidth="2"
+          />
+          <text
+            x={center.x}
+            y={center.y + 1}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="11"
+            fill="#f59e0b"
+            fontWeight="700"
+          >
+            פירוט
+          </text>
         </svg>
       </div>
     </div>
@@ -190,11 +243,17 @@ function VariablesMockup() {
       <div className="p-4 space-y-4">
         <div className="rounded-lg border border-border bg-secondary/50 p-3 leading-relaxed text-foreground">
           <span>כתוב </span>
-          <span className="bg-sky-500/20 border border-sky-500/40 text-sky-400 px-1.5 py-0.5 rounded font-mono">&#123;סוג_תוכן&#125;</span>
+          <span className="bg-sky-500/20 border border-sky-500/40 text-sky-400 px-1.5 py-0.5 rounded font-mono">
+            &#123;סוג_תוכן&#125;
+          </span>
           <span> על </span>
-          <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 px-1.5 py-0.5 rounded font-mono">&#123;נושא&#125;</span>
+          <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 px-1.5 py-0.5 rounded font-mono">
+            &#123;נושא&#125;
+          </span>
           <span> ל</span>
-          <span className="bg-purple-500/20 border border-purple-500/40 text-purple-400 px-1.5 py-0.5 rounded font-mono">&#123;קהל_יעד&#125;</span>
+          <span className="bg-purple-500/20 border border-purple-500/40 text-purple-400 px-1.5 py-0.5 rounded font-mono">
+            &#123;קהל_יעד&#125;
+          </span>
         </div>
         <div className="space-y-1.5">
           {[
@@ -202,7 +261,10 @@ function VariablesMockup() {
             { key: "נושא", val: "בינה מלאכותית ב-HR", color: "text-amber-400" },
             { key: "קהל_יעד", val: "מנהלי HR", color: "text-purple-400" },
           ].map((v) => (
-            <div key={v.key} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-secondary border border-border">
+            <div
+              key={v.key}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-secondary border border-border"
+            >
               <span className={`font-mono ${v.color} text-[10px]`}>{v.key}</span>
               <ArrowLeft className="w-2.5 h-2.5 text-muted-foreground" />
               <span className="text-foreground">{v.val}</span>
@@ -237,14 +299,19 @@ function AutoCategorizeMockup() {
           <div className="text-muted-foreground text-[10px] mb-1.5">תגיות שזוהו:</div>
           <div className="flex flex-wrap gap-1.5">
             {tags.map((t) => (
-              <span key={t} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium">
-                <Tag className="w-2.5 h-2.5" />{t}
+              <span
+                key={t}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium"
+              >
+                <Tag className="w-2.5 h-2.5" />
+                {t}
               </span>
             ))}
           </div>
         </div>
         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2 text-emerald-500 text-[10px] flex items-center gap-1.5">
-          <CheckCircle2 className="w-3 h-3" />שמור בתיקיית שיווק
+          <CheckCircle2 className="w-3 h-3" />
+          שמור בתיקיית שיווק
         </div>
       </div>
     </div>
@@ -254,8 +321,16 @@ function AutoCategorizeMockup() {
 function SmartImproveMockup() {
   const suggestions = [
     { text: "הוסף קהל יעד ספציפי", color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
-    { text: "ציין את הטון הרצוי", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-    { text: "הוסף דוגמה ספציפית", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+    {
+      text: "ציין את הטון הרצוי",
+      color: "text-amber-400",
+      bg: "bg-amber-500/10 border-amber-500/20",
+    },
+    {
+      text: "הוסף דוגמה ספציפית",
+      color: "text-purple-400",
+      bg: "bg-purple-500/10 border-purple-500/20",
+    },
   ];
   return (
     <div className="rounded-xl border border-border bg-background text-[11px] shadow-2xl overflow-hidden">
@@ -293,50 +368,74 @@ function SmartImproveMockup() {
 
 const WALKTHROUGH = [
   {
-    icon: FolderOpen, num: "01",
-    title: "ספרייה אישית", subtitle: "כל הפרומפטים שלכם, מאורגנים",
-    description: "כל פרומפט שמשדרגים נשמר אוטומטית בספרייה האישית. ארגנו לפי תיקיות, הוסיפו מועדפים, הצמידו את הנפוצים ביותר — וחפשו בשניות. לא צריך עוד להמציא את הגלגל מחדש.",
-    color: "text-sky-400", accent: "border-sky-500/20 bg-sky-500/5",
+    icon: FolderOpen,
+    num: "01",
+    title: "ספרייה אישית",
+    subtitle: "כל הפרומפטים שלכם, מאורגנים",
+    description:
+      "כל פרומפט שמשדרגים נשמר אוטומטית בספרייה האישית. ארגנו לפי תיקיות, הוסיפו מועדפים, הצמידו את הנפוצים ביותר — וחפשו בשניות. לא צריך עוד להמציא את הגלגל מחדש.",
+    color: "text-sky-400",
+    accent: "border-sky-500/20 bg-sky-500/5",
     bullets: ["שמירה אוטומטית", "תיקיות מותאמות אישית", "חיפוש מלא", "מועדפים ומוצמדים"],
     Mockup: LibraryMockup,
   },
   {
-    icon: Link2, num: "02",
-    title: "שרשרת פרומפטים", subtitle: "זרימת עבודה אוטומטית בלחיצה אחת",
-    description: "חברו כמה פרומפטים יחד לתהליך רב-שלבי. הפלט של שלב אחד מזין אוטומטית את הבא — כך שתהליך שלקח שעה הופך לדקה אחת. מושלם לצינורות תוכן, ניתוח שוק, בניית אסטרטגיות.",
-    color: "text-purple-400", accent: "border-purple-500/20 bg-purple-500/5",
+    icon: Link2,
+    num: "02",
+    title: "שרשרת פרומפטים",
+    subtitle: "זרימת עבודה אוטומטית בלחיצה אחת",
+    description:
+      "חברו כמה פרומפטים יחד לתהליך רב-שלבי. הפלט של שלב אחד מזין אוטומטית את הבא — כך שתהליך שלקח שעה הופך לדקה אחת. מושלם לצינורות תוכן, ניתוח שוק, בניית אסטרטגיות.",
+    color: "text-purple-400",
+    accent: "border-purple-500/20 bg-purple-500/5",
     bullets: ["חיבור פרומפטים לרצף", "העברת פלט אוטומטית", "שמירת שרשראות", "הרצה בלחיצה"],
     Mockup: ChainsMockup,
   },
   {
-    icon: Network, num: "03",
-    title: "גרף הקשרים", subtitle: "ידע מחובר — לא רשימה שטוחה",
-    description: "ספריית הפרומפטים שלכם מוצגת גם כגרף ויזואלי בסגנון Obsidian. ראו בבירור איך הפרומפטים קשורים זה לזה לפי קטגוריה, תגית, תבנית וקישורים. גלו קשרים שלא ידעתם שקיימים.",
-    color: "text-emerald-400", accent: "border-emerald-500/20 bg-emerald-500/5",
+    icon: Network,
+    num: "03",
+    title: "גרף הקשרים",
+    subtitle: "ידע מחובר — לא רשימה שטוחה",
+    description:
+      "ספריית הפרומפטים שלכם מוצגת גם כגרף ויזואלי בסגנון Obsidian. ראו בבירור איך הפרומפטים קשורים זה לזה לפי קטגוריה, תגית, תבנית וקישורים. גלו קשרים שלא ידעתם שקיימים.",
+    color: "text-emerald-400",
+    accent: "border-emerald-500/20 bg-emerald-500/5",
     bullets: ["ויזואליזציה של הספרייה", "4 סוגי קשרים", "ניווט אינטראקטיבי", "גרף force-directed"],
     Mockup: GraphMockup,
   },
   {
-    icon: Zap, num: "04",
-    title: "משתנים דינמיים", subtitle: "פרומפט אחד, שימושים אינסופיים",
-    description: 'הגדירו משתנים בסוגריים מסולסלות {כמו_זה} בתוך הפרומפטים שלכם. בכל שימוש — מלאו את הערכים המתאימים בלי לערוך את הפרומפט מחדש. חסכו זמן, שמרו עקביות.',
-    color: "text-amber-400", accent: "border-amber-500/20 bg-amber-500/5",
+    icon: Zap,
+    num: "04",
+    title: "משתנים דינמיים",
+    subtitle: "פרומפט אחד, שימושים אינסופיים",
+    description:
+      "הגדירו משתנים בסוגריים מסולסלות {כמו_זה} בתוך הפרומפטים שלכם. בכל שימוש — מלאו את הערכים המתאימים בלי לערוך את הפרומפט מחדש. חסכו זמן, שמרו עקביות.",
+    color: "text-amber-400",
+    accent: "border-amber-500/20 bg-amber-500/5",
     bullets: ["{משתנים} בפרומפט", "מילוי מהיר בשימוש", "ללא עריכה חוזרת", "תבניות גמישות"],
     Mockup: VariablesMockup,
   },
   {
-    icon: Tag, num: "05",
-    title: "קיטלוג אוטומטי", subtitle: "AI מארגן עבורכם",
-    description: "כשאתם שומרים פרומפט, AI מנתח את התוכן ומוסיף תגיות ותיקייה אוטומטית — בלי שתצטרכו לחשוב על ארגון. הספרייה נשארת מסודרת תמיד, גם כשגדלה למאות פרומפטים.",
-    color: "text-rose-400", accent: "border-rose-500/20 bg-rose-500/5",
+    icon: Tag,
+    num: "05",
+    title: "קיטלוג אוטומטי",
+    subtitle: "AI מארגן עבורכם",
+    description:
+      "כשאתם שומרים פרומפט, AI מנתח את התוכן ומוסיף תגיות ותיקייה אוטומטית — בלי שתצטרכו לחשוב על ארגון. הספרייה נשארת מסודרת תמיד, גם כשגדלה למאות פרומפטים.",
+    color: "text-rose-400",
+    accent: "border-rose-500/20 bg-rose-500/5",
     bullets: ["קיטלוג בשמירה", "תגיות אוטומטיות", "הצעת תיקייה", "ניתן לשינוי ידני"],
     Mockup: AutoCategorizeMockup,
   },
   {
-    icon: Sparkles, num: "06",
-    title: "שיפור חכם", subtitle: "לא מספיק? ה-AI יציע עוד",
-    description: "אחרי כל שדרוג, ניתן לבקש הצעות שיפור נוספות מבוססות AI — ציון איכות, נקודות חולשה, ואפשרויות לשכלול. תהליך איטרטיבי עד שהפרומפט מושלם ב-100%.",
-    color: "text-indigo-400", accent: "border-indigo-500/20 bg-indigo-500/5",
+    icon: Sparkles,
+    num: "06",
+    title: "שיפור חכם",
+    subtitle: "לא מספיק? ה-AI יציע עוד",
+    description:
+      "אחרי כל שדרוג, ניתן לבקש הצעות שיפור נוספות מבוססות AI — ציון איכות, נקודות חולשה, ואפשרויות לשכלול. תהליך איטרטיבי עד שהפרומפט מושלם ב-100%.",
+    color: "text-indigo-400",
+    accent: "border-indigo-500/20 bg-indigo-500/5",
     bullets: ["ציון איכות מיידי", "הצעות ספציפיות", "שיפור איטרטיבי", "10 ממדי הערכה"],
     Mockup: SmartImproveMockup,
   },
@@ -346,32 +445,52 @@ const WALKTHROUGH = [
 
 const WORK_MODES = [
   {
-    icon: MessageSquare, title: "פרומפטים לטקסט", subtitle: "Standard",
-    color: "text-sky-400", gradient: "from-sky-500/15 to-sky-500/5", border: "border-sky-500/20",
+    icon: MessageSquare,
+    title: "פרומפטים לטקסט",
+    subtitle: "Standard",
+    color: "text-sky-400",
+    gradient: "from-sky-500/15 to-sky-500/5",
+    border: "border-sky-500/20",
     platforms: ["ChatGPT", "Claude", "Gemini", "Copilot"],
     bullets: ["זיהוי כוונה אוטומטי", "מבנה מקצועי", "תמיכה מלאה בעברית", "משתנים דינמיים"],
   },
   {
-    icon: Globe, title: "מחקר מעמיק", subtitle: "Deep Research",
-    color: "text-emerald-400", gradient: "from-emerald-500/15 to-emerald-500/5", border: "border-emerald-500/20",
+    icon: Globe,
+    title: "מחקר מעמיק",
+    subtitle: "Deep Research",
+    color: "text-emerald-400",
+    gradient: "from-emerald-500/15 to-emerald-500/5",
+    border: "border-emerald-500/20",
     platforms: ["Perplexity", "ChatGPT Deep Research", "Gemini Deep Research"],
     bullets: ["חיפוש ברשת עם מקורות", "שרשרת חשיבה", "ציטוטים ואסמכתאות", "מבנה מחקרי"],
   },
   {
-    icon: Palette, title: "יצירת תמונות", subtitle: "Image Generation",
-    color: "text-purple-400", gradient: "from-purple-500/15 to-purple-500/5", border: "border-purple-500/20",
+    icon: Palette,
+    title: "יצירת תמונות",
+    subtitle: "Image Generation",
+    color: "text-purple-400",
+    gradient: "from-purple-500/15 to-purple-500/5",
+    border: "border-purple-500/20",
     platforms: ["Midjourney", "DALL-E 3", "Flux", "Stable Diffusion"],
     bullets: ["ספציפי לכל פלטפורמה", "סגנון ותאורה", "יחס תמונה", "Negative prompts"],
   },
   {
-    icon: Video, title: "יצירת סרטונים", subtitle: "Video Generation",
-    color: "text-rose-400", gradient: "from-rose-500/15 to-rose-500/5", border: "border-rose-500/20",
+    icon: Video,
+    title: "יצירת סרטונים",
+    subtitle: "Video Generation",
+    color: "text-rose-400",
+    gradient: "from-rose-500/15 to-rose-500/5",
+    border: "border-rose-500/20",
     platforms: ["Runway Gen-4", "Kling 2.0", "Sora", "Google Veo 3"],
     bullets: ["תנועות מצלמה", "פרמטרים ספציפיים", "אווירה וסגנון", "משך ורזולוציה"],
   },
   {
-    icon: Bot, title: "בניית סוכני AI", subtitle: "Agent Builder",
-    color: "text-amber-400", gradient: "from-amber-500/15 to-amber-500/5", border: "border-amber-500/20",
+    icon: Bot,
+    title: "בניית סוכני AI",
+    subtitle: "Agent Builder",
+    color: "text-amber-400",
+    gradient: "from-amber-500/15 to-amber-500/5",
+    border: "border-amber-500/20",
     platforms: ["Custom GPTs", "Claude Projects", "Gemini Gems"],
     bullets: ["הוראות מערכת", "הגדרת אישיות", "כללים ומגבלות", "תזרימי עבודה"],
   },
@@ -382,21 +501,34 @@ const WORK_MODES = [
 export default function FeaturesPage() {
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "דף הבית", url: "/" }, { name: "תכונות", url: "/features" }])} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "דף הבית", url: "/" },
+          { name: "תכונות", url: "/features" },
+        ])}
+      />
 
       {/* Global effects — fixed, render outside main */}
       <ScrollProgress />
       <CursorSpotlight />
 
-      <main className="min-h-screen bg-background text-foreground selection:bg-amber-500/30" dir="rtl">
-
+      <main
+        className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"
+        dir="rtl"
+      >
         {/* ── Sticky Header ── */}
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
           <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
-            <Link href="/" className="text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+            <Link
+              href="/"
+              className="text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
               Peroot
             </Link>
-            <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
               חזרה לדף הבית
               <ArrowLeft className="w-4 h-4" />
             </Link>
@@ -404,7 +536,6 @@ export default function FeaturesPage() {
         </header>
 
         <div className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
-
           {/* ── Hero ── */}
           <section className="relative py-16 md:py-24 overflow-hidden">
             <FeaturesHeroParallax />
@@ -468,24 +599,44 @@ export default function FeaturesPage() {
 
                 return (
                   <ScrollReveal key={feature.num} fromY={24}>
-                    <div className={`rounded-2xl border ${feature.accent} p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center`}>
+                    <div
+                      className={`rounded-2xl border ${feature.accent} p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center`}
+                    >
                       {/* Text column */}
-                      <ScrollReveal fromX={textFromX} fromY={0} delay={0.12} className={!isEven ? "md:order-2" : ""}>
+                      <ScrollReveal
+                        fromX={textFromX}
+                        fromY={0}
+                        delay={0.12}
+                        className={!isEven ? "md:order-2" : ""}
+                      >
                         <div className="space-y-5">
                           <div className="flex items-center gap-3">
-                            <span className={`text-xs font-mono font-bold ${feature.color} opacity-60`}>{feature.num}</span>
-                            <div className={`w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center ${feature.color}`}>
+                            <span
+                              className={`text-xs font-mono font-bold ${feature.color} opacity-60`}
+                            >
+                              {feature.num}
+                            </span>
+                            <div
+                              className={`w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center ${feature.color}`}
+                            >
                               <Icon className="w-5 h-5" />
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-foreground leading-tight">{feature.title}</h3>
+                              <h3 className="text-lg font-bold text-foreground leading-tight">
+                                {feature.title}
+                              </h3>
                               <p className="text-xs text-muted-foreground">{feature.subtitle}</p>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {feature.description}
+                          </p>
                           <ul className="grid grid-cols-2 gap-2">
                             {feature.bullets.map((b) => (
-                              <li key={b} className="flex items-center gap-2 text-xs text-foreground">
+                              <li
+                                key={b}
+                                className="flex items-center gap-2 text-xs text-foreground"
+                              >
                                 <CheckCircle2 className={`w-3.5 h-3.5 ${feature.color} shrink-0`} />
                                 {b}
                               </li>
@@ -495,7 +646,12 @@ export default function FeaturesPage() {
                       </ScrollReveal>
 
                       {/* Mockup column */}
-                      <ScrollReveal fromX={mockupFromX} fromY={0} delay={0.22} className={!isEven ? "md:order-1" : ""}>
+                      <ScrollReveal
+                        fromX={mockupFromX}
+                        fromY={0}
+                        delay={0.22}
+                        className={!isEven ? "md:order-1" : ""}
+                      >
                         <MockupFloatTilt>
                           <Mockup />
                         </MockupFloatTilt>
@@ -523,7 +679,9 @@ export default function FeaturesPage() {
           <section className="pb-16 space-y-4">
             <ScrollReveal fromY={20}>
               <div className="text-center space-y-1">
-                <h2 className="text-xl md:text-2xl font-serif font-bold text-foreground">ראו הכל בפעולה</h2>
+                <h2 className="text-xl md:text-2xl font-serif font-bold text-foreground">
+                  ראו הכל בפעולה
+                </h2>
                 <p className="text-muted-foreground text-sm">סרטון קצר שמסביר הכל</p>
               </div>
             </ScrollReveal>
@@ -536,7 +694,9 @@ export default function FeaturesPage() {
           <section className="space-y-8 pb-20">
             <ScrollReveal fromY={20}>
               <div className="text-center space-y-2">
-                <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">5 מצבי עבודה</h2>
+                <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+                  5 מצבי עבודה
+                </h2>
                 <p className="text-muted-foreground text-sm">
                   כל מצב מייצר פרומפט מותאם בדיוק לסוג הפלטפורמה שאתם עובדים איתה
                 </p>
@@ -548,13 +708,17 @@ export default function FeaturesPage() {
                 const Icon = m.icon;
                 return (
                   <ScrollReveal key={m.subtitle} delay={i * 0.07} fromY={24}>
-                    <div className={`relative group rounded-2xl border ${m.border} bg-linear-to-b ${m.gradient} p-6 transition-all hover:scale-[1.015] hover:shadow-lg hover:shadow-black/20`}>
+                    <div
+                      className={`relative group rounded-2xl border ${m.border} bg-linear-to-b ${m.gradient} p-6 transition-all hover:scale-[1.015] hover:shadow-lg hover:shadow-black/20`}
+                    >
                       <div className="absolute top-4 left-4 w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground">
                         {i + 1}
                       </div>
                       <div className="flex flex-col gap-4">
                         <div className="flex items-start gap-3">
-                          <div className={`w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center ${m.color} shrink-0`}>
+                          <div
+                            className={`w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center ${m.color} shrink-0`}
+                          >
                             <Icon className="w-5 h-5" />
                           </div>
                           <div>
@@ -564,13 +728,19 @@ export default function FeaturesPage() {
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {m.platforms.map((p) => (
-                            <span key={p} className="text-[11px] px-2.5 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground">{p}</span>
+                            <span
+                              key={p}
+                              className="text-[11px] px-2.5 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground"
+                            >
+                              {p}
+                            </span>
                           ))}
                         </div>
                         <ul className="space-y-1.5">
                           {m.bullets.map((b) => (
                             <li key={b} className="flex items-center gap-2 text-sm text-foreground">
-                              <CheckCircle2 className={`w-4 h-4 ${m.color} shrink-0`} />{b}
+                              <CheckCircle2 className={`w-4 h-4 ${m.color} shrink-0`} />
+                              {b}
                             </li>
                           ))}
                         </ul>
@@ -586,19 +756,41 @@ export default function FeaturesPage() {
           <section className="pb-20 space-y-10">
             <ScrollReveal fromY={20}>
               <div className="text-center space-y-2">
-                <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">איך זה עובד?</h2>
+                <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+                  איך זה עובד?
+                </h2>
                 <p className="text-muted-foreground text-sm">3 צעדים, פחות מ-30 שניות</p>
               </div>
             </ScrollReveal>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { step: "1", title: "כתבו משפט פשוט", desc: "אפילו משפט אחד בעברית. לא צריך להיות מומחים.", color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
-                { step: "2", title: "בחרו מצב עבודה", desc: "טקסט, מחקר, תמונה, סרטון או סוכן — בחרו מה אתם צריכים.", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-                { step: "3", title: "קבלו פרומפט מקצועי", desc: "AI מתקדם משדרג את המשפט שלכם לפרומפט חד ומדויק.", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+                {
+                  step: "1",
+                  title: "כתבו משפט פשוט",
+                  desc: "אפילו משפט אחד בעברית. לא צריך להיות מומחים.",
+                  color: "text-sky-400",
+                  bg: "bg-sky-500/10 border-sky-500/20",
+                },
+                {
+                  step: "2",
+                  title: "בחרו מצב עבודה",
+                  desc: "טקסט, מחקר, תמונה, סרטון או סוכן — בחרו מה אתם צריכים.",
+                  color: "text-amber-400",
+                  bg: "bg-amber-500/10 border-amber-500/20",
+                },
+                {
+                  step: "3",
+                  title: "קבלו פרומפט מקצועי",
+                  desc: "AI מתקדם משדרג את המשפט שלכם לפרומפט חד ומדויק.",
+                  color: "text-emerald-400",
+                  bg: "bg-emerald-500/10 border-emerald-500/20",
+                },
               ].map((s, i) => (
                 <ScrollReveal key={s.step} delay={i * 0.15} fromY={24}>
                   <div className={`rounded-2xl border ${s.bg} p-6 text-center`}>
-                    <div className={`w-10 h-10 rounded-full bg-secondary border border-border ${s.color} flex items-center justify-center text-lg font-bold mx-auto mb-4`}>
+                    <div
+                      className={`w-10 h-10 rounded-full bg-secondary border border-border ${s.color} flex items-center justify-center text-lg font-bold mx-auto mb-4`}
+                    >
                       {s.step}
                     </div>
                     <h3 className="text-base font-bold text-foreground mb-2">{s.title}</h3>
@@ -612,13 +804,27 @@ export default function FeaturesPage() {
           {/* ── Cross-links ── */}
           <section className="pb-12 space-y-4">
             <ScrollReveal fromY={16}>
-              <h2 className="text-lg font-serif font-bold text-foreground text-center mb-6">המשיכו לגלות</h2>
+              <h2 className="text-lg font-serif font-bold text-foreground text-center mb-6">
+                המשיכו לגלות
+              </h2>
             </ScrollReveal>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { href: "/prompts", title: `ספריית ${PROMPT_LIBRARY_COUNT} תבניות פרומפטים`, description: "פרומפטים מוכנים לכל תחום ופלטפורמה" },
-                { href: "/examples", title: "דוגמאות לפרומפטים משודרגים", description: "ראו לפני ואחרי — איך Peroot משפר פרומפטים" },
-                { href: "/blog", title: "טיפים נוספים בבלוג", description: "מדריכים מקצועיים לכתיבת פרומפטים ו-AI" },
+                {
+                  href: "/prompts",
+                  title: `ספריית ${PROMPT_LIBRARY_COUNT} תבניות פרומפטים`,
+                  description: "פרומפטים מוכנים לכל תחום ופלטפורמה",
+                },
+                {
+                  href: "/examples",
+                  title: "דוגמאות לפרומפטים משודרגים",
+                  description: "ראו לפני ואחרי — איך Peroot משפר פרומפטים",
+                },
+                {
+                  href: "/blog",
+                  title: "טיפים נוספים בבלוג",
+                  description: "מדריכים מקצועיים לכתיבת פרומפטים ו-AI",
+                },
               ].map((c, i) => (
                 <ScrollReveal key={c.href} delay={i * 0.08} fromY={20}>
                   <CrossLinkCard href={c.href} title={c.title} description={c.description} />
@@ -631,7 +837,8 @@ export default function FeaturesPage() {
           <section className="py-16 text-center space-y-6">
             <ScrollReveal fromY={24}>
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                <Sparkles className="w-3.5 h-3.5" />מוכנים?
+                <Sparkles className="w-3.5 h-3.5" />
+                מוכנים?
               </div>
               <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mt-4">
                 תנסו בחינם — עכשיו
@@ -664,7 +871,10 @@ export default function FeaturesPage() {
 
             <ScrollReveal fromY={12} delay={0.2}>
               <p className="text-slate-500 text-xs">
-                <Link href="/pricing" className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                <Link
+                  href="/pricing"
+                  className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                >
                   מחירים ותוכניות &rarr;
                 </Link>
               </p>

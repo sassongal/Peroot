@@ -21,7 +21,7 @@ type AdminHandler<TContext = unknown> = (
   req: NextRequest,
   supabase: SupabaseClient,
   user: User,
-  context: TContext
+  context: TContext,
 ) => Promise<NextResponse>;
 
 /**
@@ -40,17 +40,14 @@ export function withAdmin<TContext = unknown>(handler: AdminHandler<TContext>) {
       if (error || !supabase || !user) {
         return NextResponse.json(
           { error: error || "Forbidden" },
-          { status: error === "Unauthorized" ? 401 : 403 }
+          { status: error === "Unauthorized" ? 401 : 403 },
         );
       }
 
       return await handler(req, supabase, user, context);
     } catch (err) {
       logger.error("[withAdmin] Unhandled error:", err);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   };
 }
@@ -68,7 +65,7 @@ export function withAdminWrite<TContext = unknown>(handler: AdminHandler<TContex
       if (error || !supabase || !user) {
         return NextResponse.json(
           { error: error || "Forbidden" },
-          { status: error === "Unauthorized" ? 401 : 403 }
+          { status: error === "Unauthorized" ? 401 : 403 },
         );
       }
 
@@ -83,17 +80,14 @@ export function withAdminWrite<TContext = unknown>(handler: AdminHandler<TContex
               "X-RateLimit-Remaining": "0",
               "X-RateLimit-Reset": String(rl.reset),
             },
-          }
+          },
         );
       }
 
       return await handler(req, supabase, user, context);
     } catch (err) {
       logger.error("[withAdminWrite] Unhandled error:", err);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   };
 }
