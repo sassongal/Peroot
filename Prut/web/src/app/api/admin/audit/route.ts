@@ -53,7 +53,7 @@ export const GET = withAdmin(async (req) => {
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
-  const actionSearch = searchParams.get("action") || "";
+  const actionSearch = (searchParams.get("action") || "").slice(0, 200);
   const limit = Math.min(parseInt(searchParams.get("limit") || "200", 10), 500);
 
   // ── Fetch admin action logs ────────────────────────────────────────────────

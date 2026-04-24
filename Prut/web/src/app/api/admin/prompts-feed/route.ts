@@ -25,8 +25,10 @@ export const GET = withAdmin(async (req) => {
   try {
     const svc = createServiceClient();
     const sp = req.nextUrl.searchParams;
-    const limit = Math.min(parseInt(sp.get("limit") || "50") || 50, 200);
-    const offset = Math.max(0, parseInt(sp.get("offset") || "0") || 0);
+    const rawLimit = parseInt(sp.get("limit") || "50", 10);
+    const limit = Math.min(Number.isNaN(rawLimit) || rawLimit < 1 ? 50 : rawLimit, 200);
+    const rawOffset = parseInt(sp.get("offset") || "0", 10);
+    const offset = Math.max(0, Number.isNaN(rawOffset) ? 0 : rawOffset);
     const search = (sp.get("search") || "").trim();
     const mode = sp.get("mode");
     const from = sp.get("from");

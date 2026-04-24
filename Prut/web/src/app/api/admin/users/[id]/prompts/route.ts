@@ -18,8 +18,10 @@ export const GET = withAdmin(
         return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 });
       }
       const tab = req.nextUrl.searchParams.get("tab") || "prompts";
-      const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "50") || 50, 200);
-      const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get("offset") || "0") || 0);
+      const rawLimit = parseInt(req.nextUrl.searchParams.get("limit") || "50", 10);
+      const limit = Math.min(Number.isNaN(rawLimit) || rawLimit < 1 ? 50 : rawLimit, 200);
+      const rawOffset = parseInt(req.nextUrl.searchParams.get("offset") || "0", 10);
+      const offset = Math.max(0, Number.isNaN(rawOffset) ? 0 : rawOffset);
 
       if (tab === "history") {
         // Fetch generation history — the actual prompts and AI outputs

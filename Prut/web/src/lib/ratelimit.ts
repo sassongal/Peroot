@@ -112,6 +112,12 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(120, "1 m"),
     prefix: "@peroot/ratelimit:admin-write",
   }),
+  // Public prompt body fetch (/api/p/[id] and /api/p/batch) — authenticated only.
+  publicPromptFetch: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(300, "1 m"),
+    prefix: "@peroot/ratelimit:public-prompt-fetch",
+  }),
 };
 
 type RateLimitTier =
@@ -134,7 +140,8 @@ type RateLimitTier =
   | "chainPro"
   | "speedTest"
   | "siteSearchGuest"
-  | "siteSearchUser";
+  | "siteSearchUser"
+  | "publicPromptFetch";
 
 interface RateLimitResult {
   success: boolean;

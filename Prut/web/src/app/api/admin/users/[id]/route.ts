@@ -66,7 +66,7 @@ export const GET = withAdmin(
           .select("*", { count: "exact", head: true })
           .eq("user_id", id),
         supabase.from("history").select("*", { count: "exact", head: true }).eq("user_id", id),
-        // Token usage + cost — fetch all rows for accurate totals (no limit; indexed by user_id)
+        // Token usage + cost — capped at 1000 rows (enough for accurate totals)
         supabase
           .from("api_usage_logs")
           .select(
@@ -74,7 +74,7 @@ export const GET = withAdmin(
           )
           .eq("user_id", id)
           .order("created_at", { ascending: false })
-          .limit(10000),
+          .limit(1000),
         // 1 row only — just enough for lastActive timestamp
         supabase
           .from("activity_logs")
@@ -95,7 +95,7 @@ export const GET = withAdmin(
           .from("history")
           .select("source, tone, category, capability_mode")
           .eq("user_id", id)
-          .limit(5000),
+          .limit(1000),
         supabase
           .from("credit_ledger")
           .select("id, delta, balance_after, reason, source, created_at")

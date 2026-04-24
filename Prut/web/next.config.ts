@@ -30,6 +30,9 @@ const securityHeaders = [
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "worker-src 'self' blob:",
+      "media-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com",
+      "upgrade-insecure-requests",
     ].join("; "),
   },
 ];

@@ -248,6 +248,10 @@ export const POST = withAdminWrite(async (req, _ssrClient, user) => {
       }
     }
 
+    // Deduplicate — DB rows are unique by user but defensive dedup prevents
+    // double-sending if the same address appears via multiple profile rows.
+    emails = [...new Set(emails.map((e) => e.toLowerCase()))];
+
     if (emails.length === 0) {
       return NextResponse.json({
         success: true,
