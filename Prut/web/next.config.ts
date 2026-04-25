@@ -101,6 +101,20 @@ const nextConfig: NextConfig = {
 
 const sentryWebpackPluginOptions = {
   silent: true,
+  org: "joya-tech",
+  project: "javascript-nextjs",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Route Sentry requests through our own domain to bypass ad blockers
+  tunnelRoute: "/monitoring",
+
+  // Don't expose source maps to the client bundle
+  hideSourceMaps: true,
+
+  // Remove Sentry debug logging from production bundles
+  disableLogger: true,
+
+  // Only upload source maps and wire webpack plugins in production
   disableServerWebpackPlugin: process.env.NODE_ENV !== "production",
   disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
 };

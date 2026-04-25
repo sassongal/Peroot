@@ -143,6 +143,7 @@ import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { SentryUserProvider } from "@/components/providers/SentryUserProvider";
 
 import { Footer } from "@/components/layout/Footer";
 import { DeferredWidgets, DeferredCookieConsent } from "@/components/layout/DeferredWidgets";
@@ -210,6 +211,7 @@ export default async function RootLayout({
         <DeferredWidgets />
         <VercelAnalytics />
         <ServiceWorkerRegistration />
+        <SentryUserProvider />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             {locale === "he" ? "דלג לתוכן הראשי" : "Skip to main content"}
