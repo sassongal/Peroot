@@ -5,28 +5,49 @@ import * as Sentry from "@sentry/nextjs";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Attaches the authenticated user's ID to every Sentry event so that
- * errors can be correlated across sessions without sending PII.
- * Only the user ID is forwarded — no email, no name.
+ * Attaches authenticated user context to every Sentry event:
+ * - user.id only (no email/name — GDPR)
+ * - tag: plan (free | pro | <plan_name>)
+ * - tag: role (user | admin)
+ * - tag: locale (he — fixed for Peroot)
  */
 export function SentryUserProvider() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Set initial user if already logged in
+    async function syncUserContext(userId: string) {
+      Sentry.setUser({ id: userId });
+      Sentry.setTag("locale", "he");
+
+      // Fetch plan + role without exposing PII
+      const [{ data: subData }, { data: roleData }] = await Promise.all([
+        supabase
+          .from("subscriptions")
+          .select("plan_name, status")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      ]);
+
+      Sentry.setTag("plan", subData?.plan_name ?? "free");
+      Sentry.setTag("role", roleData?.role ?? "user");
+    }
+
+    // Set initial context if already logged in
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        Sentry.setUser({ id: data.user.id });
-      }
+      if (data.user) syncUserContext(data.user.id);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        Sentry.setUser({ id: session.user.id });
+        syncUserContext(session.user.id);
       } else {
         Sentry.setUser(null);
+        Sentry.setTag("plan", undefined as unknown as string);
+        Sentry.setTag("role", undefined as unknown as string);
       }
     });
 
