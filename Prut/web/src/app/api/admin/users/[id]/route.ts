@@ -324,59 +324,27 @@ export const POST = withAdminWrite(
         }
 
         case "grant_admin": {
-          // The user_roles table has UNIQUE(user_id, role) — not a single-column
-          // constraint on user_id — so onConflict must list both columns.
-          const { error: upsertError } = await supabase
-            .from("user_roles")
-            .upsert(
-              { user_id: id, role: "admin" },
-              { onConflict: "user_id,role", ignoreDuplicates: true },
-            );
-
-          if (upsertError) {
-            logger.error("[Admin User POST] grant_admin error:", upsertError);
+          // Atomic RPC: inserts user_roles row + sets plan_tier = 'admin'
+          // in a single transaction — no partial-state window.
+          const { error: grantError } = await supabase.rpc("grant_admin_role", {
+            target_user_id: id,
+          });
+          if (grantError) {
+            logger.error("[Admin User POST] grant_admin error:", grantError);
             return NextResponse.json({ error: "Failed to grant admin role" }, { status: 500 });
-          }
-
-          // Sync profiles.plan_tier so rate limiting, credits, and all API
-          // tier checks recognize this user as admin (not just user_roles).
-          const { error: tierError } = await supabase
-            .from("profiles")
-            .update({ plan_tier: "admin" })
-            .eq("id", id);
-          if (tierError) {
-            logger.error("[Admin User POST] grant_admin plan_tier sync error:", tierError);
           }
           break;
         }
 
         case "revoke_admin": {
-          const { error: deleteError } = await supabase
-            .from("user_roles")
-            .delete()
-            .eq("user_id", id)
-            .eq("role", "admin");
-
-          if (deleteError) {
-            logger.error("[Admin User POST] revoke_admin error:", deleteError);
+          // Atomic RPC: deletes user_roles row + restores plan_tier in one transaction.
+          // Subscription check happens inside the RPC — no TOCTOU window.
+          const { error: revokeError } = await supabase.rpc("revoke_admin_role", {
+            target_user_id: id,
+          });
+          if (revokeError) {
+            logger.error("[Admin User POST] revoke_admin error:", revokeError);
             return NextResponse.json({ error: "Failed to revoke admin role" }, { status: 500 });
-          }
-
-          // Restore plan_tier: keep 'pro' if they have an active subscription,
-          // otherwise fall back to 'free'.
-          const { data: activeSub } = await supabase
-            .from("subscriptions")
-            .select("status")
-            .eq("user_id", id)
-            .in("status", ["active", "on_trial", "past_due"])
-            .maybeSingle();
-          const restoredTier = activeSub ? "pro" : "free";
-          const { error: restoreError } = await supabase
-            .from("profiles")
-            .update({ plan_tier: restoredTier })
-            .eq("id", id);
-          if (restoreError) {
-            logger.error("[Admin User POST] revoke_admin plan_tier restore error:", restoreError);
           }
           break;
         }

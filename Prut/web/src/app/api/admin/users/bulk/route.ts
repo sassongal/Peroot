@@ -76,39 +76,11 @@ export const POST = withAdminWrite(async (req, _ssrClient, adminUser) => {
         });
         if (metaErr) logger.error(`[Admin Bulk] ${action} app_metadata failed for ${id}:`, metaErr);
       } else if (action === "grant_admin") {
-        const { error } = await supabase
-          .from("user_roles")
-          .upsert(
-            { user_id: id, role: "admin" },
-            { onConflict: "user_id,role", ignoreDuplicates: true },
-          );
+        const { error } = await supabase.rpc("grant_admin_role", { target_user_id: id });
         if (error) throw error;
-        // Mirror per-user grant_admin: sync plan_tier so rate limiting and tier
-        // checks recognise this user as admin immediately (not just user_roles).
-        const { error: tierErr } = await supabase
-          .from("profiles")
-          .update({ plan_tier: "admin" })
-          .eq("id", id);
-        if (tierErr) logger.error(`[Admin Bulk] grant_admin plan_tier sync failed for ${id}:`, tierErr);
       } else if (action === "revoke_admin") {
-        const { error } = await supabase
-          .from("user_roles")
-          .delete()
-          .eq("user_id", id)
-          .eq("role", "admin");
+        const { error } = await supabase.rpc("revoke_admin_role", { target_user_id: id });
         if (error) throw error;
-        // Restore plan_tier: keep 'pro' if active subscription, otherwise 'free'.
-        const { data: activeSub } = await supabase
-          .from("subscriptions")
-          .select("status")
-          .eq("user_id", id)
-          .in("status", ["active", "on_trial", "past_due"])
-          .maybeSingle();
-        const { error: restoreErr } = await supabase
-          .from("profiles")
-          .update({ plan_tier: activeSub ? "pro" : "free" })
-          .eq("id", id);
-        if (restoreErr) logger.error(`[Admin Bulk] revoke_admin plan_tier restore failed for ${id}:`, restoreErr);
       }
       ok++;
     } catch (err) {
