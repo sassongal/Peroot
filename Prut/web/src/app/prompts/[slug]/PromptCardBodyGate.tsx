@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { CopyButton } from "./CopyButton";
 import { UsePromptButton } from "./UsePromptButton";
 
@@ -65,8 +65,8 @@ export function PromptCardBodyGate({
   capabilityMode,
   detailHref,
 }: Props) {
-  const { user, isLoading } = useAuth();
-  const isGuest = isLoading || !user;
+  const { user, isLoaded } = useAuth();
+  const isGuest = !isLoaded || !user;
   const [fullText, setFullText] = useState<string | null>(
     () => fullTextCache.get(promptId) ?? null,
   );

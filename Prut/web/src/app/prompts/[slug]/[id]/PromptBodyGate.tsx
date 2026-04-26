@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CopyButton } from "../CopyButton";
@@ -22,8 +22,8 @@ interface Props {
  * the full text (no HTML/ISR leak).
  */
 export function PromptBodyGate({ promptId, previewText, title, slug, capabilityMode }: Props) {
-  const { user, isLoading } = useAuth();
-  const isGuest = isLoading || !user;
+  const { user, isLoaded } = useAuth();
+  const isGuest = !isLoaded || !user;
   const [fullText, setFullText] = useState<string | null>(null);
 
   useEffect(() => {
