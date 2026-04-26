@@ -23,7 +23,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { isAdmin } = useAuth();
+  const { isAdmin, isPro } = useAuth();
 
   const getErrorMessage = (err: unknown) =>
     err instanceof Error ? err.message : t.auth.unexpected_error;
@@ -218,14 +218,16 @@ export function UserMenu({ user, position }: UserMenuProps) {
                     <span>Admin Dashboard</span>
                   </Link>
                 )}
-                <Link
-                  href="/pricing"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-xl transition-colors text-right"
-                >
-                  <Crown className="w-4 h-4" />
-                  <span>שדרג ל-Pro</span>
-                </Link>
+                {!isPro && (
+                  <Link
+                    href="/pricing"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-xl transition-colors text-right"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>שדרג ל-Pro</span>
+                  </Link>
+                )}
                 <Link
                   href="/settings"
                   onClick={() => setIsOpen(false)}

@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 interface AuthContextValue {
   user: User | null;
   isAdmin: boolean;
+  isPro: boolean;
   /** True once we've resolved the first auth state (SSR hydration or getUser round-trip). */
   isLoaded: boolean;
 }
@@ -37,6 +38,7 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(initialUser);
   const [isLoaded, setIsLoaded] = useState(initialUser !== null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const userIdRef = useRef<string | null>(initialUser?.id ?? null);
 
   useEffect(() => {
@@ -97,34 +99,45 @@ export function AuthProvider({
     };
   }, [initialUser, router]);
 
-  // Resolve admin role from user_roles. One query per logged-in user id.
+  // Resolve admin role + pro plan. One round-trip per logged-in user id.
   useEffect(() => {
     if (!user) {
-      // Defer to avoid synchronous setState-during-effect which React 19 flags.
-      queueMicrotask(() => setIsAdmin(false));
+      queueMicrotask(() => {
+        setIsAdmin(false);
+        setIsPro(false);
+      });
       return;
     }
     let cancelled = false;
     const supabase = createClient();
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) logger.warn("[AuthProvider] user_roles query failed", error);
-        setIsAdmin(Boolean(data));
-      });
+    Promise.all([
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("plan_tier")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]).then(([roleResult, profileResult]) => {
+      if (cancelled) return;
+      if (roleResult.error) logger.warn("[AuthProvider] user_roles query failed", roleResult.error);
+      if (profileResult.error) logger.warn("[AuthProvider] profiles query failed", profileResult.error);
+      const tier = profileResult.data?.plan_tier as string | undefined;
+      setIsAdmin(Boolean(roleResult.data));
+      setIsPro(tier === "pro" || tier === "premium" || tier === "admin");
+    });
     return () => {
       cancelled = true;
     };
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAdmin, isLoaded }),
-    [user, isAdmin, isLoaded],
+    () => ({ user, isAdmin, isPro, isLoaded }),
+    [user, isAdmin, isPro, isLoaded],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -136,7 +149,7 @@ export function useAuth(): AuthContextValue {
     // Fallback rather than throw: components that mount before the provider
     // (e.g. error boundaries during early hydration) should still render
     // in a safe guest state.
-    return { user: null, isAdmin: false, isLoaded: false };
+    return { user: null, isAdmin: false, isPro: false, isLoaded: false };
   }
   return ctx;
 }
