@@ -227,20 +227,12 @@ export function UserMenu({ user, position }: UserMenuProps) {
                   </Link>
                 )}
                 <Link
-                  href="/settings?tab=profile"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-(--text-secondary) hover:bg-(--glass-bg) rounded-xl transition-colors text-right"
-                >
-                  <UserIcon className="w-4 h-4" />
-                  <span>פרופיל אישי</span>
-                </Link>
-                <Link
                   href="/settings"
                   onClick={() => setIsOpen(false)}
                   className="w-full flex items-center gap-3 px-3 py-2 text-sm text-(--text-secondary) hover:bg-(--glass-bg) rounded-xl transition-colors text-right"
                 >
-                  <Settings className="w-4 h-4" />
-                  <span>{t.auth.account_settings}</span>
+                  <UserIcon className="w-4 h-4" />
+                  <span>פרופיל והגדרות</span>
                 </Link>
                 <div className="border-t border-(--glass-border) my-1" />
                 <button
