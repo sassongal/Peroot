@@ -3,7 +3,6 @@
 import { ReactNode, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard,
   Settings,
@@ -246,8 +245,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <button
               className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all text-sm font-bold border border-rose-500/0 hover:border-rose-500/20"
               onClick={async () => {
-                const supabase = createClient();
-                await supabase.auth.signOut();
+                await fetch("/api/auth/signout", { method: "POST" });
                 window.location.href = "/";
               }}
             >

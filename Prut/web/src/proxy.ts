@@ -214,6 +214,33 @@ export async function proxy(request: NextRequest) {
 
   if (user) {
     Sentry.setUser({ id: user.id, email: user.email });
+
+    // Enforce bans: app_metadata.is_banned is stamped server-side on ban/unban
+    // so we can check it from the JWT without an extra DB round-trip.
+    if (user.app_metadata?.is_banned === true) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+      }
+      if (!pathname.startsWith("/banned") && !pathname.startsWith("/login")) {
+        return NextResponse.redirect(new URL("/banned", request.url));
+      }
+    }
+
+    // Redirect authenticated non-admins away from the /admin UI pages.
+    // /api/admin/* routes are already guarded by withAdmin() — this only
+    // catches direct browser navigation to the admin panel.
+    const isAdminUiPath =
+      pathname.startsWith("/admin") && !pathname.startsWith("/api/admin");
+    if (isAdminUiPath) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan_tier")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.plan_tier !== "admin") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
   } else {
     // Guest accessing admin path - require login
     const isAdminPath =

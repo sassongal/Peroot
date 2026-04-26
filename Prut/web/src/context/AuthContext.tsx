@@ -12,6 +12,8 @@ interface AuthContextValue {
   isPro: boolean;
   /** True once we've resolved the first auth state (SSR hydration or getUser round-trip). */
   isLoaded: boolean;
+  /** True once the user_roles + plan_tier round-trip has resolved. Prevents isPro/isAdmin flashing false. */
+  isRoleLoaded: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -39,6 +41,7 @@ export function AuthProvider({
   const [isLoaded, setIsLoaded] = useState(initialUser !== null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPro, setIsPro] = useState(false);
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
   const userIdRef = useRef<string | null>(initialUser?.id ?? null);
 
   useEffect(() => {
@@ -105,6 +108,7 @@ export function AuthProvider({
       queueMicrotask(() => {
         setIsAdmin(false);
         setIsPro(false);
+        setIsRoleLoaded(true);
       });
       return;
     }
@@ -117,18 +121,16 @@ export function AuthProvider({
         .eq("user_id", user.id)
         .eq("role", "admin")
         .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("plan_tier")
-        .eq("id", user.id)
-        .maybeSingle(),
+      supabase.from("profiles").select("plan_tier").eq("id", user.id).maybeSingle(),
     ]).then(([roleResult, profileResult]) => {
       if (cancelled) return;
       if (roleResult.error) logger.warn("[AuthProvider] user_roles query failed", roleResult.error);
-      if (profileResult.error) logger.warn("[AuthProvider] profiles query failed", profileResult.error);
+      if (profileResult.error)
+        logger.warn("[AuthProvider] profiles query failed", profileResult.error);
       const tier = profileResult.data?.plan_tier as string | undefined;
       setIsAdmin(Boolean(roleResult.data));
       setIsPro(tier === "pro" || tier === "premium" || tier === "admin");
+      setIsRoleLoaded(true);
     });
     return () => {
       cancelled = true;
@@ -136,8 +138,8 @@ export function AuthProvider({
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAdmin, isPro, isLoaded }),
-    [user, isAdmin, isPro, isLoaded],
+    () => ({ user, isAdmin, isPro, isLoaded, isRoleLoaded }),
+    [user, isAdmin, isPro, isLoaded, isRoleLoaded],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -149,7 +151,7 @@ export function useAuth(): AuthContextValue {
     // Fallback rather than throw: components that mount before the provider
     // (e.g. error boundaries during early hydration) should still render
     // in a safe guest state.
-    return { user: null, isAdmin: false, isPro: false, isLoaded: false };
+    return { user: null, isAdmin: false, isPro: false, isLoaded: false, isRoleLoaded: false };
   }
   return ctx;
 }

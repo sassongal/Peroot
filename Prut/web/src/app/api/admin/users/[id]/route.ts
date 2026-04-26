@@ -297,6 +297,12 @@ export const POST = withAdminWrite(
             logger.error("[Admin User POST] ban error:", updateError);
             return NextResponse.json({ error: "Failed to ban user" }, { status: 500 });
           }
+          // Stamp app_metadata so the middleware can enforce the ban from the JWT
+          // without an extra DB call on every request.
+          const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
+            app_metadata: { is_banned: true },
+          });
+          if (metaErr) logger.error("[Admin User POST] ban app_metadata error:", metaErr);
           break;
         }
 
@@ -310,6 +316,10 @@ export const POST = withAdminWrite(
             logger.error("[Admin User POST] unban error:", updateError);
             return NextResponse.json({ error: "Failed to unban user" }, { status: 500 });
           }
+          const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
+            app_metadata: { is_banned: false },
+          });
+          if (metaErr) logger.error("[Admin User POST] unban app_metadata error:", metaErr);
           break;
         }
 

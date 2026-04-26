@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useAuth } from "@/context/AuthContext";
 import { User as UserIcon, Settings, LogOut, Crown, Shield } from "lucide-react";
@@ -23,7 +22,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { isAdmin, isPro } = useAuth();
+  const { isAdmin, isPro, isRoleLoaded } = useAuth();
 
   const getErrorMessage = (err: unknown) =>
     err instanceof Error ? err.message : t.auth.unexpected_error;
@@ -34,9 +33,8 @@ export function UserMenu({ user, position }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const res = await fetch("/api/auth/signout", { method: "POST" });
+      if (!res.ok) throw new Error("signout failed");
       toast.success(t.auth.logout_success);
       window.location.href = "/?logged-out=true";
     } catch (err) {
@@ -218,7 +216,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
                     <span>Admin Dashboard</span>
                   </Link>
                 )}
-                {!isPro && (
+                {isRoleLoaded && !isPro && (
                   <Link
                     href="/pricing"
                     onClick={() => setIsOpen(false)}

@@ -60,26 +60,13 @@ export function usePromptLimits() {
     setUser(activeUser);
 
     if (activeUser) {
-      // Source of truth: /api/me/quota (applies rolling 24h reset)
+      // Source of truth: /api/me/quota — server-side, checks both plan_tier
+      // and user_roles as defense-in-depth, applies rolling 24h reset.
       const q = await fetchQuota();
       if (q) {
         setQuota(q);
         setIsPro(q.plan_tier === "pro" || q.plan_tier === "admin");
         setIsAdmin(q.plan_tier === "admin");
-      }
-
-      // Secondary: user_roles admin check (app_metadata or explicit row)
-      const hasAdminMetadata = activeUser.app_metadata?.role === "admin";
-      if (hasAdminMetadata) {
-        setIsAdmin(true);
-      } else {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", activeUser.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        if (roleData) setIsAdmin(true);
       }
     } else {
       const stored = localStorage.getItem(USAGE_STORAGE_KEY);

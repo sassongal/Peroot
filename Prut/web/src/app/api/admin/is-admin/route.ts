@@ -7,11 +7,8 @@ import { withAdmin } from '@/lib/api-middleware';
  * Check if the current user has admin role
  */
 export const GET = withAdmin(async (_req, _supabase, user) => {
-  return NextResponse.json({
-    isAdmin: true,
-    user: {
-      id: user.id,
-      email: user.email
-    }
-  });
+  return NextResponse.json(
+    { isAdmin: true, userId: user.id },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 });
