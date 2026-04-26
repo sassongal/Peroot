@@ -767,9 +767,34 @@ a:focus-visible,
   contain: layout;
 }
 
-/* Hide server-rendered SEO hero once the client app has hydrated */
+/* SEO hero: position:absolute so it never affects the interactive UI layout.
+   HomeClient is always at top — zero CLS on desktop. */
+.home-page-root {
+  position: relative;
+}
+
+.home-seo-hero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background-color: var(--surface-body);
+  transition: opacity 200ms ease-out;
+}
+
+/* On mobile, hide entirely — Google crawls desktop so no SEO impact.
+   Eliminates the flicker/layout-shift guest users see on mobile. */
+@media (max-width: 767px) {
+  .home-seo-hero {
+    display: none;
+  }
+}
+
+/* After hydration: fade out instead of abrupt display:none */
 .home-page-root:has(.hydrated) .home-seo-hero {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .hydrated .hero-logo-image {

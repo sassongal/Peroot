@@ -416,7 +416,10 @@ export async function POST(req: Request) {
         ? createHash("sha256")
             .update(
               contextAttachments
-                .map((c) => `${c.type}|${(c as { id?: string }).id ?? ""}|${(c as { sha256?: string }).sha256 ?? (c as { content?: string }).content?.slice(0, 64) ?? ""}`)
+                .map(
+                  (c) =>
+                    `${c.type}|${(c as { id?: string }).id ?? ""}|${(c as { sha256?: string }).sha256 ?? (c as { content?: string }).content?.slice(0, 64) ?? ""}`,
+                )
                 .join("\u0000"),
             )
             .digest("hex")
