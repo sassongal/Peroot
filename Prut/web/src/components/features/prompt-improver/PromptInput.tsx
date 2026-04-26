@@ -23,7 +23,7 @@ import { TargetModelSelect } from "@/components/features/prompt-improver/TargetM
 import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 
