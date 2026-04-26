@@ -25,16 +25,25 @@ export async function GET(req: NextRequest) {
 
     const queryClient = bearerToken ? createServiceClient() : supabase;
 
-    const [{ data: profile }, { data: settings }] = await Promise.all([
+    const [{ data: profile }, { data: settings }, { data: adminRole }] = await Promise.all([
       queryClient
         .from("profiles")
         .select("plan_tier, credits_balance, last_prompt_at")
         .eq("id", user.id)
         .maybeSingle(),
       queryClient.from("site_settings").select("daily_free_limit").maybeSingle(),
+      // Safety net: if plan_tier is out of sync, user_roles is authoritative for admin
+      queryClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle(),
     ]);
 
-    const tier = (profile?.plan_tier as "free" | "pro" | "admin") || "free";
+    const profileTier = (profile?.plan_tier as "free" | "pro" | "admin") || "free";
+    // user_roles.admin overrides a stale plan_tier (e.g. before grant_admin synced profiles)
+    const tier: "free" | "pro" | "admin" = adminRole ? "admin" : profileTier;
     const dailyLimit = settings?.daily_free_limit ?? 2;
     const refreshAt = await getRefreshAt(user.id);
 

@@ -66,6 +66,15 @@ export async function handleSubscriptionEvent(
     .eq("id", userId)
     .single();
 
+  // Never overwrite admin plan_tier — admin status is managed via the admin
+  // panel (grant_admin action), not through payment events.
+  if (currentProfile?.plan_tier === "admin") {
+    logger.info(
+      `[LemonSqueezy Webhook] Skipping plan_tier update for admin user ${userId}`,
+    );
+    return;
+  }
+
   const wasPro = currentProfile?.plan_tier === "pro";
 
   const { error: profileError } = await supabase

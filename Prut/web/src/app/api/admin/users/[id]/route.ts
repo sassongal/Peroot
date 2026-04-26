@@ -327,6 +327,16 @@ export const POST = withAdminWrite(
             logger.error("[Admin User POST] grant_admin error:", upsertError);
             return NextResponse.json({ error: "Failed to grant admin role" }, { status: 500 });
           }
+
+          // Sync profiles.plan_tier so rate limiting, credits, and all API
+          // tier checks recognize this user as admin (not just user_roles).
+          const { error: tierError } = await supabase
+            .from("profiles")
+            .update({ plan_tier: "admin" })
+            .eq("id", id);
+          if (tierError) {
+            logger.error("[Admin User POST] grant_admin plan_tier sync error:", tierError);
+          }
           break;
         }
 
@@ -340,6 +350,23 @@ export const POST = withAdminWrite(
           if (deleteError) {
             logger.error("[Admin User POST] revoke_admin error:", deleteError);
             return NextResponse.json({ error: "Failed to revoke admin role" }, { status: 500 });
+          }
+
+          // Restore plan_tier: keep 'pro' if they have an active subscription,
+          // otherwise fall back to 'free'.
+          const { data: activeSub } = await supabase
+            .from("subscriptions")
+            .select("status")
+            .eq("user_id", id)
+            .in("status", ["active", "on_trial", "past_due"])
+            .maybeSingle();
+          const restoredTier = activeSub ? "pro" : "free";
+          const { error: restoreError } = await supabase
+            .from("profiles")
+            .update({ plan_tier: restoredTier })
+            .eq("id", id);
+          if (restoreError) {
+            logger.error("[Admin User POST] revoke_admin plan_tier restore error:", restoreError);
           }
           break;
         }
