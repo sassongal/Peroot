@@ -11,8 +11,5 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return NextResponse.json(
-    { success: true },
-    { headers: { "Cache-Control": "no-store" } },
-  );
+  return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store" } });
 }

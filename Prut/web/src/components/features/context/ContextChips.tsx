@@ -43,7 +43,7 @@ export function ContextChips({ attachments, onRemove, onRetry, tokenLimit }: Con
             stage={a.stage ?? "uploading"}
             title={a.name || a.url || "attachment"}
             onRemove={() => onRemove(a.id)}
-            onRetry={onRetry ? () => onRetry(a.id) : undefined}
+            onRetry={onRetry && a.type === "url" ? () => onRetry(a.id) : undefined}
           />
         ))}
       </div>

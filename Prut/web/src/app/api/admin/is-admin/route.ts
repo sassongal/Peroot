@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { withAdmin } from '@/lib/api-middleware';
+import { NextResponse } from "next/server";
+import { withAdmin } from "@/lib/api-middleware";
 
 /**
  * GET /api/admin/is-admin

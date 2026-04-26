@@ -6,7 +6,7 @@ import { checkExtractionLimit } from "@/lib/context/engine/extraction-rate-limit
 import { logger } from "@/lib/logger";
 import type { PlanTier, ProcessingStage } from "@/lib/context/engine/types";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const MAX_IMAGE_SIZE_MB = 5;
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];

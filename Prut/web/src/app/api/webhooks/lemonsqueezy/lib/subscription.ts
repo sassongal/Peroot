@@ -28,10 +28,12 @@ export async function handleSubscriptionEvent(
 
   // Upsert / update subscription row
   if (eventName === "subscription_created") {
-    const { error } = await supabase.from("subscriptions").upsert(
-      { ...subscriptionData, created_at: new Date().toISOString() },
-      { onConflict: "user_id" },
-    );
+    const { error } = await supabase
+      .from("subscriptions")
+      .upsert(
+        { ...subscriptionData, created_at: new Date().toISOString() },
+        { onConflict: "user_id" },
+      );
     if (error) {
       logger.error("[LemonSqueezy Webhook] Insert error:", error);
       throw error;
@@ -69,9 +71,7 @@ export async function handleSubscriptionEvent(
   // Never overwrite admin plan_tier — admin status is managed via the admin
   // panel (grant_admin action), not through payment events.
   if (currentProfile?.plan_tier === "admin") {
-    logger.info(
-      `[LemonSqueezy Webhook] Skipping plan_tier update for admin user ${userId}`,
-    );
+    logger.info(`[LemonSqueezy Webhook] Skipping plan_tier update for admin user ${userId}`);
     return;
   }
 

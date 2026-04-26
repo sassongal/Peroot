@@ -338,7 +338,8 @@ export const POST = withAdminWrite(
           const { error: grantMetaErr } = await supabase.auth.admin.updateUserById(id, {
             app_metadata: { role: "admin" },
           });
-          if (grantMetaErr) logger.error("[Admin User POST] grant_admin app_metadata error:", grantMetaErr);
+          if (grantMetaErr)
+            logger.error("[Admin User POST] grant_admin app_metadata error:", grantMetaErr);
           break;
         }
 
@@ -355,7 +356,8 @@ export const POST = withAdminWrite(
           const { error: revokeMetaErr } = await supabase.auth.admin.updateUserById(id, {
             app_metadata: { role: null },
           });
-          if (revokeMetaErr) logger.error("[Admin User POST] revoke_admin app_metadata error:", revokeMetaErr);
+          if (revokeMetaErr)
+            logger.error("[Admin User POST] revoke_admin app_metadata error:", revokeMetaErr);
           break;
         }
 

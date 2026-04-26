@@ -46,7 +46,12 @@ Sentry.init({
     }
     // Drop browser-extension-injected errors
     const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
-    if (frames.some((f) => f.filename?.includes("chrome-extension://") || f.filename?.includes("moz-extension://"))) {
+    if (
+      frames.some(
+        (f) =>
+          f.filename?.includes("chrome-extension://") || f.filename?.includes("moz-extension://"),
+      )
+    ) {
       return null;
     }
     return event;

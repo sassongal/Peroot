@@ -229,8 +229,7 @@ export async function proxy(request: NextRequest) {
     // Redirect authenticated non-admins away from the /admin UI pages.
     // /api/admin/* routes are already guarded by withAdmin() — this only
     // catches direct browser navigation to the admin panel.
-    const isAdminUiPath =
-      pathname.startsWith("/admin") && !pathname.startsWith("/api/admin");
+    const isAdminUiPath = pathname.startsWith("/admin") && !pathname.startsWith("/api/admin");
     if (isAdminUiPath) {
       const { data: profile } = await supabase
         .from("profiles")
