@@ -78,9 +78,17 @@ export const POST = withAdminWrite(async (req, _ssrClient, adminUser) => {
       } else if (action === "grant_admin") {
         const { error } = await supabase.rpc("grant_admin_role", { target_user_id: id });
         if (error) throw error;
+        const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
+          app_metadata: { role: "admin" },
+        });
+        if (metaErr) logger.error(`[Admin Bulk] grant_admin app_metadata failed for ${id}:`, metaErr);
       } else if (action === "revoke_admin") {
         const { error } = await supabase.rpc("revoke_admin_role", { target_user_id: id });
         if (error) throw error;
+        const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
+          app_metadata: { role: null },
+        });
+        if (metaErr) logger.error(`[Admin Bulk] revoke_admin app_metadata failed for ${id}:`, metaErr);
       }
       ok++;
     } catch (err) {

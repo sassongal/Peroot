@@ -333,6 +333,12 @@ export const POST = withAdminWrite(
             logger.error("[Admin User POST] grant_admin error:", grantError);
             return NextResponse.json({ error: "Failed to grant admin role" }, { status: 500 });
           }
+          // Stamp app_metadata so proxy can check admin from JWT (maintenance bypass)
+          // without a DB round-trip — mirrors the is_banned pattern.
+          const { error: grantMetaErr } = await supabase.auth.admin.updateUserById(id, {
+            app_metadata: { role: "admin" },
+          });
+          if (grantMetaErr) logger.error("[Admin User POST] grant_admin app_metadata error:", grantMetaErr);
           break;
         }
 
@@ -346,6 +352,10 @@ export const POST = withAdminWrite(
             logger.error("[Admin User POST] revoke_admin error:", revokeError);
             return NextResponse.json({ error: "Failed to revoke admin role" }, { status: 500 });
           }
+          const { error: revokeMetaErr } = await supabase.auth.admin.updateUserById(id, {
+            app_metadata: { role: null },
+          });
+          if (revokeMetaErr) logger.error("[Admin User POST] revoke_admin app_metadata error:", revokeMetaErr);
           break;
         }
 
