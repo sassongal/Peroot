@@ -32,7 +32,7 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
       <div
         className={[
           "group relative w-full rounded-xl border p-3 text-right transition-all",
-          "flex items-start gap-3",
+          "flex items-start",
           isError
             ? "border-red-500/40 bg-red-500/5"
             : stage === "warning"
@@ -43,13 +43,14 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
           .filter(Boolean)
           .join(" ")}
       >
-        {/* Clickable card area — does NOT wrap the X button */}
-        <button
-          type="button"
+        {/* Clickable card area — uses div to avoid nested-button HTML violation */}
+        <div
+          role={canOpen ? "button" : undefined}
+          tabIndex={canOpen ? 0 : undefined}
           onClick={() => canOpen && setOpen(true)}
-          disabled={!canOpen}
-          className="contents"
+          onKeyDown={(e) => e.key === "Enter" && canOpen && setOpen(true)}
           aria-label={canOpen ? "פתח פרטים" : undefined}
+          className={["contents-area flex items-start gap-3 flex-1 min-w-0", canOpen ? "cursor-pointer" : ""].join(" ").trim()}
         >
           <Icon className="w-5 h-5 shrink-0 mt-0.5 text-(--text-muted)" />
           <div className="flex-1 min-w-0">
@@ -77,7 +78,7 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={onRetry}
+                  onClick={(e) => { e.stopPropagation(); onRetry(); }}
                   className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition-colors"
                 >
                   נסה שוב
@@ -85,12 +86,12 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
               </div>
             )}
           </div>
-        </button>
+        </div>
 
-        {/* X button is a direct child of the wrapper div, NOT inside the card button */}
+        {/* X button — stopPropagation prevents triggering the card click area */}
         <button
           type="button"
-          onClick={onRemove}
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
           className="shrink-0 opacity-60 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-(--glass-bg) text-(--text-muted) hover:text-red-500"
           aria-label="הסר"
         >
