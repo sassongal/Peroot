@@ -36,27 +36,32 @@ interface ChipColors {
 const COLOR_CLASSES: Record<string, ChipColors> = {
   sky: {
     base: "border-sky-300/50 bg-sky-100/20 text-sky-600 dark:border-sky-400/25 dark:bg-sky-300/[0.06] dark:text-sky-300",
-    selected: "border-sky-400/60 bg-sky-200/35 text-sky-700 dark:border-sky-400/50 dark:bg-sky-300/15 dark:text-sky-200",
+    selected:
+      "border-sky-400/60 bg-sky-200/35 text-sky-700 dark:border-sky-400/50 dark:bg-sky-300/15 dark:text-sky-200",
     shadow: "0 0 16px -3px rgba(56,189,248,0.35)",
   },
   emerald: {
     base: "border-emerald-300/50 bg-emerald-100/20 text-emerald-600 dark:border-emerald-400/25 dark:bg-emerald-300/[0.06] dark:text-emerald-300",
-    selected: "border-emerald-400/60 bg-emerald-200/35 text-emerald-700 dark:border-emerald-400/50 dark:bg-emerald-300/15 dark:text-emerald-200",
+    selected:
+      "border-emerald-400/60 bg-emerald-200/35 text-emerald-700 dark:border-emerald-400/50 dark:bg-emerald-300/15 dark:text-emerald-200",
     shadow: "0 0 16px -3px rgba(52,211,153,0.35)",
   },
   purple: {
     base: "border-violet-300/50 bg-violet-100/20 text-violet-600 dark:border-violet-400/25 dark:bg-violet-300/[0.06] dark:text-violet-300",
-    selected: "border-violet-400/60 bg-violet-200/35 text-violet-700 dark:border-violet-400/50 dark:bg-violet-300/15 dark:text-violet-200",
+    selected:
+      "border-violet-400/60 bg-violet-200/35 text-violet-700 dark:border-violet-400/50 dark:bg-violet-300/15 dark:text-violet-200",
     shadow: "0 0 16px -3px rgba(167,139,250,0.35)",
   },
   amber: {
     base: "border-amber-300/50 bg-amber-100/20 text-amber-600 dark:border-amber-400/25 dark:bg-amber-300/[0.06] dark:text-amber-300",
-    selected: "border-amber-400/60 bg-amber-200/35 text-amber-700 dark:border-amber-400/50 dark:bg-amber-300/15 dark:text-amber-200",
+    selected:
+      "border-amber-400/60 bg-amber-200/35 text-amber-700 dark:border-amber-400/50 dark:bg-amber-300/15 dark:text-amber-200",
     shadow: "0 0 16px -3px rgba(251,191,36,0.35)",
   },
   rose: {
     base: "border-pink-300/50 bg-pink-100/20 text-pink-600 dark:border-pink-400/25 dark:bg-pink-300/[0.06] dark:text-pink-300",
-    selected: "border-pink-400/60 bg-pink-200/35 text-pink-700 dark:border-pink-400/50 dark:bg-pink-300/15 dark:text-pink-200",
+    selected:
+      "border-pink-400/60 bg-pink-200/35 text-pink-700 dark:border-pink-400/50 dark:bg-pink-300/15 dark:text-pink-200",
     shadow: "0 0 16px -3px rgba(249,168,212,0.35)",
   },
 };
@@ -93,7 +98,7 @@ export function CapabilitySelector({
   return (
     <div
       className={cn(
-        "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory min-w-0",
+        "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory min-w-0 px-0.5",
         compact ? "gap-1.5" : "gap-2",
       )}
     >
