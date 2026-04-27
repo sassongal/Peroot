@@ -827,15 +827,15 @@ function scoreVisualSubject(t: string): DimensionScoreChunk {
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/person|woman|man|child|character|portrait|face|figure|אישה|איש|דמות|ילד|פנים/i.test(t)) {
+  if (/person|woman|man|child|character|portrait|face|figure|אישה|איש|גבר|ילד|ילדה|פנים|דמות|אדם|נער|נערה|תינוק|זקן|זקנה/i.test(t)) {
     matched.push('סוג נושא');
     pts += 5;
   }
-  if (/wearing|dressed|hair|eyes|skin|clothes|לובש|שיער|עיניים|בגד/i.test(t)) {
+  if (/wearing|dressed|hair|eyes|skin|clothes|expression|pose|לובש|לובשת|שיער|עיניים|בגד|ביטוי|תנוחה|עור|זקן|מבט/i.test(t)) {
     matched.push('מראה');
     pts += 5;
   } else missing.push('פירוט מראה');
-  if (/car|building|landscape|forest|city|ocean|room|table|product|מכונית|בניין|נוף|יער|עיר|חדר/i.test(t)) {
+  if (/car|building|landscape|forest|city|ocean|room|table|product|animal|flower|sky|mountain|tree|מכונית|בניין|נוף|יער|עיר|חדר|שולחן|מוצר|חיה|פרח|שמים|הר|עץ|ים|נחל|שדה|ביתן|רחוב|גשר|מדבר|אי/i.test(t)) {
     matched.push('אובייקט / סצנה');
     pts += 5;
   }
@@ -849,11 +849,11 @@ function scoreVisualStyle(t: string): DimensionScoreChunk {
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/photo|realistic|illustration|painting|3d|render|anime|watercolor|digital art|צילום|ציור|איור/i.test(t)) {
+  if (/photo|realistic|illustration|painting|3d|render|anime|watercolor|digital art|צילום|ציור|איור|רישום|תלת\s*מימד|אנימציה|קולנועי|קריקטורה|מנגה|גרפי|ריאליסטי|מופשט|ספר|פסטל|שמן/i.test(t)) {
     matched.push('מדיום');
     pts += 8;
   } else missing.push('מדיום');
-  if (/style of|בסגנון|aesthetic|art deco|cyberpunk|minimalist|vintage|retro|modern/i.test(t)) {
+  if (/style of|בסגנון|aesthetic|art deco|cyberpunk|minimalist|vintage|retro|modern|cinematic|noir|fantasy|sci-fi|אסתטיקה|ויינטג|רטרו|מינימליסטי|פנטזיה|מדע\s*בדיוני|קלאסי|מסורתי|עתידני|אורבני/i.test(t)) {
     matched.push('אסתטיקה');
     pts += 7;
   } else missing.push('התייחסות אסתטית');
@@ -867,11 +867,11 @@ function scoreVisualComposition(t: string): DimensionScoreChunk {
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/close-up|wide shot|aerial|medium shot|full body|low angle|high angle|תקריב|זווית/i.test(t)) {
+  if (/close-up|wide shot|aerial|medium shot|full body|low angle|high angle|תקריב|זווית|זווית\s*נמוכה|זווית\s*גבוהה|עין\s*ציפור|מבט\s*מלמעלה|מבט\s*מלמטה|מסגור|פריים|שדה\s*ראייה|מלא\s*גוף|פנים\s*בלבד|ראש\s*כתפיים/i.test(t)) {
     matched.push('סוג צילום');
     pts += 4;
   } else missing.push('סוג צילום');
-  if (/rule of thirds|centered|symmetr|diagonal|foreground|background|depth|bokeh|שדה|רקע/i.test(t)) {
+  if (/rule of thirds|centered|symmetr|diagonal|foreground|background|depth|bokeh|שדה|רקע|קדמה|עומק|סימטרי|אסימטרי|אלכסוני|מרכזי|מדורג|שכבות/i.test(t)) {
     matched.push('קומפוזיציה');
     pts += 4;
   } else missing.push('מסגור');
@@ -890,11 +890,11 @@ function scoreVisualLighting(t: string): DimensionScoreChunk {
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/golden hour|sunset|sunrise|natural light|studio|neon|backlight|rim light|volumetric|שעת זהב|תאורה|אור/i.test(t)) {
+  if (/golden hour|sunset|sunrise|natural light|studio|neon|backlight|rim light|volumetric|שעת\s*זהב|תאורה|אור|שקיעה|זריחה|בוקר|ערב|לילה|נר|אש|ניאון|סטודיו|שמש|ירח|חלון|פנס|להב/i.test(t)) {
     matched.push('סוג תאורה');
     pts += 8;
   } else missing.push('סוג תאורה');
-  if (/soft|hard|dramatic|warm|cool|diffused|shadow|contrast|high key|low key|רך|חם|קר|דרמטי/i.test(t)) {
+  if (/soft|hard|dramatic|warm|cool|diffused|shadow|contrast|high key|low key|רך|חם|קר|דרמטי|עדין|חזק|ניגוד|צל|מפוזר|עמעום|בהיר|כהה|חשוך|מואר/i.test(t)) {
     matched.push('איכות אור');
     pts += 7;
   } else missing.push('מצב אור');
@@ -908,11 +908,11 @@ function scoreVisualColor(t: string): DimensionScoreChunk {
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/red|blue|green|yellow|purple|orange|amber|teal|crimson|magenta|ciano|#[0-9a-f]{3,6}|אדום|כחול|ירוק/i.test(t)) {
+  if (/red|blue|green|yellow|purple|orange|amber|teal|crimson|magenta|cyan|#[0-9a-f]{3,6}|אדום|כחול|ירוק|צהוב|כתום|סגול|ורוד|חום|שחור|לבן|אפור|טורקיז|זהוב|כסוף|בורדו|זית|בז|חאקי|תכלת|לילך|מנטה|קורל|שזוף|כרם/i.test(t)) {
     matched.push('צבעים ספציפיים');
     pts += 5;
   } else missing.push('פלטת צבעים');
-  if (/mood|atmosphere|vibe|feeling|cinematic|אווירה|מצב רוח|קולנועי/i.test(t)) {
+  if (/mood|atmosphere|vibe|feeling|cinematic|monochrome|pastel|warm tones|cool tones|אווירה|מצב\s*רוח|קולנועי|מונוכרום|פסטל|טון\s*חם|טון\s*קר|גווני|צבעוני|עמום|תוסס|קודר/i.test(t)) {
     matched.push('אווירה');
     pts += 5;
   } else missing.push('אווירה');
@@ -965,15 +965,15 @@ function scoreVisualMotion(t: string): DimensionScoreChunk {
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/dolly|pan|tracking|zoom|crane|handheld|steadicam|orbit|תנועת מצלמה/i.test(t)) {
+  if (/dolly|pan|tracking|zoom|crane|handheld|steadicam|orbit|תנועת\s*מצלמה|מצלמה\s*נעה|פאן|זום|מתקרב|מתרחק|סיבוב|מקיף|מעגלי|מעוף/i.test(t)) {
     matched.push('תנועת מצלמה');
     pts += 5;
   } else missing.push('תנועת מצלמה');
-  if (/walks|runs|jumps|glides|sprints|rises|falls|turns|הולך|רץ|קופץ/i.test(t)) {
+  if (/walks|runs|jumps|glides|sprints|rises|falls|turns|flies|swims|dances|הולך|הולכת|רץ|רצה|קופץ|קופצת|מרחף|שוחה|רוקד|רוקדת|מסתובב|ניגש|עולה|יורד|נע|מתנועע|זורם|גולש/i.test(t)) {
     matched.push('תנועת נושא');
     pts += 4;
   } else missing.push('פעלים של נושא');
-  if (/rain|snow|smoke|dust|particles|mist|wind|fog|גשם|שלג|ערפל/i.test(t)) {
+  if (/rain|snow|smoke|dust|particles|mist|wind|fog|waves|fire|גשם|שלג|ערפל|עשן|אבק|רוח|גלים|אש|להבות|עלים\s*נושרים|נהר|מפל|ענן|ברק/i.test(t)) {
     matched.push('תנועה סביבתית');
     pts += 4;
   } else missing.push('תנועה סביבתית');
