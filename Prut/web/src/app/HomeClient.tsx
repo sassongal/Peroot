@@ -1155,6 +1155,12 @@ function PageContent() {
     setPersonalView("all");
   }, [setViewMode, setPersonalView]);
 
+  const [pendingGraph, setPendingGraph] = useState(false);
+  const handleOpenGraph = useCallback(() => {
+    setPendingGraph(true);
+    handleNavPersonal();
+  }, [handleNavPersonal]);
+
   const handleNavFavorites = useCallback(() => {
     setViewMode("personal");
     setPersonalView("favorites");
@@ -1230,7 +1236,7 @@ function PageContent() {
   }, [handleNavPersonal]);
 
   const topNavBar = (
-    <TopNavBar viewMode={viewMode} onNavigate={handleTopNavNavigate}>
+    <TopNavBar viewMode={viewMode} onNavigate={handleTopNavNavigate} onOpenGraph={handleOpenGraph}>
       <PromptLimitIndicator creditsBalance={creditsRemaining} />
       {/* Chains + History hidden on mobile — reachable via personal library & MobileTabBar.
           Keeps TopNavBar under the 375px crowding threshold. */}
@@ -1289,6 +1295,8 @@ function PageContent() {
             }}
             handleImportHistory={handleImportHistory}
             historyLength={history.length}
+            openToGraph={pendingGraph}
+            onGraphOpened={() => setPendingGraph(false)}
           />
         </ErrorBoundary>
       </>

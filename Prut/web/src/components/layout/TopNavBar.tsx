@@ -29,16 +29,17 @@ type ViewMode = "home" | "library" | "personal";
 const NAV_ITEMS: { id: ViewMode; label: string; Icon: LucideIcon }[] = [
   { id: "home", label: "שפר", Icon: Wand2 },
   { id: "library", label: "ספרייה", Icon: Library },
-  { id: "personal", label: "שלי", Icon: BookOpen },
+  { id: "personal", label: "ספרייה אישית", Icon: BookOpen },
 ];
 
 interface TopNavBarProps {
   viewMode: ViewMode | string;
   onNavigate: (view: ViewMode) => void;
+  onOpenGraph?: () => void;
   children?: React.ReactNode;
 }
 
-export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
+export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNavBarProps) {
   const { theme, toggleTheme } = useTheme();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreWrapRef = useRef<HTMLDivElement>(null);
@@ -109,6 +110,7 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
 
           {NAV_ITEMS.map(({ id, label, Icon }) => {
             const isActive = viewMode === id;
+            const isPersonal = id === "personal";
             return (
               <button
                 key={id}
@@ -116,13 +118,19 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
                 className={cn(
                   // On mobile the MobileTabBar already provides home/library/personal —
                   // hiding these avoids duplicating nav and freeing space for children.
-                  "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none relative",
                   isActive
                     ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
+                {isPersonal && !isActive && (
+                  <span
+                    aria-hidden
+                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping motion-reduce:animate-none"
+                  />
+                )}
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{label}</span>
               </button>
@@ -132,14 +140,8 @@ export function TopNavBar({ viewMode, onNavigate, children }: TopNavBarProps) {
           {/* Graph button — navigates to personal library and opens graph view */}
           <button
             onClick={() => {
-              // sessionStorage flag survives the dynamic-import mount race —
-              // PersonalLibraryView reads + clears it on mount. The event is a
-              // fast-path for when the view is already mounted.
-              try {
-                sessionStorage.setItem("peroot:pending-graph", "1");
-              } catch {}
-              onNavigate("personal");
-              setTimeout(() => window.dispatchEvent(new CustomEvent("peroot:open-graph")), 50);
+              if (onOpenGraph) onOpenGraph();
+              else onNavigate("personal");
             }}
             className={cn(
               "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:outline-none border",

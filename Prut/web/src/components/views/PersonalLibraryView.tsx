@@ -31,6 +31,8 @@ interface PersonalLibraryViewProps {
   onCopyText: (text: string) => Promise<void>;
   handleImportHistory: () => void;
   historyLength: number;
+  openToGraph?: boolean;
+  onGraphOpened?: () => void;
 }
 
 export function PersonalLibraryView({
@@ -38,6 +40,8 @@ export function PersonalLibraryView({
   onCopyText,
   handleImportHistory,
   historyLength,
+  openToGraph,
+  onGraphOpened,
 }: PersonalLibraryViewProps) {
   const ctx = useLibraryContext();
   const { history } = useHistory();
@@ -92,18 +96,7 @@ export function PersonalLibraryView({
   const [activeLocalFolder, setActiveLocalFolder] = useState<string>("all");
 
   // Graph vs grid view toggle.
-  // Read sessionStorage on init so a pending graph request from TopNavBar
-  // survives the dynamic-import mount race (event may fire before listener).
-  const [localViewType, setLocalViewType] = useState<"grid" | "graph">(() => {
-    if (typeof window === "undefined") return "grid";
-    try {
-      if (sessionStorage.getItem("peroot:pending-graph") === "1") {
-        sessionStorage.removeItem("peroot:pending-graph");
-        return "graph";
-      }
-    } catch {}
-    return "grid";
-  });
+  const [localViewType, setLocalViewType] = useState<"grid" | "graph">("grid");
   // All prompts for graph mode — fetched without pagination when graph activates
   const [graphPrompts, setGraphPrompts] = useState<PersonalPrompt[]>([]);
   const [graphLoading, setGraphLoading] = useState(false);
@@ -127,12 +120,12 @@ export function PersonalLibraryView({
     return () => window.removeEventListener("peroot:open-chains", handler);
   }, []);
 
-  // Open graph view when the top-nav graph button is clicked.
+  // Open graph view when parent signals via prop (race-condition-free).
   useEffect(() => {
-    const handler = () => setLocalViewType("graph");
-    window.addEventListener("peroot:open-graph", handler);
-    return () => window.removeEventListener("peroot:open-graph", handler);
-  }, []);
+    if (!openToGraph) return;
+    setLocalViewType("graph");
+    onGraphOpened?.();
+  }, [openToGraph]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When graph mode activates, fetch ALL personal prompts (no pagination).
   // filteredPersonalLibrary only has the current page — graph needs the full library.
