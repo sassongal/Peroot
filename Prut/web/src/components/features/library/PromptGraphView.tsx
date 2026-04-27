@@ -17,6 +17,7 @@ import { scoreInput } from "@/lib/engines/scoring/input-scorer";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { PromptNodeCard } from "./PromptNodeCard";
+import { TagNodePanel } from "./TagNodePanel";
 
 // SSR-safe — `react-force-graph-3d` bundles THREE at module-eval, so it must
 // be loaded client-only.
@@ -64,6 +65,11 @@ export function PromptGraphView({
   const backBtnRef = useRef<HTMLButtonElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedPrompt, setSelectedPrompt] = useState<PersonalPrompt | null>(null);
+  const [selectedTagNode, setSelectedTagNode] = useState<{
+    type: "tag" | "library";
+    id: string;
+    label: string;
+  } | null>(null);
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [mobileLegendOpen, setMobileLegendOpen] = useState(false);
@@ -287,6 +293,14 @@ export function PromptGraphView({
   const handleNodeClick = useCallback(
     (node: GraphNode) => {
       savePositions();
+      if (node.type === "tag" || node.type === "library") {
+        setSelectedTagNode((prev) =>
+          prev?.id === node.id
+            ? null
+            : { type: node.type as "tag" | "library", id: node.id, label: node.label },
+        );
+        return;
+      }
       if (node.type === "prompt" && node.prompt) {
         setSelectedPrompt((prev) => (prev?.id === node.prompt!.id ? null : node.prompt!));
         setFocusedId((prev) => (prev === node.id ? null : node.id));
@@ -322,10 +336,18 @@ export function PromptGraphView({
       if (Math.sqrt(dx * dx + dy * dy) > 8) return;
       // Prefer node captured at pointerdown; fall back to current hover
       const clicked = down.node ?? hoverNodeRef.current;
-      if (clicked && clicked.type === "prompt" && clicked.prompt) {
+      if (clicked) {
         savePositions();
-        setSelectedPrompt((prev) => (prev?.id === clicked.prompt!.id ? null : clicked.prompt!));
-        setFocusedId((prev) => (prev === clicked.id ? null : clicked.id));
+        if (clicked.type === "tag" || clicked.type === "library") {
+          setSelectedTagNode((prev) =>
+            prev?.id === clicked.id
+              ? null
+              : { type: clicked.type as "tag" | "library", id: clicked.id, label: clicked.label },
+          );
+        } else if (clicked.type === "prompt" && clicked.prompt) {
+          setSelectedPrompt((prev) => (prev?.id === clicked.prompt!.id ? null : clicked.prompt!));
+          setFocusedId((prev) => (prev === clicked.id ? null : clicked.id));
+        }
       }
     },
     [savePositions],
@@ -498,11 +520,12 @@ export function PromptGraphView({
   // Guard: only reset when something is actually focused/selected, so casual
   // pan-clicks on the background don't constantly refit the camera.
   const handleBackgroundClick = useCallback(() => {
-    if (!focusedId && !selectedPrompt) return;
+    if (!focusedId && !selectedPrompt && !selectedTagNode) return;
     setFocusedId(null);
     setSelectedPrompt(null);
+    setSelectedTagNode(null);
     handleFitView();
-  }, [focusedId, selectedPrompt, handleFitView]);
+  }, [focusedId, selectedPrompt, selectedTagNode, handleFitView]);
 
   // Feature 5 — edge hover tooltip
   const handleLinkHover = useCallback(
@@ -529,6 +552,8 @@ export function PromptGraphView({
         // Modal takes priority — close it first without clearing filters.
         if (selectedPrompt) {
           setSelectedPrompt(null);
+        } else if (selectedTagNode) {
+          setSelectedTagNode(null);
         } else if (searchQuery || capabilityFilter.size > 0 || favOnly || focusedId) {
           setSearchQuery("");
           setCapabilityFilter(new Set());
@@ -555,6 +580,7 @@ export function PromptGraphView({
     favOnly,
     focusedId,
     selectedPrompt,
+    selectedTagNode,
     dismissHint,
     handleFitView,
   ]);
@@ -1131,6 +1157,34 @@ export function PromptGraphView({
               הקישו על צומת לפתיחת פרטים · צבטו להגדלה · גררו להזזה
             </div>
           </div>
+        )}
+
+        {/* Tag / Library hub node panel */}
+        {selectedTagNode && (
+          <TagNodePanel
+            nodeId={selectedTagNode.id}
+            nodeType={selectedTagNode.type}
+            nodeLabel={selectedTagNode.label}
+            prompts={prompts}
+            onClose={() => setSelectedTagNode(null)}
+            onOpenPrompt={(p) => {
+              setSelectedTagNode(null);
+              setSelectedPrompt(p);
+              setFocusedId(p.id);
+            }}
+            onRemoveTag={async (promptId, tag) => {
+              const p = prompts.find((x) => x.id === promptId);
+              if (!p) return;
+              const next = (p.tags ?? []).filter((t) => t.trim().toLowerCase() !== tag);
+              await updateTags(promptId, next);
+            }}
+            onAddTag={async (promptId, tag) => {
+              const p = prompts.find((x) => x.id === promptId);
+              if (!p) return;
+              const next = [...(p.tags ?? []), tag];
+              await updateTags(promptId, next);
+            }}
+          />
         )}
 
         {/* ── Selected prompt modal — fixed viewport overlay so overflow-hidden on parent doesn't clip it ── */}
