@@ -216,8 +216,14 @@ const DIMS: Record<string, DimensionDef> = {
     tip: 'הוסף מגבלות שליליות: "אל ת…", "ללא…", "בלי…"',
     test: (p) => {
       if (hasNegativeConstraints(p)) {
-        return { ratio: 1, matched: ['negative constraints'], missing: [] };
+        const hasTone = /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי/i.test(p.text);
+        const hasLang = /שפה|language|בעברית|באנגלית|in\s+(?:hebrew|english)/i.test(p.text);
+        if (hasTone && hasLang) return { ratio: 1, matched: ['negative constraints', 'tone', 'language'], missing: [] };
+        if (hasTone || hasLang) return { ratio: 0.75, matched: ['negative constraints', hasTone ? 'tone' : 'language'], missing: [hasTone ? 'language' : 'tone'] };
+        return { ratio: 0.4, matched: ['negative constraints'], missing: ['tone spec', 'language spec'] };
       }
+      const hasToneOnly = /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי/i.test(p.text);
+      if (hasToneOnly) return { ratio: 0.25, matched: ['tone mentioned'], missing: ['explicit do/don\'t rules'] };
       return { ratio: 0, matched: [], missing: ['do/don\'t rules'] };
     },
   },
@@ -288,20 +294,29 @@ const DIMS: Record<string, DimensionDef> = {
     key: 'examples',
     label: 'דוגמאות',
     tip: 'הוסף בלוק דוגמה מופרד: "דוגמה: ..."',
-    test: (p) =>
-      hasExampleBlock(p)
-        ? { ratio: 1, matched: ['example block'], missing: [] }
-        : { ratio: 0, matched: [], missing: ['concrete example'] },
+    test: (p) => {
+      if (hasExampleBlock(p)) return { ratio: 1, matched: ['example block'], missing: [] };
+      const hasMention = /דוגמה|example|sample|template|תבנית|כמו\s+ל|כמו\s+זה|למשל/i.test(p.text);
+      if (hasMention) return { ratio: 0.4, matched: ['example mentioned'], missing: ['full example block'] };
+      return { ratio: 0, matched: [], missing: ['concrete example'] };
+    },
   },
 
   measurability: {
     key: 'measurability',
     label: 'מדידות',
     tip: 'הוסף קריטריון הצלחה מספרי (X מילים, Y פריטים, טווח Z)',
-    test: (p) =>
-      hasMeasurableQuantity(p)
-        ? { ratio: 1, matched: ['measurable criteria'], missing: [] }
-        : { ratio: 0, matched: [], missing: ['success metric'] },
+    test: (p) => {
+      if (!hasMeasurableQuantity(p)) {
+        return { ratio: 0, matched: [], missing: ['success metric'] };
+      }
+      const hasMin = /לפחות|מינימום|at\s+least|minimum/i.test(p.text);
+      const hasMax = /מקסימום|לכל\s+היותר|up\s+to|at\s+most|עד\s+\d+/i.test(p.text);
+      const hasRange = /בין\s+\d+\s+ל|between\s+\d+\s+and|\d+[-–]\d+\s*(מילים|words|items|פריטים)/i.test(p.text);
+      if (hasRange || (hasMin && hasMax)) return { ratio: 1, matched: ['measurable range'], missing: [] };
+      if (hasMin || hasMax) return { ratio: 0.7, matched: ['one-sided limit'], missing: ['add matching min/max for full range'] };
+      return { ratio: 0.5, matched: ['measurable quantity'], missing: ['explicit min/max range'] };
+    },
   },
 
   enforceability: {
@@ -484,19 +499,24 @@ const DIMS: Record<string, DimensionDef> = {
     key: 'subject',
     label: 'נושא',
     tip: 'תאר בבהירות מה נמצא בתמונה (מי/מה/איפה)',
-    test: (p) =>
-      hasImageSubject(p)
-        ? { ratio: p.wordCount >= 8 ? 1 : 0.6, matched: ['subject described'], missing: [] }
-        : { ratio: 0, matched: [], missing: ['subject'] },
+    test: (p) => {
+      if (!hasImageSubject(p)) return { ratio: 0, matched: [], missing: ['subject'] };
+      const hasAttribute = /wearing|dressed|hair|eyes|expression|pose|color|לובש|שיער|עיניים|ביטוי|תנוחה|בגד|גובה|גיל|young|old|tall|small|גדול|קטן|צעיר|מבוגר/i.test(p.text);
+      if (hasAttribute && p.wordCount >= 8) return { ratio: 1, matched: ['subject described', 'attributes'], missing: [] };
+      if (p.wordCount >= 8) return { ratio: 0.75, matched: ['subject described'], missing: ['subject attributes (appearance/pose)'] };
+      return { ratio: 0.4, matched: ['subject mentioned'], missing: ['more subject detail'] };
+    },
   },
   style: {
     key: 'style',
     label: 'סגנון',
     tip: 'ציין מדיום/סגנון (צילום, איור, אנימציה, cinematic ...)',
-    test: (p) =>
-      hasImageStyle(p)
-        ? { ratio: 1, matched: ['style'], missing: [] }
-        : { ratio: 0, matched: [], missing: ['style / medium'] },
+    test: (p) => {
+      if (!hasImageStyle(p)) return { ratio: 0, matched: [], missing: ['style / medium'] };
+      const hasAesthetic = /style\s+of|בסגנון|aesthetic|art\s+deco|cyberpunk|minimalist|vintage|retro|modern|cinematic|אסתטיקה|ויינטג|רטרו|מינימליסטי|פנטזיה|עתידני|קלאסי/i.test(p.text);
+      if (hasAesthetic) return { ratio: 1, matched: ['medium', 'aesthetic'], missing: [] };
+      return { ratio: 0.5, matched: ['medium'], missing: ['aesthetic reference (בסגנון X)'] };
+    },
   },
   composition: {
     key: 'composition',
@@ -520,19 +540,23 @@ const DIMS: Record<string, DimensionDef> = {
     key: 'lighting',
     label: 'תאורה',
     tip: 'תאר תאורה (golden hour, soft light, rim, Rembrandt ...)',
-    test: (p) =>
-      hasImageLighting(p)
-        ? { ratio: 1, matched: ['lighting'], missing: [] }
-        : { ratio: 0, matched: [], missing: ['lighting'] },
+    test: (p) => {
+      if (!hasImageLighting(p)) return { ratio: 0, matched: [], missing: ['lighting'] };
+      const hasQuality = /soft|hard|dramatic|warm|cool|diffused|shadow|contrast|high\s+key|low\s+key|רך|חם|קר|דרמטי|עדין|ניגוד|צל|עמעום|מפוזר/i.test(p.text);
+      if (hasQuality) return { ratio: 1, matched: ['lighting type', 'quality'], missing: [] };
+      return { ratio: 0.5, matched: ['lighting type'], missing: ['lighting quality (soft/dramatic/warm...)'] };
+    },
   },
   color: {
     key: 'color',
     label: 'צבע',
     tip: 'פרט פלטת צבעים / מצב-רוח צבעוני',
-    test: (p) =>
-      hasImageColor(p)
-        ? { ratio: 1, matched: ['color'], missing: [] }
-        : { ratio: 0, matched: [], missing: ['color palette'] },
+    test: (p) => {
+      if (!hasImageColor(p)) return { ratio: 0, matched: [], missing: ['color palette'] };
+      const hasMood = /mood|atmosphere|vibe|cinematic|monochrome|pastel|אווירה|מצב\s*רוח|קולנועי|מונוכרום|פסטל|גווני|טון\s*חם|טון\s*קר/i.test(p.text);
+      if (hasMood) return { ratio: 1, matched: ['colors', 'mood'], missing: [] };
+      return { ratio: 0.5, matched: ['colors specified'], missing: ['color mood / atmosphere'] };
+    },
   },
   quality: {
     key: 'quality',
