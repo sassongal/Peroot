@@ -159,7 +159,6 @@ function HomeViewChromeInner({
           <div className="hero-logo-container">
             <div className="hero-logo-ring hero-logo-ring-1" />
             <div className="hero-logo-ring hero-logo-ring-2" />
-            <div className="hero-logo-ring hero-logo-ring-3" />
             <NextImage
               src="/Peroot-hero.png"
               alt="פירוט"
