@@ -5,12 +5,12 @@ import { IMAGE_PLATFORMS, ImagePlatform, ImageOutputFormat } from "@/lib/media-p
 import { IMAGE_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
 
 const ASPECT_RATIO_OPTIONS = [
-  { value: '', label: 'אוטומטי' },
-  { value: '1:1', label: '1:1' },
-  { value: '16:9', label: '16:9' },
-  { value: '9:16', label: '9:16' },
-  { value: '4:3', label: '4:3' },
-  { value: '3:2', label: '3:2' },
+  { value: "", label: "אוטומטי" },
+  { value: "1:1", label: "1:1" },
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+  { value: "4:3", label: "4:3" },
+  { value: "3:2", label: "3:2" },
 ] as const;
 
 interface ImagePlatformSelectorProps {
@@ -28,15 +28,17 @@ export function ImagePlatformSelector({
   onPlatformChange,
   outputFormat,
   onOutputFormatChange,
-  aspectRatio = '',
+  aspectRatio = "",
   onAspectRatioChange,
   disabled,
 }: ImagePlatformSelectorProps) {
-  const selectedConfig = IMAGE_PLATFORMS.find(p => p.id === selectedPlatform);
+  const selectedConfig = IMAGE_PLATFORMS.find((p) => p.id === selectedPlatform);
 
   return (
     <div className="flex flex-col gap-2" dir="rtl">
-      <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">פלטפורמת תמונה</div>
+      <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">
+        פלטפורמת תמונה
+      </div>
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
         {IMAGE_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
@@ -54,7 +56,7 @@ export function ImagePlatformSelector({
                 isSelected
                   ? "border-purple-500/50 bg-purple-500/10 text-purple-700 dark:text-purple-300"
                   : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-purple-500/30 hover:bg-purple-500/5",
-                disabled && "opacity-50 cursor-not-allowed"
+                disabled && "opacity-50 cursor-not-allowed",
               )}
               aria-pressed={isSelected}
               title={platform.description}
@@ -82,12 +84,12 @@ export function ImagePlatformSelector({
             <button
               type="button"
               disabled={disabled}
-              onClick={() => onOutputFormatChange('text')}
+              onClick={() => onOutputFormatChange("text")}
               className={cn(
                 "px-2.5 py-1 text-[11px] font-medium transition-colors",
-                outputFormat === 'text'
+                outputFormat === "text"
                   ? "bg-purple-500/20 text-purple-700 dark:text-purple-300"
-                  : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5"
+                  : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
               )}
             >
               רגיל
@@ -95,12 +97,12 @@ export function ImagePlatformSelector({
             <button
               type="button"
               disabled={disabled}
-              onClick={() => onOutputFormatChange('json')}
+              onClick={() => onOutputFormatChange("json")}
               className={cn(
                 "px-2.5 py-1 text-[11px] font-medium transition-colors",
-                outputFormat === 'json'
+                outputFormat === "json"
                   ? "bg-purple-500/20 text-purple-700 dark:text-purple-300"
-                  : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5"
+                  : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
               )}
             >
               JSON
@@ -124,7 +126,7 @@ export function ImagePlatformSelector({
                   "px-2.5 py-1 text-[11px] font-medium transition-colors",
                   aspectRatio === option.value
                     ? "bg-purple-500/20 text-purple-300"
-                    : "text-slate-400 hover:bg-white/5"
+                    : "text-slate-400 hover:bg-white/5",
                 )}
               >
                 {option.label}

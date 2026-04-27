@@ -5,11 +5,11 @@ import { VIDEO_PLATFORMS, VideoPlatform, getVideoPlatform } from "@/lib/video-pl
 import { VIDEO_PLATFORM_ICONS } from "@/components/ui/PlatformIcons";
 
 const ASPECT_RATIO_OPTIONS = [
-  { value: '', label: 'אוטומטי' },
-  { value: '16:9', label: '16:9' },
-  { value: '9:16', label: '9:16' },
-  { value: '1:1', label: '1:1' },
-  { value: '4:3', label: '4:3' },
+  { value: "", label: "אוטומטי" },
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+  { value: "1:1", label: "1:1" },
+  { value: "4:3", label: "4:3" },
 ] as const;
 
 interface VideoPlatformSelectorProps {
@@ -23,14 +23,16 @@ interface VideoPlatformSelectorProps {
 export function VideoPlatformSelector({
   selectedPlatform,
   onPlatformChange,
-  aspectRatio = '',
+  aspectRatio = "",
   onAspectRatioChange,
   disabled,
 }: VideoPlatformSelectorProps) {
   const selectedMeta = getVideoPlatform(selectedPlatform);
   return (
     <div className="flex flex-col gap-2" dir="rtl">
-      <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">פלטפורמת וידאו</div>
+      <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">
+        פלטפורמת וידאו
+      </div>
       {selectedMeta && (
         <p className="text-[10px] text-(--text-muted) px-1 leading-snug hidden sm:block">
           {selectedMeta.description}
@@ -53,7 +55,7 @@ export function VideoPlatformSelector({
                 isSelected
                   ? "border-rose-500/50 bg-rose-500/10 text-rose-700 dark:text-rose-300"
                   : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-rose-500/30 hover:bg-rose-500/5",
-                disabled && "opacity-50 cursor-not-allowed"
+                disabled && "opacity-50 cursor-not-allowed",
               )}
               aria-pressed={isSelected}
               title={platform.description}
@@ -88,7 +90,7 @@ export function VideoPlatformSelector({
                   "px-2.5 py-1 text-[11px] font-medium transition-colors",
                   aspectRatio === option.value
                     ? "bg-rose-500/20 text-rose-700 dark:text-rose-300"
-                    : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5"
+                    : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
                 )}
               >
                 {option.label}
