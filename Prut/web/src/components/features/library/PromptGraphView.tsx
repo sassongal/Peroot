@@ -935,7 +935,6 @@ export function PromptGraphView({
             linkDirectionalParticleWidth={linkDirectionalParticleWidth as any}
             linkDirectionalParticleSpeed={graphData.nodes.length < 15 ? 0.004 : 0.006}
             linkDirectionalParticleColor={linkDirectionalParticleColor as any}
-            onNodeClick={handleNodeClick as any}
             onNodeDragEnd={handleNodeDragEnd as any}
             onNodeHover={handleNodeHover as any}
             onLinkHover={handleLinkHover as any}
