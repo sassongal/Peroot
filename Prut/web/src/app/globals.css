@@ -743,17 +743,17 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 360px;
-  height: 140px;
+  width: 270px;
+  height: 105px;
   overflow: hidden;
   contain: layout;
 }
 
 @media (max-width: 768px) {
   .hero-logo-container {
-    max-width: 200px;
+    max-width: 150px;
     width: 100%;
-    height: 78px;
+    height: 59px;
   }
 }
 
@@ -797,25 +797,6 @@ a:focus-visible,
   pointer-events: none;
 }
 
-.hydrated .hero-logo-image {
-  animation: hero-logo-float 4s ease-in-out infinite;
-}
-
-:root:not(.dark) .hero-logo-image {
-  filter: brightness(0.15) sepia(1) saturate(3) hue-rotate(-10deg) drop-shadow(0 0 40px rgba(180, 83, 9, 0.4));
-}
-
-
-/* Floating animation for logo */
-@keyframes hero-logo-float {
-  0%,
-  100% {
-    transform: translateY(0) translateZ(0);
-  }
-  50% {
-    transform: translateY(-6px) translateZ(0);
-  }
-}
 
 /* Animated rings around logo */
 .hero-logo-ring {
