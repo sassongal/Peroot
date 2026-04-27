@@ -13,6 +13,7 @@ import {
   type GraphLink,
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
+import { scoreInput } from "@/lib/engines/scoring/input-scorer";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { PromptNodeCard } from "./PromptNodeCard";
@@ -39,6 +40,13 @@ const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
   [CapabilityMode.AGENT_BUILDER]: "סוכן",
   [CapabilityMode.VIDEO_GENERATION]: "וידאו",
 };
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 export function PromptGraphView({
   prompts,
@@ -149,8 +157,17 @@ export function PromptGraphView({
     };
   }, []);
 
+  const scoreMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of prompts) {
+      const result = scoreInput(p.prompt ?? "", p.capability_mode ?? CapabilityMode.STANDARD);
+      m.set(p.id, result.total);
+    }
+    return m;
+  }, [prompts]);
+
   const graphData = useMemo(() => {
-    const data = buildGraphData(prompts, favoriteIds);
+    const data = buildGraphData(prompts, favoriteIds, scoreMap);
     // Restore saved positions so the simulation doesn't restart from scratch
     data.nodes.forEach((n) => {
       const saved = positionMapRef.current.get(n.id);
@@ -160,7 +177,7 @@ export function PromptGraphView({
       }
     });
     return data;
-  }, [prompts, favoriteIds]);
+  }, [prompts, favoriteIds, scoreMap]);
 
   // Indexed lookup — avoids O(n) .find() per edge hover on large libraries.
   const promptById = useMemo(() => {
@@ -865,14 +882,19 @@ export function PromptGraphView({
               ((n: GraphNode) => {
                 if (n.type === "tag") return 3;
                 if (n.type === "library") return 5;
-                return Math.max(4, Math.min(10, n.isFavorite ? 9 : n.isRecentlyUsed ? 6 : 4));
+                // Size = score-driven: 0→4, 50→9, 100→18
+                const s = n.score ?? 50;
+                return Math.max(4, Math.min(18, 4 + (s / 100) * 14));
               }) as any
             }
             nodeColor={
               ((n: GraphNode) => {
                 if (n.type === "tag") return "#f59e0b"; // amber — matches legend
                 if (n.type === "library") return "#a855f7"; // purple — matches legend
-                return CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
+                const hex = CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
+                const s = n.score ?? 50;
+                const alpha = s < 40 ? 0.55 : s < 70 ? 0.55 + ((s - 40) / 30) * 0.45 : 1.0;
+                return alpha >= 1.0 ? hex : hexToRgba(hex, alpha);
               }) as any
             }
             nodeOpacity={0.95}
@@ -935,6 +957,16 @@ export function PromptGraphView({
             {hoverNode.prompt.personal_category && (
               <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 {hoverNode.prompt.personal_category}
+              </div>
+            )}
+            {hoverNode.successRate !== undefined && (
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                הצלחה: {Math.round(hoverNode.successRate * 100)}%
+              </div>
+            )}
+            {hoverNode.score !== undefined && (
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                ציון: {hoverNode.score}
               </div>
             )}
             {(hoverNode.prompt.tags ?? []).length > 0 && (
