@@ -165,7 +165,7 @@ function HomeViewChromeInner({
               className="hero-logo-image"
               width={720}
               height={316}
-              sizes="(max-width: 768px) 80vw, 480px"
+              sizes="(max-width: 768px) 80vw, 270px"
               priority
             />
           </div>

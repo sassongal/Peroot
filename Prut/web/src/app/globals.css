@@ -821,13 +821,6 @@ a:focus-visible,
   animation: hero-ring-pulse 4s ease-in-out infinite 1s;
 }
 
-.hero-logo-ring-3 {
-  width: 160%;
-  height: 280%;
-  border-color: rgba(245, 158, 11, 0.05);
-  animation: hero-ring-pulse 4s ease-in-out infinite 2s;
-}
-
 :root:not(.dark) .hero-logo-ring-1 {
   border-color: rgba(220, 38, 38, 0.15);
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.05);
@@ -836,10 +829,6 @@ a:focus-visible,
 :root:not(.dark) .hero-logo-ring-2 {
   border-color: rgba(245, 158, 11, 0.18);
   box-shadow: 0 0 30px rgba(220, 38, 38, 0.03);
-}
-
-:root:not(.dark) .hero-logo-ring-3 {
-  border-color: rgba(180, 83, 9, 0.10);
 }
 
 @keyframes hero-ring-pulse {
