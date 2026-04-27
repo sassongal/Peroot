@@ -79,18 +79,31 @@ export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props
                 למסמכים מלאים.
               </div>
             )}
-            {isError && onRetry && (
+            {isError && (
               <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRetry();
-                  }}
-                  className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition-colors"
-                >
-                  נסה שוב
-                </button>
+                {onRetry ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRetry();
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition-colors"
+                  >
+                    נסה שוב
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove();
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition-colors"
+                  >
+                    הסר ועלה שוב
+                  </button>
+                )}
               </div>
             )}
           </div>
