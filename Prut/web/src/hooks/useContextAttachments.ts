@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import type { ContextAttachment, ContextPayload, AttachmentType } from "@/lib/context/types";
+import type { ContextAttachment, AttachmentType } from "@/lib/context/types";
 import type { ProcessingStage } from "@/lib/context/engine/types";
 import { PLAN_CONTEXT_LIMITS } from "@/lib/plans";
 import { getApiPath } from "@/lib/api-path";
@@ -124,6 +124,25 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
   }, []);
 
+  const applyBlockUpdate = useCallback(
+    (id: string, block: unknown) => {
+      const b = block as { stage?: string };
+      setAttachments((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                block: block as ContextAttachment["block"],
+                stage: b.stage as ProcessingStage,
+                status: b.stage === "error" ? "error" : "ready",
+              }
+            : a,
+        ),
+      );
+    },
+    [],
+  );
+
   const addFile = useCallback(
     async (file: File) => {
       if (
@@ -171,21 +190,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         await readSseStream(
           res,
           (stage) => updateAttachment(id, { stage }),
-          (block) => {
-            const b = block as { stage?: string };
-            setAttachments((prev) =>
-              prev.map((a) =>
-                a.id === id
-                  ? {
-                      ...a,
-                      block: block as ContextAttachment["block"],
-                      stage: b.stage as ProcessingStage,
-                      status: b.stage === "error" ? "error" : "ready",
-                    }
-                  : a,
-              ),
-            );
-          },
+          (block) => applyBlockUpdate(id, block),
           (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
@@ -198,7 +203,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         pendingCounts.current.file--;
       }
     },
-    [limits.maxFiles, updateAttachment],
+    [limits.maxFiles, updateAttachment, applyBlockUpdate],
   );
 
   const addUrl = useCallback(
@@ -241,21 +246,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         await readSseStream(
           res,
           (stage) => updateAttachment(id, { stage }),
-          (block) => {
-            const b = block as { stage?: string };
-            setAttachments((prev) =>
-              prev.map((a) =>
-                a.id === id
-                  ? {
-                      ...a,
-                      block: block as ContextAttachment["block"],
-                      stage: b.stage as ProcessingStage,
-                      status: b.stage === "error" ? "error" : "ready",
-                    }
-                  : a,
-              ),
-            );
-          },
+          (block) => applyBlockUpdate(id, block),
           (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
@@ -268,7 +259,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         pendingCounts.current.url--;
       }
     },
-    [limits.maxUrls, updateAttachment],
+    [limits.maxUrls, updateAttachment, applyBlockUpdate],
   );
 
   const addImage = useCallback(
@@ -318,21 +309,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         await readSseStream(
           res,
           (stage) => updateAttachment(id, { stage }),
-          (block) => {
-            const b = block as { stage?: string };
-            setAttachments((prev) =>
-              prev.map((a) =>
-                a.id === id
-                  ? {
-                      ...a,
-                      block: block as ContextAttachment["block"],
-                      stage: b.stage as ProcessingStage,
-                      status: b.stage === "error" ? "error" : "ready",
-                    }
-                  : a,
-              ),
-            );
-          },
+          (block) => applyBlockUpdate(id, block),
           (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
@@ -345,7 +322,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         pendingCounts.current.image--;
       }
     },
-    [limits.maxImages, updateAttachment],
+    [limits.maxImages, updateAttachment, applyBlockUpdate],
   );
 
   const addFiles = useCallback(
@@ -382,21 +359,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         await readSseStream(
           res,
           (stage) => updateAttachment(id, { stage }),
-          (block) => {
-            const b = block as { stage?: string };
-            setAttachments((prev) =>
-              prev.map((a) =>
-                a.id === id
-                  ? {
-                      ...a,
-                      block: block as ContextAttachment["block"],
-                      stage: b.stage as ProcessingStage,
-                      status: b.stage === "error" ? "error" : "ready",
-                    }
-                  : a,
-              ),
-            );
-          },
+          (block) => applyBlockUpdate(id, block),
           (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
@@ -407,7 +370,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         });
       }
     },
-    [updateAttachment],
+    [updateAttachment, applyBlockUpdate],
   );
 
   const removeAttachment = useCallback((id: string) => {
@@ -418,10 +381,10 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     setAttachments([]);
   }, []);
 
-  const getContextPayload = useCallback((): ContextPayload[] => {
+  const getContextPayload = useCallback(() => {
     return attachments
       .filter((a) => a.status === "ready" && a.block)
-      .map((a) => a.block as unknown as ContextPayload);
+      .map((a) => a.block!);
   }, [attachments]);
 
   return {
