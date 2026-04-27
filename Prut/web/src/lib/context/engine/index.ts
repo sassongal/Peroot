@@ -135,30 +135,6 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
   return block;
 }
 
-export async function processBatch(inputs: ProcessAttachmentInput[]): Promise<ContextBlock[]> {
-  const limits = getContextLimits(inputs[0]?.tier ?? "free");
-  const results = await Promise.all(inputs.map(processAttachment));
-  // Enforce total token budget — truncate blocks that push us over the limit
-  let remaining = limits.total;
-  return results.map((block) => {
-    if (block.stage !== "ready") return block;
-    if (block.injected.tokenCount <= remaining) {
-      remaining -= block.injected.tokenCount;
-      return block;
-    }
-    // Mark as warning so the UI can inform the user this block was excluded
-    return {
-      ...block,
-      stage: "warning" as const,
-      error: {
-        stage: "inject" as const,
-        message: "חריגה ממכסת הטוקנים הכוללת — הקובץ לא יוזרק לפרומפט",
-        retryable: false,
-      },
-    };
-  });
-}
-
 function failedBlock(
   id: string,
   input: ProcessAttachmentInput,
