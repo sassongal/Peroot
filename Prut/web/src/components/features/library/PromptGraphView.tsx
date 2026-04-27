@@ -887,6 +887,7 @@ export function PromptGraphView({
             onNodeClick={handleNodeClick as any}
             onNodeDragEnd={handleNodeDragEnd as any}
             onNodeHover={handleNodeHover as any}
+            onLinkHover={handleLinkHover as any}
             onBackgroundClick={handleBackgroundClick as any}
             onEngineStop={handle3DEngineStop}
             backgroundColor="rgba(2,6,23,0)"

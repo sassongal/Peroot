@@ -31,7 +31,7 @@ export interface GraphNode {
 export interface GraphLink {
   source: string | GraphNode;
   target: string | GraphNode;
-  type: "category" | "tag" | "reference" | "template" | "similarity" | "capability" | "temporal";
+  type: "tag" | "reference" | "template" | "similarity" | "capability" | "temporal";
   strength?: number;
 }
 
