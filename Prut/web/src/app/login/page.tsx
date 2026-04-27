@@ -19,7 +19,10 @@ export default function LoginPage() {
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/6 blur-[160px] rounded-full" />
         <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-orange-600/4 blur-[120px] rounded-full" />
         <div className="absolute top-[40%] left-[-10%] w-[300px] h-[300px] bg-slate-500/3 blur-[100px] rounded-full" />
-        <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "url('/noise.svg')" }} />
+        <div
+          className="absolute inset-0 opacity-[0.035]"
+          style={{ backgroundImage: "url('/noise.svg')" }}
+        />
         <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/60" />
       </div>
 
@@ -28,9 +31,9 @@ export default function LoginPage() {
         <div className="flex justify-center mb-6 relative">
           <Image
             src="/Peroot-hero.webp"
-            alt="פרוט"
+            alt="פירוט"
             width={720}
-            height={392}
+            height={316}
             className="relative w-full max-w-[340px] h-auto"
             priority
           />

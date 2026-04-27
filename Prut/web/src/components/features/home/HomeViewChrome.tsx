@@ -9,41 +9,45 @@ import type { DiscoveryTip } from "@/hooks/useFeatureDiscovery";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 
 const FAQBubble = dynamic(
-  () => import("@/components/features/faq/FAQBubble").then(mod => mod.FAQBubble),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-full bg-(--glass-bg) w-12 h-12" /> }
+  () => import("@/components/features/faq/FAQBubble").then((mod) => mod.FAQBubble),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse rounded-full bg-(--glass-bg) w-12 h-12" />,
+  },
 );
 const FeatureDiscoveryTooltip = dynamic(
-  () => import("@/components/ui/FeatureDiscoveryTooltip").then(mod => mod.FeatureDiscoveryTooltip),
-  { ssr: false, loading: () => null }
+  () =>
+    import("@/components/ui/FeatureDiscoveryTooltip").then((mod) => mod.FeatureDiscoveryTooltip),
+  { ssr: false, loading: () => null },
 );
 const LoginRequiredModal = dynamic(
-  () => import("@/components/ui/LoginRequiredModal").then(mod => mod.LoginRequiredModal),
-  { ssr: false, loading: () => null }
+  () => import("@/components/ui/LoginRequiredModal").then((mod) => mod.LoginRequiredModal),
+  { ssr: false, loading: () => null },
 );
 const WhatIsThisModal = dynamic(
-  () => import("@/components/ui/WhatIsThisModal").then(mod => mod.WhatIsThisModal),
-  { ssr: false, loading: () => null }
+  () => import("@/components/ui/WhatIsThisModal").then((mod) => mod.WhatIsThisModal),
+  { ssr: false, loading: () => null },
 );
 const OnboardingOverlay = dynamic(
-  () => import("@/components/ui/OnboardingOverlay").then(mod => mod.OnboardingOverlay),
-  { ssr: false, loading: () => null }
+  () => import("@/components/ui/OnboardingOverlay").then((mod) => mod.OnboardingOverlay),
+  { ssr: false, loading: () => null },
 );
 const LoadingOverlay = dynamic(
-  () => import("@/components/ui/LoadingOverlay").then(mod => mod.LoadingOverlay),
-  { ssr: false, loading: () => null }
+  () => import("@/components/ui/LoadingOverlay").then((mod) => mod.LoadingOverlay),
+  { ssr: false, loading: () => null },
 );
-const StreamingProgress = dynamic(
-  () => import("@/components/ui/StreamingProgress"),
-  { ssr: false, loading: () => null }
-);
+const StreamingProgress = dynamic(() => import("@/components/ui/StreamingProgress"), {
+  ssr: false,
+  loading: () => null,
+});
 const DidYouKnowBanner = dynamic(
-  () => import("@/components/ui/DidYouKnowBanner").then(mod => mod.DidYouKnowBanner),
-  { ssr: false, loading: () => <div className="h-[48px]" /> }
+  () => import("@/components/ui/DidYouKnowBanner").then((mod) => mod.DidYouKnowBanner),
+  { ssr: false, loading: () => <div className="h-[48px]" /> },
 );
-const UpgradeNudge = dynamic(
-  () => import("@/components/features/prompt-improver/UpgradeNudge"),
-  { ssr: false, loading: () => null }
-);
+const UpgradeNudge = dynamic(() => import("@/components/features/prompt-improver/UpgradeNudge"), {
+  ssr: false,
+  loading: () => null,
+});
 
 /** Subset of useFeatureDiscovery() return value needed for rendering */
 interface FeatureDiscoveryRenderProps {
@@ -120,7 +124,10 @@ function HomeViewChromeInner({
   return (
     <main className="flex flex-col gap-6 animate-in fade-in duration-500 max-w-[1920px] 2xl:max-w-7xl mx-auto w-full pb-20 md:pb-0">
       {/* Background Gradient */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/12 dark:from-amber-500/8 via-red-500/4 dark:via-yellow-500/4 to-transparent blur-3xl -z-10" style={{ contain: 'layout style' }} />
+      <div
+        className="absolute top-0 inset-x-0 h-40 bg-linear-to-b from-amber-500/12 dark:from-amber-500/8 via-red-500/4 dark:via-yellow-500/4 to-transparent blur-3xl -z-10"
+        style={{ contain: "layout style" }}
+      />
 
       {/* FAQ: floating bubble on desktop only */}
       <div className="hidden md:block fixed bottom-6 right-6 z-50">
@@ -141,49 +148,49 @@ function HomeViewChromeInner({
       />
 
       {/* Mobile Bottom Tab Bar */}
-      <MobileTabBar
-        activeTab={viewMode}
-        onTabChange={onTabChange}
-      />
+      <MobileTabBar activeTab={viewMode} onTabChange={onTabChange} />
 
       {/* Fixed overlays (sidebar, mobile FAQ) */}
       {overlays}
 
       {/* Main Content (Full Width) */}
       <div className="flex flex-col gap-4 md:gap-6 max-w-4xl mx-auto w-full px-4 md:px-8 pt-4">
-           <div className="flex justify-center">
-             <div className="hero-logo-container">
-               <div className="hero-logo-ring hero-logo-ring-1" />
-               <div className="hero-logo-ring hero-logo-ring-2" />
-               <div className="hero-logo-ring hero-logo-ring-3" />
-               <NextImage
-                 src="/Peroot-hero.png"
-                 alt="Peroot"
-                 className="hero-logo-image"
-                 width={720}
-                 height={392}
-                 sizes="360px"
-                 priority
-               />
-             </div>
-           </div>
-
-           <button
-             onClick={onOpenWhatIsThis}
-             className="text-xs md:text-sm text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
-           >
-             מה עושים פה?
-           </button>
-
-           {/* Did You Know banner — reserve min-height to prevent CLS */}
-           {!hasCompletion && !isLoading && <div className="min-h-[48px]"><DidYouKnowBanner /></div>}
-
-           <LoadingOverlay isVisible={isLoading} phase={streamPhase} />
-           <StreamingProgress phase={streamPhase} />
-
-           {children}
-
+        <div className="flex justify-center">
+          <div className="hero-logo-container">
+            <div className="hero-logo-ring hero-logo-ring-1" />
+            <div className="hero-logo-ring hero-logo-ring-2" />
+            <div className="hero-logo-ring hero-logo-ring-3" />
+            <NextImage
+              src="/Peroot-hero.png"
+              alt="פירוט"
+              className="hero-logo-image"
+              width={720}
+              height={316}
+              sizes="(max-width: 768px) 80vw, 480px"
+              priority
+            />
+          </div>
         </div>
+
+        <button
+          onClick={onOpenWhatIsThis}
+          className="text-xs md:text-sm text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
+        >
+          מה עושים פה?
+        </button>
+
+        {/* Did You Know banner — reserve min-height to prevent CLS */}
+        {!hasCompletion && !isLoading && (
+          <div className="min-h-[48px]">
+            <DidYouKnowBanner />
+          </div>
+        )}
+
+        <LoadingOverlay isVisible={isLoading} phase={streamPhase} />
+        <StreamingProgress phase={streamPhase} />
+
+        {children}
+      </div>
 
       {/* Login Modal */}
       <LoginRequiredModal
@@ -198,7 +205,9 @@ function HomeViewChromeInner({
       {showUpgradeNudge && (
         <UpgradeNudge
           type="exhausted"
-          onUpgrade={() => { window.location.href = '/pricing'; }}
+          onUpgrade={() => {
+            window.location.href = "/pricing";
+          }}
           onDismiss={onDismissUpgradeNudge}
         />
       )}
@@ -207,9 +216,7 @@ function HomeViewChromeInner({
       <WhatIsThisModal isOpen={showWhatIsThis} onClose={onCloseWhatIsThis} />
 
       {/* Onboarding Overlay */}
-      {showOnboarding && !!user && (
-          <OnboardingOverlay onComplete={onOnboardingComplete} />
-      )}
+      {showOnboarding && !!user && <OnboardingOverlay onComplete={onOnboardingComplete} />}
     </main>
   );
 }
