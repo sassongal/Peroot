@@ -37,7 +37,7 @@ export function ImagePlatformSelector({
   return (
     <div className="flex flex-col gap-2" dir="rtl">
       <div className="text-[11px] text-(--text-muted) uppercase tracking-widest px-1">פלטפורמת תמונה</div>
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
         {IMAGE_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
           const isEmoji = platform.icon.length <= 2 && /\p{Emoji}/u.test(platform.icon);

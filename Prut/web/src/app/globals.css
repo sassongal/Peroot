@@ -1295,6 +1295,17 @@ a:focus-visible,
   display: none;
 }
 
+/* Suppress number input spinners (up/down arrows) globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Streaming cursor blink */
 @keyframes cursor-blink {
   0%, 50% { opacity: 1; }
@@ -1539,12 +1550,12 @@ a:focus-visible,
 /* Glass chip mode buttons — shimmer sweep, staggered per-chip */
 @keyframes chip-shimmer {
   0% { transform: translateX(200%); opacity: 0; }
-  25% { opacity: 1; }
-  75% { opacity: 1; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
   100% { transform: translateX(-200%); opacity: 0; }
 }
 .chip-shimmer {
-  animation: chip-shimmer 3s ease-in-out infinite;
+  animation: chip-shimmer 7s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .chip-shimmer { animation: none !important; }

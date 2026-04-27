@@ -36,7 +36,7 @@ export function VideoPlatformSelector({
           {selectedMeta.description}
         </p>
       )}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
         {VIDEO_PLATFORMS.map((platform) => {
           const isSelected = selectedPlatform === platform.id;
           const isEmoji = platform.icon.length <= 2 && /\p{Emoji}/u.test(platform.icon);

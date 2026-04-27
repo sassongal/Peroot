@@ -428,7 +428,7 @@ export function PromptInput({
         >
           <div className="bg-white/60 dark:bg-black/40 rounded-xl flex flex-col gap-4 relative">
             {/* Scroll wrapper: long prompts used to clip (overflow-hidden on layers). */}
-            <div className="max-h-[min(75vh,36rem)] overflow-y-auto min-h-0 rounded-t-xl overscroll-contain">
+            <div className="max-h-[min(75vh,36rem)] overflow-y-auto scrollbar-hide min-h-0 rounded-t-xl overscroll-contain">
               <div className="relative min-h-[120px] md:min-h-[160px]">
                 <div
                   aria-hidden

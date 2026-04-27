@@ -18,13 +18,13 @@ const ICONS: Record<IconName, LucideIcon> = {
 /** Modes shown in the UI but not yet available */
 const COMING_SOON_MODES = new Set<CapabilityMode>([]);
 
-/** Staggered shimmer delays so each chip animates independently */
+/** Staggered shimmer delays so each chip animates independently (7s cycle, evenly spread) */
 const SHIMMER_DELAYS: Record<CapabilityMode, string> = {
   [CapabilityMode.STANDARD]: "0s",
-  [CapabilityMode.DEEP_RESEARCH]: "0.55s",
-  [CapabilityMode.IMAGE_GENERATION]: "1.1s",
-  [CapabilityMode.AGENT_BUILDER]: "1.65s",
-  [CapabilityMode.VIDEO_GENERATION]: "2.2s",
+  [CapabilityMode.DEEP_RESEARCH]: "1.4s",
+  [CapabilityMode.IMAGE_GENERATION]: "2.8s",
+  [CapabilityMode.AGENT_BUILDER]: "4.2s",
+  [CapabilityMode.VIDEO_GENERATION]: "5.6s",
 };
 
 interface ChipColors {
@@ -35,29 +35,29 @@ interface ChipColors {
 
 const COLOR_CLASSES: Record<string, ChipColors> = {
   sky: {
-    base: "border-sky-500/40 bg-sky-500/[0.07] text-sky-600 dark:text-sky-300",
-    selected: "border-sky-500/70 bg-sky-500/15 text-sky-500 dark:text-sky-200",
-    shadow: "0 0 14px -2px rgba(14,165,233,0.5)",
+    base: "border-sky-300/50 bg-sky-100/20 text-sky-600 dark:border-sky-400/25 dark:bg-sky-300/[0.06] dark:text-sky-300",
+    selected: "border-sky-400/60 bg-sky-200/35 text-sky-700 dark:border-sky-400/50 dark:bg-sky-300/15 dark:text-sky-200",
+    shadow: "0 0 16px -3px rgba(56,189,248,0.35)",
   },
   emerald: {
-    base: "border-emerald-500/40 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300",
-    selected: "border-emerald-500/70 bg-emerald-500/15 text-emerald-500 dark:text-emerald-200",
-    shadow: "0 0 14px -2px rgba(16,185,129,0.5)",
+    base: "border-emerald-300/50 bg-emerald-100/20 text-emerald-600 dark:border-emerald-400/25 dark:bg-emerald-300/[0.06] dark:text-emerald-300",
+    selected: "border-emerald-400/60 bg-emerald-200/35 text-emerald-700 dark:border-emerald-400/50 dark:bg-emerald-300/15 dark:text-emerald-200",
+    shadow: "0 0 16px -3px rgba(52,211,153,0.35)",
   },
   purple: {
-    base: "border-purple-500/40 bg-purple-500/[0.07] text-purple-600 dark:text-purple-300",
-    selected: "border-purple-500/70 bg-purple-500/15 text-purple-500 dark:text-purple-200",
-    shadow: "0 0 14px -2px rgba(168,85,247,0.5)",
+    base: "border-violet-300/50 bg-violet-100/20 text-violet-600 dark:border-violet-400/25 dark:bg-violet-300/[0.06] dark:text-violet-300",
+    selected: "border-violet-400/60 bg-violet-200/35 text-violet-700 dark:border-violet-400/50 dark:bg-violet-300/15 dark:text-violet-200",
+    shadow: "0 0 16px -3px rgba(167,139,250,0.35)",
   },
   amber: {
-    base: "border-amber-500/40 bg-amber-500/[0.07] text-amber-600 dark:text-amber-300",
-    selected: "border-amber-500/70 bg-amber-500/15 text-amber-500 dark:text-amber-200",
-    shadow: "0 0 14px -2px rgba(245,158,11,0.5)",
+    base: "border-amber-300/50 bg-amber-100/20 text-amber-600 dark:border-amber-400/25 dark:bg-amber-300/[0.06] dark:text-amber-300",
+    selected: "border-amber-400/60 bg-amber-200/35 text-amber-700 dark:border-amber-400/50 dark:bg-amber-300/15 dark:text-amber-200",
+    shadow: "0 0 16px -3px rgba(251,191,36,0.35)",
   },
   rose: {
-    base: "border-rose-500/40 bg-rose-500/[0.07] text-rose-600 dark:text-rose-300",
-    selected: "border-rose-500/70 bg-rose-500/15 text-rose-500 dark:text-rose-200",
-    shadow: "0 0 14px -2px rgba(244,63,94,0.5)",
+    base: "border-pink-300/50 bg-pink-100/20 text-pink-600 dark:border-pink-400/25 dark:bg-pink-300/[0.06] dark:text-pink-300",
+    selected: "border-pink-400/60 bg-pink-200/35 text-pink-700 dark:border-pink-400/50 dark:bg-pink-300/15 dark:text-pink-200",
+    shadow: "0 0 16px -3px rgba(249,168,212,0.35)",
   },
 };
 
@@ -93,7 +93,7 @@ export function CapabilitySelector({
   return (
     <div
       className={cn(
-        "flex overflow-x-auto scrollbar-none snap-x snap-mandatory min-w-0",
+        "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory min-w-0",
         compact ? "gap-1.5" : "gap-2",
       )}
     >
@@ -152,7 +152,7 @@ export function CapabilitySelector({
             {!isComingSoon && !isLocked && (
               <span
                 aria-hidden
-                className="chip-shimmer pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/12 to-transparent"
+                className="chip-shimmer pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/8 to-transparent"
                 style={{ animationDelay: shimmerDelay }}
               />
             )}
