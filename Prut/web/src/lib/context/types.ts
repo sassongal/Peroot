@@ -32,18 +32,6 @@ export interface ContextAttachment {
   // -- URL-specific fields --
   url?: string;
 
-  // -- Extracted content --
-  extractedText?: string;
-  /** Alias kept for extraction pipeline compatibility */
-  extracted_text?: string;
-  /** Human-readable description (used for images) */
-  description?: string;
-  metadata?: Record<string, unknown>;
-  /** Estimated token count of extracted text */
-  tokenCount?: number;
-  /** Alias kept for extraction pipeline compatibility */
-  tokens?: number;
-
   // -- Error --
   error?: string;
 

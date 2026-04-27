@@ -110,8 +110,8 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
   const totalTokens = useMemo(
     () =>
       attachments.reduce((sum, a) => {
-        if (a.status === "ready" && a.tokenCount) {
-          return sum + a.tokenCount;
+        if (a.status === "ready" && a.block?.injected?.tokenCount) {
+          return sum + a.block.injected.tokenCount;
         }
         return sum;
       }, 0),
