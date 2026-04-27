@@ -4,7 +4,7 @@ import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-m
 import { cn } from "@/lib/utils";
 import { MessageSquare, Globe, Palette, Bot, Video, Lock, LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const ICONS: Record<IconName, LucideIcon> = {
@@ -18,26 +18,46 @@ const ICONS: Record<IconName, LucideIcon> = {
 /** Modes shown in the UI but not yet available */
 const COMING_SOON_MODES = new Set<CapabilityMode>([]);
 
-const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
+/** Staggered shimmer delays so each chip animates independently */
+const SHIMMER_DELAYS: Record<CapabilityMode, string> = {
+  [CapabilityMode.STANDARD]: "0s",
+  [CapabilityMode.DEEP_RESEARCH]: "0.55s",
+  [CapabilityMode.IMAGE_GENERATION]: "1.1s",
+  [CapabilityMode.AGENT_BUILDER]: "1.65s",
+  [CapabilityMode.VIDEO_GENERATION]: "2.2s",
+};
+
+interface ChipColors {
+  base: string;
+  selected: string;
+  shadow: string;
+}
+
+const COLOR_CLASSES: Record<string, ChipColors> = {
   sky: {
-    selected: "border-sky-500/50 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-    default: "hover:border-sky-500/30 hover:bg-sky-500/5",
+    base: "border-sky-500/40 bg-sky-500/[0.07] text-sky-600 dark:text-sky-300",
+    selected: "border-sky-500/70 bg-sky-500/15 text-sky-500 dark:text-sky-200",
+    shadow: "0 0 14px -2px rgba(14,165,233,0.5)",
   },
   emerald: {
-    selected: "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-    default: "hover:border-emerald-500/30 hover:bg-emerald-500/5",
+    base: "border-emerald-500/40 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300",
+    selected: "border-emerald-500/70 bg-emerald-500/15 text-emerald-500 dark:text-emerald-200",
+    shadow: "0 0 14px -2px rgba(16,185,129,0.5)",
   },
   purple: {
-    selected: "border-purple-500/50 bg-purple-500/10 text-purple-700 dark:text-purple-300",
-    default: "hover:border-purple-500/30 hover:bg-purple-500/5",
+    base: "border-purple-500/40 bg-purple-500/[0.07] text-purple-600 dark:text-purple-300",
+    selected: "border-purple-500/70 bg-purple-500/15 text-purple-500 dark:text-purple-200",
+    shadow: "0 0 14px -2px rgba(168,85,247,0.5)",
   },
   amber: {
-    selected: "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-    default: "hover:border-amber-500/30 hover:bg-amber-500/5",
+    base: "border-amber-500/40 bg-amber-500/[0.07] text-amber-600 dark:text-amber-300",
+    selected: "border-amber-500/70 bg-amber-500/15 text-amber-500 dark:text-amber-200",
+    shadow: "0 0 14px -2px rgba(245,158,11,0.5)",
   },
   rose: {
-    selected: "border-rose-500/50 bg-rose-500/10 text-rose-700 dark:text-rose-300",
-    default: "hover:border-rose-500/30 hover:bg-rose-500/5",
+    base: "border-rose-500/40 bg-rose-500/[0.07] text-rose-600 dark:text-rose-300",
+    selected: "border-rose-500/70 bg-rose-500/15 text-rose-500 dark:text-rose-200",
+    shadow: "0 0 14px -2px rgba(244,63,94,0.5)",
   },
 };
 
@@ -62,7 +82,6 @@ export function CapabilitySelector({
   const router = useRouter();
   const modes = Object.values(CapabilityMode);
 
-  // Guests are locked to STANDARD — reset if somehow they landed on another mode.
   useEffect(() => {
     if (isGuest && value !== CapabilityMode.STANDARD) {
       onChange(CapabilityMode.STANDARD);
@@ -71,137 +90,91 @@ export function CapabilitySelector({
 
   const isNonStandard = value !== CapabilityMode.STANDARD;
 
-  // Auto-expand when user has selected a non-standard mode so we never hide their selection.
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const showExpanded = isExpanded || isNonStandard;
-
-  const renderModeButton = (mode: CapabilityMode) => {
-    const config = CAPABILITY_CONFIGS[mode];
-    const Icon = ICONS[config.icon];
-    const isSelected = value === mode;
-    const colorClasses = COLOR_CLASSES[config.color];
-    const isComingSoon = COMING_SOON_MODES.has(mode);
-    const isLocked = isGuest && mode !== CapabilityMode.STANDARD && !isComingSoon;
-
-    return (
-      <button
-        key={mode}
-        type="button"
-        disabled={disabled || isComingSoon}
-        onClick={() => {
-          if (isComingSoon) {
-            toast("מנוע הסרטונים בדרך! נעדכן אותך כשיהיה מוכן", { icon: "🎬" });
-            return;
-          }
-          if (isLocked) {
-            toast("התחבר כדי להשתמש במצב זה", { icon: "🔒" });
-            router.push("/login");
-            return;
-          }
-          onChange(mode);
-        }}
-        className={cn(
-          "flex items-center gap-2 rounded-xl border transition-all duration-200 relative",
-          "hover:scale-[1.02] active:scale-[0.98] snap-start shrink-0",
-          compact ? "px-3 py-2" : "px-4 py-3",
-          isComingSoon
-            ? "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) cursor-not-allowed opacity-60"
-            : isLocked
-              ? cn(
-                  "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) opacity-70",
-                  "hover:opacity-90 hover:border-amber-500/30 cursor-pointer",
-                )
-              : isSelected
-                ? colorClasses.selected
-                : cn(
-                    "border-(--glass-border) bg-(--glass-bg) text-(--text-muted)",
-                    colorClasses.default,
-                  ),
-          disabled && !isComingSoon && !isLocked && "opacity-50 cursor-not-allowed",
-        )}
-        aria-pressed={isComingSoon || isLocked ? false : isSelected}
-        title={
-          isComingSoon ? "בקרוב" : isLocked ? "התחבר כדי להשתמש במצב זה" : config.descriptionHe
-        }
-      >
-        <Icon className={cn("shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
-        <span className={cn("font-medium", compact ? "text-sm" : "text-base")}>
-          {config.labelHe}
-        </span>
-        {isComingSoon && (
-          <span className="flex items-center gap-1 text-[10px] text-(--text-muted) bg-(--glass-bg) px-1.5 py-0.5 rounded-full">
-            <Lock className="w-3 h-3" />
-            בקרוב
-          </span>
-        )}
-        {isLocked && (
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-            <Lock className="w-3 h-3" />
-            התחבר
-          </span>
-        )}
-      </button>
-    );
-  };
-
   return (
     <div
       className={cn(
         "flex overflow-x-auto scrollbar-none snap-x snap-mandatory min-w-0",
-        compact ? "gap-1.5" : "gap-3",
+        compact ? "gap-1.5" : "gap-2",
       )}
     >
-      {showExpanded ? (
-        <>
-          {modes.map((mode) => renderModeButton(mode))}
-          {/* Collapse button - only show when user manually expanded (non-standard selection keeps it open without a toggle) */}
-          {!isNonStandard && (
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
-              className={cn(
-                "flex items-center rounded-xl border border-(--glass-border) bg-(--glass-bg) text-(--text-muted)",
-                "hover:border-black/20 dark:hover:border-white/20 hover:text-(--text-secondary) transition-all duration-200 shrink-0 snap-start",
-                compact ? "px-2.5 py-2 text-sm" : "px-3 py-3 text-base",
-              )}
-              title="סגור"
-              aria-label="סגור מצבים נוספים"
-            >
-              −
-            </button>
-          )}
-        </>
-      ) : (
-        <>
-          {renderModeButton(CapabilityMode.STANDARD)}
+      {modes.map((mode) => {
+        const config = CAPABILITY_CONFIGS[mode];
+        const Icon = ICONS[config.icon];
+        const isSelected = value === mode;
+        const colors = COLOR_CLASSES[config.color];
+        const isComingSoon = COMING_SOON_MODES.has(mode);
+        const isLocked = isGuest && mode !== CapabilityMode.STANDARD && !isComingSoon;
+        const shimmerDelay = SHIMMER_DELAYS[mode];
+
+        return (
           <button
+            key={mode}
             type="button"
-            onClick={() => setIsExpanded(true)}
+            disabled={disabled || isComingSoon}
+            onClick={() => {
+              if (isComingSoon) {
+                toast("מנוע הסרטונים בדרך! נעדכן אותך כשיהיה מוכן", { icon: "🎬" });
+                return;
+              }
+              if (isLocked) {
+                toast("התחבר כדי להשתמש במצב זה", { icon: "🔒" });
+                router.push("/login");
+                return;
+              }
+              onChange(mode);
+            }}
+            style={isSelected && !isComingSoon && !isLocked ? { boxShadow: colors.shadow } : undefined}
             className={cn(
-              "group relative flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-linear-to-l from-amber-500/10 via-orange-500/10 to-rose-500/10",
-              "text-amber-700 dark:text-amber-300 hover:border-amber-500/60 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-rose-500/20",
-              "transition-all duration-300 shrink-0 snap-start font-semibold overflow-hidden peroot-attention-btn",
-              compact ? "px-3 py-2 text-sm" : "px-4 py-3 text-base",
+              "relative flex items-center gap-2 rounded-full border overflow-hidden snap-start shrink-0",
+              "transition-all duration-200 cursor-pointer",
+              compact ? "px-3 py-1.5" : "px-4 py-2.5",
+              isComingSoon
+                ? "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) cursor-not-allowed opacity-50"
+                : isLocked
+                  ? "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) opacity-60 hover:opacity-80"
+                  : isSelected
+                    ? cn(colors.selected, "scale-105")
+                    : cn(
+                        colors.base,
+                        isNonStandard && "opacity-60 hover:opacity-90",
+                        "hover:scale-[1.03] active:scale-[0.97]",
+                      ),
+              disabled && !isComingSoon && !isLocked && "opacity-40 cursor-not-allowed",
             )}
-            title="הצג מצבים נוספים"
-            aria-label="הצג מצבים נוספים"
+            aria-pressed={isComingSoon || isLocked ? false : isSelected}
+            title={
+              isComingSoon ? "בקרוב" : isLocked ? "התחבר כדי להשתמש במצב זה" : config.descriptionHe
+            }
           >
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-amber-400/60 peroot-attention-ring"
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 -inset-x-8 peroot-attention-shimmer bg-linear-to-l from-transparent via-amber-300/40 to-transparent"
-            />
-            <span className="relative">עוד מצבים</span>
-            <span className="relative inline-block transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110 peroot-attention-sparkle">
-              ✦
+            {/* shimmer sweep — disabled via CSS when prefers-reduced-motion */}
+            {!isComingSoon && !isLocked && (
+              <span
+                aria-hidden
+                className="chip-shimmer pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/12 to-transparent"
+                style={{ animationDelay: shimmerDelay }}
+              />
+            )}
+
+            <Icon className={cn("relative shrink-0", compact ? "w-4 h-4" : "w-4 h-4")} />
+            <span className={cn("relative font-semibold", compact ? "text-sm" : "text-sm")}>
+              {config.labelHe}
             </span>
+
+            {isComingSoon && (
+              <span className="relative flex items-center gap-1 text-[10px] text-(--text-muted) bg-(--glass-bg) px-1.5 py-0.5 rounded-full">
+                <Lock className="w-3 h-3" />
+                בקרוב
+              </span>
+            )}
+            {isLocked && (
+              <span className="relative flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                <Lock className="w-3 h-3" />
+                התחבר
+              </span>
+            )}
           </button>
-        </>
-      )}
+        );
+      })}
     </div>
   );
 }

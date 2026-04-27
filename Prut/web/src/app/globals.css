@@ -1565,6 +1565,20 @@ a:focus-visible,
   }
 }
 
+/* Glass chip mode buttons — shimmer sweep, staggered per-chip */
+@keyframes chip-shimmer {
+  0% { transform: translateX(200%); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateX(-200%); opacity: 0; }
+}
+.chip-shimmer {
+  animation: chip-shimmer 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip-shimmer { animation: none !important; }
+}
+
 /* "עוד מצבים" attention animations — pulse ring, shimmer sweep, sparkle spin */
 @keyframes peroot-attention-pulse {
   0%, 100% {
