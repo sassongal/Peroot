@@ -12,6 +12,7 @@ export interface GraphNode {
   isTemplate?: boolean;
   isRecentlyUsed?: boolean;
   successRate?: number; // 0–1, from success_count / total
+  score?: number; // 0–100, from client-side scoreInput
   prompt?: PersonalPrompt;
   // Spatial grouping hint for force layout — categories pull related prompts together
   // without needing a visible hub node.
@@ -179,7 +180,11 @@ interface CandidateEdge {
   weight: number;
 }
 
-export function buildGraphData(prompts: PersonalPrompt[], favoriteIds: Set<string>): GraphData {
+export function buildGraphData(
+  prompts: PersonalPrompt[],
+  favoriteIds: Set<string>,
+  scoreMap?: Map<string, number>,
+): GraphData {
   const now = Date.now();
 
   const nodes: GraphNode[] = prompts.map((p) => {
@@ -202,6 +207,7 @@ export function buildGraphData(prompts: PersonalPrompt[], favoriteIds: Set<strin
       // same personal category cluster tightest; same-capability alone clusters
       // looser. Forces in the view use this for spatial grouping.
       groupId: `${p.capability_mode ?? CapabilityMode.STANDARD}:${p.personal_category || "כללי"}`,
+      score: scoreMap?.get(p.id),
     };
   });
 
