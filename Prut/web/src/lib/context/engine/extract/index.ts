@@ -1,18 +1,17 @@
-import { extractPdf } from './file-pdf';
-import { extractDocx, extractCsv, extractXlsx } from './file-office';
-import { extractText } from './file-text';
-import { extractUrl } from './url';
-import { extractImage } from './image';
+import { extractPdf } from "./file-pdf";
+import { extractDocx, extractCsv, extractXlsx } from "./file-office";
+import { extractText } from "./file-text";
+import { extractImage } from "./image";
 
 export const MAX_FILE_SIZE_MB = 10;
 
 export const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
-  pdf: 'pdf',
-  docx: 'docx',
-  txt: 'txt',
-  csv: 'csv',
-  xlsx: 'xlsx',
-  xls: 'xlsx',
+  pdf: "pdf",
+  docx: "docx",
+  txt: "txt",
+  csv: "csv",
+  xlsx: "xlsx",
+  xls: "xlsx",
 };
 
 export interface FileDispatchResult {
@@ -34,11 +33,16 @@ export async function dispatchFile(
   }
   const format = resolveFormat(mimeType, filename);
   switch (format) {
-    case 'pdf':  return extractPdf(buffer);
-    case 'docx': return extractDocx(buffer);
-    case 'txt':  return extractText(buffer);
-    case 'csv':  return extractCsv(buffer);
-    case 'xlsx': return extractXlsx(buffer);
+    case "pdf":
+      return extractPdf(buffer);
+    case "docx":
+      return extractDocx(buffer);
+    case "txt":
+      return extractText(buffer);
+    case "csv":
+      return extractCsv(buffer);
+    case "xlsx":
+      return extractXlsx(buffer);
     default:
       throw new Error(`Unsupported file format: ${format}`);
   }
@@ -46,17 +50,17 @@ export async function dispatchFile(
 
 function resolveFormat(mimeType: string, filename: string): string {
   const mimeMap: Record<string, string> = {
-    'application/pdf': 'pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-    'text/plain': 'txt',
-    'text/csv': 'csv',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-    'application/vnd.ms-excel': 'xlsx',
+    "application/pdf": "pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "text/plain": "txt",
+    "text/csv": "csv",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.ms-excel": "xlsx",
   };
   if (mimeMap[mimeType]) return mimeMap[mimeType];
-  const ext = filename.split('.').pop()?.toLowerCase();
+  const ext = filename.split(".").pop()?.toLowerCase();
   if (ext && SUPPORTED_FILE_EXTENSIONS[ext]) return SUPPORTED_FILE_EXTENSIONS[ext];
-  throw new Error(`Cannot resolve format for MIME "${mimeType}" / extension ".${ext ?? '?'}"`);
+  throw new Error(`Cannot resolve format for MIME "${mimeType}" / extension ".${ext ?? "?"}"`);
 }
 
-export { extractUrl, extractImage };
+export { extractImage };
