@@ -43,6 +43,7 @@ const CAPABILITY_LABELS: Record<CapabilityMode, string> = {
 };
 
 function hexToRgba(hex: string, alpha: number): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -294,6 +295,7 @@ export function PromptGraphView({
     (node: GraphNode) => {
       savePositions();
       if (node.type === "tag" || node.type === "library") {
+        setSelectedPrompt(null);
         setSelectedTagNode((prev) =>
           prev?.id === node.id
             ? null
@@ -339,6 +341,7 @@ export function PromptGraphView({
       if (clicked) {
         savePositions();
         if (clicked.type === "tag" || clicked.type === "library") {
+          setSelectedPrompt(null);
           setSelectedTagNode((prev) =>
             prev?.id === clicked.id
               ? null
