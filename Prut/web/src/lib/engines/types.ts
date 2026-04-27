@@ -1,4 +1,5 @@
 import { CapabilityMode } from "../capability-mode";
+import type { PlanTier } from "@/lib/context/engine/types";
 
 export type TargetModel = "chatgpt" | "claude" | "gemini" | "general";
 
@@ -40,6 +41,8 @@ export interface EngineInput {
   targetModel?: TargetModel;
   /** Force output language — overrides the engine's default (Hebrew) */
   outputLanguage?: "hebrew" | "english";
+  /** Tier for context token budget enforcement in renderInjection */
+  tier?: PlanTier;
   /** Context attachments (files, URLs, images) */
   context?: Array<{
     type: "file" | "url" | "image";

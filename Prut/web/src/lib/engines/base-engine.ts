@@ -13,6 +13,7 @@ import { EnhancedScorer, type EnhancedScore } from "./scoring/enhanced-scorer";
 import { memoryFlags } from "../memory/injection-flags";
 import { renderInjection } from "@/lib/context/engine/inject";
 import type { ContextBlock } from "@/lib/context/engine/types";
+import { getContextLimits } from "@/lib/plans";
 
 /**
  * Escape template variable patterns in user-supplied values to prevent
@@ -282,9 +283,9 @@ ${alignment}
     injectionStats.approxAddedTokens = Math.round((contextInjected.length - startLen) / 4);
 
     if (input.context && input.context.length > 0) {
-      // New unified Context Engine injection.
-      // input.context carries ContextBlock[] produced server-side by processAttachment.
-      const rendered = renderInjection(input.context as unknown as ContextBlock[]);
+      const tier = input.tier ?? "free";
+      const tokenBudget = getContextLimits(tier).total;
+      const rendered = renderInjection(input.context as unknown as ContextBlock[], tokenBudget);
       if (rendered) contextInjected += `\n\n${rendered}\n`;
     }
 
