@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       .select("plan_tier")
       .eq("id", user.id)
       .maybeSingle();
-    const tier: PlanTier = profile?.plan_tier === "pro" ? "pro" : "free";
+    const tier: PlanTier =
+      profile?.plan_tier === "pro" || profile?.plan_tier === "admin" ? "pro" : "free";
 
     const rl = await checkExtractionLimit(user.id, tier);
     if (!rl.allowed) {

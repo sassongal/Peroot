@@ -186,11 +186,12 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
               ),
             );
           },
-          (error) => updateAttachment(id, { status: "error", error }),
+          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
+          stage: "error",
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       } finally {
@@ -255,11 +256,12 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
               ),
             );
           },
-          (error) => updateAttachment(id, { status: "error", error }),
+          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
+          stage: "error",
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       } finally {
@@ -331,11 +333,12 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
               ),
             );
           },
-          (error) => updateAttachment(id, { status: "error", error }),
+          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
+          stage: "error",
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       } finally {
@@ -394,11 +397,12 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
               ),
             );
           },
-          (error) => updateAttachment(id, { status: "error", error }),
+          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
         );
       } catch (err) {
         updateAttachment(id, {
           status: "error",
+          stage: "error",
           error: err instanceof Error ? err.message : "שגיאה לא צפויה",
         });
       }
