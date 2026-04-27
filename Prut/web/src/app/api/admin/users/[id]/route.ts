@@ -303,6 +303,10 @@ export const POST = withAdminWrite(
             app_metadata: { is_banned: true },
           });
           if (metaErr) logger.error("[Admin User POST] ban app_metadata error:", metaErr);
+          // Invalidate all existing sessions immediately so the ban takes effect
+          // before the user's current JWT would naturally expire (~1 hour).
+          const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
+          if (signOutErr) logger.error("[Admin User POST] ban signOut error:", signOutErr);
           break;
         }
 

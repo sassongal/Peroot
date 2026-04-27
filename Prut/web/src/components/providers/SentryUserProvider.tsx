@@ -36,18 +36,18 @@ export function SentryUserProvider() {
 
     // Set initial context if already logged in
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) syncUserContext(data.user.id);
+      if (data.user) void syncUserContext(data.user.id).catch(() => {});
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        syncUserContext(session.user.id);
+        void syncUserContext(session.user.id).catch(() => {});
       } else {
         Sentry.setUser(null);
-        Sentry.setTag("plan", undefined as unknown as string);
-        Sentry.setTag("role", undefined as unknown as string);
+        Sentry.setTag("plan", null as unknown as string);
+        Sentry.setTag("role", null as unknown as string);
       }
     });
 

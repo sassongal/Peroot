@@ -75,6 +75,11 @@ export const POST = withAdminWrite(async (req, _ssrClient, adminUser) => {
           app_metadata: { is_banned: isBanning },
         });
         if (metaErr) logger.error(`[Admin Bulk] ${action} app_metadata failed for ${id}:`, metaErr);
+        // Revoke all sessions on ban so the JWT lag window is eliminated.
+        if (isBanning) {
+          const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
+          if (signOutErr) logger.error(`[Admin Bulk] ban signOut failed for ${id}:`, signOutErr);
+        }
       } else if (action === "grant_admin") {
         const { error } = await supabase.rpc("grant_admin_role", { target_user_id: id });
         if (error) throw error;

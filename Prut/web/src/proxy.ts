@@ -213,7 +213,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user) {
-    Sentry.setUser({ id: user.id, email: user.email });
+    Sentry.setUser({ id: user.id });
 
     // Enforce bans: app_metadata.is_banned is stamped server-side on ban/unban
     // so we can check it from the JWT without an extra DB round-trip.
