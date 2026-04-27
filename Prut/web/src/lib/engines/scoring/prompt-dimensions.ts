@@ -367,11 +367,11 @@ function scoreContext(
     matched.push("קהל יעד");
     pts += 4;
   } else missing.push("קהל יעד");
-  if (/מטרה|יעד|goal|objective|כדי\s+ל|so\s+that/i.test(t)) {
+  if (/מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i.test(t)) {
     matched.push("מטרה");
     pts += 3;
   } else missing.push("מטרה");
-  if (/רקע|הקשר|מצב|context|background|situation/i.test(t) || p.sections.has("context")) {
+  if (/רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i.test(t) || p.sections.has("context")) {
     matched.push("רקע");
     pts += 3;
   } else missing.push("רקע");
@@ -559,7 +559,7 @@ function scoreExamples(
   if (/דוגמה לפלט|output\s+example|expected\s+output|כמו\s+זה/i.test(t)) {
     return { key, maxPoints, score: 6, matched: ["דוגמאות פלט מפורשות"], missing: [] };
   }
-  if (/דוגמה|example|sample|template|תבנית/i.test(t)) {
+  if (/דוגמה|לדוגמה|למשל|example|sample|template|תבנית|e\.g\./i.test(t)) {
     return { key, maxPoints, score: 3, matched: ["אזכור דוגמה"], missing: ["בלוק דוגמה מלא"] };
   }
   return { key, maxPoints, score: 0, matched: [], missing: ["few-shot / דוגמה"] };
@@ -585,6 +585,9 @@ function scoreClarity(
     "נסה ל",
     "ייתכן",
     "אפשר",
+    "לא בטוח אם",
+    "יכול להיות ש",
+    "נראה לי ש",
     "maybe",
     "perhaps",
     "try to",
@@ -920,7 +923,7 @@ export function scoreEnhancedResearchDimensions(
   const p = parse(t);
   // research_sources (16 pts)
   const sourcePts = hasSourcesRequirement(p) ? 10 : 0;
-  const urlPts = /url|http|אתר|official|ראשוני|primary\s+source|peer[-\s]?reviewed/i.test(t)
+  const urlPts = /url|http|אתר|official|ראשוני|אקדמי|primary\s+source|peer[-\s]?reviewed|journal|doi|arxiv|published\s+(?:paper|study|research)/i.test(t)
     ? 6
     : 0;
   const researchSources: DimensionScoreChunk = {
