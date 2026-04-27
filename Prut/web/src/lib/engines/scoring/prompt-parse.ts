@@ -186,7 +186,18 @@ export function hasExampleBlock(p: Parsed): boolean {
 }
 
 export function hasSpecificityProperNouns(p: Parsed): boolean {
-  return /\b[A-Z][a-z]{2,}\b/.test(p.text) || /["""״].{2,}["""״]/.test(p.text);
+  // English capitalized proper nouns
+  if (/\b[A-Z][a-z]{2,}\b/.test(p.text)) return true;
+  // Quoted text (any script) — "פרויקט X", ״שם מוצר״, "Brand Name"
+  if (/["""״].{2,}["""״]/.test(p.text)) return true;
+  // Hebrew entity markers: חברת X, עיר X, מדינת X, פרוייקט X — possessive construct + Hebrew word
+  if (
+    /(?:חברת|מדינת|עיר|פרויקט|פרוייקט|מוצר|ארגון|פלטפורמת|שירות|אתר|אפליקציית)\s+[א-ת]{2,}/i.test(
+      p.text,
+    )
+  )
+    return true;
+  return false;
 }
 
 export function hasStructure(p: Parsed): boolean {
@@ -209,7 +220,7 @@ export function countBuzzwords(p: Parsed): number {
 }
 
 export function hasHedges(p: Parsed): boolean {
-  return /אולי|אפשר|אם\s+אפשר|בערך|נדמה|ייתכן|maybe|perhaps|possibly|probably|might|could\s+be|somewhat|kind\s+of|sort\s+of|i\s+think|i\s+guess|it\s+seems/i.test(
+  return /אולי|אפשר|אם\s+אפשר|בערך|נדמה|ייתכן|לא\s+בטוח\s+(?:אם|מה|איך|כיצד)|יכול\s+להיות\s+ש|נראה\s+לי\s+ש|maybe|perhaps|possibly|probably|might|could\s+be|somewhat|kind\s+of|sort\s+of|i\s+think|i\s+guess|it\s+seems/i.test(
     p.text,
   );
 }
@@ -253,19 +264,23 @@ export function hasContradictions(p: Parsed): boolean {
 
 export function hasSourcesRequirement(p: Parsed): boolean {
   if (p.sections.has("sources")) return true;
-  return /מקורות|צטט|ציטוט|cite|citation|url|reference|בבליוגרפי|אימות|fact.?check|verify|verification/i.test(
+  return /מקורות|צטט|ציטוט|מאמר|מחקר\s+(?:מדעי|אקדמי)|מחקרים|ביבליוגרפיה|cite|citation|url|reference|בבליוגרפי|אימות|fact.?check|verify|verification|journal|doi|arxiv|published\s+(?:paper|study|research)/i.test(
     p.text,
   );
 }
 
 export function hasMethodology(p: Parsed): boolean {
   if (p.sections.has("method")) return true;
-  return /שלבים|מתודולוגיה|framework|steps|method|גישה|תהליך|protocol|procedure/i.test(p.text);
+  return /שלבים|מתודולוגיה|שיטה|שיטות|צעדים|תוכנית\s+עבודה|סדר\s+פעולות|framework|steps|method|גישה|תהליך|protocol|procedure/i.test(
+    p.text,
+  );
 }
 
 export function hasConfidenceProtocol(p: Parsed): boolean {
   if (p.sections.has("confidence")) return true;
-  return /confidence|ביטחון|רמת\s+ודאות|ודאות|certainty|probability|likelihood/i.test(p.text);
+  return /confidence|ביטחון|רמת\s+ודאות|ודאות|ודאי|אמינות|דרג\s+(?:כל|לפי)|certainty|probability|likelihood|high\s+confidence|low\s+confidence|uncertain/i.test(
+    p.text,
+  );
 }
 
 export function hasFalsifiability(p: Parsed): boolean {

@@ -180,11 +180,21 @@ const DIMS: Record<string, DimensionDef> = {
         matched.push("audience");
         pts += 0.4;
       } else missing.push("target audience");
-      if (p.sections.has("goal") || /מטרה|יעד|goal|objective|כדי\s+ל|so\s+that/i.test(p.text)) {
+      if (
+        p.sections.has("goal") ||
+        /מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i.test(
+          p.text,
+        )
+      ) {
         matched.push("goal");
         pts += 0.3;
       } else missing.push("goal");
-      if (p.sections.has("context") || /רקע|הקשר|מצב|context|background|situation/i.test(p.text)) {
+      if (
+        p.sections.has("context") ||
+        /רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i.test(
+          p.text,
+        )
+      ) {
         matched.push("background");
         pts += 0.3;
       } else missing.push("background");
@@ -312,7 +322,10 @@ const DIMS: Record<string, DimensionDef> = {
     tip: 'הוסף בלוק דוגמה מופרד: "דוגמה: ..."',
     test: (p) => {
       if (hasExampleBlock(p)) return { ratio: 1, matched: ["example block"], missing: [] };
-      const hasMention = /דוגמה|example|sample|template|תבנית|כמו\s+ל|כמו\s+זה|למשל/i.test(p.text);
+      const hasMention =
+        /דוגמה|לדוגמה|לצורך\s+הדגמה|example|sample|template|תבנית|כמו\s+ל|כמו\s+זה|למשל/i.test(
+          p.text,
+        );
       if (hasMention)
         return { ratio: 0.4, matched: ["example mentioned"], missing: ["full example block"] };
       return { ratio: 0, matched: [], missing: ["concrete example"] };
@@ -430,7 +443,11 @@ const DIMS: Record<string, DimensionDef> = {
         matched.push("sources required");
         pts += 0.6;
       } else missing.push("sources requirement");
-      if (/url|http|אתר|official|ראשוני|primary\s+source|peer[-\s]?reviewed/i.test(p.text)) {
+      if (
+        /url|http|אתר|official|ראשוני|אקדמי|peer[-\s]?reviewed|primary\s+source|journal|doi|arxiv|published\s+(?:paper|study)/i.test(
+          p.text,
+        )
+      ) {
         matched.push("URL / primary sources");
         pts += 0.4;
       } else missing.push("URL / primary sources");
