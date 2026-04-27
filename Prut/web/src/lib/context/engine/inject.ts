@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { estimateTokens } from "@/lib/context/token-counter";
+import { compressToLimit } from "./compress";
 import { renderRoleBlock } from "./role-mapper";
 import type { ContextBlock, ContextBlockInjected } from "./types";
 
@@ -39,13 +40,55 @@ export function buildInjectedBlock(b: ContextBlock, index: number): ContextBlock
   return { header, body, tokenCount: estimateTokens(body) };
 }
 
-export function renderInjection(blocks: ContextBlock[]): string {
+function summaryFloorTokens(b: ContextBlock, index: number): number {
+  const icon = TYPE_ICON[b.type] ?? "📎";
+  const header = `[מקור #${index} — ${icon} ${b.display.documentType}: ${b.display.title}]`;
+  const lines: string[] = [header, `סוג: ${b.display.documentType}`];
+  if (b.display.keyFacts.length > 0) {
+    lines.push("נקודות מפתח:");
+    for (const fact of b.display.keyFacts) lines.push(`  • ${fact}`);
+  }
+  if (b.display.entities.length > 0) {
+    const ents = b.display.entities.map((e) => `${e.name} (${e.type})`).join(", ");
+    lines.push(`ישויות מרכזיות: ${ents}`);
+  }
+  lines.push(`תקציר: ${b.display.summary}`);
+  return estimateTokens(lines.join("\n"));
+}
+
+export function renderInjection(blocks: ContextBlock[], tokenBudget?: number): string {
   if (blocks.length === 0) return "";
+
+  let effectiveBlocks = blocks;
+  if (tokenBudget !== undefined) {
+    const totalTokens = blocks.reduce((s, b, i) => s + buildInjectedBlock(b, i + 1).tokenCount, 0);
+    if (totalTokens > tokenBudget) {
+      const floors = blocks.map((b, i) => summaryFloorTokens(b, i + 1));
+      const totalFloor = floors.reduce((s, f) => s + f, 0);
+      const rawBudget = Math.max(0, tokenBudget - totalFloor);
+      const rawWeights = blocks.map((b) => estimateTokens(b.display.rawText ?? ""));
+      const totalRawWeight = rawWeights.reduce((s, w) => s + w, 0);
+
+      effectiveBlocks = blocks.map((b, i) => {
+        const rawText = b.display.rawText ?? "";
+        if (!rawText || totalRawWeight === 0) return b;
+        const share = Math.floor(rawBudget * (rawWeights[i] / totalRawWeight));
+        if (share <= 0) {
+          return { ...b, display: { ...b.display, rawText: "" } };
+        }
+        const { text } = compressToLimit(rawText, share);
+        return { ...b, display: { ...b.display, rawText: text } };
+      });
+    }
+  }
+
   // Nonce makes the section delimiters unpredictable — hardens against prompt injection
   // attempts that try to close/escape the user-data section.
   const nonce = randomUUID().replace(/-/g, "").slice(0, 12);
-  const roleBlock = renderRoleBlock(blocks.map((b) => b.display.documentType));
-  const bodies = blocks.map((b, i) => buildInjectedBlock(b, i + 1).body).join("\n\n");
+  const roleBlock = renderRoleBlock(effectiveBlocks.map((b) => b.display.documentType));
+  const bodies = effectiveBlocks
+    .map((b, i) => buildInjectedBlock(b, i + 1).body)
+    .join("\n\n");
   return [
     roleBlock,
     "",
