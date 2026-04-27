@@ -275,13 +275,13 @@ export function hasImageSubject(p: Parsed): boolean {
 }
 
 export function hasImageStyle(p: Parsed): boolean {
-  return /סגנון|מינימליסטי|ריאליסטי|אנימציה|illustration|painting|photography|render|3d|cinematic|cartoon|anime|watercolor|oil|sketch|digital\s+art|סטודיו/i.test(
+  return /סגנון|מינימליסטי|ריאליסטי|אנימציה|צילום|ציור|איור|שמן|רישום|תלת\s*מימד|קולנועי|קריקטורה|מנגה|גרפי|מופשט|פסטל|סטודיו|illustration|painting|photography|render|3d|cinematic|cartoon|anime|watercolor|oil|sketch|digital\s+art/i.test(
     p.text
   );
 }
 
 export function hasImageComposition(p: Parsed): boolean {
-  return /קומפוזיציה|close[-\s]?up|wide\s+shot|portrait|landscape|low\s+angle|high\s+angle|symmetry|rule\s+of\s+thirds|מסגור|מרחק|זווית/i.test(
+  return /קומפוזיציה|מסגור|מרחק|זווית|תקריב|פריים|שדה\s*ראייה|ראש\s*כתפיים|מלא\s*גוף|עין\s*ציפור|זווית\s*נמוכה|זווית\s*גבוהה|close[-\s]?up|wide\s+shot|portrait|landscape|low\s+angle|high\s+angle|symmetry|rule\s+of\s+thirds/i.test(
     p.text
   );
 }
@@ -291,19 +291,19 @@ export function hasAspectRatio(p: Parsed): boolean {
 }
 
 export function hasImageLighting(p: Parsed): boolean {
-  return /תאורה|lighting|soft\s+light|hard\s+light|golden\s+hour|rim\s+light|rembrandt|ambient|rim|backlit|studio\s+light|קרני\s+שמש|שקיעה|זריחה/i.test(
+  return /תאורה|אור|שעת\s*זהב|בוקר|ערב|לילה|נר|אש|ניאון|שמש|ירח|חלון|פנס|להב|רך|חם|קר|דרמטי|עדין|קרני\s+שמש|שקיעה|זריחה|lighting|soft\s+light|hard\s+light|golden\s+hour|rim\s+light|rembrandt|ambient|backlit|studio\s+light/i.test(
     p.text
   );
 }
 
 export function hasImageColor(p: Parsed): boolean {
-  return /צבע|גוון|פלטה|palette|monochrom|pastel|vibrant|muted|warm|cool|black\s+and\s+white|זהב|כסף|אדום|כחול|ירוק/i.test(
+  return /צבע|גוון|פלטה|זהב|כסף|אדום|כחול|ירוק|צהוב|כתום|סגול|ורוד|חום|שחור|לבן|אפור|טורקיז|זהוב|כסוף|בורדו|זית|בז|חאקי|תכלת|לילך|מנטה|קורל|שזוף|כרם|אווירה|מצב\s*רוח|מונוכרום|palette|monochrom|pastel|vibrant|muted|warm|cool|black\s+and\s+white/i.test(
     p.text
   );
 }
 
 export function hasImageQuality(p: Parsed): boolean {
-  return /4k|8k|hd|hyper[-\s]?real|ultra\s+detailed|sharp|photorealistic|high\s+detail|רזולוציה|חדות|איכות\s+גבוהה/i.test(
+  return /רזולוציה|חדות|איכות\s*גבוהה|מפורט|עשיר|מקצועי|ריאליסטי\s*במיוחד|4k|8k|hd|hyper[-\s]?real|ultra\s+detailed|sharp|photorealistic|high\s+detail|masterpiece|best\s+quality/i.test(
     p.text
   );
 }
@@ -318,7 +318,7 @@ export function hasChainOfThought(p: Parsed): boolean {
 }
 
 export function hasVideoMotion(p: Parsed): boolean {
-  return /תנועה|מצלמה\s+נעה|pan|tilt|zoom|dolly|tracking|motion|movement|flying|running|drone|סלואו\s?מושן|slow\s?motion/i.test(
+  return /תנועה|מצלמה\s*נעה|מסתובב|מתקרב|מתרחק|עובר|זורם|מרחף|קופץ|רץ|עף|מתנדנד|גל|רוח|אש\s*בוערת|עשן|מים\s*זורמים|סלואו\s?מושן|טייס|pan|tilt|zoom|dolly|tracking|motion|movement|flying|running|drone|slow\s?motion/i.test(
     p.text
   );
 }
