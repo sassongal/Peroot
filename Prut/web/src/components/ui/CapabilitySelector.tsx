@@ -123,7 +123,9 @@ export function CapabilitySelector({
               }
               onChange(mode);
             }}
-            style={isSelected && !isComingSoon && !isLocked ? { boxShadow: colors.shadow } : undefined}
+            style={
+              isSelected && !isComingSoon && !isLocked ? { boxShadow: colors.shadow } : undefined
+            }
             className={cn(
               "relative flex items-center gap-2 rounded-full border overflow-hidden snap-start shrink-0",
               "transition-all duration-200 cursor-pointer",
@@ -155,8 +157,8 @@ export function CapabilitySelector({
               />
             )}
 
-            <Icon className={cn("relative shrink-0", compact ? "w-4 h-4" : "w-4 h-4")} />
-            <span className={cn("relative font-semibold", compact ? "text-sm" : "text-sm")}>
+            <Icon className={cn("relative shrink-0", compact ? "w-4 h-4" : "w-5 h-5")} />
+            <span className={cn("relative font-semibold", compact ? "text-sm" : "text-base")}>
               {config.labelHe}
             </span>
 
