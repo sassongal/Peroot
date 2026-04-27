@@ -29,6 +29,28 @@ describe('buildInjectedBlock', () => {
     expect(r.body).toContain('חברת אלפא');
     expect(r.tokenCount).toBeGreaterThan(0);
   });
+
+  it('appends rawText after separator when rawText is present', () => {
+    const b = block({ display: { ...block().display, rawText: 'full contract text here' } });
+    const r = buildInjectedBlock(b, 1);
+    expect(r.body).toContain('───');
+    expect(r.body).toContain('full contract text here');
+  });
+
+  it('does not append separator when rawText is empty or missing', () => {
+    const b = block({ display: { ...block().display, rawText: '' } });
+    expect(buildInjectedBlock(b, 1).body).not.toContain('───');
+    const b2 = block({ display: { ...block().display, rawText: undefined } });
+    expect(buildInjectedBlock(b2, 1).body).not.toContain('───');
+  });
+
+  it('includes rawText in tokenCount', () => {
+    const bNoRaw = block({ display: { ...block().display, rawText: '' } });
+    const bWithRaw = block({ display: { ...block().display, rawText: 'a'.repeat(400) } });
+    expect(buildInjectedBlock(bWithRaw, 1).tokenCount).toBeGreaterThan(
+      buildInjectedBlock(bNoRaw, 1).tokenCount,
+    );
+  });
 });
 
 describe('renderInjection', () => {

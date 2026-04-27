@@ -28,6 +28,10 @@ export function buildInjectedBlock(b: ContextBlock, index: number): ContextBlock
     lines.push(`ישויות מרכזיות: ${ents}`);
   }
   lines.push(`תקציר: ${b.display.summary}`);
+  if (b.display.rawText) {
+    lines.push("───");
+    lines.push(b.display.rawText);
+  }
   if (b.display.metadata.truncated) {
     lines.push("⚠️ הקובץ נחתך בגלל מגבלת תקציב בתוכנית החינמית");
   }
