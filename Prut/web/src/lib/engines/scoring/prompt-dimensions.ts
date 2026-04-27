@@ -302,8 +302,9 @@ function scoreRole(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "role
   const matched: string[] = [];
   const missing: string[] = [];
 
-  // Extended Hebrew persona patterns produced by the enhancement LLM
-  const extendedHebrewRole = /כ-\s*\S|בתפקיד\s+\S|בהיותי\s+\S|בכושר\s+\S|בתחום\s+\S|מתמחה\s+ב/i;
+  // Extended Hebrew persona patterns — "כסופר", "כמומחה", "כ-מנהל", "בתפקיד X", "מתמחה ב-X"
+  const extendedHebrewRole =
+    /כ-?\s*[א-ת]{3,}|בתפקיד\s+\S|בהיותי\s+\S|בכושר\s+\S|בתחום\s+\S|מתמחה\s+ב/i;
 
   // English "You are" guard: require a role-like noun to avoid "You are a table/book/example"
   const ENGLISH_ROLE_NOUN_RE =
@@ -323,7 +324,11 @@ function scoreRole(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "role
     }
     return { key, maxPoints, score: 7, matched, missing: ["שנות ניסיון או התמחות ספציפית"] };
   }
-  if (/מומחה|יועץ|אנליסט|expert|specialist|analyst/i.test(t)) {
+  if (
+    /מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|סופר|חוקר|מעצב|אסטרטג|יועצת|מנהלת|אדריכל|רופא|עורך[-\s]דין|מורה|מאמן|פסיכולוג|עיתונאי|expert|specialist|analyst|consultant|writer|engineer|developer|designer|researcher|strategist|marketer|advisor|manager|director|scientist|doctor|lawyer|architect|editor|teacher|coach|copywriter/i.test(
+      t,
+    )
+  ) {
     return { key, maxPoints, score: 4, matched: ["אזכור תפקיד"], missing: ['משפט "אתה …" מפורש'] };
   }
   missing.push("הגדרת תפקיד");
@@ -367,11 +372,20 @@ function scoreContext(
     matched.push("קהל יעד");
     pts += 4;
   } else missing.push("קהל יעד");
-  if (/מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i.test(t)) {
+  if (
+    /מטרה|יעד|לצורך|בכדי|כדי\s+[לש]|כך\s+ש|שיוכל|מטרתי|goal|objective|so\s+that|in\s+order\s+to/i.test(
+      t,
+    )
+  ) {
     matched.push("מטרה");
     pts += 3;
   } else missing.push("מטרה");
-  if (/רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i.test(t) || p.sections.has("context")) {
+  if (
+    /רקע|הקשר|מצב|אנחנו|הצוות|בחברה|בפרוייקט|בתחום|אני\s+(?:עובד|מנהל|מפתח|כותב|עוסק)|context|background|situation/i.test(
+      t,
+    ) ||
+    p.sections.has("context")
+  ) {
     matched.push("רקע");
     pts += 3;
   } else missing.push("רקע");
@@ -795,7 +809,7 @@ function scoreFramework(
   // Count structured ## section headers (the enhancement LLM uses these extensively)
   const sectionHeaders = (t.match(/^##\s+\S/gm) || []).length;
 
-  if (/תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה/.test(t)) {
+  if (/תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה|הקשר|הוראות|סגנון|מגבלות|פורמט|מבנה|דרישות/.test(t)) {
     matched.push("אלמנטי מסגרת בעברית");
   }
   // Chain-of-thought / structured reasoning instructions — bonus signal
@@ -923,9 +937,12 @@ export function scoreEnhancedResearchDimensions(
   const p = parse(t);
   // research_sources (16 pts)
   const sourcePts = hasSourcesRequirement(p) ? 10 : 0;
-  const urlPts = /url|http|אתר|official|ראשוני|אקדמי|primary\s+source|peer[-\s]?reviewed|journal|doi|arxiv|published\s+(?:paper|study|research)/i.test(t)
-    ? 6
-    : 0;
+  const urlPts =
+    /url|http|אתר|official|ראשוני|אקדמי|primary\s+source|peer[-\s]?reviewed|journal|doi|arxiv|published\s+(?:paper|study|research)/i.test(
+      t,
+    )
+      ? 6
+      : 0;
   const researchSources: DimensionScoreChunk = {
     key: "research_sources",
     maxPoints: 16,
