@@ -418,15 +418,27 @@ function scoreFormat(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "fo
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/פורמט|מבנה|טבלה|עמודות|רשימה|ממוספר|לא\s*ממוספר|bullet|markdown|json|csv|xml|html|תבנית|סעיפים|כותרות|פרקים|שורות\s+של|מחולק\s+ל/i.test(t)) {
+  if (
+    /פורמט|מבנה|טבלה|עמודות|רשימה|ממוספר|לא\s*ממוספר|bullet|markdown|json|csv|xml|html|תבנית|סעיפים|כותרות|פרקים|שורות\s+של|מחולק\s+ל/i.test(
+      t,
+    )
+  ) {
     matched.push("פורמט פלט");
     pts += 5;
   } else missing.push("פורמט פלט");
-  if (/אורך|מילים|שורות|פסקאות|תווים|words|sentences|paragraphs|characters|short|long|brief|concise|קצר|ארוך|תמציתי|מפורט|מורחב|תקציר/i.test(t)) {
+  if (
+    /אורך|מילים|שורות|פסקאות|תווים|words|sentences|paragraphs|characters|short|long|brief|concise|קצר|ארוך|תמציתי|מפורט|מורחב|תקציר/i.test(
+      t,
+    )
+  ) {
     matched.push("אורך");
     pts += 3;
   } else missing.push("אורך");
-  if (/כותרת|כותרות|סעיפים|חלקים|פרק|מבוא|תקציר|סיכום|מסקנות|header|section|intro|summary|conclusion|breakdown|חלק\s+ראשון|חלק\s+שני/i.test(t)) {
+  if (
+    /כותרת|כותרות|סעיפים|חלקים|פרק|מבוא|תקציר|סיכום|מסקנות|header|section|intro|summary|conclusion|breakdown|חלק\s+ראשון|חלק\s+שני/i.test(
+      t,
+    )
+  ) {
     matched.push("מבנה סעיפים");
     pts += 2;
   }
@@ -443,8 +455,12 @@ function scoreConstraints(
   const missing: string[] = [];
   if (
     p.sections.has("constraints") &&
-    /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i.test(t) &&
-    /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i.test(t)
+    /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i.test(
+      t,
+    ) &&
+    /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i.test(
+      t,
+    )
   ) {
     return {
       key,
@@ -459,15 +475,27 @@ function scoreConstraints(
   if (/##\s*(הנחיות|מגבלות|constraints|instructions|rules|הגבלות)/i.test(t)) {
     matched.push("כותרת מגבלות");
     pts += 4;
-  } else if (/אל\s+ת|אסור|ללא|בלי|אין\s+ל|שלא\s+|לא\s+לכלול|לא\s+להזכיר|הימנע|מבלי|ללא\s+שימוש|אין\s+להשתמש|don'?t|avoid|never|without|refrain|exclude/i.test(t)) {
+  } else if (
+    /אל\s+ת|אסור|ללא|בלי|אין\s+ל|שלא\s+|לא\s+לכלול|לא\s+להזכיר|הימנע|מבלי|ללא\s+שימוש|אין\s+להשתמש|don'?t|avoid|never|without|refrain|exclude/i.test(
+      t,
+    )
+  ) {
     matched.push("מגבלות שליליות");
     pts += 4;
   } else missing.push("מגבלות שליליות");
-  if (/טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i.test(t)) {
+  if (
+    /טון|סגנון|tone|style|formal|casual|מקצועי|ידידותי|רשמי|לא\s*רשמי|ישיר|עדין|חד|נחרץ|אישי|אובייקטיבי|נייטרלי|חם|קר/i.test(
+      t,
+    )
+  ) {
     matched.push("טון");
     pts += 3;
   } else missing.push("טון");
-  if (/שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i.test(t)) {
+  if (
+    /שפה|language|בעברית|באנגלית|בערבית|בצרפתית|בספרדית|בגרמנית|בלבד|רק\s+ב|only\s+in|in\s+(?:hebrew|english|arabic|french|spanish|german)/i.test(
+      t,
+    )
+  ) {
     matched.push("שפה");
     pts += 3;
   } else missing.push("שפה");
@@ -632,19 +660,27 @@ function scoreGroundedness(
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/צטט|מקור|ציין\s*מקור|הסתמך\s*על|בהתבסס\s*על|לפי|עיגן|בסס\s*על|cite|source|reference|based\s+on|according\s+to|grounded\s+in/i.test(t)) {
+  if (
+    /צטט|מקור|ציין\s*מקור|הסתמך\s*על|בהתבסס\s*על|לפי|עיגן|בסס\s*על|cite|source|reference|based\s+on|according\s+to|grounded\s+in/i.test(
+      t,
+    )
+  ) {
     matched.push("דרישת מקורות");
     pts += 3;
   } else missing.push("דרישת מקור / ציטוט");
   if (
-    /אם\s+לא\s+בטוח|אל\s+תמציא|לא\s+ידוע\s+לך|הודה\s+שאינ|ציין\s+אי.וודאות|במקרה\s+של\s+אי.ודאות|אם\s+אינ\s+בטוח|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|admit\s+(?:when\s+)?uncertain|say\s+(?:you\s+)?don'?t\s+know|acknowledge\s+(?:when\s+)?uncertain|flag\s+uncertainty/i.test(
+    /אם\s+לא\s+בטוח|אל\s+תמציא|לא\s+ידוע\s+לך|הודה\s+שאינ|ציין\s+אי.ודאות|במקרה\s+של\s+אי.ודאות|אם\s+אינ\s+בטוח|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|admit\s+(?:when\s+)?uncertain|say\s+(?:you\s+)?don'?t\s+know|acknowledge\s+(?:when\s+)?uncertain|flag\s+uncertainty/i.test(
       t,
     )
   ) {
     matched.push("רשות לאי-ודאות");
     pts += 3;
   } else missing.push("רשות לאי-ודאות");
-  if (/עובדות|עובדתי|מאומת|מוכח|אמיתי|fact|ground|אמת|verify|verified|factual|accurate|evidence.based|מבוסס\s+על\s+ראיות|בדוק/i.test(t)) {
+  if (
+    /עובדות|עובדתי|מאומת|מוכח|אמיתי|fact|ground|אמת|verify|verified|factual|accurate|evidence.based|מבוסס\s+על\s+ראיות|בדוק/i.test(
+      t,
+    )
+  ) {
     matched.push("עיגון בעובדות");
     pts += 2;
   } else missing.push("עיגון בעובדות");
@@ -657,11 +693,19 @@ function scoreSafety(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "sa
   const matched: string[] = [];
   const missing: string[] = [];
   let pts = 0;
-  if (/מחוץ\s+לתחום|לא\s+בתחום|גבול\s+תחום|מגבלת\s+תחום|out\s+of\s+scope|not\s+covered|beyond\s+scope|outside\s+my\s+(?:scope|expertise)/i.test(t)) {
+  if (
+    /מחוץ\s+לתחום|לא\s+בתחום|גבול\s+תחום|מגבלת\s+תחום|out\s+of\s+scope|not\s+covered|beyond\s+scope|outside\s+my\s+(?:scope|expertise)/i.test(
+      t,
+    )
+  ) {
     matched.push("גבול תחום");
     pts += 3;
   }
-  if (/מקרה\s+קצה|מקרי\s+קצה|חריג|יוצא\s+דופן|מצב\s+חריג|edge\s+case|exception|corner\s+case|fallback|אם\s+.*\s+אז|במקרה\s+ש|כאשר\s+.*\s+אז/i.test(t)) {
+  if (
+    /מקרה\s+קצה|מקרי\s+קצה|חריג|יוצא\s+דופן|מצב\s+חריג|edge\s+case|exception|corner\s+case|fallback|אם\s+.*\s+אז|במקרה\s+ש|כאשר\s+.*\s+אז/i.test(
+      t,
+    )
+  ) {
     matched.push("מקרי קצה");
     pts += 2;
   }
@@ -1082,7 +1126,7 @@ function scoreVisualSubject(t: string): DimensionScoreChunk {
     pts += 5;
   } else missing.push("פירוט מראה");
   if (
-    /car|building|landscape|forest|city|ocean|room|table|product|animal|flower|sky|mountain|tree|מכונית|בניין|נוף|יער|עיר|חדר|שולחן|מוצר|חיה|פרח|שמים|הר|עץ|ים|נחל|שדה|ביתן|רחוב|גשר|מדבר|אי/i.test(
+    /car|building|landscape|forest|city|ocean|room|table|product|animal|flower|sky|mountain|tree|מכונית|בניין|נוף|יער|עיר|חדר|שולחן|מוצר|חיה|פרח|שמים|הר|עץ|(?<![א-ת])ים(?![א-ת])|נחל|שדה|ביתן|רחוב|גשר|מדבר|(?<![א-ת])אי(?![א-ת])/i.test(
       t,
     )
   ) {
