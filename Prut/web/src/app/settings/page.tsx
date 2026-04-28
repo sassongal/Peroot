@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   LayoutDashboard,
   Brain,
+  Coins,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -30,6 +31,7 @@ import { SettingsBillingSection } from "@/components/settings/SettingsBillingSec
 import { SettingsDataSection } from "@/components/settings/SettingsDataSection";
 import { SettingsDangerSection } from "@/components/settings/SettingsDangerSection";
 import { SettingsMemorySection } from "@/components/settings/SettingsMemorySection";
+import { CreditsPanel } from "@/components/settings/CreditsPanel";
 import { resolveAvatarUrl, avatarFallbackUrl as uiAvatarsFallback } from "@/lib/user-avatar";
 
 export default function SettingsPage() {
@@ -369,6 +371,7 @@ export default function SettingsPage() {
     { id: "memory", label: "זיכרון AI", icon: Brain },
     { id: "referral", label: "הזמן חברים", icon: Gift },
     { id: "billing", label: "מנוי וחיוב", icon: CreditCard },
+    { id: "credits", label: "קרדיטים", icon: Coins },
     { id: "data", label: "נתונים ופרטיות", icon: Shield },
     { id: "danger", label: "אזור מסוכן", icon: AlertTriangle },
   ];
@@ -501,6 +504,7 @@ export default function SettingsPage() {
                 portalUrl={portalUrl}
               />
             )}
+            {activeSection === "credits" && <CreditsPanel />}
             {activeSection === "data" && (
               <SettingsDataSection
                 onExportData={handleExportData}
