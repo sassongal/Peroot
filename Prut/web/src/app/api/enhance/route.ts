@@ -197,8 +197,13 @@ export async function POST(req: Request) {
       const {
         data: { user },
       } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
-      if (bearerToken && user && user.aud !== "authenticated") {
-        return NextResponse.json({ error: "Invalid token audience" }, { status: 401 });
+      if (bearerToken) {
+        if (!user) {
+          return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
+        }
+        if (user.aud !== "authenticated") {
+          return NextResponse.json({ error: "Invalid token audience" }, { status: 401 });
+        }
       }
       userId = user?.id;
       if (bearerToken && userId) useServiceClient = true;

@@ -52,6 +52,13 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
     .trim()
     .slice(0, 100);
 
+  const ALLOWED_ENRICH_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  if (input.sourceType === "image" && input.imageBase64) {
+    if (!input.imageMimeType || !ALLOWED_ENRICH_MIMES.has(input.imageMimeType)) {
+      throw new Error(`Unsupported image MIME type for enrichment: ${input.imageMimeType ?? "none"}`);
+    }
+  }
+
   const nonce = randomUUID();
   const messages: ModelMessage[] = [
     {
