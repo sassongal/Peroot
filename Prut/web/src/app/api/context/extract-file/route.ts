@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 import { MAX_FILE_SIZE_MB, SUPPORTED_FILE_EXTENSIONS } from "@/lib/context/engine/extract";
 import type { PlanTier, ProcessingStage } from "@/lib/context/engine/types";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",

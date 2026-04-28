@@ -6,7 +6,7 @@ import { checkExtractionLimit } from "@/lib/context/engine/extraction-rate-limit
 import { logger } from "@/lib/logger";
 import type { PlanTier, ProcessingStage } from "@/lib/context/engine/types";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const enc = new TextEncoder();
 function sseEvent(data: unknown): Uint8Array {

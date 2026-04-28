@@ -72,17 +72,30 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
   ];
 
   const model = input.tier === "pro" ? ENRICH_MODEL_PRO : ENRICH_MODEL_FREE;
-  const result = await generateText({
-    model: google(model),
-    output: Output.object({ schema: enrichSchema }),
-    system,
-    messages,
-    temperature: 0.2,
-    abortSignal: AbortSignal.timeout(ENRICH_TIMEOUT_MS),
-  });
 
-  const output = result.output as z.infer<typeof enrichSchema> | null;
-  if (!output) throw new Error("Enrichment returned empty output");
+  async function runEnrich(modelId: string, timeoutMs: number) {
+    const result = await generateText({
+      model: google(modelId),
+      output: Output.object({ schema: enrichSchema }),
+      system,
+      messages,
+      temperature: 0.2,
+      abortSignal: AbortSignal.timeout(timeoutMs),
+    });
+    const out = result.output as z.infer<typeof enrichSchema> | null;
+    if (!out) throw new Error("Enrichment returned empty output");
+    return out;
+  }
+
+  let output: z.infer<typeof enrichSchema>;
+  try {
+    output = await runEnrich(model, ENRICH_TIMEOUT_MS);
+  } catch (primaryErr) {
+    if (model === ENRICH_MODEL_FREE) throw primaryErr;
+    // Pro model failed — retry with the lighter model at shorter timeout
+    output = await runEnrich(ENRICH_MODEL_FREE, 15_000);
+  }
+
   return {
     title: output.title,
     documentType: output.documentType as DocumentType,

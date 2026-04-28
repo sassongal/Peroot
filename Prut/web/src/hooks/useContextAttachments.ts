@@ -66,12 +66,17 @@ async function readSseStream(
   onStage: (stage: ProcessingStage) => void,
   onBlock: (block: unknown) => void,
   onError: (error: string) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const reader = response.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
 
+  // Cancel the reader when the external signal fires
+  signal?.addEventListener("abort", () => reader.cancel().catch(() => {}), { once: true });
+
   while (true) {
+    if (signal?.aborted) break;
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
@@ -89,6 +94,32 @@ async function readSseStream(
         // malformed SSE line — skip
       }
     }
+  }
+}
+
+const SSE_TIMEOUT_MS = 55_000;
+
+async function readSseStreamWithTimeout(
+  response: Response,
+  onStage: (stage: ProcessingStage) => void,
+  onBlock: (block: unknown) => void,
+  onError: (error: string) => void,
+): Promise<void> {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), SSE_TIMEOUT_MS);
+  try {
+    await readSseStream(response, onStage, onBlock, onError, abort.signal);
+    if (abort.signal.aborted) {
+      onError("העיבוד ארך יותר מדי — נסה שנית");
+    }
+  } catch {
+    if (abort.signal.aborted) {
+      onError("העיבוד ארך יותר מדי — נסה שנית");
+    } else {
+      onError("שגיאה לא צפויה בקריאת הנתונים");
+    }
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -184,7 +215,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           throw new Error((body as { error?: string }).error || "שגיאה בחילוץ הקובץ");
         }
 
-        await readSseStream(
+        await readSseStreamWithTimeout(
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
@@ -240,7 +271,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           throw new Error((body as { error?: string }).error || "שגיאה בחילוץ התוכן מהכתובת");
         }
 
-        await readSseStream(
+        await readSseStreamWithTimeout(
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
@@ -303,7 +334,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           throw new Error((body as { error?: string }).error || "שגיאה בעיבוד התמונה");
         }
 
-        await readSseStream(
+        await readSseStreamWithTimeout(
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
@@ -353,7 +384,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           throw new Error((body as { error?: string }).error || "שגיאה בחילוץ התוכן מהכתובת");
         }
 
-        await readSseStream(
+        await readSseStreamWithTimeout(
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
