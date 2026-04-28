@@ -16,6 +16,94 @@ const USAGE_RULES = [
 
 const TYPE_ICON: Record<string, string> = { file: "📄", url: "🌐", image: "🖼️" };
 
+const HE_STOP_WORDS = new Set([
+  "של", "את", "הוא", "היא", "הם", "הן", "אני", "אתה", "אנחנו", "אתם", "אתן",
+  "זה", "זו", "זאת", "אלה", "אלו", "כי", "אם", "לא", "כן", "רק",
+  "על", "עם", "מן", "אל", "בין", "תחת", "עד", "מה", "מי", "כל", "גם",
+  "כבר", "עוד", "יש", "אין", "היה", "הייתה", "כ", "ב", "ל", "ו", "ה",
+]);
+
+const EN_STOP_WORDS = new Set([
+  "the", "a", "an", "is", "in", "on", "at", "to", "for", "of", "and", "or",
+  "but", "not", "with", "by", "from", "as", "be", "this", "that", "it",
+  "are", "was", "were", "been", "have", "has", "had", "do", "does", "did",
+  "will", "would", "could", "should", "may", "might", "can", "what", "how",
+  "who", "which", "when", "where", "why", "its",
+]);
+
+const GAP_MARKER = "\n[...סעיפים רלוונטיים נבחרו מתוך המסמך...]\n";
+
+/**
+ * Select the most query-relevant paragraphs from rawText within charBudget.
+ * Pure JS, <1ms, no network call.
+ *
+ * No-op paths:
+ *   - userPrompt is empty → return rawText.slice(0, charBudget)
+ *   - rawText has ≤3 paragraphs → return rawText (too short to benefit from scoring)
+ */
+export function selectRelevantChunks(
+  rawText: string,
+  userPrompt: string,
+  charBudget: number,
+): string {
+  if (!userPrompt.trim()) return rawText.slice(0, charBudget);
+
+  const paragraphs = rawText.split(/\n\n+/).filter((p) => p.trim().length > 0);
+  if (paragraphs.length <= 3) return rawText.slice(0, charBudget);
+
+  const queryTokens = new Set(
+    userPrompt
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((t) => t.length > 1 && !HE_STOP_WORDS.has(t) && !EN_STOP_WORDS.has(t)),
+  );
+
+  if (queryTokens.size === 0) return rawText.slice(0, charBudget);
+
+  const scored = paragraphs.map((para, idx) => {
+    const words = para
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((t) => t.length > 1);
+    if (words.length === 0) return { idx, para, score: 0 };
+    const seen = new Set<string>();
+    let uniqueMatches = 0;
+    for (const w of words) {
+      if (queryTokens.has(w) && !seen.has(w)) {
+        uniqueMatches++;
+        seen.add(w);
+      }
+    }
+    return { idx, para, score: uniqueMatches / words.length };
+  });
+
+  const byScore = [...scored].sort((a, b) => b.score - a.score);
+  const selected: typeof scored = [];
+  let used = 0;
+  for (const item of byScore) {
+    const cost = item.para.length + 2;
+    if (used + cost > charBudget) {
+      if (selected.length === 0) {
+        selected.push({ ...item, para: item.para.slice(0, charBudget) });
+      }
+      break;
+    }
+    selected.push(item);
+    used += cost;
+  }
+
+  selected.sort((a, b) => a.idx - b.idx);
+
+  const result: string[] = [];
+  for (let i = 0; i < selected.length; i++) {
+    result.push(selected[i].para);
+    if (i < selected.length - 1 && selected[i + 1].idx !== selected[i].idx + 1) {
+      result.push(GAP_MARKER);
+    }
+  }
+  return result.join("\n\n");
+}
+
 export function buildInjectedBlock(b: ContextBlock, index: number): ContextBlockInjected {
   const icon = TYPE_ICON[b.type] ?? "📎";
   const header = `[מקור #${index} — ${icon} ${b.display.documentType}: ${b.display.title}]`;
@@ -56,7 +144,11 @@ function summaryFloorTokens(b: ContextBlock, index: number): number {
   return estimateTokens(lines.join("\n"));
 }
 
-export function renderInjection(blocks: ContextBlock[], tokenBudget?: number): string {
+export function renderInjection(
+  blocks: ContextBlock[],
+  tokenBudget?: number,
+  userPrompt?: string,
+): string {
   if (blocks.length === 0) return "";
 
   let effectiveBlocks = blocks;
@@ -76,14 +168,16 @@ export function renderInjection(blocks: ContextBlock[], tokenBudget?: number): s
         if (share <= 0) {
           return { ...b, display: { ...b.display, rawText: "" } };
         }
-        const { text } = compressToLimit(rawText, share);
+        const charBudget = share * 4;
+        const text =
+          userPrompt && userPrompt.trim()
+            ? selectRelevantChunks(rawText, userPrompt, charBudget)
+            : compressToLimit(rawText, share).text;
         return { ...b, display: { ...b.display, rawText: text } };
       });
     }
   }
 
-  // Nonce makes the section delimiters unpredictable — hardens against prompt injection
-  // attempts that try to close/escape the user-data section.
   const nonce = randomUUID().replace(/-/g, "").slice(0, 12);
   const roleBlock = renderRoleBlock(effectiveBlocks.map((b) => b.display.documentType));
   const bodies = effectiveBlocks.map((b, i) => buildInjectedBlock(b, i + 1).body).join("\n\n");
