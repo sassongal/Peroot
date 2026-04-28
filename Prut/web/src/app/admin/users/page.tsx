@@ -21,6 +21,7 @@ import { getApiPath } from "@/lib/api-path";
 import Link from "next/link";
 import { useI18n } from "@/context/I18nContext";
 import { logger } from "@/lib/logger";
+import { UserCreditsCell } from "@/components/admin/UserCreditsCell";
 
 interface User {
   id: string;
@@ -595,12 +596,10 @@ export default function UsersPage() {
 
                       {/* Credits */}
                       <td className="px-10 py-7">
-                        <div className="flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-amber-500" />
-                          <span className="text-lg font-black text-white">
-                            {user.credits_balance || 0}
-                          </span>
-                        </div>
+                        <UserCreditsCell
+                          tier={user.role === "admin" ? "admin" : user.plan_tier}
+                          balance={user.credits_balance}
+                        />
                       </td>
 
                       {/* Actions */}
