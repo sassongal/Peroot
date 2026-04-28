@@ -8,13 +8,29 @@ import type { ContextBlock, ProcessAttachmentInput, PipelineError, DocumentType 
 import { dispatchFile, extractImage } from "./extract";
 import { computeSha256, detectDocumentType } from "./classify";
 import { enrichContent } from "./enrich";
-import { compressToLimit } from "./compress";
+import { compressToLimit, type CompressionStrategy } from "./compress";
 import { buildInjectedBlock, renderInjection } from "./inject";
 import { getCachedBlock, putCachedBlock } from "./cache";
 
 export { renderInjection } from "./inject";
 export { selectEngineModel } from "@/lib/ai/context-router";
 export type { ContextBlock, ProcessAttachmentInput } from "./types";
+
+function getCompressionStrategy(detectedType: DocumentType): CompressionStrategy {
+  switch (detectedType) {
+    case "קוד מקור":
+      return "code";
+    case "טבלת נתונים":
+      return "data";
+    case "חוזה משפטי":
+    case "מסמך משפטי":
+      return "contract";
+    case "מאמר אקדמי":
+      return "academic";
+    default:
+      return "default";
+  }
+}
 
 export async function processAttachment(input: ProcessAttachmentInput): Promise<ContextBlock> {
   const limits = getContextLimits(input.tier);
@@ -102,7 +118,8 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
   }
 
   // 4. COMPRESS
-  const compressed = compressToLimit(rawText, limits.perAttachment);
+  const strategy = getCompressionStrategy(detectedType);
+  const compressed = compressToLimit(rawText, limits.perAttachment, strategy);
 
   // 5. STRUCTURE
   const block: ContextBlock = {
