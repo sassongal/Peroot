@@ -15,11 +15,11 @@ export async function GET() {
 
     if (error) {
       logger.error("[blog] DB error:", error);
-      return NextResponse.json({ error: "Database operation failed" }, { status: 500 });
+      return NextResponse.json({ error: "פעולת מסד הנתונים נכשלה", code: "db_error" }, { status: 500 });
     }
     return NextResponse.json(data);
   } catch (error) {
     logger.error("[blog] Error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   const promptId = request.nextUrl.searchParams.get("promptId");
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!prompt) {
-    return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
+    return NextResponse.json({ error: "הפרומפט לא נמצא", code: "not_found" }, { status: 404 });
   }
 
   const { data: versions, error } = await supabase
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     logger.error("[Versions] Failed to fetch:", error);
-    return NextResponse.json({ error: "Failed to fetch versions" }, { status: 500 });
+    return NextResponse.json({ error: "טעינת הגרסאות נכשלה", code: "load_failed" }, { status: 500 });
   }
 
   return NextResponse.json({ versions: versions || [] });
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   const { promptId, versionId } = await request.json();
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (!prompt) {
-    return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
+    return NextResponse.json({ error: "הפרומפט לא נמצא", code: "not_found" }, { status: 404 });
   }
 
   // Get the version content
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (!version) {
-    return NextResponse.json({ error: "Version not found" }, { status: 404 });
+    return NextResponse.json({ error: "הגרסה לא נמצאה", code: "not_found" }, { status: 404 });
   }
 
   // Update the prompt (this will trigger the version save for the current content)
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     logger.error("[Versions] Failed to restore:", error);
-    return NextResponse.json({ error: "Failed to restore version" }, { status: 500 });
+    return NextResponse.json({ error: "שחזור הגרסה נכשל", code: "restore_failed" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, content: version.content, title: version.title });

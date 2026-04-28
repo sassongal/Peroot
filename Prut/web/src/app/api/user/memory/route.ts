@@ -10,7 +10,7 @@ export async function GET() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
   const sb = createServiceClient();
   const { data, error } = await sb
@@ -36,17 +36,17 @@ export async function POST(req: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" }, { status: 400 });
   }
 
   const parsed = AddSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "קלט לא תקין", code: "invalid_input" }, { status: 400 });
 
   const sb = createServiceClient();
 
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     .eq("user_id", user.id);
 
   if ((count ?? 0) >= MAX_FACTS) {
-    return NextResponse.json({ error: "Maximum memory limit reached" }, { status: 400 });
+    return NextResponse.json({ error: "הגעת למגבלת הזיכרון", code: "limit_reached" }, { status: 400 });
   }
 
   const { data, error } = await sb
@@ -84,17 +84,17 @@ export async function DELETE(req: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" }, { status: 400 });
   }
 
   const parsed = DeleteSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "קלט לא תקין", code: "invalid_input" }, { status: 400 });
 
   const sb = createServiceClient();
   const { error } = await sb

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const queryClient = bearerToken ? createServiceClient() : supabase;
@@ -73,6 +73,6 @@ export async function GET(req: NextRequest) {
     );
   } catch (error) {
     logger.error("[me/quota] Error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

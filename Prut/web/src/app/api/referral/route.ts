@@ -10,7 +10,7 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   // Check for existing code
@@ -44,7 +44,7 @@ export async function GET() {
 
   if (error) {
     logger.error("[Referral] Failed to create code:", error);
-    return NextResponse.json({ error: "Failed to create referral code" }, { status: 500 });
+    return NextResponse.json({ error: "יצירת קוד ההפניה נכשלה", code: "create_failed" }, { status: 500 });
   }
 
   return NextResponse.json({
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   const rateLimit = await checkRateLimit(user.id, 'referral');
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
     if (error) {
       logger.error("[Referral] RPC error:", error);
-      return NextResponse.json({ error: "Failed to redeem code" }, { status: 500 });
+      return NextResponse.json({ error: "מימוש הקוד נכשל", code: "redeem_failed" }, { status: 500 });
     }
 
     if (!data?.success) {
@@ -93,10 +93,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, creditsAwarded: data.credits_awarded });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid code format" }, { status: 400 });
+      return NextResponse.json({ error: "פורמט הקוד אינו תקין", code: "invalid_code" }, { status: 400 });
     }
     logger.error("[Referral] Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }
 

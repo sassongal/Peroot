@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
     const { data: profile } = await supabase
       .from("profiles")

@@ -50,20 +50,20 @@ export async function GET(req: NextRequest) {
   const strategy = req.nextUrl.searchParams.get("strategy") || "mobile";
 
   if (!url) {
-    return NextResponse.json({ error: "Missing url parameter" }, { status: 400 });
+    return NextResponse.json({ error: "חסר פרמטר URL", code: "missing_url" }, { status: 400 });
   }
 
   // Validate URL format + block SSRF targets
   try {
     const parsed = new URL(url);
     if (!["http:", "https:"].includes(parsed.protocol)) {
-      return NextResponse.json({ error: "URL must use http or https" }, { status: 400 });
+      return NextResponse.json({ error: "הכתובת חייבת להתחיל ב-http או https", code: "invalid_url" }, { status: 400 });
     }
     if (isBlockedHost(parsed.hostname)) {
-      return NextResponse.json({ error: "URL host is not allowed" }, { status: 400 });
+      return NextResponse.json({ error: "הדומיין אינו מורשה", code: "host_not_allowed" }, { status: 400 });
     }
   } catch {
-    return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
+    return NextResponse.json({ error: "כתובת URL אינה תקינה", code: "invalid_url" }, { status: 400 });
   }
 
   // Validate strategy
@@ -76,14 +76,14 @@ export async function GET(req: NextRequest) {
   const rl = await checkRateLimit(`speed-test:${ip}`, "speedTest");
   if (!rl.success) {
     return NextResponse.json(
-      { error: "Too many requests. Try again in a minute." },
+      { error: "יותר מדי בקשות. נסה שוב בעוד דקה", code: "too_many_requests" },
       { status: 429 },
     );
   }
 
   const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "PageSpeed API key not configured" }, { status: 500 });
+    return NextResponse.json({ error: "מפתח PageSpeed לא מוגדר", code: "not_configured" }, { status: 500 });
   }
 
   try {
@@ -153,6 +153,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     Sentry.captureException(err, { tags: { route: "api/speed-test" } });
-    return NextResponse.json({ error: "Failed to fetch PageSpeed data" }, { status: 500 });
+    return NextResponse.json({ error: "טעינת נתוני PageSpeed נכשלה", code: "load_failed" }, { status: 500 });
   }
 }

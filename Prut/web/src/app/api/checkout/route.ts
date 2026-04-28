@@ -24,13 +24,13 @@ export async function POST(request: Request) {
 
     const rl = await checkRateLimit(`checkout:${user.id}`, "free");
     if (!rl.success) {
-      return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+      return NextResponse.json({ error: "יותר מדי ניסיונות. נסה שוב מאוחר יותר", code: "too_many_attempts" }, { status: 429 });
     }
 
     const body = await request.json();
     const parsed = CheckoutSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+      return NextResponse.json({ error: "בקשה לא תקינה", code: "invalid_request" }, { status: 400 });
     }
     const { variantId } = parsed.data;
 

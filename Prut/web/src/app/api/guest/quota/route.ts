@@ -26,6 +26,6 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (error) {
     logger.error("[guest/quota] Error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

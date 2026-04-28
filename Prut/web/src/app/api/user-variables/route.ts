@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const client = bearerToken ? createServiceClient() : supabase;
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       logger.error("[user-variables] GET error:", error);
-      return NextResponse.json({ error: "Failed to load variables" }, { status: 500 });
+      return NextResponse.json({ error: "טעינת המשתנים נכשלה", code: "load_failed" }, { status: 500 });
     }
 
     const variables: Record<string, string> = {};
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ variables });
   } catch (error) {
     logger.error("[user-variables] GET error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }
 
@@ -74,14 +74,14 @@ export async function POST(req: NextRequest) {
       : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     let body: Record<string, unknown>;
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      return NextResponse.json({ error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" }, { status: 400 });
     }
     const { variables } = body as { variables?: Record<string, string> };
 
@@ -117,12 +117,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       logger.error("[user-variables] POST error:", error);
-      return NextResponse.json({ error: "Failed to save variables" }, { status: 500 });
+      return NextResponse.json({ error: "שמירת המשתנים נכשלה", code: "save_failed" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("[user-variables] POST error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

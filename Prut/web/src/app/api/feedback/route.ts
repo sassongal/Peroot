@@ -36,11 +36,11 @@ export async function POST(req: Request) {
       insertClient = supabase;
     }
 
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
     const body = await req.json();
     const parsed = Schema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 422 });
+    if (!parsed.success) return NextResponse.json({ error: "קלט לא תקין", code: "invalid_input" }, { status: 422 });
 
     const { rating, input_text, enhanced_text, capability_mode } = parsed.data;
     const { error } = await insertClient.from("prompt_feedback").insert({
@@ -54,6 +54,6 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

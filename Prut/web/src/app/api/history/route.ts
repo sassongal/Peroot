@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const queryClient = bearerToken ? createServiceClient() : supabase;
@@ -74,18 +74,18 @@ export async function POST(req: NextRequest) {
       : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const rateLimit = await checkRateLimit(user.id, 'history');
     if (!rateLimit.success) {
-      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+      return NextResponse.json({ error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" }, { status: 429 });
     }
 
     const body = await req.json();
     const parsed = HistoryBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid request data", details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: "נתוני הבקשה אינם תקינים", code: "invalid_request", details: parsed.error.flatten() }, { status: 400 });
     }
     const { prompt, enhanced_prompt, tone, category, title, source } = parsed.data;
 
@@ -113,12 +113,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       logger.error("[history] DB error:", error);
-      return NextResponse.json({ error: "Failed to save history" }, { status: 500 });
+      return NextResponse.json({ error: "שמירת ההיסטוריה נכשלה", code: "save_failed" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
     logger.error("[history] Error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

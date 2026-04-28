@@ -11,13 +11,13 @@ export async function DELETE() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   // Rate limit: 5 attempts per hour (using guest tier)
   const rl = await checkRateLimit(`delete-account:${user.id}`, "guest");
   if (!rl.success) {
-    return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+    return NextResponse.json({ error: "יותר מדי ניסיונות", code: "too_many_attempts" }, { status: 429 });
   }
 
   try {
@@ -35,7 +35,7 @@ export async function DELETE() {
     if (failures.length > 0) {
       logger.error("[delete-account] Partial data deletion failures:", failures);
       return NextResponse.json(
-        { error: "Failed to delete all user data. Please try again or contact support." },
+        { error: "מחיקת כל הנתונים נכשלה. נסה שוב או פנה לתמיכה", code: "delete_failed" },
         { status: 500 }
       );
     }
@@ -51,7 +51,7 @@ export async function DELETE() {
     if (deleteError) {
       logger.error("[delete-account] Failed to delete auth user:", deleteError);
       return NextResponse.json(
-        { error: "Failed to delete account" },
+        { error: "מחיקת החשבון נכשלה", code: "delete_failed" },
         { status: 500 }
       );
     }
@@ -59,6 +59,6 @@ export async function DELETE() {
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("[delete-account] Unexpected error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

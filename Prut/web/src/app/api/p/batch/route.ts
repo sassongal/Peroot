@@ -19,12 +19,12 @@ export async function GET(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const rl = await checkRateLimit(user.id, "publicPromptFetch");
     if (!rl.success) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+      return NextResponse.json({ error: "יותר מדי בקשות", code: "too_many_requests" }, { status: 429 });
     }
 
     const raw = req.nextUrl.searchParams.get("ids") ?? "";
@@ -55,6 +55,6 @@ export async function GET(req: NextRequest) {
     );
   } catch (e) {
     logger.error("[api/p/batch] error:", e);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

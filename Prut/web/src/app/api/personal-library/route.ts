@@ -20,12 +20,12 @@ export async function GET(req: NextRequest) {
       : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const rateLimit = await checkRateLimit(user.id, 'personalLibrary');
     if (!rateLimit.success) {
-      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+      return NextResponse.json({ error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" }, { status: 429 });
     }
 
     // Use service role to bypass RLS for Bearer token requests
@@ -42,12 +42,12 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       logger.error("[personal-library] DB error:", error);
-      return NextResponse.json({ error: "Failed to load library" }, { status: 500 });
+      return NextResponse.json({ error: "טעינת הספרייה נכשלה", code: "load_failed" }, { status: 500 });
     }
 
     return NextResponse.json({ items: data || [] });
   } catch (error) {
     logger.error("[personal-library] Error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

@@ -7,9 +7,11 @@ import { checkRateLimit } from "@/lib/ratelimit";
 // GET: List user's folders
 export async function GET() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -20,7 +22,10 @@ export async function GET() {
 
   if (error) {
     logger.error("[Folders] Failed to list:", error);
-    return NextResponse.json({ error: "Failed to load folders" }, { status: 500 });
+    return NextResponse.json(
+      { error: "טעינת התיקיות נכשלה", code: "load_failed" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ folders: data || [] });
@@ -35,14 +40,19 @@ const CreateSchema = z.object({
 // POST: Create a folder
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
-  const rateLimit = await checkRateLimit(user.id, 'folders');
+  const rateLimit = await checkRateLimit(user.id, "folders");
   if (!rateLimit.success) {
-    return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+    return NextResponse.json(
+      { error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" },
+      { status: 429 },
+    );
   }
 
   try {
@@ -56,7 +66,10 @@ export async function POST(req: Request) {
       .eq("user_id", user.id);
 
     if ((count ?? 0) >= 50) {
-      return NextResponse.json({ error: "Maximum folder limit reached (50)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "הגעת למגבלת התיקיות (50)", code: "limit_reached" },
+        { status: 400 },
+      );
     }
 
     // Get max sort_index
@@ -84,16 +97,25 @@ export async function POST(req: Request) {
 
     if (error) {
       logger.error("[Folders] Failed to create:", error);
-      return NextResponse.json({ error: "Failed to create folder" }, { status: 500 });
+      return NextResponse.json(
+        { error: "יצירת התיקייה נכשלה", code: "create_failed" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ folder: data });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid folder data" }, { status: 400 });
+      return NextResponse.json(
+        { error: "נתוני התיקייה אינם תקינים", code: "invalid_request" },
+        { status: 400 },
+      );
     }
     logger.error("[Folders] Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "שגיאת שרת פנימית", code: "internal_error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -107,9 +129,11 @@ const UpdateSchema = z.object({
 // PATCH: Update a folder
 export async function PATCH(req: Request) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   try {
@@ -124,31 +148,45 @@ export async function PATCH(req: Request) {
 
     if (error) {
       logger.error("[Folders] Failed to update:", error);
-      return NextResponse.json({ error: "Failed to update folder" }, { status: 500 });
+      return NextResponse.json(
+        { error: "עדכון התיקייה נכשל", code: "update_failed" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid update data" }, { status: 400 });
+      return NextResponse.json(
+        { error: "נתוני העדכון אינם תקינים", code: "invalid_request" },
+        { status: 400 },
+      );
     }
     logger.error("[Folders] Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "שגיאת שרת פנימית", code: "internal_error" },
+      { status: 500 },
+    );
   }
 }
 
 // DELETE: Delete a folder (prompts inside move to "unfiled")
 export async function DELETE(req: Request) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-    return NextResponse.json({ error: "Valid folder ID required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "נדרש מזהה תיקייה תקין", code: "invalid_id" },
+      { status: 400 },
+    );
   }
 
   // folder_id column has ON DELETE SET NULL, so prompts will be unfiled automatically
@@ -160,7 +198,10 @@ export async function DELETE(req: Request) {
 
   if (error) {
     logger.error("[Folders] Failed to delete:", error);
-    return NextResponse.json({ error: "Failed to delete folder" }, { status: 500 });
+    return NextResponse.json(
+      { error: "מחיקת התיקייה נכשלה", code: "delete_failed" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ success: true });

@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
       : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const rateLimit = await checkRateLimit(user.id, 'me');
     if (!rateLimit.success) {
-      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+      return NextResponse.json({ error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" }, { status: 429 });
     }
 
     // When using Bearer token, RLS won't have auth.uid() set,
@@ -63,6 +63,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     logger.error("[me] Error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

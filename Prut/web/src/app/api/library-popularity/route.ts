@@ -19,7 +19,7 @@ export async function GET() {
 
   if (error) {
     logger.error("Failed to load popularity:", error);
-    return NextResponse.json({ error: "Failed to load popularity" }, { status: 500 });
+    return NextResponse.json({ error: "טעינת הנתונים נכשלה", code: "load_failed" }, { status: 500 });
   }
 
   const popularity = Object.fromEntries(
@@ -51,15 +51,15 @@ export async function POST(req: Request) {
 
     if (error) {
       logger.error("Failed to update popularity:", error);
-      return NextResponse.json({ error: "Failed to update popularity" }, { status: 500 });
+      return NextResponse.json({ error: "עדכון הנתונים נכשל", code: "update_failed" }, { status: 500 });
     }
 
     return NextResponse.json({ id, count: data ?? null });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid request data", details: error.issues }, { status: 400 });
+      return NextResponse.json({ error: "נתוני הבקשה אינם תקינים", code: "invalid_request", details: error.issues }, { status: 400 });
     }
     logger.error("Popularity API error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

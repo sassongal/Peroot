@@ -14,7 +14,7 @@ export async function POST() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const { error: updateError } = await supabase
@@ -44,7 +44,7 @@ export async function POST() {
   } catch (error) {
     logger.error("[Onboarding API] Error:", error);
     return NextResponse.json(
-        { error: "Failed to complete onboarding" }, 
+        { error: "השלמת ההכרות נכשלה", code: "onboarding_failed" }, 
         { status: 500 }
     );
   }

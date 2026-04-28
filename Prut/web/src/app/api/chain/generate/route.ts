@@ -164,14 +164,14 @@ export async function POST(req: Request) {
     } catch {
       logger.error("[chain/generate] JSON parse failed:", cleaned.slice(0, 300));
       if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
-      return NextResponse.json({ error: "AI returned invalid format. Please try again." }, { status: 500 });
+      return NextResponse.json({ error: "ה-AI החזיר תשובה בפורמט לא תקין. נסה שוב", code: "ai_invalid_format" }, { status: 500 });
     }
 
     // Validate structure — refund on incomplete
     if (typeof parsed.title !== "string" || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
       logger.error("[chain/generate] Incomplete chain:", JSON.stringify(parsed).slice(0, 300));
       if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
-      return NextResponse.json({ error: "Generated chain is incomplete. Please try again." }, { status: 500 });
+      return NextResponse.json({ error: "השרשרת שנוצרה אינה שלמה. נסה שוב", code: "ai_incomplete" }, { status: 500 });
     }
 
     const steps = normalizeSteps(parsed.steps);
@@ -192,14 +192,14 @@ export async function POST(req: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Validation error — no credits were charged yet
-      return NextResponse.json({ error: "Invalid request", details: error.issues }, { status: 400 });
+      return NextResponse.json({ error: "בקשה לא תקינה", code: "invalid_request", details: error.issues }, { status: 400 });
     }
     // AI or concurrency error after credits were charged — refund
     if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
     if (error instanceof ConcurrencyError) {
-      return NextResponse.json({ error: "Server is busy. Please try again in a moment." }, { status: 503 });
+      return NextResponse.json({ error: "השרת עמוס. נסה שוב בעוד רגע", code: "server_busy" }, { status: 503 });
     }
     logger.error("[chain/generate] Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

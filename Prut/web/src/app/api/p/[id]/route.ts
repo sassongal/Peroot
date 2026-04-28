@@ -22,17 +22,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const rl = await checkRateLimit(user.id, "publicPromptFetch");
     if (!rl.success) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+      return NextResponse.json({ error: "יותר מדי בקשות", code: "too_many_requests" }, { status: 429 });
     }
 
     const { id } = await params;
     if (!id || !/^[a-f0-9-]{8,64}$/i.test(id)) {
-      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+      return NextResponse.json({ error: "מזהה לא תקין", code: "invalid_id" }, { status: 400 });
     }
 
     const service = createServiceClient();
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .maybeSingle();
 
     if (error || !data) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ error: "לא נמצא", code: "not_found" }, { status: 404 });
     }
 
     return NextResponse.json(data, {
@@ -52,6 +52,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   } catch (e) {
     logger.error("[api/p/[id]] error:", e);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }

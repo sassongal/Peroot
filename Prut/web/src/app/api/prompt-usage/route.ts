@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401 });
+      return new Response(JSON.stringify({ error: "נדרשת התחברות", code: "auth_required" }), { status: 401 });
     }
 
     const { error } = await supabase.from("prompt_usage_events").insert({
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const key = searchParams.get("key");
   if (!key) {
-    return new Response(JSON.stringify({ error: "Missing key" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "חסר מפתח", code: "missing_key" }), { status: 400 });
   }
 
   try {

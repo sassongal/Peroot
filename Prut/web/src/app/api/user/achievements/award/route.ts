@@ -27,13 +27,13 @@ export async function POST(req: Request) {
         // Rate limit: 10 achievement awards per 24h
         const rl = await checkRateLimit(`achievement:${user.id}`, "free");
         if (!rl.success) {
-            return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+            return NextResponse.json({ error: "יותר מדי ניסיונות", code: "too_many_attempts" }, { status: 429 });
         }
 
         const body = await req.json();
         const parsed = AwardSchema.safeParse(body);
         if (!parsed.success) {
-            return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+            return NextResponse.json({ error: "בקשה לא תקינה", code: "invalid_request" }, { status: 400 });
         }
         const { achievementId } = parsed.data;
 

@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Not authenticated" },
+        { error: "נדרשת התחברות", code: "auth_required" },
         { status: 401 }
       );
     }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const rateLimit = await checkRateLimit(user.id, 'personalLibrary');
     if (!rateLimit.success) {
       return NextResponse.json(
-        { error: "Rate limit exceeded. Try again later." },
+        { error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" },
         { status: 429 }
       );
     }
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     if (!jsonMatch) {
       logger.warn("[suggest-category] Failed to parse model response:", text);
       return NextResponse.json(
-        { error: "Failed to parse suggestion" },
+        { error: "שגיאה בעיבוד ההצעה", code: "parse_failed" },
         { status: 500 }
       );
     }
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     } catch {
       logger.warn("[suggest-category] Invalid JSON from model:", jsonMatch[0]);
       return NextResponse.json(
-        { error: "Failed to parse suggestion" },
+        { error: "שגיאה בעיבוד ההצעה", code: "parse_failed" },
         { status: 500 }
       );
     }
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error("[suggest-category] Error:", error);
     return NextResponse.json(
-      { error: "Internal error" },
+      { error: "שגיאת שרת פנימית", code: "internal_error" },
       { status: 500 }
     );
   }

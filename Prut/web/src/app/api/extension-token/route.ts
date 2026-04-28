@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const limitResult = await checkRateLimit(identifier, "free");
     if (!limitResult.success) {
       return NextResponse.json(
-        { error: "Too many requests", retryAfter: limitResult.reset },
+        { error: "יותר מדי בקשות", code: "too_many_requests", retryAfter: limitResult.reset },
         { status: 429 }
       );
     }

@@ -28,7 +28,7 @@ export async function GET() {
 
     const rateLimit = await checkRateLimit(user.id, 'subscription');
     if (!rateLimit.success) {
-      return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
+      return NextResponse.json({ error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" }, { status: 429 });
     }
 
     const [{ data: subscription }, { data: profile }, { data: adminRole }] = await Promise.all([
@@ -68,6 +68,6 @@ export async function GET() {
     return NextResponse.json({ ...subscription, plan_tier: planTier }, { headers: cacheHeaders });
   } catch (error) {
     logger.error('[Subscription API] Error:', error);
-    return NextResponse.json({ error: "Failed to fetch subscription status" }, { status: 500 });
+    return NextResponse.json({ error: "טעינת סטטוס המנוי נכשלה", code: "load_failed" }, { status: 500 });
   }
 }

@@ -15,7 +15,7 @@ export async function GET() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -27,7 +27,7 @@ export async function GET() {
 
     if (error) {
       logger.error("[me/credits/ledger] query error:", error);
-      return NextResponse.json({ error: "Failed to load ledger" }, { status: 500 });
+      return NextResponse.json({ error: "טעינת ההיסטוריה נכשלה", code: "load_failed" }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -36,6 +36,6 @@ export async function GET() {
     );
   } catch (err) {
     logger.error("[me/credits/ledger] error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
   }
 }
