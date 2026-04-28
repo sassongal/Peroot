@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Star, Pin, FolderOpen, Sparkles, Plus } from "lucide-react";
+import { BookOpen, Star, Network, FolderOpen, Sparkles, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 import type { PersonalLibrarySharedState } from "@/components/views/personal-library/types";
@@ -8,19 +8,20 @@ import type { PersonalLibrarySharedState } from "@/components/views/personal-lib
 interface LibraryBottomNavProps {
   shared: Pick<
     PersonalLibrarySharedState,
-    "effectiveFolder" | "folderCounts" | "setFolder" | "setSidebarOpen"
+    "effectiveFolder" | "folderCounts" | "setFolder" | "setSidebarOpen" | "localViewType" | "setLocalViewType"
   >;
 }
 
-const NAV_TABS = [
+const FOLDER_TABS = [
   { key: "all", label: "הכל", icon: BookOpen },
   { key: "favorites", label: "מועדפים", icon: Star },
-  { key: "pinned", label: "מוצמדים", icon: Pin },
 ] as const;
 
 export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
-  const { effectiveFolder, folderCounts, setFolder, setSidebarOpen } = shared;
+  const { effectiveFolder, folderCounts, setFolder, setSidebarOpen, localViewType, setLocalViewType } = shared;
   const { setViewMode } = useLibraryContext();
+
+  const isGraphActive = localViewType === "graph";
 
   return (
     <nav
@@ -30,18 +31,23 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
       dir="rtl"
     >
       <div className="flex items-center justify-around px-2 h-14">
-        {/* Left tabs: הכל + מועדפים */}
-        {NAV_TABS.slice(0, 2).map(({ key, label, icon: Icon }) => {
-          const isActive = effectiveFolder === key;
+        {/* Folder tabs: הכל + מועדפים */}
+        {FOLDER_TABS.map(({ key, label, icon: Icon }) => {
+          const isActive = effectiveFolder === key && !isGraphActive;
           const count = folderCounts[key] ?? 0;
           return (
             <button
               key={key}
-              onClick={() => setFolder(key)}
+              onClick={() => {
+                setFolder(key);
+                setLocalViewType("grid");
+              }}
               aria-pressed={isActive}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg transition-colors",
-                isActive ? "text-amber-500 dark:text-amber-400 bg-amber-500/8 rounded-xl" : "text-(--text-muted)",
+                "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-xl transition-colors",
+                isActive
+                  ? "text-amber-500 dark:text-amber-400 bg-amber-500/8"
+                  : "text-(--text-muted) hover:text-(--text-secondary)",
               )}
             >
               <div className="relative">
@@ -73,40 +79,28 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
           />
         </button>
 
-        {/* Right tabs: מוצמדים + תיקיות */}
-        {NAV_TABS.slice(2).map(({ key, label, icon: Icon }) => {
-          const isActive = effectiveFolder === key;
-          const count = folderCounts[key] ?? 0;
-          return (
-            <button
-              key={key}
-              onClick={() => setFolder(key)}
-              aria-pressed={isActive}
-              className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg transition-colors",
-                isActive ? "text-amber-500 dark:text-amber-400 bg-amber-500/8 rounded-xl" : "text-(--text-muted)",
-              )}
-            >
-              <div className="relative">
-                <Icon className="w-5 h-5" />
-                {count > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 text-[9px] tabular-nums bg-amber-500 text-black font-bold rounded-full px-1 min-w-[14px] text-center leading-[14px]">
-                    {count > 99 ? "99+" : count}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-medium">{label}</span>
-              {isActive && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-amber-500" />
-              )}
-            </button>
-          );
-        })}
+        {/* Graph view tab */}
+        <button
+          onClick={() => setLocalViewType(isGraphActive ? "grid" : "graph")}
+          aria-pressed={isGraphActive}
+          className={cn(
+            "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 rounded-xl transition-colors",
+            isGraphActive
+              ? "text-violet-400 bg-violet-500/10"
+              : "text-(--text-muted) hover:text-(--text-secondary)",
+          )}
+        >
+          <Network className="w-5 h-5" />
+          <span className="text-[10px] font-medium">גרף</span>
+          {isGraphActive && (
+            <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-violet-400" />
+          )}
+        </button>
 
         {/* Folders button — opens sidebar drawer */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center text-(--text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg transition-colors"
+          className="flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center text-(--text-muted) hover:text-(--text-secondary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-xl transition-colors"
           aria-label="פתח תיקיות"
         >
           <FolderOpen className="w-5 h-5" />
