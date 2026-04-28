@@ -49,9 +49,10 @@ describe("platform prompt accuracy (source guardrails)", () => {
     expect(f).not.toMatch(/deprecated in v7/i);
   });
 
-  it("skills/video/runway.ts: matches Gen-4 clip length guidance", () => {
+  it("skills/video/runway.ts: reflects Gen-4.5 duration and audio guidance", () => {
     const f = src("lib", "engines", "skills", "video", "runway.ts");
-    expect(f).toMatch(/5s or 10s|5 or 10/);
+    expect(f).toMatch(/60s/);
+    expect(f).toMatch(/Audio block/i);
     expect(f).not.toMatch(/~4s unless using multi-scene Director/i);
     expect(f).not.toMatch(/4-16s/);
   });

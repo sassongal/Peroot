@@ -3,7 +3,7 @@
  * and builds UX summary (Hebrew strengths / weaknesses without tip duplication).
  */
 
-import { CapabilityMode } from '../../capability-mode';
+import { CapabilityMode } from "../../capability-mode";
 import {
   scoreEnhancedTextDimensions,
   scoreEnhancedVisualDimensions,
@@ -16,7 +16,7 @@ import {
   detectPromptDomain,
   type DimensionScoreChunk,
   type PromptDomain,
-} from './prompt-dimensions';
+} from "./prompt-dimensions";
 
 export interface DimensionResult {
   dimension: string;
@@ -29,7 +29,7 @@ export interface DimensionResult {
 
 export interface EnhancedScore {
   total: number;
-  level: 'low' | 'medium' | 'high' | 'elite';
+  level: "low" | "medium" | "high" | "elite";
   label: string;
   breakdown: DimensionResult[];
   topWeaknesses: string[];
@@ -50,51 +50,57 @@ function chunksToBreakdown(chunks: DimensionScoreChunk[]): DimensionResult[] {
 }
 
 export class EnhancedScorer {
-  static score(text: string, mode: CapabilityMode = CapabilityMode.STANDARD, domain?: PromptDomain): EnhancedScore {
-    const trimmed = (text || '').trim();
+  static score(
+    text: string,
+    mode: CapabilityMode = CapabilityMode.STANDARD,
+    domain?: PromptDomain,
+    platform?: string,
+  ): EnhancedScore {
+    const trimmed = (text || "").trim();
     const detectedDomain = domain ?? detectPromptDomain(trimmed);
     if (!trimmed) {
       return {
         total: 0,
-        level: 'low',
-        label: 'ריק',
+        level: "low",
+        label: "ריק",
         breakdown: [],
-        topWeaknesses: ['הפרומפט ריק — התחל לתאר את המטרה'],
-        estimatedImpact: 'הוסף משפט או שניים על מה להשיג',
+        topWeaknesses: ["הפרומפט ריק — התחל לתאר את המטרה"],
+        estimatedImpact: "הוסף משפט או שניים על מה להשיג",
         strengths: [],
         domain: detectedDomain,
       };
     }
 
     const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
-    const isVisual = mode === CapabilityMode.IMAGE_GENERATION || mode === CapabilityMode.VIDEO_GENERATION;
+    const isVisual =
+      mode === CapabilityMode.IMAGE_GENERATION || mode === CapabilityMode.VIDEO_GENERATION;
     const isVideo = mode === CapabilityMode.VIDEO_GENERATION;
 
     const chunks = isVisual
-      ? scoreEnhancedVisualDimensions(trimmed, wordCount, isVideo)
+      ? scoreEnhancedVisualDimensions(trimmed, wordCount, isVideo, platform)
       : mode === CapabilityMode.DEEP_RESEARCH
-      ? scoreEnhancedResearchDimensions(trimmed, wordCount)
-      : mode === CapabilityMode.AGENT_BUILDER
-      ? scoreEnhancedAgentDimensions(trimmed, wordCount)
-      : scoreEnhancedTextDimensions(trimmed, wordCount, detectedDomain);
+        ? scoreEnhancedResearchDimensions(trimmed, wordCount)
+        : mode === CapabilityMode.AGENT_BUILDER
+          ? scoreEnhancedAgentDimensions(trimmed, wordCount)
+          : scoreEnhancedTextDimensions(trimmed, wordCount, detectedDomain);
 
     const breakdown = chunksToBreakdown(chunks);
     const total = enhancedTotalFromChunks(chunks);
 
-    let level: EnhancedScore['level'];
+    let level: EnhancedScore["level"];
     let label: string;
     if (total >= 90) {
-      level = 'elite';
-      label = 'מצוין';
+      level = "elite";
+      label = "מצוין";
     } else if (total >= 70) {
-      level = 'high';
-      label = 'חזק';
+      level = "high";
+      label = "חזק";
     } else if (total >= 40) {
-      level = 'medium';
-      label = 'בינוני';
+      level = "medium";
+      label = "בינוני";
     } else {
-      level = 'low';
-      label = 'חלש';
+      level = "low";
+      label = "חלש";
     }
 
     const withGap = chunks.map((c) => ({
@@ -122,7 +128,7 @@ export class EnhancedScorer {
       const lab = DIMENSION_LABEL_HE[topGap.chunk.key] ?? topGap.chunk.key;
       estimatedImpact = `השפעה גבוהה: ${lab} — עד +${topGap.gap} נקודות אם תסגור את הפער`;
     } else {
-      estimatedImpact = 'הפרומפט מאוזן — שיפורים קטנים בלבד';
+      estimatedImpact = "הפרומפט מאוזן — שיפורים קטנים בלבד";
     }
 
     return {
@@ -141,24 +147,28 @@ export class EnhancedScorer {
 function generateImprovementPlan(score: EnhancedScore): string[] {
   const suggestions: string[] = [];
   const sortedByGap = [...score.breakdown]
-    .map((d) => ({ ...d, gap: d.maxScore - d.score, pct: d.maxScore > 0 ? d.score / d.maxScore : 0 }))
+    .map((d) => ({
+      ...d,
+      gap: d.maxScore - d.score,
+      pct: d.maxScore > 0 ? d.score / d.maxScore : 0,
+    }))
     .filter((d) => d.gap >= 3)
     .sort((a, b) => b.gap - a.gap)
     .slice(0, 5);
 
   for (const d of sortedByGap) {
-    const missingStr = d.missing.length > 0 ? ` (חסר: ${d.missing[0]})` : '';
+    const missingStr = d.missing.length > 0 ? ` (חסר: ${d.missing[0]})` : "";
     suggestions.push(`${d.tip}${missingStr} — פוטנציאל +${d.gap} נקודות`);
   }
 
-  const clarityDim = score.breakdown.find((d) => d.dimension === 'clarity');
-  if (clarityDim && clarityDim.missing.some((m) => m.includes('hedge'))) {
+  const clarityDim = score.breakdown.find((d) => d.dimension === "clarity");
+  if (clarityDim && clarityDim.missing.some((m) => m.includes("hedge"))) {
     suggestions.unshift('הסר מילים מחמיקות ("אולי", "נסה", "ייתכן") והשתמש בצורת ציווי ברורה');
   }
 
-  const frameworkDim = score.breakdown.find((d) => d.dimension === 'framework');
+  const frameworkDim = score.breakdown.find((d) => d.dimension === "framework");
   if (frameworkDim && frameworkDim.score < 4) {
-    suggestions.push('הוסף מסגרת: כותרות בעברית (תפקיד, משימה, פורמט) או מילות CO-STAR באנגלית');
+    suggestions.push("הוסף מסגרת: כותרות בעברית (תפקיד, משימה, פורמט) או מילות CO-STAR באנגלית");
   }
 
   return suggestions.slice(0, 5);

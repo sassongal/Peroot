@@ -225,6 +225,8 @@ export const DIMENSION_LABEL_HE: Record<string, string> = {
   policies: "מדיניות",
   failure_modes: "מצבי כשל",
   enforceability: "אכיפות",
+  // Audio dimension (video platforms with native audio)
+  audio: "שמע",
 };
 
 /**
@@ -276,6 +278,7 @@ const TIPS: Record<string, string> = {
   falsifiability: 'ציין "מה היה מפריך את הטענה"',
   info_gaps: 'דרוש סעיף "פערי מידע" — מה לא ניתן לאמת',
   // Agent tips
+  audio: "הוסף בלוק Audio עם Dialogue, SFX, Ambient ו-Music",
   tools: "פרט כלים/APIs שהסוכן רשאי לקרוא",
   boundaries: "הגדר מה אסור לסוכן ומתי להעביר לאנושי",
   inputs_outputs: "הגדר schema מדויק לקלט ולפלט",
@@ -1312,6 +1315,43 @@ function scoreVisualQuality(t: string): DimensionScoreChunk {
   return { key, maxPoints, tipHe, score: Math.min(10, pts), matched, missing };
 }
 
+const AUDIO_CAPABLE_PLATFORMS = new Set(["runway", "veo", "kling"]);
+
+function scoreVideoAudio(t: string): DimensionScoreChunk {
+  const key = "audio";
+  const maxPoints = 15;
+  const tipHe = TIPS.audio;
+  const matched: string[] = [];
+  const missing: string[] = [];
+  let pts = 0;
+
+  if (!/^Audio\s*:/im.test(t)) {
+    missing.push("בלוק Audio");
+    return { key, maxPoints, tipHe, score: 0, matched, missing };
+  }
+  matched.push("בלוק Audio");
+  pts += 5;
+
+  if (/^Dialogue\s*:/im.test(t)) {
+    matched.push("Dialogue");
+    pts += 2;
+  } else missing.push("Dialogue");
+  if (/^SFX\s*:/im.test(t)) {
+    matched.push("SFX");
+    pts += 4;
+  } else missing.push("SFX");
+  if (/^Ambient\s*:/im.test(t)) {
+    matched.push("Ambient");
+    pts += 2;
+  } else missing.push("Ambient");
+  if (/^Music\s*:/im.test(t)) {
+    matched.push("Music");
+    pts += 2;
+  } else missing.push("Music");
+
+  return { key, maxPoints, tipHe, score: Math.min(15, pts), matched, missing };
+}
+
 function scoreVisualMotion(t: string): DimensionScoreChunk {
   const key = "motion";
   const maxPoints = 13;
@@ -1350,6 +1390,7 @@ export function scoreEnhancedVisualDimensions(
   t: string,
   wordCount: number,
   isVideo: boolean,
+  platform?: string,
 ): DimensionScoreChunk[] {
   const dims = [
     scoreVisualLength(wordCount),
@@ -1361,6 +1402,9 @@ export function scoreEnhancedVisualDimensions(
     scoreVisualQuality(t),
   ];
   if (isVideo) dims.push(scoreVisualMotion(t));
+  if (isVideo && platform && AUDIO_CAPABLE_PLATFORMS.has(platform)) {
+    dims.push(scoreVideoAudio(t));
+  }
   return dims;
 }
 

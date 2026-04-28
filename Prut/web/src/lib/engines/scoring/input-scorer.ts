@@ -103,13 +103,18 @@ export interface InputScore {
   domain: PromptDomain;
 }
 
-function buildSharedChunkMap(mode: CapabilityMode, p: Parsed): Map<string, DimensionScoreChunk> {
+function buildSharedChunkMap(
+  mode: CapabilityMode,
+  p: Parsed,
+  platform?: string,
+): Map<string, DimensionScoreChunk> {
   const m = new Map<string, DimensionScoreChunk>();
   if (mode === CapabilityMode.IMAGE_GENERATION || mode === CapabilityMode.VIDEO_GENERATION) {
     scoreEnhancedVisualDimensions(
       p.text,
       p.wordCount,
       mode === CapabilityMode.VIDEO_GENERATION,
+      platform,
     ).forEach((c) => m.set(c.key, c));
   } else if (mode === CapabilityMode.DEEP_RESEARCH) {
     scoreEnhancedResearchDimensions(p.text, p.wordCount).forEach((c) => m.set(c.key, c));
@@ -909,7 +914,7 @@ function levelOf(total: number, wordCount: number): { level: InputScoreLevel; la
 // Main entry
 // ---------------------------------------------------------------------------
 
-export function scoreInput(text: string, mode: CapabilityMode): InputScore {
+export function scoreInput(text: string, mode: CapabilityMode, platform?: string): InputScore {
   const p = parse(text);
   const profile = PROFILES[mode] ?? PROFILES[CapabilityMode.STANDARD];
 
@@ -949,7 +954,7 @@ export function scoreInput(text: string, mode: CapabilityMode): InputScore {
   const breakdown: InputScoreDimension[] = [];
   let totalRaw = 0;
   const strengths: string[] = [];
-  const chunkMap = buildSharedChunkMap(mode, p);
+  const chunkMap = buildSharedChunkMap(mode, p, platform);
 
   for (const { key, weight } of profile) {
     const dim = DIMS[key];

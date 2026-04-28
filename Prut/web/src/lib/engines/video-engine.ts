@@ -1,4 +1,3 @@
-
 import { BaseEngine, escapeTemplateVars, sanitizeModeParams } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
@@ -11,7 +10,10 @@ import {
   getRefinementExamplesBlock,
 } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
-import { extractVisualPreferences, buildVisualPreferencesBlock } from "./visual-preference-extractor";
+import {
+  extractVisualPreferences,
+  buildVisualPreferencesBlock,
+} from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
 import { getPlatformOverrides } from "./platform-overrides";
 
@@ -133,69 +135,26 @@ Concept: "רקדנית בלט"
 Output: Slow tracking shot, medium close-up, a professional ballerina in a flowing white tutu rises from plie to full releve en pointe, her weight shifting smoothly upward through her core as arms sweep from bras bas through first to fifth position overhead. Her back arches slightly as momentum carries her into a controlled single pirouette, spotted head whipping around, then she settles gracefully back to fifth. Shot on ARRI Alexa, 85mm lens, dramatic side lighting from a single spotlight creating long shadows across the polished wooden stage floor, cinematic film grain.
 Negative: morphing, distorted hands, extra limbs, flickering, jittery movement.`,
 
-  sora: `PLATFORM: Sora 2
-Sora 2 is OpenAI's latest video model with strong cinematography literacy, native dialogue generation, and character reference support. It responds best to structured prompts with clear sections.
-
-PROMPT STRUCTURE:
-[Scene description - characters, costumes, setting, weather in plain language]
-
-Cinematography:
-Camera shot: [framing/angle, lens spec, motion]
-Mood: [tone]
-
-Actions:
-- [Specific beat 1 with timing]
-- [Specific beat 2 with timing]
-- [Specific beat 3 with timing]
-
-Dialogue:
-[Speaker]: "[Natural, concise lines]"
+  wan: `PLATFORM: Wan 2.6 (Alibaba)
+Wan 2.6 is Alibaba's open-source video model with strong cinematic control. It responds best to a continuous prose structure: Subject + movement + scene + camera + lighting + atmosphere, followed by an artifact-specific Negative prompt line.
 
 Rules:
-- Use professional cinematography terminology: framing (wide, medium close-up), angle (eye level, low), motion (slow push-in, handheld), lens (35mm, 50mm, anamorphic 2.0x).
-- One clear camera move per shot. One clear subject action per shot.
-- Actions as verb-driven beats with timing: "takes four steps to window, pauses, pulls curtain in final second" NOT "walks across room."
-- Lighting/color: Name 3-5 color anchors. "Soft window light, warm lamp fill, cool rim from hallway; palette: amber, cream, walnut brown" NOT "brightly lit."
-- Style: "anamorphic 2.0x lens, shallow DOF, volumetric light" NOT "cinematic look."
-- Dialogue: Keep separate from visual prose. Label speakers consistently. Limit to match clip length (4s = 1-2 exchanges; 8s+ = more).
-- Audio: Describe diegetic (story-world) sounds — "The hum of espresso machines and murmur of voices." Single atmospheric cue for silent shots.
-- Duration: Specify as "Duration: Xs" to match the OpenAI Video API \`seconds\` value for the chosen model. Official docs highlight 16s and 20s generations for full beats; shorter clips (e.g. 8s) are common in examples — always align with the API/UI enum the user has access to.
-- Resolution: 1280×720 or 720×1280 (sora-2). Use sora-2-pro for 1920×1080 or 1080×1920 exports (per OpenAI video generation docs).
-- Character references: Describe subjects with 5+ unique visual identifiers for consistency.
-- Video extension: Can extend up to 6 times, max 120s total.
-- Sora understands real-world physics — describe interactions with gravity, fluids, fabric.
-- More detail = more control. Shorter prompts = more model creativity.
-- Sweet spot: 50-150 words.
-- Output in English only.
-
-Character reference system: use [character_ref: ID] to maintain consistency across scenes. Each character needs 5+ unique visual identifiers: hair, build, clothing, accessories, distinguishing features.
+- Lead with subject description including identity, clothing, and starting state.
+- Describe movement with precise verbs and physical endpoints (not "walks" but "strides forward three steps then stops").
+- Camera: specify move + angle + speed (e.g. "slow push-in from medium to close-up").
+- Lighting: describe source, direction, quality, and color temperature.
+- Atmosphere: one closing line naming the emotional/cinematic tone.
+- Always end with a Negative prompt line targeting artifacts for your scene type: morphing, flickering, warping, temporal artifacts, distortion. Tailor to the subject (fabric: "dress warping"; faces: "face morphing"; vehicles: "bodywork judder").
+- Do NOT use Midjourney-style tags or Stable Diffusion keyword lists.
+- 50-150 words. Output in English only.
 
 CRITICAL — OUTPUT PURITY:
-Your output MUST start directly with the prompt content. NEVER output:
-- "Here's a video prompt for Sora:"
-- "I've created/crafted a prompt:"
-- "To generate this video, use:"
-- "כתוב את הפרומפט הבא:"
-- "הנה הפרומפט:"
-- Any explanation, meta-commentary, or preamble
-Start IMMEDIATELY with the cinematic description.
-Your output must start with the scene description section directly. First word must describe the scene. Example: "A", "In", "The", "Inside".
+Your output MUST start directly with the prompt content. NEVER add preamble, meta-commentary, or explanation.
+Start IMMEDIATELY with the subject description.
 
 EXAMPLE:
-Concept: "עיר עתידנית"
-Output: A young woman with silver cropped hair, wearing a dark fitted jacket, stands at a rooftop observation deck overlooking a sprawling futuristic metropolis at blue hour. Towering glass skyscrapers display holographic billboards, flying vehicles leave light trails. Duration: 8s.
-
-Cinematography:
-Camera shot: 35mm anamorphic lens, slow crane up revealing the cityscape behind her
-Mood: Awe and wonder
-
-Actions:
-- She places her hand on the glass railing in the first two seconds
-- Tilts her head up as a massive transport ship glides silently overhead
-- Wind catches her hair as the ship passes, casting a moving shadow
-
-Lighting: Cool blue ambient from the city below, warm golden rim light from the setting sun, palette: teal, amber, deep navy.
-Style: Blade Runner 2049 aesthetic, Deakins-inspired backlight, anamorphic flare.`,
+Concept: "נשר טס מעל קניון"
+Output: A golden eagle with wings fully extended soaring over a vast red-rock canyon at dusk, riding thermal updrafts along the sheer cliff face. The camera follows from behind in a low tracking arc, revealing layers of striated sandstone glowing amber and burgundy in the fading light. Cinematic wide lens, high-contrast golden light from low sun angle, deep shadow pools in the canyon floor. Atmosphere: majestic solitude, vast geological scale. Negative prompt: morphing, warping, flickering, distortion, artifacts.`,
 
   veo: `PLATFORM: Google Veo 3 / Veo 3.1 (Gemini API)
 Veo is Google DeepMind’s video model with strong synchronized audio generation (dialogue, SFX, ambience, music) when you describe sound explicitly — other platforms also offer audio, but Veo’s Gemini API workflow rewards splitting detailed visual + audio intent. Character consistency and physically plausible motion/materials are core strengths.
@@ -383,11 +342,11 @@ Concept: {{input}}
 
 Output ONLY the ready-to-paste Kling prompt. No meta-text.`,
 
-  sora: `Generate the ACTUAL Sora 2 prompt that will be DIRECTLY pasted into Sora (or API). Use structured format: Scene description paragraph, then Cinematography (camera shot + mood), Actions (verb-driven beats with timing), and Dialogue (if needed). Include lens specs, 3-5 color anchors, and diegetic sound cues. Set Duration: Xs to match OpenAI Video API allowed seconds for the model (docs emphasize 16s and 20s for longer beats; sora-2-pro for 1080p-class sizes). 50-150 words.
+  wan: `Generate the ACTUAL Wan 2.6 prompt that will be DIRECTLY pasted into the Wan interface. Use the continuous prose structure: Subject + movement + scene + camera + lighting + atmosphere, then end with a Negative prompt line targeting artifact types specific to your scene. 50-150 words.
 
 Concept: {{input}}
 
-Output ONLY the ready-to-paste Sora prompt. No meta-text.`,
+Output ONLY the ready-to-paste Wan prompt. No meta-text.`,
 
   veo: `Generate the ACTUAL Google Veo 3 / 3.1 prompt that will be DIRECTLY pasted into Veo (Gemini API / app). Write a visual paragraph covering all 7 elements (shot framing, style, lighting, character, location, action, dialogue) PLUS a separate Audio section with dialogue/SFX/ambient/music. ALWAYS include the Audio section — unspecified ambience drifts. Use Duration: 4s, 6s, or 8s to match API options (1080p/4K often tied to 8s). 50-100 words visual + 20-40 words audio. Precise, concrete, sensory.
 
@@ -410,7 +369,7 @@ Output ONLY the ready-to-paste Minimax prompt. No meta-text.`,
 
 // ── Main system prompt ──
 
-const DEFAULT_SYSTEM_PROMPT = `You are an Elite Video Prompt Architect - the world's foremost expert in crafting prompts for AI video generation platforms (Runway, Kling, Sora, Veo, Higgsfield, Minimax/Hailuo). Your mission: transform any concept into a precisely engineered video generation prompt that produces cinematic, professional-quality results on first attempt.
+const DEFAULT_SYSTEM_PROMPT = `You are an Elite Video Prompt Architect - the world's foremost expert in crafting prompts for AI video generation platforms (Runway, Kling, Veo, Wan, Higgsfield, Minimax/Hailuo). Your mission: transform any concept into a precisely engineered video generation prompt that produces cinematic, professional-quality results on first attempt.
 
 CRITICAL RULES:
 1. Output ONLY the final video prompt - the ACTUAL prompt that will be DIRECTLY copy-pasted into the video AI platform. NEVER output instructions for writing a prompt, meta-commentary, or "here is your prompt". The output IS the prompt.
@@ -483,16 +442,18 @@ export function getShippedVideoEngineBaseline(): {
 
 export class VideoEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
-    super(config ?? {
-      mode: CapabilityMode.VIDEO_GENERATION,
-      name: "Video Generation Engine",
-      system_prompt_template: DEFAULT_SYSTEM_PROMPT,
-      user_prompt_template: VIDEO_USER_PROMPTS['general'],
-    });
+    super(
+      config ?? {
+        mode: CapabilityMode.VIDEO_GENERATION,
+        name: "Video Generation Engine",
+        system_prompt_template: DEFAULT_SYSTEM_PROMPT,
+        user_prompt_template: VIDEO_USER_PROMPTS["general"],
+      },
+    );
   }
 
   generate(input: EngineInput): EngineOutput {
-    const platform = (input.modeParams?.video_platform as VideoPlatform) || 'general';
+    const platform = (input.modeParams?.video_platform as VideoPlatform) || "general";
     const platformBlock = PLATFORM_OVERRIDES[platform] || PLATFORM_OVERRIDES.general;
 
     const variables: Record<string, string> = {
@@ -508,22 +469,24 @@ export class VideoEngine extends BaseEngine {
       // Guide composition framing only: the model should shape the shot accordingly.
       const ratio = input.modeParams.aspect_ratio;
       const compositionHint =
-        ratio === '16:9' ? 'wide cinematic panoramic composition' :
-        ratio === '9:16' ? 'tall vertical portrait composition' :
-        ratio === '1:1'  ? 'square balanced composition' :
-        `composition suited for a ${ratio} frame`;
+        ratio === "16:9"
+          ? "wide cinematic panoramic composition"
+          : ratio === "9:16"
+            ? "tall vertical portrait composition"
+            : ratio === "1:1"
+              ? "square balanced composition"
+              : `composition suited for a ${ratio} frame`;
       variables.aspect_ratio_hint = `\nIMPORTANT: The user has selected aspect ratio ${ratio}. Design the shot for ${compositionHint} — do NOT add aspect ratio text or parameters to the prompt; aspect ratio is set in the platform UI/API.`;
     } else {
-      variables.aspect_ratio_hint = '';
+      variables.aspect_ratio_hint = "";
     }
 
     const dbOverrides = getPlatformOverrides(
-      this.config.default_params as Record<string, unknown> | undefined
+      this.config.default_params as Record<string, unknown> | undefined,
     );
     const po = dbOverrides?.[platform];
 
-    const systemShell =
-      po?.system_template ?? this.config.system_prompt_template;
+    const systemShell = po?.system_template ?? this.config.system_prompt_template;
     const systemPrompt = this.buildTemplate(systemShell, variables);
 
     const userShell =
@@ -553,7 +516,7 @@ export class VideoEngine extends BaseEngine {
 
     // Context attachments as cinematic reference material
     if (input.context && input.context.length > 0) {
-        finalSystem += `\n\n[CINEMATIC_REFERENCE_MATERIAL]
+      finalSystem += `\n\n[CINEMATIC_REFERENCE_MATERIAL]
 המשתמש צירף חומר מקור — השתמש בו כ-**השראה קולנועית ומגבלות ויזואליות** לפרומפט הווידאו:
 - תמונות מצורפות: נתח קומפוזיציה, תאורה, פלטת צבעים, ואווירה — ושלב בפרומפט כ-reference visuals.
 - סטוריבורד/מסמך: חלץ תיאור סצנות, תנועת מצלמה, ואלמנטים נרטיביים.
@@ -561,50 +524,55 @@ export class VideoEngine extends BaseEngine {
 - שלב את הפרטים ישירות — אל תכתוב "בהתבסס על הקובץ".
 
 `;
-        for (const attachment of input.context) {
-            const block = attachment as unknown as ContextBlock;
-            const title = block.display?.title || attachment.name || 'attachment';
-            const text = block.display?.rawText || block.display?.summary || attachment.content || attachment.description || '';
-            if (attachment.type === 'image') {
-                finalSystem += `━━━ 🖼️ Visual ref: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
-            } else if (attachment.type === 'url') {
-                finalSystem += `━━━ 🌐 Source: ${attachment.url || title} ━━━\n${text.slice(0, 1000)}\n\n`;
-            } else {
-                finalSystem += `━━━ 📄 Doc: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
-            }
+      for (const attachment of input.context) {
+        const block = attachment as unknown as ContextBlock;
+        const title = block.display?.title || attachment.name || "attachment";
+        const text =
+          block.display?.rawText ||
+          block.display?.summary ||
+          attachment.content ||
+          attachment.description ||
+          "";
+        if (attachment.type === "image") {
+          finalSystem += `━━━ 🖼️ Visual ref: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
+        } else if (attachment.type === "url") {
+          finalSystem += `━━━ 🌐 Source: ${attachment.url || title} ━━━\n${text.slice(0, 1000)}\n\n`;
+        } else {
+          finalSystem += `━━━ 📄 Doc: "${title}" ━━━\n${text.slice(0, 1200)}\n\n`;
         }
+      }
     }
 
     // Inject concept classification (LLM-level semantic understanding)
-    finalSystem += getConceptClassificationBlock('video');
+    finalSystem += getConceptClassificationBlock("video");
 
     // Inject few-shot examples from skill files (smart selection based on user concept)
-    const examplesBlock = getExamplesBlock('video', platform, input.prompt, 3);
+    const examplesBlock = getExamplesBlock("video", platform, input.prompt, 3);
     if (examplesBlock) {
       finalSystem += examplesBlock;
     }
 
     // Inject common mistakes to avoid
-    const mistakesBlock = getMistakesBlock('video', platform);
+    const mistakesBlock = getMistakesBlock("video", platform);
     if (mistakesBlock) {
       finalSystem += mistakesBlock;
     }
 
     // Inject platform-specific scoring criteria
-    const scoringBlock = getScoringBlock('video', platform);
+    const scoringBlock = getScoringBlock("video", platform);
 
-    const cotBlock = getChainOfThoughtBlock('video', platform, input.prompt);
+    const cotBlock = getChainOfThoughtBlock("video", platform, input.prompt);
     if (cotBlock) finalSystem += cotBlock;
-    const refineExamplesBlock = getRefinementExamplesBlock('video', platform, 1);
+    const refineExamplesBlock = getRefinementExamplesBlock("video", platform, 1);
     if (refineExamplesBlock) finalSystem += refineExamplesBlock;
 
     const hasContext = !!(input.context && input.context.length > 0);
     const contextQualityRule = hasContext
-        ? '\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate palette, mood, composition, and cinematic style from references. Ignoring attachments is a FAILURE.'
-        : '';
+      ? "\nCONTEXT INTEGRATION (mandatory): Reference material is attached — incorporate palette, mood, composition, and cinematic style from references. Ignoring attachments is a FAILURE."
+      : "";
     const contextQuestionHint = hasContext
-        ? '\nCONTEXT-AWARE: reference material is attached — ask about INTENT (exact replication? mood inspiration? style guide?) not about the file contents.'
-        : '';
+      ? "\nCONTEXT-AWARE: reference material is attached — ask about INTENT (exact replication? mood inspiration? style guide?) not about the file contents."
+      : "";
 
     // English cinematic GENIUS_QUESTIONS focused on the 7 video layers + platform-specific gate
     finalSystem += `\n\n<internal_quality_check hidden="true">
@@ -616,7 +584,7 @@ Silently verify before generating (NEVER include any of this in output):
 5. SCENE MOTION: Environmental dynamics (wind, water, crowd, particles) if relevant.
 6. LIGHTING: Direction, quality, color temperature, and mood.
 7. STYLE: Film reference or grading vocabulary when it tightens the look.
-8. ANTI-PATTERNS: No keyword soup; no contradictory moves; English output only.${contextQualityRule}${scoringBlock ? `\nPLATFORM-SPECIFIC QUALITY GATE:${scoringBlock}` : ''}
+8. ANTI-PATTERNS: No keyword soup; no contradictory moves; English output only.${contextQualityRule}${scoringBlock ? `\nPLATFORM-SPECIFIC QUALITY GATE:${scoringBlock}` : ""}
 </internal_quality_check>
 
 After the enhanced prompt, on a new line add a short descriptive Hebrew title:
@@ -631,14 +599,17 @@ CRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the English 
     // Append context summary to user prompt
     let finalUserPrompt = userPrompt;
     if (hasContext) {
-        const summary = input.context!.map(a => {
-            const block = a as unknown as ContextBlock;
-            const title = block.display?.title || a.name || 'attachment';
-            const text = block.display?.summary || block.display?.rawText || a.content || a.description || '';
-            if (a.type === 'image') return `[Visual ref: ${title}] ${text.slice(0, 600)}`;
-            return `[${title}] ${text.slice(0, 600)}`;
-        }).join('\n');
-        finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב אלמנטים קולנועיים מהחומר בפרומפט]\n${summary}`;
+      const summary = input
+        .context!.map((a) => {
+          const block = a as unknown as ContextBlock;
+          const title = block.display?.title || a.name || "attachment";
+          const text =
+            block.display?.summary || block.display?.rawText || a.content || a.description || "";
+          if (a.type === "image") return `[Visual ref: ${title}] ${text.slice(0, 600)}`;
+          return `[${title}] ${text.slice(0, 600)}`;
+        })
+        .join("\n");
+      finalUserPrompt += `\n\n[חומר ויזואלי מצורף — שלב אלמנטים קולנועיים מהחומר בפרומפט]\n${summary}`;
     }
 
     return {
@@ -653,8 +624,13 @@ CRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the English 
     if (!input.previousResult) throw new Error("Previous result required for refinement");
 
     const iteration = input.iteration || 1;
-    const platform = (input.modeParams?.video_platform as VideoPlatform) || 'general';
-    const instruction = (input.refinementInstruction || "Refine the video prompt and make it more cinematic and precise.").trim().slice(0, 2000);
+    const platform = (input.modeParams?.video_platform as VideoPlatform) || "general";
+    const instruction = (
+      input.refinementInstruction ||
+      "Refine the video prompt and make it more cinematic and precise."
+    )
+      .trim()
+      .slice(0, 2000);
 
     let answersBlock = "";
     if (input.answers && Object.keys(input.answers).length > 0) {
@@ -670,23 +646,32 @@ CRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the English 
     const identity = this.getSystemIdentity();
 
     const platformRefinementGuidance: Record<string, string> = {
-      runway: '\nPlatform-specific: Check camera movement is the FIRST element. Verify 30-60 word count. Ensure single continuous shot design. Add motion intensity vocabulary if missing.',
-      kling: '\nPlatform-specific: Verify physics-based motion detail (weight, momentum, endpoints). Check 4-part structure. Confirm duration and aspect ratio. Add negative prompt if missing.',
-      sora: '\nPlatform-specific: Verify structured format (Scene description, Cinematography, Actions with timing beats, Dialogue if needed). Check lens specs present. Verify 3-5 color anchors. Confirm duration specified.',
-      veo: '\nPlatform-specific: Verify Audio section exists with all 4 elements (dialogue/SFX/ambient/music) — missing audio causes hallucinated sounds. Check character identifiers for consistency. Verify all 7 elements covered. Confirm duration specified.',
-      higgsfield: '\nPlatform-specific: Verify directive command syntax (not prose). Check timing cues present. Confirm style tags appended. Verify active verbs used.',
-      minimax: '\nPlatform-specific: Verify body movement choreography detail. Check micro-expressions present. Confirm sequential movement order. Verify camera movement complexity.',
-      general: '',
+      runway:
+        "\nPlatform-specific: Check camera movement is the FIRST element. Verify 30-80 word count. Ensure single continuous shot design (or valid multi-shot Scene N format). Verify Audio block has all 4 sub-keys. Add motion intensity vocabulary if missing.",
+      kling:
+        "\nPlatform-specific: Verify physics-based motion detail (weight, momentum, endpoints). Check 4-part structure. Confirm duration and aspect ratio. Add negative prompt if missing.",
+      wan: "\nPlatform-specific: Verify prose structure (subject + movement + scene + camera + lighting + atmosphere). Confirm Negative prompt line is artifact-specific to the scene type. Check no keyword-list syntax.",
+      veo: "\nPlatform-specific: Verify Audio section exists with all 4 elements (dialogue/SFX/ambient/music) — missing audio causes hallucinated sounds. Check character identifiers for consistency. Verify all 7 elements covered. Confirm duration specified.",
+      higgsfield:
+        "\nPlatform-specific: Verify directive command syntax (not prose). Check timing cues present. Confirm style tags appended. Verify active verbs used.",
+      minimax:
+        "\nPlatform-specific: Verify body movement choreography detail. Check micro-expressions present. Confirm sequential movement order. Verify camera movement complexity.",
+      general: "",
     };
 
     const platformGeniusQuestions: Record<string, string> = {
-      runway: 'Focus questions on: camera movement style/speed, motion intensity preference, cinematic reference inspiration, and how to design the 4-second action arc.',
-      kling: 'Focus questions on: physics detail for movements (weight/momentum), preferred duration (5s vs 10s), what to include in negative prompt, and specific camera/lens specs (ARRI, RED, 35mm, 85mm).',
-      sora: 'Focus questions on: preferred lens spec, action timing beats, dialogue needs and speaker delivery style, diegetic sound elements, and color palette anchors.',
-      veo: 'Focus questions on: audio mood and music feel, whether dialogue is needed and its delivery style, specific SFX tied to actions, ambient sound environment, and character consistency identifiers across scenes.',
-      higgsfield: 'Focus questions on: timing cue precision (exact timestamps), preferred style preset (cinematic/documentary/anime), compound camera move preferences, and character likeness detail.',
-      minimax: 'Focus questions on: choreography detail for body movements, micro-expression needs for emotional beats, emotion transition arcs, and group choreography dynamics.',
-      general: 'Focus questions on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.',
+      runway:
+        "Focus questions on: camera movement style/speed, motion intensity, cinematic reference, audio mood (music genre, SFX elements), and whether single-scene or multi-shot format is intended.",
+      kling:
+        "Focus questions on: physics detail for movements (weight/momentum), preferred duration (5s vs 10s), what to include in negative prompt, and specific camera/lens specs (ARRI, RED, 35mm, 85mm).",
+      wan: "Focus questions on: camera move type and speed, lighting source and color temperature, atmosphere/tone of the scene, and which artifact types should be called out in the negative prompt.",
+      veo: "Focus questions on: audio mood and music feel, whether dialogue is needed and its delivery style, specific SFX tied to actions, ambient sound environment, and character consistency identifiers across scenes.",
+      higgsfield:
+        "Focus questions on: timing cue precision (exact timestamps), preferred style preset (cinematic/documentary/anime), compound camera move preferences, and character likeness detail.",
+      minimax:
+        "Focus questions on: choreography detail for body movements, micro-expression needs for emotional beats, emotion transition arcs, and group choreography dynamics.",
+      general:
+        "Focus questions on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.",
     };
 
     return {
@@ -699,11 +684,11 @@ Rules:
 4. Output ONLY the refined video prompt in English.
 5. If answers reveal a new creative direction, expand the prompt accordingly - leave no gaps.
 6. Never add meta-commentary, explanations, or preamble to the output.
-${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is already at a high level - make surgical cinematic precision improvements only.` : iteration === 2 ? '\nThis is the second refinement round - focus on remaining cinematic gaps, not what is already strong.' : ''}${platformRefinementGuidance[platform] || ''}
+${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is already at a high level - make surgical cinematic precision improvements only.` : iteration === 2 ? "\nThis is the second refinement round - focus on remaining cinematic gaps, not what is already strong." : ""}${platformRefinementGuidance[platform] || ""}
 
 Platform: ${platform}. Tone: ${input.tone}. Category: ${input.category}.
 
-${identity ? `${identity}\n\n` : ''}After the improved prompt, on a new line add:
+${identity ? `${identity}\n\n` : ""}After the improved prompt, on a new line add:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
 Then add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact gaps. ${platformGeniusQuestions[platform] || platformGeniusQuestions.general} Return an empty array [] if the prompt is now comprehensive across all 7 layers.
@@ -714,7 +699,7 @@ Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "e
 ${input.previousResult}
 ---
 ${answersBlock}
-${instruction ? `Additional instructions from user: ${instruction}` : ''}
+${instruction ? `Additional instructions from user: ${instruction}` : ""}
 
 Integrate all new information and produce an upgraded, refined video prompt in English.`,
 

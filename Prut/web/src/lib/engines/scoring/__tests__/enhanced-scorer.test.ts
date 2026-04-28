@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { EnhancedScorer } from '../enhanced-scorer';
 import { scoreInput } from '../input-scorer';
 import { CapabilityMode } from '@/lib/capability-mode';
+import { getVideoSkill, getImageSkill, isDeprecated } from '@/lib/engines/skills';
 
 /**
  * Regression tests for EnhancedScorer — specifically the role detection fix
@@ -59,6 +60,93 @@ describe('EnhancedScorer vs scoreInput (shared dimensions)', () => {
     const enhanced = EnhancedScorer.score(text, CapabilityMode.STANDARD);
     const input = scoreInput(text, CapabilityMode.STANDARD);
     expect(Math.abs(enhanced.total - input.total)).toBeLessThanOrEqual(28);
+  });
+});
+
+describe('Skills registry — wan + sora deprecation', () => {
+  it('wan is registered in VIDEO_SKILLS', () => {
+    const skill = getVideoSkill('wan');
+    expect(skill).toBeDefined();
+    expect(skill!.platform).toBe('wan');
+  });
+
+  it('sora is marked deprecated', () => {
+    expect(isDeprecated('video', 'sora')).toBe(true);
+  });
+
+  it('runway is not deprecated', () => {
+    expect(isDeprecated('video', 'runway')).toBe(false);
+  });
+
+  it('image skills remain accessible after registry updates', () => {
+    expect(getImageSkill('flux')).toBeDefined();
+    expect(getImageSkill('midjourney')).toBeDefined();
+    expect(getImageSkill('imagen')).toBeDefined();
+    expect(getImageSkill('dalle')).toBeDefined();
+  });
+});
+
+describe('scoreVideoAudio — audio dimension scoring', () => {
+  const FULL_AUDIO_BLOCK = `
+A cat walks across a moonlit rooftop.
+
+Audio:
+Dialogue: "Come here, little one."
+SFX: soft pawsteps on tile, distant city hum
+Ambient: night wind, crickets
+Music: slow piano, minor key
+`.trim();
+
+  const NO_AUDIO = `A cat walks across a moonlit rooftop. Camera slowly zooms in.`;
+
+  const PARTIAL_AUDIO = `
+A cat walks across a moonlit rooftop.
+
+Audio:
+SFX: soft pawsteps on tile
+`.trim();
+
+  it('full Audio block with all sub-keys scores max (15) for runway platform', () => {
+    const result = EnhancedScorer.score(FULL_AUDIO_BLOCK, CapabilityMode.VIDEO_GENERATION, undefined, 'runway');
+    const audioDim = result.breakdown.find((d) => d.dimension === 'audio');
+    expect(audioDim).toBeDefined();
+    expect(audioDim!.score).toBe(audioDim!.maxScore);
+    expect(audioDim!.score).toBe(15);
+  });
+
+  it('missing Audio block scores 0 for runway platform', () => {
+    const result = EnhancedScorer.score(NO_AUDIO, CapabilityMode.VIDEO_GENERATION, undefined, 'runway');
+    const audioDim = result.breakdown.find((d) => d.dimension === 'audio');
+    expect(audioDim).toBeDefined();
+    expect(audioDim!.score).toBe(0);
+  });
+
+  it('Audio block with only SFX scores 9 (5 base + 4 SFX)', () => {
+    const result = EnhancedScorer.score(PARTIAL_AUDIO, CapabilityMode.VIDEO_GENERATION, undefined, 'runway');
+    const audioDim = result.breakdown.find((d) => d.dimension === 'audio');
+    expect(audioDim).toBeDefined();
+    expect(audioDim!.score).toBe(9);
+  });
+
+  it('audio dimension is absent for non-audio platform (higgsfield)', () => {
+    const result = EnhancedScorer.score(FULL_AUDIO_BLOCK, CapabilityMode.VIDEO_GENERATION, undefined, 'higgsfield');
+    const audioDim = result.breakdown.find((d) => d.dimension === 'audio');
+    expect(audioDim).toBeUndefined();
+  });
+
+  it('audio dimension is absent when no platform provided', () => {
+    const result = EnhancedScorer.score(FULL_AUDIO_BLOCK, CapabilityMode.VIDEO_GENERATION);
+    const audioDim = result.breakdown.find((d) => d.dimension === 'audio');
+    expect(audioDim).toBeUndefined();
+  });
+
+  it('veo and kling also trigger audio scoring', () => {
+    for (const platform of ['veo', 'kling']) {
+      const result = EnhancedScorer.score(FULL_AUDIO_BLOCK, CapabilityMode.VIDEO_GENERATION, undefined, platform);
+      const audioDim = result.breakdown.find((d) => d.dimension === 'audio');
+      expect(audioDim).toBeDefined();
+      expect(audioDim!.score).toBe(15);
+    }
   });
 });
 
