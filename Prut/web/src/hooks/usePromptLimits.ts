@@ -144,6 +144,8 @@ export function usePromptLimits() {
         lastReset: getIsraelDateString(),
       };
       setUsage(newUsage);
+      // UI-only tracking — not a security boundary. Real enforcement is
+      // Redis-backed server-side in enhance/route.ts (guest credit system).
       localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(newUsage));
     } else {
       // Re-fetch quota after a spend so the UI reflects new balance + refresh_at

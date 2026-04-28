@@ -255,12 +255,18 @@ export class AIGateway {
         ) as ModelId[])
       : preferredChain;
 
-    // Filter to vision-capable models when image attachments are present
+    // Filter to vision-capable models when image attachments are present.
+    // If no vision-capable model survives the circuit-breaker filter, throw
+    // rather than silently falling back to non-vision models — sending image
+    // payloads to models that don't support vision produces undefined behaviour.
     const hasImages = !!(params.imageAttachments && params.imageAttachments.length > 0);
     const visionChain = hasImages
       ? (models.filter((m) => AVAILABLE_MODELS[m]?.supportsVision) as ModelId[])
       : models;
-    const finalModels = visionChain.length > 0 ? visionChain : models;
+    if (hasImages && visionChain.length === 0) {
+      throw new Error("No vision-capable model available");
+    }
+    const finalModels = hasImages ? visionChain : models;
 
     try {
       for (const modelId of finalModels) {
@@ -387,7 +393,10 @@ export class AIGateway {
     const visionChain2 = hasImages
       ? (models.filter((m) => AVAILABLE_MODELS[m]?.supportsVision) as ModelId[])
       : models;
-    const finalModels2 = visionChain2.length > 0 ? visionChain2 : models;
+    if (hasImages && visionChain2.length === 0) {
+      throw new Error("No vision-capable model available");
+    }
+    const finalModels2 = hasImages ? visionChain2 : models;
 
     try {
       for (const modelId of finalModels2) {

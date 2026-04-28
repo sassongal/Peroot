@@ -314,8 +314,9 @@ ${alignment}
         ? `\n\n[OUTPUT_LANGUAGE_OVERRIDE]\nThe user has requested an ENGLISH output. Write the entire enhanced prompt in English only. All headers, instructions, persona descriptions, constraints, and examples must be in English. Do NOT use Hebrew anywhere in the output.`
         : "";
 
+    const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
     const imageAttachments = (input.context as unknown as ContextBlock[])
-      ?.filter((b) => b.imageBase64 && b.imageMimeType)
+      ?.filter((b) => b.imageBase64 && b.imageMimeType && ALLOWED_IMAGE_MIMES.has(b.imageMimeType))
       .map((b) => ({ base64: b.imageBase64!, mimeType: b.imageMimeType! }));
 
     return {

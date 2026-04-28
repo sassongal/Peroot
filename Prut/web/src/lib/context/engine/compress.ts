@@ -86,11 +86,19 @@ export function compressToLimit(
       const headChars = Math.floor(charBudget * 0.3);
       const tailChars = Math.floor(charBudget * 0.3);
       const midChars = Math.max(0, charBudget - headChars - tailChars);
-      const midStart = Math.floor(text.length / 2) - Math.floor(midChars / 2);
-      const head = text.slice(0, headChars);
-      const middle = text.slice(midStart, midStart + midChars);
-      const tail = text.slice(-tailChars);
-      cut = head + SEPARATOR + middle + SEPARATOR + tail;
+      // Clamp slices to prevent overlap when text is shorter than the budget.
+      const safeHead = Math.min(headChars, text.length);
+      const safeTail = Math.min(tailChars, Math.max(0, text.length - safeHead));
+      const rawMidStart = Math.floor(text.length / 2) - Math.floor(midChars / 2);
+      const safeMidStart = Math.max(safeHead, rawMidStart);
+      const safeMidEnd = Math.min(safeMidStart + midChars, text.length - safeTail);
+      const head = text.slice(0, safeHead);
+      const middle = safeMidEnd > safeMidStart ? text.slice(safeMidStart, safeMidEnd) : "";
+      const tail = safeTail > 0 ? text.slice(-safeTail) : "";
+      cut =
+        head +
+        (middle ? SEPARATOR + middle : "") +
+        (tail ? SEPARATOR + tail : "");
       break;
     }
 

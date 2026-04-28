@@ -116,8 +116,8 @@ const RequestSchema = z.object({
             tokenCount: z.number().min(0).max(100_000),
           })
           .optional(),
-        imageBase64: z.string().max(2_000_000).optional(),
-        imageMimeType: z.string().max(100).optional(),
+        imageBase64: z.string().max(1_400_000).optional(),
+        imageMimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]).optional(),
       }),
     )
     .max(20)
@@ -197,6 +197,9 @@ export async function POST(req: Request) {
       const {
         data: { user },
       } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
+      if (bearerToken && user && user.aud !== "authenticated") {
+        return NextResponse.json({ error: "Invalid token audience" }, { status: 401 });
+      }
       userId = user?.id;
       if (bearerToken && userId) useServiceClient = true;
     }
@@ -350,13 +353,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Aggregate image payload guard — each image ≤1.4M chars (≈1MB base64);
+    // total kept under 4M to stay well within Vercel's 4.5MB body limit.
+    const totalBase64Chars = (contextAttachments ?? []).reduce(
+      (sum, a) => sum + ((a as { imageBase64?: string }).imageBase64?.length ?? 0),
+      0,
+    );
+    if (totalBase64Chars > 4_000_000) {
+      return NextResponse.json({ error: "Image payload too large" }, { status: 413 });
+    }
+
     // Guest id resolution (only when we'll actually spend a credit below).
     let guestNeedsCookie = false;
 
     if (!isAdmin) {
-      // 2. Execute Rate Limiting (kept as a coarse abuse guard on top of credits)
+      // 2. Execute Rate Limiting (kept as a coarse abuse guard on top of credits).
+      // Use x-real-ip (Vercel-injected, not spoofable) or the rightmost entry in
+      // x-forwarded-for (Vercel appends the true client IP at the right; [0] is
+      // client-controlled and must not be trusted).
       const clientIp =
-        req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+        req.headers.get("x-real-ip") ||
+        req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
       const identifier = userId || clientIp;
       if (!identifier) {
         return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
@@ -372,50 +389,12 @@ export async function POST(req: Request) {
       if (!limitResult.success) {
         return RateLimitError(limitResult.reset);
       }
-
-      // 3. ATOMIC Credit Enforcement. GENIUS refinement/answers are absorbed
-      // (the cost of iterating on a question we asked), so skip decrement when
-      // this is a refinement turn.
-      if (!isRefinement) {
-        if (userId) {
-          const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
-          if (!creditResult.allowed) {
-            return NextResponse.json(
-              {
-                error: creditResult.error || "Insufficient credits or profile not found",
-                balance: creditResult.remaining,
-                code: "quota_exhausted",
-              },
-              { status: 403 },
-            );
-          }
-        } else {
-          // Guest path — Redis-backed rolling 24h
-          const resolved = await resolveGuestId(req);
-          guestId = resolved.id;
-          guestNeedsCookie = resolved.needsCookie;
-          const guestResult = await checkAndDecrementGuestCredits(guestId);
-          if (!guestResult.allowed) {
-            const res = NextResponse.json(
-              {
-                error: "מכסת האורח מוצתה. הירשם לקבלת 2 פרומפטים וגישה לכל המנועים.",
-                balance: 0,
-                refresh_at: guestResult.refreshAt?.toISOString() ?? null,
-                code: "guest_quota_exhausted",
-              },
-              { status: 403 },
-            );
-            if (guestNeedsCookie) applyGuestCookie(res, guestId);
-            return res;
-          }
-        }
-      }
     }
 
-    // 3.5 In-flight dedup — a double-click or client retry within the
-    // same 10-second window will be rejected with 409 so we don't charge
-    // two credits for one logical request. We hash prompt + mode + tone +
-    // target + attachments so only genuinely identical payloads collide.
+    // 3. In-flight dedup — acquired BEFORE credit deduction to prevent TOCTOU:
+    // two concurrent identical requests would both pass the credit check before
+    // either lock is visible in Redis. Lock first, then charge. A double-click
+    // or retry within the 10-second window is rejected with 409.
     // If Redis is unreachable the helper fails open — see inflight-lock.ts.
     const contextFingerprint =
       contextAttachments && contextAttachments.length > 0
@@ -441,18 +420,56 @@ export async function POST(req: Request) {
       contextFingerprint,
     });
     if (!lock.acquired) {
-      // Refund the credit we just decremented — this request never ran.
-      if (userId) {
-        await refundCredit(userId);
-      } else if (guestId && !isRefinement) {
-        await refundGuestCredit(guestId);
-      }
+      // Credits not yet decremented — no refund needed.
       return NextResponse.json(
         { error: "בקשה זהה כבר בתהליך. נסה שוב בעוד רגע." },
         { status: 409, headers: { "Retry-After": "2" } },
       );
     }
     releaseInflightLock = lock.release;
+
+    if (!isAdmin) {
+      // 4. ATOMIC Credit Enforcement (after lock to eliminate TOCTOU window).
+      // GENIUS refinement/answers are absorbed — skip decrement on refinement turns.
+      if (!isRefinement) {
+        if (userId) {
+          const creditResult = await checkAndDecrementCredits(userId, tier, queryClient);
+          if (!creditResult.allowed) {
+            await releaseInflightLock();
+            releaseInflightLock = null;
+            return NextResponse.json(
+              {
+                error: creditResult.error || "Insufficient credits or profile not found",
+                balance: creditResult.remaining,
+                code: "quota_exhausted",
+              },
+              { status: 403 },
+            );
+          }
+        } else {
+          // Guest path — Redis-backed rolling 24h
+          const resolved = await resolveGuestId(req);
+          guestId = resolved.id;
+          guestNeedsCookie = resolved.needsCookie;
+          const guestResult = await checkAndDecrementGuestCredits(guestId);
+          if (!guestResult.allowed) {
+            await releaseInflightLock();
+            releaseInflightLock = null;
+            const res = NextResponse.json(
+              {
+                error: "מכסת האורח מוצתה. הירשם לקבלת 2 פרומפטים וגישה לכל המנועים.",
+                balance: 0,
+                refresh_at: guestResult.refreshAt?.toISOString() ?? null,
+                code: "guest_quota_exhausted",
+              },
+              { status: 403 },
+            );
+            if (guestNeedsCookie) applyGuestCookie(res, guestId);
+            return res;
+          }
+        }
+      }
+    }
 
     // 4. Engine Selection & Generation
     const engine = await getEngine(mode);
