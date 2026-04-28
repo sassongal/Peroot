@@ -362,11 +362,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
       }
 
-      const rateLimitTier = isGuest
+      const rateLimitTier: "free" | "pro" | "guest" = isGuest
         ? "guest"
-        : tier === "admin" || tier === "premium"
-          ? "pro"
-          : tier;
+        : tier === "free"
+          ? "free"
+          : "pro";
       const limitResult = await checkRateLimit(identifier, rateLimitTier);
 
       if (!limitResult.success) {
