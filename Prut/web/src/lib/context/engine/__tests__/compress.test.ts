@@ -71,7 +71,7 @@ describe("compressToLimit", () => {
       ...Array.from({ length: 50 }, (_, i) => `Middle section paragraph ${i}`),
       "Conclusion: The results confirm X is valid.",
     ].join("\n");
-    const r = compressToLimit(sections, 30, "academic"); // tight budget
+    const r = compressToLimit(sections, 60, "academic"); // 60 tokens = 240 chars; tail (72) > "Conclusion" (43)
     expect(r.truncated).toBe(true);
     expect(r.text).toContain("Abstract");
     expect(r.text).toContain("Conclusion");
