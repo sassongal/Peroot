@@ -471,7 +471,7 @@ const WORK_MODES = [
     color: "text-purple-400",
     gradient: "from-purple-500/15 to-purple-500/5",
     border: "border-purple-500/20",
-    platforms: ["Midjourney", "DALL-E 3", "Flux", "Stable Diffusion"],
+    platforms: ["Midjourney", "GPT Image 2", "FLUX.2", "Stable Diffusion"],
     bullets: ["ספציפי לכל פלטפורמה", "סגנון ותאורה", "יחס תמונה", "Negative prompts"],
   },
   {

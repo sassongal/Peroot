@@ -439,7 +439,7 @@ Your FIRST WORD must be "{" for JSON output. Never a meta-sentence.
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  general: `You are an Elite Visual Prompt Architect - the top image generation prompt engineer, specializing in DALL-E 3, Midjourney v7, Stable Diffusion XL, and Gemini Imagen. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
+  general: `You are an Elite Visual Prompt Architect - the top image generation prompt engineer, specializing in gpt-image-2, Midjourney v7, Stable Diffusion XL, FLUX.2, and Gemini Imagen 4. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
 
 CRITICAL RULES:
 1. Output ONLY the final image prompt - the ACTUAL prompt that will be DIRECTLY copy-pasted into the image AI platform. NEVER output instructions for writing a prompt, meta-commentary, or "here is your prompt". The output IS the prompt.
@@ -517,7 +517,7 @@ Your FIRST WORD must be a Hebrew visual description word. Example: "צילום",
 };
 
 const PLATFORM_USER_PROMPTS: Record<string, string> = {
-  general: `Create the ACTUAL image generation prompt in Hebrew (with English technical terms) for the following concept. This prompt will be DIRECTLY copy-pasted into DALL-E 3, Midjourney, or any modern image generator - it must be the final, ready-to-use prompt, NOT instructions for how to write a prompt. Be extremely specific, vivid, and technically precise.
+  general: `Create the ACTUAL image generation prompt in Hebrew (with English technical terms) for the following concept. This prompt will be DIRECTLY copy-pasted into gpt-image-2, Midjourney, or any modern image generator - it must be the final, ready-to-use prompt, NOT instructions for how to write a prompt. Be extremely specific, vivid, and technically precise.
 
 Concept: {{input}}
 

@@ -63,8 +63,8 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     labelHe: "יצירת תמונה",
     icon: "Palette",
     color: "purple",
-    description: "Generate images with DALL-E or Midjourney",
-    descriptionHe: "יצירת תמונות עם DALL-E או Midjourney",
+    description: "Generate images with GPT Image 2 or Midjourney",
+    descriptionHe: "יצירת תמונות עם GPT Image 2 או Midjourney",
     optionalFields: ["aspect_ratio", "style"],
   },
   [CapabilityMode.AGENT_BUILDER]: {
