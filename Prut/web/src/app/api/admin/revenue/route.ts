@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
@@ -10,10 +10,14 @@ const LS_MRR_CACHE_TTL = 300; // 5 minutes
 const PAYLOAD_CACHE_KEY = "admin:revenue:payload:v1";
 const PAYLOAD_CACHE_TTL = 300; // 5 minutes
 
-async function getLsMrr(): Promise<{ mrr: number; activeSubs: number } | null> {
+async function getLsMrr(
+  skipCache = false,
+): Promise<{ mrr: number; activeSubs: number } | null> {
   try {
-    const cached = await redis.get<{ mrr: number; activeSubs: number }>(LS_MRR_CACHE_KEY);
-    if (cached) return cached;
+    if (!skipCache) {
+      const cached = await redis.get<{ mrr: number; activeSubs: number }>(LS_MRR_CACHE_KEY);
+      if (cached) return cached;
+    }
 
     if (!process.env.LEMONSQUEEZY_API_KEY) return null;
     lemonSqueezySetup({ apiKey: process.env.LEMONSQUEEZY_API_KEY! });
@@ -43,7 +47,7 @@ async function getLsMrr(): Promise<{ mrr: number; activeSubs: number } | null> {
  *   - Plan-tier breakdown (free / pro / premium counts)
  *   - Recent subscription events from activity_logs
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const { error, user, supabase } = await validateAdminSession();
     if (error || !user || !supabase) {
@@ -53,11 +57,15 @@ export async function GET() {
       );
     }
 
-    try {
-      const cached = await redis.get<Record<string, unknown>>(PAYLOAD_CACHE_KEY);
-      if (cached) return NextResponse.json(cached);
-    } catch (err) {
-      logger.warn("[Admin Revenue] Redis cache read failed:", err);
+    const skipCache = new URL(req.url).searchParams.get("refresh") === "1";
+
+    if (!skipCache) {
+      try {
+        const cached = await redis.get<Record<string, unknown>>(PAYLOAD_CACHE_KEY);
+        if (cached) return NextResponse.json(cached);
+      } catch (err) {
+        logger.warn("[Admin Revenue] Redis cache read failed:", err);
+      }
     }
 
     const now = new Date();
@@ -127,7 +135,7 @@ export async function GET() {
     const totalUsers = totalUsersResult.count ?? 0;
 
     // ── MRR calculation — real LS API data, fall back to active subs × price ──
-    const lsMrr = await getLsMrr();
+    const lsMrr = await getLsMrr(skipCache);
     const mrr = lsMrr ? lsMrr.mrr : activeSubs * PRO_PRICE_ILS;
 
     // ── Churn rate (churned / (active + churned)) ──────────────────────────

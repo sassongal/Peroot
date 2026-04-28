@@ -42,12 +42,15 @@ export const GET = withAdmin(async (req) => {
     const range = searchParams.get("range") || "all";
     const startDate = getStartDate(range);
 
+    const skipCache = searchParams.get("refresh") === "1";
     const cacheKey = `${CACHE_KEY_PREFIX}${range}`;
-    try {
-      const cached = await redis.get<FunnelResponse>(cacheKey);
-      if (cached) return NextResponse.json(cached);
-    } catch (err) {
-      logger.warn("[Admin Funnel] Redis cache read failed:", err);
+    if (!skipCache) {
+      try {
+        const cached = await redis.get<FunnelResponse>(cacheKey);
+        if (cached) return NextResponse.json(cached);
+      } catch (err) {
+        logger.warn("[Admin Funnel] Redis cache read failed:", err);
+      }
     }
 
     // ── Stage 1: Signups + cohort user IDs (parallel) ──────────────────────────

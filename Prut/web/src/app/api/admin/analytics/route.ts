@@ -27,15 +27,18 @@ interface CachedAnalytics {
 export const GET = withAdmin(async (req) => {
   const supabase = createServiceClient();
   const url = new URL(req.url);
+  const skipCache = url.searchParams.get("refresh") === "1";
   const range = parseInt(url.searchParams.get("range") ?? "30", 10);
   const rangeKey = [7, 30, 90].includes(range) ? range : 30;
   const cacheKey = `${CACHE_KEY_PREFIX}${rangeKey}`;
 
-  try {
-    const cached = await redis.get<CachedAnalytics>(cacheKey);
-    if (cached) return NextResponse.json(cached);
-  } catch (err) {
-    logger.warn("[Admin Analytics] Redis cache read failed:", err);
+  if (!skipCache) {
+    try {
+      const cached = await redis.get<CachedAnalytics>(cacheKey);
+      if (cached) return NextResponse.json(cached);
+    } catch (err) {
+      logger.warn("[Admin Analytics] Redis cache read failed:", err);
+    }
   }
 
   const now = new Date();

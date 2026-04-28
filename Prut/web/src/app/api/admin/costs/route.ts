@@ -35,12 +35,15 @@ export const GET = withAdmin(async (req) => {
     if (to && !isValidDate(to))
       return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
 
+    const skipCache = searchParams.get("refresh") === "1";
     const cacheKey = `${CACHE_KEY_PREFIX}${from}:${to}:${provider ?? "all"}`;
-    try {
-      const cached = await redis.get<Record<string, unknown>>(cacheKey);
-      if (cached) return NextResponse.json(cached);
-    } catch (err) {
-      logger.warn("[Admin Costs] Redis cache read failed:", err);
+    if (!skipCache) {
+      try {
+        const cached = await redis.get<Record<string, unknown>>(cacheKey);
+        if (cached) return NextResponse.json(cached);
+      } catch (err) {
+        logger.warn("[Admin Costs] Redis cache read failed:", err);
+      }
     }
 
     // Cap the result set. api_usage_logs grows unbounded; the 90-day retention
