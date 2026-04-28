@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useI18n } from "@/context/I18nContext";
-import { Crown, Clock, CheckCircle2 } from "lucide-react";
+import { Crown, Clock, CheckCircle2, X } from "lucide-react";
 
 interface UpgradeNudgeProps {
   type: "warning" | "exhausted" | "feature-gate";
@@ -108,7 +108,14 @@ export default function UpgradeNudge({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overscroll-contain"
       dir="rtl"
     >
-      <div className="bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-sm mx-4 space-y-5 shadow-xl">
+      <div className="relative bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-sm mx-4 space-y-5 shadow-xl">
+        <button
+          onClick={onDismiss}
+          aria-label="סגור"
+          className="absolute top-2 left-2 text-slate-500 hover:text-slate-200 transition-colors min-h-11 min-w-11 flex items-center justify-center rounded-lg cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
         {/* Header */}
         <div className="text-center space-y-1.5">
           <Crown className="w-8 h-8 text-amber-400 mx-auto" />

@@ -71,7 +71,12 @@ export async function checkAndDecrementCredits(
   amount = 1,
 ): Promise<CreditCheckResult> {
   // --- Primary path: atomic RPC -------------------------------------------
-  const { data: creditRes, error: rpcError } = await queryClient.rpc(
+  // The RPC has EXECUTE granted only to service_role and is SECURITY DEFINER
+  // with no internal auth.uid() check — must always be called via the service
+  // client, regardless of how the caller authenticated. Cookie-auth (Pro/free
+  // browser users) on the user-scoped queryClient gets permission denied.
+  const serviceClient = createServiceClient();
+  const { data: creditRes, error: rpcError } = await serviceClient.rpc(
     "refresh_and_decrement_credits",
     {
       target_user_id: userId,

@@ -384,6 +384,14 @@ function PageContent() {
     }
   }, [ps.error, user, isProPlan]);
 
+  // Pro/admin users don't get the upgrade nudge — they need actual error feedback
+  // so a silent failure doesn't leave them staring at a blank screen.
+  useEffect(() => {
+    if (ps.error && user && isProPlan) {
+      toast.error(ps.error);
+    }
+  }, [ps.error, user, isProPlan]);
+
   const showLoginRequired = (feature: string, message?: string) => {
     setLoginRequiredConfig({
       feature,
