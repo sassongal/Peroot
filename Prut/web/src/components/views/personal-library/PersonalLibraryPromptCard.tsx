@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import {
     Star, ArrowRight, Plus, Copy, Pencil, Check, X,
     Trash2, CheckSquare, Square, Tag, Download,
@@ -124,6 +125,24 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
     last_used_at: toIsoOrNull(prompt.last_used_at),
   });
 
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handlePointerDown = () => {
+    if (selectionMode) return;
+    longPressTimer.current = setTimeout(() => {
+      navigator.vibrate?.(40);
+      shared.setSelectionMode(true);
+      toggleSelection(prompt.id);
+    }, 500);
+  };
+
+  const handlePointerUp = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
   const toggleExpand = () => {
     if (selectionMode) { toggleSelection(prompt.id); return; }
     setExpandedIds(prev => {
@@ -162,6 +181,9 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpand(); } }}
         aria-expanded={isExpanded}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
       >
         {/* Checkbox */}
         <button
@@ -254,7 +276,7 @@ export function PersonalLibraryPromptCard({ prompt, shared, viewProps }: Persona
             </button>
             {isMenuOpen && (
               <div
-                className="absolute left-0 top-full mt-1 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[180px] animate-in fade-in slide-in-from-top-2 duration-150"
+                className="absolute right-0 top-full mt-1 z-50 bg-[#111] border border-(--glass-border) rounded-xl shadow-2xl py-1 min-w-[180px] max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-2 duration-150"
                 onClick={(e) => e.stopPropagation()}
               >
                 {showMoveSubMenu ? (
