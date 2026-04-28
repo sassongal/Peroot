@@ -797,7 +797,7 @@ export function PersonalLibraryView({
 
   return (
     <div
-      className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-20 md:pb-0 overflow-x-hidden"
+      className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-20 md:pb-0 overflow-x-hidden w-full"
       dir="rtl"
     >
       {/* Mobile sidebar overlay */}
