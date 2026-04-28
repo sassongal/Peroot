@@ -721,7 +721,7 @@ export function PersonalLibraryPromptCard({
                     {showOriginal ? (
                       <ChevronDown className="w-3.5 h-3.5" />
                     ) : (
-                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <ChevronRight className="w-3.5 h-3.5" />
                     )}
                     הצג פרומפט מקורי
                   </button>
