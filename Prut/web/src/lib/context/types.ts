@@ -42,20 +42,3 @@ export interface ContextAttachment {
   stage?: ProcessingStage;
 }
 
-export interface ContextPayload {
-  type: AttachmentType;
-  name: string;
-  content: string;
-  tokenCount: number;
-  format?: string;
-  filename?: string;
-  url?: string;
-  extracted_text?: string;
-  description?: string;
-  metadata?: Record<string, unknown>;
-}
-
-interface ExtractionResult {
-  text: string;
-  metadata: Record<string, unknown>;
-}
