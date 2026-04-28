@@ -49,6 +49,20 @@ describe("platform prompt accuracy (source guardrails)", () => {
     expect(f).not.toMatch(/deprecated in v7/i);
   });
 
+  it("image-engine.ts: dalle block references gpt-image-2 and no longer uses [quality: hd]", () => {
+    const f = src("lib", "engines", "image-engine.ts");
+    expect(f).toMatch(/gpt-image-2/);
+    expect(f).not.toMatch(/\[quality:\s*hd\]/i);
+  });
+
+  it("skills/image/dalle.ts: gpt-image-2 name, [quality: high] not hd, multi-panel guidance", () => {
+    const f = src("lib", "engines", "skills", "image", "dalle.ts");
+    expect(f).toMatch(/gpt-image-2/);
+    expect(f).not.toMatch(/\[quality:\s*hd\]/i);
+    expect(f).toMatch(/\[quality:\s*high\]/i);
+    expect(f).toMatch(/multi-panel|Multi-panel|QUOTES|ALL CAPS/i);
+  });
+
   it("skills/video/runway.ts: reflects Gen-4.5 duration and audio guidance", () => {
     const f = src("lib", "engines", "skills", "video", "runway.ts");
     expect(f).toMatch(/60s/);
