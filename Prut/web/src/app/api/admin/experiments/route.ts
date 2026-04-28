@@ -28,10 +28,18 @@ export const GET = withAdmin(async (req) => {
     const totalUserCount = totalUsers ?? 1;
 
     // ── 2. Fetch all activity logs in last 30 days ───────────────────────────
+    const ACTIVITY_LOG_LIMIT = 100000;
     const { data: activityLogs, error: logsError } = await supabase
       .from("activity_logs")
       .select("user_id, action, entity_type, details, created_at")
-      .gte("created_at", thirtyDaysAgo);
+      .gte("created_at", thirtyDaysAgo)
+      .limit(ACTIVITY_LOG_LIMIT);
+
+    if ((activityLogs?.length ?? 0) === ACTIVITY_LOG_LIMIT) {
+      logger.warn(
+        `[Admin Experiments] activity_logs hit limit of ${ACTIVITY_LOG_LIMIT} rows — results may be incomplete. Consider switching to aggregate RPC.`,
+      );
+    }
 
     if (logsError) {
       logger.error("[Admin Experiments] activity_logs query error:", logsError);
@@ -87,7 +95,17 @@ export const GET = withAdmin(async (req) => {
     );
 
     // ── 5. Pro vs Free segment comparison ───────────────────────────────────
-    const { data: profiles } = await supabase.from("profiles").select("id, plan_tier");
+    const PROFILES_LIMIT = 10000;
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, plan_tier")
+      .limit(PROFILES_LIMIT);
+
+    if ((profiles?.length ?? 0) === PROFILES_LIMIT) {
+      logger.warn(
+        `[Admin Experiments] profiles hit limit of ${PROFILES_LIMIT} rows — segment counts may be incomplete.`,
+      );
+    }
 
     const proUserIds = new Set(
       (profiles ?? [])

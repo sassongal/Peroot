@@ -28,7 +28,7 @@ export const GET = withAdmin(async () => {
       // Recent 200 prompts for client-side scoring sample
       supabase
         .from("history")
-        .select("original, capability_mode")
+        .select("prompt, capability_mode")
         .order("created_at", { ascending: false })
         .limit(200),
 

@@ -10,7 +10,7 @@ import { logger } from "@/lib/logger";
  * Query params:
  *   page       page number (default 1)
  *   limit      items per page (default 20)
- *   filter     all | flagged | approved | removed (default all)
+ *   filter     all | flagged | approved | pending (default all)
  *   search     search string for prompt_text
  *
  * Returns paginated public prompts and summary stats.
@@ -115,6 +115,8 @@ export const GET = withAdmin(async (req) => {
   } else if (filter === "pending") {
     enriched = enriched.filter((p) => p.moderation_status === "pending");
   }
+  // 'removed' is not filterable here: removed prompts have is_public=false and are
+  // excluded from publicPrompts above, so they never appear in this view.
   // 'all' passes everything through
 
   const totalFiltered = enriched.length;

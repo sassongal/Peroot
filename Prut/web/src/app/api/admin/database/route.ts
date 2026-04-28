@@ -34,7 +34,7 @@ const STATS_TABLES = [
  * stats  - returns row counts and health status
  * backup - returns full table dumps for all key tables
  */
-export const GET = withAdmin(async (req) => {
+export const GET = withAdmin(async (req, _ssrClient, adminUser) => {
   const supabase = createServiceClient();
   try {
     const action = req.nextUrl.searchParams.get("action") || "stats";
@@ -73,21 +73,13 @@ export const GET = withAdmin(async (req) => {
         if (!tblError && data) tables[table] = data;
       }
 
-      // Log the backup action
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("activity_logs").insert({
-          action: "DB Backup Genesis",
-          entity_type: "database",
-          user_id: user.id,
-          details: {
-            is_admin: true,
-            timestamp: new Date().toISOString(),
-          },
-        });
-      }
+      // Log the backup action using the already-authenticated admin user from withAdmin
+      await supabase.from("activity_logs").insert({
+        user_id: adminUser.id,
+        action: "DB Backup Genesis",
+        entity_type: "database",
+        details: { is_admin: true, timestamp: new Date().toISOString() },
+      });
 
       return NextResponse.json({
         timestamp: new Date().toISOString(),
