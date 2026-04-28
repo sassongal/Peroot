@@ -40,18 +40,24 @@ export const GET = withAdmin(async () => {
       .select("id", { count: "exact", head: true })
       .eq("status", "active");
 
-    // Enrich sequence unsubscribes with user emails (Auth Admin API requires service role)
-    const service = createServiceClient();
-    const enriched = await Promise.all(
-      (seqUnsubscribed ?? []).map(async (seq) => {
-        const { data: userData } = await service.auth.admin.getUserById(seq.user_id);
-        return {
-          ...seq,
-          email: userData?.user?.email || "unknown",
-          source: "email_sequences" as const,
-        };
-      }),
-    );
+    // Enrich sequence unsubscribes with user emails via a single profiles join
+    const seqList = seqUnsubscribed ?? [];
+    const userIds = [...new Set(seqList.map((s) => s.user_id))];
+    const emailByUserId = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: profileRows } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .in("id", userIds);
+      for (const p of profileRows ?? []) {
+        emailByUserId.set(p.id, p.email ?? "unknown");
+      }
+    }
+    const enriched = seqList.map((seq) => ({
+      ...seq,
+      email: emailByUserId.get(seq.user_id) ?? "unknown",
+      source: "email_sequences" as const,
+    }));
 
     return NextResponse.json({
       automation: getEmailAutomationSnapshot(),

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
@@ -274,7 +275,7 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
     }
 
     // 6. Insert new prompt
-    const promptId = `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const promptId = `cf_${randomUUID()}`;
     const { data: newPrompt, error: insertError } = await supabase
       .from("public_library_prompts")
       .insert({

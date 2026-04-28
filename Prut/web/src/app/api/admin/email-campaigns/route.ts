@@ -310,7 +310,11 @@ export const POST = withAdminWrite(async (req, _ssrClient, user) => {
     // ── Send via Resend ───────────────────────────────────────────────────
     const resend = new Resend(process.env.RESEND_API_KEY);
     const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@example.com";
-    const replyToEmail = process.env.RESEND_REPLY_TO || "gal@joya-tech.net";
+    const replyToEmail = process.env.RESEND_REPLY_TO;
+    if (!replyToEmail) {
+      logger.error("[email-campaigns] RESEND_REPLY_TO env var is not set");
+      return NextResponse.json({ error: "Reply-to email not configured" }, { status: 500 });
+    }
 
     let sentCount = 0;
     const failures: { email: string; error: string }[] = [];
