@@ -14,15 +14,19 @@ const CACHE_TTL = 300; // 5 minutes
  * Cached in Redis for 5 minutes to avoid re-running 17 parallel Supabase
  * queries on every admin page load.
  */
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (req) => {
+  const skipCache = new URL(req.url).searchParams.get("refresh") === "1";
+
   // Use service client so RLS does not scope cross-user aggregations
   // (history, profiles, subscriptions, personal_library) to the requesting admin.
   const supabase = createServiceClient();
-  try {
-    const cached = await redis.get<Record<string, unknown>>(CACHE_KEY);
-    if (cached) return NextResponse.json(cached);
-  } catch (err) {
-    logger.warn("[Admin Dashboard] Redis cache read failed:", err);
+  if (!skipCache) {
+    try {
+      const cached = await redis.get<Record<string, unknown>>(CACHE_KEY);
+      if (cached) return NextResponse.json(cached);
+    } catch (err) {
+      logger.warn("[Admin Dashboard] Redis cache read failed:", err);
+    }
   }
 
   const now = new Date();
@@ -50,6 +54,7 @@ export const GET = withAdmin(async () => {
     { data: mauData },
     { data: modeBreakdown },
     { count: errorCount },
+    { data: mismatchRows },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).neq("plan_tier", "free"),
@@ -113,6 +118,8 @@ export const GET = withAdmin(async () => {
       .eq("endpoint", "enhance")
       .gte("created_at", firstOfMonth)
       .lte("estimated_cost_usd", 0),
+    // Auth ↔ profiles mismatch: users in auth.users with no profiles row (or vice versa)
+    supabase.rpc("auth_profile_mismatch_count"),
   ]);
 
   // Aggregate free vs pro users (two head:true counts — no row fetch)
@@ -144,6 +151,16 @@ export const GET = withAdmin(async () => {
     const mode = (row.capability_mode as string) || "STANDARD";
     modeDistribution[mode] = (modeDistribution[mode] || 0) + 1;
   }
+
+  // Auth ↔ profile mismatch
+  const mismatchRow = Array.isArray(mismatchRows) && mismatchRows[0] ? mismatchRows[0] : null;
+  const authProfileMismatch = mismatchRow
+    ? {
+        authCount: mismatchRow.auth_count ?? 0,
+        profileCount: mismatchRow.profile_count ?? 0,
+        missing: mismatchRow.missing ?? 0,
+      }
+    : null;
 
   // Monthly trend: last 6 months, new users per month (single query instead of 6)
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
@@ -190,6 +207,7 @@ export const GET = withAdmin(async () => {
     recentSignups: recentSignups ?? [],
     recentActivity: recentActivity ?? [],
     monthlyTrend,
+    authProfileMismatch,
     generatedAt: new Date().toISOString(),
   };
 
