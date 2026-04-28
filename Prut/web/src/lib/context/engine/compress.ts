@@ -95,10 +95,7 @@ export function compressToLimit(
       const head = text.slice(0, safeHead);
       const middle = safeMidEnd > safeMidStart ? text.slice(safeMidStart, safeMidEnd) : "";
       const tail = safeTail > 0 ? text.slice(-safeTail) : "";
-      cut =
-        head +
-        (middle ? SEPARATOR + middle : "") +
-        (tail ? SEPARATOR + tail : "");
+      cut = head + (middle ? SEPARATOR + middle : "") + (tail ? SEPARATOR + tail : "");
       break;
     }
 
