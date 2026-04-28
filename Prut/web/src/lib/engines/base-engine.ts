@@ -285,7 +285,11 @@ ${alignment}
     if (input.context && input.context.length > 0) {
       const tier = input.tier ?? "free";
       const tokenBudget = getContextLimits(tier).total;
-      const rendered = renderInjection(input.context as unknown as ContextBlock[], tokenBudget);
+      const rendered = renderInjection(
+        input.context as unknown as ContextBlock[],
+        tokenBudget,
+        input.prompt,
+      );
       if (rendered) contextInjected += `\n\n${rendered}\n`;
     }
 
