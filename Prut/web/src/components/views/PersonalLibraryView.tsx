@@ -20,6 +20,7 @@ import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
 import { PersonalLibraryModals } from "./personal-library/PersonalLibraryModals";
 import { PersonalLibrarySidebar } from "./personal-library/PersonalLibrarySidebar";
 import { PromptGraphView } from "@/components/features/library/PromptGraphView";
+import { LibraryBottomNav } from "@/components/features/library/LibraryBottomNav";
 import { GuestGraphPreview } from "@/components/features/library/GuestGraphPreview";
 import type { PersonalLibrarySharedState } from "./personal-library/types";
 import { useHistory } from "@/hooks/useHistory";
@@ -852,6 +853,9 @@ export function PersonalLibraryView({
 
       {/* Modals, floating bars, context menus */}
       <PersonalLibraryModals shared={shared} />
+
+      {/* Mobile bottom navigation */}
+      <LibraryBottomNav shared={shared} />
     </div>
   );
 }
