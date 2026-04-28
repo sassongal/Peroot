@@ -19,6 +19,7 @@ import {
   FolderInput,
   History,
   ChevronDown,
+  CopyPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { PersonalPrompt } from "@/lib/types";
@@ -55,7 +56,7 @@ export function PromptNodeCard({
   onSaveTags,
   backButtonRef,
 }: PromptNodeCardProps) {
-  const { togglePin, movePrompts, deletePrompts, personalCategories, updatePrompt } =
+  const { togglePin, movePrompts, deletePrompts, personalCategories, updatePrompt, duplicatePrompt } =
     useLibraryContext();
   const { favoritePersonalIds, handleToggleFavorite } = useFavoritesContext();
 
@@ -217,6 +218,16 @@ export function PromptNodeCard({
       toast.error("מחיקה נכשלה");
     }
   }, [prompt, deletePrompts, onClose]);
+
+  const handleDuplicate = useCallback(async () => {
+    if (!prompt) return;
+    try {
+      await duplicatePrompt(prompt);
+      toast.success("הפרומפט שוכפל");
+    } catch {
+      toast.error("שכפול נכשל");
+    }
+  }, [prompt, duplicatePrompt]);
 
   const handleOpenEdit = useCallback(() => {
     if (!prompt) return;
@@ -690,6 +701,14 @@ export function PromptNodeCard({
               >
                 <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current" : ""}`} />
                 {isPinned ? "מוצמד" : "הצמד"}
+              </button>
+              <button
+                onClick={handleDuplicate}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] text-slate-300 hover:text-white border border-white/10 hover:bg-white/6 transition-colors"
+                title="שכפל פרומפט"
+              >
+                <CopyPlus className="w-3.5 h-3.5" />
+                שכפל
               </button>
             </div>
           </div>

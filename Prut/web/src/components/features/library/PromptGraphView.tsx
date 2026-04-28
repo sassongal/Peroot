@@ -827,10 +827,13 @@ export function PromptGraphView({
             className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-full border border-slate-200/60 dark:border-white/15 bg-white/85 dark:bg-black/75 backdrop-blur-xl px-4 py-2 text-xs text-slate-700 dark:text-slate-200 shadow-xl cursor-pointer"
             dir="rtl"
           >
-            טיפ: <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">/</kbd> חיפוש ·{" "}
-            <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
-            <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">F</kbd> מועדפים ·{" "}
-            <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">R</kbd> רעיון מחדש
+            <span className="hidden md:inline">
+              טיפ: <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">/</kbd> חיפוש ·{" "}
+              <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">Esc</kbd> איפוס ·{" "}
+              <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">F</kbd> מועדפים ·{" "}
+              <kbd className="px-1 bg-slate-100 dark:bg-white/10 rounded">R</kbd> רעיון מחדש
+            </span>
+            <span className="md:hidden">הקישו על צומת לפרטים · צבטו להגדלה · גררו להזזה</span>
           </div>
         )}
 
