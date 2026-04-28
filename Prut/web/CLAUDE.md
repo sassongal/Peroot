@@ -22,10 +22,11 @@ Next.js 16 renamed `middleware.ts` → `proxy.ts`. The active middleware file is
 - The exported function is named `proxy` and there is `export const config = { matcher: [...] }`
 
 ### Known local dev quirks (Windows-specific):
-- `@react-pdf/renderer` is STUBBED in node_modules — v4 has broken sub-packages on npm.
-  Do NOT try to import it at top-level. Only use via dynamic import in `src/lib/export/download-prompt-pdf.tsx`
-- `husky` prepare script was removed from package.json (Windows incompatibility). Git hooks not active locally.
-- `@next/bundle-analyzer` is disabled in next.config.ts locally — import replaced with no-op.
+- `@react-pdf/renderer` v4 is fully installed and working (verified 2026-04-29).
+  Still load it via dynamic import in `src/lib/export/download-prompt-pdf.tsx` — it
+  dispatches to browser APIs at module init, so a top-level import would break SSR.
+- `husky` git hooks may not run on Windows. Run `npm run precommit` (lint-staged) before committing, or `npm run preflight` (lint + typecheck + test) before pushing.
+- `@next/bundle-analyzer` is gated by `process.env.ANALYZE === "true"` in next.config.ts (no-op unless the env var is set).
 - `NODE_ENV` warning on startup is cosmetic — Next.js sets it automatically, ignore it.
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` missing — rate limiting degraded locally, not blocking.
 - `vercel` MCP and `peroot-platform` MCP may show errors in Cursor — not blocking for development.

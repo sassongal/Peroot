@@ -26,7 +26,18 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
     "prepare": "husky",
+    "precommit": "lint-staged",
+    "preflight": "npm run lint && npm run typecheck && npm run test",
     "repomix": "npx repomix --compress --style xml -o repomix-output.xml"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",
