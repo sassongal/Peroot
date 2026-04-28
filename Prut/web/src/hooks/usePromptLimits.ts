@@ -104,7 +104,8 @@ export function usePromptLimits() {
 
   const updateLimits = useCallback(() => {
     if (user) {
-      if (isAdmin) {
+      if (isAdmin || isPro) {
+        // Pro/admin: always allow — server handles monthly refresh at spend time
         setCanUsePrompt(true);
         return;
       }
@@ -120,7 +121,7 @@ export function usePromptLimits() {
       }
       setCanUsePrompt(usage.count < settings.max_free_prompts);
     }
-  }, [user, isAdmin, quota, settings.allow_guest_access, settings.max_free_prompts, usage.count]);
+  }, [user, isAdmin, isPro, quota, settings.allow_guest_access, settings.max_free_prompts, usage.count]);
 
   useEffect(() => {
     queueMicrotask(() => updateLimits());
@@ -147,7 +148,7 @@ export function usePromptLimits() {
 
   function getRequiredAction(): "login" | "upgrade" | null {
     if (user) {
-      if (isAdmin) return null;
+      if (isAdmin || isPro) return null;
       return quota !== null && quota.credits_balance < 1 ? "upgrade" : null;
     }
     if (!user && !settings.allow_guest_access) return "login";

@@ -119,7 +119,7 @@ function PageContent() {
 
   const { state: ps, dispatch } = usePromptWorkflow();
   const { isPro } = useSubscription();
-  const { canUsePrompt, requiredAction, incrementUsage } = usePromptLimits();
+  const { canUsePrompt, requiredAction, incrementUsage, isPro: isProPlan } = usePromptLimits();
   const discovery = useFeatureDiscovery();
   const context = useContextAttachments({ tier: isPro ? "pro" : "free" });
 
@@ -368,9 +368,10 @@ function PageContent() {
 
   // --- Logic ---
 
-  // Show upgrade popup when user hits rate limit or runs out of credits
+  // Show upgrade popup when user hits rate limit or runs out of credits.
+  // Never show for Pro/admin — they don't need to upgrade, they need to wait.
   useEffect(() => {
-    if (ps.error && user) {
+    if (ps.error && user && !isProPlan) {
       const err = ps.error.toLowerCase();
       if (
         err.includes("too many") ||
@@ -381,7 +382,7 @@ function PageContent() {
         setShowUpgradeNudge(true);
       }
     }
-  }, [ps.error, user]);
+  }, [ps.error, user, isProPlan]);
 
   const showLoginRequired = (feature: string, message?: string) => {
     setLoginRequiredConfig({
