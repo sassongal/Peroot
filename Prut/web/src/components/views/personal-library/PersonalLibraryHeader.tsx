@@ -6,7 +6,6 @@ import {
   Plus,
   Star,
   Pin,
-  LayoutTemplate,
   CheckSquare,
   Upload,
   History,
@@ -59,17 +58,8 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     setLocalViewType,
   } = shared;
 
-  // Mobile quick tabs — surface favorites + virtual folders inline so
-  // users don't need to open the drawer. Horizontally scrollable.
-  const mobileQuickTabs = [
-    { key: "all", label: "הכל", icon: BookOpen },
-    { key: "favorites", label: "מועדפים", icon: Star },
-    { key: "pinned", label: "מוצמדים", icon: Pin },
-    { key: "templates", label: "תבניות", icon: LayoutTemplate },
-  ] as const;
-
   return (
-    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) bg-black/40 mb-4 overflow-x-hidden">
+    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) bg-black/40 mb-4 overflow-x-hidden sticky top-0 z-20 md:static bg-[#0A0A0F]/90 md:bg-black/40 backdrop-blur-md md:backdrop-blur-none">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
           {/* Mobile sidebar toggle */}
@@ -169,67 +159,6 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           </span>
         </div>
       )}
-
-      {/* Mobile quick tabs — virtual folders + "full library" chip.
-          Horizontally scrollable, never wraps, hidden on md+. */}
-      <div className="md:hidden -mx-4 px-4 mb-3 overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-1.5 w-max">
-          {mobileQuickTabs.map(({ key, label, icon: Icon }) => {
-            const isActive = effectiveFolder === key;
-            const count = folderCounts[key] ?? 0;
-            return (
-              <button
-                key={key}
-                onClick={() => setFolder(key)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-                  isActive
-                    ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 border border-amber-500/40 shadow-sm shadow-amber-500/10"
-                    : "bg-black/5 dark:bg-white/5 text-(--text-secondary) border border-(--glass-border) hover:text-(--text-primary)",
-                )}
-                aria-pressed={isActive}
-              >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                <span>{label}</span>
-                {count > 0 && (
-                  <span
-                    className={cn(
-                      "text-[10px] tabular-nums px-1.5 py-0.5 rounded-full",
-                      isActive
-                        ? "bg-amber-500/20 text-amber-800 dark:text-amber-100"
-                        : "bg-black/10 dark:bg-white/10 text-(--text-muted)",
-                    )}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          <div className="w-px h-6 bg-(--glass-border) mx-1 shrink-0" />
-          {/* Mobile graph toggle */}
-          <button
-            onClick={() => setLocalViewType(localViewType === "graph" ? "grid" : "graph")}
-            aria-pressed={localViewType === "graph"}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-              localViewType === "graph"
-                ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 border-amber-500/40"
-                : "bg-black/5 dark:bg-white/5 text-(--text-secondary) border-(--glass-border) hover:text-(--text-primary)",
-            )}
-          >
-            <Network className="w-3.5 h-3.5 shrink-0" />
-            <span>גרף</span>
-          </button>
-          <button
-            onClick={() => setViewMode("library")}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap bg-black/5 dark:bg-white/5 text-(--text-secondary) hover:text-(--text-primary) border border-(--glass-border) transition-colors min-h-9 shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-          >
-            <BookOpen className="w-3.5 h-3.5 shrink-0" />
-            <span>ספרייה מלאה</span>
-          </button>
-        </div>
-      </div>
 
       {/* Search + Sort + Actions: full width search; on mobile toolbar scrolls horizontally */}
       <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
