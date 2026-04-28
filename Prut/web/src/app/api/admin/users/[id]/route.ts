@@ -7,13 +7,7 @@ import { adminAdjustCredits } from "@/lib/services/credit-service";
 import { logger } from "@/lib/logger";
 
 const adminActionSchema = z.object({
-  action: z.enum([
-    "change_tier",
-    "grant_credits",
-    "revoke_credits",
-    "ban",
-    "unban",
-  ]),
+  action: z.enum(["change_tier", "grant_credits", "revoke_credits", "ban", "unban"]),
   value: z.union([z.string(), z.number()]).optional(),
 });
 
@@ -246,7 +240,10 @@ export const POST = withAdminWrite(
                 .eq("role", "admin");
               if (countErr) {
                 logger.error("[Admin User POST] change_tier admin-count check failed:", countErr);
-                return NextResponse.json({ error: "Failed to verify admin count" }, { status: 500 });
+                return NextResponse.json(
+                  { error: "Failed to verify admin count" },
+                  { status: 500 },
+                );
               }
               if ((count ?? 0) <= 1) {
                 return NextResponse.json(
@@ -257,13 +254,31 @@ export const POST = withAdminWrite(
             }
           }
 
+          // For demotions FROM admin, metadata/signOut failures are fatal
+          // (otherwise demoted user retains admin access via stale JWT for ~1h).
+          // Re-read role here because the guard branch above is in a different scope.
+          let wasAdmin = false;
+          if (newTier !== "admin") {
+            const { data: roleRow } = await supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", id)
+              .maybeSingle();
+            wasAdmin = roleRow?.role === "admin";
+          }
+
           const { error: rpcErr } = await supabase.rpc("admin_change_tier", {
             target_user_id: id,
             new_tier: newTier,
           });
           if (rpcErr) {
             logger.error("[Admin User POST] change_tier RPC error:", rpcErr);
-            return NextResponse.json({ error: "Failed to change tier" }, { status: 500 });
+            const msg =
+              typeof rpcErr.message === "string" && rpcErr.message.includes("last remaining admin")
+                ? "Refusing: this would remove the last remaining admin"
+                : "Failed to change tier";
+            const status = msg.startsWith("Refusing") ? 400 : 500;
+            return NextResponse.json({ error: msg }, { status });
           }
 
           // Sync app_metadata so proxy.ts JWT checks see the new role/tier without a DB hit.
@@ -273,11 +288,34 @@ export const POST = withAdminWrite(
               plan_tier: newTier,
             },
           });
-          if (metaErr) logger.error("[Admin User POST] change_tier app_metadata error:", metaErr);
+          if (metaErr) {
+            logger.error("[Admin User POST] change_tier app_metadata error:", metaErr);
+            if (wasAdmin) {
+              return NextResponse.json(
+                { error: "Tier changed but JWT metadata sync failed; retry to revoke admin access" },
+                { status: 500 },
+              );
+            }
+          }
 
           // Force JWT refresh so the new role/tier is visible on the user's next request.
-          const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
-          if (signOutErr) logger.error("[Admin User POST] change_tier signOut error:", signOutErr);
+          // Skip when the admin is changing their own tier — global signOut would kill
+          // the in-progress admin panel session.
+          if (id !== adminUser.id) {
+            const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
+            if (signOutErr) {
+              logger.error("[Admin User POST] change_tier signOut error:", signOutErr);
+              if (wasAdmin) {
+                return NextResponse.json(
+                  {
+                    error:
+                      "Tier changed but session invalidation failed; demoted user retains admin until token expiry",
+                  },
+                  { status: 500 },
+                );
+              }
+            }
+          }
           break;
         }
 

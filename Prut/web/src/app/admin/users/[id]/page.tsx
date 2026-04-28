@@ -167,8 +167,7 @@ function initials(email: string) {
 }
 
 function sourceColor(source: string) {
-  if (source === "extension")
-    return "bg-purple-500/10 border-purple-500/20 text-purple-400";
+  if (source === "extension") return "bg-purple-500/10 border-purple-500/20 text-purple-400";
   return "bg-blue-500/10 border-blue-500/20 text-blue-400";
 }
 
@@ -236,11 +235,10 @@ export default function UserDetailPage() {
     setLoadingPrompts(true);
     try {
       const res = await fetch(
-        getApiPath(`/api/admin/users/${userId}/prompts?tab=prompts&limit=50`)
+        getApiPath(`/api/admin/users/${userId}/prompts?tab=prompts&limit=50`),
       );
       if (!res.ok) throw new Error("Failed to fetch prompts");
-      const json: { tab: string; items: PromptItem[]; total: number } =
-        await res.json();
+      const json: { tab: string; items: PromptItem[]; total: number } = await res.json();
       setPrompts(json.items ?? []);
       setPromptsLoaded(true);
     } catch (err) {
@@ -257,8 +255,8 @@ export default function UserDetailPage() {
     try {
       const res = await fetch(
         getApiPath(
-          `/api/admin/users/${userId}/prompts?tab=history&limit=20&offset=${historyOffset}`
-        )
+          `/api/admin/users/${userId}/prompts?tab=history&limit=20&offset=${historyOffset}`,
+        ),
       );
       if (!res.ok) throw new Error("Failed to fetch history");
       const json: {
@@ -280,25 +278,28 @@ export default function UserDetailPage() {
   }, [userId, historyOffset]);
 
   // Fetch/load-more activity from dedicated paginated endpoint
-  const fetchActivity = useCallback(async (reset = false) => {
-    setLoadingActivity(true);
-    const offset = reset ? 0 : activityOffset;
-    try {
-      const res = await fetch(
-        getApiPath(`/api/admin/users/${userId}/activity?limit=50&offset=${offset}`)
-      );
-      if (!res.ok) throw new Error("Failed to fetch activity");
-      const json: { logs: ActivityLog[]; total: number } = await res.json();
-      setActivity((prev) => (reset ? json.logs : [...prev, ...json.logs]));
-      setActivityOffset(offset + (json.logs?.length ?? 0));
-      setActivityTotal(json.total ?? 0);
-    } catch (err) {
-      logger.error(err);
-      toast.error("Failed to load activity");
-    } finally {
-      setLoadingActivity(false);
-    }
-  }, [userId, activityOffset]);
+  const fetchActivity = useCallback(
+    async (reset = false) => {
+      setLoadingActivity(true);
+      const offset = reset ? 0 : activityOffset;
+      try {
+        const res = await fetch(
+          getApiPath(`/api/admin/users/${userId}/activity?limit=50&offset=${offset}`),
+        );
+        if (!res.ok) throw new Error("Failed to fetch activity");
+        const json: { logs: ActivityLog[]; total: number } = await res.json();
+        setActivity((prev) => (reset ? json.logs : [...prev, ...json.logs]));
+        setActivityOffset(offset + (json.logs?.length ?? 0));
+        setActivityTotal(json.total ?? 0);
+      } catch (err) {
+        logger.error(err);
+        toast.error("Failed to load activity");
+      } finally {
+        setLoadingActivity(false);
+      }
+    },
+    [userId, activityOffset],
+  );
 
   useEffect(() => {
     fetchDetail();
@@ -328,9 +329,7 @@ export default function UserDetailPage() {
       fetchDetail();
     } catch (err: unknown) {
       logger.error(err);
-      toast.error(
-        err instanceof Error ? err.message : "Action failed"
-      );
+      toast.error(err instanceof Error ? err.message : "Action failed");
     } finally {
       setActionLoading(null);
     }
@@ -339,7 +338,7 @@ export default function UserDetailPage() {
   function toggleExpandedSet(
     set: Set<string>,
     setter: React.Dispatch<React.SetStateAction<Set<string>>>,
-    id: string
+    id: string,
   ) {
     setter((prev) => {
       const next = new Set(prev);
@@ -412,19 +411,13 @@ export default function UserDetailPage() {
   const email = profile.email ?? subscription?.customer_email ?? "unknown";
   const displayName = subscription?.customer_name ?? email;
 
-  const hasInsights =
-    topCategories?.length > 0 ||
-    Object.keys(sourceBreakdown ?? {}).length > 0;
+  const hasInsights = topCategories?.length > 0 || Object.keys(sourceBreakdown ?? {}).length > 0;
 
-  const sourceTotal = Object.values(sourceBreakdown ?? {}).reduce(
-    (a, b) => a + b,
-    0
-  );
+  const sourceTotal = Object.values(sourceBreakdown ?? {}).reduce((a, b) => a + b, 0);
 
   return (
     <AdminLayout>
       <div className="space-y-10 animate-in fade-in duration-700 pb-20" dir="rtl">
-
         {/* Back Button */}
         <Link
           href="/admin/users"
@@ -452,7 +445,7 @@ export default function UserDetailPage() {
               <span
                 className={cn(
                   "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
-                  tierColor(profile.plan_tier)
+                  tierColor(profile.plan_tier),
                 )}
               >
                 {profile.plan_tier?.toUpperCase() || "FREE"}
@@ -474,7 +467,7 @@ export default function UserDetailPage() {
                     "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
                     tag === "churn"
                       ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
-                      : "bg-zinc-500/10 border-zinc-500/20 text-zinc-400"
+                      : "bg-zinc-500/10 border-zinc-500/20 text-zinc-400",
                   )}
                 >
                   {tag}
@@ -484,9 +477,7 @@ export default function UserDetailPage() {
             <h1 className="text-3xl font-black text-white tracking-tight leading-none">
               {displayName}
             </h1>
-            {subscription?.customer_name && (
-              <p className="text-zinc-400 font-medium">{email}</p>
-            )}
+            {subscription?.customer_name && <p className="text-zinc-400 font-medium">{email}</p>}
             <p className="text-[9px] text-zinc-700 font-black uppercase tracking-widest">
               ID: {profile.id}
             </p>
@@ -516,12 +507,7 @@ export default function UserDetailPage() {
 
         {/* Quick Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4">
-          <QuickStat
-            label="Prompts"
-            value={promptCount}
-            icon={BookOpen}
-            color="blue"
-          />
+          <QuickStat label="Prompts" value={promptCount} icon={BookOpen} color="blue" />
           <QuickStat
             label="API Cost"
             value={fmtCost(totalApiCost)}
@@ -546,18 +532,8 @@ export default function UserDetailPage() {
             icon={Zap}
             color="amber"
           />
-          <QuickStat
-            label="Achievements"
-            value={achievementCount}
-            icon={Trophy}
-            color="purple"
-          />
-          <QuickStat
-            label="Generations"
-            value={historyCount ?? 0}
-            icon={Sparkles}
-            color="blue"
-          />
+          <QuickStat label="Achievements" value={achievementCount} icon={Trophy} color="purple" />
+          <QuickStat label="Generations" value={historyCount ?? 0} icon={Sparkles} color="blue" />
           <QuickStat
             label="Last Active"
             value={lastActive ? timeAgo(lastActive) : "—"}
@@ -568,13 +544,21 @@ export default function UserDetailPage() {
 
         {/* Main content + Sidebar */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-
           {/* Tabs Area */}
           <div className="xl:col-span-2 space-y-6">
-
             {/* Tab Switcher */}
             <div className="flex p-1.5 bg-zinc-950/50 border border-white/5 rounded-[28px] gap-1">
-              {(["overview", "activity", "prompts", "history", "tokens", "credits", "emails"] as Tab[]).map((tab) => {
+              {(
+                [
+                  "overview",
+                  "activity",
+                  "prompts",
+                  "history",
+                  "tokens",
+                  "credits",
+                  "emails",
+                ] as Tab[]
+              ).map((tab) => {
                 const labels: Record<Tab, string> = {
                   overview: "Overview",
                   activity: "Activity",
@@ -592,7 +576,7 @@ export default function UserDetailPage() {
                       "flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
                       activeTab === tab
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                        : "text-zinc-600 hover:text-zinc-300"
+                        : "text-zinc-600 hover:text-zinc-300",
                     )}
                   >
                     {labels[tab]}
@@ -609,7 +593,11 @@ export default function UserDetailPage() {
                   {subscription ? (
                     <div className="grid grid-cols-2 gap-6">
                       <InfoRow label="Plan" value={subscription.plan_name} />
-                      <InfoRow label="Status" value={subscription.status} highlight={subscription.status === "active"} />
+                      <InfoRow
+                        label="Status"
+                        value={subscription.status}
+                        highlight={subscription.status === "active"}
+                      />
                       <InfoRow label="Customer" value={subscription.customer_name || "-"} />
                       <InfoRow
                         label="Renews"
@@ -645,7 +633,10 @@ export default function UserDetailPage() {
                         </p>
                       )}
                       {stylePersonality.preferred_format && (
-                        <InfoRow label="Preferred Format" value={stylePersonality.preferred_format} />
+                        <InfoRow
+                          label="Preferred Format"
+                          value={stylePersonality.preferred_format}
+                        />
                       )}
                     </div>
                   ) : (
@@ -670,7 +661,6 @@ export default function UserDetailPage() {
                 {hasInsights && (
                   <Panel title="Usage Insights" icon={BarChart2} color="blue">
                     <div className="space-y-6">
-
                       {/* Source Breakdown */}
                       {sourceTotal > 0 && (
                         <div className="space-y-3">
@@ -679,16 +669,15 @@ export default function UserDetailPage() {
                           </span>
                           <div className="space-y-2">
                             {Object.entries(sourceBreakdown).map(([src, count]) => {
-                              const pct = sourceTotal > 0
-                                ? Math.round((count / sourceTotal) * 100)
-                                : 0;
+                              const pct =
+                                sourceTotal > 0 ? Math.round((count / sourceTotal) * 100) : 0;
                               return (
                                 <div key={src} className="space-y-1">
                                   <div className="flex items-center justify-between">
                                     <span
                                       className={cn(
                                         "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                                        sourceColor(src)
+                                        sourceColor(src),
                                       )}
                                     >
                                       {src}
@@ -701,9 +690,7 @@ export default function UserDetailPage() {
                                     <div
                                       className={cn(
                                         "h-full rounded-full transition-all",
-                                        src === "extension"
-                                          ? "bg-purple-500/60"
-                                          : "bg-blue-500/60"
+                                        src === "extension" ? "bg-purple-500/60" : "bg-blue-500/60",
                                       )}
                                       style={{ width: `${pct}%` }}
                                     />
@@ -751,12 +738,8 @@ export default function UserDetailPage() {
                                 key={tone}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/2 border border-white/5"
                               >
-                                <span className="text-[10px] font-bold text-zinc-400">
-                                  {tone}
-                                </span>
-                                <span className="text-[9px] font-black text-zinc-600">
-                                  {count}
-                                </span>
+                                <span className="text-[10px] font-bold text-zinc-400">{tone}</span>
+                                <span className="text-[9px] font-black text-zinc-600">{count}</span>
                               </div>
                             ))}
                           </div>
@@ -775,12 +758,8 @@ export default function UserDetailPage() {
                                 key={mode}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/2 border border-white/5"
                               >
-                                <span className="text-[10px] font-bold text-zinc-400">
-                                  {mode}
-                                </span>
-                                <span className="text-[9px] font-black text-zinc-600">
-                                  {count}
-                                </span>
+                                <span className="text-[10px] font-bold text-zinc-400">{mode}</span>
+                                <span className="text-[9px] font-black text-zinc-600">{count}</span>
                               </div>
                             ))}
                           </div>
@@ -800,7 +779,11 @@ export default function UserDetailPage() {
                     {activityTotal > 0 ? `${activityTotal} total actions` : "Activity"}
                   </span>
                   <button
-                    onClick={() => { setActivity([]); setActivityOffset(0); fetchActivity(true); }}
+                    onClick={() => {
+                      setActivity([]);
+                      setActivityOffset(0);
+                      fetchActivity(true);
+                    }}
                     className="text-[9px] font-black uppercase tracking-widest text-zinc-700 hover:text-zinc-400 transition-colors"
                   >
                     Refresh
@@ -819,14 +802,15 @@ export default function UserDetailPage() {
                   ) : (
                     <div className="divide-y divide-white/5">
                       {activity.map((log) => (
-                        <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-white/2 transition-all">
+                        <div
+                          key={log.id}
+                          className="px-8 py-5 flex items-start gap-5 hover:bg-white/2 transition-all"
+                        >
                           <div className="mt-0.5 p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
                             <Activity className="w-3.5 h-3.5 text-zinc-600" />
                           </div>
                           <div className="flex-1 space-y-1">
-                            <span className="text-sm font-bold text-zinc-300">
-                              {log.action}
-                            </span>
+                            <span className="text-sm font-bold text-zinc-300">{log.action}</span>
                             {log.details && Object.keys(log.details).length > 0 && (
                               <p className="text-[10px] text-zinc-700 font-mono truncate max-w-xs">
                                 {JSON.stringify(log.details).slice(0, 80)}…
@@ -848,11 +832,14 @@ export default function UserDetailPage() {
                     disabled={loadingActivity}
                     className="w-full py-4 rounded-2xl bg-white/3 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                   >
+                    {loadingActivity ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
                     {loadingActivity
-                      ? <RefreshCw className="w-4 h-4 animate-spin" />
-                      : <ChevronDown className="w-4 h-4" />
-                    }
-                    {loadingActivity ? "Loading…" : `Load More (${activityTotal - activity.length} remaining)`}
+                      ? "Loading…"
+                      : `Load More (${activityTotal - activity.length} remaining)`}
                   </button>
                 )}
               </div>
@@ -875,10 +862,7 @@ export default function UserDetailPage() {
                       const isExpanded = expandedPrompts.has(p.id);
                       const hasPromptText = !!p.prompt;
                       return (
-                        <div
-                          key={p.id}
-                          className="px-8 py-5 hover:bg-white/2 transition-all"
-                        >
+                        <div key={p.id} className="px-8 py-5 hover:bg-white/2 transition-all">
                           <div className="flex items-center gap-5">
                             <div className="p-2 rounded-xl bg-zinc-900 border border-white/5 shrink-0">
                               <BookOpen className="w-3.5 h-3.5 text-zinc-600" />
@@ -906,18 +890,14 @@ export default function UserDetailPage() {
                               {hasPromptText && (
                                 <button
                                   onClick={() =>
-                                    toggleExpandedSet(
-                                      expandedPrompts,
-                                      setExpandedPrompts,
-                                      p.id
-                                    )
+                                    toggleExpandedSet(expandedPrompts, setExpandedPrompts, p.id)
                                   }
                                   className="p-1.5 rounded-lg text-zinc-700 hover:text-zinc-400 transition-colors"
                                 >
                                   <ChevronDown
                                     className={cn(
                                       "w-3.5 h-3.5 transition-transform",
-                                      isExpanded && "rotate-180"
+                                      isExpanded && "rotate-180",
                                     )}
                                   />
                                 </button>
@@ -965,11 +945,7 @@ export default function UserDetailPage() {
                           {/* Header row */}
                           <button
                             onClick={() =>
-                              toggleExpandedSet(
-                                expandedHistory,
-                                setExpandedHistory,
-                                item.id
-                              )
+                              toggleExpandedSet(expandedHistory, setExpandedHistory, item.id)
                             }
                             className="w-full px-7 py-5 flex items-start gap-4 hover:bg-white/2 transition-all text-right"
                           >
@@ -998,7 +974,7 @@ export default function UserDetailPage() {
                                 <span
                                   className={cn(
                                     "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border",
-                                    sourceColor(item.source)
+                                    sourceColor(item.source),
                                   )}
                                 >
                                   {item.source}
@@ -1027,7 +1003,7 @@ export default function UserDetailPage() {
                               <ChevronDown
                                 className={cn(
                                   "w-3.5 h-3.5 text-zinc-700 transition-transform",
-                                  isExpanded && "rotate-180"
+                                  isExpanded && "rotate-180",
                                 )}
                               />
                             </div>
@@ -1108,15 +1084,25 @@ export default function UserDetailPage() {
                 {/* Token totals */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="rounded-[28px] border border-white/5 bg-zinc-950/80 p-6 space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Total Input Tokens</p>
-                    <p className="text-2xl font-black text-zinc-200">{(totalInputTokens ?? 0).toLocaleString()}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                      Total Input Tokens
+                    </p>
+                    <p className="text-2xl font-black text-zinc-200">
+                      {(totalInputTokens ?? 0).toLocaleString()}
+                    </p>
                   </div>
                   <div className="rounded-[28px] border border-white/5 bg-zinc-950/80 p-6 space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Total Output Tokens</p>
-                    <p className="text-2xl font-black text-zinc-200">{(totalOutputTokens ?? 0).toLocaleString()}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                      Total Output Tokens
+                    </p>
+                    <p className="text-2xl font-black text-zinc-200">
+                      {(totalOutputTokens ?? 0).toLocaleString()}
+                    </p>
                   </div>
                   <div className="rounded-[28px] border border-white/5 bg-zinc-950/80 p-6 space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Total API Cost</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                      Total API Cost
+                    </p>
                     <p className="text-2xl font-black text-emerald-400">{fmtCost(totalApiCost)}</p>
                   </div>
                 </div>
@@ -1131,23 +1117,42 @@ export default function UserDetailPage() {
                     <div className="divide-y divide-white/5">
                       {/* Header */}
                       <div className="px-8 py-3 grid grid-cols-6 gap-4">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 col-span-2">Model / Engine</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">In Tokens</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">Out Tokens</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">Cost</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">When</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 col-span-2">
+                          Model / Engine
+                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                          In Tokens
+                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                          Out Tokens
+                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                          Cost
+                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                          When
+                        </span>
                       </div>
                       {recentApiCalls.map((call, i) => (
-                        <div key={i} className="px-8 py-4 grid grid-cols-6 gap-4 items-center hover:bg-white/2 transition-all">
+                        <div
+                          key={i}
+                          className="px-8 py-4 grid grid-cols-6 gap-4 items-center hover:bg-white/2 transition-all"
+                        >
                           <div className="col-span-2 space-y-0.5">
                             <p className="text-xs font-bold text-zinc-300 truncate">{call.model}</p>
                             <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
                               {call.engine_mode ?? call.provider}
                             </p>
                           </div>
-                          <span className="text-xs font-mono text-blue-400 text-right">{(call.input_tokens).toLocaleString()}</span>
-                          <span className="text-xs font-mono text-purple-400 text-right">{(call.output_tokens).toLocaleString()}</span>
-                          <span className="text-xs font-mono text-emerald-400 text-right">{fmtCost(call.cost_usd)}</span>
+                          <span className="text-xs font-mono text-blue-400 text-right">
+                            {call.input_tokens.toLocaleString()}
+                          </span>
+                          <span className="text-xs font-mono text-purple-400 text-right">
+                            {call.output_tokens.toLocaleString()}
+                          </span>
+                          <span className="text-xs font-mono text-emerald-400 text-right">
+                            {fmtCost(call.cost_usd)}
+                          </span>
                           <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest text-right whitespace-nowrap">
                             {timeAgo(call.created_at)}
                           </span>
@@ -1183,14 +1188,20 @@ export default function UserDetailPage() {
                           referral_bonus: "Referral Bonus",
                         };
                         return (
-                          <div key={entry.id} className="px-8 py-4 flex items-center gap-5 hover:bg-white/2 transition-all">
-                            <div className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-black border",
-                              isPositive
-                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                : "bg-red-500/10 border-red-500/20 text-red-400"
-                            )}>
-                              {isPositive ? "+" : ""}{entry.delta}
+                          <div
+                            key={entry.id}
+                            className="px-8 py-4 flex items-center gap-5 hover:bg-white/2 transition-all"
+                          >
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-sm font-black border",
+                                isPositive
+                                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                  : "bg-red-500/10 border-red-500/20 text-red-400",
+                              )}
+                            >
+                              {isPositive ? "+" : ""}
+                              {entry.delta}
                             </div>
                             <div className="flex-1 min-w-0">
                               <span className="text-sm font-bold text-zinc-300">
@@ -1218,9 +1229,7 @@ export default function UserDetailPage() {
             )}
 
             {/* ── Emails Tab ── */}
-            {activeTab === "emails" && (
-              <EmailsTab userId={userId} />
-            )}
+            {activeTab === "emails" && <EmailsTab userId={userId} />}
           </div>
 
           {/* ── Admin Actions Sidebar ── */}
@@ -1245,16 +1254,25 @@ export default function UserDetailPage() {
                   <option value="pro">Pro</option>
                   <option value="admin">Admin</option>
                 </select>
-                <button
-                  onClick={() => doAction("change_tier", tierValue)}
-                  disabled={actionLoading === "change_tier"}
-                  className="w-full py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {actionLoading === "change_tier" ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : null}
-                  Update Tier
-                </button>
+                {(() => {
+                  const currentEffectiveTier = isAdmin
+                    ? "admin"
+                    : (profile.plan_tier ?? "free");
+                  const isNoop = tierValue === currentEffectiveTier;
+                  return (
+                    <button
+                      onClick={() => doAction("change_tier", tierValue)}
+                      disabled={actionLoading === "change_tier" || isNoop}
+                      title={isNoop ? "Same as current tier — pick a different tier" : undefined}
+                      className="w-full py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {actionLoading === "change_tier" ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : null}
+                      Update Tier
+                    </button>
+                  );
+                })()}
               </div>
 
               <Divider />
@@ -1325,7 +1343,7 @@ export default function UserDetailPage() {
                     "w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 border",
                     isBanned
                       ? "bg-emerald-600/10 border-emerald-600/20 text-emerald-400 hover:bg-emerald-600/20"
-                      : "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
+                      : "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20",
                   )}
                 >
                   {actionLoading === "ban" || actionLoading === "unban" ? (
@@ -1336,7 +1354,6 @@ export default function UserDetailPage() {
                   {isBanned ? "Unban User" : "Ban User"}
                 </button>
               </div>
-
             </div>
           </div>
         </div>
@@ -1371,12 +1388,8 @@ function QuickStat({
         <Icon className="w-5 h-5" />
       </div>
       <div className="space-y-0.5">
-        <div className="text-3xl font-black text-white tracking-tighter leading-none">
-          {value}
-        </div>
-        <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
-          {label}
-        </div>
+        <div className="text-3xl font-black text-white tracking-tighter leading-none">{value}</div>
+        <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">{label}</div>
       </div>
     </div>
   );
@@ -1405,9 +1418,7 @@ function Panel({
         <div className={cn("p-2.5 rounded-xl border", iconColors[color] ?? iconColors.blue)}>
           <Icon className="w-4 h-4" />
         </div>
-        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">
-          {title}
-        </h3>
+        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">{title}</h3>
       </div>
       {children}
     </div>
@@ -1425,15 +1436,8 @@ function InfoRow({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
-        {label}
-      </span>
-      <span
-        className={cn(
-          "text-sm font-bold",
-          highlight ? "text-emerald-400" : "text-zinc-300"
-        )}
-      >
+      <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">{label}</span>
+      <span className={cn("text-sm font-bold", highlight ? "text-emerald-400" : "text-zinc-300")}>
         {value}
       </span>
     </div>
@@ -1483,28 +1487,31 @@ interface EmailData {
 }
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
-  resend: { label: 'Resend', color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' },
-  lemonsqueezy: { label: 'LemonSqueezy', color: 'bg-amber-500/10 border-amber-500/20 text-amber-400' },
-  system: { label: 'System', color: 'bg-zinc-800 border-white/10 text-zinc-400' },
+  resend: { label: "Resend", color: "bg-blue-500/10 border-blue-500/20 text-blue-400" },
+  lemonsqueezy: {
+    label: "LemonSqueezy",
+    color: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+  },
+  system: { label: "System", color: "bg-zinc-800 border-white/10 text-zinc-400" },
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  welcome: 'ברוכים הבאים',
-  campaign: 'קמפיין',
-  onboarding_welcome: 'ברוכים הבאים (אונבורדינג)',
-  onboarding_day1: 'אונבורדינג יום 1',
-  onboarding_day3: 'אונבורדינג יום 3',
-  onboarding_day7: 'אונבורדינג יום 7',
-  onboarding_day14: 'אונבורדינג יום 14',
-  subscription_created: 'אישור מנוי',
-  subscription_payment_success: 'קבלה',
-  subscription_cancelled: 'ביטול מנוי',
-  subscription_expired: 'מנוי פג תוקף',
-  subscription_resumed: 'חידוש מנוי',
-  subscription_payment_failed: 'תשלום נכשל',
-  churn_notification: 'הודעת ביטול מנוי',
-  admin_churn_alert: 'התראת מנהל — churn',
-  transactional: 'הודעה',
+  welcome: "ברוכים הבאים",
+  campaign: "קמפיין",
+  onboarding_welcome: "ברוכים הבאים (אונבורדינג)",
+  onboarding_day1: "אונבורדינג יום 1",
+  onboarding_day3: "אונבורדינג יום 3",
+  onboarding_day7: "אונבורדינג יום 7",
+  onboarding_day14: "אונבורדינג יום 14",
+  subscription_created: "אישור מנוי",
+  subscription_payment_success: "קבלה",
+  subscription_cancelled: "ביטול מנוי",
+  subscription_expired: "מנוי פג תוקף",
+  subscription_resumed: "חידוש מנוי",
+  subscription_payment_failed: "תשלום נכשל",
+  churn_notification: "הודעת ביטול מנוי",
+  admin_churn_alert: "התראת מנהל — churn",
+  transactional: "הודעה",
 };
 
 function EmailsTab({ userId }: { userId: string }) {
@@ -1552,7 +1559,9 @@ function EmailsTab({ userId }: { userId: string }) {
         </div>
         <div className="p-4 rounded-2xl bg-zinc-950 border border-white/5 text-center">
           <div className="text-2xl font-black text-blue-400">{data.summary.sources.length}</div>
-          <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">מקורות</div>
+          <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+            מקורות
+          </div>
         </div>
       </div>
 
@@ -1560,17 +1569,29 @@ function EmailsTab({ userId }: { userId: string }) {
       <Panel title="רצף אונבורדינג" icon={Mail} color="blue">
         <div className="space-y-4">
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">סטטוס:</span>
-            <span className={cn(
-              "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
-              data.onboarding.status === 'active' && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-              data.onboarding.status === 'completed' && "bg-blue-500/10 border-blue-500/20 text-blue-400",
-              data.onboarding.status === 'unsubscribed' && "bg-red-500/10 border-red-500/20 text-red-400",
-              data.onboarding.status === 'not_started' && "bg-zinc-800 border-white/10 text-zinc-500",
-            )}>
-              {data.onboarding.status === 'active' ? 'פעיל' :
-               data.onboarding.status === 'completed' ? 'הושלם' :
-               data.onboarding.status === 'unsubscribed' ? 'בוטל' : 'לא התחיל'}
+            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+              סטטוס:
+            </span>
+            <span
+              className={cn(
+                "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border",
+                data.onboarding.status === "active" &&
+                  "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+                data.onboarding.status === "completed" &&
+                  "bg-blue-500/10 border-blue-500/20 text-blue-400",
+                data.onboarding.status === "unsubscribed" &&
+                  "bg-red-500/10 border-red-500/20 text-red-400",
+                data.onboarding.status === "not_started" &&
+                  "bg-zinc-800 border-white/10 text-zinc-500",
+              )}
+            >
+              {data.onboarding.status === "active"
+                ? "פעיל"
+                : data.onboarding.status === "completed"
+                  ? "הושלם"
+                  : data.onboarding.status === "unsubscribed"
+                    ? "בוטל"
+                    : "לא התחיל"}
             </span>
           </div>
 
@@ -1584,23 +1605,33 @@ function EmailsTab({ userId }: { userId: string }) {
                     "flex items-center gap-4 px-5 py-3 rounded-2xl border transition-all",
                     step.sent && "bg-emerald-500/5 border-emerald-500/10",
                     step.current && "bg-blue-500/5 border-blue-500/10",
-                    !step.sent && !step.current && "bg-zinc-900/50 border-white/5 opacity-40"
+                    !step.sent && !step.current && "bg-zinc-900/50 border-white/5 opacity-40",
                   )}
                 >
-                  <StepIcon className={cn(
-                    "w-4 h-4 shrink-0",
-                    step.sent && "text-emerald-400",
-                    step.current && "text-blue-400 animate-pulse",
-                    !step.sent && !step.current && "text-zinc-700"
-                  )} />
+                  <StepIcon
+                    className={cn(
+                      "w-4 h-4 shrink-0",
+                      step.sent && "text-emerald-400",
+                      step.current && "text-blue-400 animate-pulse",
+                      !step.sent && !step.current && "text-zinc-700",
+                    )}
+                  />
                   <div className="flex-1">
                     <span className="text-sm font-bold text-zinc-300">{step.name}</span>
                   </div>
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{step.delay}</span>
-                  <span className={cn(
-                    "text-[9px] font-black uppercase tracking-widest",
-                    step.sent ? "text-emerald-500" : step.current ? "text-blue-400" : "text-zinc-700"
-                  )}>
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                    {step.delay}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[9px] font-black uppercase tracking-widest",
+                      step.sent
+                        ? "text-emerald-500"
+                        : step.current
+                          ? "text-blue-400"
+                          : "text-zinc-700",
+                    )}
+                  >
                     {step.sent ? "נשלח" : step.current ? "ממתין" : "טרם"}
                   </span>
                 </div>
@@ -1610,7 +1641,7 @@ function EmailsTab({ userId }: { userId: string }) {
 
           {data.onboarding.lastSentAt && (
             <p className="text-[9px] text-zinc-600 font-bold">
-              שליחה אחרונה: {new Date(data.onboarding.lastSentAt).toLocaleString('he-IL')}
+              שליחה אחרונה: {new Date(data.onboarding.lastSentAt).toLocaleString("he-IL")}
             </p>
           )}
         </div>
@@ -1627,22 +1658,29 @@ function EmailsTab({ userId }: { userId: string }) {
             {data.emails.map((email) => {
               const sourceInfo = SOURCE_LABELS[email.source] || SOURCE_LABELS.system;
               const typeLabel = TYPE_LABELS[email.type] || email.type;
-              const isFailed = email.status === 'failed';
+              const isFailed = email.status === "failed";
               return (
                 <div
                   key={email.id}
                   className={cn(
                     "flex items-center gap-4 px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-white/2 transition-all",
-                    isFailed && "opacity-60 border-red-500/10"
+                    isFailed && "opacity-60 border-red-500/10",
                   )}
                 >
-                  <Mail className={cn("w-4 h-4 shrink-0", isFailed ? "text-red-400" : "text-zinc-400")} />
+                  <Mail
+                    className={cn("w-4 h-4 shrink-0", isFailed ? "text-red-400" : "text-zinc-400")}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-zinc-300 truncate">
                       {email.subject || typeLabel}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border", sourceInfo.color)}>
+                      <span
+                        className={cn(
+                          "px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border",
+                          sourceInfo.color,
+                        )}
+                      >
                         {sourceInfo.label}
                       </span>
                       <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-wider">
@@ -1656,8 +1694,11 @@ function EmailsTab({ userId }: { userId: string }) {
                     </div>
                   </div>
                   <span className="text-[9px] font-bold text-zinc-700 shrink-0">
-                    {new Date(email.sentAt).toLocaleDateString('he-IL')}{' '}
-                    {new Date(email.sentAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(email.sentAt).toLocaleDateString("he-IL")}{" "}
+                    {new Date(email.sentAt).toLocaleTimeString("he-IL", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
               );

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 
@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
  * RLS already restricts the table to the row owner; we filter by auth.uid()
  * defensively so the endpoint cannot return cross-user rows even if RLS is loosened.
  */
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
     const {
