@@ -7,6 +7,7 @@ const mockValidateAdminSession = vi.fn();
 const mockLogAdminAction = vi.fn();
 const mockParseAdminInput = vi.fn();
 const mockAdminAdjustCredits = vi.fn();
+const mockCheckRateLimit = vi.fn();
 
 vi.mock("@/lib/admin/admin-security", () => ({
   validateAdminSession: (...args: unknown[]) => mockValidateAdminSession(...args),
@@ -20,6 +21,10 @@ vi.mock("@/lib/services/credit-service", () => ({
 
 vi.mock("@/lib/logger", () => ({
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+}));
+
+vi.mock("@/lib/ratelimit", () => ({
+  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
 }));
 
 // ─── Chainable query builder ─────────────────────────────────────────────────
@@ -42,10 +47,27 @@ function mockQueryBuilder(
   return builder;
 }
 
-// ─── Supabase mock ────────────────────────────────────────────────────────────
+// ─── Supabase service client mock ────────────────────────────────────────────
 
 const mockFrom = vi.fn();
-const mockAdminUser = { id: "admin-uuid-0000-0000-000000000000", email: "admin@example.com" };
+const mockRpc = vi.fn();
+const mockUpdateUserById = vi.fn();
+const mockSignOut = vi.fn();
+
+vi.mock("@/lib/supabase/service", () => ({
+  createServiceClient: () => ({
+    from: mockFrom,
+    rpc: mockRpc,
+    auth: {
+      admin: {
+        updateUserById: mockUpdateUserById,
+        signOut: mockSignOut,
+      },
+    },
+  }),
+}));
+
+const mockAdminUser = { id: "ad000000-0000-0000-0000-000000000000", email: "admin@example.com" };
 
 function setupAuth() {
   mockValidateAdminSession.mockResolvedValue({
@@ -92,7 +114,11 @@ describe("POST /api/admin/users/[id]", () => {
     vi.clearAllMocks();
     setupAuth();
     mockLogAdminAction.mockResolvedValue(undefined);
+    mockCheckRateLimit.mockResolvedValue({ success: true, limit: 120, remaining: 119, reset: 0 });
     mockFrom.mockReturnValue(mockQueryBuilder({ data: null, error: null }));
+    mockRpc.mockResolvedValue({ data: null, error: null });
+    mockUpdateUserById.mockResolvedValue({ data: null, error: null });
+    mockSignOut.mockResolvedValue({ data: null, error: null });
   });
 
   // ── UUID validation ───────────────────────────────────────────────────────
@@ -117,28 +143,98 @@ describe("POST /api/admin/users/[id]", () => {
 
   // ── change_tier ───────────────────────────────────────────────────────────
 
-  it("returns 200 on change_tier with a valid tier", async () => {
+  it("change_tier free→pro: calls rpc, updateUserById with role=null/plan_tier=pro, signOut, returns 200", async () => {
     setupParseInput("change_tier", "pro");
-    mockFrom.mockReturnValue(mockQueryBuilder({ error: null }));
+    // Target user is NOT an admin (no current role)
+    mockFrom.mockReturnValue(mockQueryBuilder({ data: null, error: null }));
 
     const res = await POST(makePostRequest({ action: "change_tier", value: "pro" }), makeContext());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ success: true, action: "change_tier", target_user_id: VALID_UUID });
+
+    expect(mockRpc).toHaveBeenCalledWith("admin_change_tier", {
+      target_user_id: VALID_UUID,
+      new_tier: "pro",
+    });
+    expect(mockUpdateUserById).toHaveBeenCalledWith(VALID_UUID, {
+      app_metadata: { role: null, plan_tier: "pro" },
+    });
+    expect(mockSignOut).toHaveBeenCalledWith(VALID_UUID, "global");
   });
 
-  it("returns 400 on change_tier with an invalid tier", async () => {
-    setupParseInput("change_tier", "enterprise");
+  it("change_tier free→admin: updateUserById called with role=admin/plan_tier=admin", async () => {
+    setupParseInput("change_tier", "admin");
+    // No demotion guard needed when promoting to admin
+    mockFrom.mockReturnValue(mockQueryBuilder({ data: null, error: null }));
 
-    const res = await POST(makePostRequest({ action: "change_tier", value: "enterprise" }), makeContext());
+    const res = await POST(makePostRequest({ action: "change_tier", value: "admin" }), makeContext());
+    expect(res.status).toBe(200);
+
+    expect(mockUpdateUserById).toHaveBeenCalledWith(VALID_UUID, {
+      app_metadata: { role: "admin", plan_tier: "admin" },
+    });
+  });
+
+  it("change_tier: self-demotion refused with 400 /cannot demote self/i", async () => {
+    setupParseInput("change_tier", "free");
+    // Target IS the admin user themselves AND has role=admin
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "user_roles") {
+        return mockQueryBuilder({ data: { role: "admin" }, error: null });
+      }
+      return mockQueryBuilder({ data: null, error: null });
+    });
+
+    const res = await POST(
+      makePostRequest({ action: "change_tier", value: "free" }),
+      makeContext(mockAdminUser.id),
+    );
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toMatch(/free|pro|premium/);
+    expect(body.error).toMatch(/cannot demote self/i);
   });
 
-  it("returns 500 when the change_tier DB update fails", async () => {
+  it("change_tier: last-admin refusal returns 400 /last remaining admin/i", async () => {
+    setupParseInput("change_tier", "free");
+    const OTHER_UUID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    // Target is a different user who is an admin; only 1 admin total
+    let callCount = 0;
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "user_roles") {
+        callCount++;
+        if (callCount === 1) {
+          // First call: maybeSingle — current role of target
+          return mockQueryBuilder({ data: { role: "admin" }, error: null });
+        }
+        // Second call: count of admins = 1
+        return mockQueryBuilder({ data: null, error: null, count: 1 });
+      }
+      return mockQueryBuilder({ data: null, error: null });
+    });
+
+    const res = await POST(
+      makePostRequest({ action: "change_tier", value: "free" }),
+      makeContext(OTHER_UUID),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/last remaining admin/i);
+  });
+
+  it("change_tier: invalid tier value 'premium' returns 400 /value must be one of/", async () => {
+    setupParseInput("change_tier", "premium");
+
+    const res = await POST(makePostRequest({ action: "change_tier", value: "premium" }), makeContext());
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/value must be one of/);
+  });
+
+  it("returns 500 when the change_tier RPC fails", async () => {
     setupParseInput("change_tier", "pro");
-    mockFrom.mockReturnValue(mockQueryBuilder({ error: { message: "DB error" } }));
+    mockFrom.mockReturnValue(mockQueryBuilder({ data: null, error: null }));
+    mockRpc.mockResolvedValue({ error: { message: "DB error" } });
 
     const res = await POST(makePostRequest({ action: "change_tier", value: "pro" }), makeContext());
     expect(res.status).toBe(500);
@@ -225,51 +321,6 @@ describe("POST /api/admin/users/[id]", () => {
     const res = await POST(makePostRequest({ action: "unban" }), makeContext());
     expect(res.status).toBe(200);
     expect(updateBuilder.update).toHaveBeenCalledWith({ is_banned: false });
-  });
-
-  // ── grant_admin ───────────────────────────────────────────────────────────
-
-  it("returns 200 on grant_admin and upserts admin role", async () => {
-    setupParseInput("grant_admin");
-    const upsertBuilder = mockQueryBuilder({ error: null });
-    mockFrom.mockReturnValue(upsertBuilder);
-
-    const res = await POST(makePostRequest({ action: "grant_admin" }), makeContext());
-    expect(res.status).toBe(200);
-    expect(upsertBuilder.upsert).toHaveBeenCalledWith(
-      { user_id: VALID_UUID, role: "admin" },
-      { onConflict: "user_id" }
-    );
-  });
-
-  it("returns 500 when grant_admin upsert fails", async () => {
-    setupParseInput("grant_admin");
-    mockFrom.mockReturnValue(mockQueryBuilder({ error: { message: "DB error" } }));
-
-    const res = await POST(makePostRequest({ action: "grant_admin" }), makeContext());
-    expect(res.status).toBe(500);
-  });
-
-  // ── revoke_admin ──────────────────────────────────────────────────────────
-
-  it("returns 200 on revoke_admin and deletes admin role row", async () => {
-    setupParseInput("revoke_admin");
-    const deleteBuilder = mockQueryBuilder({ error: null });
-    mockFrom.mockReturnValue(deleteBuilder);
-
-    const res = await POST(makePostRequest({ action: "revoke_admin" }), makeContext());
-    expect(res.status).toBe(200);
-    expect(deleteBuilder.delete).toHaveBeenCalled();
-    expect(deleteBuilder.eq).toHaveBeenCalledWith("user_id", VALID_UUID);
-    expect(deleteBuilder.eq).toHaveBeenCalledWith("role", "admin");
-  });
-
-  it("returns 500 when revoke_admin delete fails", async () => {
-    setupParseInput("revoke_admin");
-    mockFrom.mockReturnValue(mockQueryBuilder({ error: { message: "DB error" } }));
-
-    const res = await POST(makePostRequest({ action: "revoke_admin" }), makeContext());
-    expect(res.status).toBe(500);
   });
 
   // ── Audit logging ─────────────────────────────────────────────────────────
