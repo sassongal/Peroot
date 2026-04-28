@@ -226,7 +226,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
   };
 
   return (
-      <div id="library-top" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full overflow-x-hidden pb-20 md:pb-0">
+      <div id="library-top" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full overflow-x-hidden pb-20 md:pb-0 w-full">
 
         {/* Back Button */}
         <button
