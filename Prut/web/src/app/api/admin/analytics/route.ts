@@ -55,9 +55,9 @@ export const GET = withAdmin(async (req) => {
       { data: mauRows, error: mauErr },
     ] = await Promise.all([
       supabase.from("history").select("capability_mode").gte("created_at", engineWindow),
-      supabase.from("activity_logs").select("user_id").gte("created_at", startOfToday),
-      supabase.from("activity_logs").select("user_id").gte("created_at", minus7d),
-      supabase.from("activity_logs").select("user_id").gte("created_at", minus30d),
+      supabase.from("history").select("user_id").gte("created_at", startOfToday).limit(100000),
+      supabase.from("history").select("user_id").gte("created_at", minus7d).limit(100000),
+      supabase.from("history").select("user_id").gte("created_at", minus30d).limit(100000),
     ]);
 
     if (engineErr) logger.warn("[Admin Analytics] engine query:", engineErr);

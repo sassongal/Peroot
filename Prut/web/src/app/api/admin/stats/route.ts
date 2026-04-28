@@ -55,9 +55,9 @@ export const GET = withAdmin(async () => {
       .from("subscriptions")
       .select("*", { count: "exact", head: true })
       .eq("status", "active"),
-    supabase.from("activity_logs").select("user_id").gte("created_at", todayMidnight).limit(50000),
-    supabase.from("activity_logs").select("user_id").gte("created_at", sevenDaysAgo).limit(50000),
-    supabase.from("activity_logs").select("user_id").gte("created_at", thirtyDaysAgo).limit(50000),
+    supabase.from("history").select("user_id").gte("created_at", todayMidnight).limit(100000),
+    supabase.from("history").select("user_id").gte("created_at", sevenDaysAgo).limit(100000),
+    supabase.from("history").select("user_id").gte("created_at", thirtyDaysAgo).limit(100000),
   ]);
 
   const dau = new Set((dauData ?? []).map((r) => r.user_id)).size;
