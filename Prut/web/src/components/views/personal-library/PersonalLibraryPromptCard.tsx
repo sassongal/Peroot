@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   Star,
   ArrowRight,
@@ -115,6 +115,7 @@ export function PersonalLibraryPromptCard({
 
   const isExpanded = expandedIds.has(prompt.id);
   const isEditing = editingPersonalId === prompt.id;
+  const [showOriginal, setShowOriginal] = useState(false);
   const isDragging = draggingPersonalId === prompt.id;
   const isDragOver = dragOverPersonalId === prompt.id && draggingPersonalId !== prompt.id;
   const isFavorite = favoritePersonalIds.has(prompt.id);
@@ -273,7 +274,11 @@ export function PersonalLibraryPromptCard({
           {/* Mobile-only meta line — dates + category always visible on small screens.
               Desktop uses the inline md:flex row below. */}
           <div className="flex sm:hidden items-center gap-1.5 text-[10px] text-(--text-muted) mt-0.5 flex-wrap">
-            <CapabilityBadge mode={prompt.capability_mode} showLabel={false} className="scale-90 origin-left" />
+            <CapabilityBadge
+              mode={prompt.capability_mode}
+              showLabel={false}
+              className="scale-90 origin-left"
+            />
             <span className="opacity-30">·</span>
             <DateBadge mode="compact" entity={entity} />
             <span className="opacity-30">·</span>
@@ -705,6 +710,32 @@ export function PersonalLibraryPromptCard({
                 dir="rtl"
               />
 
+              {/* Original prompt ("before") — only shown when stored */}
+              {prompt.original_prompt && (
+                <div>
+                  <button
+                    onClick={() => setShowOriginal((v) => !v)}
+                    className="flex items-center gap-1 text-xs text-(--text-muted) hover:text-(--text-primary) transition-colors"
+                    dir="rtl"
+                  >
+                    {showOriginal ? (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    )}
+                    הצג פרומפט מקורי
+                  </button>
+                  {showOriginal && (
+                    <div
+                      className="mt-2 me-2 text-xs text-(--text-muted) leading-relaxed whitespace-pre-wrap border-s-2 border-(--glass-border) ps-3"
+                      dir="rtl"
+                    >
+                      {prompt.original_prompt}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Tags */}
               {prompt.tags && prompt.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -939,7 +970,7 @@ export function PersonalLibraryPromptCard({
                     text as both. */}
                 <ExportPdfButton
                   title={prompt.title || prompt.prompt.slice(0, 60)}
-                  original={prompt.prompt}
+                  original={prompt.original_prompt || prompt.prompt}
                   enhanced={prompt.prompt}
                   createdAt={
                     typeof prompt.created_at === "number"
