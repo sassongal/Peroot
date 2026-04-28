@@ -13,8 +13,6 @@ const adminActionSchema = z.object({
     "revoke_credits",
     "ban",
     "unban",
-    "grant_admin",
-    "revoke_admin",
   ]),
   value: z.union([z.string(), z.number()]).optional(),
 });
@@ -207,51 +205,79 @@ export const POST = withAdminWrite(
 
       const { action, value } = body;
 
-      // ── Guardrails: self-lockout + last-admin protection ───────────────────
-      // An admin banning themselves or revoking their own admin role can
-      // brick the panel. Revoking the final admin leaves the system without
-      // anyone who can flip maintenance mode / grant access to recover.
-      if (id === adminUser.id && (action === "ban" || action === "revoke_admin")) {
+      // ── Guardrails: self-lockout protection ───────────────────────────────
+      if (id === adminUser.id && action === "ban") {
         return NextResponse.json(
-          { error: `Refusing ${action}: admin cannot ${action} themselves` },
+          { error: "Refusing ban: admin cannot ban themselves" },
           { status: 400 },
         );
-      }
-      if (action === "revoke_admin") {
-        const { count: adminCount, error: countErr } = await supabase
-          .from("user_roles")
-          .select("user_id", { count: "exact", head: true })
-          .eq("role", "admin");
-        if (countErr) {
-          logger.error("[Admin User POST] revoke_admin precheck failed:", countErr);
-          return NextResponse.json({ error: "Failed to verify admin count" }, { status: 500 });
-        }
-        if ((adminCount ?? 0) <= 1) {
-          return NextResponse.json(
-            { error: "Refusing: this would remove the last remaining admin" },
-            { status: 400 },
-          );
-        }
       }
 
       switch (action) {
         case "change_tier": {
-          const validTiers = ["free", "pro", "premium"];
-          if (typeof value !== "string" || !validTiers.includes(value)) {
+          const validTiers = ["free", "pro", "admin"] as const;
+          type Tier = (typeof validTiers)[number];
+          if (typeof value !== "string" || !validTiers.includes(value as Tier)) {
             return NextResponse.json(
               { error: `value must be one of: ${validTiers.join(", ")}` },
               { status: 400 },
             );
           }
-          const { error: updateError } = await supabase
-            .from("profiles")
-            .update({ plan_tier: value })
-            .eq("id", id);
+          const newTier = value as Tier;
 
-          if (updateError) {
-            logger.error("[Admin User POST] change_tier error:", updateError);
-            return NextResponse.json({ error: "Failed to update plan tier" }, { status: 500 });
+          // Last-admin / self-demotion guards (only when leaving admin)
+          if (newTier !== "admin") {
+            const { data: currentRole } = await supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", id)
+              .maybeSingle();
+
+            if (currentRole?.role === "admin") {
+              if (id === adminUser.id) {
+                return NextResponse.json(
+                  { error: "Refusing: admin cannot demote self" },
+                  { status: 400 },
+                );
+              }
+              const { count, error: countErr } = await supabase
+                .from("user_roles")
+                .select("user_id", { count: "exact", head: true })
+                .eq("role", "admin");
+              if (countErr) {
+                logger.error("[Admin User POST] change_tier admin-count check failed:", countErr);
+                return NextResponse.json({ error: "Failed to verify admin count" }, { status: 500 });
+              }
+              if ((count ?? 0) <= 1) {
+                return NextResponse.json(
+                  { error: "Refusing: this would remove the last remaining admin" },
+                  { status: 400 },
+                );
+              }
+            }
           }
+
+          const { error: rpcErr } = await supabase.rpc("admin_change_tier", {
+            target_user_id: id,
+            new_tier: newTier,
+          });
+          if (rpcErr) {
+            logger.error("[Admin User POST] change_tier RPC error:", rpcErr);
+            return NextResponse.json({ error: "Failed to change tier" }, { status: 500 });
+          }
+
+          // Sync app_metadata so proxy.ts JWT checks see the new role/tier without a DB hit.
+          const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
+            app_metadata: {
+              role: newTier === "admin" ? "admin" : null,
+              plan_tier: newTier,
+            },
+          });
+          if (metaErr) logger.error("[Admin User POST] change_tier app_metadata error:", metaErr);
+
+          // Force JWT refresh so the new role/tier is visible on the user's next request.
+          const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
+          if (signOutErr) logger.error("[Admin User POST] change_tier signOut error:", signOutErr);
           break;
         }
 
@@ -324,44 +350,6 @@ export const POST = withAdminWrite(
             app_metadata: { is_banned: false },
           });
           if (metaErr) logger.error("[Admin User POST] unban app_metadata error:", metaErr);
-          break;
-        }
-
-        case "grant_admin": {
-          // Atomic RPC: inserts user_roles row + sets plan_tier = 'admin'
-          // in a single transaction — no partial-state window.
-          const { error: grantError } = await supabase.rpc("grant_admin_role", {
-            target_user_id: id,
-          });
-          if (grantError) {
-            logger.error("[Admin User POST] grant_admin error:", grantError);
-            return NextResponse.json({ error: "Failed to grant admin role" }, { status: 500 });
-          }
-          // Stamp app_metadata so proxy can check admin from JWT (maintenance bypass)
-          // without a DB round-trip — mirrors the is_banned pattern.
-          const { error: grantMetaErr } = await supabase.auth.admin.updateUserById(id, {
-            app_metadata: { role: "admin" },
-          });
-          if (grantMetaErr)
-            logger.error("[Admin User POST] grant_admin app_metadata error:", grantMetaErr);
-          break;
-        }
-
-        case "revoke_admin": {
-          // Atomic RPC: deletes user_roles row + restores plan_tier in one transaction.
-          // Subscription check happens inside the RPC — no TOCTOU window.
-          const { error: revokeError } = await supabase.rpc("revoke_admin_role", {
-            target_user_id: id,
-          });
-          if (revokeError) {
-            logger.error("[Admin User POST] revoke_admin error:", revokeError);
-            return NextResponse.json({ error: "Failed to revoke admin role" }, { status: 500 });
-          }
-          const { error: revokeMetaErr } = await supabase.auth.admin.updateUserById(id, {
-            app_metadata: { role: null },
-          });
-          if (revokeMetaErr)
-            logger.error("[Admin User POST] revoke_admin app_metadata error:", revokeMetaErr);
           break;
         }
 
