@@ -23,10 +23,10 @@ interface CapabilityBadgeProps {
   showLabel?: boolean;
 }
 
-export function CapabilityBadge({ 
+export function CapabilityBadge({
   mode = CapabilityMode.STANDARD,
   className,
-  showLabel = true
+  showLabel = true,
 }: CapabilityBadgeProps) {
   const config = CAPABILITY_CONFIGS[mode] || CAPABILITY_CONFIGS[CapabilityMode.STANDARD];
   const Icon = ICONS[config.icon];

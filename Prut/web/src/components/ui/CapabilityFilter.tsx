@@ -31,26 +31,31 @@ interface CapabilityFilterProps {
   className?: string;
 }
 
-export function CapabilityFilter({ 
-  value, 
-  onChange, 
-  counts = {}, 
-  className 
+export function CapabilityFilter({
+  value,
+  onChange,
+  counts = {},
+  className,
 }: CapabilityFilterProps) {
   const modes = Object.values(CapabilityMode);
-  
+
   // Total count across all specific capabilities (excluding null/all for now, or just sum logic elsewhere)
   // For UI simplicity we won't show "All" count unless provided
-  
+
   return (
-    <div className={cn("flex items-center gap-1.5 md:gap-2 overflow-x-auto scrollbar-hide pb-1", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-1.5 md:gap-2 overflow-x-auto scrollbar-hide pb-1",
+        className,
+      )}
+    >
       <button
         onClick={() => onChange(null)}
         className={cn(
           "shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium border transition-all duration-200",
           value === null
             ? "bg-white/10 text-white border-white/20 shadow-sm"
-            : "bg-transparent text-slate-400 border-transparent hover:bg-white/5 hover:text-slate-200"
+            : "bg-transparent text-slate-400 border-transparent hover:bg-white/5 hover:text-slate-200",
         )}
       >
         <LayoutGrid className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -86,10 +91,12 @@ export function CapabilityFilter({
             <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>{config.labelHe}</span>
             {count > 0 && (
-              <span className={cn(
-                "ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-black/20",
-                isSelected ? "text-current opacity-80" : "text-slate-500"
-              )}>
+              <span
+                className={cn(
+                  "ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-black/20",
+                  isSelected ? "text-current opacity-80" : "text-slate-500",
+                )}
+              >
                 {count}
               </span>
             )}

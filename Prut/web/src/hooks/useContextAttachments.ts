@@ -124,24 +124,21 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
   }, []);
 
-  const applyBlockUpdate = useCallback(
-    (id: string, block: unknown) => {
-      const b = block as { stage?: string };
-      setAttachments((prev) =>
-        prev.map((a) =>
-          a.id === id
-            ? {
-                ...a,
-                block: block as ContextAttachment["block"],
-                stage: b.stage as ProcessingStage,
-                status: b.stage === "error" ? "error" : "ready",
-              }
-            : a,
-        ),
-      );
-    },
-    [],
-  );
+  const applyBlockUpdate = useCallback((id: string, block: unknown) => {
+    const b = block as { stage?: string };
+    setAttachments((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? {
+              ...a,
+              block: block as ContextAttachment["block"],
+              stage: b.stage as ProcessingStage,
+              status: b.stage === "error" ? "error" : "ready",
+            }
+          : a,
+      ),
+    );
+  }, []);
 
   const addFile = useCallback(
     async (file: File) => {
@@ -382,9 +379,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
   }, []);
 
   const getContextPayload = useCallback(() => {
-    return attachments
-      .filter((a) => a.status === "ready" && a.block)
-      .map((a) => a.block!);
+    return attachments.filter((a) => a.status === "ready" && a.block).map((a) => a.block!);
   }, [attachments]);
 
   return {

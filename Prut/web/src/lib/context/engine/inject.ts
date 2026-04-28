@@ -86,9 +86,7 @@ export function renderInjection(blocks: ContextBlock[], tokenBudget?: number): s
   // attempts that try to close/escape the user-data section.
   const nonce = randomUUID().replace(/-/g, "").slice(0, 12);
   const roleBlock = renderRoleBlock(effectiveBlocks.map((b) => b.display.documentType));
-  const bodies = effectiveBlocks
-    .map((b, i) => buildInjectedBlock(b, i + 1).body)
-    .join("\n\n");
+  const bodies = effectiveBlocks.map((b, i) => buildInjectedBlock(b, i + 1).body).join("\n\n");
   return [
     roleBlock,
     "",

@@ -507,7 +507,7 @@ export async function POST(req: Request) {
       // Cast to satisfy EngineInput — name/content may be absent on new ContextBlock shape;
       // BaseEngine.buildContextSummaryForUserPrompt handles both shapes defensively.
       context: contextAttachments as EngineInput["context"],
-      tier: (tier === "pro" || tier === "admin") ? "pro" : "free",
+      tier: tier === "pro" || tier === "admin" ? "pro" : "free",
       targetModel: target_model || "general",
       outputLanguage: output_language,
     };

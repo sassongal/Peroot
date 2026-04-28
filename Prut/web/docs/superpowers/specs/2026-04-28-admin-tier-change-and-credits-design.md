@@ -124,7 +124,7 @@ Admin UI (select Pro)
        ├── UPDATE profiles SET plan_tier='pro', credits_balance=150, credits_refreshed_at=now()
        ├── DELETE FROM user_roles WHERE user_id=… AND role='admin'  (no-op if not admin)
        ├── (if old_tier='pro' and new_tier<>'pro') UPDATE subscriptions SET status='cancelled'
-       └── INSERT INTO credit_ledger (delta=150, balance_after=150, reason='admin_tier_change')
+       └── INSERT INTO credit_ledger (delta=150-old_balance, balance_after=150, reason='admin_tier_change')
   → auth.admin.updateUserById(id, app_metadata: { role: null, plan_tier: 'pro' })
   → auth.admin.signOut(id, 'global')
   → logAdminAction(adminUser.id, 'user_change_tier', { target_user_id, value: 'pro' })

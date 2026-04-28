@@ -22,8 +22,7 @@ export function ContextChips({ attachments, onRemove, onRetry, tokenLimit }: Con
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
-    (sum, a) =>
-      sum + (a.status === "ready" ? (a.block?.injected?.tokenCount ?? 0) : 0),
+    (sum, a) => sum + (a.status === "ready" ? (a.block?.injected?.tokenCount ?? 0) : 0),
     0,
   );
   const effectiveLimit = tokenLimit ?? 15_000;

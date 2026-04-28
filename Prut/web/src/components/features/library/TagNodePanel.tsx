@@ -43,9 +43,7 @@ export function TagNodePanel({
 
   const panelPrompts = useMemo(() => {
     if (nodeType === "tag") {
-      return prompts.filter((p) =>
-        (p.tags ?? []).some((t) => t.trim().toLowerCase() === tagKey),
-      );
+      return prompts.filter((p) => (p.tags ?? []).some((t) => t.trim().toLowerCase() === tagKey));
     }
     return prompts.filter(
       (p) => p.source === "library" && (p.reference || p.category || "library") === libKey,
@@ -54,9 +52,7 @@ export function TagNodePanel({
 
   const untaggedPrompts = useMemo(() => {
     if (nodeType !== "tag") return [];
-    return prompts.filter(
-      (p) => !(p.tags ?? []).some((t) => t.trim().toLowerCase() === tagKey),
-    );
+    return prompts.filter((p) => !(p.tags ?? []).some((t) => t.trim().toLowerCase() === tagKey));
   }, [prompts, nodeType, tagKey]);
 
   return (

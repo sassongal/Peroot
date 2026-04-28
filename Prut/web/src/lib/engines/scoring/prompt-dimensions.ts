@@ -809,7 +809,11 @@ function scoreFramework(
   // Count structured ## section headers (the enhancement LLM uses these extensively)
   const sectionHeaders = (t.match(/^##\s+\S/gm) || []).length;
 
-  if (/תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה|הקשר|הוראות|סגנון|מגבלות|פורמט|מבנה|דרישות/.test(t)) {
+  if (
+    /תפקיד|משימה|שלבים|הגבלות|טון|פורמט פלט|קהל יעד|מטרה|הקשר|הוראות|סגנון|מגבלות|פורמט|מבנה|דרישות/.test(
+      t,
+    )
+  ) {
     matched.push("אלמנטי מסגרת בעברית");
   }
   // Chain-of-thought / structured reasoning instructions — bonus signal

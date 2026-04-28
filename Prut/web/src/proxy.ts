@@ -106,13 +106,18 @@ export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  // Determine allowed origin
+  // Determine allowed origins. In dev we additionally accept the request's own
+  // origin so engineers can run the app on localhost while .env.local still
+  // points NEXT_PUBLIC_SITE_URL at production.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-  let allowedOrigin: string;
+  const allowedOrigins: string[] = [];
   try {
-    allowedOrigin = new URL(siteUrl).origin;
+    allowedOrigins.push(new URL(siteUrl).origin);
   } catch {
-    allowedOrigin = request.nextUrl.origin;
+    allowedOrigins.push(request.nextUrl.origin);
+  }
+  if (process.env.NODE_ENV !== "production") {
+    allowedOrigins.push(request.nextUrl.origin);
   }
 
   // Extract request origin from Origin or Referer header
@@ -128,7 +133,10 @@ export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
 
   // Allow both www and non-www variants of the same origin
   const normalizeOrigin = (o: string) => o.replace("://www.", "://");
-  if (!requestOrigin || normalizeOrigin(requestOrigin) !== normalizeOrigin(allowedOrigin)) {
+  const matches =
+    requestOrigin &&
+    allowedOrigins.some((allowed) => normalizeOrigin(requestOrigin) === normalizeOrigin(allowed));
+  if (!matches) {
     return NextResponse.json({ error: "CSRF validation failed" }, { status: 403 });
   }
 

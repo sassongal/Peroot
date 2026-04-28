@@ -5,11 +5,11 @@
  * that are extracted, tokenized, and bundled into prompts.
  */
 
-import type { ContextBlock, ProcessingStage } from './engine/types';
+import type { ContextBlock, ProcessingStage } from "./engine/types";
 
-export type AttachmentType = 'file' | 'url' | 'image';
+export type AttachmentType = "file" | "url" | "image";
 
-export type AttachmentStatus = 'loading' | 'ready' | 'error';
+export type AttachmentStatus = "loading" | "ready" | "error";
 
 export interface ContextAttachment {
   /** Unique identifier for this attachment */
