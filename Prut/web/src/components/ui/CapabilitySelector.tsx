@@ -27,44 +27,29 @@ const SHIMMER_DELAYS: Record<CapabilityMode, string> = {
   [CapabilityMode.VIDEO_GENERATION]: "5.6s",
 };
 
-interface ChipColors {
-  base: string;
-  selected: string;
-  shadow: string;
-}
-
-const COLOR_CLASSES: Record<string, ChipColors> = {
-  sky: {
-    base: "border-sky-300/50 bg-sky-100/20 text-sky-600 dark:border-sky-400/25 dark:bg-sky-300/[0.06] dark:text-sky-300",
-    selected:
-      "border-sky-400/60 bg-sky-200/35 text-sky-700 dark:border-sky-400/50 dark:bg-sky-300/15 dark:text-sky-200",
-    shadow: "0 0 16px -3px rgba(56,189,248,0.35)",
-  },
-  emerald: {
-    base: "border-emerald-300/50 bg-emerald-100/20 text-emerald-600 dark:border-emerald-400/25 dark:bg-emerald-300/[0.06] dark:text-emerald-300",
-    selected:
-      "border-emerald-400/60 bg-emerald-200/35 text-emerald-700 dark:border-emerald-400/50 dark:bg-emerald-300/15 dark:text-emerald-200",
-    shadow: "0 0 16px -3px rgba(52,211,153,0.35)",
-  },
-  purple: {
-    base: "border-violet-300/50 bg-violet-100/20 text-violet-600 dark:border-violet-400/25 dark:bg-violet-300/[0.06] dark:text-violet-300",
-    selected:
-      "border-violet-400/60 bg-violet-200/35 text-violet-700 dark:border-violet-400/50 dark:bg-violet-300/15 dark:text-violet-200",
-    shadow: "0 0 16px -3px rgba(167,139,250,0.35)",
-  },
-  amber: {
-    base: "border-amber-300/50 bg-amber-100/20 text-amber-600 dark:border-amber-400/25 dark:bg-amber-300/[0.06] dark:text-amber-300",
-    selected:
-      "border-amber-400/60 bg-amber-200/35 text-amber-700 dark:border-amber-400/50 dark:bg-amber-300/15 dark:text-amber-200",
-    shadow: "0 0 16px -3px rgba(251,191,36,0.35)",
-  },
-  rose: {
-    base: "border-pink-300/50 bg-pink-100/20 text-pink-600 dark:border-pink-400/25 dark:bg-pink-300/[0.06] dark:text-pink-300",
-    selected:
-      "border-pink-400/60 bg-pink-200/35 text-pink-700 dark:border-pink-400/50 dark:bg-pink-300/15 dark:text-pink-200",
-    shadow: "0 0 16px -3px rgba(249,168,212,0.35)",
-  },
+// Nordic Pastel palette — icy, desaturated, sophisticated.
+// Each mode keeps a distinct hue while staying calm enough to coexist with the rest of the UI.
+const PASTEL_ACCENTS: Record<string, { accent: string; shadowRgb: string }> = {
+  sky: { accent: "#C5D5E0", shadowRgb: "197,213,224" }, // icy blue — Standard
+  emerald: { accent: "#C0D4C8", shadowRgb: "192,212,200" }, // dusty sage — Deep Research
+  rose: { accent: "#E5C8CC", shadowRgb: "229,200,204" }, // dusty rose — Image
+  purple: { accent: "#CDC4D8", shadowRgb: "205,196,216" }, // pale lilac — Agent
+  amber: { accent: "#E8DAB8", shadowRgb: "232,218,184" }, // butter — Video
 };
+
+type ChipVars = React.CSSProperties & {
+  "--chip-accent": string;
+  "--chip-shadow": string;
+};
+
+function getChipVars(colorKey: string, isSelected: boolean): ChipVars {
+  const { accent, shadowRgb } = PASTEL_ACCENTS[colorKey] ?? PASTEL_ACCENTS.sky;
+  return {
+    "--chip-accent": accent,
+    "--chip-shadow": isSelected ? `0 0 16px -3px rgba(${shadowRgb},0.45)` : "none",
+    boxShadow: isSelected ? `0 0 16px -3px rgba(${shadowRgb},0.45)` : undefined,
+  };
+}
 
 interface CapabilitySelectorProps {
   value: CapabilityMode;
@@ -106,10 +91,11 @@ export function CapabilitySelector({
         const config = CAPABILITY_CONFIGS[mode];
         const Icon = ICONS[config.icon];
         const isSelected = value === mode;
-        const colors = COLOR_CLASSES[config.color];
         const isComingSoon = COMING_SOON_MODES.has(mode);
         const isLocked = isGuest && mode !== CapabilityMode.STANDARD && !isComingSoon;
         const shimmerDelay = SHIMMER_DELAYS[mode];
+        const usePastel = !isComingSoon && !isLocked;
+        const pastelVars = usePastel ? getChipVars(config.color, isSelected) : undefined;
 
         return (
           <button
@@ -128,9 +114,7 @@ export function CapabilitySelector({
               }
               onChange(mode);
             }}
-            style={
-              isSelected && !isComingSoon && !isLocked ? { boxShadow: colors.shadow } : undefined
-            }
+            style={pastelVars}
             className={cn(
               "relative flex items-center gap-2 rounded-full border overflow-hidden snap-start shrink-0",
               "transition-all duration-200 cursor-pointer",
@@ -140,11 +124,20 @@ export function CapabilitySelector({
                 : isLocked
                   ? "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) opacity-60 hover:opacity-80"
                   : isSelected
-                    ? cn(colors.selected, "scale-105")
+                    ? cn(
+                        "scale-105",
+                        "[background-color:color-mix(in_oklab,var(--chip-accent)_60%,transparent)]",
+                        "[border-color:var(--chip-accent)]",
+                        "[color:color-mix(in_oklab,var(--chip-accent)_45%,black)]",
+                        "dark:[color:color-mix(in_oklab,var(--chip-accent)_55%,white)]",
+                      )
                     : cn(
-                        colors.base,
                         isNonStandard && "opacity-60 hover:opacity-90",
                         "hover:scale-[1.03] active:scale-[0.97]",
+                        "[background-color:color-mix(in_oklab,var(--chip-accent)_25%,transparent)]",
+                        "[border-color:color-mix(in_oklab,var(--chip-accent)_55%,transparent)]",
+                        "[color:color-mix(in_oklab,var(--chip-accent)_40%,black)]",
+                        "dark:[color:color-mix(in_oklab,var(--chip-accent)_60%,white)]",
                       ),
               disabled && !isComingSoon && !isLocked && "opacity-40 cursor-not-allowed",
             )}
