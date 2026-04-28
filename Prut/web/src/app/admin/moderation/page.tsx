@@ -31,7 +31,7 @@ interface Prompt {
   user_id: string;
   created_at: string;
   personal_category: string | null;
-  prompt_text: string;
+  prompt: string;
   is_public: boolean;
   moderation_status: ModerationStatus;
   reviewed_at: string | null;
@@ -78,10 +78,7 @@ function fmtDateTime(iso: string) {
   });
 }
 
-const STATUS_CONFIG: Record<
-  ModerationStatus,
-  { label: string; color: string; dot: string }
-> = {
+const STATUS_CONFIG: Record<ModerationStatus, { label: string; color: string; dot: string }> = {
   pending: {
     label: "ממתין",
     color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
@@ -134,15 +131,11 @@ function StatCard({
   };
   return (
     <div className="group p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-6 transition-all duration-500 hover:border-white/10">
-      <div
-        className={cn("p-3.5 rounded-2xl border w-fit", colorMap[color])}
-      >
+      <div className={cn("p-3.5 rounded-2xl border w-fit", colorMap[color])}>
         <Icon className="w-5 h-5" />
       </div>
       <div className="space-y-1">
-        <div className="text-4xl font-black text-white tracking-tighter leading-none">
-          {value}
-        </div>
+        <div className="text-4xl font-black text-white tracking-tighter leading-none">{value}</div>
         <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
           {label}
         </div>
@@ -163,7 +156,7 @@ function PromptCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const status = STATUS_CONFIG[prompt.moderation_status] ?? STATUS_CONFIG.pending;
-  const isLong = prompt.prompt_text.length > 220;
+  const isLong = prompt.prompt.length > 220;
 
   return (
     <div
@@ -171,7 +164,7 @@ function PromptCard({
         "rounded-[36px] border bg-zinc-950/80 backdrop-blur-xl p-8 space-y-6 transition-all duration-300",
         prompt.moderation_status === "flagged"
           ? "border-rose-500/20"
-          : "border-white/5 hover:border-white/10"
+          : "border-white/5 hover:border-white/10",
       )}
     >
       {/* Header row */}
@@ -181,7 +174,7 @@ function PromptCard({
           <span
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider",
-              status.color
+              status.color,
             )}
           >
             <span className={cn("w-1.5 h-1.5 rounded-full", status.dot)} />
@@ -209,19 +202,17 @@ function PromptCard({
         <User className="w-3.5 h-3.5" />
         <span>{prompt.author_display}</span>
         <span className="text-zinc-800">•</span>
-        <span className="text-zinc-800 font-mono text-[10px]">
-          {prompt.user_id.slice(0, 8)}...
-        </span>
+        <span className="text-zinc-800 font-mono text-[10px]">{prompt.user_id.slice(0, 8)}...</span>
       </div>
 
       {/* Prompt text */}
       <div
         className={cn(
           "text-sm text-zinc-300 font-medium leading-relaxed bg-white/2 rounded-2xl p-5 border border-white/5",
-          !expanded && isLong && "line-clamp-3"
+          !expanded && isLong && "line-clamp-3",
         )}
       >
-        {prompt.prompt_text}
+        {prompt.prompt}
       </div>
       {isLong && (
         <button
@@ -249,7 +240,7 @@ function PromptCard({
             "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95",
             prompt.moderation_status === "approved"
               ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 cursor-default"
-              : "bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+              : "bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50",
           )}
         >
           <CheckCircle className="w-3.5 h-3.5" />
@@ -263,7 +254,7 @@ function PromptCard({
             "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95",
             prompt.moderation_status === "flagged"
               ? "bg-rose-500/10 border border-rose-500/20 text-rose-400 cursor-default"
-              : "bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 disabled:opacity-50"
+              : "bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 disabled:opacity-50",
           )}
         >
           <Flag className="w-3.5 h-3.5" />
@@ -341,10 +332,7 @@ export default function ModerationPage() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  async function handleAction(
-    promptId: string,
-    action: "approve" | "remove" | "flag"
-  ) {
+  async function handleAction(promptId: string, action: "approve" | "remove" | "flag") {
     setActingOn(promptId);
     try {
       const res = await fetch(getApiPath("/api/admin/moderation"), {
@@ -365,10 +353,7 @@ export default function ModerationPage() {
       await fetchData();
     } catch (err) {
       logger.error("[Moderation] action error:", err);
-      showToast(
-        err instanceof Error ? err.message : "פעולה נכשלה",
-        false
-      );
+      showToast(err instanceof Error ? err.message : "פעולה נכשלה", false);
     } finally {
       setActingOn(null);
     }
@@ -381,22 +366,15 @@ export default function ModerationPage() {
   return (
     <AdminLayout>
       <div className="space-y-10 animate-in fade-in duration-700 pb-20" dir="rtl">
-
         {/* Toast */}
         {toast && (
           <div
             className={cn(
               "fixed bottom-8 start-8 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-sm shadow-2xl transition-all animate-in slide-in-from-bottom-4 duration-300",
-              toast.ok
-                ? "bg-emerald-600 text-white"
-                : "bg-rose-600 text-white"
+              toast.ok ? "bg-emerald-600 text-white" : "bg-rose-600 text-white",
             )}
           >
-            {toast.ok ? (
-              <CheckCircle className="w-4 h-4" />
-            ) : (
-              <XCircle className="w-4 h-4" />
-            )}
+            {toast.ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
             {toast.msg}
           </div>
         )}
@@ -463,7 +441,6 @@ export default function ModerationPage() {
 
         {/* ── Filter + Search bar ────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center p-6 bg-zinc-950/50 rounded-[36px] border border-white/5">
-
           {/* Filter tabs */}
           <div className="flex flex-wrap gap-2">
             {FILTER_TABS.map((tab) => (
@@ -474,7 +451,7 @@ export default function ModerationPage() {
                   "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
                   filter === tab.key
                     ? "bg-white text-black"
-                    : "bg-white/5 text-zinc-500 hover:text-zinc-200 hover:bg-white/10"
+                    : "bg-white/5 text-zinc-500 hover:text-zinc-200 hover:bg-white/10",
                 )}
               >
                 {tab.label}

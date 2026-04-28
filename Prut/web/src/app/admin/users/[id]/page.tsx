@@ -1255,9 +1255,7 @@ export default function UserDetailPage() {
                   <option value="admin">Admin</option>
                 </select>
                 {(() => {
-                  const currentEffectiveTier = isAdmin
-                    ? "admin"
-                    : (profile.plan_tier ?? "free");
+                  const currentEffectiveTier = isAdmin ? "admin" : (profile.plan_tier ?? "free");
                   const isNoop = tierValue === currentEffectiveTier;
                   return (
                     <button

@@ -81,7 +81,9 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
                 <p className="text-sm leading-relaxed text-(--text-secondary)">{d.summary}</p>
               </Section>
             ) : block.stage === "warning" && block.type === "image" ? (
-              <div className="text-sm text-(--text-muted) italic">לא הצלחנו ליצור תיאור טקסטואלי לתמונה. התמונה תועבר לAI ישירות כהקשר ויזואלי.</div>
+              <div className="text-sm text-(--text-muted) italic">
+                לא הצלחנו ליצור תיאור טקסטואלי לתמונה. התמונה תועבר לAI ישירות כהקשר ויזואלי.
+              </div>
             ) : null}
 
             {d.keyFacts.length > 0 && (

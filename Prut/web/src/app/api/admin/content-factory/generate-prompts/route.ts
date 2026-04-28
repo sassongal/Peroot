@@ -10,8 +10,16 @@ import { checkHebrewQuality } from "@/lib/content-factory/qa";
 export const maxDuration = 120;
 
 const GeneratePromptsSchema = z.object({
-  topic: z.string().max(500).optional().transform(v => v?.trim() || undefined),
-  category: z.string().max(200).optional().transform(v => v?.trim() || undefined),
+  topic: z
+    .string()
+    .max(500)
+    .optional()
+    .transform((v) => v?.trim() || undefined),
+  category: z
+    .string()
+    .max(200)
+    .optional()
+    .transform((v) => v?.trim() || undefined),
 });
 
 /**
@@ -30,7 +38,7 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request data", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +57,10 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
       .single();
 
     if (logInsertError) {
-      logger.error("[admin/content-factory/generate-prompts] Failed to create log entry:", logInsertError);
+      logger.error(
+        "[admin/content-factory/generate-prompts] Failed to create log entry:",
+        logInsertError,
+      );
     } else {
       logId = logEntry.id as string;
     }
@@ -58,7 +69,9 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
     const context = await getGenerationContext(supabase);
 
     // 3. Generate prompt batch via AI
-    logger.info(`[admin/content-factory/generate-prompts] Generating 5 prompts, topic: ${topic ?? "auto"}, category: ${category ?? "auto"}`);
+    logger.info(
+      `[admin/content-factory/generate-prompts] Generating 5 prompts, topic: ${topic ?? "auto"}, category: ${category ?? "auto"}`,
+    );
     const { prompts: generatedPrompts, usage } = await generatePromptBatch({
       topic,
       category,
@@ -103,13 +116,21 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
       }
 
       // Validate category_id exists, fallback to "general"
-      const validCategoryIds = context.existingCategories.map((c: { id: string; name_he: string }) => c.id);
+      const validCategoryIds = context.existingCategories.map(
+        (c: { id: string; name_he: string }) => c.id,
+      );
       const safeCategoryId = validCategoryIds.includes(prompt.category_id)
         ? prompt.category_id
         : "general";
 
       // Validate capability_mode
-      const validModes = ["STANDARD", "DEEP_RESEARCH", "IMAGE_GENERATION", "AGENT_BUILDER", "VIDEO_GENERATION"];
+      const validModes = [
+        "STANDARD",
+        "DEEP_RESEARCH",
+        "IMAGE_GENERATION",
+        "AGENT_BUILDER",
+        "VIDEO_GENERATION",
+      ];
       const safeMode = validModes.includes(prompt.capability_mode)
         ? prompt.capability_mode
         : "STANDARD";
@@ -148,7 +169,10 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
         .single();
 
       if (insertError) {
-        logger.error(`[admin/content-factory/generate-prompts] Insert error for "${prompt.title}":`, insertError);
+        logger.error(
+          `[admin/content-factory/generate-prompts] Insert error for "${prompt.title}":`,
+          insertError,
+        );
         skipped.push({ title: prompt.title, reason: `DB error: ${insertError.message}` });
         continue;
       }
@@ -170,7 +194,9 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
         .eq("id", logId);
     }
 
-    logger.info(`[admin/content-factory/generate-prompts] Inserted ${inserted.length} prompts, skipped ${skipped.length}`);
+    logger.info(
+      `[admin/content-factory/generate-prompts] Inserted ${inserted.length} prompts, skipped ${skipped.length}`,
+    );
 
     return NextResponse.json(
       {
@@ -179,7 +205,7 @@ export const POST = withAdminWrite(async (req, supabase, user) => {
         count: inserted.length,
         tokenUsage: usage,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (err) {
     logger.error("[admin/content-factory/generate-prompts] Error:", err);

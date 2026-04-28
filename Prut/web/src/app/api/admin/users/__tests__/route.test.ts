@@ -17,11 +17,26 @@ vi.mock("@/lib/logger", () => ({
 
 // ─── Chainable Supabase query builder ────────────────────────────────────────
 
-function makeBuilder(resolveValue: { data?: unknown; error?: unknown; count?: number } = { data: null }) {
+function makeBuilder(
+  resolveValue: { data?: unknown; error?: unknown; count?: number } = { data: null },
+) {
   const b: Record<string, unknown> = {};
   const chainMethods = [
-    "select", "eq", "in", "or", "order", "range", "limit", "gte",
-    "ilike", "insert", "update", "upsert", "delete", "not", "contains",
+    "select",
+    "eq",
+    "in",
+    "or",
+    "order",
+    "range",
+    "limit",
+    "gte",
+    "ilike",
+    "insert",
+    "update",
+    "upsert",
+    "delete",
+    "not",
+    "contains",
   ];
   for (const m of chainMethods) {
     b[m] = vi.fn().mockReturnValue(b);
@@ -118,18 +133,27 @@ describe("GET /api/admin/users — enriched credit fields", () => {
     // Call 6 (second wave): site_settings — daily_free_limit = 2
     const siteSettingsBuilder = makeBuilder({ data: { daily_free_limit: 2 }, error: null });
     // maybeSingle is already set in makeBuilder; override to return the right data
-    siteSettingsBuilder.maybeSingle = vi.fn().mockResolvedValue({ data: { daily_free_limit: 2 }, error: null });
+    siteSettingsBuilder.maybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { daily_free_limit: 2 }, error: null });
 
     // Wire up mockFrom to return the right builder per table
     mockFrom.mockImplementation((table: string) => {
       switch (table) {
-        case "profiles":      return profilesBuilder;
-        case "user_roles":    return rolesBuilder;
-        case "subscriptions": return subsBuilder;
-        case "history":       return historyBuilder;
-        case "credit_ledger": return ledgerBuilder;
-        case "site_settings": return siteSettingsBuilder;
-        default:              return makeBuilder({ data: [], error: null });
+        case "profiles":
+          return profilesBuilder;
+        case "user_roles":
+          return rolesBuilder;
+        case "subscriptions":
+          return subsBuilder;
+        case "history":
+          return historyBuilder;
+        case "credit_ledger":
+          return ledgerBuilder;
+        case "site_settings":
+          return siteSettingsBuilder;
+        default:
+          return makeBuilder({ data: [], error: null });
       }
     });
 
@@ -166,22 +190,34 @@ describe("GET /api/admin/users — enriched credit fields", () => {
 
   it("sets daily_limit to -1 for admin role users", async () => {
     const profilesBuilder = makeBuilder({ data: [PROFILE], count: 1, error: null });
-    const rolesBuilder = makeBuilder({ data: [{ user_id: PROFILE.id, role: "admin" }], error: null });
+    const rolesBuilder = makeBuilder({
+      data: [{ user_id: PROFILE.id, role: "admin" }],
+      error: null,
+    });
     const subsBuilder = makeBuilder({ data: [], error: null });
     const historyBuilder = makeBuilder({ data: [], error: null });
     const ledgerBuilder = makeBuilder({ data: [], error: null });
     const siteSettingsBuilder = makeBuilder({ data: { daily_free_limit: 2 }, error: null });
-    siteSettingsBuilder.maybeSingle = vi.fn().mockResolvedValue({ data: { daily_free_limit: 2 }, error: null });
+    siteSettingsBuilder.maybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { daily_free_limit: 2 }, error: null });
 
     mockFrom.mockImplementation((table: string) => {
       switch (table) {
-        case "profiles":      return profilesBuilder;
-        case "user_roles":    return rolesBuilder;
-        case "subscriptions": return subsBuilder;
-        case "history":       return historyBuilder;
-        case "credit_ledger": return ledgerBuilder;
-        case "site_settings": return siteSettingsBuilder;
-        default:              return makeBuilder({ data: [], error: null });
+        case "profiles":
+          return profilesBuilder;
+        case "user_roles":
+          return rolesBuilder;
+        case "subscriptions":
+          return subsBuilder;
+        case "history":
+          return historyBuilder;
+        case "credit_ledger":
+          return ledgerBuilder;
+        case "site_settings":
+          return siteSettingsBuilder;
+        default:
+          return makeBuilder({ data: [], error: null });
       }
     });
 
@@ -191,23 +227,39 @@ describe("GET /api/admin/users — enriched credit fields", () => {
   });
 
   it("sets daily_limit to 150 for pro plan users", async () => {
-    const profilesBuilder = makeBuilder({ data: [{ ...PROFILE, plan_tier: "pro" }], count: 1, error: null });
+    const profilesBuilder = makeBuilder({
+      data: [{ ...PROFILE, plan_tier: "pro" }],
+      count: 1,
+      error: null,
+    });
     const rolesBuilder = makeBuilder({ data: [], error: null });
-    const subsBuilder = makeBuilder({ data: [{ user_id: PROFILE.id, plan_name: "pro", status: "active", customer_name: "Test" }], error: null });
+    const subsBuilder = makeBuilder({
+      data: [{ user_id: PROFILE.id, plan_name: "pro", status: "active", customer_name: "Test" }],
+      error: null,
+    });
     const historyBuilder = makeBuilder({ data: [], error: null });
     const ledgerBuilder = makeBuilder({ data: [], error: null });
     const siteSettingsBuilder = makeBuilder({ data: { daily_free_limit: 2 }, error: null });
-    siteSettingsBuilder.maybeSingle = vi.fn().mockResolvedValue({ data: { daily_free_limit: 2 }, error: null });
+    siteSettingsBuilder.maybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { daily_free_limit: 2 }, error: null });
 
     mockFrom.mockImplementation((table: string) => {
       switch (table) {
-        case "profiles":      return profilesBuilder;
-        case "user_roles":    return rolesBuilder;
-        case "subscriptions": return subsBuilder;
-        case "history":       return historyBuilder;
-        case "credit_ledger": return ledgerBuilder;
-        case "site_settings": return siteSettingsBuilder;
-        default:              return makeBuilder({ data: [], error: null });
+        case "profiles":
+          return profilesBuilder;
+        case "user_roles":
+          return rolesBuilder;
+        case "subscriptions":
+          return subsBuilder;
+        case "history":
+          return historyBuilder;
+        case "credit_ledger":
+          return ledgerBuilder;
+        case "site_settings":
+          return siteSettingsBuilder;
+        default:
+          return makeBuilder({ data: [], error: null });
       }
     });
 

@@ -292,7 +292,9 @@ export const POST = withAdminWrite(
             logger.error("[Admin User POST] change_tier app_metadata error:", metaErr);
             if (wasAdmin) {
               return NextResponse.json(
-                { error: "Tier changed but JWT metadata sync failed; retry to revoke admin access" },
+                {
+                  error: "Tier changed but JWT metadata sync failed; retry to revoke admin access",
+                },
                 { status: 500 },
               );
             }

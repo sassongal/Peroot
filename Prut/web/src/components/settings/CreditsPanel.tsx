@@ -128,9 +128,7 @@ export function CreditsPanel() {
         )}
       </div>
 
-      {tier === "admin" && (
-        <p className="text-xs text-zinc-400">חשבון מנהל — ללא הגבלת שימוש.</p>
-      )}
+      {tier === "admin" && <p className="text-xs text-zinc-400">חשבון מנהל — ללא הגבלת שימוש.</p>}
 
       {tier === "free" && quota.refresh_at && (
         <p className="text-xs text-zinc-500">

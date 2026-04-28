@@ -165,7 +165,9 @@ describe("renderInjection with userPrompt", () => {
   });
 
   it("produces non-empty output with or without userPrompt under tight budget", () => {
-    const rawText = Array.from({ length: 20 }, (_, i) => `paragraph ${i} content here`).join("\n\n");
+    const rawText = Array.from({ length: 20 }, (_, i) => `paragraph ${i} content here`).join(
+      "\n\n",
+    );
     const b: ContextBlock = {
       id: "y",
       type: "file",

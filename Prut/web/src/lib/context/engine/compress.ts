@@ -84,7 +84,7 @@ export function compressToLimit(
 
     case "academic": {
       const headChars = Math.floor(charBudget * 0.3);
-      const tailChars = Math.floor(charBudget * 0.4);
+      const tailChars = Math.floor(charBudget * 0.3);
       const midChars = Math.max(0, charBudget - headChars - tailChars);
       const midStart = Math.floor(text.length / 2) - Math.floor(midChars / 2);
       const head = text.slice(0, headChars);

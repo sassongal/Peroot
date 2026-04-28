@@ -3,10 +3,18 @@ import { randomUUID } from "crypto";
 import { withAdminWrite } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
-import { generateBlogPost, generatePromptBatch, getGenerationContext } from "@/lib/content-factory/generate";
+import {
+  generateBlogPost,
+  generatePromptBatch,
+  getGenerationContext,
+} from "@/lib/content-factory/generate";
 
 export const maxDuration = 120;
-import { generateSlugPair, ensureUniqueSlug, calculateReadTime } from "@/lib/content-factory/slug-utils";
+import {
+  generateSlugPair,
+  ensureUniqueSlug,
+  calculateReadTime,
+} from "@/lib/content-factory/slug-utils";
 import { findDuplicate } from "@/lib/content-factory/dedup";
 
 const RegenerateSchema = z.object({
@@ -28,7 +36,7 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request data", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,7 +59,9 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
         return NextResponse.json({ error: "Only drafts can be regenerated" }, { status: 400 });
       }
 
-      const originalTopic = (existing.source_metadata as Record<string, unknown>)?.topic as string | undefined;
+      const originalTopic = (existing.source_metadata as Record<string, unknown>)?.topic as
+        | string
+        | undefined;
       const originalTemplate = (existing.source_metadata as Record<string, unknown>)?.template as
         | "guide"
         | "listicle"
@@ -60,10 +70,7 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
         | undefined;
 
       // 2. Delete the old draft
-      const { error: deleteError } = await supabase
-        .from("blog_posts")
-        .delete()
-        .eq("id", id);
+      const { error: deleteError } = await supabase.from("blog_posts").delete().eq("id", id);
 
       if (deleteError) {
         logger.error("[admin/content-factory/regenerate] Delete error:", deleteError);
@@ -88,7 +95,9 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
       // 4. Fetch context and regenerate
       const context = await getGenerationContext(supabase);
 
-      logger.info(`[admin/content-factory/regenerate] Regenerating blog, topic: ${originalTopic ?? "auto"}`);
+      logger.info(
+        `[admin/content-factory/regenerate] Regenerating blog, topic: ${originalTopic ?? "auto"}`,
+      );
       const generated = await generateBlogPost({
         topic: originalTopic,
         template: originalTemplate ?? "guide",
@@ -113,7 +122,7 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
         }
         return NextResponse.json(
           { error: "Duplicate content detected", duplicate },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
@@ -177,7 +186,9 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
           .eq("id", logId);
       }
 
-      logger.info(`[admin/content-factory/regenerate] Blog regenerated: "${generated.title}" (id: ${newBlog.id})`);
+      logger.info(
+        `[admin/content-factory/regenerate] Blog regenerated: "${generated.title}" (id: ${newBlog.id})`,
+      );
       return NextResponse.json({ blogPost: newBlog });
     }
 
@@ -195,11 +206,18 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
     }
 
     if (existing.is_active !== false) {
-      return NextResponse.json({ error: "Only inactive (pending) prompts can be regenerated" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only inactive (pending) prompts can be regenerated" },
+        { status: 400 },
+      );
     }
 
-    const originalTopic = (existing.source_metadata as Record<string, unknown>)?.topic as string | undefined;
-    const originalCategory = (existing.source_metadata as Record<string, unknown>)?.category as string | undefined;
+    const originalTopic = (existing.source_metadata as Record<string, unknown>)?.topic as
+      | string
+      | undefined;
+    const originalCategory = (existing.source_metadata as Record<string, unknown>)?.category as
+      | string
+      | undefined;
 
     // 2. Delete the old draft
     const { error: deleteError } = await supabase
@@ -229,7 +247,9 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
     // 4. Fetch context and regenerate (single prompt from batch)
     const context = await getGenerationContext(supabase);
 
-    logger.info(`[admin/content-factory/regenerate] Regenerating prompt, topic: ${originalTopic ?? "auto"}`);
+    logger.info(
+      `[admin/content-factory/regenerate] Regenerating prompt, topic: ${originalTopic ?? "auto"}`,
+    );
     const { prompts: generated } = await generatePromptBatch({
       topic: originalTopic,
       category: originalCategory,
@@ -268,10 +288,7 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
           })
           .eq("id", logId);
       }
-      return NextResponse.json(
-        { error: "Duplicate content detected", duplicate },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "Duplicate content detected", duplicate }, { status: 409 });
     }
 
     // 6. Insert new prompt
@@ -329,7 +346,9 @@ export const POST = withAdminWrite(async (req, supabase, _user) => {
         .eq("id", logId);
     }
 
-    logger.info(`[admin/content-factory/regenerate] Prompt regenerated: "${newPromptData.title}" (id: ${newPrompt.id})`);
+    logger.info(
+      `[admin/content-factory/regenerate] Prompt regenerated: "${newPromptData.title}" (id: ${newPrompt.id})`,
+    );
     return NextResponse.json({ prompt: newPrompt });
   } catch (err) {
     logger.error("[admin/content-factory/regenerate] Error:", err);

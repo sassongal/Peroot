@@ -10,9 +10,7 @@ const LS_MRR_CACHE_TTL = 300; // 5 minutes
 const PAYLOAD_CACHE_KEY = "admin:revenue:payload:v1";
 const PAYLOAD_CACHE_TTL = 300; // 5 minutes
 
-async function getLsMrr(
-  skipCache = false,
-): Promise<{ mrr: number; activeSubs: number } | null> {
+async function getLsMrr(skipCache = false): Promise<{ mrr: number; activeSubs: number } | null> {
   try {
     if (!skipCache) {
       const cached = await redis.get<{ mrr: number; activeSubs: number }>(LS_MRR_CACHE_KEY);

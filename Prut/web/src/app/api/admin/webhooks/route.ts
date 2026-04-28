@@ -28,9 +28,7 @@ export const GET = withAdmin(async (req) => {
   const limit = Math.min(MAX_LIMIT, Math.max(1, isNaN(limitRaw) ? DEFAULT_LIMIT : limitRaw));
   const status = searchParams.get("status") || "all";
 
-  let countQuery = supabase
-    .from("webhook_events")
-    .select("id", { count: "exact", head: true });
+  let countQuery = supabase.from("webhook_events").select("id", { count: "exact", head: true });
 
   let query = supabase
     .from("webhook_events")

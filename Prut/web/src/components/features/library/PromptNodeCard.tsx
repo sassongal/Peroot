@@ -56,8 +56,14 @@ export function PromptNodeCard({
   onSaveTags,
   backButtonRef,
 }: PromptNodeCardProps) {
-  const { togglePin, movePrompts, deletePrompts, personalCategories, updatePrompt, duplicatePrompt } =
-    useLibraryContext();
+  const {
+    togglePin,
+    movePrompts,
+    deletePrompts,
+    personalCategories,
+    updatePrompt,
+    duplicatePrompt,
+  } = useLibraryContext();
   const { favoritePersonalIds, handleToggleFavorite } = useFavoritesContext();
 
   const [editingTitle, setEditingTitle] = useState(false);

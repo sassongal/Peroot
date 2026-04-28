@@ -30,12 +30,24 @@ vi.mock("@/lib/ratelimit", () => ({
 // ─── Chainable query builder ─────────────────────────────────────────────────
 
 function mockQueryBuilder(
-  resolveValue: { data?: unknown; error?: unknown; count?: number } = { data: null }
+  resolveValue: { data?: unknown; error?: unknown; count?: number } = { data: null },
 ) {
   const builder: Record<string, unknown> = {};
   const methods = [
-    "select", "eq", "in", "or", "order", "limit", "gte", "ilike",
-    "insert", "update", "upsert", "delete", "maybeSingle", "single",
+    "select",
+    "eq",
+    "in",
+    "or",
+    "order",
+    "limit",
+    "gte",
+    "ilike",
+    "insert",
+    "update",
+    "upsert",
+    "delete",
+    "maybeSingle",
+    "single",
   ];
   for (const m of methods) {
     builder[m] = vi.fn().mockReturnValue(builder);
@@ -151,7 +163,11 @@ describe("POST /api/admin/users/[id]", () => {
     const res = await POST(makePostRequest({ action: "change_tier", value: "pro" }), makeContext());
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toMatchObject({ success: true, action: "change_tier", target_user_id: VALID_UUID });
+    expect(body).toMatchObject({
+      success: true,
+      action: "change_tier",
+      target_user_id: VALID_UUID,
+    });
 
     expect(mockRpc).toHaveBeenCalledWith("admin_change_tier", {
       target_user_id: VALID_UUID,
@@ -168,7 +184,10 @@ describe("POST /api/admin/users/[id]", () => {
     // No demotion guard needed when promoting to admin
     mockFrom.mockReturnValue(mockQueryBuilder({ data: null, error: null }));
 
-    const res = await POST(makePostRequest({ action: "change_tier", value: "admin" }), makeContext());
+    const res = await POST(
+      makePostRequest({ action: "change_tier", value: "admin" }),
+      makeContext(),
+    );
     expect(res.status).toBe(200);
 
     expect(mockUpdateUserById).toHaveBeenCalledWith(VALID_UUID, {
@@ -225,7 +244,10 @@ describe("POST /api/admin/users/[id]", () => {
   it("change_tier: invalid tier value 'premium' returns 400 /value must be one of/", async () => {
     setupParseInput("change_tier", "premium");
 
-    const res = await POST(makePostRequest({ action: "change_tier", value: "premium" }), makeContext());
+    const res = await POST(
+      makePostRequest({ action: "change_tier", value: "premium" }),
+      makeContext(),
+    );
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toMatch(/value must be one of/);
@@ -261,7 +283,10 @@ describe("POST /api/admin/users/[id]", () => {
   it("returns 400 on grant_credits exceeding 10,000", async () => {
     setupParseInput("grant_credits", 10001);
 
-    const res = await POST(makePostRequest({ action: "grant_credits", value: 10001 }), makeContext());
+    const res = await POST(
+      makePostRequest({ action: "grant_credits", value: 10001 }),
+      makeContext(),
+    );
     expect(res.status).toBe(400);
   });
 
@@ -334,7 +359,7 @@ describe("POST /api/admin/users/[id]", () => {
     expect(mockLogAdminAction).toHaveBeenCalledWith(
       mockAdminUser.id,
       "user_ban",
-      expect.objectContaining({ target_user_id: VALID_UUID })
+      expect.objectContaining({ target_user_id: VALID_UUID }),
     );
   });
 

@@ -123,9 +123,7 @@ describe("GET /api/admin/dashboard", () => {
   it("skips redis.get, calls redis.set, and includes authProfileMismatch when ?refresh=1", async () => {
     redisGet.mockResolvedValue(null); // should not be reached
 
-    const req = new NextRequest(
-      "http://localhost:3000/api/admin/dashboard?refresh=1"
-    );
+    const req = new NextRequest("http://localhost:3000/api/admin/dashboard?refresh=1");
     const res = await GET(req, undefined as never);
 
     // redis.get must NOT have been called (skipCache = true)

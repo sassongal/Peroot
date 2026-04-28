@@ -39,7 +39,7 @@ export const GET = withAdmin(async (req) => {
   // ── 1. Fetch all public prompts (with author info) ──────────────────────
   let promptsQuery = supabase
     .from("personal_library")
-    .select("id, user_id, created_at, personal_category, prompt_text, is_public", {
+    .select("id, user_id, created_at, personal_category, prompt, is_public", {
       count: "exact",
     })
     .eq("is_public", true)
@@ -48,7 +48,7 @@ export const GET = withAdmin(async (req) => {
   if (search) {
     // Escape special LIKE characters to prevent wildcard DOS
     const escaped = search.replace(/[%_\\]/g, "\\$&");
-    promptsQuery = promptsQuery.ilike("prompt_text", `%${escaped}%`);
+    promptsQuery = promptsQuery.ilike("prompt", `%${escaped}%`);
   }
 
   const { data: allPublicPrompts, error: promptsError } = await promptsQuery;
@@ -92,7 +92,7 @@ export const GET = withAdmin(async (req) => {
     user_id: string;
     created_at: string;
     personal_category: string | null;
-    prompt_text: string;
+    prompt: string;
     is_public: boolean;
     moderation_status: string;
     reviewed_at: string | null;

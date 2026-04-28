@@ -593,8 +593,9 @@ function PageContent() {
       enhanceCooldownRef.current = false;
     }, 500);
 
-    // Block immediately when credits hit 0 — avoid wasting an API round trip
-    if (user && creditsRemaining !== null && creditsRemaining <= 0) {
+    // Block immediately when credits hit 0 — avoid wasting an API round trip.
+    // Pro/admin: skip — server auto-refreshes at spend time; local counter is stale.
+    if (user && !isProPlan && creditsRemaining !== null && creditsRemaining <= 0) {
       setShowUpgradeNudge(true);
       return;
     }
@@ -685,7 +686,7 @@ function PageContent() {
       if (user && creditsRemaining !== null) {
         const newCredits = Math.max(0, creditsRemaining - 1);
         setCreditsRemaining(newCredits);
-        if (newCredits === 0) {
+        if (newCredits === 0 && !isProPlan) {
           toast("הקרדיטים נגמרו — הם מתחדשים כל יום בשעה 14:00", { duration: 8000 });
         }
       }

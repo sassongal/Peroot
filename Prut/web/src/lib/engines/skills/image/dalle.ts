@@ -37,7 +37,7 @@ export const skill: PlatformSkill = {
     {
       concept: "קומיקס 4 פאנלים: חתול שונא ימי שני",
       output:
-        "A 4-panel comic strip arranged in a 2x2 grid with clean black panel borders. Panel 1: A chubby orange tabby cat asleep on a couch, alarm clock shows 6AM Monday, speech bubble reads \"NO.\". Panel 2: Same cat dragging itself off the couch, eyes barely open, a tiny dark storm cloud over its head. Panel 3: Cat staring at a full food bowl with existential dread, tail drooping. Panel 4: Cat back on the couch wrapped in a blanket at 6:05AM, speech bubble reads \"Nope.\". Consistent character — same orange tabby with white chest patch and sleepy green eyes across all panels. Friendly cartoon illustration style, warm Sunday-paper palette of cream, orange, and ink black. [size: 1024x1024] [quality: high]",
+        'A 4-panel comic strip arranged in a 2x2 grid with clean black panel borders. Panel 1: A chubby orange tabby cat asleep on a couch, alarm clock shows 6AM Monday, speech bubble reads "NO.". Panel 2: Same cat dragging itself off the couch, eyes barely open, a tiny dark storm cloud over its head. Panel 3: Cat staring at a full food bowl with existential dread, tail drooping. Panel 4: Cat back on the couch wrapped in a blanket at 6:05AM, speech bubble reads "Nope.". Consistent character — same orange tabby with white chest patch and sleepy green eyes across all panels. Friendly cartoon illustration style, warm Sunday-paper palette of cream, orange, and ink black. [size: 1024x1024] [quality: high]',
       category: "fantasy",
     },
     {
@@ -140,7 +140,7 @@ export const skill: PlatformSkill = {
       reasoning:
         "Multi-panel needs strong character anchors — repeat specific visual descriptors across all panel descriptions so gpt-image-2 maintains identity. Describe each panel explicitly. 2x2 grid layout in the prompt.",
       output:
-        "A 4-panel comic strip in a 2x2 grid with clean black borders. Panel 1: a chubby orange tabby with white chest patch, sleeping, speech bubble \"MONDAY? NO.\". Panel 2: same orange tabby dragging himself off a couch, tiny storm cloud over his head. Panel 3: same tabby staring at a full food bowl, tail drooping. Panel 4: same tabby back under blanket, speech bubble \"Nope.\". Consistent character — orange fur, white chest, sleepy green eyes in every panel. Warm Sunday-paper cartoon palette. [size: 1024x1024] [quality: high]",
+        'A 4-panel comic strip in a 2x2 grid with clean black borders. Panel 1: a chubby orange tabby with white chest patch, sleeping, speech bubble "MONDAY? NO.". Panel 2: same orange tabby dragging himself off a couch, tiny storm cloud over his head. Panel 3: same tabby staring at a full food bowl, tail drooping. Panel 4: same tabby back under blanket, speech bubble "Nope.". Consistent character — orange fur, white chest, sleepy green eyes in every panel. Warm Sunday-paper cartoon palette. [size: 1024x1024] [quality: high]',
     },
   ],
   refinementExamples: [

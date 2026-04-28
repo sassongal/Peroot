@@ -42,9 +42,7 @@ export function DashboardMismatchCard({ authCount, profileCount, missing, onSync
     >
       <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
       <div className="flex-1 space-y-1">
-        <p className="text-sm font-bold text-amber-300">
-          נמצאו {missing} משתמשים ללא פרופיל
-        </p>
+        <p className="text-sm font-bold text-amber-300">נמצאו {missing} משתמשים ללא פרופיל</p>
         <p className="text-xs text-amber-400/80">
           {authCount} ב-auth · {profileCount} ב-profiles
         </p>

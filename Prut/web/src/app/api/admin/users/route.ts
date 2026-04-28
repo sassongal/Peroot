@@ -64,7 +64,12 @@ export const GET = withAdmin(async (req) => {
 
   if (userIds.length > 0) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: historyRows, error: historyErr }, authList, { data: ledgerRows }, { data: siteSettings }] = await Promise.all([
+    const [
+      { data: historyRows, error: historyErr },
+      authList,
+      { data: ledgerRows },
+      { data: siteSettings },
+    ] = await Promise.all([
       svc
         .from("history")
         .select("user_id, created_at")
@@ -92,10 +97,7 @@ export const GET = withAdmin(async (req) => {
         .in("user_id", userIds)
         .gte("created_at", sevenDaysAgo)
         .limit(50000),
-      svc
-        .from("site_settings")
-        .select("daily_free_limit")
-        .maybeSingle(),
+      svc.from("site_settings").select("daily_free_limit").maybeSingle(),
     ]);
 
     if (historyErr) {

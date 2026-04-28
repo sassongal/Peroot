@@ -74,8 +74,7 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
   // Flash-lite does not reliably support multimodal structured output.
   // Always use the full flash model when the input contains an image.
   const isImageInput = input.sourceType === "image" && !!input.imageBase64;
-  const model =
-    input.tier === "pro" || isImageInput ? ENRICH_MODEL_PRO : ENRICH_MODEL_FREE;
+  const model = input.tier === "pro" || isImageInput ? ENRICH_MODEL_PRO : ENRICH_MODEL_FREE;
 
   async function runEnrich(modelId: string, timeoutMs: number) {
     const result = await generateText({

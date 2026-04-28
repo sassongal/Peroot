@@ -65,7 +65,9 @@ export function usePromptLimits() {
       const q = await fetchQuota();
       if (q) {
         setQuota(q);
-        setIsPro(q.plan_tier === "pro" || q.plan_tier === "admin");
+        setIsPro(
+          q.plan_tier === "pro" || q.plan_tier === "admin" || (q.plan_tier as string) === "premium",
+        );
         setIsAdmin(q.plan_tier === "admin");
       }
     } else {
@@ -121,7 +123,15 @@ export function usePromptLimits() {
       }
       setCanUsePrompt(usage.count < settings.max_free_prompts);
     }
-  }, [user, isAdmin, isPro, quota, settings.allow_guest_access, settings.max_free_prompts, usage.count]);
+  }, [
+    user,
+    isAdmin,
+    isPro,
+    quota,
+    settings.allow_guest_access,
+    settings.max_free_prompts,
+    usage.count,
+  ]);
 
   useEffect(() => {
     queueMicrotask(() => updateLimits());

@@ -8,7 +8,12 @@ import type { PersonalLibrarySharedState } from "@/components/views/personal-lib
 interface LibraryBottomNavProps {
   shared: Pick<
     PersonalLibrarySharedState,
-    "effectiveFolder" | "folderCounts" | "setFolder" | "setSidebarOpen" | "localViewType" | "setLocalViewType"
+    | "effectiveFolder"
+    | "folderCounts"
+    | "setFolder"
+    | "setSidebarOpen"
+    | "localViewType"
+    | "setLocalViewType"
   >;
 }
 
@@ -18,7 +23,14 @@ const FOLDER_TABS = [
 ] as const;
 
 export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
-  const { effectiveFolder, folderCounts, setFolder, setSidebarOpen, localViewType, setLocalViewType } = shared;
+  const {
+    effectiveFolder,
+    folderCounts,
+    setFolder,
+    setSidebarOpen,
+    localViewType,
+    setLocalViewType,
+  } = shared;
   const { setViewMode } = useLibraryContext();
 
   const isGraphActive = localViewType === "graph";
