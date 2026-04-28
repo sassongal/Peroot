@@ -28,6 +28,12 @@ export interface GatewayParams {
   estimatedInputTokens?: number;
   onFinish?: (completion: { usage: unknown; text: string }) => Promise<void>;
   onStreamEnd?: () => void;
+  /**
+   * Optional image attachments for multimodal requests.
+   * When present, the fallback chain is filtered to vision-capable models only,
+   * and messages are built as a multimodal array (text + image parts).
+   */
+  imageAttachments?: Array<{ base64: string; mimeType: string }>;
 }
 
 /**
@@ -249,8 +255,15 @@ export class AIGateway {
         ) as ModelId[])
       : preferredChain;
 
+    // Filter to vision-capable models when image attachments are present
+    const hasImages = !!(params.imageAttachments && params.imageAttachments.length > 0);
+    const visionChain = hasImages
+      ? (models.filter((m) => AVAILABLE_MODELS[m]?.supportsVision) as ModelId[])
+      : models;
+    const finalModels = visionChain.length > 0 ? visionChain : models;
+
     try {
-      for (const modelId of models) {
+      for (const modelId of finalModels) {
         const config = AVAILABLE_MODELS[modelId];
         if (!config) continue;
 
@@ -272,7 +285,22 @@ export class AIGateway {
           const result = await streamText({
             model: config.model,
             system: params.system,
-            prompt: params.prompt,
+            ...(hasImages
+              ? {
+                  messages: [
+                    {
+                      role: "user" as const,
+                      content: [
+                        { type: "text" as const, text: params.prompt },
+                        ...params.imageAttachments!.map((img) => ({
+                          type: "image" as const,
+                          image: `data:${img.mimeType};base64,${img.base64}`,
+                        })),
+                      ],
+                    },
+                  ],
+                }
+              : { prompt: params.prompt }),
             temperature: defaults.temperature,
             maxOutputTokens: defaults.maxOutputTokens,
             ...(providerOptions ? { providerOptions } : {}),
@@ -355,8 +383,14 @@ export class AIGateway {
         ) as ModelId[])
       : preferredChain2;
 
+    const hasImages = !!(params.imageAttachments && params.imageAttachments.length > 0);
+    const visionChain2 = hasImages
+      ? (models.filter((m) => AVAILABLE_MODELS[m]?.supportsVision) as ModelId[])
+      : models;
+    const finalModels2 = visionChain2.length > 0 ? visionChain2 : models;
+
     try {
-      for (const modelId of models) {
+      for (const modelId of finalModels2) {
         const config = AVAILABLE_MODELS[modelId];
         if (!config) continue;
         if (!(await isProviderAvailable(config.provider))) {
@@ -373,7 +407,22 @@ export class AIGateway {
           const result = await generateText({
             model: config.model,
             system: params.system,
-            prompt: params.prompt,
+            ...(hasImages
+              ? {
+                  messages: [
+                    {
+                      role: "user" as const,
+                      content: [
+                        { type: "text" as const, text: params.prompt },
+                        ...params.imageAttachments!.map((img) => ({
+                          type: "image" as const,
+                          image: `data:${img.mimeType};base64,${img.base64}`,
+                        })),
+                      ],
+                    },
+                  ],
+                }
+              : { prompt: params.prompt }),
             temperature: defaults.temperature,
             maxOutputTokens: defaults.maxOutputTokens,
             ...(providerOptions ? { providerOptions } : {}),

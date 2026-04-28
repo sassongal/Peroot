@@ -87,6 +87,8 @@ export interface EngineOutput {
    * BaseEngine.injectContext; consumed by /api/enhance for activity_logs.
    */
   injectionStats?: InjectionStats;
+  /** Image attachments extracted from context blocks for visual passthrough. */
+  imageAttachments?: Array<{ base64: string; mimeType: string }>;
 }
 
 export interface PromptEngine {

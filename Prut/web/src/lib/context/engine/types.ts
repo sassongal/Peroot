@@ -80,6 +80,10 @@ export interface ContextBlock {
   injected: ContextBlockInjected;
   stage: ProcessingStage;
   error?: PipelineError;
+  /** Raw base64 image data for visual passthrough to vision-capable models.
+   *  Present only on fresh (non-cached) image blocks. Stripped before Redis write. */
+  imageBase64?: string;
+  imageMimeType?: string;
 }
 
 export type PlanTier = "free" | "pro";

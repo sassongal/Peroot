@@ -147,8 +147,15 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
   };
   block.injected = buildInjectedBlock(block, 1);
 
+  // Populate image passthrough fields (not written to Redis cache)
+  if (input.type === "image" && imageBase64 && imageBase64.length <= 1_400_000) {
+    block.imageBase64 = imageBase64;
+    block.imageMimeType = imageMimeType;
+  }
+
   // 6. CACHE
-  await putCachedBlock(block, input.tier, input.userId);
+  const { imageBase64: _b64, imageMimeType: _mime, ...blockForCache } = block;
+  await putCachedBlock(blockForCache as ContextBlock, input.tier, input.userId);
   onStage?.("ready");
   return block;
 }
