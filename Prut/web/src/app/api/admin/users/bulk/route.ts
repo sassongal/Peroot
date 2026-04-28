@@ -8,19 +8,20 @@ import { logger } from "@/lib/logger";
 /**
  * POST /api/admin/users/bulk
  *
- * Body: { action: "ban" | "unban" | "grant_admin" | "revoke_admin", ids: string[] }
+ * Body: { action: "ban" | "unban" | "promote_admin" | "demote_admin" | "grant_admin" | "revoke_admin", ids: string[] }
+ *
+ * `grant_admin` is an alias for `promote_admin`; `revoke_admin` is an alias for `demote_admin`.
+ * The canonical names are `promote_admin` and `demote_admin`, which use admin_change_tier RPC
+ * (parity with the single-user endpoint). Aliases are preserved for backwards compatibility.
  *
  * Performs the requested action across up to 100 users in one round-trip.
  * Applies the same self-lockout + last-admin guardrails as the per-user
  * endpoint (/api/admin/users/[id]). Returns per-ID ok/fail breakdown.
- *
- * Replaces the prior pattern of firing N fetches from the client, which
- * spammed the audit log and could partially succeed with no progress UX.
  */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const bulkSchema = z.object({
-  action: z.enum(["ban", "unban", "grant_admin", "revoke_admin"]),
+  action: z.enum(["ban", "unban", "promote_admin", "demote_admin", "grant_admin", "revoke_admin"]),
   ids: z.array(z.string().regex(UUID_RE)).min(1).max(100),
 });
 
@@ -30,17 +31,25 @@ export const POST = withAdminWrite(async (req, _ssrClient, adminUser) => {
   if (parseError) return parseError;
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
-  const { action, ids } = body;
+  const { ids } = body;
+  // Normalize aliases to canonical action names for consistent audit log entries.
+  const action =
+    body.action === "grant_admin"
+      ? "promote_admin"
+      : body.action === "revoke_admin"
+        ? "demote_admin"
+        : body.action;
+
   const unique = Array.from(new Set(ids));
 
-  // Self-lockout guardrail — strip admin's own id from ban/revoke_admin ops.
+  // Self-lockout guardrail — strip admin's own id from ban/demote_admin ops.
   const selfBlocked =
-    action === "ban" || action === "revoke_admin" ? unique.includes(adminUser.id) : false;
+    action === "ban" || action === "demote_admin" ? unique.includes(adminUser.id) : false;
   const targets = selfBlocked ? unique.filter((id) => id !== adminUser.id) : unique;
 
-  // Last-admin guardrail — if the caller is revoking admin and would drop
-  // the remaining admin count below 1, refuse.
-  if (action === "revoke_admin") {
+  // Last-admin guardrail — if the caller is demoting admin and would drop
+  // the remaining admin count below 1, refuse. RPC enforces this too — defence in depth.
+  if (action === "demote_admin") {
     const { count, error: countErr } = await supabase
       .from("user_roles")
       .select("user_id", { count: "exact", head: true })
@@ -80,22 +89,40 @@ export const POST = withAdminWrite(async (req, _ssrClient, adminUser) => {
           const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
           if (signOutErr) logger.error(`[Admin Bulk] ban signOut failed for ${id}:`, signOutErr);
         }
-      } else if (action === "grant_admin") {
-        const { error } = await supabase.rpc("grant_admin_role", { target_user_id: id });
+      } else if (action === "promote_admin") {
+        const { error } = await supabase.rpc("admin_change_tier", {
+          target_user_id: id,
+          new_tier: "admin",
+        });
         if (error) throw error;
         const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
-          app_metadata: { role: "admin" },
+          app_metadata: { role: "admin", plan_tier: "admin" },
         });
         if (metaErr)
-          logger.error(`[Admin Bulk] grant_admin app_metadata failed for ${id}:`, metaErr);
-      } else if (action === "revoke_admin") {
-        const { error } = await supabase.rpc("revoke_admin_role", { target_user_id: id });
+          logger.error(`[Admin Bulk] promote_admin app_metadata failed for ${id}:`, metaErr);
+        // Force re-login so new JWT picks up the admin role immediately.
+        if (id !== adminUser.id) {
+          const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
+          if (signOutErr)
+            logger.error(`[Admin Bulk] promote_admin signOut failed for ${id}:`, signOutErr);
+        }
+      } else if (action === "demote_admin") {
+        const { error } = await supabase.rpc("admin_change_tier", {
+          target_user_id: id,
+          new_tier: "free",
+        });
         if (error) throw error;
         const { error: metaErr } = await supabase.auth.admin.updateUserById(id, {
-          app_metadata: { role: null },
+          app_metadata: { role: null, plan_tier: "free" },
         });
         if (metaErr)
-          logger.error(`[Admin Bulk] revoke_admin app_metadata failed for ${id}:`, metaErr);
+          logger.error(`[Admin Bulk] demote_admin app_metadata failed for ${id}:`, metaErr);
+        // Force re-login so revoked role takes effect immediately.
+        if (id !== adminUser.id) {
+          const { error: signOutErr } = await supabase.auth.admin.signOut(id, "global");
+          if (signOutErr)
+            logger.error(`[Admin Bulk] demote_admin signOut failed for ${id}:`, signOutErr);
+        }
       }
       ok++;
     } catch (err) {
