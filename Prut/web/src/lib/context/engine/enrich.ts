@@ -71,7 +71,11 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
     },
   ];
 
-  const model = input.tier === "pro" ? ENRICH_MODEL_PRO : ENRICH_MODEL_FREE;
+  // Flash-lite does not reliably support multimodal structured output.
+  // Always use the full flash model when the input contains an image.
+  const isImageInput = input.sourceType === "image" && !!input.imageBase64;
+  const model =
+    input.tier === "pro" || isImageInput ? ENRICH_MODEL_PRO : ENRICH_MODEL_FREE;
 
   async function runEnrich(modelId: string, timeoutMs: number) {
     const result = await generateText({
@@ -92,7 +96,9 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
     output = await runEnrich(model, ENRICH_TIMEOUT_MS);
   } catch (primaryErr) {
     if (model === ENRICH_MODEL_FREE) throw primaryErr;
-    // Pro model failed — retry with the lighter model at shorter timeout
+    // Primary model failed — retry with lighter model (skip for image inputs since flash-lite
+    // has no reliable multimodal structured output support; propagate so engine returns warningBlock)
+    if (isImageInput) throw primaryErr;
     output = await runEnrich(ENRICH_MODEL_FREE, 15_000);
   }
 

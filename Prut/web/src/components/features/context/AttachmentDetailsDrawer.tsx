@@ -69,9 +69,20 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
           </div>
 
           <div className="p-5 space-y-5">
-            <Section title="תקציר" copyText={d.summary}>
-              <p className="text-sm leading-relaxed text-(--text-secondary)">{d.summary}</p>
-            </Section>
+            {block.stage === "warning" && (
+              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-300">
+                <span>⚠</span>
+                <span>הניתוח האוטומטי לא הושלם — הקובץ עדיין ישמש כהקשר ויזואלי בשליחה.</span>
+              </div>
+            )}
+
+            {d.summary ? (
+              <Section title="תקציר" copyText={d.summary}>
+                <p className="text-sm leading-relaxed text-(--text-secondary)">{d.summary}</p>
+              </Section>
+            ) : block.stage === "warning" && block.type === "image" ? (
+              <div className="text-sm text-(--text-muted) italic">לא הצלחנו ליצור תיאור טקסטואלי לתמונה. התמונה תועבר לAI ישירות כהקשר ויזואלי.</div>
+            ) : null}
 
             {d.keyFacts.length > 0 && (
               <Section title="נקודות מפתח" copyText={d.keyFacts.map((f) => `• ${f}`).join("\n")}>
