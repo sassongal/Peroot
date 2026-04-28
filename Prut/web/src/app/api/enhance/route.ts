@@ -116,6 +116,8 @@ const RequestSchema = z.object({
             tokenCount: z.number().min(0).max(100_000),
           })
           .optional(),
+        imageBase64: z.string().max(2_000_000).optional(),
+        imageMimeType: z.string().max(100).optional(),
       }),
     )
     .max(20)
@@ -360,7 +362,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
       }
 
-      const rateLimitTier = isGuest ? "guest" : tier === "admin" ? "pro" : tier;
+      const rateLimitTier = isGuest ? "guest" : (tier === "admin" || tier === "premium") ? "pro" : tier;
       const limitResult = await checkRateLimit(identifier, rateLimitTier);
 
       if (!limitResult.success) {
@@ -755,6 +757,9 @@ export async function POST(req: Request) {
       // on the task preset (undefined = use pickDefaults).
       ...(refinementMaxTokens !== undefined ? { maxOutputTokens: refinementMaxTokens } : {}),
       userTier: tier === "guest" ? "guest" : tier === "admin" ? "pro" : tier,
+      ...(engineOutput.imageAttachments && engineOutput.imageAttachments.length > 0
+        ? { imageAttachments: engineOutput.imageAttachments }
+        : {}),
       onFinish: async (completion) => {
         const durationMs = Date.now() - startTime;
         const textCopy = completion.text;
