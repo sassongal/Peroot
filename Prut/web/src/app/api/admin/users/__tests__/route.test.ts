@@ -133,7 +133,7 @@ describe("GET /api/admin/users — enriched credit fields", () => {
       }
     });
 
-    const res = await GET(makeGetRequest());
+    const res = await GET(makeGetRequest(), {} as never);
     expect(res.status).toBe(200);
 
     const body = await res.json();
@@ -185,7 +185,7 @@ describe("GET /api/admin/users — enriched credit fields", () => {
       }
     });
 
-    const res = await GET(makeGetRequest());
+    const res = await GET(makeGetRequest(), {} as never);
     const body = await res.json();
     expect(body[0].daily_limit).toBe(-1);
   });
@@ -211,7 +211,7 @@ describe("GET /api/admin/users — enriched credit fields", () => {
       }
     });
 
-    const res = await GET(makeGetRequest());
+    const res = await GET(makeGetRequest(), {} as never);
     const body = await res.json();
     expect(body[0].daily_limit).toBe(150);
   });
