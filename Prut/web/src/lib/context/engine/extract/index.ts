@@ -70,4 +70,4 @@ function resolveFormat(mimeType: string, filename: string): string {
   throw new Error(`Cannot resolve format for MIME "${mimeType}" / extension ".${ext ?? "?"}"`);
 }
 
-export { extractImage };
+export { extractImage } from "./image";
