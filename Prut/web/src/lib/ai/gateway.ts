@@ -210,7 +210,17 @@ export function filterModelsForEstimatedInput(
     const safeInputLimit = Math.floor(contextLimit * 0.6);
     return estimatedInputTokens <= safeInputLimit;
   });
-  return filtered.length > 0 ? filtered : [chain[0]];
+  if (filtered.length === 0) {
+    // Every model with a known context limit was too small. We keep the
+    // first model so the gateway has something to try, but we log loudly
+    // so the dashboard surfaces the silent truncation risk — provider-side
+    // prompt clipping is hard to debug after the fact.
+    logger.warn(
+      `[AIGateway] All context-bounded models too small for ${estimatedInputTokens} input tokens; falling back to ${chain[0]} (likely silent truncation).`,
+    );
+    return [chain[0]];
+  }
+  return filtered;
 }
 
 export class AIGateway {

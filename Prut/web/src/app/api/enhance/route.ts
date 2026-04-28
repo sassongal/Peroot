@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
@@ -22,7 +23,7 @@ import {
   checkAndDecrementGuestCredits,
   refundGuestCredit,
 } from "@/lib/guest-service";
-import { buildCacheKey, getCached, setCached } from "@/lib/ai/enhance-cache";
+import { buildCacheKey, deleteCached, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
@@ -36,20 +37,36 @@ const profileCache = new Map<string, { tier: string; isAdmin: boolean; ts: numbe
 const profileInflight = new Map<string, Promise<{ tier: string; isAdmin: boolean }>>();
 const PROFILE_CACHE_TTL = 15_000; // 15 seconds
 const PROFILE_CACHE_MAX = 10_000;
-const PROFILE_CACHE_EVICT = 1_000;
 
 /**
- * Bounded-size eviction. Map iteration order is insertion order, so dropping
- * the oldest N entries approximates LRU without the overhead of an
- * access-list update on every hit. Prevents the thundering-herd DB refetch
- * that a full `.clear()` would cause at the 10k threshold.
+ * True LRU using Map's insertion-order semantics: on every read we delete
+ * and re-insert to move the entry to the end, and the eviction loop drops
+ * keys from the beginning (oldest unused). Adds a tiny per-hit cost in
+ * exchange for accurate hot-set retention — important once the working
+ * set is much smaller than 10k and the previous insertion-order policy
+ * would evict frequently-used profiles purely because they were inserted
+ * early.
  */
-function evictProfileCacheIfFull(): void {
-  if (profileCache.size < PROFILE_CACHE_MAX) return;
-  let dropped = 0;
-  for (const key of profileCache.keys()) {
-    profileCache.delete(key);
-    if (++dropped >= PROFILE_CACHE_EVICT) break;
+function profileCacheGet(
+  userId: string,
+): { tier: string; isAdmin: boolean; ts: number } | undefined {
+  const entry = profileCache.get(userId);
+  if (!entry) return undefined;
+  profileCache.delete(userId);
+  profileCache.set(userId, entry);
+  return entry;
+}
+
+function profileCacheSet(
+  userId: string,
+  value: { tier: string; isAdmin: boolean; ts: number },
+): void {
+  if (profileCache.has(userId)) profileCache.delete(userId);
+  profileCache.set(userId, value);
+  while (profileCache.size > PROFILE_CACHE_MAX) {
+    const oldest = profileCache.keys().next().value;
+    if (oldest === undefined) break;
+    profileCache.delete(oldest);
   }
 }
 
@@ -59,9 +76,15 @@ const RequestSchema = z.object({
   category: z.string().default("כללי"),
   capability_mode: z.string().optional(),
   mode_params: z.record(z.string(), z.string()).optional(),
-  previousResult: z.string().optional(),
-  refinementInstruction: z.string().optional(),
-  answers: z.record(z.string(), z.string()).optional(),
+  previousResult: z.string().max(50_000).optional(),
+  refinementInstruction: z.string().max(5_000).optional(),
+  // Bounded refinement Q/A payload. Prevents an oversized `answers` map
+  // (long keys, long values, or thousands of entries) from bloating the
+  // engine prompt and burning tokens on garbage input.
+  answers: z
+    .record(z.string().max(200), z.string().max(2_000))
+    .refine((r) => Object.keys(r).length <= 50, { message: "answers exceeds 50 entries" })
+    .optional(),
   iteration: z.number().int().min(0).optional(),
   target_model: z.enum(["chatgpt", "claude", "gemini", "general"]).default("general").optional(),
   output_language: z.enum(["hebrew", "english"]).optional(),
@@ -129,7 +152,7 @@ const RequestSchema = z.object({
  */
 const RateLimitError = (reset: number) =>
   NextResponse.json(
-    { error: "Too many requests. Please try again later.", reset_at: reset },
+    { error: "יותר מדי בקשות. נסה שוב מאוחר יותר", code: "too_many_requests", reset_at: reset },
     { status: 429, headers: { "Retry-After": reset.toString() } },
   );
 
@@ -150,7 +173,10 @@ export async function POST(req: Request) {
   try {
     json = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json(
+      { error: "גוף הבקשה אינו JSON תקין", code: "invalid_json" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -199,10 +225,16 @@ export async function POST(req: Request) {
       } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
       if (bearerToken) {
         if (!user) {
-          return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
+          return NextResponse.json(
+            { error: "טוקן אימות לא תקין או פג תוקף", code: "invalid_token" },
+            { status: 401 },
+          );
         }
         if (user.aud !== "authenticated") {
-          return NextResponse.json({ error: "Invalid token audience" }, { status: 401 });
+          return NextResponse.json(
+            { error: "טוקן אימות אינו מאושר", code: "invalid_token_audience" },
+            { status: 401 },
+          );
         }
       }
       userId = user?.id;
@@ -222,7 +254,7 @@ export async function POST(req: Request) {
     let cachedHit = false;
 
     if (userId) {
-      const cached = profileCache.get(userId);
+      const cached = profileCacheGet(userId);
       if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
         tier = cached.tier as "free" | "pro" | "admin";
         isAdmin = cached.isAdmin;
@@ -245,8 +277,7 @@ export async function POST(req: Request) {
             ]);
             const t = (pRes.data?.plan_tier as "free" | "pro" | "admin") || "free";
             const a = !!arRes.data;
-            evictProfileCacheIfFull();
-            profileCache.set(userId!, { tier: t, isAdmin: a, ts: Date.now() });
+            profileCacheSet(userId!, { tier: t, isAdmin: a, ts: Date.now() });
             return { tier: t, isAdmin: a };
           })().finally(() => profileInflight.delete(userId!));
           profileInflight.set(userId, inflight);
@@ -335,8 +366,7 @@ export async function POST(req: Request) {
 
       // Store in cache
       if (userId) {
-        evictProfileCacheIfFull();
-        profileCache.set(userId, { tier, isAdmin, ts: Date.now() });
+        profileCacheSet(userId, { tier, isAdmin, ts: Date.now() });
       }
     }
 
@@ -365,7 +395,10 @@ export async function POST(req: Request) {
       0,
     );
     if (totalBase64Chars > 4_000_000) {
-      return NextResponse.json({ error: "Image payload too large" }, { status: 413 });
+      return NextResponse.json(
+        { error: "התמונה גדולה מדי, אנא העלה קובץ קטן יותר", code: "image_too_large" },
+        { status: 413 },
+      );
     }
 
     // Guest id resolution (only when we'll actually spend a credit below).
@@ -376,12 +409,22 @@ export async function POST(req: Request) {
       // Use x-real-ip (Vercel-injected, not spoofable) or the rightmost entry in
       // x-forwarded-for (Vercel appends the true client IP at the right; [0] is
       // client-controlled and must not be trusted).
+      // Validate parsed values with `net.isIP()` before they reach the
+      // rate-limit bucket key. A malformed/garbage value would otherwise
+      // collide all bad-IP traffic into a single shared bucket and
+      // mis-attribute usage across unrelated callers (DoS amplifier on
+      // the free tier).
+      const rawRealIp = req.headers.get("x-real-ip");
+      const rawXff = req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
       const clientIp =
-        req.headers.get("x-real-ip") ||
-        req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
+        (rawRealIp && isIP(rawRealIp) ? rawRealIp : null) ??
+        (rawXff && isIP(rawXff) ? rawXff : null);
       const identifier = userId || clientIp;
       if (!identifier) {
-        return NextResponse.json({ error: "Unable to identify request source" }, { status: 400 });
+        return NextResponse.json(
+          { error: "לא ניתן לזהות את מקור הבקשה", code: "unidentified_source" },
+          { status: 400 },
+        );
       }
 
       const rateLimitTier: "free" | "pro" | "guest" = isGuest
@@ -566,21 +609,30 @@ export async function POST(req: Request) {
     // and forcing expensive LLM calls on every request.
     const bypassCache =
       (isAdmin || tier === "pro") && req.headers.get("x-peroot-cache-bypass") === "1";
-    const cacheKey = bypassCache
-      ? null
-      : buildCacheKey({
-          prompt,
-          mode: capability_mode,
-          tone,
-          category,
-          targetModel: target_model || "general",
-          userId,
-          hasContext: !!(contextAttachments && contextAttachments.length > 0),
-          hasPersonalization: !!(userHistory.length > 0 || userPersonality),
-          isRefinement,
-        });
+    // Always compute the key. Bypass suppresses the read (so we re-run the
+    // LLM) but the key is retained for the post-stream write — that way the
+    // forced fresh result overwrites the stale entry. Without this, a bypass
+    // request would leave the prior cached value intact and the next
+    // non-bypass caller would read the stale text.
+    const cacheKey = buildCacheKey({
+      prompt,
+      mode: capability_mode,
+      tone,
+      category,
+      targetModel: target_model || "general",
+      userId,
+      hasContext: !!(contextAttachments && contextAttachments.length > 0),
+      hasPersonalization: !!(userHistory.length > 0 || userPersonality),
+      isRefinement,
+    });
 
-    if (cacheKey) {
+    if (bypassCache && cacheKey) {
+      // Proactively evict the existing entry so any concurrent reader after
+      // this point misses and waits for the fresh write below.
+      await deleteCached(cacheKey);
+    }
+
+    if (cacheKey && !bypassCache) {
       const cacheCheckStart = Date.now();
       const cached = await getCached(cacheKey);
       if (cached) {
@@ -1025,6 +1077,9 @@ export async function POST(req: Request) {
     } else if (guestId && !isRefinementOuter) {
       await refundGuestCredit(guestId);
     }
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "שגיאת שרת פנימית, אנא נסה שוב", code: "internal_error" },
+      { status: 500 },
+    );
   }
 }

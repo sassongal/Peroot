@@ -55,7 +55,9 @@ export async function enrichContent(input: EnrichInput): Promise<EnrichOutput> {
   const ALLOWED_ENRICH_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
   if (input.sourceType === "image" && input.imageBase64) {
     if (!input.imageMimeType || !ALLOWED_ENRICH_MIMES.has(input.imageMimeType)) {
-      throw new Error(`Unsupported image MIME type for enrichment: ${input.imageMimeType ?? "none"}`);
+      throw new Error(
+        `Unsupported image MIME type for enrichment: ${input.imageMimeType ?? "none"}`,
+      );
     }
   }
 

@@ -27,41 +27,41 @@ const CACHE_PREFIX = `peroot:enhance:${ENGINE_VERSION}`;
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 hour
 
 interface EnhanceCacheKeyInput {
-    prompt: string;
-    mode?: string;
-    tone?: string;
-    category?: string;
-    targetModel?: string;
-    /**
-     * The authenticated user ID. REQUIRED for the key to resolve — guests
-     * (no userId) never hit the cache, and per-user scoping prevents the
-     * cross-user data leak where user A's PDF-influenced output could
-     * leak to user B asking the same prompt. See the code-review findings
-     * in docs/superpowers/specs/2026-04-07-cost-optimization-quickwins-design.md.
-     */
-    userId?: string;
-    /**
-     * True when the request has file/URL/image context attachments. Context
-     * can contain confidential documents whose content the engine incorporates
-     * into the generated prompt — we never cache those. Even though the key
-     * is now per-user, context also varies within the same user, and storing
-     * multi-KB PDF-derived prompts in Redis is wasteful.
-     */
-    hasContext?: boolean;
-    /**
-     * True when any style/history personalization was loaded for this
-     * request. The engine output depends on user personality + history, but
-     * those live in the DB and change over time. Rather than invalidate on
-     * every personality update, we skip the cache whenever personalization
-     * is active. Same-user repeat requests are still the dominant cache case.
-     */
-    hasPersonalization?: boolean;
-    /**
-     * Set true for refinement requests. Refinements carry previousResult +
-     * refinementInstruction + answers, all of which make the request effectively
-     * unique per user — we explicitly skip the cache for those.
-     */
-    isRefinement?: boolean;
+  prompt: string;
+  mode?: string;
+  tone?: string;
+  category?: string;
+  targetModel?: string;
+  /**
+   * The authenticated user ID. REQUIRED for the key to resolve — guests
+   * (no userId) never hit the cache, and per-user scoping prevents the
+   * cross-user data leak where user A's PDF-influenced output could
+   * leak to user B asking the same prompt. See the code-review findings
+   * in docs/superpowers/specs/2026-04-07-cost-optimization-quickwins-design.md.
+   */
+  userId?: string;
+  /**
+   * True when the request has file/URL/image context attachments. Context
+   * can contain confidential documents whose content the engine incorporates
+   * into the generated prompt — we never cache those. Even though the key
+   * is now per-user, context also varies within the same user, and storing
+   * multi-KB PDF-derived prompts in Redis is wasteful.
+   */
+  hasContext?: boolean;
+  /**
+   * True when any style/history personalization was loaded for this
+   * request. The engine output depends on user personality + history, but
+   * those live in the DB and change over time. Rather than invalidate on
+   * every personality update, we skip the cache whenever personalization
+   * is active. Same-user repeat requests are still the dominant cache case.
+   */
+  hasPersonalization?: boolean;
+  /**
+   * Set true for refinement requests. Refinements carry previousResult +
+   * refinementInstruction + answers, all of which make the request effectively
+   * unique per user — we explicitly skip the cache for those.
+   */
+  isRefinement?: boolean;
 }
 
 /**
@@ -70,11 +70,11 @@ interface EnhanceCacheKeyInput {
  * trailing punctuation characters that users often add inconsistently.
  */
 function normalizePrompt(input: string): string {
-    return input
-        .trim()
-        .replace(/\s+/g, " ")
-        .replace(/[.!?,;:\s]+$/, "")
-        .toLowerCase();
+  return input
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.!?,;:\s]+$/, "")
+    .toLowerCase();
 }
 
 /**
@@ -90,55 +90,55 @@ function normalizePrompt(input: string): string {
  * their Redis entries live in separate slots.
  */
 export function buildCacheKey(input: EnhanceCacheKeyInput): string | null {
-    if (input.isRefinement) return null;
-    if (!input.userId) return null;
-    if (input.hasContext) return null;
-    if (input.hasPersonalization) return null;
+  if (input.isRefinement) return null;
+  if (!input.userId) return null;
+  if (input.hasContext) return null;
+  if (input.hasPersonalization) return null;
 
-    const parts = [
-        input.userId,
-        normalizePrompt(input.prompt),
-        input.mode ?? "STANDARD",
-        input.tone ?? "",
-        input.category ?? "",
-        input.targetModel ?? "general",
-    ];
-    const hash = createHash("sha256").update(parts.join("\u0000")).digest("hex");
-    // userId lives in the hash AND as a key prefix so that bulk operations
-    // (e.g., GDPR user deletion) can scan `peroot:enhance:v2-*:user:<id>:*`
-    // and nuke all of a user's cached entries without collision.
-    return `${CACHE_PREFIX}:user:${input.userId}:${hash}`;
+  const parts = [
+    input.userId,
+    normalizePrompt(input.prompt),
+    input.mode ?? "STANDARD",
+    input.tone ?? "",
+    input.category ?? "",
+    input.targetModel ?? "general",
+  ];
+  const hash = createHash("sha256").update(parts.join("\u0000")).digest("hex");
+  // userId lives in the hash AND as a key prefix so that bulk operations
+  // (e.g., GDPR user deletion) can scan `peroot:enhance:v2-*:user:<id>:*`
+  // and nuke all of a user's cached entries without collision.
+  return `${CACHE_PREFIX}:user:${input.userId}:${hash}`;
 }
 
 // Lazily-initialized Redis client. Matches the pattern in src/lib/ratelimit.ts.
 let redis: Redis | null = null;
 function getRedis(): Redis | null {
-    if (redis) return redis;
-    const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN;
-    if (!url || !token) return null;
-    redis = new Redis({ url, token });
-    return redis;
+  if (redis) return redis;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN;
+  if (!url || !token) return null;
+  redis = new Redis({ url, token });
+  return redis;
 }
 
 /** @internal Test-only helper to reset the lazy Redis singleton between tests. */
 export function __resetRedisForTest(): void {
-    redis = null;
+  redis = null;
 }
 
 /** Soft kill switch. Set ENHANCE_CACHE_ENABLED=false to bypass cache at runtime. */
 function cacheEnabled(): boolean {
-    return process.env.ENHANCE_CACHE_ENABLED !== "false";
+  return process.env.ENHANCE_CACHE_ENABLED !== "false";
 }
 
 interface CachedEnhanceResult {
-    text: string;
-    modelId: string;
-    /**
-     * Timestamp when the result was cached (ms since epoch). Used for
-     * debugging and for lightweight "tokens saved" estimation.
-     */
-    cachedAt: number;
+  text: string;
+  modelId: string;
+  /**
+   * Timestamp when the result was cached (ms since epoch). Used for
+   * debugging and for lightweight "tokens saved" estimation.
+   */
+  cachedAt: number;
 }
 
 /**
@@ -147,16 +147,33 @@ interface CachedEnhanceResult {
  * "run the LLM".
  */
 export async function getCached(key: string | null): Promise<CachedEnhanceResult | null> {
-    if (!key || !cacheEnabled()) return null;
-    try {
-        const client = getRedis();
-        if (!client) return null;
-        const raw = await client.get<CachedEnhanceResult>(key);
-        return raw ?? null;
-    } catch (err) {
-        logger.warn("[enhance-cache] get failed, falling through to LLM:", err);
-        return null;
-    }
+  if (!key || !cacheEnabled()) return null;
+  try {
+    const client = getRedis();
+    if (!client) return null;
+    const raw = await client.get<CachedEnhanceResult>(key);
+    return raw ?? null;
+  } catch (err) {
+    logger.warn("[enhance-cache] get failed, falling through to LLM:", err);
+    return null;
+  }
+}
+
+/**
+ * Delete a cached entry. Used by the X-Peroot-Cache-Bypass path to ensure
+ * a forced regeneration overwrites any stale value; without this, a bypass
+ * request would leave the existing entry intact for the next non-bypass
+ * caller to read. Fire-and-forget; failures are logged but never thrown.
+ */
+export async function deleteCached(key: string | null): Promise<void> {
+  if (!key) return;
+  try {
+    const client = getRedis();
+    if (!client) return;
+    await client.del(key);
+  } catch (err) {
+    logger.warn("[enhance-cache] delete failed:", err);
+  }
 }
 
 /**
@@ -164,16 +181,16 @@ export async function getCached(key: string | null): Promise<CachedEnhanceResult
  * care if it fails; the next identical request will simply miss again.
  */
 export async function setCached(
-    key: string | null,
-    value: CachedEnhanceResult,
-    ttlSeconds: number = DEFAULT_TTL_SECONDS
+  key: string | null,
+  value: CachedEnhanceResult,
+  ttlSeconds: number = DEFAULT_TTL_SECONDS,
 ): Promise<void> {
-    if (!key || !cacheEnabled()) return;
-    try {
-        const client = getRedis();
-        if (!client) return;
-        await client.set(key, value, { ex: ttlSeconds });
-    } catch (err) {
-        logger.warn("[enhance-cache] set failed:", err);
-    }
+  if (!key || !cacheEnabled()) return;
+  try {
+    const client = getRedis();
+    if (!client) return;
+    await client.set(key, value, { ex: ttlSeconds });
+  } catch (err) {
+    logger.warn("[enhance-cache] set failed:", err);
+  }
 }

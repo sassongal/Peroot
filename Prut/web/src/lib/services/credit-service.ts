@@ -10,6 +10,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
+import { captureRouteError } from "@/lib/sentry";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,16 +35,32 @@ export async function logCreditChange(
 ): Promise<void> {
   try {
     const client = createServiceClient();
-    await client.rpc("log_credit_change", {
+    const { error: rpcError } = await client.rpc("log_credit_change", {
       p_user_id: userId,
       p_delta: delta,
       p_balance_after: balanceAfter,
       p_reason: reason,
       p_source: source,
     });
+    if (rpcError) {
+      // Ledger desync is silent and rare — surface to Sentry so we can
+      // detect drift before it accumulates into customer support cases.
+      logger.error("[CreditService] log_credit_change RPC failed:", rpcError);
+      captureRouteError(rpcError, {
+        route: "credit-service.logCreditChange",
+        userId,
+        extra: { delta, balanceAfter, reason, source },
+      });
+    }
   } catch (e) {
-    // Never block credit operations — ledger is best-effort
+    // Never block credit operations — ledger is best-effort, but unknown
+    // failures still need an audit trail in Sentry.
     logger.error("[CreditService] Failed to log credit change:", e);
+    captureRouteError(e, {
+      route: "credit-service.logCreditChange",
+      userId,
+      extra: { delta, balanceAfter, reason, source },
+    });
   }
 }
 
@@ -132,24 +149,45 @@ export async function checkAndDecrementCredits(
  * @param userId  The user to refund.
  * @param amount  Number of credits to restore (defaults to 1).
  */
-export async function refundCredit(userId: string, amount = 1): Promise<void> {
+export async function refundCredit(
+  userId: string,
+  amount = 1,
+): Promise<{ success: boolean; error?: string }> {
   try {
     const client = createServiceClient();
-    await client.rpc("refund_credit", {
+    const { error: rpcError } = await client.rpc("refund_credit", {
       target_user_id: userId,
       amount,
     });
+
+    // Surface RPC errors instead of silently swallowing them. If we don't,
+    // a transient Supabase failure (network, 5xx, auth) leaves the ledger
+    // grant unrecorded AND the user's credits_balance unchanged — they
+    // permanently lose the credit they were owed.
+    if (rpcError) {
+      logger.error("[CreditService] refund_credit RPC failed:", rpcError);
+      return { success: false, error: rpcError.message || "Refund RPC failed" };
+    }
+
     // Log refund — fetch balance after refund
-    const { data: profile } = await client
+    const { data: profile, error: readErr } = await client
       .from("profiles")
       .select("credits_balance")
       .eq("id", userId)
       .single();
-    if (profile) {
-      logCreditChange(userId, amount, profile.credits_balance, "refund");
+    if (readErr) {
+      // RPC succeeded but post-read failed — still a successful refund;
+      // ledger entry is best-effort.
+      logger.warn("[CreditService] refund post-read failed:", readErr);
+      return { success: true };
     }
+    if (profile) {
+      await logCreditChange(userId, amount, profile.credits_balance, "refund");
+    }
+    return { success: true };
   } catch (e) {
     logger.error("[CreditService] refund failed:", e);
+    return { success: false, error: e instanceof Error ? e.message : "Refund failed" };
   }
 }
 

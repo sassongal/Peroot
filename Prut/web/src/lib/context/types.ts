@@ -41,4 +41,3 @@ export interface ContextAttachment {
   /** NEW — drives the progress bar in the attachment card */
   stage?: ProcessingStage;
 }
-

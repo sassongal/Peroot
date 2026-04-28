@@ -37,6 +37,9 @@ function makeRequest(opts: {
     headers: {
       get: (name: string) => headers.get(name.toLowerCase()) ?? null,
     },
+    cookies: {
+      getAll: () => [],
+    },
   } as unknown as NextRequest;
 }
 

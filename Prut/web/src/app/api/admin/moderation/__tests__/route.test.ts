@@ -11,6 +11,25 @@ vi.mock("@/lib/admin/admin-security", () => ({
   logAdminAction: (...args: unknown[]) => mockLogAdminAction(...args),
 }));
 
+// withAdminWrite calls checkRateLimit; without this mock the route hits
+// real Upstash and the test stalls / fails unpredictably.
+vi.mock("@/lib/ratelimit", () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({
+    success: true,
+    limit: 120,
+    remaining: 119,
+    reset: Date.now() + 60_000,
+  }),
+}));
+
+// The POST handler builds its own service-role client (it must bypass RLS
+// to write to rows owned by other users). Route the service client's `from`
+// to the same mockFrom the tests instrument.
+const mockFrom = vi.fn();
+vi.mock("@/lib/supabase/service", () => ({
+  createServiceClient: () => ({ from: (...args: unknown[]) => mockFrom(...args) }),
+}));
+
 vi.mock("@/lib/logger", () => ({
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
@@ -18,12 +37,25 @@ vi.mock("@/lib/logger", () => ({
 // ─── Chainable query builder ─────────────────────────────────────────────────
 
 function mockQueryBuilder(
-  resolveValue: { data?: unknown; error?: unknown; count?: number } = { data: null }
+  resolveValue: { data?: unknown; error?: unknown; count?: number } = { data: null },
 ) {
   const builder: Record<string, unknown> = {};
   const methods = [
-    "select", "eq", "in", "or", "order", "limit", "gte", "ilike",
-    "insert", "update", "upsert", "delete", "maybeSingle", "single", "contains",
+    "select",
+    "eq",
+    "in",
+    "or",
+    "order",
+    "limit",
+    "gte",
+    "ilike",
+    "insert",
+    "update",
+    "upsert",
+    "delete",
+    "maybeSingle",
+    "single",
+    "contains",
     "not",
   ];
   for (const m of methods) {
@@ -38,7 +70,6 @@ function mockQueryBuilder(
 
 // ─── Supabase mock ────────────────────────────────────────────────────────────
 
-const mockFrom = vi.fn();
 const mockUser = { id: "admin-id", email: "admin@example.com" };
 
 function setupAuth() {
@@ -63,7 +94,11 @@ function makePostRequest(body: unknown) {
   });
 }
 
-const EXISTING_PROMPT = { id: "prompt-1", user_id: "user-1", is_public: true };
+const EXISTING_PROMPT = {
+  id: "11111111-2222-3333-4444-555555555555",
+  user_id: "user-1",
+  is_public: true,
+};
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
@@ -79,7 +114,7 @@ describe("POST /api/admin/moderation", () => {
   // ── Input validation ──────────────────────────────────────────────────────
 
   it("returns 400 when action is missing", async () => {
-    const res = await POST(makePostRequest({ prompt_id: "p1" }), undefined);
+    const res = await POST(makePostRequest({ prompt_id: EXISTING_PROMPT.id }), undefined);
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toMatch(/required/i);
@@ -99,8 +134,8 @@ describe("POST /api/admin/moderation", () => {
 
   it("returns 400 for an unrecognised action", async () => {
     const res = await POST(
-      makePostRequest({ action: "delete", prompt_id: "p1" }),
-      undefined
+      makePostRequest({ action: "delete", prompt_id: EXISTING_PROMPT.id }),
+      undefined,
     );
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -113,8 +148,11 @@ describe("POST /api/admin/moderation", () => {
   it("returns 404 when the prompt does not exist", async () => {
     mockFrom.mockReturnValue(mockQueryBuilder({ data: null, error: null }));
     const res = await POST(
-      makePostRequest({ action: "approve", prompt_id: "missing" }),
-      undefined
+      makePostRequest({
+        action: "approve",
+        prompt_id: "99999999-9999-9999-9999-999999999999",
+      }),
+      undefined,
     );
     expect(res.status).toBe(404);
     const body = await res.json();
@@ -126,7 +164,7 @@ describe("POST /api/admin/moderation", () => {
   it("returns 200 with status=approved on approve", async () => {
     const res = await POST(
       makePostRequest({ action: "approve", prompt_id: EXISTING_PROMPT.id }),
-      undefined
+      undefined,
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -136,10 +174,7 @@ describe("POST /api/admin/moderation", () => {
   });
 
   it("does not update is_public on approve", async () => {
-    await POST(
-      makePostRequest({ action: "approve", prompt_id: EXISTING_PROMPT.id }),
-      undefined
-    );
+    await POST(makePostRequest({ action: "approve", prompt_id: EXISTING_PROMPT.id }), undefined);
     // Only one from() call (the select), no update call
     expect(mockFrom).toHaveBeenCalledTimes(1);
   });
@@ -149,7 +184,7 @@ describe("POST /api/admin/moderation", () => {
   it("returns 200 with status=flagged on flag", async () => {
     const res = await POST(
       makePostRequest({ action: "flag", prompt_id: EXISTING_PROMPT.id }),
-      undefined
+      undefined,
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -160,15 +195,15 @@ describe("POST /api/admin/moderation", () => {
 
   it("sets is_public=false and returns 200 on remove", async () => {
     const selectBuilder = mockQueryBuilder({ data: EXISTING_PROMPT, error: null });
-    const updateBuilder = mockQueryBuilder({ error: null });
+    const updateBuilder = mockQueryBuilder({ data: [{ id: EXISTING_PROMPT.id }], error: null });
 
     mockFrom
-      .mockReturnValueOnce(selectBuilder)   // prompt existence check
-      .mockReturnValueOnce(updateBuilder);  // is_public update
+      .mockReturnValueOnce(selectBuilder) // prompt existence check
+      .mockReturnValueOnce(updateBuilder); // is_public update
 
     const res = await POST(
       makePostRequest({ action: "remove", prompt_id: EXISTING_PROMPT.id }),
-      undefined
+      undefined,
     );
 
     expect(res.status).toBe(200);
@@ -181,13 +216,11 @@ describe("POST /api/admin/moderation", () => {
     const selectBuilder = mockQueryBuilder({ data: EXISTING_PROMPT, error: null });
     const updateBuilder = mockQueryBuilder({ error: { message: "DB write error" } });
 
-    mockFrom
-      .mockReturnValueOnce(selectBuilder)
-      .mockReturnValueOnce(updateBuilder);
+    mockFrom.mockReturnValueOnce(selectBuilder).mockReturnValueOnce(updateBuilder);
 
     const res = await POST(
       makePostRequest({ action: "remove", prompt_id: EXISTING_PROMPT.id }),
-      undefined
+      undefined,
     );
     expect(res.status).toBe(500);
   });
@@ -195,10 +228,7 @@ describe("POST /api/admin/moderation", () => {
   // ── Audit logging ─────────────────────────────────────────────────────────
 
   it("calls logAdminAction with correct args on approve", async () => {
-    await POST(
-      makePostRequest({ action: "approve", prompt_id: EXISTING_PROMPT.id }),
-      undefined
-    );
+    await POST(makePostRequest({ action: "approve", prompt_id: EXISTING_PROMPT.id }), undefined);
     expect(mockLogAdminAction).toHaveBeenCalledWith(
       mockUser.id,
       "moderation_review",
@@ -207,23 +237,20 @@ describe("POST /api/admin/moderation", () => {
         prompt_id: EXISTING_PROMPT.id,
         status: "approved",
         prompt_owner_id: EXISTING_PROMPT.user_id,
-      })
+      }),
     );
   });
 
   it("calls logAdminAction with correct status on remove", async () => {
     const selectBuilder = mockQueryBuilder({ data: EXISTING_PROMPT, error: null });
-    const updateBuilder = mockQueryBuilder({ error: null });
+    const updateBuilder = mockQueryBuilder({ data: [{ id: EXISTING_PROMPT.id }], error: null });
     mockFrom.mockReturnValueOnce(selectBuilder).mockReturnValueOnce(updateBuilder);
 
-    await POST(
-      makePostRequest({ action: "remove", prompt_id: EXISTING_PROMPT.id }),
-      undefined
-    );
+    await POST(makePostRequest({ action: "remove", prompt_id: EXISTING_PROMPT.id }), undefined);
     expect(mockLogAdminAction).toHaveBeenCalledWith(
       mockUser.id,
       "moderation_review",
-      expect.objectContaining({ status: "removed" })
+      expect.objectContaining({ status: "removed" }),
     );
   });
 });

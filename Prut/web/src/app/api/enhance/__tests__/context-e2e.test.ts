@@ -15,9 +15,18 @@ function mockChain(resolveValue: unknown = { data: null }) {
     "not",
     "insert",
     "update",
+    "upsert",
+    "delete",
     "maybeSingle",
     "single",
     "head",
+    "gte",
+    "lte",
+    "gt",
+    "lt",
+    "or",
+    "ilike",
+    "contains",
   ];
   for (const m of methods) builder[m] = vi.fn().mockReturnValue(builder);
   builder.then = (resolve: (v: unknown) => void) => {

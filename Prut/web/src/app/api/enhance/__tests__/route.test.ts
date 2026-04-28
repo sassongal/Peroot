@@ -19,8 +19,20 @@ function mockQueryBuilder(
 ) {
   const builder: Record<string, unknown> = {};
   const chainMethods = [
-    "select", "eq", "in", "order", "limit", "not",
-    "insert", "update", "maybeSingle", "single",
+    "select",
+    "eq",
+    "in",
+    "order",
+    "limit",
+    "not",
+    "gte",
+    "lte",
+    "gt",
+    "lt",
+    "insert",
+    "update",
+    "maybeSingle",
+    "single",
   ];
   for (const m of chainMethods) {
     builder[m] = vi.fn().mockReturnValue(builder);
@@ -84,8 +96,7 @@ vi.mock("@/lib/ai/concurrency", () => {
 const mockCheckAndDecrementCredits = vi.fn();
 const mockRefundCredit = vi.fn();
 vi.mock("@/lib/services/credit-service", () => ({
-  checkAndDecrementCredits: (...args: unknown[]) =>
-    mockCheckAndDecrementCredits(...args),
+  checkAndDecrementCredits: (...args: unknown[]) => mockCheckAndDecrementCredits(...args),
   refundCredit: (...args: unknown[]) => mockRefundCredit(...args),
 }));
 
@@ -147,10 +158,12 @@ vi.mock("@/lib/ai/inflight-lock", () => ({
 const mockBuildCacheKey = vi.fn();
 const mockGetCached = vi.fn();
 const mockSetCached = vi.fn();
+const mockDeleteCached = vi.fn();
 vi.mock("@/lib/ai/enhance-cache", () => ({
   buildCacheKey: (...args: unknown[]) => mockBuildCacheKey(...args),
   getCached: (...args: unknown[]) => mockGetCached(...args),
   setCached: (...args: unknown[]) => mockSetCached(...args),
+  deleteCached: (...args: unknown[]) => mockDeleteCached(...args),
   ENGINE_VERSION: "test-engine-version",
 }));
 
@@ -180,16 +193,14 @@ const mockGenerateRefinement = vi.fn().mockReturnValue({
 vi.mock("@/lib/engines", () => ({
   getEngine: vi.fn(async () => ({
     generate: (...args: unknown[]) => mockGenerate(...args),
-    generateRefinement: (...args: unknown[]) =>
-      mockGenerateRefinement(...args),
+    generateRefinement: (...args: unknown[]) => mockGenerateRefinement(...args),
   })),
 }));
 
 // Capability mode -- use the real implementation (enum + parser)
 vi.mock("@/lib/capability-mode", async () => {
-  const actual = await vi.importActual<
-    typeof import("@/lib/capability-mode")
-  >("@/lib/capability-mode");
+  const actual =
+    await vi.importActual<typeof import("@/lib/capability-mode")>("@/lib/capability-mode");
   return actual;
 });
 
@@ -205,10 +216,7 @@ import { createClient } from "@/lib/supabase/server";
 // ---------------------------------------------------------------------------
 
 /** Create a POST Request with a JSON body and optional extra headers. */
-function makeRequest(
-  body: unknown,
-  headers: Record<string, string> = {},
-): Request {
+function makeRequest(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request("http://localhost/api/enhance", {
     method: "POST",
     headers: {
@@ -352,20 +360,11 @@ function setupMockStream() {
   };
 
   let capturedOnFinish:
-    | ((completion: {
-        usage: unknown;
-        text: string;
-        finishReason?: string;
-      }) => Promise<void>)
+    | ((completion: { usage: unknown; text: string; finishReason?: string }) => Promise<void>)
     | undefined;
 
   mockGenerateStream.mockImplementation(
-    async (params: {
-      onFinish?: (c: {
-        usage: unknown;
-        text: string;
-      }) => Promise<void>;
-    }) => {
+    async (params: { onFinish?: (c: { usage: unknown; text: string }) => Promise<void> }) => {
       capturedOnFinish = params.onFinish as typeof capturedOnFinish;
       return { result: mockResult, modelId: "gemini-2.5-flash" };
     },
@@ -401,10 +400,18 @@ beforeEach(() => {
   mockSupabaseRpc.mockResolvedValue({ data: null, error: null });
   mockServiceFrom.mockReturnValue(mockQueryBuilder({ data: null }));
   mockServiceRpc.mockResolvedValue({ data: null, error: null });
-  mockGenerateStream.mockResolvedValue({ result: { toTextStreamResponse: vi.fn() }, modelId: "gemini-2.5-flash" });
+  mockGenerateStream.mockResolvedValue({
+    result: { toTextStreamResponse: vi.fn() },
+    modelId: "gemini-2.5-flash",
+  });
   mockCheckAndDecrementCredits.mockResolvedValue({ allowed: true, remaining: 5 });
   mockRefundCredit.mockResolvedValue(undefined);
-  mockCheckRateLimit.mockResolvedValue({ success: true, limit: 10, remaining: 9, reset: Date.now() + 60000 });
+  mockCheckRateLimit.mockResolvedValue({
+    success: true,
+    limit: 10,
+    remaining: 9,
+    reset: Date.now() + 60000,
+  });
   mockValidateApiKey.mockResolvedValue({ valid: false, error: "Not configured" });
   mockEnqueueJob.mockResolvedValue(undefined);
   mockTrackApiUsage.mockReturnValue(undefined);
@@ -425,7 +432,7 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(400);
       const body = await res.json();
-      expect(body.error).toMatch(/invalid json/i);
+      expect(body.code).toBe("invalid_json");
     });
 
     // The route uses RequestSchema.parse() inside the main try block.
@@ -439,7 +446,7 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(500);
       const body = await res.json();
-      expect(body.error).toBe("Internal Server Error");
+      expect(body.code).toBe("internal_error");
     });
 
     it("returns 500 for empty string prompt (Zod validation)", async () => {
@@ -526,21 +533,20 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(400);
       const body = await res.json();
-      expect(body.error).toMatch(/unable to identify/i);
+      expect(body.code).toBe("unidentified_source");
     });
 
     // -------------------------------------------------------------------
     // 10. Bearer token auth for Chrome extension
     // -------------------------------------------------------------------
     it("handles Supabase JWT Bearer token (Chrome extension auth)", async () => {
-      const token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake-jwt-token";
+      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake-jwt-token";
       const bearerUserId = nextUserId();
 
       // Override the supabase client for this test -- the route calls
       // supabase.auth.getUser(token) when a Bearer token is present.
       const mockSupabaseGetUserWithToken = vi.fn().mockResolvedValue({
-        data: { user: { id: bearerUserId } },
+        data: { user: { id: bearerUserId, aud: "authenticated" } },
       });
       const { createClient } = await import("@/lib/supabase/server");
       (createClient as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -557,8 +563,7 @@ describe("POST /api/enhance", () => {
       });
       mockServiceFrom.mockImplementation((table: string) => {
         if (table === "profiles") return profileBuilder;
-        if (table === "user_roles")
-          return mockQueryBuilder({ data: null });
+        if (table === "user_roles") return mockQueryBuilder({ data: null });
         return mockQueryBuilder({ data: null });
       });
 
@@ -599,8 +604,7 @@ describe("POST /api/enhance", () => {
       });
       mockServiceFrom.mockImplementation((table: string) => {
         if (table === "profiles") return profileBuilder;
-        if (table === "user_roles")
-          return mockQueryBuilder({ data: null });
+        if (table === "user_roles") return mockQueryBuilder({ data: null });
         return mockQueryBuilder({ data: null });
       });
 
@@ -663,13 +667,10 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(429);
       const body = await res.json();
-      expect(body.error).toMatch(/too many requests/i);
+      expect(body.code).toBe("too_many_requests");
       expect(body.reset_at).toBe(resetTime);
       expect(res.headers.get("Retry-After")).toBe(resetTime.toString());
-      expect(mockCheckRateLimit).toHaveBeenCalledWith(
-        "127.0.0.1",
-        "guest",
-      );
+      expect(mockCheckRateLimit).toHaveBeenCalledWith("127.0.0.1", "guest");
     });
 
     it("returns 429 when free-tier user is rate limited", async () => {
@@ -698,10 +699,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(429);
-      expect(mockCheckRateLimit).toHaveBeenCalledWith(
-        userId,
-        "free",
-      );
+      expect(mockCheckRateLimit).toHaveBeenCalledWith(userId, "free");
     });
 
     it("skips rate limiting for admin users", async () => {
@@ -767,9 +765,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      expect(res.headers.get("Content-Type")).toBe(
-        "text/plain; charset=utf-8",
-      );
+      expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
       expect(mockResult.toTextStreamResponse).toHaveBeenCalled();
       // Note: temperature is no longer passed from the route — the gateway's
       // pickDefaults(task) picks task-aware values. See enhance/route.ts.
@@ -782,7 +778,7 @@ describe("POST /api/enhance", () => {
         }),
       );
       const callArgs = mockGenerateStream.mock.calls[0][0];
-      expect(callArgs).not.toHaveProperty('temperature');
+      expect(callArgs).not.toHaveProperty("temperature");
     });
 
     it("streams response for pro-tier user", async () => {
@@ -793,9 +789,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      expect(mockGenerateStream).toHaveBeenCalledWith(
-        expect.objectContaining({ userTier: "pro" }),
-      );
+      expect(mockGenerateStream).toHaveBeenCalledWith(expect.objectContaining({ userTier: "pro" }));
     });
 
     it("streams response for guest user (no auth)", async () => {
@@ -838,9 +832,7 @@ describe("POST /api/enhance", () => {
   describe("credit refund on error", () => {
     it("refunds credit when AIGateway throws an error", async () => {
       setupAuthenticatedUser();
-      mockGenerateStream.mockRejectedValue(
-        new Error("AI provider unavailable"),
-      );
+      mockGenerateStream.mockRejectedValue(new Error("AI provider unavailable"));
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
@@ -854,9 +846,7 @@ describe("POST /api/enhance", () => {
 
       // Import ConcurrencyError from the mocked module so instanceof works
       const { ConcurrencyError } = await import("@/lib/ai/concurrency");
-      mockGenerateStream.mockRejectedValue(
-        new ConcurrencyError("Server is busy"),
-      );
+      mockGenerateStream.mockRejectedValue(new ConcurrencyError("Server is busy"));
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
@@ -889,20 +879,11 @@ describe("POST /api/enhance", () => {
       setupAuthenticatedUser();
 
       let capturedOnFinish:
-        | ((c: {
-            usage: unknown;
-            text: string;
-            finishReason?: string;
-          }) => Promise<void>)
+        | ((c: { usage: unknown; text: string; finishReason?: string }) => Promise<void>)
         | undefined;
 
       mockGenerateStream.mockImplementation(
-        async (p: {
-          onFinish?: (c: {
-            usage: unknown;
-            text: string;
-          }) => Promise<void>;
-        }) => {
+        async (p: { onFinish?: (c: { usage: unknown; text: string }) => Promise<void> }) => {
           capturedOnFinish = p.onFinish as typeof capturedOnFinish;
           return {
             result: {
@@ -939,20 +920,11 @@ describe("POST /api/enhance", () => {
       setupAuthenticatedUser();
 
       let capturedOnFinish:
-        | ((c: {
-            usage: unknown;
-            text: string;
-            finishReason?: string;
-          }) => Promise<void>)
+        | ((c: { usage: unknown; text: string; finishReason?: string }) => Promise<void>)
         | undefined;
 
       mockGenerateStream.mockImplementation(
-        async (p: {
-          onFinish?: (c: {
-            usage: unknown;
-            text: string;
-          }) => Promise<void>;
-        }) => {
+        async (p: { onFinish?: (c: { usage: unknown; text: string }) => Promise<void> }) => {
           capturedOnFinish = p.onFinish as typeof capturedOnFinish;
           return {
             result: {
@@ -1090,9 +1062,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      expect(mockGenerate).toHaveBeenCalledWith(
-        expect.objectContaining({ tone: "Professional" }),
-      );
+      expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ tone: "Professional" }));
     });
 
     it("accepts context attachments in request body", async () => {
@@ -1134,9 +1104,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      expect(mockGenerate).toHaveBeenCalledWith(
-        expect.objectContaining({ targetModel: "claude" }),
-      );
+      expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ targetModel: "claude" }));
     });
 
     it("passes iteration number through to engine input", async () => {
@@ -1147,9 +1115,7 @@ describe("POST /api/enhance", () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      expect(mockGenerate).toHaveBeenCalledWith(
-        expect.objectContaining({ iteration: 2 }),
-      );
+      expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({ iteration: 2 }));
     });
 
     it("passes capability_mode through to engine selection (pro user)", async () => {
@@ -1186,8 +1152,11 @@ describe("POST /api/enhance", () => {
       );
     });
 
-    it("returns 403 when free user requests a non-STANDARD capability mode", async () => {
-      setupAuthenticatedUser({ tier: "free" });
+    it("returns 403 when guest requests a non-STANDARD capability mode", async () => {
+      // Policy: only unauthenticated guests are locked to STANDARD;
+      // registered free users get all modes (capability access is no longer
+      // tied to plan tier).
+      setupGuestUser();
       setupMockStream();
 
       const req = makeRequest({
@@ -1198,7 +1167,7 @@ describe("POST /api/enhance", () => {
 
       expect(res.status).toBe(403);
       const body = await res.json();
-      expect(body.error).toMatch(/Pro/);
+      expect(body.code).toBe("login_required");
     });
 
     it("allows free user to use STANDARD capability mode", async () => {
@@ -1230,17 +1199,10 @@ describe("POST /api/enhance", () => {
     it("tracks API usage via trackApiUsage in onFinish callback", async () => {
       setupAuthenticatedUser();
 
-      let capturedOnFinish:
-        | ((c: { usage: unknown; text: string }) => Promise<void>)
-        | undefined;
+      let capturedOnFinish: ((c: { usage: unknown; text: string }) => Promise<void>) | undefined;
 
       mockGenerateStream.mockImplementation(
-        async (p: {
-          onFinish?: (c: {
-            usage: unknown;
-            text: string;
-          }) => Promise<void>;
-        }) => {
+        async (p: { onFinish?: (c: { usage: unknown; text: string }) => Promise<void> }) => {
           capturedOnFinish = p.onFinish;
           return {
             result: {
@@ -1394,10 +1356,11 @@ describe("POST /api/enhance", () => {
     });
 
     it("skips the cache lookup when X-Peroot-Cache-Bypass:1 header is set", async () => {
+      // Bypass is gated to pro/admin so free users can't force expensive
+      // LLM calls on every request.
+      setupAuthenticatedUser({ tier: "pro" });
       const { POST } = await import("../route");
-      await POST(
-        makeRequest(VALID_BODY, { "x-peroot-cache-bypass": "1" }),
-      );
+      await POST(makeRequest(VALID_BODY, { "x-peroot-cache-bypass": "1" }));
 
       expect(mockGetCached).not.toHaveBeenCalled();
       expect(mockGenerateStream).toHaveBeenCalled();
