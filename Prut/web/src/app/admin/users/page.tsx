@@ -21,7 +21,7 @@ import { getApiPath } from "@/lib/api-path";
 import Link from "next/link";
 import { useI18n } from "@/context/I18nContext";
 import { logger } from "@/lib/logger";
-import { UserCreditsCell } from "@/components/admin/UserCreditsCell";
+import { UserCreditsBlock } from "@/components/admin/UserCreditsBlock";
 
 interface User {
   id: string;
@@ -39,6 +39,11 @@ interface User {
   prompt_count?: number;
   last_prompt_at?: string | null;
   last_activity_at?: string | null;
+  // credit details
+  daily_limit?: number;
+  last_spend_at?: string | null;
+  refresh_at?: string | null;
+  usage_last_7_days?: number[];
 }
 
 export default function UsersPage() {
@@ -186,19 +191,20 @@ export default function UsersPage() {
     if (!confirm(t.admin.users.toasts.admin_confirm.replace("{action}", actionText))) return;
 
     try {
-      const action = isNowAdmin ? "revoke_admin" : "grant_admin";
       const res = await fetch(getApiPath(`/api/admin/users/${userId}`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action: "change_tier", value: isNowAdmin ? "free" : "admin" }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error ?? `HTTP ${res.status}`);
+      }
       toast.success(t.admin.users.toasts.update_success);
       loadUsers();
     } catch (err) {
-      logger.error(err);
-      toast.error(t.admin.users.toasts.update_error);
+      logger.error("[admin/users] toggleAdmin failed:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to update role");
     }
   }
 
@@ -596,9 +602,13 @@ export default function UsersPage() {
 
                       {/* Credits */}
                       <td className="px-10 py-7">
-                        <UserCreditsCell
+                        <UserCreditsBlock
                           tier={user.role === "admin" ? "admin" : user.plan_tier}
                           balance={user.credits_balance}
+                          dailyLimit={user.daily_limit ?? 2}
+                          refreshAt={user.refresh_at ?? null}
+                          lastSpendAt={user.last_spend_at ?? null}
+                          usageLast7Days={user.usage_last_7_days ?? []}
                         />
                       </td>
 
