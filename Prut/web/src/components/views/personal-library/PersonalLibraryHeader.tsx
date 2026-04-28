@@ -174,7 +174,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           <select
             value={currentSort}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-3 text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px]"
+            className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2 px-2 md:px-3 text-xs md:text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30 min-h-[44px] max-w-[130px] md:max-w-none"
           >
             <option value="recent">עודכן לאחרונה</option>
             <option value="title">אלפביתי</option>

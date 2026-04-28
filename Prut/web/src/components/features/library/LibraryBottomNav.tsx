@@ -30,7 +30,6 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
       dir="rtl"
     >
       <div className="flex items-center justify-around px-2 h-14">
-
         {/* Left tabs: הכל + מועדפים */}
         {NAV_TABS.slice(0, 2).map(({ key, label, icon: Icon }) => {
           const isActive = effectiveFolder === key;
@@ -42,7 +41,7 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
               aria-pressed={isActive}
               className={cn(
                 "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg transition-colors",
-                isActive ? "text-amber-500 dark:text-amber-400" : "text-(--text-muted)",
+                isActive ? "text-amber-500 dark:text-amber-400 bg-amber-500/8 rounded-xl" : "text-(--text-muted)",
               )}
             >
               <div className="relative">
@@ -68,7 +67,10 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
           className="relative flex items-center justify-center w-14 h-14 rounded-full bg-yellow-300 hover:bg-yellow-200 active:scale-95 shadow-lg shadow-yellow-400/30 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 -mt-4"
         >
           <Sparkles className="absolute w-6 h-6 text-yellow-700" />
-          <Plus className="absolute w-6 h-6 text-black translate-x-0.5 translate-y-0.5" strokeWidth={2.5} />
+          <Plus
+            className="absolute w-6 h-6 text-black translate-x-0.5 translate-y-0.5"
+            strokeWidth={2.5}
+          />
         </button>
 
         {/* Right tabs: מוצמדים + תיקיות */}
@@ -82,7 +84,7 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
               aria-pressed={isActive}
               className={cn(
                 "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-lg transition-colors",
-                isActive ? "text-amber-500 dark:text-amber-400" : "text-(--text-muted)",
+                isActive ? "text-amber-500 dark:text-amber-400 bg-amber-500/8 rounded-xl" : "text-(--text-muted)",
               )}
             >
               <div className="relative">
@@ -110,7 +112,6 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
           <FolderOpen className="w-5 h-5" />
           <span className="text-[10px] font-medium">תיקיות</span>
         </button>
-
       </div>
     </nav>
   );
