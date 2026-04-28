@@ -153,7 +153,7 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
     // Skip heavyweight skill injections for simple, one-shot inputs.
     // Short prompts don't benefit from few-shot examples or CoT scaffolding;
     // the proportional-complexity rule in the template already handles them.
-    const isSimple = wordCount <= 8 && !hasContext && !input.previousResult;
+    const isSimple = wordCount <= 5 && !hasContext && !input.previousResult;
 
     // Inject concept classification (LLM-level semantic understanding, zero cost)
     result.systemPrompt += getConceptClassificationBlock("text");

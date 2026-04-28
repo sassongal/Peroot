@@ -41,7 +41,10 @@ export function useHomeScoring({
   // Weighted toward new value (0.7) so it converges fast but avoids spikes.
   // Stored in state (not ref) so the smoothed total is always derived from a
   // value written outside render — safe under React 19's refs-during-render rule.
-  const [liveInputScore, setLiveInputScore] = useState(rawInputScore);
+  const [liveInputScore, setLiveInputScore] = useState(() => {
+    if (!rawInputScore || rawInputScore.level === "empty") return rawInputScore;
+    return { ...rawInputScore, total: Math.round(rawInputScore.total * 0.7) };
+  });
   useEffect(() => {
     queueMicrotask(() => {
       setLiveInputScore((prev) => {

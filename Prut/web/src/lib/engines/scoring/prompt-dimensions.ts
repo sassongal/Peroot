@@ -306,8 +306,11 @@ function scoreRole(t: string): Omit<DimensionScoreChunk, "tipHe"> & { key: "role
   const missing: string[] = [];
 
   // Extended Hebrew persona patterns — "כסופר", "כמומחה", "כ-מנהל", "בתפקיד X", "מתמחה ב-X"
+  // The "כ" prefix form must be paired with a known role noun; the previous
+  // open-ended /כ-?\s*[א-ת]{3,}/ matched ordinary verbs like "כתוב" and
+  // produced false-positive role credit for prompts with no persona at all.
   const extendedHebrewRole =
-    /כ-?\s*[א-ת]{3,}|בתפקיד\s+\S|בהיותי\s+\S|בכושר\s+\S|בתחום\s+\S|מתמחה\s+ב/i;
+    /(?:^|\s)כ-?(?:סופר|מומחה|יועץ|מנהל|אנליסט|מתכנת|עורך|כותב|חוקר|מעצב|אסטרטג|מאמן|רופא|מורה|אדריכל|פסיכולוג|עיתונאי|מהנדס|מפתח)|בתפקיד\s+\S|בהיותי\s+\S|בכושר\s+\S|בתחום\s+\S|מתמחה\s+ב/i;
 
   // English "You are" guard: require a role-like noun to avoid "You are a table/book/example"
   const ENGLISH_ROLE_NOUN_RE =

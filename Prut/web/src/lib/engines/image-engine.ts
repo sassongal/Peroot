@@ -64,7 +64,7 @@ Your FIRST WORD must be a visual subject noun or article (A/An/The). Example fir
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  dalle: `You are an elite gpt-image-2 prompt engineer. Your mission: generate the ACTUAL prompt that will be DIRECTLY pasted into ChatGPT (using gpt-image-2) for image generation.
+  dalle: `You are an elite GPT Image (gpt-image-2) prompt engineer — successor to DALL-E. Your mission: generate the ACTUAL prompt that will be DIRECTLY pasted into ChatGPT (using GPT Image / gpt-image-2) for image generation.
 
 NOTE: ChatGPT now uses gpt-image-2 (released April 2026), OpenAI's first image model with native reasoning ("thinking") capabilities. It renders text in 30+ languages with 99% accuracy, generates up to 8 coherent panels from one prompt, and supports flexible aspect ratios from 3:1 to 1:3.
 

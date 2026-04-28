@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-28T13:24:37.701Z",
+  "generatedAt": "2026-04-28T22:57:30.483Z",
   "fixtureCount": 14,
-  "averageScore": 36.07,
+  "averageScore": 34.86,
   "entries": [
     {
       "group": "badText",
@@ -54,8 +54,8 @@
     {
       "group": "mediumText",
       "name": "task + numbers + format",
-      "score": 41,
-      "level": "medium"
+      "score": 35,
+      "level": "low"
     },
     {
       "group": "strongText",
@@ -78,20 +78,20 @@
     {
       "group": "weakText",
       "name": "bare task verb + object",
-      "score": 25,
+      "score": 19,
       "level": "low"
     },
     {
       "group": "weakText",
       "name": "task with channel only",
-      "score": 27,
+      "score": 22,
       "level": "low"
     }
   ],
   "groupAverages": {
     "badText": 6.5,
-    "weakText": 26,
-    "mediumText": 42,
+    "weakText": 20.5,
+    "mediumText": 39,
     "strongText": 85,
     "eliteText": 93,
     "badVisual": 4.5,
