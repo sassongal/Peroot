@@ -159,7 +159,6 @@ export const GET = withAdmin(async () => {
 
     return NextResponse.json({
       activeSessions,
-      activeUserIds,
       feed,
       activePages,
       heatmap,

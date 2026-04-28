@@ -200,7 +200,8 @@ export const GET = withAdmin(async (_req, supabase) => {
       const result = await listSubscriptions({ filter: { status: "active" } });
       const subs = result.data?.data ?? [];
       const activeSubs = subs.length;
-      const mrr = parseFloat((activeSubs * 3.99).toFixed(2));
+      const priceUsd = parseFloat(process.env.LEMONSQUEEZY_PRO_PRICE_USD ?? "3.99");
+      const mrr = parseFloat((activeSubs * priceUsd).toFixed(2));
       results.lemonSqueezy = {
         status: "active",
         activeSubs,

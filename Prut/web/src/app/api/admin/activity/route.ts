@@ -17,6 +17,8 @@ export const GET = withAdmin(async (req: NextRequest) => {
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "100") || 100, 500);
   const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get("offset") || "0") || 0);
 
+  const term = searchTerm.trim().toLowerCase();
+
   let query = supabase
     .from("activity_logs")
     .select(
@@ -26,14 +28,21 @@ export const GET = withAdmin(async (req: NextRequest) => {
     `,
       { count: "exact" },
     )
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .order("created_at", { ascending: false });
 
   // adminOnly takes precedence over filter (mutually exclusive)
   if (adminOnly) {
     query = query.eq("entity_type", "admin_action");
   } else if (filter !== "all") {
     query = query.eq("entity_type", filter);
+  }
+
+  // Push action search to DB; when searching, skip pagination to avoid
+  // missing matches that fall outside the current page window.
+  if (term) {
+    query = query.ilike("action", `%${term}%`).limit(1000);
+  } else {
+    query = query.range(offset, offset + limit - 1);
   }
 
   const { data, count, error } = await query;
@@ -43,10 +52,9 @@ export const GET = withAdmin(async (req: NextRequest) => {
     return NextResponse.json({ error: "Failed to load activity logs" }, { status: 500 });
   }
 
-  // Client-side search filtering (email + action)
+  // Secondary client-side filter covers email (joined field, not filterable in DB)
   let filtered = data ?? [];
-  if (searchTerm.trim()) {
-    const term = searchTerm.toLowerCase();
+  if (term) {
     filtered = filtered.filter((log: Record<string, unknown>) => {
       const action = ((log.action as string) || "").toLowerCase();
       const email = (
@@ -58,7 +66,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
   return NextResponse.json({
     logs: filtered,
-    total: searchTerm.trim() ? filtered.length : (count ?? 0),
+    total: term ? filtered.length : (count ?? 0),
     limit,
     offset,
   });

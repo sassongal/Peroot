@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { withAdmin } from "@/lib/api-middleware";
 
-export async function GET() {
-  const { error, supabase } = await validateAdminSession();
-  if (error || !supabase) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  // Use head-count queries per rating bucket instead of fetching all rows
+export const GET = withAdmin(async (_req, supabase) => {
   const [positiveResult, negativeResult] = await Promise.all([
-    supabase
-      .from("prompt_feedback")
-      .select("*", { count: "exact", head: true })
-      .eq("rating", 1),
-    supabase
-      .from("prompt_feedback")
-      .select("*", { count: "exact", head: true })
-      .eq("rating", -1),
+    supabase.from("prompt_feedback").select("*", { count: "exact", head: true }).eq("rating", 1),
+    supabase.from("prompt_feedback").select("*", { count: "exact", head: true }).eq("rating", -1),
   ]);
 
   if (positiveResult.error) {
@@ -34,4 +24,4 @@ export async function GET() {
     negative,
     positiveRate: total > 0 ? Math.round((positive / total) * 100) : 0,
   });
-}
+});

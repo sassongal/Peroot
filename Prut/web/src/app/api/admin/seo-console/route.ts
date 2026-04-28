@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { NextResponse } from 'next/server';
 import { withAdmin } from '@/lib/api-middleware';
 import { logger } from '@/lib/logger';
@@ -102,6 +104,11 @@ export const GET = withAdmin(async (_req, supabase) => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL;
     const isHttps = baseUrl?.startsWith('https://') ?? false;
 
+    const sitemapExists =
+      existsSync(join(process.cwd(), 'src/app/sitemap.ts')) ||
+      existsSync(join(process.cwd(), 'src/app/sitemap.js')) ||
+      existsSync(join(process.cwd(), 'public/sitemap.xml'));
+
     const checklist = [
       {
         id: 'site_name',
@@ -123,8 +130,8 @@ export const GET = withAdmin(async (_req, supabase) => {
         id: 'sitemap',
         label: 'Sitemap exists',
         labelHe: 'סייטמאפ קיים',
-        status: true, // Next.js sitemap.ts assumed present
-        detail: '/sitemap.xml',
+        status: sitemapExists,
+        detail: sitemapExists ? '/sitemap.xml' : 'Create src/app/sitemap.ts',
       },
       {
         id: 'blog_active',

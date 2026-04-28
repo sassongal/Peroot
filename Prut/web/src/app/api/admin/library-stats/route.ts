@@ -1,10 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { validateAdminSession } from "@/lib/admin/admin-security";
+import { withAdmin } from "@/lib/api-middleware";
 
-export async function GET(req: NextRequest) {
-  const { error, supabase } = await validateAdminSession();
-  if (error || !supabase) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const GET = withAdmin(async (req: NextRequest, supabase) => {
   const search = req.nextUrl.searchParams.get("search") ?? "";
   const page = Math.max(0, parseInt(req.nextUrl.searchParams.get("page") ?? "0"));
   const pageSize = 20;
@@ -14,7 +11,6 @@ export async function GET(req: NextRequest) {
     supabase.from("library_categories").select("id", { count: "exact", head: true }),
   ]);
 
-  // Paginated list with optional search
   let listQuery = supabase
     .from("public_library_prompts")
     .select("id, title, category_id, capability_mode, is_active, created_at, use_case")
@@ -34,4 +30,4 @@ export async function GET(req: NextRequest) {
     page,
     pageSize,
   });
-}
+});
