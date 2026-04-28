@@ -68,6 +68,17 @@ interface PromptInputProps {
 
 import { useI18n } from "@/context/I18nContext";
 
+function looksLikeUrl(text: string): boolean {
+  if (!text || text.includes("\n") || text.includes(" ")) return false;
+  try {
+    const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`;
+    const url = new URL(withScheme);
+    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
+
 const EXAMPLES_BY_MODE: Record<string, string[]> = {
   [CapabilityMode.STANDARD]: [
     "כתוב לי מייל שיווקי להשקת מוצר חדש",
@@ -450,6 +461,19 @@ export function PromptInput({
                   }
                   aria-label="כתוב את הפרומפט שלך"
                   className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans block overflow-y-auto"
+                  onPaste={(e) => {
+                    if (!onAddUrl || isGuest) return;
+                    const text = e.clipboardData.getData("text").trim();
+                    if (looksLikeUrl(text)) {
+                      e.preventDefault();
+                      Promise.resolve()
+                        .then(() => onAddUrl(text))
+                        .then(() => toast.success("קישור נוסף לקונטקסט — מחלץ תוכן..."))
+                        .catch((err: unknown) =>
+                          toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קישור"),
+                        );
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                       handleEnhance();
@@ -542,17 +566,22 @@ export function PromptInput({
                         ref={fileInputRef}
                         type="file"
                         accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
+                        multiple
                         className="hidden"
                         onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            Promise.resolve()
-                              .then(() => onAddFile(file))
-                              .then(() => toast.success(`"${file.name}" נוסף — מחלץ תוכן...`))
+                          const files = Array.from(e.target.files ?? []);
+                          if (files.length > 1 && onAddFiles) {
+                            onAddFiles(files)
+                              .then(() => toast.success(`${files.length} קבצים נוספו — מחלצים תוכן...`))
                               .catch((err: unknown) =>
-                                toast.error(
-                                  err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
-                                ),
+                                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קבצים"),
+                              );
+                          } else if (files.length === 1) {
+                            Promise.resolve()
+                              .then(() => onAddFile(files[0]))
+                              .then(() => toast.success(`"${files[0].name}" נוסף — מחלץ תוכן...`))
+                              .catch((err: unknown) =>
+                                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ"),
                               );
                           }
                           e.target.value = "";
