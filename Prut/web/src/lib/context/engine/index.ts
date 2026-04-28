@@ -182,7 +182,8 @@ function warningBlock(
     display: {
       title,
       documentType: detectedType,
-      summary: rawText.slice(0, 400),
+      // Images have no rawText — use a placeholder so the injection block isn't empty.
+      summary: rawText ? rawText.slice(0, 400) : input.type === "image" ? "[תמונה — הניתוח האוטומטי לא הצליח; התמונה לא זמינה כטקסט]" : "",
       keyFacts: [],
       entities: [],
       rawText,

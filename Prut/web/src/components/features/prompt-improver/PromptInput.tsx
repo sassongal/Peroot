@@ -73,7 +73,11 @@ function looksLikeUrl(text: string): boolean {
   try {
     const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`;
     const url = new URL(withScheme);
-    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname.includes(".");
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      url.hostname.includes(".") &&
+      !/^\d+\.\d+\.\d+\.\d+$/.test(url.hostname)
+    );
   } catch {
     return false;
   }
@@ -572,16 +576,25 @@ export function PromptInput({
                           const files = Array.from(e.target.files ?? []);
                           if (files.length > 1 && onAddFiles) {
                             onAddFiles(files)
-                              .then(() => toast.success(`${files.length} קבצים נוספו — מחלצים תוכן...`))
+                              .then(() =>
+                                toast.success(`${files.length} קבצים נוספו — מחלצים תוכן...`),
+                              )
                               .catch((err: unknown) =>
-                                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קבצים"),
+                                toast.error(
+                                  err instanceof Error ? err.message : "שגיאה בהוספת קבצים",
+                                ),
                               );
+                          } else if (files.length > 1) {
+                            // onAddFiles not wired — fall back to first file only
+                            toast.info("ניתן לצרף קובץ אחד בכל פעם");
                           } else if (files.length === 1) {
                             Promise.resolve()
                               .then(() => onAddFile(files[0]))
                               .then(() => toast.success(`"${files[0].name}" נוסף — מחלץ תוכן...`))
                               .catch((err: unknown) =>
-                                toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ"),
+                                toast.error(
+                                  err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
+                                ),
                               );
                           }
                           e.target.value = "";
