@@ -1,8 +1,3 @@
-import { extractPdf } from "./file-pdf";
-import { extractDocx, extractCsv, extractXlsx } from "./file-office";
-import { extractText } from "./file-text";
-import { extractImage } from "./image";
-
 export const MAX_FILE_SIZE_MB = 10;
 
 export const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
@@ -21,6 +16,8 @@ export interface FileDispatchResult {
 
 /**
  * Route a file buffer to the right extractor based on MIME type + filename.
+ * Dynamic imports keep heavy parsers (pdfjs-dist, mammoth, xlsx) out of
+ * routes that never process files (e.g. describe-image).
  */
 export async function dispatchFile(
   buffer: Buffer,
@@ -33,16 +30,26 @@ export async function dispatchFile(
   }
   const format = resolveFormat(mimeType, filename);
   switch (format) {
-    case "pdf":
+    case "pdf": {
+      const { extractPdf } = await import("./file-pdf");
       return extractPdf(buffer);
-    case "docx":
+    }
+    case "docx": {
+      const { extractDocx } = await import("./file-office");
       return extractDocx(buffer);
-    case "txt":
+    }
+    case "txt": {
+      const { extractText } = await import("./file-text");
       return extractText(buffer);
-    case "csv":
+    }
+    case "csv": {
+      const { extractCsv } = await import("./file-office");
       return extractCsv(buffer);
-    case "xlsx":
+    }
+    case "xlsx": {
+      const { extractXlsx } = await import("./file-office");
       return extractXlsx(buffer);
+    }
     default:
       throw new Error(`Unsupported file format: ${format}`);
   }
