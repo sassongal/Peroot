@@ -59,7 +59,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
   } = shared;
 
   return (
-    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) mb-4 overflow-x-hidden sticky top-0 z-20 md:static bg-[#0A0A0F]/90 md:bg-black/40 backdrop-blur-md md:backdrop-blur-none">
+    <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) mb-4 sticky top-0 z-20 md:static bg-[#0A0A0F]/90 md:bg-black/40 backdrop-blur-md md:backdrop-blur-none">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
           {/* Mobile sidebar toggle */}
