@@ -1,4 +1,4 @@
-import { CapabilityMode } from './capability-mode';
+import { CapabilityMode } from "./capability-mode";
 
 type PromptUsage = {
   copies?: number;
@@ -15,8 +15,8 @@ export interface Question {
 
 /** Mode-specific parameters for IMAGE_GENERATION */
 export interface ImageGenerationParams {
-  aspect_ratio?: '1:1' | '16:9' | '9:16' | '4:3';
-  style?: 'natural' | 'vivid' | 'artistic';
+  aspect_ratio?: "1:1" | "16:9" | "9:16" | "4:3";
+  style?: "natural" | "vivid" | "artistic";
 }
 
 /** Mode-specific parameters for AGENT_BUILDER */
@@ -52,6 +52,7 @@ export type PersonalPrompt = {
   is_template?: boolean;
   template_description?: string;
   template_variables?: string[];
+  original_prompt?: string;
 };
 
 export type LibraryPrompt = {
@@ -94,4 +95,3 @@ interface UserAchievement {
   unlocked_at: string;
   achievement?: Achievement;
 }
-
