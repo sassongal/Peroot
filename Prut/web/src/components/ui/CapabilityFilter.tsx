@@ -1,6 +1,7 @@
 "use client";
 
 import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-mode";
+import { getAccent } from "@/lib/capability-palette";
 import { cn } from "@/lib/utils";
 import { LayoutGrid, MessageSquare, Globe, Palette, Bot, Video, LucideIcon } from "lucide-react";
 
@@ -12,28 +13,16 @@ const ICONS: Record<IconName, LucideIcon> = {
   Video,
 };
 
-const COLOR_CLASSES: Record<string, { selected: string; default: string }> = {
-  sky: {
-    selected: "bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-[0_0_10px_-2px_rgba(14,165,233,0.3)]",
-    default: "hover:bg-sky-500/10 hover:text-sky-200 hover:border-sky-500/20",
-  },
-  emerald: {
-    selected: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_-2px_rgba(16,185,129,0.3)]",
-    default: "hover:bg-emerald-500/10 hover:text-emerald-200 hover:border-emerald-500/20",
-  },
-  purple: {
-    selected: "bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-[0_0_10px_-2px_rgba(168,85,247,0.3)]",
-    default: "hover:bg-purple-500/10 hover:text-purple-200 hover:border-purple-500/20",
-  },
-  amber: {
-    selected: "bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_10px_-2px_rgba(245,158,11,0.3)]",
-    default: "hover:bg-amber-500/10 hover:text-amber-200 hover:border-amber-500/20",
-  },
-  rose: {
-    selected: "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_10px_-2px_rgba(244,63,94,0.3)]",
-    default: "hover:bg-rose-500/10 hover:text-rose-200 hover:border-rose-500/20",
-  },
-};
+function getFilterVars(
+  colorKey: string,
+  isSelected: boolean,
+): React.CSSProperties & { "--chip-accent": string } {
+  const { accent, shadowRgb } = getAccent(colorKey);
+  return {
+    "--chip-accent": accent,
+    boxShadow: isSelected ? `0 0 10px -2px rgba(${shadowRgb},0.4)` : undefined,
+  };
+}
 
 interface CapabilityFilterProps {
   value: CapabilityMode | null;
@@ -74,18 +63,23 @@ export function CapabilityFilter({
         const config = CAPABILITY_CONFIGS[mode];
         const Icon = ICONS[config.icon];
         const isSelected = value === mode;
-        const colorClasses = COLOR_CLASSES[config.color];
         const count = counts[mode] || 0;
 
         return (
           <button
             key={mode}
             onClick={() => onChange(isSelected ? null : mode)}
+            style={getFilterVars(config.color, isSelected)}
             className={cn(
               "shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium border transition-all duration-200",
               isSelected
-                ? colorClasses.selected
-                : cn("bg-transparent text-slate-400 border-transparent", colorClasses.default)
+                ? cn(
+                    "[background-color:color-mix(in_oklab,var(--chip-accent)_55%,transparent)]",
+                    "[border-color:var(--chip-accent)]",
+                    "[color:color-mix(in_oklab,var(--chip-accent)_45%,black)]",
+                    "dark:[color:color-mix(in_oklab,var(--chip-accent)_55%,white)]",
+                  )
+                : "bg-transparent text-slate-400 border-transparent hover:text-slate-200 hover:bg-white/5",
             )}
             title={config.descriptionHe}
           >

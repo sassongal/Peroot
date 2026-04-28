@@ -1,6 +1,7 @@
 "use client";
 
 import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-mode";
+import { getAccent } from "@/lib/capability-palette";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Globe, Palette, Bot, Video, Lock, LucideIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -27,26 +28,14 @@ const SHIMMER_DELAYS: Record<CapabilityMode, string> = {
   [CapabilityMode.VIDEO_GENERATION]: "5.6s",
 };
 
-// Nordic Pastel palette — icy, desaturated, sophisticated.
-// Each mode keeps a distinct hue while staying calm enough to coexist with the rest of the UI.
-const PASTEL_ACCENTS: Record<string, { accent: string; shadowRgb: string }> = {
-  sky: { accent: "#C5D5E0", shadowRgb: "197,213,224" }, // icy blue — Standard
-  emerald: { accent: "#C0D4C8", shadowRgb: "192,212,200" }, // dusty sage — Deep Research
-  rose: { accent: "#E5C8CC", shadowRgb: "229,200,204" }, // dusty rose — Image
-  purple: { accent: "#CDC4D8", shadowRgb: "205,196,216" }, // pale lilac — Agent
-  amber: { accent: "#E8DAB8", shadowRgb: "232,218,184" }, // butter — Video
-};
-
 type ChipVars = React.CSSProperties & {
   "--chip-accent": string;
-  "--chip-shadow": string;
 };
 
 function getChipVars(colorKey: string, isSelected: boolean): ChipVars {
-  const { accent, shadowRgb } = PASTEL_ACCENTS[colorKey] ?? PASTEL_ACCENTS.sky;
+  const { accent, shadowRgb } = getAccent(colorKey);
   return {
     "--chip-accent": accent,
-    "--chip-shadow": isSelected ? `0 0 16px -3px rgba(${shadowRgb},0.45)` : "none",
     boxShadow: isSelected ? `0 0 16px -3px rgba(${shadowRgb},0.45)` : undefined,
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { CapabilityMode, CAPABILITY_CONFIGS, IconName } from "@/lib/capability-mode";
+import { getAccent } from "@/lib/capability-palette";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Globe, Palette, Bot, Video, LucideIcon } from "lucide-react";
 
@@ -12,13 +13,9 @@ const ICONS: Record<IconName, LucideIcon> = {
   Video,
 };
 
-const COLOR_CLASSES: Record<string, string> = {
-  sky: "bg-sky-500/10 text-sky-300 border-sky-500/20",
-  emerald: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  purple: "bg-purple-500/10 text-purple-300 border-purple-500/20",
-  amber: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  rose: "bg-rose-500/10 text-rose-300 border-rose-500/20",
-};
+function getBadgeVars(colorKey: string): React.CSSProperties & { "--chip-accent": string } {
+  return { "--chip-accent": getAccent(colorKey).accent };
+}
 
 interface CapabilityBadgeProps {
   mode?: CapabilityMode;
@@ -33,14 +30,17 @@ export function CapabilityBadge({
 }: CapabilityBadgeProps) {
   const config = CAPABILITY_CONFIGS[mode] || CAPABILITY_CONFIGS[CapabilityMode.STANDARD];
   const Icon = ICONS[config.icon];
-  const colors = COLOR_CLASSES[config.color];
 
   return (
-    <div 
+    <div
+      style={getBadgeVars(config.color)}
       className={cn(
         "inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-[10px] font-medium backdrop-blur-sm shadow-sm",
-        colors,
-        className
+        "[background-color:color-mix(in_oklab,var(--chip-accent)_25%,transparent)]",
+        "[border-color:color-mix(in_oklab,var(--chip-accent)_50%,transparent)]",
+        "[color:color-mix(in_oklab,var(--chip-accent)_40%,black)]",
+        "dark:[color:color-mix(in_oklab,var(--chip-accent)_60%,white)]",
+        className,
       )}
       title={config.descriptionHe}
     >
