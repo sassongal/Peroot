@@ -195,7 +195,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             title="ניהול פריטים"
           >
             <CheckSquare className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">ניהול פריטים</span>
+            <span>ניהול</span>
           </button>
 
           <button
@@ -204,7 +204,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             title="ייבוא"
           >
             <Upload className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">ייבוא</span>
+            <span>ייבוא</span>
           </button>
           <input
             ref={importFileRef}
@@ -225,7 +225,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             )}
           >
             <History className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">מהיסטוריה</span>
+            <span>היסטוריה</span>
           </button>
 
           {selectionMode && (

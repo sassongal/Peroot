@@ -253,8 +253,8 @@ export function PersonalLibraryPromptCard({
           <Pin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 fill-amber-400 shrink-0" />
         )}
 
-        {/* Capability badge */}
-        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Capability badge — hidden on mobile collapsed (shown in expanded meta row) */}
+        <div className="hidden sm:block shrink-0" onClick={(e) => e.stopPropagation()}>
           <CapabilityBadge mode={prompt.capability_mode} className="scale-90 origin-center" />
         </div>
 
@@ -272,7 +272,23 @@ export function PersonalLibraryPromptCard({
           </div>
           {/* Mobile-only meta line — dates + category always visible on small screens.
               Desktop uses the inline md:flex row below. */}
-          <div className="flex md:hidden items-center gap-2 text-[10px] text-(--text-muted) mt-0.5">
+          <div className="flex sm:hidden items-center gap-1.5 text-[10px] text-(--text-muted) mt-0.5 flex-wrap">
+            <CapabilityBadge mode={prompt.capability_mode} showLabel={false} className="scale-90 origin-left" />
+            <span className="opacity-30">·</span>
+            <DateBadge mode="compact" entity={entity} />
+            <span className="opacity-30">·</span>
+            <span className="truncate">
+              {prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}
+            </span>
+            {prompt.use_count > 0 && (
+              <>
+                <span className="opacity-30">·</span>
+                <span>{prompt.use_count}x</span>
+              </>
+            )}
+          </div>
+          {/* sm+ meta line (same as before, excluding capability badge which is in the row) */}
+          <div className="hidden sm:flex md:hidden items-center gap-2 text-[10px] text-(--text-muted) mt-0.5">
             <DateBadge mode="compact" entity={entity} />
             <span className="opacity-50">·</span>
             <span className="truncate">
@@ -322,7 +338,7 @@ export function PersonalLibraryPromptCard({
             }}
             title="השתמש"
             aria-label="השתמש בפרומפט"
-            className="p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
+            className="hidden sm:flex p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 items-center justify-center"
           >
             <ArrowRight className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
