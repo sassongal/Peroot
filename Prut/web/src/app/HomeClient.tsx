@@ -1000,6 +1000,7 @@ function PageContent() {
         capability_mode: CapabilityMode.STANDARD,
         use_case: "נשמר מהיסטוריה",
         source: "manual",
+        original_prompt: item.original,
       });
       recordUsageSignal("save", item.enhanced);
       toast.success("נשמר לספריה האישית!");
@@ -1021,6 +1022,7 @@ function PageContent() {
       capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual",
+      original_prompt: ps.input,
     });
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
@@ -1055,6 +1057,7 @@ function PageContent() {
       capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual",
+      original_prompt: ps.input,
     });
     recordUsageSignal("save", ps.completion);
     markFeatureUsed("peroot_used_personal_library");
