@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { InfoTooltip } from "@/components/admin/InfoTooltip";
+import { DashboardMismatchCard } from "@/components/admin/DashboardMismatchCard";
 import { getApiPath } from "@/lib/api-path";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,8 @@ interface DashboardData {
     details: Record<string, unknown> | null;
   }>;
   monthlyTrend: Array<{ month: string; newUsers: number }>;
+  authProfileMismatch?: { authCount: number; profileCount: number; missing: number } | null;
+  generatedAt?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -423,10 +426,11 @@ export default function AdminDashboardPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const loadData = useCallback(async (isRefresh = false) => {
+  const loadData = useCallback(async (isRefresh = false, forceRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
-      const res = await fetch(getApiPath("/api/admin/dashboard"));
+      const url = getApiPath(forceRefresh ? "/api/admin/dashboard?refresh=1" : "/api/admin/dashboard");
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed");
       const json: DashboardData = await res.json();
       setData(json);
@@ -586,6 +590,15 @@ export default function AdminDashboardPage() {
               ))}
             </div>
 
+            {/* Manual force-refresh button */}
+            <button
+              onClick={() => loadData(true, true)}
+              className="inline-flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-xl md:rounded-2xl bg-white/3 border border-white/5 text-zinc-500 hover:text-white hover:border-white/10 transition-all text-[9px] md:text-[10px] font-black uppercase tracking-widest"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              רענן עכשיו
+            </button>
+
             {/* Last updated timestamp */}
             {lastUpdated && (
               <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
@@ -595,6 +608,16 @@ export default function AdminDashboardPage() {
             )}
           </div>
         </div>
+
+        {/* ── Auth / Profile mismatch warning ── */}
+        {data.authProfileMismatch && data.authProfileMismatch.missing > 0 && (
+          <DashboardMismatchCard
+            authCount={data.authProfileMismatch.authCount}
+            profileCount={data.authProfileMismatch.profileCount}
+            missing={data.authProfileMismatch.missing}
+            onSynced={() => loadData(true, true)}
+          />
+        )}
 
         {/* ── KPI Row ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
