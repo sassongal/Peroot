@@ -215,7 +215,7 @@ export default function UserDetailPage() {
       if (!res.ok) throw new Error("Failed to fetch user detail");
       const json: UserDetail = await res.json();
       setDetail(json);
-      setTierValue(json.profile.plan_tier ?? "free");
+      setTierValue(json.role?.role === "admin" ? "admin" : (json.profile.plan_tier ?? "free"));
       // Seed history from recentHistory in the main response
       if (json.recentHistory?.length) {
         setHistory(json.recentHistory);
@@ -1243,7 +1243,7 @@ export default function UserDetailPage() {
                 >
                   <option value="free">Free</option>
                   <option value="pro">Pro</option>
-                  <option value="premium">Premium</option>
+                  <option value="admin">Admin</option>
                 </select>
                 <button
                   onClick={() => doAction("change_tier", tierValue)}
@@ -1337,39 +1337,6 @@ export default function UserDetailPage() {
                 </button>
               </div>
 
-              <Divider />
-
-              {/* Admin Role */}
-              <div className="space-y-3">
-                <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.25em]">
-                  Admin Role
-                </label>
-                <button
-                  onClick={() => {
-                    if (
-                      !confirm(
-                        `${isAdmin ? "Revoke" : "Grant"} admin role for this user?`
-                      )
-                    )
-                      return;
-                    doAction(isAdmin ? "revoke_admin" : "grant_admin");
-                  }}
-                  disabled={!!actionLoading}
-                  className={cn(
-                    "w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 border",
-                    isAdmin
-                      ? "bg-zinc-800 border-white/10 text-zinc-400 hover:bg-zinc-700"
-                      : "bg-blue-600/10 border-blue-600/20 text-blue-400 hover:bg-blue-600/20"
-                  )}
-                >
-                  {actionLoading === "grant_admin" || actionLoading === "revoke_admin" ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Crown className="w-4 h-4" />
-                  )}
-                  {isAdmin ? "Revoke Admin" : "Grant Admin"}
-                </button>
-              </div>
             </div>
           </div>
         </div>
