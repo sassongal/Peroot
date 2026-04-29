@@ -15,10 +15,12 @@ export const maxDuration = 30;
 const RequestSchema = z.object({
   goal: z.string().min(3).max(2000),
   max_steps: z.number().int().min(2).max(6).default(4),
-  user_context: z.object({
-    role: z.string().optional(),
-    recent_categories: z.array(z.string()).optional(),
-  }).optional(),
+  user_context: z
+    .object({
+      role: z.string().optional(),
+      recent_categories: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 // Cost-optimized system prompt: concise, structured instructions with clear JSON schema.
@@ -76,7 +78,7 @@ function normalizeSteps(rawSteps: unknown[]): GeneratedChainStep[] {
       variables: Array.isArray(s.variables)
         ? s.variables
             .filter((v): v is Record<string, unknown> => typeof v === "object" && v !== null)
-            .map(v => ({
+            .map((v) => ({
               name: String(v.name || ""),
               label: String(v.label || v.name || ""),
               default: String(v.default || ""),
@@ -85,39 +87,63 @@ function normalizeSteps(rawSteps: unknown[]): GeneratedChainStep[] {
       input_from_step: typeof s.input_from_step === "number" ? s.input_from_step : null,
       output_description: typeof s.output_description === "string" ? s.output_description : "",
     }))
-    .filter(s => s.prompt.length > 0); // Drop empty-prompt steps
+    .filter((s) => s.prompt.length > 0); // Drop empty-prompt steps
 }
 
 export async function POST(req: Request) {
   let userId: string | undefined;
+  let chargedCredits = false;
 
   try {
     const json = await req.json();
     const { goal, max_steps, user_context } = RequestSchema.parse(json);
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     userId = user?.id;
     const isGuest = !userId;
 
-    let tier: "free" | "pro" | "guest" = "guest";
+    let tier: "free" | "pro" | "admin" | "guest" = "guest";
+    let isAdmin = false;
 
     if (isGuest) {
-      return NextResponse.json(
-        { error: "יש להתחבר כדי לבנות שרשרת פרומפטים." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "יש להתחבר כדי לבנות שרשרת פרומפטים." }, { status: 401 });
     } else {
-      // Authenticated users: deduct 2 credits
-      const { data: profile } = await supabase.from("profiles").select("plan_tier").eq("id", userId).maybeSingle();
-      tier = (profile?.plan_tier as "free" | "pro") || "free";
+      // Resolve tier + admin status. user_roles is authoritative for admin —
+      // overrides plan_tier so admins are never charged credits even if their
+      // profile row is stale (e.g. before grant_admin synced profiles.plan_tier).
+      const [{ data: profile }, { data: adminRole }] = await Promise.all([
+        supabase.from("profiles").select("plan_tier").eq("id", userId).maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId!)
+          .eq("role", "admin")
+          .maybeSingle(),
+      ]);
+      isAdmin = !!adminRole || profile?.plan_tier === "admin";
+      tier = isAdmin ? "admin" : (profile?.plan_tier as "free" | "pro") || "free";
 
-      const creditResult = await checkAndDecrementCredits(userId!, tier, supabase, CHAIN_CREDIT_COST);
-      if (!creditResult.allowed) {
-        return NextResponse.json(
-          { error: `אין מספיק קרדיטים. בניית שרשרת עולה ${CHAIN_CREDIT_COST} קרדיטים.`, remaining: creditResult.remaining },
-          { status: 403 }
+      // Admins bypass credit decrement entirely (mirrors /api/enhance behavior).
+      if (!isAdmin) {
+        const creditResult = await checkAndDecrementCredits(
+          userId!,
+          tier,
+          supabase,
+          CHAIN_CREDIT_COST,
         );
+        if (!creditResult.allowed) {
+          return NextResponse.json(
+            {
+              error: `אין מספיק קרדיטים. בניית שרשרת עולה ${CHAIN_CREDIT_COST} קרדיטים.`,
+              remaining: creditResult.remaining,
+            },
+            { status: 403 },
+          );
+        }
+        chargedCredits = true;
       }
     }
 
@@ -134,10 +160,14 @@ export async function POST(req: Request) {
     // Letting the gateway own it means a future tweak to the chain preset
     // automatically propagates without callers drifting out of sync.
     const chainStartTime = Date.now();
-    const { text: fullText, modelId, usage: chainUsage } = await AIGateway.generateFull({
+    const {
+      text: fullText,
+      modelId,
+      usage: chainUsage,
+    } = await AIGateway.generateFull({
       system: CHAIN_BUILDER_SYSTEM_PROMPT,
       prompt: userPrompt,
-      task: "chain",    // Uses flash-first routing for cost efficiency
+      task: "chain", // Uses flash-first routing for cost efficiency
       userTier: tier,
     });
 
@@ -145,8 +175,13 @@ export async function POST(req: Request) {
 
     // Track usage for the cost dashboard. Fire-and-forget.
     const chainUsageTyped = chainUsage as
-        | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
-        | undefined;
+      | {
+          inputTokens?: number;
+          outputTokens?: number;
+          promptTokens?: number;
+          completionTokens?: number;
+        }
+      | undefined;
     trackApiUsage({
       userId,
       modelId,
@@ -163,21 +198,34 @@ export async function POST(req: Request) {
       parsed = JSON.parse(cleaned);
     } catch {
       logger.error("[chain/generate] JSON parse failed:", cleaned.slice(0, 300));
-      if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
-      return NextResponse.json({ error: "ה-AI החזיר תשובה בפורמט לא תקין. נסה שוב", code: "ai_invalid_format" }, { status: 500 });
+      if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
+      return NextResponse.json(
+        { error: "ה-AI החזיר תשובה בפורמט לא תקין. נסה שוב", code: "ai_invalid_format" },
+        { status: 500 },
+      );
     }
 
     // Validate structure — refund on incomplete
-    if (typeof parsed.title !== "string" || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+    if (
+      typeof parsed.title !== "string" ||
+      !Array.isArray(parsed.steps) ||
+      parsed.steps.length === 0
+    ) {
       logger.error("[chain/generate] Incomplete chain:", JSON.stringify(parsed).slice(0, 300));
-      if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
-      return NextResponse.json({ error: "השרשרת שנוצרה אינה שלמה. נסה שוב", code: "ai_incomplete" }, { status: 500 });
+      if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
+      return NextResponse.json(
+        { error: "השרשרת שנוצרה אינה שלמה. נסה שוב", code: "ai_incomplete" },
+        { status: 500 },
+      );
     }
 
     const steps = normalizeSteps(parsed.steps);
     if (steps.length < 2) {
-      if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
-      return NextResponse.json({ error: "Chain must have at least 2 valid steps." }, { status: 500 });
+      if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
+      return NextResponse.json(
+        { error: "Chain must have at least 2 valid steps." },
+        { status: 500 },
+      );
     }
 
     const chain: GeneratedChain = {
@@ -188,18 +236,26 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json(chain);
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Validation error — no credits were charged yet
-      return NextResponse.json({ error: "בקשה לא תקינה", code: "invalid_request", details: error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "בקשה לא תקינה", code: "invalid_request", details: error.issues },
+        { status: 400 },
+      );
     }
     // AI or concurrency error after credits were charged — refund
-    if (userId) await refundCredit(userId, CHAIN_CREDIT_COST);
+    if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
     if (error instanceof ConcurrencyError) {
-      return NextResponse.json({ error: "השרת עמוס. נסה שוב בעוד רגע", code: "server_busy" }, { status: 503 });
+      return NextResponse.json(
+        { error: "השרת עמוס. נסה שוב בעוד רגע", code: "server_busy" },
+        { status: 503 },
+      );
     }
     logger.error("[chain/generate] Error:", error);
-    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "שגיאת שרת פנימית", code: "internal_error" },
+      { status: 500 },
+    );
   }
 }
