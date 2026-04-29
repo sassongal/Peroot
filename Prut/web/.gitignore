@@ -49,8 +49,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# chrome extension (separate project)
-chrome-extension-v2.1/
+# chrome extension lives in this repo (M3 onward)
 
 # local experimentation / audit output
 tools/crewai-ui-audit/
