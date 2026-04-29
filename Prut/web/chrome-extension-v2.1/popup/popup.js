@@ -1164,6 +1164,21 @@ async function doEnhance() {
     PerootPopupTargetModel.hideScoreGateHint();
     const modelProfileSlug = PerootPopupTargetModel.resolveSlugForRequest(PerootPopupTargetModelState);
 
+    try {
+      chrome.runtime.sendMessage({
+        type: "API_FETCH",
+        path: "/api/extension-telemetry",
+        method: "POST",
+        body: {
+          event: "popup_enhance",
+          target_model: modelProfileSlug || null,
+          site: PerootPopupTargetModelState?.host || null,
+          ext_version: chrome.runtime.getManifest().version,
+          ts: Date.now(),
+        },
+      });
+    } catch {}
+
     const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
@@ -1182,6 +1197,20 @@ async function doEnhance() {
 
     if (res.headers.get("X-Peroot-Cache") === "score-gate") {
       PerootPopupTargetModel.showScoreGateHint();
+      try {
+        chrome.runtime.sendMessage({
+          type: "API_FETCH",
+          path: "/api/extension-telemetry",
+          method: "POST",
+          body: {
+            event: "score_gate_hit",
+            target_model: modelProfileSlug || null,
+            site: PerootPopupTargetModelState?.host || null,
+            ext_version: chrome.runtime.getManifest().version,
+            ts: Date.now(),
+          },
+        });
+      } catch {}
     }
 
     if (!res.ok) {
