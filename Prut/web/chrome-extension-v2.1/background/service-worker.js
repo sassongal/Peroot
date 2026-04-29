@@ -8,6 +8,21 @@
  *   - On-demand content script injection for enhance panel
  */
 
+// ─── Config Bootstrap (M3) ───
+try {
+  importScripts("../lib/config-store.js", "../lib/telemetry.js");
+} catch {
+  // importScripts failure: extension is misconfigured. Continue without registry.
+}
+
+const CONFIG_REFRESH_ALARM = "peroot-config-refresh";
+const CONFIG_REFRESH_PERIOD_MIN = 24 * 60; // 24h
+
+async function bootstrapConfig() {
+  if (typeof self.PerootConfigStore?.refreshConfig !== "function") return;
+  await self.PerootConfigStore.refreshConfig();
+}
+
 const SITE_URL = "https://www.peroot.space";
 const SUPABASE_URL = "https://ravinxlujmlvxhgbjxti.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdmlueGx1am1sdnhoZ2JqeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMDYyMzQsImV4cCI6MjA4NDU4MjIzNH0.Mq-UzPZhFe6fM5J76BcQhS8YhaDxXyBH7hzNGk1T7Kk";
@@ -41,6 +56,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
   // Set up proactive token refresh alarm (every 45 minutes)
   chrome.alarms.create("peroot-token-refresh", { periodInMinutes: 45 });
+  chrome.alarms.create(CONFIG_REFRESH_ALARM, { periodInMinutes: CONFIG_REFRESH_PERIOD_MIN });
+  bootstrapConfig();
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -122,6 +139,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // ─── Proactive Token Refresh via Alarms ───
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === CONFIG_REFRESH_ALARM) {
+    await bootstrapConfig();
+    return;
+  }
   if (alarm.name !== "peroot-token-refresh") return;
 
   const { peroot_token, peroot_refresh_token } = await chrome.storage.local.get([
@@ -251,6 +272,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ ok: false });
       }
     })();
+    return true;
+  }
+
+  if (message.type === "REFRESH_CONFIG") {
+    bootstrapConfig()
+      .then(() => sendResponse({ ok: true }))
+      .catch(() => sendResponse({ ok: false }));
     return true;
   }
 });
