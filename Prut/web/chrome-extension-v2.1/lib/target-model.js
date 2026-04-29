@@ -9,13 +9,23 @@
 (function (root) {
   const OVERRIDE_PREFIX = "peroot.target_model_override.";
 
+  // Slugs are lowercase alphanumerics with - or _; bound length to keep
+  // request bodies sane and prevent storage abuse if the server is compromised.
+  const SLUG_PATTERN = /^[a-z0-9_-]{1,64}$/;
+
+  function isValidSlug(s) {
+    return typeof s === "string" && SLUG_PATTERN.test(s);
+  }
+
   function normalizeHost(h) {
     if (!h) return "";
-    return String(h).toLowerCase().replace(/^www\./, "");
+    return String(h)
+      .toLowerCase()
+      .replace(/^www\./, "");
   }
 
   function resolveTargetModel({ hostname, registry, override }) {
-    if (override && typeof override === "string" && override.length > 0) {
+    if (isValidSlug(override)) {
       return override;
     }
     const norm = normalizeHost(hostname);
@@ -24,7 +34,7 @@
       const site = registry[siteKey];
       const hosts = Array.isArray(site?.hosts) ? site.hosts : [];
       if (hosts.some((h) => normalizeHost(h) === norm)) {
-        return site?.profile_slug || null;
+        return isValidSlug(site?.profile_slug) ? site.profile_slug : null;
       }
     }
     return null;
@@ -40,14 +50,17 @@
 
   async function setOverride(hostname, slug) {
     if (typeof chrome === "undefined" || !chrome.storage?.local) return;
-    const key = OVERRIDE_PREFIX + normalizeHost(hostname);
+    const norm = normalizeHost(hostname);
+    if (!norm) return;
+    const key = OVERRIDE_PREFIX + norm;
     return new Promise((resolve) => {
       if (!slug) chrome.storage.local.remove(key, resolve);
-      else chrome.storage.local.set({ [key]: slug }, resolve);
+      else if (isValidSlug(slug)) chrome.storage.local.set({ [key]: slug }, resolve);
+      else resolve();
     });
   }
 
-  const api = { resolveTargetModel, getOverride, setOverride, OVERRIDE_PREFIX };
+  const api = { resolveTargetModel, getOverride, setOverride, isValidSlug, OVERRIDE_PREFIX };
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
   } else {

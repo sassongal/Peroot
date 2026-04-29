@@ -32,11 +32,14 @@
   }
 
   async function refreshConfig() {
+    const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), 10000) : null;
     try {
       const res = await fetch(`${SITE_URL}/api/extension-config`, {
         method: "GET",
         credentials: "include",
         headers: { Accept: "application/json" },
+        signal: ctrl?.signal,
       });
       if (!res.ok) return { ok: false, status: res.status };
       const cfg = await res.json();
@@ -44,6 +47,8 @@
       return { ok: true, cfg };
     } catch (err) {
       return { ok: false, error: String(err?.message || err) };
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   }
 

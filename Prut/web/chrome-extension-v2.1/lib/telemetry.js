@@ -12,6 +12,20 @@
   const EXT_VERSION =
     (typeof chrome !== "undefined" && chrome.runtime?.getManifest?.()?.version) || "unknown";
 
+  // In-memory dedupe to prevent runaway beacons if a caller fires in a loop.
+  // Keyed by `${event}:${selector_kind || ''}`; one beacon per minute per key.
+  const RATE_LIMIT_MS = 60_000;
+  const lastFired = new Map();
+
+  function shouldRateLimit(event, payload) {
+    const key = `${event}:${payload?.selector_kind || ""}`;
+    const now = Date.now();
+    const prev = lastFired.get(key) || 0;
+    if (now - prev < RATE_LIMIT_MS) return true;
+    lastFired.set(key, now);
+    return false;
+  }
+
   function basePayload(extra) {
     return {
       ext_version: EXT_VERSION,
@@ -21,16 +35,15 @@
   }
 
   async function fireTelemetry(event, payload) {
+    if (shouldRateLimit(event, payload)) return;
     const body = { event, ...basePayload(payload) };
 
     if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage && !chrome.tabs) {
       try {
-        chrome.runtime.sendMessage({
-          type: "API_FETCH",
-          path: "/api/extension-telemetry",
-          method: "POST",
-          body,
-        });
+        chrome.runtime.sendMessage(
+          { type: "API_FETCH", path: "/api/extension-telemetry", method: "POST", body },
+          () => void chrome.runtime?.lastError,
+        );
       } catch {
         // Service worker may be inactive — drop event.
       }

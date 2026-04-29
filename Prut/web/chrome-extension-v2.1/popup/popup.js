@@ -16,7 +16,9 @@ const PerootPopupTargetModel = (() => {
     });
   }
   function normalizeHost(h) {
-    return String(h || "").toLowerCase().replace(/^www\./, "");
+    return String(h || "")
+      .toLowerCase()
+      .replace(/^www\./, "");
   }
   async function getActiveTabHost() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -27,13 +29,17 @@ const PerootPopupTargetModel = (() => {
     }
   }
   async function getOverride(host) {
-    const key = "peroot.target_model_override." + normalizeHost(host);
+    const norm = normalizeHost(host);
+    if (!norm) return null;
+    const key = "peroot.target_model_override." + norm;
     return new Promise((resolve) => {
       chrome.storage.local.get(key, (data) => resolve(data?.[key] || null));
     });
   }
   async function setOverride(host, slug) {
-    const key = "peroot.target_model_override." + normalizeHost(host);
+    const norm = normalizeHost(host);
+    if (!norm) return;
+    const key = "peroot.target_model_override." + norm;
     return new Promise((resolve) => {
       if (!slug) chrome.storage.local.remove(key, resolve);
       else chrome.storage.local.set({ [key]: slug }, resolve);
@@ -61,6 +67,11 @@ const PerootPopupTargetModel = (() => {
       select.appendChild(opt);
     }
     const host = await getActiveTabHost();
+    if (!normalizeHost(host)) {
+      select.disabled = true;
+      if (detectedLabel) detectedLabel.textContent = "";
+      return { host: "", registry: cfg?.selectors || null, detected: null };
+    }
     const detected = hostMatchedSlug(host, cfg?.selectors);
     const override = await getOverride(host);
     select.value = override || "";
@@ -144,12 +155,12 @@ let detectedTargetModel = "general";
  * "hebrew" or anything else → null (server default, Hebrew).
  */
 function resolveOutputLanguage(pref, inputText) {
-  if (pref === 'english') return 'english';
-  if (pref !== 'auto') return null;
+  if (pref === "english") return "english";
+  if (pref !== "auto") return null;
   const hebrew = (inputText.match(/[\u05D0-\u05EA]/g) || []).length;
-  const latin  = (inputText.match(/[a-zA-Z]/g) || []).length;
-  const total  = hebrew + latin;
-  return total > 0 && latin / total > 0.6 ? 'english' : null;
+  const latin = (inputText.match(/[a-zA-Z]/g) || []).length;
+  const total = hebrew + latin;
+  return total > 0 && latin / total > 0.6 ? "english" : null;
 }
 
 function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
@@ -204,9 +215,18 @@ function extractJSONFromStream(raw) {
   let escape = false;
   for (let i = firstBrace; i < trimmed.length; i++) {
     const ch = trimmed[i];
-    if (escape) { escape = false; continue; }
-    if (ch === "\\") { escape = true; continue; }
-    if (ch === '"') { inString = !inString; continue; }
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
     if (inString) continue;
     if (ch === "{") depth++;
     else if (ch === "}") {
@@ -229,7 +249,7 @@ let enhanceRetried = false;
 
 // ═══ PROMPT QUALITY SCORE ═══
 function scorePrompt(text) {
-  if (!text || text.trim().length < 3) return { score: 0, tips: [], label: '', color: '' };
+  if (!text || text.trim().length < 3) return { score: 0, tips: [], label: "", color: "" };
 
   const words = text.trim().split(/\s+/);
   const wc = words.length;
@@ -237,8 +257,10 @@ function scorePrompt(text) {
   const tips = [];
 
   // 1. Length (12 pts)
-  if (wc <= 3) { total += 0; tips.push('\u05D4\u05D5\u05E1\u05E3 \u05E2\u05D5\u05D3 \u05E4\u05E8\u05D8\u05D9\u05DD'); }
-  else if (wc <= 6) total += 2;
+  if (wc <= 3) {
+    total += 0;
+    tips.push("\u05D4\u05D5\u05E1\u05E3 \u05E2\u05D5\u05D3 \u05E4\u05E8\u05D8\u05D9\u05DD");
+  } else if (wc <= 6) total += 2;
   else if (wc <= 12) total += 4;
   else if (wc <= 25) total += 7;
   else if (wc <= 50) total += 10;
@@ -246,21 +268,58 @@ function scorePrompt(text) {
 
   // 2. Role (12 pts)
   if (/\u05D0\u05EA\u05D4\s+\S+|you\s+are|act\s+as|as\s+a\s+\w+/i.test(text)) total += 12;
-  else if (/\u05DE\u05D5\u05DE\u05D7\u05D4|\u05DE\u05E0\u05D4\u05DC|\u05D9\u05D5\u05E2\u05E5|\u05DB\u05D5\u05EA\u05D1|expert|specialist|coach/i.test(text)) total += 6;
-  else tips.push('\u05D4\u05D2\u05D3\u05E8 \u05EA\u05E4\u05E7\u05D9\u05D3 (\u05D0\u05EA\u05D4 \u05DE\u05D5\u05DE\u05D7\u05D4...)');
+  else if (
+    /\u05DE\u05D5\u05DE\u05D7\u05D4|\u05DE\u05E0\u05D4\u05DC|\u05D9\u05D5\u05E2\u05E5|\u05DB\u05D5\u05EA\u05D1|expert|specialist|coach/i.test(
+      text,
+    )
+  )
+    total += 6;
+  else
+    tips.push(
+      "\u05D4\u05D2\u05D3\u05E8 \u05EA\u05E4\u05E7\u05D9\u05D3 (\u05D0\u05EA\u05D4 \u05DE\u05D5\u05DE\u05D7\u05D4...)",
+    );
 
   // 3. Task (10 pts)
-  if (/\u05DB\u05EA\u05D5\u05D1|\u05E6\u05D5\u05E8|\u05D1\u05E0\u05D4|\u05E0\u05E1\u05D7|\u05D4\u05DB\u05DF|\u05E2\u05E8\u05D5\u05DA|\u05E1\u05DB\u05DD|\u05EA\u05E8\u05D2\u05DD|\u05E0\u05EA\u05D7|write|create|build|draft|generate|analyze/i.test(text)) {
-    total += /\u05DB\u05EA\u05D5\u05D1\s+\S+|\u05E6\u05D5\u05E8\s+\S+|write\s+a|create\s+a/i.test(text) ? 10 : 5;
-  } else tips.push('\u05D4\u05D2\u05D3\u05E8 \u05DE\u05E9\u05D9\u05DE\u05D4 (\u05DB\u05EA\u05D5\u05D1, \u05E6\u05D5\u05E8, \u05E0\u05EA\u05D7...)');
+  if (
+    /\u05DB\u05EA\u05D5\u05D1|\u05E6\u05D5\u05E8|\u05D1\u05E0\u05D4|\u05E0\u05E1\u05D7|\u05D4\u05DB\u05DF|\u05E2\u05E8\u05D5\u05DA|\u05E1\u05DB\u05DD|\u05EA\u05E8\u05D2\u05DD|\u05E0\u05EA\u05D7|write|create|build|draft|generate|analyze/i.test(
+      text,
+    )
+  ) {
+    total += /\u05DB\u05EA\u05D5\u05D1\s+\S+|\u05E6\u05D5\u05E8\s+\S+|write\s+a|create\s+a/i.test(
+      text,
+    )
+      ? 10
+      : 5;
+  } else
+    tips.push(
+      "\u05D4\u05D2\u05D3\u05E8 \u05DE\u05E9\u05D9\u05DE\u05D4 (\u05DB\u05EA\u05D5\u05D1, \u05E6\u05D5\u05E8, \u05E0\u05EA\u05D7...)",
+    );
 
   // 4. Context (12 pts)
   let ctx = 0;
-  if (/\u05E7\u05D4\u05DC|\u05DC\u05E7\u05D5\u05D7\u05D5\u05EA|audience|target|\u05E2\u05D1\u05D5\u05E8\s+\S+/i.test(text)) ctx += 4;
-  if (/\u05DE\u05D8\u05E8\u05D4|\u05D9\u05E2\u05D3|goal|\u05DB\u05D3\u05D9\s+\u05DC|\u05E2\u05DC\s+\u05DE\u05E0\u05EA/i.test(text)) ctx += 4;
-  if (/\u05E8\u05E7\u05E2|\u05D4\u05E7\u05E9\u05E8|context|background|\u05D1\u05D2\u05DC\u05DC|\u05DE\u05DB\u05D9\u05D5\u05D5\u05DF/i.test(text)) ctx += 4;
+  if (
+    /\u05E7\u05D4\u05DC|\u05DC\u05E7\u05D5\u05D7\u05D5\u05EA|audience|target|\u05E2\u05D1\u05D5\u05E8\s+\S+/i.test(
+      text,
+    )
+  )
+    ctx += 4;
+  if (
+    /\u05DE\u05D8\u05E8\u05D4|\u05D9\u05E2\u05D3|goal|\u05DB\u05D3\u05D9\s+\u05DC|\u05E2\u05DC\s+\u05DE\u05E0\u05EA/i.test(
+      text,
+    )
+  )
+    ctx += 4;
+  if (
+    /\u05E8\u05E7\u05E2|\u05D4\u05E7\u05E9\u05E8|context|background|\u05D1\u05D2\u05DC\u05DC|\u05DE\u05DB\u05D9\u05D5\u05D5\u05DF/i.test(
+      text,
+    )
+  )
+    ctx += 4;
   total += ctx;
-  if (ctx === 0) tips.push('\u05E1\u05E4\u05E7 \u05D4\u05E7\u05E9\u05E8 (\u05DC\u05DE\u05D9? \u05DC\u05DE\u05D4?)');
+  if (ctx === 0)
+    tips.push(
+      "\u05E1\u05E4\u05E7 \u05D4\u05E7\u05E9\u05E8 (\u05DC\u05DE\u05D9? \u05DC\u05DE\u05D4?)",
+    );
 
   // 5. Specificity (10 pts)
   let spec = 0;
@@ -271,16 +330,44 @@ function scorePrompt(text) {
 
   // 6. Format (10 pts)
   let fmt = 0;
-  if (/\u05E4\u05D5\u05E8\u05DE\u05D8|\u05D8\u05D1\u05DC\u05D4|\u05E8\u05E9\u05D9\u05DE\u05D4|bullet|json|markdown/i.test(text)) fmt += 5;
-  if (/\u05D0\u05D5\u05E8\u05DA|\u05DE\u05D9\u05DC\u05D9\u05DD|\u05E9\u05D5\u05E8\u05D5\u05EA|words|short|long|\u05E7\u05E6\u05E8|\u05D0\u05E8\u05D5\u05DA/i.test(text)) fmt += 3;
-  if (/\u05DB\u05D5\u05EA\u05E8\u05EA|\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD|header|section/i.test(text)) fmt += 2;
+  if (
+    /\u05E4\u05D5\u05E8\u05DE\u05D8|\u05D8\u05D1\u05DC\u05D4|\u05E8\u05E9\u05D9\u05DE\u05D4|bullet|json|markdown/i.test(
+      text,
+    )
+  )
+    fmt += 5;
+  if (
+    /\u05D0\u05D5\u05E8\u05DA|\u05DE\u05D9\u05DC\u05D9\u05DD|\u05E9\u05D5\u05E8\u05D5\u05EA|words|short|long|\u05E7\u05E6\u05E8|\u05D0\u05E8\u05D5\u05DA/i.test(
+      text,
+    )
+  )
+    fmt += 3;
+  if (
+    /\u05DB\u05D5\u05EA\u05E8\u05EA|\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD|header|section/i.test(text)
+  )
+    fmt += 2;
   total += Math.min(10, fmt);
 
   // 7. Constraints (10 pts)
   let con = 0;
-  if (/\u05D0\u05DC\s+\u05EA|\u05D0\u05E1\u05D5\u05E8|\u05DC\u05DC\u05D0|don't|avoid|without/i.test(text)) con += 4;
-  if (/\u05D8\u05D5\u05DF|\u05E1\u05D2\u05E0\u05D5\u05DF|tone|style|\u05DE\u05E7\u05E6\u05D5\u05E2\u05D9|\u05D9\u05D3\u05D9\u05D3\u05D5\u05EA\u05D9/i.test(text)) con += 3;
-  if (/\u05D1\u05E2\u05D1\u05E8\u05D9\u05EA|\u05D1\u05D0\u05E0\u05D2\u05DC\u05D9\u05EA|in\s+hebrew|in\s+english/i.test(text)) con += 3;
+  if (
+    /\u05D0\u05DC\s+\u05EA|\u05D0\u05E1\u05D5\u05E8|\u05DC\u05DC\u05D0|don't|avoid|without/i.test(
+      text,
+    )
+  )
+    con += 4;
+  if (
+    /\u05D8\u05D5\u05DF|\u05E1\u05D2\u05E0\u05D5\u05DF|tone|style|\u05DE\u05E7\u05E6\u05D5\u05E2\u05D9|\u05D9\u05D3\u05D9\u05D3\u05D5\u05EA\u05D9/i.test(
+      text,
+    )
+  )
+    con += 3;
+  if (
+    /\u05D1\u05E2\u05D1\u05E8\u05D9\u05EA|\u05D1\u05D0\u05E0\u05D2\u05DC\u05D9\u05EA|in\s+hebrew|in\s+english/i.test(
+      text,
+    )
+  )
+    con += 3;
   total += Math.min(10, con);
 
   // 8. Structure (8 pts)
@@ -291,10 +378,18 @@ function scorePrompt(text) {
   total += Math.min(8, str);
 
   // 9. Channel (8 pts)
-  if (/\u05DE\u05D9\u05D9\u05DC|email|\u05DC\u05D9\u05E0\u05E7\u05D3\u05D0\u05D9\u05DF|linkedin|\u05E4\u05D9\u05D9\u05E1\u05D1\u05D5\u05E7|\u05D0\u05D9\u05E0\u05E1\u05D8\u05D2\u05E8\u05DD|\u05D1\u05DC\u05D5\u05D2|blog|\u05D0\u05EA\u05E8|website/i.test(text)) total += 8;
+  if (
+    /\u05DE\u05D9\u05D9\u05DC|email|\u05DC\u05D9\u05E0\u05E7\u05D3\u05D0\u05D9\u05DF|linkedin|\u05E4\u05D9\u05D9\u05E1\u05D1\u05D5\u05E7|\u05D0\u05D9\u05E0\u05E1\u05D8\u05D2\u05E8\u05DD|\u05D1\u05DC\u05D5\u05D2|blog|\u05D0\u05EA\u05E8|website/i.test(
+      text,
+    )
+  )
+    total += 8;
 
   // 10. Examples (8 pts)
-  if (/\u05D3\u05D5\u05D2\u05DE\u05D4 \u05DC\u05E4\u05DC\u05D8|output\s+example|expected/i.test(text)) total += 8;
+  if (
+    /\u05D3\u05D5\u05D2\u05DE\u05D4 \u05DC\u05E4\u05DC\u05D8|output\s+example|expected/i.test(text)
+  )
+    total += 8;
   else if (/\u05D3\u05D5\u05D2\u05DE\u05D4|example|sample/i.test(text)) total += 4;
 
   // ═════════ ANTI-GAMING SIGNALS (synced with web EnhancedScorer) ═════════
@@ -303,20 +398,32 @@ function scorePrompt(text) {
   //     concrete spec to back them up). Mirrors the web scorer's clarity
   //     dimension rule added after users started submitting prompts like
   //     "world-class premium comprehensive professional content".
-  const buzzwords = /\u05DE\u05E7\u05E6\u05D5\u05E2\u05D9|\u05DE\u05E7\u05D9\u05E3|\u05D0\u05D9\u05DB\u05D5\u05EA\u05D9|\u05DE\u05E6\u05D5\u05D9\u05DF|\u05D9\u05D5\u05E6\u05D0 \u05D3\u05D5\u05E4\u05DF|\u05D1\u05E8\u05DE\u05D4 \u05D4\u05D2\u05D1\u05D5\u05D4\u05D4|world-class|premium|expert|best-in-class|cutting-edge|state-of-the-art|top-tier|high-quality|excellent|outstanding|superior|advanced|comprehensive|professional|innovative|revolutionary|unique/gi;
+  const buzzwords =
+    /\u05DE\u05E7\u05E6\u05D5\u05E2\u05D9|\u05DE\u05E7\u05D9\u05E3|\u05D0\u05D9\u05DB\u05D5\u05EA\u05D9|\u05DE\u05E6\u05D5\u05D9\u05DF|\u05D9\u05D5\u05E6\u05D0 \u05D3\u05D5\u05E4\u05DF|\u05D1\u05E8\u05DE\u05D4 \u05D4\u05D2\u05D1\u05D5\u05D4\u05D4|world-class|premium|expert|best-in-class|cutting-edge|state-of-the-art|top-tier|high-quality|excellent|outstanding|superior|advanced|comprehensive|professional|innovative|revolutionary|unique/gi;
   const buzzMatches = text.match(buzzwords) || [];
-  const hasConcreteSpec = /\d+\s*(\u05DE\u05D9\u05DC\u05D9\u05DD|\u05E9\u05D5\u05E8\u05D5\u05EA|\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA|words|lines|items|points|bullets|sentences)/i.test(text);
+  const hasConcreteSpec =
+    /\d+\s*(\u05DE\u05D9\u05DC\u05D9\u05DD|\u05E9\u05D5\u05E8\u05D5\u05EA|\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA|words|lines|items|points|bullets|sentences)/i.test(
+      text,
+    );
   if (buzzMatches.length >= 3 && !hasConcreteSpec) {
     total -= 5;
-    tips.push('\u05D9\u05D5\u05EA\u05E8 \u05DE\u05D3\u05D9 \u05DE\u05D9\u05DC\u05D5\u05EA \u05DB\u05DC\u05DC\u05D9\u05D5\u05EA — \u05D4\u05D7\u05DC\u05E3 \u05D1\u05DE\u05E1\u05E4\u05E8\u05D9\u05DD \u05E7\u05D5\u05E0\u05E7\u05E8\u05D8\u05D9\u05D9\u05DD');
+    tips.push(
+      "\u05D9\u05D5\u05EA\u05E8 \u05DE\u05D3\u05D9 \u05DE\u05D9\u05DC\u05D5\u05EA \u05DB\u05DC\u05DC\u05D9\u05D5\u05EA — \u05D4\u05D7\u05DC\u05E3 \u05D1\u05DE\u05E1\u05E4\u05E8\u05D9\u05DD \u05E7\u05D5\u05E0\u05E7\u05E8\u05D8\u05D9\u05D9\u05DD",
+    );
   }
 
   // 12. Contradiction detection (-3 per pair). Brevity vs high word count,
   //     no-table vs in-table, no-list vs list-of, concise vs long.
   const contradictionPairs = [
     [/(\u05E7\u05E6\u05E8|short|brief|concise)/i, /\b([5-9]\d{2,}|[1-9]\d{3,})\b/],
-    [/(\u05D1\u05DC\u05D9|\u05DC\u05DC\u05D0|without|no)\s*\u05D8\u05D1\u05DC\u05D4|no\s+table/i, /(\u05D1\u05D8\u05D1\u05DC\u05D4|in\s+a?\s*table|table\s+format)/i],
-    [/(\u05E7\u05E6\u05E8|concise|brief)/i, /(\u05D0\u05E8\u05D5\u05DA|\u05DE\u05E4\u05D5\u05E8\u05D8 \u05DE\u05D0\u05D5\u05D3|long|extensive|comprehensive)/i],
+    [
+      /(\u05D1\u05DC\u05D9|\u05DC\u05DC\u05D0|without|no)\s*\u05D8\u05D1\u05DC\u05D4|no\s+table/i,
+      /(\u05D1\u05D8\u05D1\u05DC\u05D4|in\s+a?\s*table|table\s+format)/i,
+    ],
+    [
+      /(\u05E7\u05E6\u05E8|concise|brief)/i,
+      /(\u05D0\u05E8\u05D5\u05DA|\u05DE\u05E4\u05D5\u05E8\u05D8 \u05DE\u05D0\u05D5\u05D3|long|extensive|comprehensive)/i,
+    ],
   ];
   let contradictions = 0;
   for (const [a, b] of contradictionPairs) {
@@ -324,7 +431,9 @@ function scorePrompt(text) {
   }
   if (contradictions > 0) {
     total -= contradictions * 3;
-    tips.push('\u05E1\u05EA\u05D9\u05E8\u05D4 \u05D1\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA (\u05DC\u05DE\u05E9\u05DC "\u05E7\u05E6\u05E8" + \u05DE\u05E1\u05E4\u05E8 \u05DE\u05D9\u05DC\u05D9\u05DD \u05D2\u05D1\u05D5\u05D4)');
+    tips.push(
+      '\u05E1\u05EA\u05D9\u05E8\u05D4 \u05D1\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA (\u05DC\u05DE\u05E9\u05DC "\u05E7\u05E6\u05E8" + \u05DE\u05E1\u05E4\u05E8 \u05DE\u05D9\u05DC\u05D9\u05DD \u05D2\u05D1\u05D5\u05D4)',
+    );
   }
 
   // 13. Specificity-per-task: if specificity already gave 3 pts for a
@@ -341,25 +450,56 @@ function scorePrompt(text) {
 
   // 14. Groundedness (up to 8 pts) — anti-hallucination instructions.
   let grounded = 0;
-  if (/\u05E6\u05D8\u05D8|\u05DE\u05E7\u05D5\u05E8|cite|source|reference|based\s+on/i.test(text)) grounded += 3;
-  if (/\u05D0\u05DD \u05DC\u05D0 \u05D1\u05D8\u05D5\u05D7|\u05D0\u05DC \u05EA\u05DE\u05E6\u05D9\u05D0|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|\u05D4\u05E1\u05EA\u05DE\u05DA \u05E2\u05DC/i.test(text)) grounded += 3;
-  if (/\u05E2\u05D5\u05D1\u05D3\u05D5\u05EA|fact|ground|\u05D0\u05DE\u05EA|verify/i.test(text)) grounded += 2;
+  if (/\u05E6\u05D8\u05D8|\u05DE\u05E7\u05D5\u05E8|cite|source|reference|based\s+on/i.test(text))
+    grounded += 3;
+  if (
+    /\u05D0\u05DD \u05DC\u05D0 \u05D1\u05D8\u05D5\u05D7|\u05D0\u05DC \u05EA\u05DE\u05E6\u05D9\u05D0|don'?t\s+fabricate|if\s+unsure|i\s+don'?t\s+know|\u05D4\u05E1\u05EA\u05DE\u05DA \u05E2\u05DC/i.test(
+      text,
+    )
+  )
+    grounded += 3;
+  if (/\u05E2\u05D5\u05D1\u05D3\u05D5\u05EA|fact|ground|\u05D0\u05DE\u05EA|verify/i.test(text))
+    grounded += 2;
   total += Math.min(8, grounded);
   if (grounded === 0 && wc > 15) {
-    tips.push('\u05D4\u05D5\u05E1\u05E3 \u05D4\u05D5\u05E8\u05D0\u05D5\u05EA \u05E0\u05D2\u05D3 \u05D4\u05D6\u05D9\u05D5\u05EA ("\u05D0\u05DD \u05D0\u05D9\u05E0\u05DA \u05D1\u05D8\u05D5\u05D7 - \u05E6\u05D9\u05D9\u05DF")');
+    tips.push(
+      '\u05D4\u05D5\u05E1\u05E3 \u05D4\u05D5\u05E8\u05D0\u05D5\u05EA \u05E0\u05D2\u05D3 \u05D4\u05D6\u05D9\u05D5\u05EA ("\u05D0\u05DD \u05D0\u05D9\u05E0\u05DA \u05D1\u05D8\u05D5\u05D7 - \u05E6\u05D9\u05D9\u05DF")',
+    );
   }
 
   // 15. Measurability (up to 6 pts) — numeric success criteria + bounds.
   let measure = 0;
-  if (/\d+\s*(\u05E4\u05E8\u05D9\u05D8\u05D9\u05DD|\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA|\u05E9\u05D5\u05E8\u05D5\u05EA|\u05E4\u05E1\u05E7\u05D0\u05D5\u05EA|bullets|items|sentences|paragraphs|points)/i.test(text)) measure += 3;
-  if (/\u05DE\u05E7\u05E1\u05D9\u05DE\u05D5\u05DD|\u05DC\u05DB\u05DC \u05D4\u05D9\u05D5\u05EA\u05E8|up\s+to|at\s+most|\u05EA\u05E7\u05E8\u05D4|ceiling|limit/i.test(text)) measure += 2;
-  if (/\u05DE\u05D9\u05E0\u05D9\u05DE\u05D5\u05DD|\u05DC\u05E4\u05D7\u05D5\u05EA|at\s+least|minimum/i.test(text)) measure += 1;
+  if (
+    /\d+\s*(\u05E4\u05E8\u05D9\u05D8\u05D9\u05DD|\u05E0\u05E7\u05D5\u05D3\u05D5\u05EA|\u05E9\u05D5\u05E8\u05D5\u05EA|\u05E4\u05E1\u05E7\u05D0\u05D5\u05EA|bullets|items|sentences|paragraphs|points)/i.test(
+      text,
+    )
+  )
+    measure += 3;
+  if (
+    /\u05DE\u05E7\u05E1\u05D9\u05DE\u05D5\u05DD|\u05DC\u05DB\u05DC \u05D4\u05D9\u05D5\u05EA\u05E8|up\s+to|at\s+most|\u05EA\u05E7\u05E8\u05D4|ceiling|limit/i.test(
+      text,
+    )
+  )
+    measure += 2;
+  if (
+    /\u05DE\u05D9\u05E0\u05D9\u05DE\u05D5\u05DD|\u05DC\u05E4\u05D7\u05D5\u05EA|at\s+least|minimum/i.test(
+      text,
+    )
+  )
+    measure += 1;
   total += Math.min(6, measure);
 
   // 16. Framework (up to 8 pts) — CO-STAR / RISEN / Hebrew structure.
-  const costarMatches = (text.match(/context|objective|style|tone|audience|response\s+format/gi) || []).length;
-  const risenMatches = (text.match(/role|instructions|steps|expectations|narrowing|end\s+goal/gi) || []).length;
-  const hebrewFramework = /\u05EA\u05E4\u05E7\u05D9\u05D3|\u05DE\u05E9\u05D9\u05DE\u05D4|\u05E9\u05DC\u05D1\u05D9\u05DD|\u05D4\u05D2\u05D1\u05DC\u05D5\u05EA|\u05D8\u05D5\u05DF|\u05E4\u05D5\u05E8\u05DE\u05D8 \u05E4\u05DC\u05D8|\u05E7\u05D4\u05DC \u05D9\u05E2\u05D3|\u05DE\u05D8\u05E8\u05D4/i.test(text);
+  const costarMatches = (
+    text.match(/context|objective|style|tone|audience|response\s+format/gi) || []
+  ).length;
+  const risenMatches = (
+    text.match(/role|instructions|steps|expectations|narrowing|end\s+goal/gi) || []
+  ).length;
+  const hebrewFramework =
+    /\u05EA\u05E4\u05E7\u05D9\u05D3|\u05DE\u05E9\u05D9\u05DE\u05D4|\u05E9\u05DC\u05D1\u05D9\u05DD|\u05D4\u05D2\u05D1\u05DC\u05D5\u05EA|\u05D8\u05D5\u05DF|\u05E4\u05D5\u05E8\u05DE\u05D8 \u05E4\u05DC\u05D8|\u05E7\u05D4\u05DC \u05D9\u05E2\u05D3|\u05DE\u05D8\u05E8\u05D4/i.test(
+      text,
+    );
   let framework = 0;
   if (costarMatches >= 4) framework = 8;
   else if (risenMatches >= 3) framework = 7;
@@ -368,10 +508,17 @@ function scorePrompt(text) {
   total += framework;
 
   // Hedge penalty (synced with web clarity dimension)
-  const hedgeCount = (text.match(/\u05D0\u05D5\u05DC\u05D9|\u05E0\u05E1\u05D4 \u05DC|\u05D9\u05D9\u05EA\u05DB\u05DF|\u05D0\u05E4\u05E9\u05E8|maybe|perhaps|try\s+to|somewhat|kind\s+of|sort\s+of/gi) || []).length;
+  const hedgeCount = (
+    text.match(
+      /\u05D0\u05D5\u05DC\u05D9|\u05E0\u05E1\u05D4 \u05DC|\u05D9\u05D9\u05EA\u05DB\u05DF|\u05D0\u05E4\u05E9\u05E8|maybe|perhaps|try\s+to|somewhat|kind\s+of|sort\s+of/gi,
+    ) || []
+  ).length;
   if (hedgeCount > 0) {
     total -= Math.min(6, hedgeCount * 2);
-    if (hedgeCount >= 2) tips.push('\u05D4\u05D5\u05E8\u05D0\u05D5\u05EA \u05DE\u05D4\u05D5\u05E1\u05E1\u05D5\u05EA ("\u05D0\u05D5\u05DC\u05D9", "\u05E0\u05E1\u05D4") \u05DE\u05D7\u05DC\u05D9\u05E9\u05D5\u05EA \u05D0\u05EA \u05D4\u05EA\u05D5\u05E6\u05D0\u05D4');
+    if (hedgeCount >= 2)
+      tips.push(
+        '\u05D4\u05D5\u05E8\u05D0\u05D5\u05EA \u05DE\u05D4\u05D5\u05E1\u05E1\u05D5\u05EA ("\u05D0\u05D5\u05DC\u05D9", "\u05E0\u05E1\u05D4") \u05DE\u05D7\u05DC\u05D9\u05E9\u05D5\u05EA \u05D0\u05EA \u05D4\u05EA\u05D5\u05E6\u05D0\u05D4',
+      );
   }
 
   // Max is 100 (extra dimensions push the raw total higher; cap to 100)
@@ -379,11 +526,22 @@ function scorePrompt(text) {
 
   // Label
   let label, color;
-  if (score <= 20) { label = '\u05D7\u05DC\u05E9'; color = '#ef4444'; }
-  else if (score <= 40) { label = '\u05D1\u05E1\u05D9\u05E1\u05D9'; color = '#f97316'; }
-  else if (score <= 60) { label = '\u05E1\u05D1\u05D9\u05E8'; color = '#eab308'; }
-  else if (score <= 80) { label = '\u05D8\u05D5\u05D1'; color = '#22c55e'; }
-  else { label = '\u05DE\u05E6\u05D5\u05D9\u05DF'; color = '#10b981'; }
+  if (score <= 20) {
+    label = "\u05D7\u05DC\u05E9";
+    color = "#ef4444";
+  } else if (score <= 40) {
+    label = "\u05D1\u05E1\u05D9\u05E1\u05D9";
+    color = "#f97316";
+  } else if (score <= 60) {
+    label = "\u05E1\u05D1\u05D9\u05E8";
+    color = "#eab308";
+  } else if (score <= 80) {
+    label = "\u05D8\u05D5\u05D1";
+    color = "#22c55e";
+  } else {
+    label = "\u05DE\u05E6\u05D5\u05D9\u05DF";
+    color = "#10b981";
+  }
 
   return { score, tips: tips.slice(0, 2), label, color };
 }
@@ -398,7 +556,7 @@ function updateScoreBar(text) {
       scoreFill.style.backgroundColor = result.color;
       scoreLabel.textContent = result.label;
       scoreLabel.style.color = result.color;
-      scoreTip.textContent = result.tips[0] || '';
+      scoreTip.textContent = result.tips[0] || "";
     } else {
       scoreBar.classList.add("hidden");
     }
@@ -413,25 +571,30 @@ function updateScoreBar(text) {
  * instead of resetting to STANDARD/Professional every time.
  */
 function updateLangToggle(langPref) {
-  const btn = $('lang-toggle-btn');
+  const btn = $("lang-toggle-btn");
   if (!btn) return;
-  const labels = { hebrew: 'HE', english: 'EN', auto: 'AUTO' };
-  btn.textContent = labels[langPref] || 'HE';
-  btn.classList.toggle('lang-en', langPref === 'english');
+  const labels = { hebrew: "HE", english: "EN", auto: "AUTO" };
+  btn.textContent = labels[langPref] || "HE";
+  btn.classList.toggle("lang-en", langPref === "english");
 }
 
 async function restoreLastUsedSettings() {
   try {
-    const { peroot_last_mode, peroot_last_tone, peroot_last_image_platform, peroot_last_video_platform, peroot_output_language } =
-      await chrome.storage.local.get([
-        "peroot_last_mode",
-        "peroot_last_tone",
-        "peroot_last_image_platform",
-        "peroot_last_video_platform",
-        "peroot_output_language",
-      ]);
+    const {
+      peroot_last_mode,
+      peroot_last_tone,
+      peroot_last_image_platform,
+      peroot_last_video_platform,
+      peroot_output_language,
+    } = await chrome.storage.local.get([
+      "peroot_last_mode",
+      "peroot_last_tone",
+      "peroot_last_image_platform",
+      "peroot_last_video_platform",
+      "peroot_output_language",
+    ]);
 
-    updateLangToggle(peroot_output_language || 'hebrew');
+    updateLangToggle(peroot_output_language || "hebrew");
 
     // Only restore Pro-gated modes if the user is actually Pro — otherwise
     // fall back to STANDARD. This avoids a locked-mode selected state.
@@ -439,7 +602,7 @@ async function restoreLastUsedSettings() {
       const isStandard = peroot_last_mode === "STANDARD";
       if (isStandard || isProOrAdmin()) {
         selectedMode = peroot_last_mode;
-        document.querySelectorAll(".mode-btn").forEach(b => {
+        document.querySelectorAll(".mode-btn").forEach((b) => {
           b.classList.toggle("active", b.dataset.mode === peroot_last_mode);
         });
         togglePlatformSelectors();
@@ -447,19 +610,19 @@ async function restoreLastUsedSettings() {
     }
     if (peroot_last_tone) {
       selectedTone = peroot_last_tone;
-      document.querySelectorAll(".tone-chip").forEach(c => {
+      document.querySelectorAll(".tone-chip").forEach((c) => {
         c.classList.toggle("active", c.dataset.tone === peroot_last_tone);
       });
     }
     if (peroot_last_image_platform) {
       selectedImagePlatform = peroot_last_image_platform;
-      document.querySelectorAll(".platform-chip[data-iplatform]").forEach(c => {
+      document.querySelectorAll(".platform-chip[data-iplatform]").forEach((c) => {
         c.classList.toggle("active", c.dataset.iplatform === peroot_last_image_platform);
       });
     }
     if (peroot_last_video_platform) {
       selectedVideoPlatform = peroot_last_video_platform;
-      document.querySelectorAll(".platform-chip[data-vplatform]").forEach(c => {
+      document.querySelectorAll(".platform-chip[data-vplatform]").forEach((c) => {
         c.classList.toggle("active", c.dataset.vplatform === peroot_last_video_platform);
       });
     }
@@ -494,12 +657,14 @@ async function applyThemePreference() {
   try {
     const store = chrome.storage.sync || chrome.storage.local;
     const { peroot_theme_pref } = await new Promise((resolve) =>
-      store.get(["peroot_theme_pref"], resolve)
+      store.get(["peroot_theme_pref"], resolve),
     );
     if (peroot_theme_pref === "light" || peroot_theme_pref === "dark") {
       document.documentElement.setAttribute("data-peroot-theme", peroot_theme_pref);
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 // Fire-and-forget at module load for earliest possible theme application.
 applyThemePreference();
@@ -650,7 +815,9 @@ try {
     const v = chrome.runtime.getManifest().version;
     versionEl.textContent = `v${v}`;
   }
-} catch { /* ignore */ }
+} catch {
+  /* ignore */
+}
 
 function updateTargetModelBadge(model) {
   const el = $("target-model-badge");
@@ -724,12 +891,14 @@ function onLoginSuccess() {
   detectSelectedText();
   // Eagerly detect target model so the user sees which LLM UI we're tuned
   // for before they even hit Enhance.
-  detectTargetModel().then((m) => {
-    detectedTargetModel = m;
-    updateTargetModelBadge(m);
-    // Show mode suggestion after credits/tier are loaded (300ms after restoreLastUsedSettings)
-    setTimeout(() => maybeShowModeSuggestion(m), 400);
-  }).catch(() => {});
+  detectTargetModel()
+    .then((m) => {
+      detectedTargetModel = m;
+      updateTargetModelBadge(m);
+      // Show mode suggestion after credits/tier are loaded (300ms after restoreLastUsedSettings)
+      setTimeout(() => maybeShowModeSuggestion(m), 400);
+    })
+    .catch(() => {});
   // First-run onboarding — show once after the first successful login.
   maybeShowFirstRunOnboarding();
 }
@@ -771,7 +940,9 @@ async function maybeShowFirstRunOnboarding() {
       chrome.runtime.openOptionsPage();
       dismiss();
     });
-  } catch { /* ignore — non-critical */ }
+  } catch {
+    /* ignore — non-critical */
+  }
 }
 
 /**
@@ -780,43 +951,43 @@ async function maybeShowFirstRunOnboarding() {
  * Auto-dismisses after 6 seconds.
  */
 function maybeShowModeSuggestion(targetModel) {
-  const existing = document.getElementById('mode-suggestion-banner');
+  const existing = document.getElementById("mode-suggestion-banner");
   if (existing) existing.remove();
 
   // Map platform → suggested mode and label
   const suggestions = {
-    perplexity: { mode: 'DEEP_RESEARCH', label: 'מזהה Perplexity — נסה מצב מחקר מעמיק' },
+    perplexity: { mode: "DEEP_RESEARCH", label: "מזהה Perplexity — נסה מצב מחקר מעמיק" },
   };
 
   const suggestion = suggestions[targetModel];
   if (!suggestion) return;
   // Only suggest if the user is on the default STANDARD mode and is Pro
-  if (selectedMode !== 'STANDARD') return;
+  if (selectedMode !== "STANDARD") return;
   if (!isProOrAdmin()) return;
 
-  const banner = document.createElement('div');
-  banner.id = 'mode-suggestion-banner';
-  banner.className = 'mode-suggestion-banner';
+  const banner = document.createElement("div");
+  banner.id = "mode-suggestion-banner";
+  banner.className = "mode-suggestion-banner";
   banner.innerHTML = `
     <span>${suggestion.label}</span>
     <button id="mode-suggestion-apply" title="החל מצב">✦</button>
     <button id="mode-suggestion-dismiss" title="סגור">✕</button>
   `;
 
-  const modeSelector = document.getElementById('mode-selector');
+  const modeSelector = document.getElementById("mode-selector");
   modeSelector?.after(banner);
 
   const dismiss = () => banner.remove();
 
-  banner.querySelector('#mode-suggestion-apply').addEventListener('click', () => {
+  banner.querySelector("#mode-suggestion-apply").addEventListener("click", () => {
     // Activate the suggested mode button
     const modeBtn = document.querySelector(`.mode-btn[data-mode="${suggestion.mode}"]`);
-    if (modeBtn && !modeBtn.classList.contains('locked')) {
+    if (modeBtn && !modeBtn.classList.contains("locked")) {
       modeBtn.click();
     }
     dismiss();
   });
-  banner.querySelector('#mode-suggestion-dismiss').addEventListener('click', dismiss);
+  banner.querySelector("#mode-suggestion-dismiss").addEventListener("click", dismiss);
 
   // Auto-dismiss after 6 seconds
   setTimeout(dismiss, 6000);
@@ -845,36 +1016,34 @@ function parseGeniusQuestions(raw) {
  * Each question shows example answers — clicking one fires a refinement.
  */
 function showRefinementQuestions(questions) {
-  const section = $('refinement-section');
-  const container = $('refinement-questions');
+  const section = $("refinement-section");
+  const container = $("refinement-questions");
   if (!section || !container) return;
 
-  container.innerHTML = '';
+  container.innerHTML = "";
 
   if (!questions || questions.length === 0) {
-    section.classList.add('hidden');
+    section.classList.add("hidden");
     return;
   }
 
-  const top = [...questions]
-    .sort((a, b) => (b.priority || 0) - (a.priority || 0))
-    .slice(0, 3);
+  const top = [...questions].sort((a, b) => (b.priority || 0) - (a.priority || 0)).slice(0, 3);
 
   top.forEach((q) => {
-    const item = document.createElement('div');
-    item.className = 'refinement-question';
+    const item = document.createElement("div");
+    item.className = "refinement-question";
 
-    const qRow = document.createElement('div');
-    qRow.className = 'refinement-q-row';
+    const qRow = document.createElement("div");
+    qRow.className = "refinement-q-row";
 
-    const qText = document.createElement('span');
-    qText.className = 'refinement-q-text';
-    qText.textContent = q.question || '';
+    const qText = document.createElement("span");
+    qText.className = "refinement-q-text";
+    qText.textContent = q.question || "";
     qRow.appendChild(qText);
 
     if (q.impactEstimate) {
-      const badge = document.createElement('span');
-      badge.className = 'refinement-impact';
+      const badge = document.createElement("span");
+      badge.className = "refinement-impact";
       badge.textContent = q.impactEstimate;
       qRow.appendChild(badge);
     }
@@ -883,13 +1052,15 @@ function showRefinementQuestions(questions) {
 
     const examples = (q.examples || []).slice(0, 3);
     if (examples.length > 0) {
-      const chips = document.createElement('div');
-      chips.className = 'refinement-examples';
+      const chips = document.createElement("div");
+      chips.className = "refinement-examples";
       examples.forEach((example) => {
-        const chip = document.createElement('button');
-        chip.className = 'refinement-chip';
+        const chip = document.createElement("button");
+        chip.className = "refinement-chip";
         chip.textContent = example;
-        chip.addEventListener('click', () => refinePrompt(q.question, example, String(q.id || q.question.slice(0, 40))));
+        chip.addEventListener("click", () =>
+          refinePrompt(q.question, example, String(q.id || q.question.slice(0, 40))),
+        );
         chips.appendChild(chip);
       });
       item.appendChild(chips);
@@ -898,7 +1069,7 @@ function showRefinementQuestions(questions) {
     container.appendChild(item);
   });
 
-  section.classList.remove('hidden');
+  section.classList.remove("hidden");
 }
 
 /**
@@ -908,8 +1079,8 @@ function showRefinementQuestions(questions) {
 async function refinePrompt(question, answer, questionKey) {
   if (isEnhancing || !lastEnhanced) return;
 
-  $('refinement-section')?.classList.add('hidden');
-  $('feedback-row')?.classList.add('hidden');
+  $("refinement-section")?.classList.add("hidden");
+  $("feedback-row")?.classList.add("hidden");
   hideError();
   resultText.classList.add("streaming");
   setLoading(true);
@@ -924,32 +1095,42 @@ async function refinePrompt(question, answer, questionKey) {
   }, 100);
 
   try {
-    const stored = await new Promise(r =>
-      chrome.storage.local.get(['peroot_last_tone', 'peroot_last_mode', 'peroot_output_language'], r)
+    const stored = await new Promise((r) =>
+      chrome.storage.local.get(
+        ["peroot_last_tone", "peroot_last_mode", "peroot_output_language"],
+        r,
+      ),
     );
     const tone = stored.peroot_last_tone || selectedTone;
     const mode = stored.peroot_last_mode || selectedMode;
-    const outputLang = resolveOutputLanguage(stored.peroot_output_language || 'hebrew', promptInput.value || lastOriginalForFeedback);
+    const outputLang = resolveOutputLanguage(
+      stored.peroot_output_language || "hebrew",
+      promptInput.value || lastOriginalForFeedback,
+    );
 
     const refinementInstruction = `שאלה: ${question}\nתשובה: ${answer}`;
     const answers = { [questionKey || question.slice(0, 50)]: answer };
 
     const headers = await getAuthHeaders({ "Content-Type": "application/json" });
-    const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        prompt: promptInput.value || lastOriginalForFeedback,
-        tone,
-        category: "כללי",
-        capability_mode: mode,
-        target_model: detectedTargetModel,
-        previousResult: lastEnhanced,
-        refinementInstruction,
-        answers,
-        ...(outputLang === 'english' && { output_language: 'english' }),
-      }),
-    }, 90000);
+    const res = await fetchWithTimeout(
+      `${API_BASE}/api/enhance`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          prompt: promptInput.value || lastOriginalForFeedback,
+          tone,
+          category: "כללי",
+          capability_mode: mode,
+          target_model: detectedTargetModel,
+          previousResult: lastEnhanced,
+          refinementInstruction,
+          answers,
+          ...(outputLang === "english" && { output_language: "english" }),
+        }),
+      },
+      90000,
+    );
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -963,11 +1144,12 @@ async function refinePrompt(question, answer, questionKey) {
     const decoder = new TextDecoder();
     let fullText = "";
 
-    const cleanDisplay = (raw) => raw
-      .split("[GENIUS_QUESTIONS]")[0]
-      .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
-      .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
-      .trim();
+    const cleanDisplay = (raw) =>
+      raw
+        .split("[GENIUS_QUESTIONS]")[0]
+        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
+        .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
+        .trim();
 
     resultSection.classList.remove("hidden");
 
@@ -983,19 +1165,27 @@ async function refinePrompt(question, answer, questionKey) {
     lastEnhanced = cleanDisplay(fullText);
 
     // Show feedback row for new result
-    const feedbackRow = $('feedback-row');
+    const feedbackRow = $("feedback-row");
     if (feedbackRow) {
-      feedbackRow.classList.remove('hidden');
-      const upBtn = $('feedback-up-btn');
-      const downBtn = $('feedback-down-btn');
-      if (upBtn) { upBtn.disabled = false; upBtn.classList.remove('voted-up', 'voted-down'); }
-      if (downBtn) { downBtn.disabled = false; downBtn.classList.remove('voted-up', 'voted-down'); }
+      feedbackRow.classList.remove("hidden");
+      const upBtn = $("feedback-up-btn");
+      const downBtn = $("feedback-down-btn");
+      if (upBtn) {
+        upBtn.disabled = false;
+        upBtn.classList.remove("voted-up", "voted-down");
+      }
+      if (downBtn) {
+        downBtn.disabled = false;
+        downBtn.classList.remove("voted-up", "voted-down");
+      }
     }
 
     // Parse new questions from refined result
     showRefinementQuestions(parseGeniusQuestions(fullText));
 
-    try { await navigator.clipboard.writeText(lastEnhanced); } catch {}
+    try {
+      await navigator.clipboard.writeText(lastEnhanced);
+    } catch {}
     fetchCredits();
   } catch (err) {
     if (err?.name === "AbortError") showError("הבקשה נתקעה יותר מדי זמן. נסה שוב.");
@@ -1012,19 +1202,19 @@ async function refinePrompt(question, answer, questionKey) {
  * One-shot: disables both buttons after first vote.
  */
 async function submitFeedback(rating) {
-  const upBtn = $('feedback-up-btn');
-  const downBtn = $('feedback-down-btn');
+  const upBtn = $("feedback-up-btn");
+  const downBtn = $("feedback-down-btn");
   if (!upBtn || !downBtn) return;
 
   upBtn.disabled = true;
   downBtn.disabled = true;
-  upBtn.classList.toggle('voted-up', rating > 0);
-  downBtn.classList.toggle('voted-down', rating < 0);
+  upBtn.classList.toggle("voted-up", rating > 0);
+  downBtn.classList.toggle("voted-down", rating < 0);
 
   try {
-    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
+    const headers = await getAuthHeaders({ "Content-Type": "application/json" });
     await fetch(`${API_BASE}/api/feedback`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify({
         rating,
@@ -1109,15 +1299,18 @@ async function doEnhance() {
   hideError();
   resultSection.classList.add("hidden");
   scoreBar.classList.add("hidden");
-  $('feedback-row')?.classList.add('hidden');
-  $('refinement-section')?.classList.add('hidden');
+  $("feedback-row")?.classList.add("hidden");
+  $("refinement-section")?.classList.add("hidden");
   setLoading(true);
 
   // Phase-based loading messages
   const phases = [
-    { text: '\u2726 \u05DE\u05E0\u05EA\u05D7 \u05D0\u05EA \u05D4\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8...', delay: 0 },
-    { text: '\u25C8 \u05DE\u05E9\u05D3\u05E8\u05D2 \u05E2\u05DD AI...', delay: 2500 },
-    { text: '\u2605 \u05DB\u05DE\u05E2\u05D8 \u05DE\u05D5\u05DB\u05DF...', delay: 5000 },
+    {
+      text: "\u2726 \u05DE\u05E0\u05EA\u05D7 \u05D0\u05EA \u05D4\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8...",
+      delay: 0,
+    },
+    { text: "\u25C8 \u05DE\u05E9\u05D3\u05E8\u05D2 \u05E2\u05DD AI...", delay: 2500 },
+    { text: "\u2605 \u05DB\u05DE\u05E2\u05D8 \u05DE\u05D5\u05DB\u05DF...", delay: 5000 },
   ];
   let phaseInterval = null;
   let phaseIndex = 0;
@@ -1156,27 +1349,32 @@ async function doEnhance() {
     }
 
     // Read output language preference and resolve against the actual input text
-    const { peroot_output_language } = await new Promise(r =>
-      chrome.storage.local.get(['peroot_output_language'], r)
+    const { peroot_output_language } = await new Promise((r) =>
+      chrome.storage.local.get(["peroot_output_language"], r),
     );
-    const outputLang = resolveOutputLanguage(peroot_output_language || 'hebrew', text);
+    const outputLang = resolveOutputLanguage(peroot_output_language || "hebrew", text);
 
     PerootPopupTargetModel.hideScoreGateHint();
-    const modelProfileSlug = PerootPopupTargetModel.resolveSlugForRequest(PerootPopupTargetModelState);
+    const modelProfileSlug = PerootPopupTargetModel.resolveSlugForRequest(
+      PerootPopupTargetModelState,
+    );
 
     try {
-      chrome.runtime.sendMessage({
-        type: "API_FETCH",
-        path: "/api/extension-telemetry",
-        method: "POST",
-        body: {
-          event: "popup_enhance",
-          target_model: modelProfileSlug || null,
-          site: PerootPopupTargetModelState?.host || null,
-          ext_version: chrome.runtime.getManifest().version,
-          ts: Date.now(),
+      chrome.runtime.sendMessage(
+        {
+          type: "API_FETCH",
+          path: "/api/extension-telemetry",
+          method: "POST",
+          body: {
+            event: "popup_enhance",
+            target_model: modelProfileSlug || null,
+            site: PerootPopupTargetModelState?.host || null,
+            ext_version: chrome.runtime.getManifest().version,
+            ts: Date.now(),
+          },
         },
-      });
+        () => void chrome.runtime.lastError,
+      );
     } catch {}
 
     const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
@@ -1189,33 +1387,40 @@ async function doEnhance() {
         capability_mode: selectedMode,
         target_model: detectedTargetModel,
         ...(modelProfileSlug && { model_profile_slug: modelProfileSlug }),
-        ...(outputLang === 'english' && { output_language: 'english' }),
-        ...(selectedMode === "IMAGE_GENERATION" && { mode_params: { image_platform: selectedImagePlatform } }),
-        ...(selectedMode === "VIDEO_GENERATION" && { mode_params: { video_platform: selectedVideoPlatform } }),
+        ...(outputLang === "english" && { output_language: "english" }),
+        ...(selectedMode === "IMAGE_GENERATION" && {
+          mode_params: { image_platform: selectedImagePlatform },
+        }),
+        ...(selectedMode === "VIDEO_GENERATION" && {
+          mode_params: { video_platform: selectedVideoPlatform },
+        }),
       }),
     });
 
     if (res.headers.get("X-Peroot-Cache") === "score-gate") {
       PerootPopupTargetModel.showScoreGateHint();
       try {
-        chrome.runtime.sendMessage({
-          type: "API_FETCH",
-          path: "/api/extension-telemetry",
-          method: "POST",
-          body: {
-            event: "score_gate_hit",
-            target_model: modelProfileSlug || null,
-            site: PerootPopupTargetModelState?.host || null,
-            ext_version: chrome.runtime.getManifest().version,
-            ts: Date.now(),
+        chrome.runtime.sendMessage(
+          {
+            type: "API_FETCH",
+            path: "/api/extension-telemetry",
+            method: "POST",
+            body: {
+              event: "score_gate_hit",
+              target_model: modelProfileSlug || null,
+              site: PerootPopupTargetModelState?.host || null,
+              ext_version: chrome.runtime.getManifest().version,
+              ts: Date.now(),
+            },
           },
-        });
+          () => void chrome.runtime.lastError,
+        );
       } catch {}
     }
 
     if (!res.ok) {
       clearInterval(phaseInterval);
-      enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+      enhanceLabel.textContent = "\u05E9\u05D3\u05E8\u05D2";
       const err = await res.json().catch(() => ({}));
       resultSection.classList.add("hidden");
       if (res.status === 403) showError(err.error || "אין מספיק קרדיטים");
@@ -1238,8 +1443,7 @@ async function doEnhance() {
         }
         enhanceRetried = false;
         showLoginScreen("token_expired");
-      }
-      else showError(err.error || "שגיאה בשדרוג");
+      } else showError(err.error || "שגיאה בשדרוג");
       return;
     }
 
@@ -1252,21 +1456,24 @@ async function doEnhance() {
     // instead of relying on the greedy [GENIUS_QUESTIONS] split — the
     // model can emit that marker inside a string value, which used to
     // destroy valid JSON.
-    const isJsonMode = selectedMode === "IMAGE_GENERATION" &&
+    const isJsonMode =
+      selectedMode === "IMAGE_GENERATION" &&
       (selectedImagePlatform === "stable-diffusion" || selectedImagePlatform === "nanobanana");
 
     const cleanDisplay = (raw) => {
       if (isJsonMode) return extractJSONFromStream(raw);
-      return raw
-        .split("[GENIUS_QUESTIONS]")[0]
-        .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
-        // CRITICAL: strip the <internal_quality_check> self-review block
-        // that the engine injects for the model to verify its own output
-        // against platform-specific criteria. Without this strip the
-        // user sees the raw XML block leaking into the Copy action and
-        // into the displayed result. ai-chat-injector.js does the same.
-        .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
-        .trim();
+      return (
+        raw
+          .split("[GENIUS_QUESTIONS]")[0]
+          .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/g, "")
+          // CRITICAL: strip the <internal_quality_check> self-review block
+          // that the engine injects for the model to verify its own output
+          // against platform-specific criteria. Without this strip the
+          // user sees the raw XML block leaking into the Copy action and
+          // into the displayed result. ai-chat-injector.js does the same.
+          .replace(/<internal_quality_check[\s\S]*?<\/internal_quality_check>/g, "")
+          .trim()
+      );
     };
 
     while (true) {
@@ -1284,27 +1491,33 @@ async function doEnhance() {
     enhanceRetried = false; // Reset retry flag on success
 
     clearInterval(phaseInterval);
-    enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+    enhanceLabel.textContent = "\u05E9\u05D3\u05E8\u05D2";
 
     // Parse and surface GENIUS_QUESTIONS for one-click iterative refinement
     showRefinementQuestions(parseGeniusQuestions(fullText));
 
     // Show feedback row (reset state for this new enhancement)
-    const feedbackRow = $('feedback-row');
-    const upBtn = $('feedback-up-btn');
-    const downBtn = $('feedback-down-btn');
+    const feedbackRow = $("feedback-row");
+    const upBtn = $("feedback-up-btn");
+    const downBtn = $("feedback-down-btn");
     if (feedbackRow) {
-      feedbackRow.classList.remove('hidden');
-      if (upBtn) { upBtn.disabled = false; upBtn.classList.remove('voted-up', 'voted-down'); }
-      if (downBtn) { downBtn.disabled = false; downBtn.classList.remove('voted-up', 'voted-down'); }
+      feedbackRow.classList.remove("hidden");
+      if (upBtn) {
+        upBtn.disabled = false;
+        upBtn.classList.remove("voted-up", "voted-down");
+      }
+      if (downBtn) {
+        downBtn.disabled = false;
+        downBtn.classList.remove("voted-up", "voted-down");
+      }
     }
 
     // Score comparison flash
     const beforeScore = scorePrompt(text);
     const afterScore = scorePrompt(lastEnhanced);
     if (afterScore.score > beforeScore.score) {
-      const scoreFlash = document.createElement('div');
-      scoreFlash.className = 'score-flash';
+      const scoreFlash = document.createElement("div");
+      scoreFlash.className = "score-flash";
       scoreFlash.innerHTML = `<span class="score-before">${beforeScore.score}%</span> \u2192 <span class="score-after">${afterScore.score}%</span>`;
       resultSection.prepend(scoreFlash);
       setTimeout(() => scoreFlash.remove(), 4000);
@@ -1324,7 +1537,7 @@ async function doEnhance() {
     fetchCredits(); // refresh credits after use
   } catch (err) {
     clearInterval(phaseInterval);
-    enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+    enhanceLabel.textContent = "\u05E9\u05D3\u05E8\u05D2";
     resultSection.classList.add("hidden");
     // Surface the real failure instead of a generic "network error" —
     // AbortError (timeout), TypeError (DNS), and named server errors
@@ -1352,7 +1565,7 @@ function setLoading(on) {
     enhanceSpinner.classList.remove("hidden");
   } else {
     // When done, show label (reset to default text), hide spinner
-    enhanceLabel.textContent = '\u05E9\u05D3\u05E8\u05D2';
+    enhanceLabel.textContent = "\u05E9\u05D3\u05E8\u05D2";
     enhanceLabel.classList.remove("hidden");
     enhanceSpinner.classList.add("hidden");
   }
@@ -1381,7 +1594,7 @@ insertBtn.addEventListener("click", async () => {
     // Inject content script on-demand, then insert text
     chrome.runtime.sendMessage(
       { type: "INJECT_AND_INSERT", tabId: tab.id, text: lastEnhanced },
-      () => flash(insertBtn, "הוכנס!")
+      () => flash(insertBtn, "הוכנס!"),
     );
   }
 });
@@ -1399,7 +1612,10 @@ function flash(btn, msg) {
   const orig = btn.textContent;
   btn.textContent = msg;
   btn.classList.add("success");
-  setTimeout(() => { btn.textContent = orig; btn.classList.remove("success"); }, 1200);
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.classList.remove("success");
+  }, 1200);
 }
 
 // ═══ SYNC TO WEBSITE ═══
@@ -1456,8 +1672,12 @@ async function loadFavorites() {
     loading.classList.add("hidden");
 
     if (!res.ok) {
-      if (res.status === 401) { showLoginScreen("token_expired"); return; }
-      empty.querySelector(".empty-title").textContent = "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05D8\u05E2\u05D9\u05E0\u05D4";
+      if (res.status === 401) {
+        showLoginScreen("token_expired");
+        return;
+      }
+      empty.querySelector(".empty-title").textContent =
+        "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05D8\u05E2\u05D9\u05E0\u05D4";
       empty.classList.remove("hidden");
       return;
     }
@@ -1491,7 +1711,10 @@ async function loadHistoryTab() {
     loading.classList.add("hidden");
 
     if (!res.ok) {
-      if (res.status === 401) { showLoginScreen("token_expired"); return; }
+      if (res.status === 401) {
+        showLoginScreen("token_expired");
+        return;
+      }
       empty.classList.remove("hidden");
       return;
     }
@@ -1524,7 +1747,11 @@ function createHistoryCard(item) {
 
   const title = document.createElement("span");
   title.className = "prompt-card-title";
-  title.textContent = item.title || (item.prompt ? item.prompt.substring(0, 50) : "\u05DC\u05DC\u05D0 \u05DB\u05D5\u05EA\u05E8\u05EA");
+  title.textContent =
+    item.title ||
+    (item.prompt
+      ? item.prompt.substring(0, 50)
+      : "\u05DC\u05DC\u05D0 \u05DB\u05D5\u05EA\u05E8\u05EA");
 
   const time = document.createElement("span");
   time.className = "prompt-card-cat";
@@ -1574,22 +1801,26 @@ function createHistoryCard(item) {
 function detectSelectedText() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]?.id) {
-      chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        func: () => window.getSelection()?.toString()?.trim() || '',
-      }).then(results => {
-        const selectedText = results?.[0]?.result;
-        if (selectedText && selectedText.length > 3) {
-          promptInput.value = selectedText;
-          // Show indicator
-          const badge = document.createElement('div');
-          badge.className = 'selection-badge';
-          badge.textContent = '\u05D8\u05E7\u05E1\u05D8 \u05DE\u05E1\u05D5\u05DE\u05DF \u05D6\u05D5\u05D4\u05D4';
-          document.querySelector('.enhance-input-container')?.prepend(badge);
-          updateCharCount();
-          updateScoreBar(selectedText);
-        }
-      }).catch(() => {}); // Silently fail if no permission
+      chrome.scripting
+        .executeScript({
+          target: { tabId: tabs[0].id },
+          func: () => window.getSelection()?.toString()?.trim() || "",
+        })
+        .then((results) => {
+          const selectedText = results?.[0]?.result;
+          if (selectedText && selectedText.length > 3) {
+            promptInput.value = selectedText;
+            // Show indicator
+            const badge = document.createElement("div");
+            badge.className = "selection-badge";
+            badge.textContent =
+              "\u05D8\u05E7\u05E1\u05D8 \u05DE\u05E1\u05D5\u05DE\u05DF \u05D6\u05D5\u05D4\u05D4";
+            document.querySelector(".enhance-input-container")?.prepend(badge);
+            updateCharCount();
+            updateScoreBar(selectedText);
+          }
+        })
+        .catch(() => {}); // Silently fail if no permission
     }
   });
 }
@@ -1642,7 +1873,7 @@ function createPromptCard(item) {
     if (tab?.id) {
       chrome.runtime.sendMessage(
         { type: "INJECT_AND_INSERT", tabId: tab.id, text: item.prompt },
-        () => flash(useBtn, "הוכנס!")
+        () => flash(useBtn, "הוכנס!"),
       );
     }
     // Also fill popup textarea as fallback
@@ -1703,33 +1934,35 @@ function timeAgo(ts) {
 
 // ═══ MODE SELECTOR ═══
 function isProOrAdmin() {
-  return userTier === 'pro' || userTier === 'premium' || userTier === 'admin';
+  return userTier === "pro" || userTier === "premium" || userTier === "admin";
 }
 
 function updateModeButtons() {
-  document.querySelectorAll('.mode-btn').forEach(btn => {
+  document.querySelectorAll(".mode-btn").forEach((btn) => {
     const mode = btn.dataset.mode;
-    const isLocked = mode !== 'STANDARD' && !isProOrAdmin();
-    btn.classList.toggle('locked', isLocked);
+    const isLocked = mode !== "STANDARD" && !isProOrAdmin();
+    btn.classList.toggle("locked", isLocked);
     // Show/hide lock badge
-    const lock = btn.querySelector('.mode-lock');
-    if (lock) lock.style.display = isLocked ? '' : 'none';
+    const lock = btn.querySelector(".mode-lock");
+    if (lock) lock.style.display = isLocked ? "" : "none";
   });
 }
 
-document.querySelectorAll('.mode-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+document.querySelectorAll(".mode-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
     const mode = btn.dataset.mode;
-    if (mode !== 'STANDARD' && !isProOrAdmin()) {
-      showError('שדרג ל-Pro כדי לפתוח מצבים מתקדמים');
+    if (mode !== "STANDARD" && !isProOrAdmin()) {
+      showError("שדרג ל-Pro כדי לפתוח מצבים מתקדמים");
       return;
     }
     selectedMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
     // Bounce animation
-    btn.classList.add('mode-switching');
-    btn.addEventListener('animationend', () => btn.classList.remove('mode-switching'), { once: true });
+    btn.classList.add("mode-switching");
+    btn.addEventListener("animationend", () => btn.classList.remove("mode-switching"), {
+      once: true,
+    });
     // Toggle platform selectors based on mode
     togglePlatformSelectors();
   });
@@ -1752,44 +1985,48 @@ function togglePlatformSelectors() {
   }
 }
 
-document.querySelectorAll('.platform-chip[data-iplatform]').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.platform-chip[data-iplatform]').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
+document.querySelectorAll(".platform-chip[data-iplatform]").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    document
+      .querySelectorAll(".platform-chip[data-iplatform]")
+      .forEach((c) => c.classList.remove("active"));
+    chip.classList.add("active");
     selectedImagePlatform = chip.dataset.iplatform;
   });
 });
 
-document.querySelectorAll('.platform-chip[data-vplatform]').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.platform-chip[data-vplatform]').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
+document.querySelectorAll(".platform-chip[data-vplatform]").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    document
+      .querySelectorAll(".platform-chip[data-vplatform]")
+      .forEach((c) => c.classList.remove("active"));
+    chip.classList.add("active");
     selectedVideoPlatform = chip.dataset.vplatform;
   });
 });
 
 // ═══ TONE CHIPS ═══
-document.querySelectorAll('.tone-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.tone-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
+document.querySelectorAll(".tone-chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".tone-chip").forEach((c) => c.classList.remove("active"));
+    chip.classList.add("active");
     selectedTone = chip.dataset.tone;
   });
 });
 
 // ═══ LANGUAGE TOGGLE ═══
-$('lang-toggle-btn')?.addEventListener('click', () => {
-  chrome.storage.local.get(['peroot_output_language'], ({ peroot_output_language }) => {
-    const cycle = { hebrew: 'english', english: 'auto', auto: 'hebrew' };
-    const next = cycle[peroot_output_language || 'hebrew'] || 'english';
+$("lang-toggle-btn")?.addEventListener("click", () => {
+  chrome.storage.local.get(["peroot_output_language"], ({ peroot_output_language }) => {
+    const cycle = { hebrew: "english", english: "auto", auto: "hebrew" };
+    const next = cycle[peroot_output_language || "hebrew"] || "english";
     chrome.storage.local.set({ peroot_output_language: next });
     updateLangToggle(next);
   });
 });
 
 // ═══ FEEDBACK ═══
-$('feedback-up-btn')?.addEventListener('click', () => submitFeedback(1));
-$('feedback-down-btn')?.addEventListener('click', () => submitFeedback(-1));
+$("feedback-up-btn")?.addEventListener("click", () => submitFeedback(1));
+$("feedback-down-btn")?.addEventListener("click", () => submitFeedback(-1));
 
 // ═══ SAVE TO LIBRARY ═══
 saveBtn.addEventListener("click", async () => {
@@ -1800,7 +2037,9 @@ saveBtn.addEventListener("click", async () => {
       method: "POST",
       headers,
       body: JSON.stringify({
-        title: promptInput.value.substring(0, 60) || "\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8 \u05DE\u05E9\u05D5\u05D3\u05E8\u05D2",
+        title:
+          promptInput.value.substring(0, 60) ||
+          "\u05E4\u05E8\u05D5\u05DE\u05E4\u05D8 \u05DE\u05E9\u05D5\u05D3\u05E8\u05D2",
         prompt: lastEnhanced,
         category: "\u05DB\u05DC\u05DC\u05D9",
         source: "extension",

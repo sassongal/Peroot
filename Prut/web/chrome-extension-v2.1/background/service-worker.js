@@ -25,7 +25,8 @@ async function bootstrapConfig() {
 
 const SITE_URL = "https://www.peroot.space";
 const SUPABASE_URL = "https://ravinxlujmlvxhgbjxti.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdmlueGx1am1sdnhoZ2JqeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMDYyMzQsImV4cCI6MjA4NDU4MjIzNH0.Mq-UzPZhFe6fM5J76BcQhS8YhaDxXyBH7hzNGk1T7Kk";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdmlueGx1am1sdnhoZ2JqeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMDYyMzQsImV4cCI6MjA4NDU4MjIzNH0.Mq-UzPZhFe6fM5J76BcQhS8YhaDxXyBH7hzNGk1T7Kk";
 
 // ─── Context Menu ───
 chrome.runtime.onInstalled.addListener(() => {
@@ -128,12 +129,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     (tab.url.startsWith("https://peroot.space") || tab.url.startsWith("https://www.peroot.space"))
   ) {
     // Inject auth-sync to pick up fresh token after login/navigation
-    chrome.scripting.executeScript({
-      target: { tabId },
-      files: ["content/auth-sync.js"],
-    }).catch(() => {
-      // Ignore errors (page might not be accessible)
-    });
+    chrome.scripting
+      .executeScript({
+        target: { tabId },
+        files: ["content/auth-sync.js"],
+      })
+      .catch(() => {
+        // Ignore errors (page might not be accessible)
+      });
   }
 });
 
@@ -157,7 +160,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (peroot_token) {
     try {
       const payload = JSON.parse(
-        atob(peroot_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+        atob(peroot_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
       );
       if (payload?.exp && payload.exp * 1000 > Date.now() + 10 * 60 * 1000) {
         // Token is still fresh, skip refresh
@@ -174,7 +177,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY,
+        apikey: SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({ refresh_token: peroot_refresh_token }),
     });
@@ -223,7 +226,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "API_FETCH") {
     (async () => {
       try {
-        const { peroot_token, peroot_api_key } = await chrome.storage.local.get(["peroot_token", "peroot_api_key"]);
+        const { peroot_token, peroot_api_key } = await chrome.storage.local.get([
+          "peroot_token",
+          "peroot_api_key",
+        ]);
         const token = peroot_api_key || peroot_token;
         const headers = { "Content-Type": "application/json" };
         if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -287,7 +293,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function forceAuthSync() {
   try {
     // Find any open peroot.space tab (with or without www)
-    const tabs = await chrome.tabs.query({ url: ["https://peroot.space/*", "https://www.peroot.space/*"] });
+    const tabs = await chrome.tabs.query({
+      url: ["https://peroot.space/*", "https://www.peroot.space/*"],
+    });
     if (tabs.length === 0) return null;
 
     // Ask the auth-sync content script (already injected) for a fresh token
@@ -295,19 +303,22 @@ async function forceAuthSync() {
       chrome.tabs.sendMessage(tabs[0].id, { type: "REQUEST_TOKEN_SYNC" }, (response) => {
         if (chrome.runtime.lastError || !response?.token) {
           // Content script not ready — try injecting it first, then retry
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            files: ["content/auth-sync.js"],
-          }).then(() => {
-            // Give it a moment to initialize, then ask again
-            setTimeout(() => {
-              chrome.tabs.sendMessage(tabs[0].id, { type: "REQUEST_TOKEN_SYNC" }, (r2) => {
-                const token = r2?.token || null;
-                if (token) chrome.storage.local.set({ peroot_token: token });
-                resolve(token);
-              });
-            }, 500);
-          }).catch(() => resolve(null));
+          chrome.scripting
+            .executeScript({
+              target: { tabId: tabs[0].id },
+              files: ["content/auth-sync.js"],
+            })
+            .then(() => {
+              // Give it a moment to initialize, then ask again
+              setTimeout(() => {
+                chrome.tabs.sendMessage(tabs[0].id, { type: "REQUEST_TOKEN_SYNC" }, (r2) => {
+                  const token = r2?.token || null;
+                  if (token) chrome.storage.local.set({ peroot_token: token });
+                  resolve(token);
+                });
+              }, 500);
+            })
+            .catch(() => resolve(null));
           return;
         }
         const token = response.token;

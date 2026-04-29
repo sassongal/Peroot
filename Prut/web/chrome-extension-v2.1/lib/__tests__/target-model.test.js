@@ -36,8 +36,8 @@ describe("resolveTargetModel", () => {
   });
 
   it("ignores empty-string override", () => {
-    expect(
-      resolveTargetModel({ hostname: "chatgpt.com", registry: REGISTRY, override: "" }),
-    ).toBe("gpt-5");
+    expect(resolveTargetModel({ hostname: "chatgpt.com", registry: REGISTRY, override: "" })).toBe(
+      "gpt-5",
+    );
   });
 });
