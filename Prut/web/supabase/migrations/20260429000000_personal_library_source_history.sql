@@ -16,13 +16,13 @@ CREATE INDEX IF NOT EXISTS personal_library_source_history_id_idx
 -- WHERE original_prompt IS NULL guard.
 WITH matches AS (
   SELECT DISTINCT ON (pl.id)
-    pl.id        AS pl_id,
-    h.id         AS history_id,
-    h.original   AS original_text
+    pl.id              AS pl_id,
+    h.id               AS history_id,
+    h.prompt           AS original_text
   FROM personal_library pl
   JOIN history h
     ON h.user_id = pl.user_id
-   AND h.enhanced = pl.prompt
+   AND h.enhanced_prompt = pl.prompt
   WHERE pl.original_prompt IS NULL
   ORDER BY pl.id, h.created_at DESC
 )
