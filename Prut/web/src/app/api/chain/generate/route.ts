@@ -168,7 +168,7 @@ export async function POST(req: Request) {
       system: CHAIN_BUILDER_SYSTEM_PROMPT,
       prompt: userPrompt,
       task: "chain", // Uses flash-first routing for cost efficiency
-      userTier: tier,
+      userTier: tier === "admin" ? "pro" : tier,
     });
 
     logger.info(`[chain/generate] Model: ${modelId}, response length: ${fullText.length}`);
