@@ -1,6 +1,19 @@
 "use client";
 
-import { Trash2, ArrowRight, Plus, Copy, Search, Filter, Clock, Pencil, Check, X } from "lucide-react";
+import {
+  Trash2,
+  ArrowRight,
+  Plus,
+  Copy,
+  Search,
+  Filter,
+  Clock,
+  Pencil,
+  Check,
+  X,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import { HistoryItem } from "@/hooks/useHistory";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { DateBadge } from "@/components/ui/DateBadge";
@@ -67,6 +80,14 @@ export function HistoryPanel({
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const startRename = (item: HistoryItem) => {
     setRenamingId(item.id);
@@ -96,12 +117,12 @@ export function HistoryPanel({
   }, []);
 
   const uniqueCategories = useMemo(() => {
-    const cats = new Set(history.map(item => item.category));
+    const cats = new Set(history.map((item) => item.category));
     return Array.from(cats);
   }, [history]);
 
   const filteredHistory = useMemo(() => {
-    return history.filter(item => {
+    return history.filter((item) => {
       const q = searchQuery.toLowerCase();
       const matchesSearch =
         item.original.toLowerCase().includes(q) ||
@@ -134,32 +155,34 @@ export function HistoryPanel({
         </div>
 
         <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-                <Filter className="absolute end-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-lg py-2 pe-9 ps-3 text-xs text-(--text-secondary) appearance-none focus:outline-none focus:border-amber-500/40 transition-all cursor-pointer"
-                    dir="rtl"
-                    aria-label="סינון לפי קטגוריה"
-                >
-                    <option value="all">כל הקטגוריות</option>
-                    {uniqueCategories.map(cat => (
-                        <option key={cat} value={cat}>{CATEGORY_LABELS[cat] ?? cat}</option>
-                    ))}
-                </select>
-            </div>
+          <div className="relative flex-1">
+            <Filter className="absolute end-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full bg-(--glass-bg) border border-(--glass-border) rounded-lg py-2 pe-9 ps-3 text-xs text-(--text-secondary) appearance-none focus:outline-none focus:border-amber-500/40 transition-all cursor-pointer"
+              dir="rtl"
+              aria-label="סינון לפי קטגוריה"
+            >
+              <option value="all">כל הקטגוריות</option>
+              {uniqueCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {CATEGORY_LABELS[cat] ?? cat}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {history.length > 0 && (
-                <button
-                    onClick={onClear}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-(--glass-border) text-xs text-(--text-muted) hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all font-medium cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                    title="נקה היסטוריה"
-                >
-                    <Trash2 className="w-3 h-3" />
-                    נקה
-                </button>
-            )}
+          {history.length > 0 && (
+            <button
+              onClick={onClear}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-(--glass-border) text-xs text-(--text-muted) hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all font-medium cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+              title="נקה היסטוריה"
+            >
+              <Trash2 className="w-3 h-3" />
+              נקה
+            </button>
+          )}
         </div>
       </div>
 
@@ -190,7 +213,10 @@ export function HistoryPanel({
 
         {/* 5.3 Rich empty state with CTA */}
         {isLoaded && history.length === 0 && (
-          <div className="flex flex-col items-center gap-4 text-center py-12 glass-card rounded-2xl px-8 animate-in fade-in duration-500" dir="rtl">
+          <div
+            className="flex flex-col items-center gap-4 text-center py-12 glass-card rounded-2xl px-8 animate-in fade-in duration-500"
+            dir="rtl"
+          >
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
               <Clock className="w-8 h-8 text-amber-500/50" />
             </div>
@@ -223,7 +249,7 @@ export function HistoryPanel({
               className={cn(
                 "rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-4 hover:bg-black/6 dark:hover:bg-white/5 transition-all border-s-2 cursor-pointer",
                 categoryColor,
-                isFirst && "border-black/15 dark:border-white/20 bg-black/3 dark:bg-white/3"
+                isFirst && "border-black/15 dark:border-white/20 bg-black/3 dark:bg-white/3",
               )}
               onClick={() => {
                 onBumpLastUsed?.(item.id);
@@ -232,15 +258,17 @@ export function HistoryPanel({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className={cn(
-                    "text-[10px] px-2 py-0.5 rounded-full border text-(--text-muted)",
-                    isFirst ? "border-amber-500/30 text-amber-600/80 dark:text-amber-400/80" : "border-(--glass-border)"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full border text-(--text-muted)",
+                      isFirst
+                        ? "border-amber-500/30 text-amber-600/80 dark:text-amber-400/80"
+                        : "border-(--glass-border)",
+                    )}
+                  >
                     {CATEGORY_LABELS[item.category] ?? item.category}
                   </span>
-                  {item.source && item.source !== "web" && (
-                    <SourceBadge source={item.source} />
-                  )}
+                  {item.source && item.source !== "web" && <SourceBadge source={item.source} />}
                 </div>
                 <span className="text-[10px] text-slate-500" suppressHydrationWarning>
                   {hasHydrated ? <DateBadge mode="compact" entity={item.entity} /> : "..."}
@@ -279,12 +307,18 @@ export function HistoryPanel({
               ) : (
                 item.title && (
                   <div className="mt-2 flex items-center gap-2 group/title">
-                    <p className="text-sm font-bold text-(--text-primary) flex-1 truncate" dir="rtl">
+                    <p
+                      className="text-sm font-bold text-(--text-primary) flex-1 truncate"
+                      dir="rtl"
+                    >
                       {item.title}
                     </p>
                     {onRenameTitle && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); startRename(item); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startRename(item);
+                        }}
                         className="opacity-0 group-hover/title:opacity-60 hover:opacity-100 transition-opacity p-1 rounded text-(--text-muted) hover:text-amber-400"
                         title="שנה שם"
                         aria-label="שנה שם פרומפט"
@@ -295,12 +329,47 @@ export function HistoryPanel({
                   </div>
                 )
               )}
-              <p className={cn("text-sm text-(--text-primary) leading-relaxed max-h-16 overflow-hidden", item.title ? "mt-1 text-xs text-(--text-muted)" : "mt-2")} dir="rtl">
+              <p
+                className={cn(
+                  "text-sm text-(--text-primary) leading-relaxed max-h-16 overflow-hidden",
+                  item.title ? "mt-1 text-xs text-(--text-muted)" : "mt-2",
+                )}
+                dir="rtl"
+              >
                 {item.original}
               </p>
-              <div className="mt-3 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                 <button
-                  onClick={() => { onBumpLastUsed?.(item.id); onRestore(item); }}
+                  onClick={() => toggleExpanded(item.id)}
+                  className="flex items-center gap-1 text-xs text-(--text-muted) hover:text-(--text-primary) transition-colors"
+                  dir="rtl"
+                  aria-expanded={expandedIds.has(item.id)}
+                >
+                  {expandedIds.has(item.id) ? (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  )}
+                  הצג פלט משודרג
+                </button>
+                {expandedIds.has(item.id) && (
+                  <div
+                    className="mt-2 me-2 text-xs text-(--text-secondary) leading-relaxed whitespace-pre-wrap border-s-2 border-(--glass-border) ps-3"
+                    dir="rtl"
+                  >
+                    {item.enhanced}
+                  </div>
+                )}
+              </div>
+              <div
+                className="mt-3 flex items-center gap-2 flex-wrap"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => {
+                    onBumpLastUsed?.(item.id);
+                    onRestore(item);
+                  }}
                   className="flex items-center gap-2 px-2.5 py-1 rounded-md accent-gradient text-black text-xs hover:shadow-[0_0_12px_rgba(245,158,11,0.2)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <ArrowRight className="w-3 h-3" />
@@ -314,7 +383,10 @@ export function HistoryPanel({
                   שמור לאישי
                 </button>
                 <button
-                  onClick={() => { onBumpLastUsed?.(item.id); onCopy(item.enhanced); }}
+                  onClick={() => {
+                    onBumpLastUsed?.(item.id);
+                    onCopy(item.enhanced);
+                  }}
                   className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
                 >
                   <Copy className="w-3 h-3" />
