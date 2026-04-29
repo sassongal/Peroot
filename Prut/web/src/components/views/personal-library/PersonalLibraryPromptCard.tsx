@@ -249,10 +249,25 @@ export function PersonalLibraryPromptCard({
           )}
         </button>
 
-        {/* Pin indicator */}
-        {prompt.is_pinned && (
-          <Pin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 fill-amber-400 shrink-0" />
-        )}
+        {/* Pin toggle — click to pin/unpin without opening the kebab menu */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePin(prompt.id);
+          }}
+          title={prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
+          aria-label={prompt.is_pinned ? "בטל הצמדה" : "הצמד"}
+          aria-pressed={!!prompt.is_pinned}
+          className={cn(
+            "shrink-0 p-1 rounded transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none cursor-pointer",
+            prompt.is_pinned
+              ? "text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
+              : "text-(--text-muted) opacity-40 hover:opacity-100 hover:text-amber-500",
+          )}
+        >
+          <Pin className={cn("w-3.5 h-3.5", prompt.is_pinned && "fill-amber-400")} />
+        </button>
 
         {/* Capability badge — hidden on mobile collapsed (shown in expanded meta row) */}
         <div className="hidden sm:block shrink-0" onClick={(e) => e.stopPropagation()}>
