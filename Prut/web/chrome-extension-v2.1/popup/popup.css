@@ -2104,3 +2104,43 @@ html[data-peroot-theme="light"] .result-text { color: #1c1c1e !important; }
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+.peroot-target-model-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-family: 'Alef', system-ui, sans-serif;
+  direction: rtl;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  margin: 4px 0;
+}
+.peroot-target-model-label { color: var(--peroot-fg-muted, #9ca3af); white-space: nowrap; }
+.peroot-target-model-select {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: inherit;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font: inherit;
+}
+.peroot-target-model-detected {
+  font-size: 11px;
+  color: var(--peroot-fg-muted, #9ca3af);
+  font-style: italic;
+}
+.peroot-score-gate-hint {
+  margin: 6px 0 8px;
+  padding: 6px 10px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #86efac;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Alef', system-ui, sans-serif;
+  direction: rtl;
+  text-align: center;
+}

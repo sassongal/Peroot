@@ -339,6 +339,21 @@
       </div>
     </div>
 
+    <!-- Sync -->
+    <div class="section">
+      <div class="section-title">סנכרון הגדרות שרת</div>
+      <div class="card">
+        <div class="option-row">
+          <div>
+            <div class="option-label">רענן הגדרות מהשרת</div>
+            <div class="option-desc">מושך את רישום הסלקטורים ופרופילי המודלים העדכניים</div>
+          </div>
+          <button id="peroot-refresh-config" class="btn-link" type="button">רענן עכשיו</button>
+        </div>
+        <div class="about-row" id="peroot-refresh-config-status" style="min-height:18px;"></div>
+      </div>
+    </div>
+
     <!-- About -->
     <div class="section">
       <div class="section-title">אודות</div>
@@ -454,6 +469,20 @@
     document.getElementById('inline-btn-toggle')?.addEventListener('change', (e) => {
       chrome.storage.local.set({ peroot_inline_btn: e.target.checked });
       showSaved();
+    });
+
+    // Refresh config from server
+    document.getElementById('peroot-refresh-config')?.addEventListener('click', () => {
+      const status = document.getElementById('peroot-refresh-config-status');
+      status.textContent = 'מרענן…';
+      chrome.runtime.sendMessage({ type: 'REFRESH_CONFIG' }, (resp) => {
+        if (chrome.runtime.lastError || !resp?.ok) {
+          status.textContent = 'שגיאה — נסה שוב';
+        } else {
+          status.textContent = '✓ עודכן מהשרת';
+          showSaved();
+        }
+      });
     });
   </script>
 </body>

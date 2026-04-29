@@ -6,6 +6,97 @@
 
 const API_BASE = "https://www.peroot.space";
 
+// ─── M3: Target-model dropdown + score-gate hint ───
+const PerootPopupTargetModel = (() => {
+  function getCfgFromBackground() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get("peroot.extension_config", (data) => {
+        resolve(data?.["peroot.extension_config"] || null);
+      });
+    });
+  }
+  function normalizeHost(h) {
+    return String(h || "").toLowerCase().replace(/^www\./, "");
+  }
+  async function getActiveTabHost() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    try {
+      return tab?.url ? new URL(tab.url).hostname : "";
+    } catch {
+      return "";
+    }
+  }
+  async function getOverride(host) {
+    const key = "peroot.target_model_override." + normalizeHost(host);
+    return new Promise((resolve) => {
+      chrome.storage.local.get(key, (data) => resolve(data?.[key] || null));
+    });
+  }
+  async function setOverride(host, slug) {
+    const key = "peroot.target_model_override." + normalizeHost(host);
+    return new Promise((resolve) => {
+      if (!slug) chrome.storage.local.remove(key, resolve);
+      else chrome.storage.local.set({ [key]: slug }, resolve);
+    });
+  }
+  function hostMatchedSlug(host, registry) {
+    const norm = normalizeHost(host);
+    if (!registry) return null;
+    for (const k of Object.keys(registry)) {
+      const hosts = (registry[k]?.hosts || []).map(normalizeHost);
+      if (hosts.includes(norm)) return registry[k]?.profile_slug || null;
+    }
+    return null;
+  }
+  async function init() {
+    const select = document.getElementById("peroot-target-model-select");
+    const detectedLabel = document.getElementById("peroot-target-model-detected");
+    if (!select) return null;
+    const cfg = await getCfgFromBackground();
+    const profiles = Array.isArray(cfg?.model_profiles) ? cfg.model_profiles : [];
+    for (const p of profiles) {
+      const opt = document.createElement("option");
+      opt.value = p.slug;
+      opt.textContent = p.display_name_he || p.displayNameHe || p.display_name || p.slug;
+      select.appendChild(opt);
+    }
+    const host = await getActiveTabHost();
+    const detected = hostMatchedSlug(host, cfg?.selectors);
+    const override = await getOverride(host);
+    select.value = override || "";
+    if (detected && detectedLabel) {
+      const detectedProfile = profiles.find((p) => p.slug === detected);
+      const label = detectedProfile?.display_name_he || detectedProfile?.display_name || detected;
+      detectedLabel.textContent = `(זיהוי: ${label})`;
+    } else if (detectedLabel) {
+      detectedLabel.textContent = "";
+    }
+    select.addEventListener("change", async () => {
+      await setOverride(host, select.value || null);
+    });
+    return { host, registry: cfg?.selectors || null, detected };
+  }
+  function resolveSlugForRequest(state) {
+    const select = document.getElementById("peroot-target-model-select");
+    const overrideValue = select?.value || null;
+    if (overrideValue) return overrideValue;
+    return state?.detected || null;
+  }
+  function showScoreGateHint() {
+    const el = document.getElementById("peroot-score-gate-hint");
+    if (el) el.hidden = false;
+  }
+  function hideScoreGateHint() {
+    const el = document.getElementById("peroot-score-gate-hint");
+    if (el) el.hidden = true;
+  }
+  return { init, resolveSlugForRequest, showScoreGateHint, hideScoreGateHint };
+})();
+let PerootPopupTargetModelState = null;
+document.addEventListener("DOMContentLoaded", async () => {
+  PerootPopupTargetModelState = await PerootPopupTargetModel.init();
+});
+
 // ─── DOM ───
 const $ = (id) => document.getElementById(id);
 const loginScreen = $("login-screen");
@@ -1070,6 +1161,9 @@ async function doEnhance() {
     );
     const outputLang = resolveOutputLanguage(peroot_output_language || 'hebrew', text);
 
+    PerootPopupTargetModel.hideScoreGateHint();
+    const modelProfileSlug = PerootPopupTargetModel.resolveSlugForRequest(PerootPopupTargetModelState);
+
     const res = await fetchWithTimeout(`${API_BASE}/api/enhance`, {
       method: "POST",
       headers,
@@ -1079,11 +1173,16 @@ async function doEnhance() {
         category: "\u05DB\u05DC\u05DC\u05D9",
         capability_mode: selectedMode,
         target_model: detectedTargetModel,
+        ...(modelProfileSlug && { model_profile_slug: modelProfileSlug }),
         ...(outputLang === 'english' && { output_language: 'english' }),
         ...(selectedMode === "IMAGE_GENERATION" && { mode_params: { image_platform: selectedImagePlatform } }),
         ...(selectedMode === "VIDEO_GENERATION" && { mode_params: { video_platform: selectedVideoPlatform } }),
       }),
     });
+
+    if (res.headers.get("X-Peroot-Cache") === "score-gate") {
+      PerootPopupTargetModel.showScoreGateHint();
+    }
 
     if (!res.ok) {
       clearInterval(phaseInterval);
