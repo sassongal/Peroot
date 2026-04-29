@@ -5,7 +5,10 @@ import {
   PromptEngine,
   TargetModel,
   InjectionStats,
+  ModelProfile,
+  ModelProfileSlug,
 } from "./types";
+import { getModelProfile } from "./model-profiles";
 import { CapabilityMode } from "../capability-mode";
 import { getRegistryInstructionBlock } from "../variable-utils";
 import { getIterationInstructions } from "./refinement/iteration-guidance";
@@ -63,6 +66,37 @@ export abstract class BaseEngine implements PromptEngine {
 
   get mode(): CapabilityMode {
     return this.config.mode;
+  }
+
+  /**
+   * Tail appended to the engine system prompt when a model profile is active.
+   * `null` when no profile has been applied for this run.
+   */
+  private _modelProfileTail: string | null = null;
+  private _modelProfileWeights: Record<string, number> = {};
+
+  /**
+   * Layer a model profile onto this engine instance for the current run.
+   * Graceful no-op when the profile is not found.
+   */
+  async applyModelProfile(slug: ModelProfileSlug | undefined): Promise<ModelProfile | null> {
+    if (!slug) return null;
+    const profile = await getModelProfile(slug);
+    if (!profile) return null;
+    this._modelProfileTail = profile.systemPromptHe;
+    this._modelProfileWeights = profile.dimensionWeights;
+    return profile;
+  }
+
+  /** Concatenates the engine's system prompt with the profile tail (if any). */
+  protected composeSystemPrompt(base: string): string {
+    if (!this._modelProfileTail) return base;
+    return `${base}\n\n---\n${this._modelProfileTail}`;
+  }
+
+  /** Merge of base scoring weights with model-profile overrides. */
+  protected getScoringWeights(base: Record<string, number>): Record<string, number> {
+    return { ...base, ...this._modelProfileWeights };
   }
 
   public extractVariables(template: string): string[] {
