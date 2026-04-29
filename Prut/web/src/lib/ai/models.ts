@@ -105,3 +105,11 @@ export function getModelsForTask(task: string, userTier?: "free" | "pro" | "gues
   void userTier;
   return TASK_ROUTING[task] ?? TASK_ROUTING.enhance;
 }
+
+/**
+ * Stage-3 cost-funnel tier selection. Short prompts route to flash-lite,
+ * which is ~70% cheaper. Threshold is 200 chars by default.
+ */
+export function selectModelByLength(charCount: number, threshold: number = 200): ModelId {
+  return charCount < threshold ? "gemini-2.5-flash-lite" : "gemini-2.5-flash";
+}
