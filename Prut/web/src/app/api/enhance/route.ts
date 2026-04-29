@@ -259,6 +259,13 @@ export async function POST(req: Request) {
     // so use service role client to bypass RLS
     const queryClient = useServiceClient ? createServiceClient() : supabase;
 
+    // Audit/log writes (history, activity_logs) ALWAYS go through service
+    // role. They run inside `after()` callbacks where the cookie-bound
+    // supabase session can be invalid, causing silent RLS rejections that
+    // leave the dashboard with a charged credit but no history row. Service
+    // role bypasses RLS and is the correct primitive for server-only logging.
+    const logClient = createServiceClient();
+
     // 1. Context Fetching - check cache for profile/tier first
     let tier: "free" | "pro" | "admin" | "guest" = "guest";
     let isAdmin = false;
@@ -658,7 +665,7 @@ export async function POST(req: Request) {
         after(async () => {
           try {
             if (userId && supabase) {
-              await queryClient
+              await logClient
                 .from("history")
                 .insert({
                   user_id: userId,
@@ -679,7 +686,7 @@ export async function POST(req: Request) {
                 })
                 .then(({ error: histErr }) => {
                   if (histErr)
-                    logger.warn("[Enhance:score-gate] History insert failed:", histErr.message);
+                    logger.error("[Enhance:score-gate] History insert failed:", histErr.message);
                 });
             }
           } finally {
@@ -785,7 +792,7 @@ export async function POST(req: Request) {
         after(async () => {
           try {
             if (userId && supabase) {
-              await queryClient
+              await logClient
                 .from("history")
                 .insert({
                   user_id: userId,
@@ -806,10 +813,10 @@ export async function POST(req: Request) {
                 })
                 .then(({ error: histErr }) => {
                   if (histErr)
-                    logger.warn("[Enhance:cache-hit] History insert failed:", histErr.message);
+                    logger.error("[Enhance:cache-hit] History insert failed:", histErr.message);
                 });
 
-              await queryClient
+              await logClient
                 .from("activity_logs")
                 .insert({
                   user_id: userId,
@@ -842,7 +849,7 @@ export async function POST(req: Request) {
                 })
                 .then(({ error: actErr }) => {
                   if (actErr)
-                    logger.warn("[Enhance:cache-hit] Activity log insert failed:", actErr.message);
+                    logger.error("[Enhance:cache-hit] Activity log insert failed:", actErr.message);
                 });
 
               try {
@@ -1067,7 +1074,7 @@ export async function POST(req: Request) {
 
             if (userId && supabase) {
               // Save to history table so admin can see actual prompts
-              await queryClient
+              await logClient
                 .from("history")
                 .insert({
                   user_id: userId,
@@ -1087,10 +1094,10 @@ export async function POST(req: Request) {
                   updated_at: new Date().toISOString(),
                 })
                 .then(({ error: histErr }) => {
-                  if (histErr) logger.warn("[Enhance] History insert failed:", histErr.message);
+                  if (histErr) logger.error("[Enhance] History insert failed:", histErr.message);
                 });
 
-              await queryClient
+              await logClient
                 .from("activity_logs")
                 .insert({
                   user_id: userId,
@@ -1128,7 +1135,7 @@ export async function POST(req: Request) {
                   },
                 })
                 .then(({ error: actErr }) => {
-                  if (actErr) logger.warn("[Enhance] Activity log insert failed:", actErr.message);
+                  if (actErr) logger.error("[Enhance] Activity log insert failed:", actErr.message);
                 });
 
               // L0 fact extraction — fire-and-forget, never blocks response
@@ -1141,7 +1148,7 @@ export async function POST(req: Request) {
               }
 
               try {
-                const { count } = await queryClient
+                const { count } = await logClient
                   .from("activity_logs")
                   .select("*", { count: "exact", head: true })
                   .eq("user_id", userId)
