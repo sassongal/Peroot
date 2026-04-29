@@ -20,14 +20,44 @@
     document.head.appendChild(fontLink);
   }
 
-  // ── Site Detection ──────────────────────────────────────────────────────────
+  // ── Site Detection (M3 — config-driven) ─────────────────────────────────────
+
+  const CHAINS = {
+    chatgpt: {
+      hosts: ['chatgpt.com', 'chat.openai.com'],
+      profile_slug: 'gpt-5',
+      input: ['#prompt-textarea', 'textarea[data-id="root"]', 'div[contenteditable="true"][id="prompt-textarea"]'],
+      send_button: ['button[data-testid="send-button"]', 'button[aria-label="Send prompt"]'],
+      composer: ['form.stretch', 'form[class*="composer"]', 'main form'],
+    },
+    claude: {
+      hosts: ['claude.ai'],
+      profile_slug: 'claude-sonnet-4',
+      input: ['div.ProseMirror[contenteditable="true"]', 'div[contenteditable="true"][data-placeholder]', 'fieldset div[contenteditable="true"]', 'fieldset textarea', 'textarea'],
+      send_button: ['button[aria-label="Send Message"]', 'button[data-testid="send-message"]'],
+      composer: ['fieldset', 'div[class*="composer"]', 'form'],
+    },
+    gemini: {
+      hosts: ['gemini.google.com'],
+      profile_slug: 'gemini-2.5',
+      input: ['input-area-v2 .ql-editor', 'input-area-v2 div[contenteditable="true"]', 'rich-textarea .ql-editor', 'rich-textarea div[contenteditable="true"]', 'div.ql-editor[contenteditable="true"]', 'div[contenteditable="true"][aria-label*="prompt" i]', 'div[contenteditable="true"][aria-label*="Enter" i]', 'p[data-placeholder]', 'div[contenteditable="true"]'],
+      send_button: ['button[aria-label*="Send" i]', 'button[mattooltip*="Send" i]', 'button.send-button'],
+      composer: ['input-area-v2', 'rich-textarea'],
+    },
+  };
 
   const SITES = {
     chatgpt: {
       match: () => /chat\.openai\.com|chatgpt\.com/.test(location.hostname),
-      inputSelector: '#prompt-textarea, textarea[data-id="root"], div[contenteditable="true"][id="prompt-textarea"]',
-      sendButtonSelector: 'button[data-testid="send-button"], button[aria-label="Send prompt"]',
-      inputArea: () => document.querySelector('form.stretch, form[class*="composer"], main form'),
+      hosts: CHAINS.chatgpt.hosts,
+      input: CHAINS.chatgpt.input,
+      send_button: CHAINS.chatgpt.send_button,
+      composer: CHAINS.chatgpt.composer,
+      profile_slug: CHAINS.chatgpt.profile_slug,
+      kind: 'text',
+      inputSelector: CHAINS.chatgpt.input.join(', '),
+      sendButtonSelector: CHAINS.chatgpt.send_button.join(', '),
+      inputArea: () => document.querySelector(CHAINS.chatgpt.composer.join(', ')),
       getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
       setInputText: (el, text) => {
         if (el.tagName === 'TEXTAREA') {
@@ -47,9 +77,15 @@
     },
     claude: {
       match: () => /claude\.ai/.test(location.hostname),
-      inputSelector: 'div.ProseMirror[contenteditable="true"], div[contenteditable="true"][data-placeholder], fieldset div[contenteditable="true"], fieldset textarea, textarea',
-      sendButtonSelector: 'button[aria-label="Send Message"], button[data-testid="send-message"]',
-      inputArea: () => document.querySelector('fieldset, div[class*="composer"], form'),
+      hosts: CHAINS.claude.hosts,
+      input: CHAINS.claude.input,
+      send_button: CHAINS.claude.send_button,
+      composer: CHAINS.claude.composer,
+      profile_slug: CHAINS.claude.profile_slug,
+      kind: 'text',
+      inputSelector: CHAINS.claude.input.join(', '),
+      sendButtonSelector: CHAINS.claude.send_button.join(', '),
+      inputArea: () => document.querySelector(CHAINS.claude.composer.join(', ')),
       getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
       setInputText: (el, text) => {
         if (el.tagName === 'TEXTAREA') {
@@ -69,18 +105,14 @@
     },
     gemini: {
       match: () => /gemini\.google\.com/.test(location.hostname),
-      inputSelector: [
-        'input-area-v2 .ql-editor',
-        'input-area-v2 div[contenteditable="true"]',
-        'rich-textarea .ql-editor',
-        'rich-textarea div[contenteditable="true"]',
-        'div.ql-editor[contenteditable="true"]',
-        'div[contenteditable="true"][aria-label*="prompt" i]',
-        'div[contenteditable="true"][aria-label*="Enter" i]',
-        'p[data-placeholder]',
-        'div[contenteditable="true"]'
-      ].join(', '),
-      sendButtonSelector: 'button[aria-label*="Send" i], button[aria-label*="send" i], button[mattooltip*="Send" i], button.send-button',
+      hosts: CHAINS.gemini.hosts,
+      input: CHAINS.gemini.input,
+      send_button: CHAINS.gemini.send_button,
+      composer: CHAINS.gemini.composer,
+      profile_slug: CHAINS.gemini.profile_slug,
+      kind: 'text',
+      inputSelector: CHAINS.gemini.input.join(', '),
+      sendButtonSelector: CHAINS.gemini.send_button.join(', '),
       inputArea: () => {
         // input-area-v2 is Gemini's stable custom element
         const inputArea = document.querySelector('input-area-v2');
@@ -125,152 +157,6 @@
       getUserMessages: () => document.querySelectorAll('user-query, .user-query, [data-message-author="user"]'),
       getAssistantMessages: () => document.querySelectorAll('model-response, .model-response, [data-message-author="model"]'),
     },
-    deepseek: {
-      match: () => /chat\.deepseek\.com/.test(location.hostname),
-      inputSelector: 'textarea#chat-input, textarea',
-      sendButtonSelector: 'button[class*="send"]',
-      inputArea: () => document.querySelector('div[class*="input-area"], form'),
-      getInputText: (el) => el.value || el.innerText,
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.innerText = text;
-          el.dispatchEvent(new InputEvent('input', { bubbles: true }));
-        }
-      },
-      messageSelector: '[class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[class*="user-message"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="assistant-message"]'),
-    },
-    perplexity: {
-      match: () => /perplexity\.ai/.test(location.hostname),
-      inputSelector: 'textarea[placeholder*="Ask"], textarea',
-      sendButtonSelector: 'button[aria-label="Submit"]',
-      inputArea: () => document.querySelector('div[class*="query"], form'),
-      getInputText: (el) => el.value || el.innerText,
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.innerText = text;
-          el.dispatchEvent(new InputEvent('input', { bubbles: true }));
-        }
-      },
-      messageSelector: '[class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[class*="user-message"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="answer"]'),
-    },
-    mistral: {
-      match: () => /chat\.mistral\.ai/.test(location.hostname),
-      inputSelector: 'textarea, div[contenteditable="true"]',
-      sendButtonSelector: 'button[type="submit"], button[aria-label="Send"]',
-      inputArea: () => document.querySelector('form') || document.querySelector('main'),
-      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.focus();
-          document.execCommand('selectAll', false, null);
-          document.execCommand('insertText', false, text);
-        }
-      },
-      messageSelector: '[class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[class*="user"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
-    },
-    minimax: {
-      match: () => /minimaxi\.com/.test(location.hostname),
-      inputSelector: 'textarea, div[contenteditable="true"]',
-      sendButtonSelector: 'button[type="submit"], button[aria-label="Send"]',
-      inputArea: () => document.querySelector('form') || document.querySelector('main'),
-      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.focus();
-          document.execCommand('selectAll', false, null);
-          document.execCommand('insertText', false, text);
-        }
-      },
-      messageSelector: '[class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[class*="user"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
-    },
-    grok: {
-      match: () => /grok\.com|x\.com\/i\/grok/.test(location.hostname + location.pathname),
-      inputSelector: 'textarea, div[contenteditable="true"]',
-      sendButtonSelector: 'button[type="submit"], button[aria-label*="Send" i]',
-      inputArea: () => document.querySelector('form') || document.querySelector('main'),
-      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.focus();
-          document.execCommand('selectAll', false, null);
-          document.execCommand('insertText', false, text);
-        }
-      },
-      messageSelector: '[class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[class*="user"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="assistant"]'),
-    },
-    copilot: {
-      match: () => /copilot\.microsoft\.com/.test(location.hostname),
-      inputSelector: 'textarea#userInput, textarea, div[contenteditable="true"]',
-      sendButtonSelector: 'button[data-testid="submit-button"], button[aria-label*="Submit" i], button[type="submit"]',
-      inputArea: () => document.querySelector('form') || document.querySelector('main'),
-      getInputText: (el) => el.tagName === 'TEXTAREA' ? el.value : el.innerText,
-      setInputText: (el, text) => {
-        if (el.tagName === 'TEXTAREA') {
-          const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-          if (setter) setter.call(el, text);
-          else el.value = text;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          el.focus();
-          document.execCommand('selectAll', false, null);
-          document.execCommand('insertText', false, text);
-        }
-      },
-      messageSelector: '[data-content="ai-message"], [class*="message"]',
-      getUserMessages: () => document.querySelectorAll('[data-content="user-message"], [class*="user"]'),
-      getAssistantMessages: () => document.querySelectorAll('[data-content="ai-message"], [class*="assistant"]'),
-    },
-    poe: {
-      match: () => /poe\.com/.test(location.hostname),
-      inputSelector: 'textarea[class*="GrowingTextArea"], textarea',
-      sendButtonSelector: 'button[class*="ChatMessageSendButton"], button[aria-label*="Send" i]',
-      inputArea: () => document.querySelector('form') || document.querySelector('[class*="ChatMessageInputContainer"]'),
-      getInputText: (el) => el.value,
-      setInputText: (el, text) => {
-        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-        if (setter) setter.call(el, text);
-        else el.value = text;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-      },
-      messageSelector: '[class*="ChatMessage_messageRow"]',
-      getUserMessages: () => document.querySelectorAll('[class*="ChatMessage_messageRow"][class*="human"]'),
-      getAssistantMessages: () => document.querySelectorAll('[class*="ChatMessage_messageRow"][class*="bot"]'),
-    },
   };
 
   const currentSite = Object.values(SITES).find(s => s.match());
@@ -285,6 +171,46 @@
     gemini: 'veo',
   };
   const detectedSiteKey = Object.keys(SITES).find(k => SITES[k] === currentSite);
+
+  // ── Async upgrade: replace selector chains from server config when available ──
+  let activeRegistry = CHAINS;
+  (async () => {
+    try {
+      const cfg = await (window.PerootConfigStore?.getConfig?.() || Promise.resolve(null));
+      const reg = cfg?.selectors;
+      if (reg && reg[detectedSiteKey]) {
+        activeRegistry = reg;
+        const site = reg[detectedSiteKey];
+        if (Array.isArray(site.input) && site.input.length) {
+          currentSite.input = site.input;
+          currentSite.inputSelector = site.input.join(', ');
+        }
+        if (Array.isArray(site.send_button) && site.send_button.length) {
+          currentSite.send_button = site.send_button;
+          currentSite.sendButtonSelector = site.send_button.join(', ');
+        }
+        if (Array.isArray(site.composer) && site.composer.length) {
+          currentSite.composer = site.composer;
+        }
+        if (site.profile_slug) currentSite.profile_slug = site.profile_slug;
+      }
+    } catch {
+      // ignore — fall back to baked-in CHAINS
+    }
+  })();
+
+  // Telemetry helper: fire selector_miss when a chain returns no element.
+  function reportSelectorMiss(kind, chain) {
+    try {
+      window.PerootTelemetry?.fireTelemetry?.('selector_miss', {
+        site: detectedSiteKey,
+        selector_kind: kind,
+        chain_length: Array.isArray(chain) ? chain.length : 0,
+      });
+    } catch {
+      // ignore
+    }
+  }
   const autoImagePlatform = SITE_IMAGE_PLATFORM_MAP[detectedSiteKey] || 'general';
   const autoVideoPlatform = SITE_VIDEO_PLATFORM_MAP[detectedSiteKey] || 'general';
 
@@ -425,9 +351,10 @@
 
   // Try to find the input element — uses site-specific selector first, then broad fallbacks
   function findInputElement() {
-    // 1. Site-specific selector
+    // 1. Site-specific selector chain
     let el = document.querySelector(currentSite.inputSelector);
     if (el && !el.closest('#peroot-side-panel, #peroot-ai-toolbar')) return el;
+    if (!el) reportSelectorMiss('input', currentSite.input);
 
     // 2. Broad fallback: any contenteditable or textarea that looks like a chat input
     // Exclude Peroot's own UI elements
@@ -488,6 +415,19 @@
         : detectedSiteKey === 'gemini' ? 'gemini'
         : 'general';
 
+      // Resolve target model_profile_slug (manual override beats host match).
+      let modelProfileSlug = null;
+      try {
+        const overrideSlug = await (window.PerootTargetModel?.getOverride?.(location.hostname) || Promise.resolve(null));
+        modelProfileSlug = window.PerootTargetModel?.resolveTargetModel?.({
+          hostname: location.hostname,
+          registry: activeRegistry,
+          override: overrideSlug,
+        }) || currentSite.profile_slug || null;
+      } catch {
+        modelProfileSlug = currentSite.profile_slug || null;
+      }
+
       // Route through service worker to avoid CORS
       const res = await apiFetch('/api/enhance', {
         method: 'POST',
@@ -497,6 +437,7 @@
           category: 'כללי',
           capability_mode: mode,
           target_model: targetModel,
+          ...(modelProfileSlug && { model_profile_slug: modelProfileSlug }),
           ...(outputLang === 'english' && { output_language: 'english' }),
           ...(mode === 'IMAGE_GENERATION' && { mode_params: { image_platform: imgPlat } }),
           ...(mode === 'VIDEO_GENERATION' && { mode_params: { video_platform: vidPlat } }),
