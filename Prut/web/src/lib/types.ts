@@ -53,6 +53,7 @@ export type PersonalPrompt = {
   template_description?: string;
   template_variables?: string[];
   original_prompt?: string;
+  source_history_id?: string;
 };
 
 export type LibraryPrompt = {

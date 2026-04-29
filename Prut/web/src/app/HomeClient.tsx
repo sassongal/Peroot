@@ -804,7 +804,6 @@ function PageContent() {
         dispatch({ type: "INCREMENT_ITERATION" });
         toast.success("הפרומפט עודכן!");
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [
       ps.isLoading,
@@ -1011,6 +1010,7 @@ function PageContent() {
         use_case: "נשמר מהיסטוריה",
         source: "manual",
         original_prompt: item.original,
+        source_history_id: item.id,
       });
       recordUsageSignal("save", item.enhanced);
       toast.success("נשמר לספריה האישית!");
