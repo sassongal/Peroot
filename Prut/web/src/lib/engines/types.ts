@@ -114,4 +114,5 @@ export interface PromptEngine {
   mode: CapabilityMode;
   generate(input: EngineInput): EngineOutput;
   generateRefinement(input: EngineInput): EngineOutput;
+  applyModelProfile(slug: ModelProfileSlug | undefined): Promise<ModelProfile | null>;
 }

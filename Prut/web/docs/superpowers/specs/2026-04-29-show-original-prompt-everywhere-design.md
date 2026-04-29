@@ -64,22 +64,15 @@ WHERE pl.id = m.pl_id
 
 `DISTINCT ON (pl.id)` with `ORDER BY h.created_at DESC` ensures one match per personal_library row when multiple history rows share the same enhanced text — picks the most recent. The `WHERE pl.original_prompt IS NULL` guard makes the migration idempotent.
 
-### 2. API (`src/app/api/personal-library/route.ts`)
+### 2. Insert path (`src/hooks/usePromptMutations.ts`)
 
-Extend the existing POST Zod schema to accept the new field:
+The `personal-library` route has only a GET handler; inserts happen client-side via `supabase.from('personal_library').insert(...)` inside `usePromptMutations.addPrompt`. The current `insertData` object enumerates fields explicitly and silently drops both `original_prompt` and (the new) `source_history_id` — which is why the existing toggle never renders for new saves either.
 
-```ts
-const CreateSchema = z.object({
-  prompt: z.string().min(1),
-  // ... existing fields
-  original_prompt: z.string().optional(),     // already present
-  source_history_id: z.string().uuid().optional(), // NEW
-});
-```
+Fix: add both fields to `insertData`. Add `source_history_id?: string` to `PersonalPrompt` in `src/lib/types.ts`. Add the same field to `useLibraryFetch`'s `SELECT` projection so the value round-trips.
 
-Pass through to the insert. RLS already restricts inserts to `user_id = auth.uid()`. Postgres FK validates the history row exists, but cross-user references are not blocked at the DB layer — RLS on `history` blocks any read attempt, so a dangling reference is the worst case (acceptable; UI degrades gracefully when the linked history row is unreadable).
+RLS already restricts inserts to `user_id = auth.uid()`. Postgres FK validates the history row exists, but cross-user references are not blocked at the DB layer — RLS on `history` blocks any read attempt, so a dangling reference is the worst case (acceptable; UI degrades gracefully when the linked history row is unreadable).
 
-No GET changes needed — `original_prompt` and `source_history_id` flow back via `SELECT *`.
+GET response: `useLibraryFetch.ts` currently selects an explicit column list (`id, title, prompt, ...`) — must add `original_prompt, source_history_id` to it.
 
 ### 3. Save-to-personal flow (`src/app/HomeClient.tsx`)
 

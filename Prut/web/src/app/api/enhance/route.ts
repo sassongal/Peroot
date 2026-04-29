@@ -25,7 +25,7 @@ import {
 } from "@/lib/guest-service";
 import { buildCacheKey, deleteCached, getCached, setCached } from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
-import { AVAILABLE_MODELS, type ModelId } from "@/lib/ai/models";
+import { AVAILABLE_MODELS, selectModelByLength, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
 import { extractFacts, mergeFactsForUser } from "@/lib/intelligence/fact-extractor";
 
@@ -87,6 +87,7 @@ const RequestSchema = z.object({
     .optional(),
   iteration: z.number().int().min(0).optional(),
   target_model: z.enum(["chatgpt", "claude", "gemini", "general"]).default("general").optional(),
+  model_profile_slug: z.string().max(64).optional(),
   output_language: z.enum(["hebrew", "english"]).optional(),
   // Accepts both the legacy shape { type, name, content } and the new
   // ContextBlock shape { id, type, sha256, stage, display, injected }.
@@ -192,6 +193,7 @@ export async function POST(req: Request) {
       iteration,
       context: contextAttachments,
       target_model,
+      model_profile_slug,
       output_language,
     } = RequestSchema.parse(json);
 
@@ -522,6 +524,13 @@ export async function POST(req: Request) {
     // 4. Engine Selection & Generation
     const engine = await getEngine(mode);
 
+    // Apply model profile when the extension provides an explicit slug
+    // (e.g. "gpt-5", "claude-sonnet-4", "gemini-2.5"). Non-blocking on miss —
+    // engine renders with its base system prompt unchanged.
+    if (model_profile_slug) {
+      await engine.applyModelProfile(model_profile_slug);
+    }
+
     // 4.5 Style RAG Processing (using pre-fetched data)
     let userHistory: { title: string; prompt: string; enhanced?: string }[] = [];
     let userPersonality: { tokens: string[]; brief?: string; format?: string } | undefined =
@@ -692,6 +701,7 @@ export async function POST(req: Request) {
                       ? "extension"
                       : "web",
                   input_source: inputSource,
+                  cost_funnel_stage: 2,
                   updated_at: new Date().toISOString(),
                 })
                 .then(({ error: histErr }) => {
@@ -818,7 +828,13 @@ export async function POST(req: Request) {
         block.injected.tokenCount < 100_000
       );
     }) as unknown as ContextBlock[];
-    const preferredModel = selectEngineModel({ blocks: contextBlocks });
+    // When no context blocks are attached, route by prompt length:
+    // short prompts → flash-lite (cheaper, faster), long → flash.
+    // Context-aware router still wins when blocks are present.
+    const preferredModel: ModelId =
+      contextBlocks.length > 0
+        ? selectEngineModel({ blocks: contextBlocks })
+        : selectModelByLength(prompt.length);
     const contextTokens = contextBlocks.reduce((sum, b) => sum + (b.injected?.tokenCount ?? 0), 0);
     // Rough token estimate: system + user prompt chars ÷ 4, plus injected context
     const estimatedInputTokens =
@@ -960,6 +976,7 @@ export async function POST(req: Request) {
                       ? "extension"
                       : "web",
                   input_source: inputSource,
+                  cost_funnel_stage: 3,
                   updated_at: new Date().toISOString(),
                 })
                 .then(({ error: histErr }) => {
