@@ -99,6 +99,22 @@ export abstract class BaseEngine implements PromptEngine {
     return { ...base, ...this._modelProfileWeights };
   }
 
+  /**
+   * Layer the active model profile onto an EngineOutput produced by either
+   * `generate()` or `generateRefinement()`. Single seam so engine subclasses
+   * don't each have to remember to invoke composeSystemPrompt — the route
+   * calls this once after generation. No-op when no profile was applied.
+   */
+  public finalizeOutput(out: EngineOutput): EngineOutput {
+    if (!this._modelProfileTail) return out;
+    return { ...out, systemPrompt: this.composeSystemPrompt(out.systemPrompt) };
+  }
+
+  /** Public read of the active profile's dimension weights. Used by the score gate. */
+  public getActiveProfileWeights(): Record<string, number> {
+    return this._modelProfileWeights;
+  }
+
   public extractVariables(template: string): string[] {
     const regex = /\{\{\s*(\w+)\s*\}\}/gi;
     const matches = [...template.matchAll(regex)];

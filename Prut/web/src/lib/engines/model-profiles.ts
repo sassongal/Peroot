@@ -52,11 +52,15 @@ export async function getModelProfile(slug: ModelProfileSlug): Promise<ModelProf
       .eq("slug", slug)
       .maybeSingle();
     if (error) {
+      // Don't poison-cache transient DB errors with the full 5-min TTL —
+      // a single hiccup would mask the slug for every subsequent request.
+      // Return null without caching; next call retries.
       logger.warn("[model-profiles] load failed", { slug, error: error.message });
-      singleCache.set(slug, { value: null, ts: Date.now() });
       return null;
     }
     const profile = data ? rowToProfile(data as RowShape) : null;
+    // A confirmed `null` result (row genuinely not present) is fine to cache —
+    // it prevents repeated DB hits for an unknown slug.
     singleCache.set(slug, { value: profile, ts: Date.now() });
     return profile;
   } catch (err) {

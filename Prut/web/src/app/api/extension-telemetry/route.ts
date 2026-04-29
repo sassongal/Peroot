@@ -17,6 +17,9 @@ const ALLOWED_EVENTS = [
   "cache_hit",
 ] as const;
 
+const META_MAX_KEYS = 25;
+const META_MAX_BYTES = 4096;
+
 const Body = z.object({
   event: z.enum(ALLOWED_EVENTS),
   site: z.enum(["chatgpt", "claude", "gemini"]).optional(),
@@ -25,7 +28,24 @@ const Body = z.object({
   latency_ms: z.number().int().min(0).max(60_000).optional(),
   success: z.boolean().optional(),
   chain_index: z.number().int().min(-1).max(20).optional(),
-  meta: z.record(z.string(), z.unknown()).optional(),
+  // Bound `meta` so a hostile client can't fill the JSONB column with
+  // arbitrarily large payloads. Cap by entry count and serialized size.
+  meta: z
+    .record(z.string().max(64), z.unknown())
+    .refine((m) => Object.keys(m).length <= META_MAX_KEYS, {
+      message: `meta exceeds ${META_MAX_KEYS} keys`,
+    })
+    .refine(
+      (m) => {
+        try {
+          return JSON.stringify(m).length <= META_MAX_BYTES;
+        } catch {
+          return false;
+        }
+      },
+      { message: `meta exceeds ${META_MAX_BYTES} bytes serialized` },
+    )
+    .optional(),
 });
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -44,8 +64,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     payload = Body.parse(await req.json());
   } catch (err) {
+    // Don't echo Zod's full error to the client — only surface the field paths
+    // so callers can fix bad inputs without us reflecting the values back.
+    const fields =
+      err instanceof z.ZodError
+        ? err.issues.map((i) => i.path.join(".")).filter(Boolean)
+        : undefined;
     return NextResponse.json(
-      { error: "Invalid body", detail: (err as Error).message },
+      { error: "Invalid body", ...(fields && fields.length ? { fields } : {}) },
       { status: 400 },
     );
   }

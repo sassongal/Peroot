@@ -68,4 +68,40 @@ describe("BaseEngine.applyModelProfile", () => {
     expect(result).toBeNull();
     expect(engine.exposeSystemPrompt()).toBe("BASE");
   });
+
+  it("finalizeOutput layers profile tail onto an EngineOutput", async () => {
+    (getModelProfile as ReturnType<typeof vi.fn>).mockResolvedValue({
+      slug: "gpt-5",
+      systemPromptHe: "PROFILE_TAIL",
+      outputFormatRules: {},
+      dimensionWeights: { structure: 1.2 },
+      hostMatch: [],
+      displayName: "x",
+      displayNameHe: "x",
+      isActive: true,
+      sortOrder: 10,
+    });
+    const engine = new TestEngine(baseConfig);
+    await engine.applyModelProfile("gpt-5");
+    const out = engine.finalizeOutput({
+      systemPrompt: "ENGINE_BASE",
+      userPrompt: "U",
+      outputFormat: "text",
+      requiredFields: [],
+    });
+    expect(out.systemPrompt).toContain("ENGINE_BASE");
+    expect(out.systemPrompt).toContain("PROFILE_TAIL");
+    expect(engine.getActiveProfileWeights()).toEqual({ structure: 1.2 });
+  });
+
+  it("finalizeOutput is a no-op when no profile applied", async () => {
+    const engine = new TestEngine(baseConfig);
+    const out = engine.finalizeOutput({
+      systemPrompt: "ENGINE_BASE",
+      userPrompt: "U",
+      outputFormat: "text",
+      requiredFields: [],
+    });
+    expect(out.systemPrompt).toBe("ENGINE_BASE");
+  });
 });

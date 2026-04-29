@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
 import { getEngine, EngineInput } from "@/lib/engines";
+import { BaseEngine } from "@/lib/engines/base-engine";
+import { applyModelTagWrapper, shouldSkipLLM } from "@/lib/engines/score-gate";
+import type { ModelProfile } from "@/lib/engines/types";
 import { selectEngineModel } from "@/lib/ai/context-router";
 import type { ContextBlock } from "@/lib/context/engine/types";
 import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
@@ -23,7 +26,13 @@ import {
   checkAndDecrementGuestCredits,
   refundGuestCredit,
 } from "@/lib/guest-service";
-import { buildCacheKey, deleteCached, getCached, setCached } from "@/lib/ai/enhance-cache";
+import {
+  buildCacheKey,
+  deleteCached,
+  getCached,
+  getRuntimeCacheVersion,
+  setCached,
+} from "@/lib/ai/enhance-cache";
 import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, selectModelByLength, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
@@ -527,8 +536,9 @@ export async function POST(req: Request) {
     // Apply model profile when the extension provides an explicit slug
     // (e.g. "gpt-5", "claude-sonnet-4", "gemini-2.5"). Non-blocking on miss —
     // engine renders with its base system prompt unchanged.
+    let activeProfile: ModelProfile | null = null;
     if (model_profile_slug) {
-      await engine.applyModelProfile(model_profile_slug);
+      activeProfile = await engine.applyModelProfile(model_profile_slug);
     }
 
     // 4.5 Style RAG Processing (using pre-fetched data)
@@ -592,9 +602,9 @@ export async function POST(req: Request) {
       outputLanguage: output_language,
     };
 
-    const engineOutput = isRefinement
-      ? engine.generateRefinement(engineInput)
-      : engine.generate(engineInput);
+    const engineOutput = engine.finalizeOutput(
+      isRefinement ? engine.generateRefinement(engineInput) : engine.generate(engineInput),
+    );
 
     // Anchor 4: classify the input by what the USER attached, not where the
     // request came from. The first context attachment wins; raw text is the
@@ -610,6 +620,91 @@ export async function POST(req: Request) {
             ? "image"
             : "text";
 
+    // 4.55 Stage-1 score gate. When a model profile is active and the user's
+    // raw prompt already scores at or above the skip threshold, we bypass the
+    // LLM entirely and return a profile-tagged wrapper around their input.
+    // This is the cheapest tier of the cost funnel: zero tokens, near-zero
+    // latency. Skipped for refinements (always re-render), context-bearing
+    // requests (the engine must merge the attachments), and JSON-output
+    // engines (image/video — wrapping a JSON spec breaks downstream parsing).
+    const SCORE_GATE_THRESHOLD = 80;
+    const isJsonEngine = engineOutput.outputFormat === "json";
+    const canScoreGate =
+      !!activeProfile && !isRefinement && !isJsonEngine && (contextAttachments?.length ?? 0) === 0;
+    if (canScoreGate && activeProfile) {
+      const promptScore = BaseEngine.scorePrompt(prompt, mode);
+      if (shouldSkipLLM(promptScore.score, SCORE_GATE_THRESHOLD)) {
+        const wrappedText = applyModelTagWrapper(prompt, activeProfile);
+
+        // Refund the credit decremented above — stage-1 costs us no LLM tokens.
+        if (userId) {
+          await refundCredit(userId);
+        } else if (guestId && !isRefinement) {
+          await refundGuestCredit(guestId);
+        }
+
+        // Track as a zero-token row so the cost dashboard can compute the
+        // skip rate without a NULL-handling special case.
+        trackApiUsage({
+          userId,
+          modelId: "gemini-2.5-flash",
+          inputTokens: 0,
+          outputTokens: 0,
+          durationMs: 0,
+          endpoint: "enhance",
+          cacheHit: false,
+        });
+
+        after(async () => {
+          try {
+            if (userId && supabase) {
+              await queryClient
+                .from("history")
+                .insert({
+                  user_id: userId,
+                  prompt,
+                  enhanced_prompt: wrappedText,
+                  tone,
+                  category,
+                  capability_mode: capability_mode || "STANDARD",
+                  title: prompt.slice(0, 60),
+                  source: bearerToken?.startsWith("prk_")
+                    ? "api"
+                    : bearerToken
+                      ? "extension"
+                      : "web",
+                  input_source: inputSource,
+                  cost_funnel_stage: 1,
+                  updated_at: new Date().toISOString(),
+                })
+                .then(({ error: histErr }) => {
+                  if (histErr)
+                    logger.warn("[Enhance:score-gate] History insert failed:", histErr.message);
+                });
+            }
+          } finally {
+            await lock.release();
+          }
+        });
+
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(encoder.encode(wrappedText));
+            controller.close();
+          },
+        });
+        const headers: Record<string, string> = {
+          "Content-Type": "text/plain; charset=utf-8",
+          "X-Peroot-Cache": "score-gate",
+        };
+        if (guestId && guestNeedsCookie) {
+          headers["Set-Cookie"] = buildGuestCookieHeader(guestId);
+        }
+        return new Response(stream, { headers });
+      }
+    }
+
     // 4.6 Result cache lookup. Scoped PER USER (no cross-user sharing) and
     // skipped whenever personalization signal or context attachments are
     // present — see src/lib/ai/enhance-cache.ts for the full skip rules.
@@ -623,12 +718,17 @@ export async function POST(req: Request) {
     // forced fresh result overwrites the stale entry. Without this, a bypass
     // request would leave the prior cached value intact and the next
     // non-bypass caller would read the stale text.
+    // Runtime cache_version (5-min memo). Bumping the row in extension_configs
+    // partitions the cache without needing a code-side ENGINE_VERSION change.
+    const runtimeCacheVersion = await getRuntimeCacheVersion();
     const cacheKey = buildCacheKey({
       prompt,
       mode: capability_mode,
       tone,
       category,
       targetModel: target_model || "general",
+      modelProfileSlug: model_profile_slug ?? null,
+      cacheVersion: runtimeCacheVersion,
       userId,
       hasContext: !!(contextAttachments && contextAttachments.length > 0),
       hasPersonalization: !!(userHistory.length > 0 || userPersonality),
@@ -828,13 +928,20 @@ export async function POST(req: Request) {
         block.injected.tokenCount < 100_000
       );
     }) as unknown as ContextBlock[];
-    // When no context blocks are attached, route by prompt length:
-    // short prompts → flash-lite (cheaper, faster), long → flash.
-    // Context-aware router still wins when blocks are present.
+    // Tier routing.
+    //   * Context blocks present → context-aware router wins (token-budget aware).
+    //   * Refinement requests → never downgrade (refinement quality is critical
+    //     and the *user* prompt is small while engine context is large).
+    //   * Otherwise → route by RENDERED system+user length (not raw prompt
+    //     length) so we don't downgrade requests where the engine assembled
+    //     a long context-rich prompt around a short raw input.
+    const renderedLength = engineOutput.systemPrompt.length + engineOutput.userPrompt.length;
     const preferredModel: ModelId =
       contextBlocks.length > 0
         ? selectEngineModel({ blocks: contextBlocks })
-        : selectModelByLength(prompt.length);
+        : isRefinement
+          ? "gemini-2.5-flash"
+          : selectModelByLength(renderedLength);
     const contextTokens = contextBlocks.reduce((sum, b) => sum + (b.injected?.tokenCount ?? 0), 0);
     // Rough token estimate: system + user prompt chars ÷ 4, plus injected context
     const estimatedInputTokens =

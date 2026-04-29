@@ -115,4 +115,6 @@ export interface PromptEngine {
   generate(input: EngineInput): EngineOutput;
   generateRefinement(input: EngineInput): EngineOutput;
   applyModelProfile(slug: ModelProfileSlug | undefined): Promise<ModelProfile | null>;
+  finalizeOutput(out: EngineOutput): EngineOutput;
+  getActiveProfileWeights(): Record<string, number>;
 }

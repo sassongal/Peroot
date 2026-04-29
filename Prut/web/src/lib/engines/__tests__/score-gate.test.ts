@@ -49,4 +49,23 @@ describe("score-gate.applyModelTagWrapper", () => {
     const out = applyModelTagWrapper("write a haiku", { ...gptProfile, outputFormatRules: {} });
     expect(out).toBe("write a haiku");
   });
+
+  it("does not re-wrap markdown that already starts with a header", () => {
+    const text = "## Existing Header\n\nbody";
+    const out = applyModelTagWrapper(text, gptProfile);
+    expect(out).toBe(text);
+  });
+
+  it("does not prepend `1. ` to text that is already a numbered list", () => {
+    const profile = { ...gptProfile, outputFormatRules: { prefer: "numbered_lists" } };
+    const text = "1. first\n2. second";
+    const out = applyModelTagWrapper(text, profile);
+    expect(out).toBe(text);
+  });
+
+  it("does not wrap XML when text already starts with an XML tag", () => {
+    const text = "<task>already wrapped</task>";
+    const out = applyModelTagWrapper(text, claudeProfile);
+    expect(out).toBe(text);
+  });
 });

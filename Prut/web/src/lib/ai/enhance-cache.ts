@@ -62,6 +62,19 @@ interface EnhanceCacheKeyInput {
    * unique per user — we explicitly skip the cache for those.
    */
   isRefinement?: boolean;
+  /**
+   * Active model-profile slug (e.g. "gpt-5", "claude-sonnet-4"). Once profiles
+   * actually mutate the system prompt, two requests with identical prompt/mode
+   * but different profile slugs MUST land on different cache slots — otherwise
+   * a Claude-tuned response could be served to a ChatGPT-tuned caller.
+   */
+  modelProfileSlug?: string | null;
+  /**
+   * Runtime cache version published via /api/extension-config. Bumping it
+   * invalidates all cache entries for the new extension client without
+   * needing a code-side ENGINE_VERSION change.
+   */
+  cacheVersion?: number | null;
 }
 
 /**
@@ -102,6 +115,8 @@ export function buildCacheKey(input: EnhanceCacheKeyInput): string | null {
     input.tone ?? "",
     input.category ?? "",
     input.targetModel ?? "general",
+    input.modelProfileSlug ?? "",
+    String(input.cacheVersion ?? 0),
   ];
   const hash = createHash("sha256").update(parts.join("\u0000")).digest("hex");
   // userId lives in the hash AND as a key prefix so that bulk operations
@@ -124,6 +139,42 @@ function getRedis(): Redis | null {
 /** @internal Test-only helper to reset the lazy Redis singleton between tests. */
 export function __resetRedisForTest(): void {
   redis = null;
+}
+
+/**
+ * Memoized cache_version pulled from public.extension_configs.is_active=true.
+ * Intentionally a separate path from /api/extension-config's memo so route
+ * handlers don't introduce circular imports. 5-min TTL — same window as the
+ * config endpoint — and falls back to 0 on any failure (which is a stable
+ * key contributor and never throws away cache entries spuriously).
+ */
+let cacheVersionMemo: { value: number; ts: number } | null = null;
+const CACHE_VERSION_TTL_MS = 5 * 60 * 1000;
+
+export async function getRuntimeCacheVersion(): Promise<number> {
+  if (cacheVersionMemo && Date.now() - cacheVersionMemo.ts < CACHE_VERSION_TTL_MS) {
+    return cacheVersionMemo.value;
+  }
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    const supabase = createServiceClient();
+    const { data } = await supabase
+      .from("extension_configs")
+      .select("cache_version")
+      .eq("is_active", true)
+      .maybeSingle();
+    const v = typeof data?.cache_version === "number" ? data.cache_version : 0;
+    cacheVersionMemo = { value: v, ts: Date.now() };
+    return v;
+  } catch (err) {
+    logger.warn("[enhance-cache] cache_version load failed:", err);
+    return 0;
+  }
+}
+
+/** @internal Test-only. */
+export function __resetCacheVersionForTest(): void {
+  cacheVersionMemo = null;
 }
 
 /** Soft kill switch. Set ENHANCE_CACHE_ENABLED=false to bypass cache at runtime. */
