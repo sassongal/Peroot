@@ -106,18 +106,17 @@ export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  // Determine allowed origins. In dev we additionally accept the request's own
-  // origin so engineers can run the app on localhost while .env.local still
-  // points NEXT_PUBLIC_SITE_URL at production.
+  // Determine allowed origins. Always include the request's own origin —
+  // a same-origin request (Origin header matches the host being requested)
+  // cannot be a CSRF by definition, only same-origin scripts can set it.
+  // This covers Vercel preview URLs, apex vs www mismatches, and any host
+  // that differs from NEXT_PUBLIC_SITE_URL.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-  const allowedOrigins: string[] = [];
+  const allowedOrigins: string[] = [request.nextUrl.origin];
   try {
     allowedOrigins.push(new URL(siteUrl).origin);
   } catch {
-    allowedOrigins.push(request.nextUrl.origin);
-  }
-  if (process.env.NODE_ENV !== "production") {
-    allowedOrigins.push(request.nextUrl.origin);
+    // siteUrl malformed — request.nextUrl.origin already included above
   }
 
   // Extract request origin from Origin or Referer header
