@@ -3,6 +3,22 @@ import type { PlanTier } from "@/lib/context/engine/types";
 
 export type TargetModel = "chatgpt" | "claude" | "gemini" | "general";
 
+/** DB-driven slug of a model_profiles row. Free-form string so new
+ *  profiles can be added without TypeScript releases. */
+export type ModelProfileSlug = string;
+
+export interface ModelProfile {
+  slug: ModelProfileSlug;
+  displayName: string;
+  displayNameHe: string;
+  hostMatch: string[];
+  systemPromptHe: string;
+  outputFormatRules: Record<string, unknown>;
+  dimensionWeights: Record<string, number>;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface EngineConfig {
   id?: string;
   mode: CapabilityMode;
@@ -39,6 +55,9 @@ export interface EngineInput {
   iteration?: number;
   /** Target model for prompt optimization */
   targetModel?: TargetModel;
+  /** Slug of a row in public.model_profiles. When set, BaseEngine.applyModelProfile()
+   *  layers the profile's system prompt and dimension weights onto this run. */
+  modelProfileSlug?: ModelProfileSlug;
   /** Force output language — overrides the engine's default (Hebrew) */
   outputLanguage?: "hebrew" | "english";
   /** Tier for context token budget enforcement in renderInjection */
