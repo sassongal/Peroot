@@ -49,6 +49,7 @@ interface User {
 export default function UsersPage() {
   const t = useI18n();
   const [users, setUsers] = useState<User[]>([]);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "admin" | "active" | "banned" | "churn">("all");
@@ -90,6 +91,8 @@ export default function UsersPage() {
 
       const data: User[] = await res.json();
       setUsers(data);
+      const totalHeader = res.headers.get("X-Total-Count");
+      setTotalUsers(totalHeader ? parseInt(totalHeader) : data.length);
     } catch (error) {
       logger.error("Failed to load users:", error);
       toast.error(t.admin.users.toasts.load_error);
@@ -352,7 +355,7 @@ export default function UsersPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 px-2">
           <SimpleStat
             label={t.admin.users.stats.total}
-            value={users.length}
+            value={totalUsers}
             icon={Users}
             color="blue"
           />
