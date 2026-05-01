@@ -365,7 +365,13 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
   const addFiles = useCallback(
     async (files: File[]): Promise<void> => {
-      await Promise.all(files.map((f) => addFile(f)));
+      const results = await Promise.allSettled(files.map((f) => addFile(f)));
+      const failures = results.filter((r) => r.status === "rejected");
+      if (failures.length > 0) {
+        // Surface the first error; individual cards already show per-file errors
+        const firstErr = (failures[0] as PromiseRejectedResult).reason;
+        throw firstErr instanceof Error ? firstErr : new Error("שגיאה בהוספת קבצים");
+      }
     },
     [addFile],
   );

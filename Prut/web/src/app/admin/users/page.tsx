@@ -92,7 +92,8 @@ export default function UsersPage() {
       const data: User[] = await res.json();
       setUsers(data);
       const totalHeader = res.headers.get("X-Total-Count");
-      setTotalUsers(totalHeader ? parseInt(totalHeader) : data.length);
+      const parsed = totalHeader ? parseInt(totalHeader, 10) : NaN;
+      setTotalUsers(Number.isNaN(parsed) ? data.length : parsed);
     } catch (error) {
       logger.error("Failed to load users:", error);
       toast.error(t.admin.users.toasts.load_error);

@@ -145,7 +145,9 @@ const RequestSchema = z.object({
         injected: z
           .object({
             header: z.string().max(500),
-            body: z.string().max(10_000),
+            // body = metadata lines + rawText; free tier rawText ≈ 12k chars,
+            // pro tier ≈ 48k chars — keep ceiling above both with headroom.
+            body: z.string().max(60_000),
             tokenCount: z.number().min(0).max(100_000),
           })
           .optional(),

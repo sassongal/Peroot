@@ -576,9 +576,7 @@ export function PromptInput({
                           const files = Array.from(e.target.files ?? []);
                           if (files.length > 1 && onAddFiles) {
                             onAddFiles(files)
-                              .then(() =>
-                                toast.success(`${files.length} קבצים נוספו — מחלצים תוכן...`),
-                              )
+                              .then(() => toast.success(`${files.length} קבצים נקלטו בהצלחה`))
                               .catch((err: unknown) =>
                                 toast.error(
                                   err instanceof Error ? err.message : "שגיאה בהוספת קבצים",
@@ -590,7 +588,7 @@ export function PromptInput({
                           } else if (files.length === 1) {
                             Promise.resolve()
                               .then(() => onAddFile(files[0]))
-                              .then(() => toast.success(`"${files[0].name}" נוסף — מחלץ תוכן...`))
+                              .then(() => toast.success(`"${files[0].name}" נקלט בהצלחה`))
                               .catch((err: unknown) =>
                                 toast.error(
                                   err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
