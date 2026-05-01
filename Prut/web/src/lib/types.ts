@@ -11,6 +11,14 @@ export interface Question {
   question: string;
   description: string;
   examples: string[];
+  /** 1–10 personalization impact score */
+  priority?: number;
+  /** Domain category: audience | format | platform | style | role | task | constraints | context | examples */
+  category?: string;
+  /** Human-readable impact estimate, e.g. "+10 נקודות" */
+  impactEstimate?: string;
+  /** True if answering significantly personalizes the output */
+  required?: boolean;
 }
 
 /** Mode-specific parameters for IMAGE_GENERATION */
