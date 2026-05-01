@@ -124,6 +124,12 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(3, "1 h"),
     prefix: "@peroot/ratelimit:password-reset",
   }),
+  // Background questions endpoint — lighter than enhance, no credits consumed.
+  questions: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, "1 m"),
+    prefix: "@peroot/ratelimit:questions",
+  }),
 };
 
 type RateLimitTier =
@@ -148,7 +154,8 @@ type RateLimitTier =
   | "siteSearchGuest"
   | "siteSearchUser"
   | "publicPromptFetch"
-  | "passwordReset";
+  | "passwordReset"
+  | "questions";
 
 interface RateLimitResult {
   success: boolean;

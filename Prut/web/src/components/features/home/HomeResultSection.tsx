@@ -61,6 +61,7 @@ export interface HomeResultSectionProps {
 
   // SmartRefinement props
   questions: Question[];
+  questionsLoading?: boolean;
   questionAnswers: Record<string, string>;
   onAnswerChange: (id: number, val: string) => void;
   onRefine: (instruction: string) => void;
@@ -97,6 +98,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
     capabilityMode,
     selectedPlatform,
     questions,
+    questionsLoading = false,
     questionAnswers,
     onAnswerChange,
     onRefine,
@@ -147,6 +149,15 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
               enhancedText={completion}
               capabilityMode={String(capabilityMode)}
             />
+          </div>
+        )}
+
+        {questionsLoading && questions.length === 0 && iterationCount === 0 && (
+          <div dir="rtl" className="flex flex-col gap-3 p-4 rounded-xl bg-[var(--glass-bg)]">
+            <div className="h-4 w-32 rounded animate-pulse bg-[var(--border-subtle)]" />
+            <div className="h-10 w-full rounded-lg animate-pulse bg-[var(--border-subtle)]" />
+            <div className="h-10 w-5/6 rounded-lg animate-pulse bg-[var(--border-subtle)]" />
+            <div className="h-10 w-4/6 rounded-lg animate-pulse bg-[var(--border-subtle)]" />
           </div>
         )}
 

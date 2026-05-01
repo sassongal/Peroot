@@ -1484,6 +1484,7 @@ function PageContent() {
                 : undefined)
             }
             questions={ps.questions}
+            questionsLoading={ps.questionsLoading}
             questionAnswers={ps.questionAnswers}
             onAnswerChange={(id, val) =>
               dispatch({ type: "SET_QUESTION_ANSWER", payload: { id, answer: val } })

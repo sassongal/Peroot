@@ -2,10 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { toast } from "sonner";
-import {
-  trackPromptEnhance,
-  trackEnhanceComplete,
-} from "@/lib/analytics";
+import { trackPromptEnhance, trackEnhanceComplete } from "@/lib/analytics";
 import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { getApiPath } from "@/lib/api-path";
 import { recordUsageSignal } from "@/lib/prompt-usage";
@@ -23,7 +20,7 @@ import type { useI18n } from "@/context/I18nContext";
 import type { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import type { VideoPlatform } from "@/lib/video-platforms";
 import type { TargetModel } from "@/lib/engines/types";
-import type { LibraryPrompt } from "@/lib/types";
+import type { LibraryPrompt, Question } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import type React from "react";
 
@@ -106,9 +103,65 @@ export function usePromptEnhance({
   discovery,
   filteredLibrary,
 }: UsePromptEnhanceParams) {
-
   // Cooldown ref prevents double-fire from rapid taps / keyboard shortcuts.
   const enhanceCooldownRef = useRef(false);
+
+  // AbortController ref — lets us cancel an in-flight questions fetch when
+  // the user clicks Enhance again before questions have arrived.
+  const questionsAbortRef = useRef<AbortController | null>(null);
+
+  // ── Background questions fetcher ─────────────────────────────────────────
+
+  const fetchQuestions = useCallback(
+    (
+      enhancedPrompt: string,
+      opts: {
+        prompt: string;
+        category: string;
+        tone: string;
+        capability_mode: string;
+        contextPayload: unknown[];
+        previousQuestionIds?: number[];
+        iteration?: number;
+      },
+    ) => {
+      // Cancel any prior in-flight questions fetch.
+      questionsAbortRef.current?.abort();
+      const abort = new AbortController();
+      questionsAbortRef.current = abort;
+
+      dispatch({ type: "SET_QUESTIONS_LOADING", payload: true });
+
+      fetch(getApiPath("/api/enhance/questions"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: opts.prompt,
+          enhancedPrompt,
+          category: opts.category,
+          tone: opts.tone,
+          capability_mode: opts.capability_mode,
+          ...(opts.iteration !== undefined && { iteration: opts.iteration }),
+          ...(opts.contextPayload.length > 0 && { context: opts.contextPayload }),
+          ...(opts.previousQuestionIds?.length && {
+            previousQuestionIds: opts.previousQuestionIds,
+          }),
+        }),
+        signal: abort.signal,
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data: { questions?: Question[] } | null) => {
+          if (abort.signal.aborted) return;
+          dispatch({ type: "SET_QUESTIONS", payload: data?.questions ?? [] });
+        })
+        .catch((err) => {
+          if ((err as Error)?.name === "AbortError") return;
+          logger.warn("[fetchQuestions] Request failed", err);
+          dispatch({ type: "SET_QUESTIONS", payload: [] });
+        });
+    },
+    [dispatch],
+  );
 
   // ── Stream result parser ──────────────────────────────────────────────────
 
@@ -119,9 +172,27 @@ export function usePromptEnhance({
    *
    * Mutates streamAccRef.current.rawText in-place with the cleaned body so
    * downstream readers (copy, save, refine) always see canonical text.
+   *
+   * @param opts.previousQuestionIds IDs already answered — passed to the
+   *   questions endpoint so the model avoids repeating them on refinement.
+   * @param opts.fetchQuestionsParams Params forwarded to the background
+   *   questions fetch (prompt, category, tone, etc.).
    */
   const processStreamResult = useCallback(
-    (label: string) => {
+    (
+      label: string,
+      opts?: {
+        previousQuestionIds?: number[];
+        fetchQuestionsParams?: {
+          prompt: string;
+          category: string;
+          tone: string;
+          capability_mode: string;
+          contextPayload: unknown[];
+          iteration?: number;
+        };
+      },
+    ) => {
       const acc = streamAccRef.current;
 
       // Guard: skip saving partial/interrupted results.
@@ -135,7 +206,10 @@ export function usePromptEnhance({
       let body = split.body;
       const questionsPart = split.questionsPart;
 
-      if (questionsPart.trim()) {
+      const hasEmbeddedQuestions = !!questionsPart.trim();
+
+      if (hasEmbeddedQuestions) {
+        // Backward-compat: cached responses still have embedded questions → parse synchronously.
         try {
           let jsonStr = questionsPart.trim();
           if (jsonStr.startsWith("```json"))
@@ -158,8 +232,6 @@ export function usePromptEnhance({
             dispatch({ type: "SET_QUESTIONS", payload: [] });
           }
         }
-      } else {
-        dispatch({ type: "SET_QUESTIONS", payload: [] });
       }
 
       // Strip AI thinking/reasoning tags.
@@ -195,9 +267,7 @@ export function usePromptEnhance({
               if (!data?.variables) return;
               const merged = { ...variableValuesRef.current };
               const filled: string[] = [];
-              for (const [key, value] of Object.entries(
-                data.variables as Record<string, string>,
-              )) {
+              for (const [key, value] of Object.entries(data.variables as Record<string, string>)) {
                 if (key in merged && !merged[key] && value) {
                   merged[key] = value;
                   filled.push(key);
@@ -212,10 +282,20 @@ export function usePromptEnhance({
         }
       }
 
+      // New path: no embedded questions — fire background endpoint after body is clean.
+      if (!hasEmbeddedQuestions && opts?.fetchQuestionsParams) {
+        fetchQuestions(body, {
+          ...opts.fetchQuestionsParams,
+          previousQuestionIds: opts.previousQuestionIds,
+        });
+      } else if (!hasEmbeddedQuestions) {
+        dispatch({ type: "SET_QUESTIONS", payload: [] });
+      }
+
       return { text: body, title: generatedTitle };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dispatch, user],
+    [dispatch, user, fetchQuestions],
   );
 
   // ── Enhance ───────────────────────────────────────────────────────────────
@@ -259,6 +339,9 @@ export function usePromptEnhance({
             }
           : undefined;
 
+    // Cancel any in-flight questions fetch from a previous enhance.
+    questionsAbortRef.current?.abort();
+
     dispatch({ type: "START_STREAM" });
     dispatch({ type: "SET_QUESTIONS", payload: [] });
     dispatch({
@@ -280,8 +363,7 @@ export function usePromptEnhance({
     // Auto-detect input language (Hebrew vs English).
     const hebrewChars = (ps.input.match(/[\u0590-\u05FF]/g) || []).length;
     const totalChars = ps.input.replace(/\s/g, "").length;
-    const detectedLang =
-      totalChars > 0 && hebrewChars / totalChars < 0.3 ? "en" : "he";
+    const detectedLang = totalChars > 0 && hebrewChars / totalChars < 0.3 ? "en" : "he";
 
     // Merge media params + language detection into a single mode_params object.
     // Spreading twice would cause the English branch to silently overwrite the
@@ -302,13 +384,17 @@ export function usePromptEnhance({
         targetModel !== "general" && { target_model: targetModel }),
     });
 
-    const result = processStreamResult("Enhance");
+    const result = processStreamResult("Enhance", {
+      fetchQuestionsParams: {
+        prompt: ps.input,
+        category: ps.selectedCategory,
+        tone: ps.selectedTone,
+        capability_mode: ps.selectedCapability,
+        contextPayload,
+      },
+    });
     if (result.text) {
-      trackEnhanceComplete(
-        ps.selectedCapability,
-        inputScore.score,
-        Date.now() - enhanceStart,
-      );
+      trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
       recordUsageSignal("enhance", result.text);
       if (ps.selectedCapability === CapabilityMode.DEEP_RESEARCH)
         markFeatureUsed("peroot_used_research");
@@ -321,9 +407,7 @@ export function usePromptEnhance({
         enhanced: result.text,
         tone: ps.selectedTone,
         category: ps.selectedCategory,
-        title:
-          result.title ||
-          ps.input.slice(0, 40) + (ps.input.length > 40 ? "..." : ""),
+        title: result.title || ps.input.slice(0, 40) + (ps.input.length > 40 ? "..." : ""),
       });
 
       if (user && creditsRemaining !== null) {
@@ -344,8 +428,7 @@ export function usePromptEnhance({
 
       // Pro preview nudge after 3rd enhancement in session (free users only).
       if (user && !sessionStorage.getItem("pro_nudge_shown")) {
-        const enhanceCount =
-          parseInt(sessionStorage.getItem("session_enhance_count") || "0") + 1;
+        const enhanceCount = parseInt(sessionStorage.getItem("session_enhance_count") || "0") + 1;
         sessionStorage.setItem("session_enhance_count", String(enhanceCount));
         if (enhanceCount === 3) {
           sessionStorage.setItem("pro_nudge_shown", "1");
@@ -405,16 +488,16 @@ export function usePromptEnhance({
 
       const currentCompletion = ps.completion;
 
+      // Cancel any in-flight questions fetch from a previous enhance/refine.
+      questionsAbortRef.current?.abort();
+
       dispatch({ type: "SET_PREVIOUS_SCORE", payload: completionScore.score });
       dispatch({ type: "START_STREAM" });
       streamAccRef.current = { rawText: "" };
 
       const answerParts = ps.questions
         .filter((q) => ps.questionAnswers[String(q.id)]?.trim())
-        .map(
-          (q) =>
-            `שאלה: ${q.question}\nתשובה: ${ps.questionAnswers[String(q.id)]}`,
-        );
+        .map((q) => `שאלה: ${q.question}\nתשובה: ${ps.questionAnswers[String(q.id)]}`);
 
       const combinedInstruction = [
         ...answerParts,
@@ -446,7 +529,21 @@ export function usePromptEnhance({
           targetModel !== "general" && { target_model: targetModel }),
       });
 
-      const refineResult = processStreamResult("Refine");
+      const answeredIds = ps.questions
+        .filter((q) => ps.questionAnswers[String(q.id)]?.trim())
+        .map((q) => q.id);
+
+      const refineResult = processStreamResult("Refine", {
+        previousQuestionIds: answeredIds,
+        fetchQuestionsParams: {
+          prompt: ps.input,
+          category: ctx?.category || ps.selectedCategory,
+          tone: ctx?.tone || ps.selectedTone,
+          capability_mode: ctx?.mode || ps.selectedCapability,
+          contextPayload: contextPayloadRefine,
+          iteration: ps.iterationCount + 1,
+        },
+      });
       if (refineResult.text) {
         recordUsageSignal("refine", refineResult.text);
         dispatch({ type: "INCREMENT_ITERATION" });
