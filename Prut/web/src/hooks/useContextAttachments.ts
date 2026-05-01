@@ -201,6 +201,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
         stage: "uploading",
+        fileRef: file,
       };
 
       setAttachments((prev) => [...prev, attachment]);
@@ -336,6 +337,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         status: "loading",
         stage: "uploading",
+        fileRef: file,
       };
 
       setAttachments((prev) => [...prev, attachment]);
@@ -430,6 +432,88 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     [updateAttachment, applyBlockUpdate],
   );
 
+  const retryFile = useCallback(
+    async (id: string) => {
+      const attachment = attachmentsRef.current.find((a) => a.id === id);
+      if (!attachment || attachment.type !== "file" || !attachment.fileRef) return;
+      const file = attachment.fileRef;
+
+      updateAttachment(id, {
+        status: "loading",
+        stage: "uploading",
+        error: undefined,
+        block: undefined,
+      });
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(getApiPath("/api/context/extract-file"), {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error((body as { error?: string }).error || "שגיאה בחילוץ הקובץ");
+        }
+        await readSseStreamWithTimeout(
+          res,
+          (stage) => updateAttachment(id, { stage }),
+          (block) => applyBlockUpdate(id, block),
+          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
+        );
+      } catch (err) {
+        updateAttachment(id, {
+          status: "error",
+          stage: "error",
+          error: err instanceof Error ? err.message : "שגיאה לא צפויה",
+        });
+      }
+    },
+    [updateAttachment, applyBlockUpdate],
+  );
+
+  const retryImage = useCallback(
+    async (id: string) => {
+      const attachment = attachmentsRef.current.find((a) => a.id === id);
+      if (!attachment || attachment.type !== "image" || !attachment.fileRef) return;
+      const file = attachment.fileRef;
+
+      updateAttachment(id, {
+        status: "loading",
+        stage: "uploading",
+        error: undefined,
+        block: undefined,
+      });
+
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+        const res = await fetch(getApiPath("/api/context/describe-image"), {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error((body as { error?: string }).error || "שגיאה בעיבוד התמונה");
+        }
+        await readSseStreamWithTimeout(
+          res,
+          (stage) => updateAttachment(id, { stage }),
+          (block) => applyBlockUpdate(id, block),
+          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
+        );
+      } catch (err) {
+        updateAttachment(id, {
+          status: "error",
+          stage: "error",
+          error: err instanceof Error ? err.message : "שגיאה לא צפויה",
+        });
+      }
+    },
+    [updateAttachment, applyBlockUpdate],
+  );
+
   const removeAttachment = useCallback((id: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   }, []);
@@ -450,6 +534,8 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
     addFiles,
     addUrl,
     retryUrl,
+    retryFile,
+    retryImage,
     addImage,
     removeAttachment,
     clearAll,

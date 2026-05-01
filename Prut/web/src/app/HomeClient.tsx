@@ -730,11 +730,6 @@ function PageContent() {
           }, 2000);
         }
       }
-
-      // Clear attachments after successful enhance to prevent stale context on next prompt
-      if (context.attachments.length > 0) {
-        context.clearAll();
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -1429,6 +1424,9 @@ function PageContent() {
             onAddUrl={context.addUrl}
             onAddImage={context.addImage}
             onRetryAttachment={context.retryUrl}
+            onRetryFile={context.retryFile}
+            onRetryImage={context.retryImage}
+            contextTier={isPro ? "pro" : "free"}
             onRemoveAttachment={context.removeAttachment}
             contextTotalTokens={context.totalTokens}
             contextIsOverLimit={context.isOverLimit}

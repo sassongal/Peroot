@@ -8,9 +8,12 @@ interface ContextChipsProps {
   attachments: ContextAttachment[];
   onRemove: (id: string) => void;
   onRetry?: (id: string) => void;
+  onRetryFile?: (id: string) => void;
+  onRetryImage?: (id: string) => void;
   /** @deprecated — kept for call-site compat; ContextChips no longer enforces file count. */
   maxFiles?: number;
   tokenLimit?: number;
+  tier?: "free" | "pro";
 }
 
 function formatTokenCount(count: number): string {
@@ -18,7 +21,15 @@ function formatTokenCount(count: number): string {
   return String(count);
 }
 
-export function ContextChips({ attachments, onRemove, onRetry, tokenLimit }: ContextChipsProps) {
+export function ContextChips({
+  attachments,
+  onRemove,
+  onRetry,
+  onRetryFile,
+  onRetryImage,
+  tokenLimit,
+  tier,
+}: ContextChipsProps) {
   if (attachments.length === 0) return null;
 
   const totalTokens = attachments.reduce(
@@ -42,7 +53,15 @@ export function ContextChips({ attachments, onRemove, onRetry, tokenLimit }: Con
             stage={a.stage ?? "uploading"}
             title={a.name || a.url || "attachment"}
             onRemove={() => onRemove(a.id)}
-            onRetry={onRetry && a.type === "url" ? () => onRetry(a.id) : undefined}
+            onRetry={
+              onRetry && a.type === "url"
+                ? () => onRetry(a.id)
+                : onRetryFile && a.type === "file"
+                  ? () => onRetryFile(a.id)
+                  : onRetryImage && a.type === "image"
+                    ? () => onRetryImage(a.id)
+                    : undefined
+            }
           />
         ))}
       </div>
@@ -81,6 +100,8 @@ export function ContextChips({ attachments, onRemove, onRetry, tokenLimit }: Con
         {attachments.length > 0 && (
           <span className="text-[var(--text-muted)]">קובץ עד 10MB · תמונה עד 5MB</span>
         )}
+
+        {tier === "free" && <span className="text-[var(--text-muted)]">1 העלאה ביום (חינם)</span>}
       </div>
     </div>
   );

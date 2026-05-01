@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) {
       return NextResponse.json(
         {
-          error: "ניצלת את מכסת ההעלאה החינמית להיום. שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
+          error:
+            "ניצלת את מכסת ההעלאות החינמית להיום (1 ביום). שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
         },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
       );
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
 
     const stream = new ReadableStream({
       async start(controller) {
+        let committed = false;
         try {
           const block = await processAttachment({
             id,
@@ -104,12 +106,13 @@ export async function POST(request: NextRequest) {
             mimeType: file.type,
             onStage: (stage: ProcessingStage) => controller.enqueue(sseEvent({ stage })),
           });
+          committed = true;
           controller.enqueue(sseEvent({ block }));
         } catch (err) {
-          await rl.rollback();
           logger.error("[context/extract-file]", err);
           controller.enqueue(sseEvent({ error: "שגיאה בעיבוד הקובץ" }));
         } finally {
+          if (!committed) await rl.rollback();
           controller.close();
         }
       },

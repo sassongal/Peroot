@@ -68,6 +68,17 @@ interface PromptInputProps {
 
 import { useI18n } from "@/context/I18nContext";
 
+function toastUploadError(msg: string): void {
+  if (msg.includes("שדרג ל-Pro")) {
+    toast.error(msg, {
+      action: { label: "שדרג לPro", onClick: () => (window.location.href = "/pricing") },
+      duration: 8000,
+    });
+  } else {
+    toast.error(msg);
+  }
+}
+
 function looksLikeUrl(text: string): boolean {
   if (!text || text.includes("\n") || text.includes(" ")) return false;
   try {
@@ -416,7 +427,7 @@ export function PromptInput({
                 .then(() => onAddImage?.(img))
                 .then(() => toast.success(`"${img.name}" נוספה`))
                 .catch((err: unknown) =>
-                  toast.error(err instanceof Error ? err.message : "שגיאה בהוספת תמונה"),
+                  toastUploadError(err instanceof Error ? err.message : "שגיאה בהוספת תמונה"),
                 );
             }
 
@@ -427,7 +438,7 @@ export function PromptInput({
                   toast.success(`${docFiles.length} קבצים נוספו`);
                 })
                 .catch((err: unknown) => {
-                  toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קבצים");
+                  toastUploadError(err instanceof Error ? err.message : "שגיאה בהוספת קבצים");
                 });
             } else {
               for (const file of docFiles) {
@@ -435,7 +446,7 @@ export function PromptInput({
                   .then(() => onAddFile?.(file))
                   .then(() => toast.success(`"${file.name}" נוסף`))
                   .catch((err: unknown) =>
-                    toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קובץ"),
+                    toastUploadError(err instanceof Error ? err.message : "שגיאה בהוספת קובץ"),
                   );
               }
             }
@@ -478,7 +489,9 @@ export function PromptInput({
                         .then(() => onAddUrl(text))
                         .then(() => toast.success("קישור נוסף לקונטקסט"))
                         .catch((err: unknown) =>
-                          toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קישור"),
+                          toastUploadError(
+                            err instanceof Error ? err.message : "שגיאה בהוספת קישור",
+                          ),
                         );
                     }
                   }}
@@ -582,7 +595,7 @@ export function PromptInput({
                             onAddFiles(files)
                               .then(() => toast.success(`${files.length} קבצים נקלטו בהצלחה`))
                               .catch((err: unknown) =>
-                                toast.error(
+                                toastUploadError(
                                   err instanceof Error ? err.message : "שגיאה בהוספת קבצים",
                                 ),
                               );
@@ -594,7 +607,7 @@ export function PromptInput({
                               .then(() => onAddFile(files[0]))
                               .then(() => toast.success(`"${files[0].name}" נקלט בהצלחה`))
                               .catch((err: unknown) =>
-                                toast.error(
+                                toastUploadError(
                                   err instanceof Error ? err.message : "שגיאה בהוספת קובץ",
                                 ),
                               );
@@ -658,7 +671,7 @@ export function PromptInput({
                                 .then(() => onAddUrl(url))
                                 .then(() => toast.success("הקישור נוסף ועובד בהצלחה"))
                                 .catch((err: unknown) =>
-                                  toast.error(
+                                  toastUploadError(
                                     err instanceof Error ? err.message : "שגיאה בהוספת קישור",
                                   ),
                                 );
@@ -691,7 +704,7 @@ export function PromptInput({
                               .then(() => onAddImage(file))
                               .then(() => toast.success(`"${file.name}" נוספה ועובדה בהצלחה`))
                               .catch((err: unknown) =>
-                                toast.error(
+                                toastUploadError(
                                   err instanceof Error ? err.message : "שגיאה בהוספת תמונה",
                                 ),
                               );

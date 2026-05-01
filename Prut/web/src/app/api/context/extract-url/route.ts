@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "ניצלת את מכסת חילוץ הקישורים החינמית להיום. שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
+            "ניצלת את מכסת ההעלאות החינמית להיום (1 ביום). שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
         },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
       );
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     const stream = new ReadableStream({
       async start(controller) {
+        let committed = false;
         try {
           const block = await processAttachment({
             id,
@@ -69,15 +70,16 @@ export async function POST(request: NextRequest) {
             url,
             onStage: (stage: ProcessingStage) => controller.enqueue(sseEvent({ stage })),
           });
+          committed = true;
           controller.enqueue(sseEvent({ block }));
         } catch (err) {
-          if (rl) await rl.rollback();
           logger.error("[context/extract-url]", err);
           const isUserFacing =
             err instanceof Error && (err as Error & { userFacing?: boolean }).userFacing === true;
           const msg = isUserFacing ? (err as Error).message : "שגיאה בעיבוד הקישור";
           controller.enqueue(sseEvent({ error: msg }));
         } finally {
+          if (!committed && rl) await rl.rollback();
           controller.close();
         }
       },

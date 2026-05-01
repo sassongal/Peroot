@@ -40,4 +40,7 @@ export interface ContextAttachment {
   block?: ContextBlock;
   /** NEW — drives the progress bar in the attachment card */
   stage?: ProcessingStage;
+
+  /** In-memory reference to the original File object for client-side retry. Never serialized. */
+  fileRef?: File;
 }
