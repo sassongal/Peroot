@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FeedbackButtons } from "@/components/features/home/FeedbackButtons";
 import type { PromptScore } from "@/lib/engines/base-engine";
@@ -153,11 +154,12 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
         )}
 
         {questionsLoading && questions.length === 0 && iterationCount === 0 && (
-          <div dir="rtl" className="flex flex-col gap-3 p-4 rounded-xl bg-[var(--glass-bg)]">
-            <div className="h-4 w-32 rounded animate-pulse bg-[var(--border-subtle)]" />
-            <div className="h-10 w-full rounded-lg animate-pulse bg-[var(--border-subtle)]" />
-            <div className="h-10 w-5/6 rounded-lg animate-pulse bg-[var(--border-subtle)]" />
-            <div className="h-10 w-4/6 rounded-lg animate-pulse bg-[var(--border-subtle)]" />
+          <div
+            dir="rtl"
+            className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]"
+          >
+            <Loader2 className="w-4 h-4 text-amber-500 animate-spin shrink-0" />
+            <span className="text-sm text-(--text-muted)">טוען שאלות חידוד...</span>
           </div>
         )}
 
