@@ -157,6 +157,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
   const applyBlockUpdate = useCallback((id: string, block: unknown) => {
     const b = block as { stage?: string };
+    const isError = b.stage === "error";
     setAttachments((prev) =>
       prev.map((a) =>
         a.id === id
@@ -164,7 +165,10 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
               ...a,
               block: block as ContextAttachment["block"],
               stage: b.stage as ProcessingStage,
-              status: b.stage === "error" ? "error" : "ready",
+              status: isError ? "error" : "ready",
+              // Release the raw File reference once successfully processed — only
+              // keep it on error so the retry button can re-upload the same file.
+              fileRef: isError ? a.fileRef : undefined,
             }
           : a,
       ),
@@ -407,7 +411,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         const res = await fetch(getApiPath("/api/context/extract-url"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: attachment.url, isRetry: true }),
+          body: JSON.stringify({ url: attachment.url }),
         });
 
         if (!res.ok) {

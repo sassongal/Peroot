@@ -16,11 +16,9 @@ function sseEvent(data: unknown): Uint8Array {
 export async function POST(request: NextRequest) {
   // Validate body before auth/rate-limit — malformed requests must not consume quota
   let url: string;
-  let isRetry = false;
   try {
     const body = await request.json();
     url = body?.url;
-    isRetry = body?.isRetry === true;
   } catch {
     return NextResponse.json({ error: "גוף הבקשה אינו תקין" }, { status: 400 });
   }
@@ -44,9 +42,8 @@ export async function POST(request: NextRequest) {
     const tier: PlanTier =
       profile?.plan_tier === "pro" || profile?.plan_tier === "admin" ? "pro" : "free";
 
-    // Retries don't consume quota — the original attempt already counted.
-    const rl = isRetry ? null : await checkExtractionLimit(user.id, tier);
-    if (rl && !rl.allowed) {
+    const rl = await checkExtractionLimit(user.id, tier);
+    if (!rl.allowed) {
       return NextResponse.json(
         {
           error:
@@ -79,7 +76,7 @@ export async function POST(request: NextRequest) {
           const msg = isUserFacing ? (err as Error).message : "שגיאה בעיבוד הקישור";
           controller.enqueue(sseEvent({ error: msg }));
         } finally {
-          if (!committed && rl) await rl.rollback();
+          if (!committed) await rl.rollback();
           controller.close();
         }
       },

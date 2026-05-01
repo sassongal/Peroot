@@ -204,6 +204,7 @@ function PageContent() {
   // model output can't cause the "missing middle" bug where the rest of
   // the prompt body is misrouted into the questions buffer and lost.
   const streamAccRef = useRef({ rawText: "" });
+  const questionsAbortRef = useRef<AbortController | null>(null);
 
   const { startStream } = useStreamingCompletion({
     onChunk: useCallback(
@@ -482,7 +483,18 @@ function PageContent() {
     }).catch(() => {});
   };
 
-  const processStreamResult = (label: string) => {
+  const processStreamResult = (
+    label: string,
+    fetchQuestionsParams?: {
+      prompt: string;
+      category: string;
+      tone: string;
+      capability_mode: string;
+      contextPayload: unknown[];
+      iteration?: number;
+      previousQuestionIds?: number[];
+    },
+  ) => {
     const acc = streamAccRef.current;
 
     // Guard: skip saving partial/interrupted results.
@@ -522,6 +534,42 @@ function PageContent() {
           dispatch({ type: "SET_QUESTIONS", payload: [] });
         }
       }
+    } else if (fetchQuestionsParams && body.length > 20) {
+      dispatch({ type: "SET_QUESTIONS_LOADING", payload: true });
+      questionsAbortRef.current?.abort();
+      const abort = new AbortController();
+      questionsAbortRef.current = abort;
+      fetch(getApiPath("/api/enhance/questions"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: fetchQuestionsParams.prompt,
+          enhancedPrompt: body,
+          category: fetchQuestionsParams.category,
+          tone: fetchQuestionsParams.tone,
+          capability_mode: fetchQuestionsParams.capability_mode,
+          ...(fetchQuestionsParams.iteration !== undefined && {
+            iteration: fetchQuestionsParams.iteration,
+          }),
+          ...(fetchQuestionsParams.contextPayload.length > 0 && {
+            context: fetchQuestionsParams.contextPayload,
+          }),
+          ...(fetchQuestionsParams.previousQuestionIds?.length && {
+            previousQuestionIds: fetchQuestionsParams.previousQuestionIds,
+          }),
+        }),
+        signal: abort.signal,
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data: { questions?: unknown[] } | null) => {
+          if (abort.signal.aborted) return;
+          dispatch({ type: "SET_QUESTIONS", payload: (data?.questions as never) ?? [] });
+        })
+        .catch((err: Error) => {
+          if (err?.name === "AbortError") return;
+          logger.warn(`[${label}] Questions fetch failed`, err);
+          dispatch({ type: "SET_QUESTIONS", payload: [] });
+        });
     } else {
       dispatch({ type: "SET_QUESTIONS", payload: [] });
     }
@@ -682,7 +730,14 @@ function PageContent() {
       ...(detectedLang === "en" && { mode_params: { ...currentModeParams, input_language: "en" } }),
     });
 
-    const result = processStreamResult("Enhance");
+    questionsAbortRef.current?.abort();
+    const result = processStreamResult("Enhance", {
+      prompt: ps.input,
+      category: ps.selectedCategory,
+      tone: ps.selectedTone,
+      capability_mode: ps.selectedCapability,
+      contextPayload,
+    });
     if (result.text) {
       trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
       recordUsageSignal("enhance", result.text);
@@ -802,7 +857,19 @@ function PageContent() {
         ...(targetModel !== "general" && { target_model: targetModel }),
       });
 
-      const refineResult = processStreamResult("Refine");
+      const answeredIds = ps.questions
+        .filter((q) => ps.questionAnswers[String(q.id)]?.trim())
+        .map((q) => q.id);
+      questionsAbortRef.current?.abort();
+      const refineResult = processStreamResult("Refine", {
+        prompt: ps.input,
+        category: ctx?.category || ps.selectedCategory,
+        tone: ctx?.tone || ps.selectedTone,
+        capability_mode: ctx?.mode || ps.selectedCapability,
+        contextPayload: contextPayloadRefine,
+        iteration: ps.iterationCount + 1,
+        previousQuestionIds: answeredIds,
+      });
       if (refineResult.text) {
         recordUsageSignal("refine", refineResult.text);
         dispatch({ type: "INCREMENT_ITERATION" });
