@@ -1,17 +1,19 @@
 "use client";
 
-import { ComponentType, useState } from "react";
+import { useState, useEffect, useRef, useCallback, ComponentType } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
-  Rocket,
   ArrowRight,
-  ArrowLeft,
+  Trophy,
+  Rocket,
   MessageSquare,
   Globe,
   Palette,
   Bot,
   Video,
-  Sparkles,
-  CheckCircle2,
+  Zap,
+  Star,
+  Users,
 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -20,13 +22,14 @@ import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
 import { CAPABILITY_CONFIGS, CapabilityMode, type IconName } from "@/lib/capability-mode";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface OnboardingOverlayProps {
   onComplete: (data: { role: string; goal: string }) => void;
 }
 
-// Map registry icon names to actual lucide React components. Keeps the
-// canonical CAPABILITY_CONFIGS in capability-mode.ts JSX-free (it's pure
-// data) while letting components like this one project it onto a UI tree.
+const TOTAL_STEPS = 2;
+
 const ICON_BY_NAME: Record<IconName, ComponentType<{ className?: string }>> = {
   MessageSquare,
   Globe,
@@ -35,13 +38,7 @@ const ICON_BY_NAME: Record<IconName, ComponentType<{ className?: string }>> = {
   Video,
 };
 
-// Onboarding-specific overlay on the canonical registry: which modes to
-// surface in the onboarding tour, and which to label as "coming soon"
-// for first-time users. The 4-mode subset (skipping Video) and the
-// "Agent Builder is coming soon" copy are PRESERVED from the previous
-// hand-rolled local list — this commit is purely a deduplication, not
-// a behavior change.
-const ONBOARDING_MODES: Array<{ mode: CapabilityMode; comingSoon?: boolean }> = [
+const ONBOARDING_MODES = [
   { mode: CapabilityMode.STANDARD },
   { mode: CapabilityMode.DEEP_RESEARCH },
   { mode: CapabilityMode.IMAGE_GENERATION },
@@ -49,50 +46,40 @@ const ONBOARDING_MODES: Array<{ mode: CapabilityMode; comingSoon?: boolean }> = 
   { mode: CapabilityMode.AGENT_BUILDER },
 ];
 
-// Project the onboarding subset onto the registry, attaching the React
-// icon component and the onboarding-specific copy/flags. Built once at
-// module load — the registry never changes at runtime.
-const CAPABILITY_MODES = ONBOARDING_MODES.map(({ mode, comingSoon }) => {
+const CAPABILITY_MODES = ONBOARDING_MODES.map(({ mode }) => {
   const cfg = CAPABILITY_CONFIGS[mode];
   return {
+    mode,
     icon: ICON_BY_NAME[cfg.icon],
     color: cfg.color,
     labelHe: cfg.labelHe,
-    descriptionHe: cfg.descriptionHe,
-    comingSoon,
   };
 });
 
-const COLOR_MAP: Record<string, { bg: string; border: string; text: string; ring: string }> = {
-  sky: {
-    bg: "bg-sky-500/10",
-    border: "border-sky-500/30",
-    text: "text-sky-400",
-    ring: "ring-sky-500/20",
-  },
-  emerald: {
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
-    text: "text-emerald-400",
-    ring: "ring-emerald-500/20",
-  },
-  purple: {
-    bg: "bg-purple-500/10",
-    border: "border-purple-500/30",
-    text: "text-purple-400",
-    ring: "ring-purple-500/20",
-  },
-  amber: {
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-    text: "text-amber-400",
-    ring: "ring-amber-500/20",
-  },
+const COLOR_TEXT: Record<string, string> = {
+  sky: "text-sky-400",
+  emerald: "text-emerald-400",
+  purple: "text-purple-400",
+  amber: "text-amber-400",
+  rose: "text-rose-400",
+};
+const COLOR_BG: Record<string, string> = {
+  sky: "bg-sky-500/10",
+  emerald: "bg-emerald-500/10",
+  purple: "bg-purple-500/10",
+  amber: "bg-amber-500/10",
+  rose: "bg-rose-500/10",
+};
+const COLOR_BORDER: Record<string, string> = {
+  sky: "border-sky-500/25",
+  emerald: "border-emerald-500/25",
+  purple: "border-purple-500/25",
+  amber: "border-amber-500/25",
+  rose: "border-rose-500/25",
 };
 
-const TOTAL_STEPS = 3;
+// ─── API ──────────────────────────────────────────────────────────────────────
 
-// 5.7 Mark onboarding as complete in the DB
 async function markOnboardingComplete(): Promise<void> {
   try {
     await fetch(getApiPath("/api/user/onboarding/complete"), {
@@ -104,49 +91,421 @@ async function markOnboardingComplete(): Promise<void> {
   }
 }
 
+// ─── Aurora background ────────────────────────────────────────────────────────
+
+function AuroraBackground() {
+  const prefersReduced = useReducedMotion();
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <div className="absolute inset-0 bg-[#060608]" />
+
+      <motion.div
+        className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] rounded-full"
+        style={{
+          background: "radial-gradient(circle at center, #7C3AED 0%, #4F46E5 40%, transparent 70%)",
+          filter: "blur(90px)",
+          opacity: 0.28,
+        }}
+        animate={
+          prefersReduced
+            ? {}
+            : { x: [0, "8%", "-5%", 0], y: [0, "6%", "-8%", 0], scale: [1, 1.08, 0.96, 1] }
+        }
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        className="absolute bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full"
+        style={{
+          background: "radial-gradient(circle at center, #F59E0B 0%, #D97706 40%, transparent 70%)",
+          filter: "blur(110px)",
+          opacity: 0.22,
+        }}
+        animate={
+          prefersReduced
+            ? {}
+            : { x: [0, "-7%", "5%", 0], y: [0, "-6%", "9%", 0], scale: [1.1, 0.92, 1.05, 1.1] }
+        }
+        transition={{ duration: 28, repeat: Infinity, ease: "easeInOut", delay: 6 }}
+      />
+
+      <motion.div
+        className="absolute top-[30%] left-[35%] w-[45vw] h-[45vw] rounded-full"
+        style={{
+          background: "radial-gradient(circle at center, #06B6D4 0%, #0284C7 40%, transparent 70%)",
+          filter: "blur(80px)",
+          opacity: 0.15,
+        }}
+        animate={
+          prefersReduced
+            ? {}
+            : { x: [0, "6%", "-8%", 0], y: [0, "-5%", "7%", 0], scale: [0.9, 1.12, 0.98, 0.9] }
+        }
+        transition={{ duration: 19, repeat: Infinity, ease: "easeInOut", delay: 12 }}
+      />
+
+      <div
+        className="absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Particles ────────────────────────────────────────────────────────────────
+
+function ParticleCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const COLORS = ["#F59E0B", "#818CF8", "#34D399", "#60A5FA", "#F472B6", "#A78BFA"];
+    const particles = Array.from({ length: 40 }, () => ({
+      x: Math.random() * (canvas.width || 400),
+      y: Math.random() * (canvas.height || 800),
+      size: Math.random() * 1.6 + 0.3,
+      speedY: -(Math.random() * 0.3 + 0.07),
+      speedX: (Math.random() - 0.5) * 0.15,
+      opacity: Math.random() * 0.4 + 0.07,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    }));
+
+    let animId: number;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        const hex = Math.round(p.opacity * 255)
+          .toString(16)
+          .padStart(2, "0");
+        ctx.fillStyle = p.color + hex;
+        ctx.fill();
+        p.y += p.speedY;
+        p.x += p.speedX;
+        if (p.y < -5) {
+          p.y = canvas.height + 5;
+          p.x = Math.random() * canvas.width;
+        }
+      }
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      aria-hidden="true"
+    />
+  );
+}
+
+// ─── Scene 1 — Welcome + Capabilities ────────────────────────────────────────
+
+function Scene1({ onNext }: { onNext: () => void }) {
+  const prefersReduced = useReducedMotion();
+
+  return (
+    <div
+      className="relative flex flex-col items-center justify-center text-center h-full px-6 py-12 gap-7"
+      dir="rtl"
+    >
+      {/* Logo */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.75, y: -12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="relative flex items-center justify-center"
+      >
+        <motion.div
+          className="absolute w-64 h-20 bg-amber-500/20 blur-[55px] rounded-full"
+          animate={prefersReduced ? {} : { scale: [1, 1.18, 1], opacity: [0.2, 0.35, 0.2] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/Peroot-hero.png"
+          alt="פירוט"
+          className="relative z-10 h-24 sm:h-32 w-auto drop-shadow-[0_0_28px_rgba(245,158,11,0.45)]"
+        />
+      </motion.div>
+
+      {/* Tagline */}
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        className="space-y-1.5"
+      >
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+          ברוכים הבאים לפירוט
+        </h1>
+        <p className="text-[0.97rem] text-white/58 max-w-[19rem] mx-auto leading-relaxed">
+          מרעיון גולמי לפרומפט מקצועי — תוך שניות
+        </p>
+      </motion.div>
+
+      {/* Capability mode pills — compact horizontal row */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.55 }}
+        className="flex flex-wrap justify-center gap-2 max-w-[22rem]"
+      >
+        {CAPABILITY_MODES.map(({ icon: Icon, color, labelHe }, i) => (
+          <motion.div
+            key={labelHe}
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ delay: 0.56 + i * 0.07, duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold",
+              COLOR_BG[color] ?? "bg-white/5",
+              COLOR_BORDER[color] ?? "border-white/10",
+              COLOR_TEXT[color] ?? "text-white",
+            )}
+          >
+            <Icon className="w-3 h-3 shrink-0" />
+            <span>{labelHe}</span>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Stats row */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9 }}
+        className="flex items-center gap-5 text-center"
+      >
+        {[
+          { icon: Zap, value: "2", label: "שיפורים חינם ביום", color: "text-amber-400" },
+          { icon: Users, value: "ישראלי", label: "עברית ראשית", color: "text-sky-400" },
+          { icon: Star, value: "5", label: "מצבי AI", color: "text-purple-400" },
+        ].map(({ icon: Icon, value, label, color }) => (
+          <div key={label} className="flex flex-col items-center gap-0.5">
+            <Icon className={cn("w-3.5 h-3.5 mb-0.5", color)} />
+            <span className="text-sm font-bold text-white">{value}</span>
+            <span className="text-[10px] text-white/45 leading-tight">{label}</span>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* CTA */}
+      <motion.button
+        initial={{ opacity: 0, y: 16 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          ...(prefersReduced
+            ? {}
+            : {
+                boxShadow: [
+                  "0 8px 40px -8px rgba(245,158,11,0.4)",
+                  "0 8px 60px -4px rgba(245,158,11,0.75)",
+                  "0 8px 40px -8px rgba(245,158,11,0.4)",
+                ],
+              }),
+        }}
+        transition={{
+          delay: 1.1,
+          duration: 0.5,
+          boxShadow: { duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 1.5 },
+        }}
+        onClick={onNext}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.96 }}
+        className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-lg cursor-pointer"
+      >
+        <span>בוא נתחיל</span>
+        <motion.div
+          animate={prefersReduced ? {} : { x: [0, 4, 0] }}
+          transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ArrowRight className="w-5 h-5" />
+        </motion.div>
+      </motion.button>
+    </div>
+  );
+}
+
+// ─── Scene 2 — Pioneer badge + Launch ────────────────────────────────────────
+
+function Scene2({ onFinish }: { onFinish: () => void }) {
+  const [badgeIn, setBadgeIn] = useState(false);
+  const prefersReduced = useReducedMotion();
+
+  useEffect(() => {
+    const t = setTimeout(() => setBadgeIn(true), 280);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div
+      className="flex flex-col items-center justify-center h-full px-6 py-14 gap-8 text-center"
+      dir="rtl"
+    >
+      {/* Ambient glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/[0.07] blur-[80px] rounded-full pointer-events-none" />
+
+      {/* Pioneer badge */}
+      <AnimatePresence>
+        {badgeIn && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.3, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            className="relative"
+          >
+            {/* Star-burst rays */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-[3px] h-8 bg-gradient-to-t from-transparent to-amber-400/65 rounded-full origin-bottom"
+                  style={{ rotate: i * 45, bottom: "50%" }}
+                  initial={{ scaleY: 0, opacity: 0 }}
+                  animate={{ scaleY: 1, opacity: 1 }}
+                  transition={{ delay: 0.06 + i * 0.05, duration: 0.35, ease: "backOut" }}
+                />
+              ))}
+            </div>
+
+            {/* Badge */}
+            <motion.div
+              className="w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-500/25 via-yellow-500/15 to-transparent border border-amber-500/40 flex flex-col items-center justify-center shadow-[0_0_70px_-10px_rgba(245,158,11,0.6)] relative z-10"
+              animate={prefersReduced ? {} : { rotate: [0, 1, -1, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            >
+              <Trophy className="w-10 h-10 text-amber-400 mb-1" />
+              <span className="text-[11px] text-amber-300/90 font-bold tracking-wide uppercase">
+                Pioneer
+              </span>
+            </motion.div>
+
+            {/* Outer pulse ring */}
+            <motion.div
+              className="absolute inset-[-10px] rounded-[2.5rem] border border-amber-400/20"
+              animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.12, 0.4] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Headline */}
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.55, duration: 0.6 }}
+        className="space-y-2"
+      >
+        <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
+          מוכן להתחיל!
+        </h2>
+        <p className="text-white/56 max-w-[17rem] mx-auto text-[0.97rem] leading-relaxed">
+          קיבלת את תג ה-Pioneer — אחד הראשונים לפלטפורמה
+        </p>
+      </motion.div>
+
+      {/* Tip card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.85 }}
+        className="w-full max-w-[22rem] px-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-sm text-white/60 leading-relaxed text-right"
+      >
+        <p className="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider mb-2">
+          איך מתחילים?
+        </p>
+        <p>
+          הזן כל פרומפט שיש לך — לChatGPT, Claude, Midjourney, כל AI — ופירוט ישפר אותו אוטומטית
+        </p>
+      </motion.div>
+
+      {/* Final CTA */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.88 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          ...(prefersReduced
+            ? {}
+            : {
+                boxShadow: [
+                  "0 8px 40px -8px rgba(52,211,153,0.4)",
+                  "0 8px 60px -4px rgba(52,211,153,0.75)",
+                  "0 8px 40px -8px rgba(52,211,153,0.4)",
+                ],
+              }),
+        }}
+        transition={{
+          delay: 1.2,
+          type: "spring",
+          stiffness: 240,
+          damping: 16,
+          boxShadow: { duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 2 },
+        }}
+        onClick={onFinish}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.96 }}
+        className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-400 text-black font-bold text-lg cursor-pointer"
+      >
+        <Rocket className="w-5 h-5" />
+        <span>התחל עכשיו!</span>
+      </motion.button>
+    </div>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+
 export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const [step, setStep] = useState(1);
   const [isVisible, setIsVisible] = useState(true);
+  const prefersReduced = useReducedMotion();
 
-  const handleNext = () => {
-    if (step === TOTAL_STEPS) {
-      handleFinish();
-    } else {
-      setStep((prev) => prev + 1);
-    }
-  };
-
-  const handleBack = () => {
-    setStep((prev) => Math.max(1, prev - 1));
-  };
+  const handleNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
 
   const handleFinish = async () => {
-    // 5.7 Mark onboarding complete in DB
     await markOnboardingComplete();
-
-    // Award Pioneer achievement (fire-and-forget)
     fetch(getApiPath("/api/user/achievements/award"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ achievementId: "pioneer" }),
     }).catch((e) => logger.warn("Failed to award pioneer badge", e));
-
     setIsVisible(false);
-    setTimeout(() => {
-      onComplete({ role: "", goal: "" });
-    }, 500);
+    setTimeout(() => onComplete({ role: "", goal: "" }), 450);
   };
 
   const handleSkip = async () => {
-    // 5.7 Mark onboarding complete even when skipped
     markOnboardingComplete().catch((e) =>
       logger.warn("Failed to mark onboarding complete on skip", e),
     );
-
     setIsVisible(false);
-    setTimeout(() => {
-      onComplete({ role: "", goal: "" });
-    }, 300);
+    setTimeout(() => onComplete({ role: "", goal: "" }), 280);
   };
 
   const trapRef = useFocusTrap<HTMLDivElement>(isVisible);
@@ -155,196 +514,76 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   if (!isVisible) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-white/60 dark:bg-black/80 backdrop-blur-xl animate-in fade-in duration-500 overscroll-contain overflow-y-auto"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35 }}
+      className="fixed inset-0 z-[100] flex flex-col overflow-hidden"
       onKeyDown={(e) => {
         if (e.key === "Escape") handleSkip();
       }}
     >
+      <AuroraBackground />
+      <ParticleCanvas />
+
+      {/* Skip */}
+      <div className="absolute top-4 left-4 z-20">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.8 }}
+          onClick={handleSkip}
+          className="text-xs text-white/22 hover:text-white/50 transition-colors px-4 py-2.5 min-h-[44px] flex items-center rounded-xl hover:bg-white/5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        >
+          דלג
+        </motion.button>
+      </div>
+
+      {/* Step indicator */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5">
+        <div className="flex gap-2">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <motion.div
+              key={i}
+              className={cn(
+                "h-[3px] rounded-full transition-all duration-500",
+                i + 1 === step
+                  ? "w-8 bg-gradient-to-r from-amber-400 to-yellow-400"
+                  : i + 1 < step
+                    ? "w-4 bg-white/35"
+                    : "w-4 bg-white/12",
+              )}
+            />
+          ))}
+        </div>
+        <p className="text-[9px] text-white/28 tracking-wide">
+          {step} / {TOTAL_STEPS}
+        </p>
+      </div>
+
+      {/* Scenes */}
       <div
         ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="מסך הכרות"
-        className="w-full max-w-lg glass-card rounded-[40px] border-[var(--glass-border)] bg-white/95 dark:bg-zinc-950/90 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-700"
-        dir="rtl"
+        className="relative z-10 flex-1 min-h-0 flex flex-col max-w-lg mx-auto w-full"
       >
-        {/* Background decoration */}
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-amber-500/20 blur-[120px] rounded-full" />
-          <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-yellow-500/10 blur-[120px] rounded-full" />
-        </div>
-
-        {/* Skip button */}
-        <div className="absolute top-6 left-6 z-20">
-          <button
-            onClick={handleSkip}
-            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors px-4 py-2.5 min-h-[44px] flex items-center rounded-lg hover:bg-[var(--glass-bg)] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: prefersReduced ? 0 : 36 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: prefersReduced ? 0 : -36 }}
+            transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+            className="flex-1 min-h-0 flex flex-col"
           >
-            דלג
-          </button>
-        </div>
-
-        {/* Step dots */}
-        <div className="pt-8 sm:pt-10 px-6 sm:px-10 md:px-14 flex items-center justify-center gap-3 relative z-10">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-500",
-                i + 1 === step
-                  ? "w-8 bg-gradient-to-r from-amber-400 to-yellow-500"
-                  : "w-1.5 bg-black/10 dark:bg-white/10",
-              )}
-            />
-          ))}
-        </div>
-
-        {/* Step content */}
-        <div className="px-6 sm:px-10 md:px-14 pt-8 sm:pt-10 pb-0 relative z-10 min-h-[280px] sm:min-h-[340px]">
-          {/* Step 1: Welcome */}
-          {step === 1 && (
-            <div className="text-center space-y-8 animate-in slide-in-from-right-4 duration-500">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20 mx-auto shadow-2xl shadow-amber-500/10">
-                <Rocket className="w-12 h-12 text-amber-400" />
-              </div>
-              <div className="space-y-4">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--text-primary)] tracking-tight">
-                  ברוך הבא ל-Peroot!
-                </h2>
-                <p className="text-lg text-[var(--text-muted)] max-w-md mx-auto leading-relaxed">
-                  Peroot משדרג את הפרומפטים שלך באמצעות AI מתקדם - הפוך כל רעיון גולמי לפרומפט
-                  מקצועי ומפורט בשניות.
-                </p>
-              </div>
-              <div className="flex items-center justify-center gap-6 pt-2">
-                {[
-                  { icon: Sparkles, label: "שיפור אוטומטי" },
-                  { icon: Globe, label: "מחקר חכם" },
-                  { icon: Bot, label: "בניית סוכנים" },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex flex-col items-center gap-2">
-                    <div className="w-10 h-10 rounded-2xl bg-[var(--glass-bg)] border border-[var(--glass-border)] flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-amber-400" />
-                    </div>
-                    <span className="text-xs text-slate-500">{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Capability Modes */}
-          {step === 2 && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-              <div className="text-center">
-                <h2 className="text-3xl font-serif font-bold text-[var(--text-primary)] mb-2">
-                  בחר מצב פרומפט
-                </h2>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  Peroot מציע 4 מצבי עבודה - כל אחד מותאם לסוג משימה אחר
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {CAPABILITY_MODES.map(
-                  ({ icon: Icon, color, labelHe, descriptionHe, comingSoon }) => {
-                    const c = COLOR_MAP[color];
-                    return (
-                      <div
-                        key={labelHe}
-                        className={cn(
-                          "flex items-start gap-3 p-4 rounded-2xl border transition-all relative",
-                          comingSoon && "opacity-50 cursor-not-allowed",
-                          c.bg,
-                          c.border,
-                        )}
-                      >
-                        {comingSoon && (
-                          <span className="absolute top-2 left-2 text-[9px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">
-                            בקרוב
-                          </span>
-                        )}
-                        <div
-                          className={cn(
-                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ring-1",
-                            c.bg,
-                            c.ring,
-                          )}
-                        >
-                          <Icon className={cn("w-4 h-4", c.text)} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className={cn("text-sm font-bold", c.text)}>{labelHe}</p>
-                          <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                            {descriptionHe}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Ready */}
-          {step === 3 && (
-            <div className="text-center space-y-8 animate-in slide-in-from-right-4 duration-500">
-              <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mx-auto shadow-2xl shadow-emerald-500/10 animate-pulse-once">
-                <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-              </div>
-              <div className="space-y-4">
-                <h2 className="text-4xl font-serif font-bold text-[var(--text-primary)] tracking-tight">
-                  מוכן להתחיל!
-                </h2>
-                <p className="text-lg text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
-                  כתוב פרומפט או בחר מהספרייה ותן ל-AI לעשות את הקסם
-                </p>
-              </div>
-              <div className="px-6 py-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-sm text-slate-400 leading-relaxed">
-                <span className="text-amber-400 font-semibold">טיפ: </span>
-                השתמש בסוגריים מסולסלים כמו{" "}
-                <code className="text-amber-300 bg-amber-500/10 px-1 rounded">
-                  {"{שם_לקוח}"}
-                </code>{" "}
-                בפרומפט כדי ליצור תבניות חכמות שניתן למלא בקליק.
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer controls */}
-        <div className="mt-8 sm:mt-10 px-6 sm:px-10 md:px-14 pb-8 sm:pb-10 md:pb-14 flex items-center justify-between relative z-10">
-          <div>
-            {step > 1 && (
-              <button
-                onClick={handleBack}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-all text-sm font-bold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-              >
-                <ArrowLeft className="w-4 h-4 rtl-flip" />
-                הקודם
-              </button>
-            )}
-          </div>
-
-          <button
-            onClick={handleNext}
-            className={cn(
-              "flex items-center gap-3 px-8 py-4 rounded-2xl text-black font-bold transition-all shadow-xl active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:outline-none",
-              step === TOTAL_STEPS
-                ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-900/20 hover:scale-[1.03] focus-visible:ring-emerald-500"
-                : "bg-gradient-to-r from-amber-500 to-yellow-500 shadow-amber-900/20 hover:scale-[1.03] focus-visible:ring-amber-500",
-            )}
-          >
-            <span>{step === TOTAL_STEPS ? "התחל עכשיו" : "הבא"}</span>
-            {step === TOTAL_STEPS ? (
-              <Rocket className="w-5 h-5" />
-            ) : (
-              <ArrowRight className="w-5 h-5 rtl-flip" />
-            )}
-          </button>
-        </div>
+            {step === 1 && <Scene1 onNext={handleNext} />}
+            {step === 2 && <Scene2 onFinish={handleFinish} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }

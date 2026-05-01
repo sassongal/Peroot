@@ -1152,7 +1152,14 @@ function PageContent() {
     try {
       await completeOnboarding();
       setShowOnboarding(false);
-      toast.success("ברוכים הבאים לפירוט!");
+      toast.success("ברוכים הבאים לפירוט! 🎉 הזן את הפרומפט הראשון שלך");
+      setTimeout(() => {
+        const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          textarea.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 600);
     } catch (e) {
       logger.error("[Onboarding] Error:", e);
       toast.error("שגיאה בשמירת נתוני Onboarding");
