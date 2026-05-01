@@ -201,6 +201,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
       setAttachments((prev) => [...prev, attachment]);
 
+      let extractionError: Error | null = null;
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -219,17 +220,20 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
-          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
+          (error) => {
+            updateAttachment(id, { status: "error", stage: "error", error });
+            extractionError = new Error(error);
+          },
         );
       } catch (err) {
-        updateAttachment(id, {
-          status: "error",
-          stage: "error",
-          error: err instanceof Error ? err.message : "שגיאה לא צפויה",
-        });
+        const msg = err instanceof Error ? err.message : "שגיאה לא צפויה";
+        updateAttachment(id, { status: "error", stage: "error", error: msg });
+        extractionError = err instanceof Error ? err : new Error(msg);
       } finally {
         pendingCounts.current.file--;
       }
+      // Re-throw so the call site (PromptInput) can surface a toast
+      if (extractionError) throw extractionError;
     },
     [limits.maxFiles, updateAttachment, applyBlockUpdate],
   );
@@ -259,6 +263,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
       setAttachments((prev) => [...prev, attachment]);
 
+      let extractionError: Error | null = null;
       try {
         const res = await fetch(getApiPath("/api/context/extract-url"), {
           method: "POST",
@@ -275,17 +280,19 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
-          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
+          (error) => {
+            updateAttachment(id, { status: "error", stage: "error", error });
+            extractionError = new Error(error);
+          },
         );
       } catch (err) {
-        updateAttachment(id, {
-          status: "error",
-          stage: "error",
-          error: err instanceof Error ? err.message : "שגיאה לא צפויה",
-        });
+        const msg = err instanceof Error ? err.message : "שגיאה לא צפויה";
+        updateAttachment(id, { status: "error", stage: "error", error: msg });
+        extractionError = err instanceof Error ? err : new Error(msg);
       } finally {
         pendingCounts.current.url--;
       }
+      if (extractionError) throw extractionError;
     },
     [limits.maxUrls, updateAttachment, applyBlockUpdate],
   );
@@ -320,6 +327,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
       setAttachments((prev) => [...prev, attachment]);
 
+      let extractionError: Error | null = null;
       try {
         const formData = new FormData();
         formData.append("image", file);
@@ -338,17 +346,19 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
           res,
           (stage) => updateAttachment(id, { stage }),
           (block) => applyBlockUpdate(id, block),
-          (error) => updateAttachment(id, { status: "error", stage: "error", error }),
+          (error) => {
+            updateAttachment(id, { status: "error", stage: "error", error });
+            extractionError = new Error(error);
+          },
         );
       } catch (err) {
-        updateAttachment(id, {
-          status: "error",
-          stage: "error",
-          error: err instanceof Error ? err.message : "שגיאה לא צפויה",
-        });
+        const msg = err instanceof Error ? err.message : "שגיאה לא צפויה";
+        updateAttachment(id, { status: "error", stage: "error", error: msg });
+        extractionError = err instanceof Error ? err : new Error(msg);
       } finally {
         pendingCounts.current.image--;
       }
+      if (extractionError) throw extractionError;
     },
     [limits.maxImages, updateAttachment, applyBlockUpdate],
   );

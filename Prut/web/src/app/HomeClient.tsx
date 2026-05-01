@@ -625,6 +625,14 @@ function PageContent() {
       return;
     }
 
+    const erroredAttachments = context.attachments.filter((a) => a.status === "error");
+    if (erroredAttachments.length > 0) {
+      toast.warning(
+        `${erroredAttachments.length === 1 ? "קובץ אחד" : `${erroredAttachments.length} קבצים`} לא עובדו בהצלחה ולא יכללו בקונטקסט — הסירו אותם או נסו שוב`,
+        { duration: 5000 },
+      );
+    }
+
     const currentModeParams: Record<string, string> | undefined =
       ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
         ? {

@@ -38,7 +38,7 @@ import { AVAILABLE_MODELS, selectModelByLength, type ModelId } from "@/lib/ai/mo
 import { memoryFlags } from "@/lib/memory/injection-flags";
 import { extractFacts, mergeFactsForUser } from "@/lib/intelligence/fact-extractor";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 // In-memory per-instance cache. Subscription upgrades may take up to 15s to reflect.
 // Acceptable trade-off vs Redis round-trip on every request.
@@ -1073,29 +1073,35 @@ export async function POST(req: Request) {
             }
 
             if (userId && supabase) {
-              // Save to history table so admin can see actual prompts
-              await logClient
-                .from("history")
-                .insert({
-                  user_id: userId,
-                  prompt,
-                  enhanced_prompt: textCopy,
-                  tone,
-                  category,
-                  capability_mode: capability_mode || "STANDARD",
-                  title: prompt.slice(0, 60),
-                  source: bearerToken?.startsWith("prk_")
-                    ? "api"
-                    : bearerToken
-                      ? "extension"
-                      : "web",
-                  input_source: inputSource,
-                  cost_funnel_stage: 3,
-                  updated_at: new Date().toISOString(),
-                })
-                .then(({ error: histErr }) => {
-                  if (histErr) logger.error("[Enhance] History insert failed:", histErr.message);
-                });
+              // Skip history for completely failed generations (empty output or error
+              // finish reason). Truncated outputs (finishReason=length) are still saved
+              // so the user can see what they got before the credit refund.
+              const shouldSkipHistory = textCopy.length === 0 || finishReasonCopy === "error";
+
+              if (!shouldSkipHistory) {
+                await logClient
+                  .from("history")
+                  .insert({
+                    user_id: userId,
+                    prompt,
+                    enhanced_prompt: textCopy,
+                    tone,
+                    category,
+                    capability_mode: capability_mode || "STANDARD",
+                    title: prompt.slice(0, 60),
+                    source: bearerToken?.startsWith("prk_")
+                      ? "api"
+                      : bearerToken
+                        ? "extension"
+                        : "web",
+                    input_source: inputSource,
+                    cost_funnel_stage: 3,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .then(({ error: histErr }) => {
+                    if (histErr) logger.error("[Enhance] History insert failed:", histErr.message);
+                  });
+              }
 
               await logClient
                 .from("activity_logs")
