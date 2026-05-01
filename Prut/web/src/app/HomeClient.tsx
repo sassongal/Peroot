@@ -13,6 +13,7 @@ import {
 } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
+import { PLAN_CONTEXT_LIMITS } from "@/lib/plans";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
@@ -1433,6 +1434,10 @@ function PageContent() {
             contextIsOverLimit={context.isOverLimit}
             targetModel={targetModel}
             setTargetModel={handleSetTargetModel}
+            contextLimits={{
+              maxFiles: PLAN_CONTEXT_LIMITS[isPro ? "pro" : "free"].maxFiles,
+              tokenLimit: PLAN_CONTEXT_LIMITS[isPro ? "pro" : "free"].total,
+            }}
             creditsRemaining={creditsRemaining}
             isNewUser={isNewUser}
             user={user}

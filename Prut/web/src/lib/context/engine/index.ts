@@ -87,12 +87,16 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
   }
   const detectedType: DocumentType = detectDocumentType(rawText, sourceTitle, input.type);
 
-  // 3. ENRICH
+  // 3. COMPRESS (before enrich so warning blocks also get bounded text)
+  const strategy = getCompressionStrategy(detectedType);
+  const compressed = compressToLimit(rawText, limits.perAttachment, strategy);
+
+  // 4. ENRICH
   onStage?.("enriching");
   let enriched;
   try {
     enriched = await enrichContent({
-      text: rawText,
+      text: compressed.text,
       detectedType,
       sourceType: input.type,
       title: sourceTitle,
@@ -106,7 +110,7 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
       id,
       input,
       sha256,
-      rawText,
+      compressed.text,
       sourceTitle,
       detectedType,
       extractMeta,
@@ -116,10 +120,6 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
     await putCachedBlock(wb, input.tier, input.userId);
     return wb;
   }
-
-  // 4. COMPRESS
-  const strategy = getCompressionStrategy(detectedType);
-  const compressed = compressToLimit(rawText, limits.perAttachment, strategy);
 
   // 5. STRUCTURE
   const block: ContextBlock = {

@@ -16,9 +16,11 @@ function sseEvent(data: unknown): Uint8Array {
 export async function POST(request: NextRequest) {
   // Validate body before auth/rate-limit — malformed requests must not consume quota
   let url: string;
+  let isRetry = false;
   try {
     const body = await request.json();
     url = body?.url;
+    isRetry = body?.isRetry === true;
   } catch {
     return NextResponse.json({ error: "גוף הבקשה אינו תקין" }, { status: 400 });
   }
@@ -31,7 +33,8 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
+    if (!user)
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -41,8 +44,9 @@ export async function POST(request: NextRequest) {
     const tier: PlanTier =
       profile?.plan_tier === "pro" || profile?.plan_tier === "admin" ? "pro" : "free";
 
-    const rl = await checkExtractionLimit(user.id, tier);
-    if (!rl.allowed) {
+    // Retries don't consume quota — the original attempt already counted.
+    const rl = isRetry ? null : await checkExtractionLimit(user.id, tier);
+    if (rl && !rl.allowed) {
       return NextResponse.json(
         { error: "חרגת ממכסת העיבוד היומית" },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
           });
           controller.enqueue(sseEvent({ block }));
         } catch (err) {
-          await rl.rollback();
+          if (rl) await rl.rollback();
           logger.error("[context/extract-url]", err);
           const isUserFacing =
             err instanceof Error && (err as Error & { userFacing?: boolean }).userFacing === true;

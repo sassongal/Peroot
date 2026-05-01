@@ -472,7 +472,7 @@ export function PromptInput({
                       e.preventDefault();
                       Promise.resolve()
                         .then(() => onAddUrl(text))
-                        .then(() => toast.success("קישור נוסף לקונטקסט — מחלץ תוכן..."))
+                        .then(() => toast.success("קישור נוסף לקונטקסט"))
                         .catch((err: unknown) =>
                           toast.error(err instanceof Error ? err.message : "שגיאה בהוספת קישור"),
                         );
@@ -652,7 +652,7 @@ export function PromptInput({
                               setShowUrlInput(false);
                               Promise.resolve()
                                 .then(() => onAddUrl(url))
-                                .then(() => toast.success("הקישור נוסף — מחלץ תוכן..."))
+                                .then(() => toast.success("הקישור נוסף ועובד בהצלחה"))
                                 .catch((err: unknown) =>
                                   toast.error(
                                     err instanceof Error ? err.message : "שגיאה בהוספת קישור",
@@ -678,14 +678,14 @@ export function PromptInput({
                       <input
                         ref={imageInputRef}
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
                             Promise.resolve()
                               .then(() => onAddImage(file))
-                              .then(() => toast.success(`"${file.name}" נוספה — מעבד תמונה...`))
+                              .then(() => toast.success(`"${file.name}" נוספה ועובדה בהצלחה`))
                               .catch((err: unknown) =>
                                 toast.error(
                                   err instanceof Error ? err.message : "שגיאה בהוספת תמונה",

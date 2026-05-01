@@ -177,7 +177,11 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         countByType(attachmentsRef.current, "file") + pendingCounts.current.file >=
         limits.maxFiles
       ) {
-        throw new Error(`ניתן לצרף עד ${limits.maxFiles} קבצים`);
+        throw new Error(
+          limits.maxFiles === 1
+            ? "ניתן לצרף קובץ אחד בלבד"
+            : `ניתן לצרף עד ${limits.maxFiles} קבצים`,
+        );
       }
       if (file.size > MAX_FILE_SIZE) {
         throw new Error("הקובץ גדול מדי (מקסימום 10MB)");
@@ -244,7 +248,11 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         countByType(attachmentsRef.current, "url") + pendingCounts.current.url >=
         limits.maxUrls
       ) {
-        throw new Error(`ניתן לצרף עד ${limits.maxUrls} כתובות URL`);
+        throw new Error(
+          limits.maxUrls === 1
+            ? "ניתן לצרף כתובת URL אחת בלבד"
+            : `ניתן לצרף עד ${limits.maxUrls} כתובות URL`,
+        );
       }
       const normalizedUrl = normalizeUrl(url);
       pendingCounts.current.url++;
@@ -303,13 +311,18 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         countByType(attachmentsRef.current, "image") + pendingCounts.current.image >=
         limits.maxImages
       ) {
-        throw new Error(`ניתן לצרף עד ${limits.maxImages} תמונות`);
+        throw new Error(
+          limits.maxImages === 1
+            ? "ניתן לצרף תמונה אחת בלבד"
+            : `ניתן לצרף עד ${limits.maxImages} תמונות`,
+        );
       }
       if (file.size > MAX_IMAGE_SIZE) {
         throw new Error("התמונה גדולה מדי (מקסימום 5MB)");
       }
-      if (!file.type.startsWith("image/")) {
-        throw new Error("פורמט תמונה לא נתמך");
+      const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+        throw new Error("פורמט תמונה לא נתמך (נתמכים: JPEG, PNG, WebP, GIF)");
       }
       pendingCounts.current.image++;
 
@@ -392,7 +405,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
         const res = await fetch(getApiPath("/api/context/extract-url"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: attachment.url }),
+          body: JSON.stringify({ url: attachment.url, isRetry: true }),
         });
 
         if (!res.ok) {
