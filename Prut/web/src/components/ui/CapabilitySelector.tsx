@@ -107,7 +107,7 @@ export function CapabilitySelector({
             className={cn(
               "relative flex items-center gap-2 rounded-full border overflow-hidden snap-start shrink-0",
               "transition-all duration-200 cursor-pointer",
-              compact ? "px-3 py-1.5" : "px-4 py-2.5",
+              compact ? "px-3 py-1.5 min-h-[44px]" : "px-4 py-2.5 min-h-[44px]",
               isComingSoon
                 ? "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) cursor-not-allowed opacity-50"
                 : isLocked

@@ -514,7 +514,7 @@ export function PromptInput({
                     <div className="relative" data-lang-picker>
                       <button
                         onClick={() => setShowLangPicker((prev) => !prev)}
-                        className="px-2 py-1.5 rounded-full text-xs bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
+                        className="px-2 py-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-xs bg-black/5 dark:bg-black/30 text-(--text-muted) border border-(--glass-border) hover:text-(--text-primary) hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer"
                         title="שפת הקלטה"
                         aria-label="בחר שפת הקלטה"
                       >
@@ -607,7 +607,7 @@ export function PromptInput({
                         else fileInputRef.current?.click();
                       }}
                       className={cn(
-                        "p-2 rounded-lg transition-colors cursor-pointer",
+                        "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
                         "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
                       )}
                       title={
@@ -630,7 +630,7 @@ export function PromptInput({
                         else setShowUrlInput((prev) => !prev);
                       }}
                       className={cn(
-                        "p-2 rounded-lg transition-colors cursor-pointer",
+                        "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
                         showUrlInput
                           ? "text-amber-400 bg-amber-500/10"
                           : "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
@@ -704,7 +704,7 @@ export function PromptInput({
                         else imageInputRef.current?.click();
                       }}
                       className={cn(
-                        "p-2 rounded-lg transition-colors cursor-pointer",
+                        "p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors cursor-pointer",
                         "text-(--text-muted) hover:text-amber-400 hover:bg-amber-500/10",
                       )}
                       title={isGuest ? "התחבר/י כדי לצרף תמונה" : "צרף תמונה"}
@@ -779,7 +779,7 @@ export function PromptInput({
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full ps-10 pe-4 py-2 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-(--glass-border) bg-(--glass-bg) text-(--text-primary) hover:border-black/20 dark:hover:border-white/30 hover:bg-black/6 dark:hover:bg-white/5 appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
+                    className="w-full ps-10 pe-4 py-3 rounded-xl text-base md:text-sm font-medium transition-all duration-300 border border-(--glass-border) bg-(--glass-bg) text-(--text-primary) hover:border-black/20 dark:hover:border-white/30 hover:bg-black/6 dark:hover:bg-white/5 appearance-none cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none focus:outline-none"
                     aria-label="בחר קטגוריה"
                   >
                     {CATEGORY_OPTIONS.map((cat) => (
