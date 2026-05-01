@@ -135,6 +135,7 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
         ...state,
         isLoading: false,
         streamPhase: "interrupted",
+        questionsLoading: false,
       };
 
     case "SET_ERROR":
@@ -143,6 +144,7 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
         error: action.payload,
         isLoading: false,
         streamPhase: "idle",
+        questionsLoading: false,
       };
 
     case "RESET":
