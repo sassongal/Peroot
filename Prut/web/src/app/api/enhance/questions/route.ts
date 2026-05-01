@@ -30,27 +30,34 @@ const Schema = z.object({
   previousQuestionIds: z.array(z.number()).max(20).optional(),
 });
 
-const SYSTEM_PROMPT = `אתה מומחה בניתוח פרומפטים וזיהוי פערי מידע. המשימה שלך: צור שאלות הבהרה חכמות לפרומפט משודרג.
+const SYSTEM_PROMPT = `אתה מומחה בהתאמה אישית של פרומפטים. המשימה שלך: צור שאלות שיתאימו את הפרומפט המשודרג לצרכים הספציפיים של המשתמש.
 
-CONTEXTUAL QUESTION GENERATION RULES:
-1. ANALYZE the prompt domain first: marketing? code? content? research? education? business?
-2. Generate DOMAIN-SPECIFIC questions, not generic ones. For marketing: ask about target audience, USP, funnel stage. For code: ask about language, framework, error handling. For content: ask about tone, audience expertise level, publishing platform.
-3. DYNAMIC COUNT (2-5 questions): Simple prompts (clear single task) → 2 questions. Medium complexity (multi-step or ambiguous) → 3 questions. Complex prompts (vague, multi-domain, strategic) → 4-5 questions.
-4. Each question must be actionable — answering it should DIRECTLY change the output.
-5. Include 2-3 concrete example answers per question that are domain-relevant.
+הפרומפט המשודרג כבר מבניות טובות — תפקיד, משימה, פורמט, מגבלות. אל תשאל על מה שכבר קיים בו.
+שאל על ה-WHO, WHERE, WHEN, FOR WHOM שיהפכו את הפרומפט לייחודי לסיטואציה הספציפית.
+
+PERSONALIZATION QUESTION RULES:
+1. ANALYZE the domain: marketing? code? content? research? education? business?
+2. Ask about the USER'S SPECIFIC CONTEXT — not about the prompt's structure (already handled).
+   - Marketing: target audience demographics, product name, USP, funnel stage, platform
+   - Code: specific language/framework, codebase constraints, team conventions, deployment target
+   - Content: publication platform, reader expertise level, brand voice examples, content length
+   - Research: data sources available, audience for the research output, depth level
+   - Education: learner age/level, prior knowledge assumed, learning objectives
+3. DYNAMIC COUNT (2-4 questions): One clear use case → 2 questions. Broad/multi-use prompt → 3-4 questions.
+4. Every question must change the LLM's output when answered — audience, tone, depth, platform, examples.
+5. Include 2-3 concrete domain-relevant example answers per question.
 6. Questions in Hebrew. Order by impact — most important first.
 
-Enhanced Format:
 Output ONLY a JSON array with no surrounding text, no markdown fences, no explanation.
 [{"id": 1, "question": "...", "description": "...", "examples": ["ex1", "ex2", "ex3"], "priority": 10, "category": "audience", "impactEstimate": "+10 נקודות", "required": true}]
 
 FIELD DEFINITIONS:
-- priority (1-10): 10 = critical gap, 1 = nice-to-have. Order by impact (highest first).
+- priority (1-10): 10 = high personalization impact, 1 = minor tweak. Order highest first.
 - category: role | task | audience | format | constraints | context | platform | style | examples
-- impactEstimate: Estimated score boost, e.g., "+10 נקודות"
-- required: true if answering is critical for quality output
+- impactEstimate: Estimated improvement, e.g., "+10 נקודות"
+- required: true if answering significantly personalizes the output
 
-If the prompt is already comprehensive, return an empty array: []`;
+ALWAYS generate at least 2 questions. The prompt is structurally complete but never fully personalized.`;
 
 function buildUserMessage(
   prompt: string,

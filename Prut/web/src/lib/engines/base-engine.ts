@@ -352,16 +352,6 @@ ${alignment}
 
     const hasContext = input.context && input.context.length > 0;
 
-    // Context-aware GENIUS_QUESTIONS instructions
-    const contextQuestionRules = hasContext
-      ? `\n\nCONTEXT-AWARE QUESTION RULES (attachments exist):
-- Questions should probe GAPS in the context, not repeat what's already in the files
-- Ask about the user's INTENT with the uploaded material (not about the material itself)
-- Example: if PDF has a contract → ask "מה המטרה? לנתח סעיפים? לסכם? ליצור תבנית?"
-- Example: if CSV has data → ask "מה התובנה שאתה מחפש? איזה KPIs חשובים?"
-- Never ask "what's in the file" — you already have the content`
-      : "";
-
     const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
 
     const variableRegistryBlock = this.getVariableRegistryBlock(input.category);
