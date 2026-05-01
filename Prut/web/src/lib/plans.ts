@@ -1,4 +1,4 @@
-import type { PlanTier } from '@/lib/context/engine/types';
+import type { PlanTier } from "@/lib/context/engine/types";
 
 export interface ContextPlanLimits {
   perAttachment: number;
@@ -18,7 +18,7 @@ export const PLAN_CONTEXT_LIMITS: Record<PlanTier, ContextPlanLimits> = {
     maxFiles: 1,
     maxUrls: 1,
     maxImages: 1,
-    extractionsPerDay: 5,
+    extractionsPerDay: 1,
     jinaFallback: false,
     deepImageOcr: false,
   },

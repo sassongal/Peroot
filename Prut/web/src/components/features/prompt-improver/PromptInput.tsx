@@ -466,10 +466,14 @@ export function PromptInput({
                   aria-label="כתוב את הפרומפט שלך"
                   className="w-full min-h-[120px] md:min-h-[160px] bg-transparent p-6 md:p-8 text-base md:text-lg lg:text-xl text-transparent caret-(--text-primary) placeholder:text-(--text-muted) focus:outline-none resize-none leading-relaxed relative z-10 font-sans block overflow-y-auto"
                   onPaste={(e) => {
-                    if (!onAddUrl || isGuest) return;
+                    if (!onAddUrl) return;
                     const text = e.clipboardData.getData("text").trim();
                     if (looksLikeUrl(text)) {
                       e.preventDefault();
+                      if (isGuest) {
+                        setGuestGateFeature("צירוף קישור");
+                        return;
+                      }
                       Promise.resolve()
                         .then(() => onAddUrl(text))
                         .then(() => toast.success("קישור נוסף לקונטקסט"))

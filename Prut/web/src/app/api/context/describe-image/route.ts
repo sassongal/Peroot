@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
+    if (!user)
+      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -47,7 +48,10 @@ export async function POST(request: NextRequest) {
     const rl = await checkExtractionLimit(user.id, tier);
     if (!rl.allowed) {
       return NextResponse.json(
-        { error: "חרגת ממכסת העיבוד היומית" },
+        {
+          error:
+            "ניצלת את מכסת עיבוד התמונות החינמית להיום. שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
+        },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
       );
     }

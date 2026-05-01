@@ -45,8 +45,7 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) {
       return NextResponse.json(
         {
-          error: `חרגת ממכסת העיבוד היומית (${rl.limit}). נסה שוב מחר או שדרג ל-Pro.`,
-          remaining: 0,
+          error: "ניצלת את מכסת ההעלאה החינמית להיום. שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
         },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
       );

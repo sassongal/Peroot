@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
     const rl = isRetry ? null : await checkExtractionLimit(user.id, tier);
     if (rl && !rl.allowed) {
       return NextResponse.json(
-        { error: "חרגת ממכסת העיבוד היומית" },
+        {
+          error:
+            "ניצלת את מכסת חילוץ הקישורים החינמית להיום. שדרג ל-Pro לגישה ללא הגבלה, או נסה שוב מחר.",
+        },
         { status: 429, headers: { "Retry-After": String(rl.resetIn) } },
       );
     }

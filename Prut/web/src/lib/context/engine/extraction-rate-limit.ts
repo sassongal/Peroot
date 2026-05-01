@@ -33,6 +33,17 @@ export async function checkExtractionLimit(
   userId: string,
   tier: PlanTier,
 ): Promise<ExtractionLimitResult> {
+  // Pro users have no daily extraction limit — only constrained by enhance credits.
+  if (tier === "pro") {
+    return {
+      allowed: true,
+      remaining: Infinity,
+      limit: Infinity,
+      resetIn: 0,
+      rollback: async () => {},
+    };
+  }
+
   const limit = getContextLimits(tier).extractionsPerDay;
   const k = `extract:${userId}:${dayKey()}`;
 
