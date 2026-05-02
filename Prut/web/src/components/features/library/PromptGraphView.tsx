@@ -13,7 +13,6 @@ import {
   CAPABILITY_HIGHLIGHT,
   type GraphNode,
   type GraphLink,
-  type GraphCluster,
   type GraphInsights,
   type InsightFilter,
 } from "./graph-utils";
