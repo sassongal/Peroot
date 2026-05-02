@@ -20,7 +20,7 @@ All new logic is computed client-side from the existing `prompts` prop — no ne
 2. **Insight filter chips** — second row of filter chips, node dimming via alpha channel
 3. **Visual polish** — daily pick node highlight, permanent labels for top nodes, stats HUD upgrade
 
-No changes to `graph-utils.ts`, `buildGraphData`, or the backend.
+No changes to `buildGraphData` or the backend. `graph-utils.ts` gets `computeInsights()` added.
 
 ---
 
