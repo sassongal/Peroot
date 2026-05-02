@@ -7,19 +7,16 @@ const CHROME_STORE_URL = "#"; // Replace with actual Chrome Web Store URL when a
 
 export function ExtensionBanner() {
   const [dismissed, setDismissed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     queueMicrotask(() => {
-      // Check if user already dismissed the banner this session
       if (sessionStorage.getItem("ext-banner-dismissed")) {
         setDismissed(true);
       }
-      setLoaded(true);
     });
   }, []);
 
-  if (dismissed || !loaded) return null;
+  if (dismissed) return null;
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -29,15 +26,11 @@ export function ExtensionBanner() {
   return (
     <div className="hidden md:flex items-center justify-center gap-3 px-4 py-2 bg-linear-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border-b border-amber-500/10 text-sm relative">
       <Chrome className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
-      <span className="text-(--text-secondary)">
-        תוסף Chrome חדש -
-      </span>
+      <span className="text-(--text-secondary)">תוסף Chrome חדש -</span>
       <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
         בקרוב
       </span>
-      <span className="text-(--text-secondary)">
-        שדרג טקסטים ישירות מכל אתר
-      </span>
+      <span className="text-(--text-secondary)">שדרג טקסטים ישירות מכל אתר</span>
       <a
         href={CHROME_STORE_URL}
         target="_blank"
