@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import { enqueueJob } from "@/lib/jobs/queue";
+import { captureRouteError } from "@/lib/sentry";
 import type { createServiceClient } from "@/lib/supabase/service";
 import type { ActivityLogDetails } from "./activity-log";
 
@@ -39,35 +40,44 @@ export async function saveEnhanceResults(params: SaveEnhanceResultsParams): Prom
     activityLogDetails,
   } = params;
 
-  await queryClient
-    .from("history")
-    .insert({
-      user_id: userId,
-      prompt,
-      enhanced_prompt: enhancedPrompt,
-      tone,
-      category,
-      capability_mode: capabilityMode || "STANDARD",
-      title: prompt.slice(0, 60),
-      source,
-      input_source: inputSource,
-      updated_at: new Date().toISOString(),
-    })
-    .then(({ error: histErr }) => {
-      if (histErr) logger.warn("[Enhance] History insert failed:", histErr.message);
+  // Insert history with awaited error capture — credit was already spent;
+  // a silent insert failure leaves the user with no record of the enhance
+  // they paid for. Surface to Sentry so we can detect schema/enum drift
+  // before it accumulates into support cases.
+  const { error: histErr } = await queryClient.from("history").insert({
+    user_id: userId,
+    prompt,
+    enhanced_prompt: enhancedPrompt,
+    tone,
+    category,
+    capability_mode: capabilityMode || "STANDARD",
+    title: prompt.slice(0, 60),
+    source,
+    input_source: inputSource,
+    updated_at: new Date().toISOString(),
+  });
+  if (histErr) {
+    logger.error("[Enhance] History insert failed:", histErr.message);
+    captureRouteError(histErr, {
+      route: "enhance.saveEnhanceResults.history",
+      userId,
+      extra: { capabilityMode, inputSource, source, isRefinement },
     });
+  }
 
-  await queryClient
-    .from("activity_logs")
-    .insert({
-      user_id: userId,
-      action: isRefinement ? "Prmpt Refine" : "Prmpt Enhance",
-      entity_type: "prompt",
-      details: activityLogDetails,
-    })
-    .then(({ error: actErr }) => {
-      if (actErr) logger.warn("[Enhance] Activity log insert failed:", actErr.message);
+  const { error: actErr } = await queryClient.from("activity_logs").insert({
+    user_id: userId,
+    action: isRefinement ? "Prmpt Refine" : "Prmpt Enhance",
+    entity_type: "prompt",
+    details: activityLogDetails,
+  });
+  if (actErr) {
+    logger.error("[Enhance] Activity log insert failed:", actErr.message);
+    captureRouteError(actErr, {
+      route: "enhance.saveEnhanceResults.activity_logs",
+      userId,
     });
+  }
 }
 
 /**
