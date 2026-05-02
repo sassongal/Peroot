@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { isMaintenanceMode } from "@/lib/maintenance";
@@ -153,38 +154,48 @@ export async function proxy(request: NextRequest) {
 
   const isMaintenance = await getCachedMaintenanceMode();
 
-  // Supabase SSR requires getUser() on every request to refresh session cookies.
-  // Skipping it on "public" routes caused a 2–3 refresh flicker after login: the
-  // client would get stale tokens and the AuthContext would hydrate as guest
-  // until the cookies caught up. Always run the auth path.
+  // Supabase SSR refresh: required for any request that carries auth cookies,
+  // so logged-in users never see stale tokens (the previous attempt to skip by
+  // path caused a 2–3 refresh flicker after login). True anonymous visits —
+  // requests with no `sb-*-auth-token` cookies at all — have nothing to refresh,
+  // so we skip the Supabase round-trip entirely and save ~1–2s of TTFB on
+  // homepage cold loads from new visitors.
+  const hasSupabaseAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+  let user: User | null = null;
+  let supabase: SupabaseClient | null = null;
+
+  if (hasSupabaseAuthCookie) {
+    supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            supabaseResponse = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options),
+            );
+          },
         },
       },
-    },
-  );
+    );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
   // Capture referral code from URL (?ref=CODE) into a cookie for redemption after signup
   // Uses rewrite (not redirect) to avoid an extra round-trip that hurts LCP/TTFB
@@ -237,7 +248,7 @@ export async function proxy(request: NextRequest) {
     // /api/admin/* routes are already guarded by withAdmin() — this only
     // catches direct browser navigation to the admin panel.
     const isAdminUiPath = pathname.startsWith("/admin") && !pathname.startsWith("/api/admin");
-    if (isAdminUiPath) {
+    if (isAdminUiPath && supabase) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("plan_tier")

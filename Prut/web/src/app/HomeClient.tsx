@@ -273,14 +273,6 @@ function PageContent() {
 
   // --- Effects ---
 
-  // Auto-show "What is this?" for first-time visitors
-  useEffect(() => {
-    if (!localStorage.getItem("peroot_seen_explainer")) {
-      setShowWhatIsThis(true);
-      localStorage.setItem("peroot_seen_explainer", "true");
-    }
-  }, []);
-
   // Shared-chain deep link: when a user opens `?chain=<base64>`, decode
   // the payload, navigate to personal view, and hand off to
   // PersonalLibraryGrid to import via useChains (single source of truth
