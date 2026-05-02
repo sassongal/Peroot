@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
@@ -221,22 +220,14 @@ export default async function RootLayout({
           <ThemeProvider>
             <QueryProvider>
               <I18nProvider dictionary={dictionary} lang={locale}>
-                <Suspense
-                  fallback={
-                    <div className="grow flex items-center justify-center min-h-screen">
-                      <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-                    </div>
-                  }
-                >
-                  <GlobalContextWrapper initialUser={initialUser}>
-                    <ErrorBoundary name="AppRoot">
-                      <main id="main-content" className="grow">
-                        {children}
-                      </main>
-                    </ErrorBoundary>
-                    <Footer />
-                  </GlobalContextWrapper>
-                </Suspense>
+                <GlobalContextWrapper initialUser={initialUser}>
+                  <ErrorBoundary name="AppRoot">
+                    <main id="main-content" className="grow">
+                      {children}
+                    </main>
+                  </ErrorBoundary>
+                  <Footer />
+                </GlobalContextWrapper>
               </I18nProvider>
             </QueryProvider>
           </ThemeProvider>
