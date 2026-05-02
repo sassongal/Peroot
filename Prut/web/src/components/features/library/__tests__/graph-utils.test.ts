@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildGraphData } from "../graph-utils";
 import type { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
-import { computeInsights, type GraphInsights } from "../graph-utils";
+import { computeInsights } from "../graph-utils";
 
 const makePrompt = (id: string, overrides: Partial<PersonalPrompt> = {}): PersonalPrompt =>
   ({
@@ -22,6 +22,7 @@ const makePrompt = (id: string, overrides: Partial<PersonalPrompt> = {}): Person
     ...overrides,
   }) as PersonalPrompt;
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const THIRTY_ONE_DAYS_MS = 31 * 24 * 60 * 60 * 1000;
 const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -138,5 +139,31 @@ describe("computeInsights", () => {
     });
     const { dailyPickId } = computeInsights([p], [], new Map([["p1", 80]]));
     expect(dailyPickId).toBeNull();
+  });
+
+  it("returns all zeros for empty input", () => {
+    const result = computeInsights([], [], new Map());
+    expect(result.underusedCount).toBe(0);
+    expect(result.lowScoreCount).toBe(0);
+    expect(result.recentCount).toBe(0);
+    expect(result.clusterCount).toBe(0);
+    expect(result.dailyPickId).toBeNull();
+  });
+
+  it("includes prompt in both underused and low_score when both conditions met", () => {
+    const p = makePrompt("p1", {
+      last_used_at: new Date(Date.now() - THIRTY_ONE_DAYS_MS).toISOString(),
+    });
+    const { underusedIds, lowScoreIds } = computeInsights([p], [], new Map([["p1", 45]]));
+    expect(underusedIds.has("p1")).toBe(true);
+    expect(lowScoreIds.has("p1")).toBe(true);
+  });
+
+  it("treats prompt used exactly 7 days ago as NOT recent (< boundary)", () => {
+    const exactlySeven = makePrompt("p1", {
+      last_used_at: new Date(Date.now() - SEVEN_DAYS_MS).toISOString(),
+    });
+    const { recentIds } = computeInsights([exactlySeven], [], new Map([["p1", 70]]));
+    expect(recentIds.has("p1")).toBe(false);
   });
 });

@@ -423,7 +423,8 @@ export function computeInsights(
 
   for (const p of prompts) {
     const lastUsed = p.last_used_at ? new Date(p.last_used_at as string).getTime() : null;
-    const createdAt = new Date(p.created_at as string).getTime();
+    const createdAt =
+      typeof p.created_at === "number" ? p.created_at : new Date(p.created_at).getTime();
     const score = scoreMap.get(p.id) ?? 50;
 
     const isUnderused =
@@ -438,7 +439,7 @@ export function computeInsights(
     }
 
     if (score < 60) lowScoreIds.add(p.id);
-    if (lastUsed !== null && now - lastUsed <= SEVEN_DAYS_MS) recentIds.add(p.id);
+    if (lastUsed !== null && now - lastUsed < SEVEN_DAYS_MS) recentIds.add(p.id);
   }
 
   const clusteredIds = new Set<string>();
