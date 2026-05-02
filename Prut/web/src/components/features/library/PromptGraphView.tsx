@@ -146,22 +146,10 @@ export function PromptGraphView({
     } catch {}
   }, []);
 
-  // "Today in your library" overlay — shown once per browser session
   const [showInsightOverlay, setShowInsightOverlay] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      if (!sessionStorage.getItem("peroot:graph-overlay-seen")) {
-        setShowInsightOverlay(true);
-      }
-    } catch {}
-  }, []);
 
   const dismissInsightOverlay = useCallback(() => {
     setShowInsightOverlay(false);
-    try {
-      sessionStorage.setItem("peroot:graph-overlay-seen", "1");
-    } catch {}
   }, []);
 
   // Info banner — shown once, dismissible
@@ -799,12 +787,12 @@ export function PromptGraphView({
         />
         {/* Feature 2 — search + filter bar */}
         <div
-          className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
+          className="absolute top-3 inset-x-3 md:inset-x-auto md:right-3 z-30 flex flex-col gap-1.5 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-2.5 py-2 shadow-xl"
           dir="rtl"
         >
-          {/* Row 1 (mobile): search input + fit button */}
+          {/* Row 1: search input + fit button */}
           <div className="flex items-center gap-2">
-            <div className="relative flex-1 md:flex-initial">
+            <div className="relative flex-1">
               <input
                 ref={searchInputRef}
                 type="text"
@@ -826,18 +814,25 @@ export function PromptGraphView({
                 </button>
               )}
             </div>
-            {/* Fit button in row 1 on mobile only */}
+            <button
+              onClick={() => setShowInsightOverlay(true)}
+              className="shrink-0 text-[11px] px-2 py-1 rounded-md border border-amber-400/60 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
+              title="סטטיסטיקות ספרייה"
+              aria-label="סטטיסטיקות ספרייה"
+            >
+              ✨ תובנות
+            </button>
             <button
               onClick={handleFitView}
-              className="md:hidden shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
+              className="shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
               title="התאם לתצוגה"
               aria-label="התאם לתצוגה"
             >
               התאם
             </button>
           </div>
-          {/* Row 2 (mobile): capability chips + favorites — horizontal scroll; desktop: flex-wrap continues the row */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-nowrap md:flex-wrap pb-0.5 md:pb-0">
+          {/* Row 2: capability chips + favorites */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-nowrap">
             {(Object.keys(CAPABILITY_LABELS) as CapabilityMode[]).map((cap) => {
               const active = capabilityFilter.has(cap);
               return (
@@ -878,38 +873,14 @@ export function PromptGraphView({
               מועדפים
             </button>
           </div>
-          {/* Insight filter chips */}
-          <div className="flex flex-wrap gap-2 items-center" dir="rtl">
-            {[
-              {
-                filter: "underused" as InsightFilter,
-                icon: "📬",
-                label: "לא בשימוש",
-                count: insights.underusedCount,
-              },
-              {
-                filter: "clusters" as InsightFilter,
-                icon: "🔵",
-                label: "אשכולות",
-                count: insights.clusterCount,
-              },
-              {
-                filter: "low_score" as InsightFilter,
-                icon: "⚠️",
-                label: "ציון נמוך",
-                count: insights.lowScoreCount,
-              },
-              {
-                filter: "recent" as InsightFilter,
-                icon: "🕐",
-                label: "השבוע",
-                count: insights.recentCount,
-              },
-            ].map(({ filter, icon, label, count }) => {
+          {/* Row 3: insight filter chips — only "השבוע" (recent) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap">
+            {(() => {
+              const filter: InsightFilter = "recent";
               const active = activeInsightFilters.has(filter);
+              const count = insights.recentCount;
               return (
                 <button
-                  key={filter}
                   onClick={() => toggleInsightFilter(filter)}
                   disabled={count === 0}
                   className={cn(
@@ -918,17 +889,19 @@ export function PromptGraphView({
                       ? "bg-amber-500 border-amber-500 text-black font-semibold"
                       : count === 0
                         ? "border-white/8 bg-white/3 text-slate-600 cursor-not-allowed opacity-50"
-                        : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-amber-500/30 hover:text-amber-500",
+                        : "border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:border-amber-500/30 hover:text-amber-500",
                   )}
                   aria-pressed={active}
                 >
-                  <span>{icon}</span>
-                  <span>{label}</span>
+                  <span>🕐</span>
+                  <span>השבוע</span>
                   {count > 0 && (
                     <span
                       className={cn(
                         "rounded-full px-1 font-mono tabular-nums",
-                        active ? "bg-black/20 text-black" : "bg-white/10 text-slate-400",
+                        active
+                          ? "bg-black/20 text-black"
+                          : "bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400",
                       )}
                     >
                       {count}
@@ -936,26 +909,17 @@ export function PromptGraphView({
                   )}
                 </button>
               );
-            })}
+            })()}
             {activeInsightFilters.size > 0 && (
               <button
                 onClick={() => setActiveInsightFilters(new Set())}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/15 bg-white/8 text-[11px] text-slate-300 hover:text-white hover:bg-white/15 transition-colors cursor-pointer shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/8 text-[11px] text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer shrink-0"
               >
                 <X className="w-3 h-3" />
                 <span>נקה</span>
               </button>
             )}
           </div>
-          {/* Fit button on desktop only */}
-          <button
-            onClick={handleFitView}
-            className="hidden md:block shrink-0 text-[11px] px-2 py-1 rounded-md border border-slate-300 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/8 transition-colors"
-            title="התאם לתצוגה"
-            aria-label="התאם לתצוגה"
-          >
-            התאם
-          </button>
         </div>
 
         {/* Filter chips — always-visible summary of active filters with
@@ -1033,20 +997,31 @@ export function PromptGraphView({
 
         {/* Stats HUD — tells the user what they're actually looking at. */}
         {!isLoading && graphData.nodes.length > 0 && (
-          <div
-            className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 shadow-lg pointer-events-none"
+          <button
+            className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-black/55 backdrop-blur-xl px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 shadow-lg cursor-pointer hover:bg-white/95 dark:hover:bg-black/70 transition-colors"
             dir="rtl"
+            onClick={() => setShowInsightOverlay(true)}
           >
             <span>{visibleGraphData.nodes.filter((n) => n.type === "prompt").length} פרומפטים</span>
-            <span className="text-slate-400 dark:text-slate-600">·</span>
-            <span>{visibleGraphData.links.length} קשרים</span>
+            {insights.clusterCount > 0 && (
+              <>
+                <span className="text-slate-400 dark:text-slate-600">·</span>
+                <span>{insights.clusterCount} אשכולות</span>
+              </>
+            )}
+            {insights.underusedCount > 0 && (
+              <>
+                <span className="text-slate-400 dark:text-slate-600">·</span>
+                <span>{insights.underusedCount} לא בשימוש</span>
+              </>
+            )}
             {matchedIds && (
               <>
                 <span className="text-slate-400 dark:text-slate-600">·</span>
-                <span className="text-amber-300">מסונן</span>
+                <span className="text-amber-400">מסונן</span>
               </>
             )}
-          </div>
+          </button>
         )}
 
         {/* Empty-state — filters match zero prompts. Without this the canvas
@@ -1312,29 +1287,6 @@ export function PromptGraphView({
             </div>
           </div>
         </div>
-
-        {/* Node count hint — now a clickable button that reopens the insight overlay */}
-        <button
-          onClick={() => {
-            if (typeof window !== "undefined") {
-              try {
-                sessionStorage.removeItem("peroot:graph-overlay-seen");
-              } catch {}
-            }
-            setShowInsightOverlay(true);
-          }}
-          className="hidden sm:block absolute top-3 right-3 bg-white/80 dark:bg-black/55 backdrop-blur-sm text-slate-600 dark:text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/8 z-10 select-none leading-tight hover:bg-white/90 dark:hover:bg-black/65 transition-colors cursor-pointer text-right"
-          aria-label="פתח סיכום יומי"
-        >
-          <div className="font-medium">
-            {prompts.length} פרומפטים
-            {insights.clusterCount > 0 && ` · ${insights.clusterCount} אשכולות`}
-            {insights.underusedCount > 0 && ` · ${insights.underusedCount} לא בשימוש`}
-          </div>
-          <div className="text-slate-400 dark:text-slate-500">
-            גלגלת להגדלה · גרור להזזה · לחץ לסיכום
-          </div>
-        </button>
 
         {/* Truncation banner — library exceeds row cap */}
         {truncatedAt && (

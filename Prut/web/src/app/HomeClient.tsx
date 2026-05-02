@@ -23,7 +23,7 @@ import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
-import { LibraryPrompt, PersonalPrompt } from "@/lib/types";
+import { LibraryPrompt, PersonalPrompt, Question } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
@@ -561,9 +561,10 @@ function PageContent() {
         signal: abort.signal,
       })
         .then((res) => (res.ok ? res.json() : null))
-        .then((data: { questions?: unknown[] } | null) => {
+        .then((data: { questions?: Question[] } | null) => {
           if (abort.signal.aborted) return;
-          dispatch({ type: "SET_QUESTIONS", payload: (data?.questions as never) ?? [] });
+          const qs = Array.isArray(data?.questions) ? data.questions : [];
+          dispatch({ type: "SET_QUESTIONS", payload: qs });
         })
         .catch((err: Error) => {
           if (err?.name === "AbortError") return;
