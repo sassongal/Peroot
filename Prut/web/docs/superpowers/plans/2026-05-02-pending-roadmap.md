@@ -31,14 +31,7 @@
 
 ## 🟡 Genuinely pending
 
-### P1. Show original prompt in HistoryPanel
-**Plan:** `2026-04-29-show-original-prompt-everywhere.md`
-**Status:** PersonalLibraryPromptCard renders `original_prompt`; HistoryPanel does not.
-**Files to touch:**
-- `src/components/features/history/HistoryPanel.tsx` — collapsible "show enhanced" toggle on each card
-- `src/components/features/history/__tests__/HistoryPanel.test.tsx` — interaction test
-- `src/hooks/usePromptMutations.ts` — verify `source_history_id` persistence
-**Effort:** ~1 hour. Pattern already exists in PersonalLibraryPromptCard — copy + adapt.
+_None._ P1 (HistoryPanel toggle) is already shipped — `HistoryPanel.tsx:341-363` renders the "הצג פלט משודרג" collapsible (default = original, expand = enhanced). Test coverage in `HistoryPanel.test.tsx`. The earlier audit missed it because it searched for the column name `original_prompt` instead of the rendered field `item.original`.
 
 ---
 
