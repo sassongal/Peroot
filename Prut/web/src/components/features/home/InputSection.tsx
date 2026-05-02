@@ -337,56 +337,63 @@ export const InputSection = memo<InputSectionProps>(
           </div>
         )}
 
-        {/* Prompt of the Day + Surprise Me */}
-        {filteredLibrary.length > 0 && (
-          <div className="flex flex-col gap-4 mt-2">
-            {/* Surprise Me Button */}
-            <button
-              onClick={onSurpriseMe}
-              className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-black/6 dark:hover:bg-white/6 text-(--text-muted) hover:text-(--text-primary) text-sm transition-all cursor-pointer group"
-            >
-              <Shuffle className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-              <span>הפתע אותי - פרומפט אקראי מהספריה</span>
-            </button>
+        {/* Prompt of the Day + Surprise Me — wrapped in a fixed-height
+            container so the page footer doesn't shift when filteredLibrary
+            populates post-hydration (CLS hardening). */}
+        <div className="min-h-[260px]">
+          {filteredLibrary.length > 0 && (
+            <div className="flex flex-col gap-4 mt-2">
+              {/* Surprise Me Button */}
+              <button
+                onClick={onSurpriseMe}
+                className="flex items-center gap-2 justify-center px-4 py-3 rounded-xl border border-(--glass-border) bg-(--glass-bg) hover:bg-black/6 dark:hover:bg-white/6 text-(--text-muted) hover:text-(--text-primary) text-sm transition-all cursor-pointer group"
+              >
+                <Shuffle className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                <span>הפתע אותי - פרומפט אקראי מהספריה</span>
+              </button>
 
-            {/* Prompt of the Day */}
-            {promptOfTheDay && (
-              <div className="glass-card rounded-xl border-(--glass-border) bg-linear-to-l from-amber-500/6 dark:from-amber-500/4 to-transparent overflow-hidden">
-                <div className="px-5 py-3 border-b border-(--glass-border) flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  <span className="text-xs font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider">
-                    פרומפט היום
-                  </span>
-                </div>
-                <div className="p-5 flex flex-col gap-3">
-                  <h3 className="text-base font-semibold text-(--text-primary)" dir="rtl">
-                    {promptOfTheDay.title}
-                  </h3>
-                  <p className="text-sm text-(--text-muted) leading-relaxed line-clamp-2" dir="rtl">
-                    {promptOfTheDay.use_case}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <button
-                      onClick={() => {
-                        dispatch({ type: "SET_INPUT", payload: promptOfTheDay.prompt });
-                        toast.success("פרומפט היום נטען!");
-                      }}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer"
+              {/* Prompt of the Day */}
+              {promptOfTheDay && (
+                <div className="glass-card rounded-xl border-(--glass-border) bg-linear-to-l from-amber-500/6 dark:from-amber-500/4 to-transparent overflow-hidden">
+                  <div className="px-5 py-3 border-b border-(--glass-border) flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    <span className="text-xs font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider">
+                      פרומפט היום
+                    </span>
+                  </div>
+                  <div className="p-5 flex flex-col gap-3">
+                    <h3 className="text-base font-semibold text-(--text-primary)" dir="rtl">
+                      {promptOfTheDay.title}
+                    </h3>
+                    <p
+                      className="text-sm text-(--text-muted) leading-relaxed line-clamp-2"
+                      dir="rtl"
                     >
-                      השתמש בפרומפט
-                    </button>
-                    <button
-                      onClick={onNavLibrary}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg) text-xs transition-colors cursor-pointer"
-                    >
-                      עוד פרומפטים מהספריה
-                    </button>
+                      {promptOfTheDay.use_case}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => {
+                          dispatch({ type: "SET_INPUT", payload: promptOfTheDay.prompt });
+                          toast.success("פרומפט היום נטען!");
+                        }}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer"
+                      >
+                        השתמש בפרומפט
+                      </button>
+                      <button
+                        onClick={onNavLibrary}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg) text-xs transition-colors cursor-pointer"
+                      >
+                        עוד פרומפטים מהספריה
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </>
     );
   },

@@ -8,6 +8,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 const frankRuhl = Frank_Ruhl_Libre({
   weight: ["400", "700"],
@@ -153,12 +154,21 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = "he";
+  // Mirror the proxy.ts cookie predicate: only refresh the session for
+  // authenticated visitors. Guests have no token to refresh, so skipping the
+  // Supabase round-trip saves ~500–1000ms of TTFB on cold homepage loads.
+  const cookieStore = await cookies();
+  const hasAuthCookie = cookieStore
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
   const [dictionary, initialUser] = await Promise.all([
     getDictionary(locale),
-    createClient()
-      .then((sb) => sb.auth.getUser())
-      .then(({ data }) => data.user)
-      .catch(() => null),
+    hasAuthCookie
+      ? createClient()
+          .then((sb) => sb.auth.getUser())
+          .then(({ data }) => data.user)
+          .catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -171,7 +181,7 @@ export default async function RootLayout({
       <head>
         <link
           rel="preload"
-          href="/_next/image?url=%2FPeroot-hero.png&w=270&q=85"
+          href="/_next/image?url=%2FPeroot-hero.png&w=270&q=75"
           as="image"
           fetchPriority="high"
           type="image/avif"
