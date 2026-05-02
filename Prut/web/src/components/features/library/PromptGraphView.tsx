@@ -22,6 +22,8 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { PromptNodeCard } from "./PromptNodeCard";
 import { TagNodePanel } from "./TagNodePanel";
+import * as THREE from "three";
+import { GraphInsightOverlay } from "./GraphInsightOverlay";
 
 // SSR-safe — `react-force-graph-3d` bundles THREE at module-eval, so it must
 // be loaded client-only.
@@ -52,6 +54,29 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** Creates a Three.js sprite with canvas-drawn text — used for permanent node labels. */
+function makeTextSprite(text: string): THREE.Sprite {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 48;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return new THREE.Sprite();
+  ctx.clearRect(0, 0, 256, 48);
+  ctx.font = "bold 20px sans-serif";
+  ctx.shadowColor = "rgba(0,0,0,0.85)";
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text.length > 22 ? text.slice(0, 22) + "\u2026" : text, 128, 24);
+  const texture = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(28, 8, 1);
+  sprite.position.set(0, 14, 0);
+  return sprite;
 }
 
 export function PromptGraphView({
@@ -118,6 +143,24 @@ export function PromptGraphView({
     setShowHint(false);
     try {
       localStorage.setItem("peroot:graph-hint-seen", "1");
+    } catch {}
+  }, []);
+
+  // "Today in your library" overlay — shown once per browser session
+  const [showInsightOverlay, setShowInsightOverlay] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (!sessionStorage.getItem("peroot:graph-overlay-seen")) {
+        setShowInsightOverlay(true);
+      }
+    } catch {}
+  }, []);
+
+  const dismissInsightOverlay = useCallback(() => {
+    setShowInsightOverlay(false);
+    try {
+      sessionStorage.setItem("peroot:graph-overlay-seen", "1");
     } catch {}
   }, []);
 
@@ -199,6 +242,12 @@ export function PromptGraphView({
   const insights = useMemo(
     () => computeInsights(prompts, clusters, scoreMap),
     [prompts, clusters, scoreMap],
+  );
+
+  const dailyPick = useMemo(
+    () =>
+      insights.dailyPickId ? (prompts.find((p) => p.id === insights.dailyPickId) ?? null) : null,
+    [insights.dailyPickId, prompts],
   );
 
   // IDs that satisfy ALL active insight filters (intersection logic). null = no insight filter active.
@@ -723,6 +772,20 @@ export function PromptGraphView({
               "linear-gradient(180deg, rgba(248,250,252,0.85), rgba(241,245,249,0.95))",
         }}
       >
+        {showInsightOverlay && (
+          <GraphInsightOverlay
+            insights={insights}
+            dailyPick={dailyPick}
+            onFilter={(filter) => {
+              setActiveInsightFilters(new Set([filter]));
+            }}
+            onOpenDailyPick={(p) => {
+              setSelectedPrompt(p);
+              setFocusedId(p.id);
+            }}
+            onDismiss={dismissInsightOverlay}
+          />
+        )}
         {/* Subtle dotted grid overlay for depth */}
         <div
           aria-hidden="true"
@@ -1040,6 +1103,37 @@ export function PromptGraphView({
                 return Math.max(4, Math.min(18, 4 + (s / 100) * 14));
               }) as any
             }
+            nodeThreeObjectExtend={true}
+            nodeThreeObject={
+              ((n: GraphNode) => {
+                if (n.type !== "prompt") return undefined;
+                const isDailyPick = n.id === insights.dailyPickId;
+                const hasLabel = (n.score ?? 0) > 75 || !!n.isFavorite;
+                if (!isDailyPick && !hasLabel) return undefined;
+
+                const group = new THREE.Group();
+
+                if (isDailyPick) {
+                  const nodeRadius = Math.max(4, Math.min(18, 4 + ((n.score ?? 50) / 100) * 14));
+                  const wire = new THREE.Mesh(
+                    new THREE.SphereGeometry(nodeRadius + 4, 16, 8),
+                    new THREE.MeshBasicMaterial({
+                      color: 0xf59e0b,
+                      wireframe: true,
+                      transparent: true,
+                      opacity: 0.65,
+                    }),
+                  );
+                  group.add(wire);
+                }
+
+                if (hasLabel) {
+                  group.add(makeTextSprite(n.label));
+                }
+
+                return group;
+              }) as any
+            }
             nodeColor={
               ((n: GraphNode) => {
                 if (n.type === "tag") {
@@ -1219,11 +1313,28 @@ export function PromptGraphView({
           </div>
         </div>
 
-        {/* Node count hint */}
-        <div className="hidden sm:block absolute top-3 right-3 bg-white/80 dark:bg-black/55 backdrop-blur-sm text-slate-600 dark:text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/8 z-10 select-none leading-tight">
-          <div>{prompts.length} פרומפטים</div>
-          <div className="text-slate-400 dark:text-slate-500">גלגלת להגדלה · גרור להזזה</div>
-        </div>
+        {/* Node count hint — now a clickable button that reopens the insight overlay */}
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              try {
+                sessionStorage.removeItem("peroot:graph-overlay-seen");
+              } catch {}
+            }
+            setShowInsightOverlay(true);
+          }}
+          className="hidden sm:block absolute top-3 right-3 bg-white/80 dark:bg-black/55 backdrop-blur-sm text-slate-600 dark:text-slate-400 text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/8 z-10 select-none leading-tight hover:bg-white/90 dark:hover:bg-black/65 transition-colors cursor-pointer text-right"
+          aria-label="פתח סיכום יומי"
+        >
+          <div className="font-medium">
+            {prompts.length} פרומפטים
+            {insights.clusterCount > 0 && ` · ${insights.clusterCount} אשכולות`}
+            {insights.underusedCount > 0 && ` · ${insights.underusedCount} לא בשימוש`}
+          </div>
+          <div className="text-slate-400 dark:text-slate-500">
+            גלגלת להגדלה · גרור להזזה · לחץ לסיכום
+          </div>
+        </button>
 
         {/* Truncation banner — library exceeds row cap */}
         {truncatedAt && (
