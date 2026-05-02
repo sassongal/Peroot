@@ -179,13 +179,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link
-          rel="preload"
-          href="/_next/image?url=%2FPeroot-hero.png&w=270&q=75"
-          as="image"
-          fetchPriority="high"
-          type="image/avif"
-        />
+        {/* Hero image preload is generated automatically by next/image
+            with priority={true} on HomeViewChrome.tsx. A manual <link
+            rel="preload"> here previously hardcoded the wrong width
+            (w=270 vs the actual w=640 fetched at standard viewports),
+            so the browser couldn't reuse it and double-fetched the
+            hero. Removing it lets next/image emit a preload that
+            matches the actual responsive variant. */}
         {/* Inline blocking script — intentionally NOT using next/script.
             Must execute synchronously before first paint to read the saved
             theme class from localStorage and apply it, preventing a flash of
@@ -232,7 +232,7 @@ export default async function RootLayout({
               <I18nProvider dictionary={dictionary} lang={locale}>
                 <GlobalContextWrapper initialUser={initialUser}>
                   <ErrorBoundary name="AppRoot">
-                    <main id="main-content" className="grow">
+                    <main id="main-content" className="grow min-h-[100dvh]">
                       {children}
                     </main>
                   </ErrorBoundary>
