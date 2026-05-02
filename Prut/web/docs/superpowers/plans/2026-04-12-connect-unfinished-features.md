@@ -1,3 +1,5 @@
+> STATUS: 🟡 PARTIAL — Feature A (churn cron email) done; Feature B (extract-files batch route) obsoleted by context-injection-improvements (route deleted intentionally)
+
 # P2-2: Connect Unfinished Features Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

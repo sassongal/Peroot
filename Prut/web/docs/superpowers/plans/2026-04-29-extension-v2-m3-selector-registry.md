@@ -1,3 +1,5 @@
+> STATUS: ✅ DONE — verified against codebase 2026-05-02
+
 # Extension v2.0.0 — M3: Selector Registry & Site Cuts Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

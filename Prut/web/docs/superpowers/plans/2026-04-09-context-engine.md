@@ -1,3 +1,5 @@
+> STATUS: 📚 SUPERSEDED — replaced by 2026-04-28-context-engine-v2 + context-injection-improvements
+
 # Context Engine Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
