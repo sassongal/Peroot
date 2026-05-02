@@ -386,6 +386,79 @@ export interface GraphCluster {
   capability: CapabilityMode;
 }
 
+/** One of the four insight lenses the user can activate as a filter chip. */
+export type InsightFilter = "underused" | "clusters" | "low_score" | "recent";
+
+export interface GraphInsights {
+  underusedCount: number;
+  underusedIds: Set<string>;
+  clusterCount: number;
+  clusteredIds: Set<string>;
+  lowScoreCount: number;
+  lowScoreIds: Set<string>;
+  recentCount: number;
+  recentIds: Set<string>;
+  /** ID of the highest-score underused prompt — shown as "daily pick" in the overlay. */
+  dailyPickId: string | null;
+}
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Compute per-session insight metrics from the prompt list.
+ * Pure function — no side effects, safe to call in useMemo.
+ */
+export function computeInsights(
+  prompts: PersonalPrompt[],
+  clusters: GraphCluster[],
+  scoreMap: Map<string, number>,
+): GraphInsights {
+  const now = Date.now();
+  const underusedIds = new Set<string>();
+  const lowScoreIds = new Set<string>();
+  const recentIds = new Set<string>();
+  let dailyPickId: string | null = null;
+  let dailyPickScore = -1;
+
+  for (const p of prompts) {
+    const lastUsed = p.last_used_at ? new Date(p.last_used_at as string).getTime() : null;
+    const createdAt = new Date(p.created_at as string).getTime();
+    const score = scoreMap.get(p.id) ?? 50;
+
+    const isUnderused =
+      lastUsed !== null ? now - lastUsed > THIRTY_DAYS_MS : now - createdAt > FOURTEEN_DAYS_MS;
+
+    if (isUnderused) {
+      underusedIds.add(p.id);
+      if (score > dailyPickScore) {
+        dailyPickScore = score;
+        dailyPickId = p.id;
+      }
+    }
+
+    if (score < 60) lowScoreIds.add(p.id);
+    if (lastUsed !== null && now - lastUsed <= SEVEN_DAYS_MS) recentIds.add(p.id);
+  }
+
+  const clusteredIds = new Set<string>();
+  for (const c of clusters) {
+    for (const id of c.nodeIds) clusteredIds.add(id);
+  }
+
+  return {
+    underusedCount: underusedIds.size,
+    underusedIds,
+    clusterCount: clusters.length,
+    clusteredIds,
+    lowScoreCount: lowScoreIds.size,
+    lowScoreIds,
+    recentCount: recentIds.size,
+    recentIds,
+    dailyPickId,
+  };
+}
+
 // Union-find (disjoint set) — tiny inline impl.
 function makeUF(ids: string[]) {
   const parent = new Map<string, string>();
