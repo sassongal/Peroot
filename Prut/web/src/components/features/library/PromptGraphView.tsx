@@ -7,10 +7,15 @@ import type { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
   buildGraphData,
+  computeClusters,
+  computeInsights,
   CAPABILITY_COLORS,
   CAPABILITY_HIGHLIGHT,
   type GraphNode,
   type GraphLink,
+  type GraphCluster,
+  type GraphInsights,
+  type InsightFilter,
 } from "./graph-utils";
 import { cn } from "@/lib/utils";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
@@ -91,6 +96,7 @@ export function PromptGraphView({
   const [searchQuery, setSearchQuery] = useState("");
   const [capabilityFilter, setCapabilityFilter] = useState<Set<CapabilityMode>>(new Set());
   const [favOnly, setFavOnly] = useState(false);
+  const [activeInsightFilters, setActiveInsightFilters] = useState<Set<InsightFilter>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Feature 3 — focused node for cinematic zoom
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -185,6 +191,54 @@ export function PromptGraphView({
     });
     return data;
   }, [prompts, favoriteIds, scoreMap]);
+
+  const clusters = useMemo(
+    () => computeClusters(prompts, graphData.links),
+    [prompts, graphData.links],
+  );
+
+  const insights = useMemo(
+    () => computeInsights(prompts, clusters, scoreMap),
+    [prompts, clusters, scoreMap],
+  );
+
+  // IDs that satisfy ALL active insight filters (intersection logic). null = no insight filter active.
+  const insightMatchedIds = useMemo<Set<string> | null>(() => {
+    if (activeInsightFilters.size === 0) return null;
+    const result = new Set<string>();
+    for (const p of prompts) {
+      let match = true;
+      for (const f of activeInsightFilters) {
+        if (f === "underused" && !insights.underusedIds.has(p.id)) {
+          match = false;
+          break;
+        }
+        if (f === "clusters" && !insights.clusteredIds.has(p.id)) {
+          match = false;
+          break;
+        }
+        if (f === "low_score" && !insights.lowScoreIds.has(p.id)) {
+          match = false;
+          break;
+        }
+        if (f === "recent" && !insights.recentIds.has(p.id)) {
+          match = false;
+          break;
+        }
+      }
+      if (match) result.add(p.id);
+    }
+    return result;
+  }, [activeInsightFilters, insights, prompts]);
+
+  const toggleInsightFilter = useCallback((filter: InsightFilter) => {
+    setActiveInsightFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(filter)) next.delete(filter);
+      else next.add(filter);
+      return next;
+    });
+  }, []);
 
   // Indexed lookup — avoids O(n) .find() per edge hover on large libraries.
   const promptById = useMemo(() => {
@@ -500,7 +554,6 @@ export function PromptGraphView({
     const fg = fg3dRef.current;
     if (!fg?.cameraPosition) return;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nodes = (fg.graphData?.()?.nodes ?? []) as Array<{
         x?: number;
         y?: number;
@@ -763,6 +816,75 @@ export function PromptGraphView({
               מועדפים
             </button>
           </div>
+          {/* Insight filter chips */}
+          <div className="flex flex-wrap gap-2 items-center" dir="rtl">
+            {[
+              {
+                filter: "underused" as InsightFilter,
+                icon: "📬",
+                label: "לא בשימוש",
+                count: insights.underusedCount,
+              },
+              {
+                filter: "clusters" as InsightFilter,
+                icon: "🔵",
+                label: "אשכולות",
+                count: insights.clusterCount,
+              },
+              {
+                filter: "low_score" as InsightFilter,
+                icon: "⚠️",
+                label: "ציון נמוך",
+                count: insights.lowScoreCount,
+              },
+              {
+                filter: "recent" as InsightFilter,
+                icon: "🕐",
+                label: "השבוע",
+                count: insights.recentCount,
+              },
+            ].map(({ filter, icon, label, count }) => {
+              const active = activeInsightFilters.has(filter);
+              return (
+                <button
+                  key={filter}
+                  onClick={() => toggleInsightFilter(filter)}
+                  disabled={count === 0}
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] transition-all cursor-pointer shrink-0",
+                    active
+                      ? "bg-amber-500 border-amber-500 text-black font-semibold"
+                      : count === 0
+                        ? "border-white/8 bg-white/3 text-slate-600 cursor-not-allowed opacity-50"
+                        : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-amber-500/30 hover:text-amber-500",
+                  )}
+                  aria-pressed={active}
+                >
+                  <span>{icon}</span>
+                  <span>{label}</span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1 font-mono tabular-nums",
+                        active ? "bg-black/20 text-black" : "bg-white/10 text-slate-400",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            {activeInsightFilters.size > 0 && (
+              <button
+                onClick={() => setActiveInsightFilters(new Set())}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/15 bg-white/8 text-[11px] text-slate-300 hover:text-white hover:bg-white/15 transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-3 h-3" />
+                <span>נקה</span>
+              </button>
+            )}
+          </div>
           {/* Fit button on desktop only */}
           <button
             onClick={handleFitView}
@@ -901,7 +1023,7 @@ export function PromptGraphView({
           onPointerUp={handleContainerPointerUp}
           className="w-full h-[calc(100vh-15rem)] min-h-[480px] md:h-[calc(100vh-13rem)] relative"
         >
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {/* eslint-disable @typescript-eslint/no-explicit-any */}
           <ForceGraph3D
             key="fg-3d"
             ref={fg3dRef as any}
@@ -921,12 +1043,20 @@ export function PromptGraphView({
             }
             nodeColor={
               ((n: GraphNode) => {
-                if (n.type === "tag") return "#f59e0b"; // amber — matches legend
-                if (n.type === "library") return "#a855f7"; // purple — matches legend
+                if (n.type === "tag") {
+                  return insightMatchedIds ? hexToRgba("#f59e0b", 0.35) : "#f59e0b";
+                }
+                if (n.type === "library") {
+                  return insightMatchedIds ? hexToRgba("#a855f7", 0.35) : "#a855f7";
+                }
                 const hex = CAPABILITY_COLORS[n.capability ?? CapabilityMode.STANDARD];
                 const s = n.score ?? 50;
-                const alpha = s < 40 ? 0.55 : s < 70 ? 0.55 + ((s - 40) / 30) * 0.45 : 1.0;
-                return alpha >= 1.0 ? hex : hexToRgba(hex, alpha);
+                const scoreAlpha = s < 40 ? 0.55 : s < 70 ? 0.55 + ((s - 40) / 30) * 0.45 : 1.0;
+                // Insight filter: ghost non-matching nodes to near-invisible
+                if (insightMatchedIds && !insightMatchedIds.has(n.id)) {
+                  return hexToRgba(hex, 0.12);
+                }
+                return scoreAlpha >= 1.0 ? hex : hexToRgba(hex, scoreAlpha);
               }) as any
             }
             nodeOpacity={0.95}
@@ -954,6 +1084,7 @@ export function PromptGraphView({
             d3VelocityDecay={0.28}
             rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           />
+          {/* eslint-enable @typescript-eslint/no-explicit-any */}
         </div>
 
         {/* Floating hover tooltip — shows a peek card next to the cursor */}
