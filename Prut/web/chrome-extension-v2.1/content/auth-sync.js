@@ -9,6 +9,11 @@
  */
 
 (async function syncAuth() {
+  // Set when /api/extension-token returns 401/403/429 — caller is unauth'd or
+  // rate-limited, so don't keep hammering the endpoint for the rest of this
+  // page lifetime. localStorage path still runs every poll/visibilitychange.
+  let apiUnavailable = false;
+
   // Method 1: Read Supabase session from localStorage
   // Supabase stores the session in localStorage with a key pattern
   // Returns { access_token, refresh_token } or null
@@ -17,19 +22,21 @@
       // Try known Supabase storage key patterns
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && (key.includes('supabase') || key.includes('sb-')) && key.includes('auth')) {
+        if (key && (key.includes("supabase") || key.includes("sb-")) && key.includes("auth")) {
           try {
             const raw = localStorage.getItem(key);
             if (!raw) continue;
             const data = JSON.parse(raw);
             // Supabase stores { access_token, refresh_token, ... } or nested
-            const accessToken = data?.access_token
-              || data?.currentSession?.access_token
-              || data?.session?.access_token;
-            const refreshToken = data?.refresh_token
-              || data?.currentSession?.refresh_token
-              || data?.session?.refresh_token;
-            if (accessToken && typeof accessToken === 'string' && accessToken.length > 20) {
+            const accessToken =
+              data?.access_token ||
+              data?.currentSession?.access_token ||
+              data?.session?.access_token;
+            const refreshToken =
+              data?.refresh_token ||
+              data?.currentSession?.refresh_token ||
+              data?.session?.refresh_token;
+            if (accessToken && typeof accessToken === "string" && accessToken.length > 20) {
               return { access_token: accessToken, refresh_token: refreshToken || null };
             }
           } catch {
@@ -51,8 +58,13 @@
 
   // Method 2: Fetch from server API
   async function fetchTokenFromAPI() {
+    if (apiUnavailable) return null;
     try {
       const res = await fetch("/api/extension-token", { credentials: "same-origin" });
+      if (res.status === 401 || res.status === 403 || res.status === 429) {
+        apiUnavailable = true;
+        return null;
+      }
       if (!res.ok) return null;
       const data = await res.json();
       return data.token || null;
@@ -75,10 +87,14 @@
     if (!token) return;
     try {
       await chrome.storage.local.set({ peroot_token: token });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     try {
       chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   // Store both access and refresh tokens when available
@@ -88,10 +104,14 @@
     if (refreshToken) data.peroot_refresh_token = refreshToken;
     try {
       await chrome.storage.local.set(data);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     try {
       chrome.runtime.sendMessage({ type: "STORE_AUTH_TOKEN", token: accessToken });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   // Sync immediately — store both tokens
@@ -139,7 +159,7 @@
   // Listen for explicit sync requests from service worker
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === "REQUEST_TOKEN_SYNC") {
-      getToken().then(t => {
+      getToken().then((t) => {
         if (t) storeToken(t);
         sendResponse({ token: t });
       });

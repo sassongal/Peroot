@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Peroot - AI Prompt Enhancer",
   "short_name": "Peroot",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Enhance prompts on ChatGPT, Claude, and Gemini with model-aware tailoring. Iterative refinement, output language control, and prompt library sync.",
   "homepage_url": "https://www.peroot.space",
   "author": "Peroot by Joyatech",
