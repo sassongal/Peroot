@@ -104,6 +104,18 @@ export async function checkAndDecrementCredits(
 
   if (!rpcError && creditRes?.success) {
     logCreditChange(userId, -amount, creditRes.current_balance ?? 0, "spend");
+    // Bump last_prompt_at on every successful spend, regardless of tier.
+    // Without this the column drifts by months on Pro/Admin users (RPC
+    // path doesn't touch it) and stays null for users whose first
+    // decrement always lands on the fast path. Fire-and-forget — never
+    // block the response on a single-column update.
+    void serviceClient
+      .from("profiles")
+      .update({ last_prompt_at: new Date().toISOString() })
+      .eq("id", userId)
+      .then(({ error }) => {
+        if (error) logger.warn("[CreditService] last_prompt_at bump failed:", error.message);
+      });
     return {
       allowed: true,
       remaining: creditRes.current_balance ?? 0,
@@ -320,13 +332,14 @@ async function legacyCheckAndDecrement(
     };
   }
 
-  // Update last_prompt_at after successful decrement
-  if (tier === "free") {
-    await queryClient
-      .from("profiles")
-      .update({ last_prompt_at: new Date().toISOString() })
-      .eq("id", userId);
-  }
+  // Update last_prompt_at after successful decrement, all tiers.
+  // (The free-only gate was a leftover from when this column was used
+  // solely to drive the rolling-24h reset; admin views now read it as
+  // last-activity, so every tier needs to bump it.)
+  await queryClient
+    .from("profiles")
+    .update({ last_prompt_at: new Date().toISOString() })
+    .eq("id", userId);
 
   return {
     allowed: true,
