@@ -16,7 +16,7 @@ import { escapePostgrestValue } from "@/lib/sanitize";
 export const GET = withAdmin(async (req) => {
   const svc = createServiceClient();
   const searchTerm = req.nextUrl.searchParams.get("search") || "";
-  const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "100") || 100, 500);
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "500") || 500, 1000);
   const offset = Math.max(0, parseInt(req.nextUrl.searchParams.get("offset") || "0") || 0);
 
   let profilesQuery = svc
@@ -51,9 +51,15 @@ export const GET = withAdmin(async (req) => {
 
   const userIds = (profiles ?? []).map((p) => p.id);
 
-  // Aggregate real activity from history + auth.users last_sign_in_at
+  // Aggregate real activity from history + activity_logs + personal_library
+  // + auth.users last_sign_in_at. We pull from multiple sources because
+  // `profiles.last_prompt_at` is only updated on the fallback credit path
+  // (and only for free tier), so it's stale for most users — we treat it
+  // as a hint, not a source of truth.
   const promptCountByUser = new Map<string, number>();
   const latestHistoryByUser = new Map<string, string>();
+  const latestActivityLogByUser = new Map<string, string>();
+  const latestLibraryByUser = new Map<string, string>();
   const lastSignInByUser = new Map<string, string>();
 
   let freeDailyLimit = 2;
@@ -66,6 +72,8 @@ export const GET = withAdmin(async (req) => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const [
       { data: historyRows, error: historyErr },
+      { data: activityLogRows, error: activityLogErr },
+      { data: libraryRows, error: libraryErr },
       authList,
       { data: ledgerRows },
       { data: siteSettings },
@@ -75,6 +83,18 @@ export const GET = withAdmin(async (req) => {
         .select("user_id, created_at")
         .in("user_id", userIds)
         .order("created_at", { ascending: false })
+        .limit(20000),
+      svc
+        .from("activity_logs")
+        .select("user_id, created_at")
+        .in("user_id", userIds)
+        .order("created_at", { ascending: false })
+        .limit(20000),
+      svc
+        .from("personal_library")
+        .select("user_id, created_at, updated_at")
+        .in("user_id", userIds)
+        .order("updated_at", { ascending: false })
         .limit(20000),
       // auth.admin.listUsers is paginated (max 1000/page); pull up to 5 pages.
       (async () => {
@@ -109,6 +129,31 @@ export const GET = withAdmin(async (req) => {
         if (!uid) continue;
         promptCountByUser.set(uid, (promptCountByUser.get(uid) ?? 0) + 1);
         if (!latestHistoryByUser.has(uid)) latestHistoryByUser.set(uid, ts);
+      }
+    }
+
+    if (activityLogErr) {
+      logger.warn("[admin/users] activity_logs aggregation warning:", activityLogErr);
+    } else {
+      for (const row of activityLogRows ?? []) {
+        const uid = (row as { user_id: string }).user_id;
+        const ts = (row as { created_at: string }).created_at;
+        if (!uid) continue;
+        if (!latestActivityLogByUser.has(uid)) latestActivityLogByUser.set(uid, ts);
+      }
+    }
+
+    if (libraryErr) {
+      logger.warn("[admin/users] personal_library aggregation warning:", libraryErr);
+    } else {
+      for (const row of libraryRows ?? []) {
+        const uid = (row as { user_id: string }).user_id;
+        const updated = (row as { updated_at?: string | null }).updated_at;
+        const created = (row as { created_at: string }).created_at;
+        const ts = updated ?? created;
+        if (!uid || !ts) continue;
+        const prev = latestLibraryByUser.get(uid);
+        if (!prev || ts > prev) latestLibraryByUser.set(uid, ts);
       }
     }
 
@@ -148,8 +193,27 @@ export const GET = withAdmin(async (req) => {
     const lastSignInAt = authLastSignIn ?? profileLastSignIn;
     const lastPromptAt = (p as { last_prompt_at?: string | null }).last_prompt_at ?? null;
     const latestHistory = latestHistoryByUser.get(p.id) ?? null;
+    const latestActivityLog = latestActivityLogByUser.get(p.id) ?? null;
+    const latestLibrary = latestLibraryByUser.get(p.id) ?? null;
 
-    const candidates = [lastPromptAt, latestHistory, lastSignInAt].filter((v): v is string => !!v);
+    // Effective "last prompt" prefers real activity sources over the
+    // unreliable profiles.last_prompt_at column (only updated on free
+    // tier fallback path).
+    const lastPromptCandidates = [lastPromptAt, latestHistory, latestActivityLog].filter(
+      (v): v is string => !!v,
+    );
+    const effectiveLastPromptAt =
+      lastPromptCandidates.length > 0
+        ? lastPromptCandidates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b))
+        : null;
+
+    const candidates = [
+      lastPromptAt,
+      latestHistory,
+      latestActivityLog,
+      latestLibrary,
+      lastSignInAt,
+    ].filter((v): v is string => !!v);
     const lastActivityAt =
       candidates.length > 0
         ? candidates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b))
@@ -183,7 +247,7 @@ export const GET = withAdmin(async (req) => {
       plan_tier: tier,
       customer_name: sub?.customer_name ?? null,
       prompt_count: promptCountByUser.get(p.id) ?? 0,
-      last_prompt_at: lastPromptAt,
+      last_prompt_at: effectiveLastPromptAt,
       last_activity_at: lastActivityAt,
       daily_limit,
       last_spend_at: ledger.lastSpend,
