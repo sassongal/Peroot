@@ -8,6 +8,7 @@ import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCreativeWorkSchema } from "@/lib/schema";
 import { PromptBodyGate } from "./PromptBodyGate";
+import { UsePromptCTA } from "./UsePromptCTA";
 
 // Max chars of prompt body to render in public HTML. Keeps SEO-useful text
 // available while preventing the full prompt from leaking to guests via
@@ -326,13 +327,16 @@ export default async function PromptPage({ params }: Props) {
               Peroot משדרגת כל פרומפט אוטומטית — מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר
               ב-ChatGPT, Claude ו-Gemini.
             </p>
-            <Link
-              href="/?ref=library-prompt"
-              className="inline-flex px-8 py-3 rounded-xl text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
-              style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
-            >
-              נסו Peroot - חינם
-            </Link>
+            <UsePromptCTA
+              id={p.id}
+              title={p.title}
+              slug={slug}
+              previewText={
+                p.prompt.length > PUBLIC_PREVIEW_CHARS
+                  ? p.prompt.slice(0, PUBLIC_PREVIEW_CHARS).trimEnd() + "…"
+                  : p.prompt
+              }
+            />
           </section>
 
           {/* Back to category */}

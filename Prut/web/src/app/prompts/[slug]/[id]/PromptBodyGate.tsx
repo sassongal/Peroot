@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Lock } from "lucide-react";
+import { Lock, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CopyButton } from "../CopyButton";
 import { UsePromptButton } from "../UsePromptButton";
+import { setPendingPrompt } from "@/lib/pending-prompt";
 
 interface Props {
   promptId: string;
@@ -98,20 +99,39 @@ export function PromptBodyGate({ promptId, previewText, title, slug, capabilityM
               <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                 ההרשמה חינמית — 2 פרומפטים ביום, גישה לכל המנועים וספרייה אישית.
               </p>
-              <div className="flex items-center justify-center gap-2">
-                <Link
-                  href="/login"
-                  className="px-5 py-2 rounded-lg text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingPrompt({
+                      id: promptId,
+                      title,
+                      prompt: previewText,
+                      category: slug,
+                      source: "prompts-library",
+                    });
+                    window.location.href = "/login";
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
                   style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
                 >
-                  הירשם חינם
-                </Link>
-                <Link
-                  href="/login"
-                  className="px-4 py-2 rounded-lg border border-border text-sm text-secondary-foreground hover:bg-secondary transition-colors"
-                >
-                  התחבר
-                </Link>
+                  <Zap className="w-4 h-4" />
+                  שדרגו פרומפט זה ב-Peroot
+                </button>
+                <div className="flex items-center gap-2 w-full">
+                  <Link
+                    href="/login"
+                    className="flex-1 px-4 py-2 rounded-lg text-center border border-border text-sm text-secondary-foreground hover:bg-secondary transition-colors"
+                  >
+                    הירשם חינם
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="flex-1 px-4 py-2 rounded-lg text-center border border-border text-sm text-secondary-foreground hover:bg-secondary transition-colors"
+                  >
+                    התחבר
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
