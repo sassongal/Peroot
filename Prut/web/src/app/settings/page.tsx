@@ -44,6 +44,7 @@ export default function SettingsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isClearingHistory, setIsClearingHistory] = useState(false);
@@ -327,9 +328,17 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/user/delete-account", {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmEmail }),
       });
 
       if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        if (body?.code === "email_mismatch") {
+          toast.error("האימייל שהזנת אינו תואם לחשבון");
+          setIsDeleting(false);
+          return;
+        }
         throw new Error("Delete failed");
       }
 
@@ -520,6 +529,8 @@ export default function SettingsPage() {
                 onShowDeleteConfirm={setShowDeleteConfirm}
                 deleteConfirmText={deleteConfirmText}
                 setDeleteConfirmText={setDeleteConfirmText}
+                confirmEmail={confirmEmail}
+                setConfirmEmail={setConfirmEmail}
                 onDeleteAccount={handleDeleteAccount}
                 isDeleting={isDeleting}
               />

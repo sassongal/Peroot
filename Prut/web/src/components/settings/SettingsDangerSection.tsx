@@ -7,6 +7,8 @@ interface SettingsDangerSectionProps {
   onShowDeleteConfirm: (v: boolean) => void;
   deleteConfirmText: string;
   setDeleteConfirmText: (v: string) => void;
+  confirmEmail: string;
+  setConfirmEmail: (v: string) => void;
   onDeleteAccount: () => void;
   isDeleting: boolean;
 }
@@ -16,6 +18,8 @@ export function SettingsDangerSection({
   onShowDeleteConfirm,
   deleteConfirmText,
   setDeleteConfirmText,
+  confirmEmail,
+  setConfirmEmail,
   onDeleteAccount,
   isDeleting,
 }: SettingsDangerSectionProps) {
@@ -54,6 +58,15 @@ export function SettingsDangerSection({
           </button>
         ) : (
           <div className="space-y-3 p-4 bg-black/30 rounded-xl">
+            <p className="text-sm text-slate-300">הזן את כתובת האימייל שלך לאישור</p>
+            <input
+              type="email"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/50 transition-colors"
+              dir="ltr"
+            />
             <p className="text-sm text-slate-300">
               כדי לאשר, הקלד <strong className="text-red-400">מחק את החשבון</strong>
             </p>
@@ -71,6 +84,7 @@ export function SettingsDangerSection({
                 onClick={() => {
                   onShowDeleteConfirm(false);
                   setDeleteConfirmText("");
+                  setConfirmEmail("");
                 }}
                 className="cursor-pointer flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-medium rounded-xl transition-colors"
               >
@@ -79,7 +93,7 @@ export function SettingsDangerSection({
               <button
                 type="button"
                 onClick={onDeleteAccount}
-                disabled={isDeleting || deleteConfirmText !== "מחק את החשבון"}
+                disabled={isDeleting || deleteConfirmText !== "מחק את החשבון" || !confirmEmail}
                 className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? (
