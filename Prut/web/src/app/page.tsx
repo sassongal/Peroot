@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import HomeClient from "./HomeClient";
 import { HomeSEOContent } from "@/components/seo/HomeSEOContent";
 import { RecentBlogPosts } from "@/components/home/RecentBlogPosts";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { softwareAppSchema } from "@/lib/schema";
 
 export const revalidate = 60;
 
@@ -17,7 +15,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="home-page-root">
-      <JsonLd data={softwareAppSchema()} />
+      {/* softwareAppSchema is rendered inside HomeSEOContent — no duplicate needed here */}
       <HomeSEOContent />
       <HomeClient />
       <RecentBlogPosts />

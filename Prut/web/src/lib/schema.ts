@@ -150,14 +150,14 @@ export function pricingSchema() {
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
-          price: "3.99",
+          price: "10",
           priceCurrency: "ILS",
           availability: "https://schema.org/InStock",
           url: `${SITE_URL}/pricing`,
           priceValidUntil: "2027-12-31",
           priceSpecification: {
             "@type": "UnitPriceSpecification",
-            price: "3.99",
+            price: "10",
             priceCurrency: "ILS",
             unitText: "MONTH",
             referenceQuantity: {
