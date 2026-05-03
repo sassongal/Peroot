@@ -14,6 +14,9 @@ import {
   Users,
   Zap,
   ChevronLeft,
+  CreditCard,
+  X,
+  CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -44,6 +47,10 @@ interface User {
   last_spend_at?: string | null;
   refresh_at?: string | null;
   usage_last_7_days?: number[];
+  // subscription
+  subscription_status?: string | null;
+  renews_at?: string | null;
+  ends_at?: string | null;
 }
 
 export default function UsersPage() {
@@ -56,6 +63,7 @@ export default function UsersPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [showProPanel, setShowProPanel] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -304,6 +312,13 @@ export default function UsersPage() {
 
           <div className="flex gap-4">
             <button
+              onClick={() => setShowProPanel(true)}
+              className="px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center gap-3"
+            >
+              <CreditCard className="w-4 h-4" />
+              Pro Subscribers
+            </button>
+            <button
               onClick={syncWithAuth}
               disabled={isSyncing}
               className="px-8 py-3 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3 shadow-2xl"
@@ -353,7 +368,7 @@ export default function UsersPage() {
         </div>
 
         {/* User Statistics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 px-2">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 px-2">
           <SimpleStat
             label={t.admin.users.stats.total}
             value={totalUsers}
@@ -365,6 +380,13 @@ export default function UsersPage() {
             value={users.filter((u) => u.role === "admin").length}
             icon={Crown}
             color="purple"
+          />
+          <SimpleStat
+            label="Pro Paying"
+            value={users.filter((u) => u.plan_tier === "pro").length}
+            icon={CreditCard}
+            color="amber"
+            onClick={() => setShowProPanel(true)}
           />
           <SimpleStat
             label={t.admin.users.stats.active}
@@ -383,7 +405,7 @@ export default function UsersPage() {
             label={t.admin.users.stats.credits}
             value={users.reduce((acc, curr) => acc + (curr.credits_balance || 0), 0)}
             icon={Clock}
-            color="amber"
+            color="zinc"
           />
         </div>
 
@@ -655,6 +677,101 @@ export default function UsersPage() {
             </table>
           </div>
         </div>
+        {/* Pro Subscribers Panel */}
+        {showProPanel && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[40px] shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-10 py-8 border-b border-white/5">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-white tracking-tight">
+                      Pro Subscribers
+                    </h2>
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                      {users.filter((u) => u.plan_tier === "pro").length} active · sorted by renewal
+                      date
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowProPanel(false)}
+                  className="p-2 rounded-xl text-zinc-600 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="divide-y divide-white/5 max-h-[60vh] overflow-y-auto">
+                {users
+                  .filter((u) => u.plan_tier === "pro")
+                  .sort((a, b) => {
+                    if (!a.renews_at) return 1;
+                    if (!b.renews_at) return -1;
+                    return new Date(a.renews_at).getTime() - new Date(b.renews_at).getTime();
+                  })
+                  .map((u) => {
+                    const renewsAt = u.renews_at ? new Date(u.renews_at) : null;
+                    const endsAt = u.ends_at ? new Date(u.ends_at) : null;
+                    const daysUntilRenewal = renewsAt
+                      ? Math.ceil((renewsAt.getTime() - Date.now()) / 86400000)
+                      : null;
+                    const isUrgent = daysUntilRenewal !== null && daysUntilRenewal <= 3;
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center gap-6 px-10 py-6 hover:bg-white/2 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-400 font-black text-sm shrink-0">
+                          {u.email?.[0]?.toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-white text-sm truncate">
+                            {u.customer_name || u.email}
+                          </div>
+                          <div className="text-xs text-zinc-500 truncate">{u.email}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div
+                            className={cn(
+                              "flex items-center gap-2 text-sm font-bold",
+                              isUrgent ? "text-orange-400" : "text-emerald-400",
+                            )}
+                          >
+                            <CalendarClock className="w-4 h-4" />
+                            {renewsAt
+                              ? renewsAt.toLocaleDateString("he-IL", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })
+                              : endsAt
+                                ? `Ends ${endsAt.toLocaleDateString("he-IL")}`
+                                : "—"}
+                          </div>
+                          <div className="text-[10px] font-black uppercase tracking-widest mt-0.5">
+                            {daysUntilRenewal !== null ? (
+                              <span className={isUrgent ? "text-orange-500/70" : "text-zinc-600"}>
+                                {daysUntilRenewal <= 0 ? "today" : `in ${daysUntilRenewal}d`}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-700">{u.subscription_status ?? "—"}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                {users.filter((u) => u.plan_tier === "pro").length === 0 && (
+                  <div className="px-10 py-20 text-center text-zinc-700 font-black uppercase tracking-widest text-[10px]">
+                    No Pro Subscribers
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
@@ -665,21 +782,30 @@ function SimpleStat({
   value,
   icon: Icon,
   color,
+  onClick,
 }: {
   label: string;
   value: number | string;
   icon: React.ElementType;
   color: string;
+  onClick?: () => void;
 }) {
   const colors: Record<string, string> = {
     blue: "text-blue-500 bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500",
     purple: "text-purple-500 bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500",
     emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500",
     amber: "text-amber-500 bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500",
+    zinc: "text-zinc-500 bg-zinc-500/10 border-zinc-500/20 group-hover:bg-zinc-500",
   };
 
   return (
-    <div className="group p-8 rounded-[40px] bg-zinc-950 border border-white/5 flex flex-col gap-6 transition-all duration-700 hover:border-white/10 hover:shadow-2xl">
+    <div
+      className={cn(
+        "group p-8 rounded-[40px] bg-zinc-950 border border-white/5 flex flex-col gap-6 transition-all duration-700 hover:border-white/10 hover:shadow-2xl",
+        onClick && "cursor-pointer",
+      )}
+      onClick={onClick}
+    >
       <div className="flex justify-between items-start">
         <div
           className={cn(

@@ -39,7 +39,12 @@ export const GET = withAdmin(async (req) => {
   ] = await Promise.all([
     profilesQuery,
     svc.from("user_roles").select("user_id, role").limit(1000),
-    svc.from("subscriptions").select("user_id, plan_name, status, customer_name").limit(1000),
+    svc
+      .from("subscriptions")
+      .select(
+        "user_id, plan_name, status, customer_name, renews_at, ends_at, lemonsqueezy_subscription_id",
+      )
+      .limit(1000),
   ]);
 
   if (profileError) {
@@ -246,6 +251,9 @@ export const GET = withAdmin(async (req) => {
       role,
       plan_tier: tier,
       customer_name: sub?.customer_name ?? null,
+      subscription_status: sub?.status ?? null,
+      renews_at: (sub as { renews_at?: string | null } | undefined)?.renews_at ?? null,
+      ends_at: (sub as { ends_at?: string | null } | undefined)?.ends_at ?? null,
       prompt_count: promptCountByUser.get(p.id) ?? 0,
       last_prompt_at: effectiveLastPromptAt,
       last_activity_at: lastActivityAt,
