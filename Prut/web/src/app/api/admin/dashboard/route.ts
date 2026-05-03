@@ -3,13 +3,12 @@ import { withAdmin } from "@/lib/api-middleware";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
+import { getLsMrr } from "@/lib/admin/ls-mrr";
 
-const CACHE_KEY = "admin:dashboard:v2";
+const CACHE_KEY = "admin:dashboard:v3";
 const CACHE_TTL = 300; // 5 minutes
 
 const ACTIVE_SUB_STATUSES = ["active", "on_trial", "past_due", "paid"] as const;
-// Current Pro subscription price in NIS (₪)
-const PRO_PRICE_NIS = 10.0;
 
 /**
  * GET /api/admin/dashboard
@@ -138,7 +137,10 @@ export const GET = withAdmin(async (req) => {
 
   // Active paying subscribers and real MRR in ₪
   const activeSubscribers = activeSubsCount ?? 0;
-  const monthlyRevenue = parseFloat((activeSubscribers * PRO_PRICE_NIS).toFixed(2));
+
+  // Real MRR from LemonSqueezy per-subscriber prices; falls back to activeSubscribers × ₪10
+  const lsMrr = await getLsMrr(skipCache);
+  const monthlyRevenue = lsMrr ? lsMrr.mrr : parseFloat((activeSubscribers * 10).toFixed(2));
 
   // Sum API costs MTD
   const apiCostsMTD =

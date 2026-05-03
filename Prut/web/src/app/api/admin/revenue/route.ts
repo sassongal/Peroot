@@ -2,49 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/admin/admin-security";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
-import { lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
+import { getLsMrr } from "@/lib/admin/ls-mrr";
 
 const PRO_PRICE_ILS = 10.0;
-const LS_ACTIVE_STATUSES = new Set(["active", "on_trial", "past_due", "paid"]);
-const LS_MRR_CACHE_KEY = "admin:revenue:ls_mrr";
-const LS_MRR_CACHE_TTL = 300; // 5 minutes
 const PAYLOAD_CACHE_KEY = "admin:revenue:payload:v1";
 const PAYLOAD_CACHE_TTL = 300; // 5 minutes
-
-async function getLsMrr(skipCache = false): Promise<{ mrr: number; activeSubs: number } | null> {
-  try {
-    if (!skipCache) {
-      const cached = await redis.get<{ mrr: number; activeSubs: number }>(LS_MRR_CACHE_KEY);
-      if (cached) return cached;
-    }
-
-    if (!process.env.LEMONSQUEEZY_API_KEY) return null;
-    lemonSqueezySetup({ apiKey: process.env.LEMONSQUEEZY_API_KEY! });
-    const { listSubscriptions } = await import("@lemonsqueezy/lemonsqueezy.js");
-
-    // Fetch all subscriptions (no status filter) and count active ones locally.
-    // The LS API filter only accepts a single status value, so we can't pass an
-    // array — fetching all and filtering is the only way to count on_trial,
-    // past_due, and paid alongside active.
-    const result = await listSubscriptions({ filter: {}, page: { size: 100 } } as Parameters<
-      typeof listSubscriptions
-    >[0]);
-    if (!result.data) return null;
-
-    const subs = (result.data.data ?? []).filter((s) =>
-      LS_ACTIVE_STATUSES.has((s.attributes as { status?: string }).status ?? ""),
-    );
-    const activeSubs = subs.length;
-    const totalMrr = activeSubs * PRO_PRICE_ILS;
-
-    const out = { mrr: parseFloat(totalMrr.toFixed(2)), activeSubs };
-    await redis.set(LS_MRR_CACHE_KEY, out, { ex: LS_MRR_CACHE_TTL });
-    return out;
-  } catch (err) {
-    logger.warn("[Admin Revenue] LemonSqueezy MRR fetch failed, using DB fallback:", err);
-    return null;
-  }
-}
 
 /**
  * GET /api/admin/revenue
