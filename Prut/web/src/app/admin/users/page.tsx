@@ -49,6 +49,7 @@ interface User {
   usage_last_7_days?: number[];
   // subscription
   subscription_status?: string | null;
+  is_paying_pro?: boolean;
   renews_at?: string | null;
   ends_at?: string | null;
 }
@@ -383,7 +384,7 @@ export default function UsersPage() {
           />
           <SimpleStat
             label="Pro Paying"
-            value={users.filter((u) => u.plan_tier === "pro").length}
+            value={users.filter((u) => u.is_paying_pro).length}
             icon={CreditCard}
             color="amber"
             onClick={() => setShowProPanel(true)}
@@ -687,12 +688,11 @@ export default function UsersPage() {
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black text-white tracking-tight">
-                      Pro Subscribers
-                    </h2>
+                    <h2 className="text-xl font-black text-white tracking-tight">Pro Users</h2>
                     <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                      {users.filter((u) => u.plan_tier === "pro").length} active · sorted by renewal
-                      date
+                      {users.filter((u) => u.is_paying_pro).length} משלמים ·{" "}
+                      {users.filter((u) => u.plan_tier === "pro" && !u.is_paying_pro).length} חינמי
+                      · ממוין לפי תאריך חיוב
                     </p>
                   </div>
                 </div>
@@ -705,8 +705,11 @@ export default function UsersPage() {
               </div>
               <div className="divide-y divide-white/5 max-h-[60vh] overflow-y-auto">
                 {users
-                  .filter((u) => u.plan_tier === "pro")
+                  .filter((u) => u.plan_tier === "pro" || u.is_paying_pro)
                   .sort((a, b) => {
+                    // Paying users first, sorted by renewal; free grants at bottom
+                    if (a.is_paying_pro && !b.is_paying_pro) return -1;
+                    if (!a.is_paying_pro && b.is_paying_pro) return 1;
                     if (!a.renews_at) return 1;
                     if (!b.renews_at) return -1;
                     return new Date(a.renews_at).getTime() - new Date(b.renews_at).getTime();
@@ -727,45 +730,74 @@ export default function UsersPage() {
                           {u.email?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-bold text-white text-sm truncate">
-                            {u.customer_name || u.email}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white text-sm truncate">
+                              {u.customer_name || u.email}
+                            </span>
+                            {u.is_paying_pro ? (
+                              <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                                משלם
+                              </span>
+                            ) : (
+                              <span className="shrink-0 px-2 py-0.5 rounded-md bg-zinc-500/10 border border-zinc-500/20 text-zinc-500 text-[9px] font-black uppercase tracking-widest">
+                                חינמי
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-zinc-500 truncate">{u.email}</div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div
-                            className={cn(
-                              "flex items-center gap-2 text-sm font-bold",
-                              isUrgent ? "text-orange-400" : "text-emerald-400",
-                            )}
-                          >
-                            <CalendarClock className="w-4 h-4" />
-                            {renewsAt
-                              ? renewsAt.toLocaleDateString("he-IL", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                })
-                              : endsAt
-                                ? `Ends ${endsAt.toLocaleDateString("he-IL")}`
-                                : "—"}
-                          </div>
-                          <div className="text-[10px] font-black uppercase tracking-widest mt-0.5">
-                            {daysUntilRenewal !== null ? (
-                              <span className={isUrgent ? "text-orange-500/70" : "text-zinc-600"}>
-                                {daysUntilRenewal <= 0 ? "today" : `in ${daysUntilRenewal}d`}
-                              </span>
-                            ) : (
-                              <span className="text-zinc-700">{u.subscription_status ?? "—"}</span>
-                            )}
-                          </div>
+                          {u.is_paying_pro ? (
+                            <>
+                              <div
+                                className={cn(
+                                  "flex items-center gap-2 text-sm font-bold",
+                                  isUrgent ? "text-orange-400" : "text-emerald-400",
+                                )}
+                              >
+                                <CalendarClock className="w-4 h-4" />
+                                {renewsAt
+                                  ? renewsAt.toLocaleDateString("he-IL", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                    })
+                                  : endsAt
+                                    ? endsAt.toLocaleDateString("he-IL", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                      })
+                                    : "—"}
+                              </div>
+                              <div className="text-[10px] font-black uppercase tracking-widest mt-0.5">
+                                {daysUntilRenewal !== null ? (
+                                  <span
+                                    className={isUrgent ? "text-orange-500/70" : "text-zinc-600"}
+                                  >
+                                    {daysUntilRenewal <= 0
+                                      ? "היום"
+                                      : `עוד ${daysUntilRenewal} ימים`}
+                                  </span>
+                                ) : (
+                                  <span className="text-zinc-700">
+                                    {u.subscription_status ?? "—"}
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
+                              ללא מנוי פעיל
+                            </span>
+                          )}
                         </div>
                       </div>
                     );
                   })}
-                {users.filter((u) => u.plan_tier === "pro").length === 0 && (
+                {users.filter((u) => u.plan_tier === "pro" || u.is_paying_pro).length === 0 && (
                   <div className="px-10 py-20 text-center text-zinc-700 font-black uppercase tracking-widest text-[10px]">
-                    No Pro Subscribers
+                    No Pro Users
                   </div>
                 )}
               </div>

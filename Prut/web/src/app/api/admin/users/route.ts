@@ -227,7 +227,12 @@ export const GET = withAdmin(async (req) => {
     const role =
       (roles ?? []).find((r: { user_id: string; role: string }) => r.user_id === p.id)?.role ??
       "user";
-    const tier = role === "admin" ? "admin" : (sub?.plan_name ?? p.plan_tier ?? "free");
+    const ACTIVE_SUB_STATUSES = ["active", "on_trial", "past_due", "paid"];
+    const isActiveSub =
+      !!sub && ACTIVE_SUB_STATUSES.includes((sub as { status?: string }).status ?? "");
+    // Use profiles.plan_tier as authoritative source (set by webhook).
+    // Fall back to deriving from active subscription if plan_tier is stale/missing.
+    const tier = role === "admin" ? "admin" : (p.plan_tier ?? (isActiveSub ? "pro" : "free"));
 
     const daily_limit = tier === "admin" ? -1 : tier === "pro" ? 150 : freeDailyLimit;
     const ledger = ledgerByUser.get(p.id) ?? { lastSpend: null, daily: {} };
@@ -252,6 +257,7 @@ export const GET = withAdmin(async (req) => {
       plan_tier: tier,
       customer_name: sub?.customer_name ?? null,
       subscription_status: sub?.status ?? null,
+      is_paying_pro: isActiveSub,
       renews_at: (sub as { renews_at?: string | null } | undefined)?.renews_at ?? null,
       ends_at: (sub as { ends_at?: string | null } | undefined)?.ends_at ?? null,
       prompt_count: promptCountByUser.get(p.id) ?? 0,
