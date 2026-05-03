@@ -43,6 +43,9 @@
       });
       if (!res.ok) return { ok: false, status: res.status };
       const cfg = await res.json();
+      if (!cfg || typeof cfg !== "object" || !cfg.selectors) {
+        return { ok: false, error: "invalid_shape" };
+      }
       await setConfig(cfg);
       return { ok: true, cfg };
     } catch (err) {

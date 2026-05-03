@@ -225,3 +225,18 @@ Do NOT commit. Already in .gitignore.
 - `sequential-thinking` — complex reasoning (1 tool)
 - `vercel` — deployments, logs (may error — known issue)
 - `peroot-platform` — internal platform tools (may error — tsx missing globally)
+---
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues (`github.com/sassongal/Peroot`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role triage vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.

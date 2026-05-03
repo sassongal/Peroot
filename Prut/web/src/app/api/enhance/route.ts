@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { isIP } from "node:net";
+import * as Sentry from "@sentry/nextjs";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
@@ -1060,7 +1061,12 @@ export async function POST(req: Request) {
               textCopy.length === 0 || finishReasonCopy === "error" || isTruncated;
             if (shouldRefund) {
               if (userId) {
-                await refundCredit(userId);
+                const refundResult = await refundCredit(userId);
+                if (!refundResult.success) {
+                  Sentry.captureException(new Error("Credit refund failed in onFinish"), {
+                    extra: { userId, finishReason: finishReasonCopy, error: refundResult.error },
+                  });
+                }
               } else if (guestId && !isRefinement) {
                 await refundGuestCredit(guestId);
               }

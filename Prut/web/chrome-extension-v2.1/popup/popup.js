@@ -42,7 +42,8 @@ const PerootPopupTargetModel = (() => {
     const key = "peroot.target_model_override." + norm;
     return new Promise((resolve) => {
       if (!slug) chrome.storage.local.remove(key, resolve);
-      else chrome.storage.local.set({ [key]: slug }, resolve);
+      else if (/^[a-z0-9_-]{1,64}$/.test(slug)) chrome.storage.local.set({ [key]: slug }, resolve);
+      else resolve();
     });
   }
   function hostMatchedSlug(host, registry) {

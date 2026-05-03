@@ -15,39 +15,49 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
 
-    const { data: { user } } = bearerToken
-      ? await supabase.auth.getUser(bearerToken)
-      : await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
     }
 
-    const rateLimit = await checkRateLimit(user.id, 'personalLibrary');
+    const rateLimit = await checkRateLimit(user.id, "personalLibrary");
     if (!rateLimit.success) {
-      return NextResponse.json({ error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" }, { status: 429 });
+      return NextResponse.json(
+        { error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" },
+        { status: 429 },
+      );
     }
 
     // Use service role to bypass RLS for Bearer token requests
-    const client = bearerToken
-      ? createServiceClient()
-      : supabase;
+    const client = bearerToken ? createServiceClient() : supabase;
 
     const { data, error } = await client
       .from("personal_library")
-      .select("id, title, prompt, category, personal_category, use_case, tags, use_count, sort_index, created_at")
+      .select(
+        "id, title, prompt, category, personal_category, use_case, tags, use_count, sort_index, created_at",
+      )
       .eq("user_id", user.id)
       .order("sort_index", { ascending: true })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(2000);
 
     if (error) {
       logger.error("[personal-library] DB error:", error);
-      return NextResponse.json({ error: "טעינת הספרייה נכשלה", code: "load_failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: "טעינת הספרייה נכשלה", code: "load_failed" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ items: data || [] });
   } catch (error) {
     logger.error("[personal-library] Error:", error);
-    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "שגיאת שרת פנימית", code: "internal_error" },
+      { status: 500 },
+    );
   }
 }

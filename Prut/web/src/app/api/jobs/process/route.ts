@@ -6,10 +6,10 @@ import { createServiceClient } from "@/lib/supabase/service";
 
 export async function GET(req: Request) {
   // 1. Secure this endpoint with CRON_SECRET
-  const authHeader = req.headers.get('authorization');
+  const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Use service client to fetch/update jobs bypassing RLS
@@ -17,14 +17,19 @@ export async function GET(req: Request) {
 
   try {
     // 2. Fetch Next Job (Atomic)
-    const { data, error } = await supabase.rpc('fetch_next_job');
-    
+    const { data, error } = await supabase.rpc("fetch_next_job");
+
     if (error) throw error;
     if (!data || data.length === 0) {
-      return NextResponse.json({ message: 'No pending jobs' });
+      return NextResponse.json({ message: "No pending jobs" });
     }
 
-    const job = data[0] as { j_id: string; j_type: JobType; j_payload: JobPayload; j_attempts: number }; // RPC returns list
+    const job = data[0] as {
+      j_id: string;
+      j_type: JobType;
+      j_payload: JobPayload;
+      j_attempts: number;
+    }; // RPC returns list
     logger.info(`[Worker] Rate Processing Job: ${job.j_id} (${job.j_type})`);
 
     // 3. Process Job
@@ -32,55 +37,47 @@ export async function GET(req: Request) {
     let errorMsg = null;
 
     try {
-      if (job.j_type === 'style_analysis') {
-         const { analyzeUserStyle } = await import("@/lib/intelligence/personality-analyzer");
-         const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
-         
-         const userId = job.j_payload.userId as string;
-         if (userId) {
-             await analyzeUserStyle(userId);
-             await AchievementTracker.award(userId, 'style_explorer');
-         }
-      } 
-      else if (job.j_type === 'achievement_check') {
-         const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
-         const userId = job.j_payload.userId as string;
-         if (userId) {
-             await AchievementTracker.checkAll(userId);
-         }
+      if (job.j_type === "style_analysis") {
+        const { analyzeUserStyle } = await import("@/lib/intelligence/personality-analyzer");
+        const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
+
+        const userId = job.j_payload.userId as string;
+        if (userId) {
+          await analyzeUserStyle(userId);
+          await AchievementTracker.award(userId, "style_explorer");
+        }
+      } else if (job.j_type === "achievement_check") {
+        const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
+        const userId = job.j_payload.userId as string;
+        if (userId) {
+          await AchievementTracker.checkAll(userId);
+        }
       }
-      
+
       success = true;
     } catch (e: unknown) {
-        logger.error(`[Worker] Job Failed:`, e);
-        errorMsg = (e instanceof Error) ? e.message : 'Unknown error';
+      logger.error(`[Worker] Job Failed:`, e);
+      errorMsg = e instanceof Error ? e.message : "Unknown error";
     }
 
-    // 4. Update Status
-    const status = success ? 'completed' : (job.j_attempts >= 5 ? 'failed' : 'pending'); // Retry if attempts < 5
-    // If pending (retry), we might want to set locked_until to future (backoff). 
-    // The current logic just unlocks it after 5 mins or keeps it processing until update.
-    // Let's rely on the RPC logic which increments attempts. 
-    // Ideally we should set locked_until = now() + backoff.
-    
-    // For simplicity:
-    // specific retry logic could go here.
+    // 4. Update Status — exponential backoff: 60s * 2^attempts, capped at 1h
+    const MAX_ATTEMPTS = 5;
+    const status = success ? "completed" : job.j_attempts >= MAX_ATTEMPTS ? "failed" : "pending";
+    const backoffMs =
+      status === "pending" ? Math.min(60_000 * Math.pow(2, job.j_attempts), 3_600_000) : 0;
 
     await supabase
-        .from('background_jobs')
-        .update({
-            status,
-            last_error: errorMsg,
-            // unlock if pending so it can be picked up again? 
-            // Better: update locked_until to now() + delay
-            locked_until: status === 'pending' ? new Date(Date.now() + 60000).toISOString() : null
-        })
-        .eq('id', job.j_id);
+      .from("background_jobs")
+      .update({
+        status,
+        last_error: errorMsg,
+        locked_until: status === "pending" ? new Date(Date.now() + backoffMs).toISOString() : null,
+      })
+      .eq("id", job.j_id);
 
     return NextResponse.json({ success: true, jobId: job.j_id, status });
-
   } catch (err: unknown) {
-      const message = (err instanceof Error) ? err.message : 'Internal Server Error';
-      return NextResponse.json({ error: message }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Internal Server Error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

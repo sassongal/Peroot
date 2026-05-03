@@ -178,7 +178,7 @@ export async function refundCredit(
     // permanently lose the credit they were owed.
     if (rpcError) {
       logger.error("[CreditService] refund_credit RPC failed:", rpcError);
-      return { success: false, error: rpcError.message || "Refund RPC failed" };
+      return { success: false, error: "Credit refund failed" };
     }
 
     // Log refund — fetch balance after refund

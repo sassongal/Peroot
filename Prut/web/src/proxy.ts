@@ -211,12 +211,16 @@ export async function proxy(request: NextRequest) {
   }
 
   // Maintenance mode enforcement
+  // Use app_metadata.role (JWT-embedded) for lightweight maintenance gate —
+  // avoids an extra DB round-trip on every request. The admin UI path makes
+  // a separate DB check against plan_tier for defence-in-depth.
   const adminEmails = (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
   const isAdmin =
     user?.app_metadata?.role === "admin" ||
+    user?.app_metadata?.plan_tier === "admin" ||
     (user?.email && adminEmails.includes(user.email.toLowerCase()));
 
   if (isMaintenance && !isAdmin) {
