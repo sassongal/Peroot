@@ -62,16 +62,32 @@ export async function handleSubscriptionEvent(
   const activeProStatus = isActivePro(attributes.status);
   const newTier = activeProStatus ? "pro" : "free";
 
-  const { data: currentProfile } = await supabase
-    .from("profiles")
-    .select("plan_tier, tags, credits_balance")
-    .eq("id", userId)
-    .single();
+  const [{ data: currentProfile }, { data: canonicalSub }] = await Promise.all([
+    supabase.from("profiles").select("plan_tier, tags, credits_balance").eq("id", userId).single(),
+    supabase
+      .from("subscriptions")
+      .select("lemonsqueezy_subscription_id")
+      .eq("user_id", userId)
+      .maybeSingle(),
+  ]);
 
   // Never overwrite admin plan_tier — admin status is managed via the admin
   // panel (grant_admin action), not through payment events.
   if (currentProfile?.plan_tier === "admin") {
     logger.info(`[LemonSqueezy Webhook] Skipping plan_tier update for admin user ${userId}`);
+    return;
+  }
+
+  // If this event is for a non-canonical subscription (user re-subscribed and the
+  // DB row now points to a different sub ID), don't let the old subscription's
+  // cancellation/expiry downgrade the user's plan_tier.
+  const eventSubId = event.data!.id;
+  const canonicalSubId = (canonicalSub as { lemonsqueezy_subscription_id?: string } | null)
+    ?.lemonsqueezy_subscription_id;
+  if (!activeProStatus && canonicalSubId && canonicalSubId !== eventSubId) {
+    logger.info(
+      `[LemonSqueezy Webhook] Ignoring ${attributes.status} for non-canonical sub ${eventSubId} (canonical: ${canonicalSubId})`,
+    );
     return;
   }
 
