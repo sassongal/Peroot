@@ -123,7 +123,7 @@ Image and video prompts are scored on:
 
 ## Technical Architecture
 
-- **Frontend**: Next.js 15 (App Router) + React 19 + TypeScript
+- **Frontend**: Next.js 16.2 (App Router) + React 19 + TypeScript
 - **Styling**: Tailwind CSS with custom design system
 - **Backend**: Next.js API Routes + Supabase (PostgreSQL + Auth + Edge Functions)
 - **Hosting**: Vercel (with ISR and Edge Runtime)
@@ -172,7 +172,7 @@ Developers can integrate Peroot's prompt enhancement capabilities into their own
 | Chrome extension | No | Yes | Yes |
 | Image/Video prompts | Yes | Yes | Yes |
 | Agent builder | No | No | Yes |
-| Price | Free | Free | NIS 3.99/month |
+| Price | Free | Free | NIS 10/month |
 | Free trial | N/A | N/A | 4 days |
 
 ---

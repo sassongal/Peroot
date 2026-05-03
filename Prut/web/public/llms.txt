@@ -56,7 +56,7 @@ Runway Gen-4, Kling 2.0, Sora, Google Veo 3, Higgsfield, Minimax Hailuo
 ## Pricing
 - Guest: 1 free prompt/day without signup or registration
 - Free: 2 credits/day, public library access, Chrome extension
-- Pro: 150 credits/month, all engines, iterative refinement, personal library, 4-day free trial, NIS 3.99/month
+- Pro: 150 credits/month, all engines, iterative refinement, personal library, 4-day free trial, NIS 10/month
 
 ## Key Facts
 - Website: https://www.peroot.space

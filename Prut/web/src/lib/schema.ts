@@ -275,5 +275,21 @@ export function webSiteSchema() {
       },
       "query-input": "required name=search_term_string",
     },
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", "h2", ".home-seo-hero p", ".faq-answer", "details p"],
+    },
+  };
+}
+
+export function speakablePageSchema(url: string, cssSelectors: string[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    url,
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: cssSelectors,
+    },
   };
 }
