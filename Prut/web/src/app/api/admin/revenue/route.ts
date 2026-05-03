@@ -4,7 +4,8 @@ import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 import { lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
 
-const PRO_PRICE_ILS = 3.99;
+const PRO_PRICE_ILS = 10.0;
+const LS_ACTIVE_STATUSES = new Set(["active", "on_trial", "past_due", "paid"]);
 const LS_MRR_CACHE_KEY = "admin:revenue:ls_mrr";
 const LS_MRR_CACHE_TTL = 300; // 5 minutes
 const PAYLOAD_CACHE_KEY = "admin:revenue:payload:v1";
@@ -20,10 +21,19 @@ async function getLsMrr(skipCache = false): Promise<{ mrr: number; activeSubs: n
     if (!process.env.LEMONSQUEEZY_API_KEY) return null;
     lemonSqueezySetup({ apiKey: process.env.LEMONSQUEEZY_API_KEY! });
     const { listSubscriptions } = await import("@lemonsqueezy/lemonsqueezy.js");
-    const result = await listSubscriptions({ filter: { status: "active" } });
+
+    // Fetch all subscriptions (no status filter) and count active ones locally.
+    // The LS API filter only accepts a single status value, so we can't pass an
+    // array — fetching all and filtering is the only way to count on_trial,
+    // past_due, and paid alongside active.
+    const result = await listSubscriptions({ filter: {}, page: { size: 100 } } as Parameters<
+      typeof listSubscriptions
+    >[0]);
     if (!result.data) return null;
 
-    const subs = result.data.data ?? [];
+    const subs = (result.data.data ?? []).filter((s) =>
+      LS_ACTIVE_STATUSES.has((s.attributes as { status?: string }).status ?? ""),
+    );
     const activeSubs = subs.length;
     const totalMrr = activeSubs * PRO_PRICE_ILS;
 
@@ -79,11 +89,11 @@ export async function GET(req: NextRequest) {
       planBreakdownResult,
       recentEventsResult,
     ] = await Promise.all([
-      // Active subscriptions
+      // Active subscriptions — all paying-tier statuses
       supabase
         .from("subscriptions")
         .select("*", { count: "exact", head: true })
-        .eq("status", "active"),
+        .in("status", ["active", "on_trial", "past_due", "paid"]),
 
       // New subscriptions this month
       supabase

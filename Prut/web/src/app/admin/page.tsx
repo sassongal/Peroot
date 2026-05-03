@@ -33,7 +33,10 @@ interface DashboardData {
   freeUsers: number;
   proUsers: number;
   conversionRate: string;
-  totalRevenue: number;
+  /** @deprecated use monthlyRevenue + activeSubscribers */
+  totalRevenue?: number;
+  activeSubscribers: number;
+  monthlyRevenue: number;
   apiCostsMTD: number;
   manualCostsMTD: number;
   promptsThisMonth: number;
@@ -65,6 +68,11 @@ interface DashboardData {
 function formatCurrency(n: number): string {
   if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
   return `$${n.toFixed(2)}`;
+}
+
+function formatILS(n: number): string {
+  if (n >= 1000) return `₪${(n / 1000).toFixed(1)}k`;
+  return `₪${n.toFixed(0)}`;
 }
 
 function formatNumber(n: number): string {
@@ -548,7 +556,8 @@ export default function AdminDashboardPage() {
 
   const totalCostsMTD = data.apiCostsMTD + data.manualCostsMTD;
 
-  const mrr = data.totalRevenue;
+  const mrr = data.monthlyRevenue;
+  const activeSubscribers = data.activeSubscribers;
 
   // Seed monthlyTrend fallback if empty
   const trendData: Array<{ month: string; count: number }> =
@@ -563,10 +572,23 @@ export default function AdminDashboardPage() {
           { month: "Mar", count: 0 },
         ];
 
+  // Revenue is in ₪, costs in USD — donut shows relative scale for illustration only.
+  // Revenue ÷ 3.7 converts ₪ → $ approx for a coherent visual (display label still shows ₪).
+  const mrrUsdApprox = mrr / 3.7;
   const donutSlices: DonutSlice[] = [
-    { label: "LLM API", value: data.apiCostsMTD, color: "text-blue-400", stroke: "#3b82f6" },
-    { label: "Manual", value: data.manualCostsMTD, color: "text-purple-400", stroke: "#a78bfa" },
-    { label: "Revenue", value: mrr, color: "text-emerald-400", stroke: "#10b981" },
+    { label: "LLM API ($)", value: data.apiCostsMTD, color: "text-blue-400", stroke: "#3b82f6" },
+    {
+      label: "Manual ($)",
+      value: data.manualCostsMTD,
+      color: "text-purple-400",
+      stroke: "#a78bfa",
+    },
+    {
+      label: `Revenue (₪${mrr.toFixed(0)})`,
+      value: mrrUsdApprox,
+      color: "text-emerald-400",
+      stroke: "#10b981",
+    },
   ];
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -689,14 +711,14 @@ export default function AdminDashboardPage() {
           />
           <KpiCard
             label="Monthly Revenue"
-            value={formatCurrency(mrr)}
-            sub="MRR"
-            trend="-"
+            value={formatILS(mrr)}
+            sub={`${activeSubscribers} מנויים פעילים · MRR`}
+            trend={`₪${mrr.toFixed(0)}`}
             icon={DollarSign}
             color="emerald"
-            href="/admin/users"
+            href="/admin/revenue"
             flashing={kpiFlash}
-            tooltip="MRR — Monthly Recurring Revenue. סה״כ ההכנסה החוזרת החודשית ממנויים פעילים. מחושב כ: מספר מנויי Pro פעילים × מחיר המנוי."
+            tooltip="MRR — Monthly Recurring Revenue בשקלים. מחושב כ: מספר מנויים פעילים (active + on_trial + past_due + paid) × ₪10 לחודש. מוצג בשקלים כי המחיר בשקלים."
           />
           <KpiCard
             label="API Costs MTD"

@@ -4,8 +4,12 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
-const CACHE_KEY = "admin:dashboard:v1";
+const CACHE_KEY = "admin:dashboard:v2";
 const CACHE_TTL = 300; // 5 minutes
+
+const ACTIVE_SUB_STATUSES = ["active", "on_trial", "past_due", "paid"] as const;
+// Current Pro subscription price in NIS (₪)
+const PRO_PRICE_NIS = 10.0;
 
 /**
  * GET /api/admin/dashboard
@@ -39,7 +43,7 @@ export const GET = withAdmin(async (req) => {
   const [
     { count: totalUsers },
     { count: proUsersCount },
-    { count: totalRevenue },
+    { count: activeSubsCount },
     { data: apiCostsData },
     { data: manualCostsData },
     { count: promptsThisMonth },
@@ -58,10 +62,12 @@ export const GET = withAdmin(async (req) => {
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).neq("plan_tier", "free"),
+    // Count all paying-tier subscriptions — includes active, on_trial, past_due, paid.
+    // This is the authoritative "active streams" count for MRR calculation.
     supabase
       .from("subscriptions")
       .select("*", { count: "exact", head: true })
-      .eq("status", "active"),
+      .in("status", [...ACTIVE_SUB_STATUSES]),
     supabase
       .from("api_usage_logs")
       .select("estimated_cost_usd")
@@ -130,6 +136,10 @@ export const GET = withAdmin(async (req) => {
   const conversionRate =
     (totalUsers ?? 0) > 0 ? ((proUsers / (totalUsers ?? 1)) * 100).toFixed(1) : "0";
 
+  // Active paying subscribers and real MRR in ₪
+  const activeSubscribers = activeSubsCount ?? 0;
+  const monthlyRevenue = parseFloat((activeSubscribers * PRO_PRICE_NIS).toFixed(2));
+
   // Sum API costs MTD
   const apiCostsMTD =
     apiCostsData?.reduce((sum, row) => sum + (row.estimated_cost_usd ?? 0), 0) ?? 0;
@@ -190,7 +200,8 @@ export const GET = withAdmin(async (req) => {
     freeUsers,
     proUsers,
     conversionRate,
-    totalRevenue: totalRevenue ?? 0,
+    activeSubscribers,
+    monthlyRevenue,
     apiCostsMTD,
     manualCostsMTD,
     promptsThisMonth: promptsThisMonth ?? 0,
