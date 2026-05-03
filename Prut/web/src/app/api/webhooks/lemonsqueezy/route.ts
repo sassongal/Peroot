@@ -55,7 +55,14 @@ export async function POST(request: Request) {
 
   // Idempotency: INSERT event BEFORE processing. Unique index on event_name
   // ensures only one concurrent webhook wins the insert. Losers get a constraint error.
-  const dedupKey = `${eventName}:${event.data?.id || "unknown"}`;
+  //
+  // Key includes the subscription's updated_at so every distinct state change
+  // on the same subscription gets its own row. Without this, the second
+  // subscription_updated (e.g. expired → active after trial payment) would
+  // collide with the first and be silently dropped.
+  const subUpdatedAt =
+    (event.data?.attributes as Record<string, unknown> | undefined)?.updated_at ?? "";
+  const dedupKey = `${eventName}:${event.data?.id || "unknown"}:${subUpdatedAt}`;
   const { error: dedupError } = await supabase.from("webhook_events").insert({
     event_name: dedupKey,
     body: event,
