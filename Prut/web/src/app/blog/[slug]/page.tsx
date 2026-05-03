@@ -4,7 +4,13 @@ import { ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { articleSchema, breadcrumbSchema, faqSchema, howToSchema } from "@/lib/schema";
+import {
+  articleSchema,
+  breadcrumbSchema,
+  faqSchema,
+  howToSchema,
+  speakablePageSchema,
+} from "@/lib/schema";
 import { HEBREW_BLOG_SLUGS, ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { SafeHtml } from "@/components/ui/SafeHtml";
 import { BlogHeroImage } from "@/components/blog/BlogHeroImage";
@@ -385,6 +391,14 @@ export default async function BlogPostPage({ params }: Props) {
           author: post.author || "Gal Sasson",
           thumbnail_url: ogImageUrl,
         })}
+      />
+      <JsonLd
+        data={speakablePageSchema(`${blogSiteUrl}/blog/${post.slug}`, [
+          "h1",
+          "article p",
+          "article h2",
+          ".blog-excerpt",
+        ])}
       />
       <JsonLd
         data={breadcrumbSchema([

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
 import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbSchema } from "@/lib/schema";
+import { breadcrumbSchema, speakablePageSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PromptSearch } from "@/components/features/library/PromptSearch";
@@ -59,10 +59,15 @@ function groupSlugsByCollection() {
   for (const collection of PROMPT_COLLECTIONS) {
     const items = collection.categories
       .map((catId) => {
-        const slug = Object.entries(CATEGORY_SLUG_MAP).find(
-          ([, v]) => v.id === catId
-        );
-        return slug ? { slug: slug[0], id: catId, labelHe: CATEGORY_LABELS[catId] || slug[1].labelHe, emoji: slug[1].emoji } : null;
+        const slug = Object.entries(CATEGORY_SLUG_MAP).find(([, v]) => v.id === catId);
+        return slug
+          ? {
+              slug: slug[0],
+              id: catId,
+              labelHe: CATEGORY_LABELS[catId] || slug[1].labelHe,
+              emoji: slug[1].emoji,
+            }
+          : null;
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
 
@@ -80,7 +85,12 @@ function groupSlugsByCollection() {
   // Remaining categories not in any collection
   const remaining = Object.entries(CATEGORY_SLUG_MAP)
     .filter(([, v]) => !assignedIds.has(v.id))
-    .map(([slug, v]) => ({ slug, id: v.id, labelHe: CATEGORY_LABELS[v.id] || v.labelHe, emoji: v.emoji }));
+    .map(([slug, v]) => ({
+      slug,
+      id: v.id,
+      labelHe: CATEGORY_LABELS[v.id] || v.labelHe,
+      emoji: v.emoji,
+    }));
 
   if (remaining.length > 0) {
     collectionGroups.push({
@@ -113,8 +123,7 @@ export default function PromptsIndexPage() {
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           name: "ספריית פרומפטים בעברית",
-          description:
-            "מאות פרומפטים מקצועיים בעברית לכל תחום: שיווק, מכירות, פיתוח, עיצוב ועוד.",
+          description: "מאות פרומפטים מקצועיים בעברית לכל תחום: שיווק, מכירות, פיתוח, עיצוב ועוד.",
           url: `${SITE_URL}/prompts`,
           inLanguage: "he",
           publisher: {
@@ -124,13 +133,25 @@ export default function PromptsIndexPage() {
           },
         }}
       />
+      <JsonLd
+        data={speakablePageSchema(`${SITE_URL}/prompts`, [
+          "h1",
+          "h2",
+          "h3",
+          ".prompt-collection-description",
+        ])}
+      />
 
       <div className="min-h-screen bg-background text-foreground" dir="rtl">
         <div className="max-w-6xl mx-auto px-4 py-8 md:py-14">
-
           {/* Breadcrumbs */}
-          <nav aria-label="breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
-            <Link href="/" className="hover:text-foreground transition-colors">דף הבית</Link>
+          <nav
+            aria-label="breadcrumb"
+            className="flex items-center gap-2 text-xs text-muted-foreground mb-8"
+          >
+            <Link href="/" className="hover:text-foreground transition-colors">
+              דף הבית
+            </Link>
             <span>/</span>
             <span className="text-secondary-foreground">ספריית פרומפטים</span>
           </nav>
@@ -162,15 +183,11 @@ export default function PromptsIndexPage() {
             {groups.map((group) => (
               <section key={group.collectionId} aria-label={group.title}>
                 {/* Section header */}
-                <div
-                  className={`flex items-center gap-3 mb-5 pb-4 border-b border-border`}
-                >
+                <div className={`flex items-center gap-3 mb-5 pb-4 border-b border-border`}>
                   <span className="text-2xl" role="img" aria-hidden="true">
                     {group.icon}
                   </span>
-                  <h2 className="text-xl md:text-2xl font-serif text-foreground">
-                    {group.title}
-                  </h2>
+                  <h2 className="text-xl md:text-2xl font-serif text-foreground">{group.title}</h2>
                 </div>
 
                 {/* Category cards */}
@@ -199,8 +216,16 @@ export default function PromptsIndexPage() {
 
           {/* Cross-links */}
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <CrossLinkCard href="/guide" title="איך לכתוב פרומפט טוב?" description="המדריך המלא עם עקרונות זהב וטכניקות" />
-            <CrossLinkCard href="/features" title="מצבי עבודה מתקדמים" description="תמונות, סרטונים, מחקר מעמיק וסוכני AI" />
+            <CrossLinkCard
+              href="/guide"
+              title="איך לכתוב פרומפט טוב?"
+              description="המדריך המלא עם עקרונות זהב וטכניקות"
+            />
+            <CrossLinkCard
+              href="/features"
+              title="מצבי עבודה מתקדמים"
+              description="תמונות, סרטונים, מחקר מעמיק וסוכני AI"
+            />
           </div>
 
           {/* CTA */}
