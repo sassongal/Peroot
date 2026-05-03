@@ -101,6 +101,17 @@ export async function handleSubscriptionEvent(
     await handleResubscribeTransition(supabase, userId, currentProfile ?? {});
   }
 
+  // Safety net: active subscription should NEVER carry the churn tag,
+  // regardless of the wasPro path taken above (handles dedup-missed transitions).
+  if (activeProStatus && currentProfile?.tags?.includes("churn")) {
+    const cleanedTags = (currentProfile.tags ?? []).filter((t: string) => t !== "churn");
+    await supabase
+      .from("profiles")
+      .update({ tags: cleanedTags, churned_at: null })
+      .eq("id", userId);
+    logger.info(`[LemonSqueezy Webhook] Removed stale churn tag for active user ${userId}`);
+  }
+
   // Grant monthly credits on creation / renewal / resume
   if (activeProStatus) {
     await grantProCredits(supabase, userId, eventName);
