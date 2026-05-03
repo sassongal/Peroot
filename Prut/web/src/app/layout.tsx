@@ -179,6 +179,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* hreflang — explicitly rendered here because Next.js App Router's
+            metadata.alternates.languages is silently dropped when the page
+            segment re-declares alternates.canonical without languages. */}
+        <link rel="alternate" hrefLang="he-IL" href={`${siteUrl}/`} />
+        <link rel="alternate" hrefLang="x-default" href={`${siteUrl}/`} />
         {/* Hero image preload is generated automatically by next/image
             with priority={true} on HomeViewChrome.tsx. A manual <link
             rel="preload"> here previously hardcoded the wrong width
