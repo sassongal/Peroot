@@ -7,10 +7,35 @@ export function organizationSchema() {
     name: "Peroot",
     alternateName: "פירוט",
     url: SITE_URL,
-    description: "Peroot (פירוט) - פלטפורמת הנדסת פרומפטים מקצועית בעברית, המפותחת על ידי JoyaTech",
+    description:
+      "Peroot (פירוט) היא פלטפורמת הנדסת פרומפטים מקצועית בעברית. הפלטפורמה מאפשרת שיפור אוטומטי של פרומפטים ל-ChatGPT, Claude, Gemini ו-Midjourney, עם ספריית 480+ תבניות, דירוג איכות מובנה ותמיכה מלאה בשפה העברית.",
     logo: {
       "@type": "ImageObject",
       url: `${SITE_URL}/assets/branding/logo.png`,
+    },
+    foundingDate: "2024",
+    areaServed: {
+      "@type": "Country",
+      name: "Israel",
+      sameAs: "https://www.wikidata.org/wiki/Q801",
+    },
+    inLanguage: "he",
+    knowsAbout: [
+      "Prompt Engineering",
+      "Generative AI",
+      "Large Language Models",
+      "Hebrew NLP",
+      "AI Tools",
+      "ChatGPT",
+      "Claude AI",
+      "Midjourney",
+      "AI Image Generation",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: "gal@joya-tech.net",
+      contactType: "customer support",
+      availableLanguage: ["Hebrew", "English"],
     },
     sameAs: [
       "https://www.facebook.com/profile.php?id=61579689932777",
@@ -20,7 +45,17 @@ export function organizationSchema() {
     founder: {
       "@type": "Person",
       name: "Gal Sasson",
-      jobTitle: "Founder & Developer",
+      jobTitle: "Founder & Full-Stack Developer",
+      description:
+        "מפתח תוכנה ויזם ישראלי, מייסד JoyaTech ו-Peroot. מומחה לבינה מלאכותית, פיתוח Web ויישומי AI בעברית.",
+      knowsAbout: [
+        "Prompt Engineering",
+        "Generative AI",
+        "Next.js",
+        "TypeScript",
+        "Supabase",
+        "AI Integration",
+      ],
       sameAs: ["https://github.com/sassongal", "https://www.linkedin.com/in/sassongal/"],
     },
     parentOrganization: {
@@ -28,11 +63,6 @@ export function organizationSchema() {
       name: "JoyaTech",
       url: "https://joya-tech.net",
     },
-    areaServed: {
-      "@type": "Country",
-      name: "Israel",
-    },
-    inLanguage: "he",
   };
 }
 
@@ -60,6 +90,10 @@ export function articleSchema(post: {
       "@type": "Person",
       name: post.author || "Gal Sasson",
       url: SITE_URL,
+      jobTitle: "Founder & AI Developer",
+      description:
+        "מפתח תוכנה ויזם ישראלי, מייסד Peroot ו-JoyaTech. מומחה לפיתוח יישומי AI ולהנדסת פרומפטים בעברית.",
+      knowsAbout: ["Prompt Engineering", "Generative AI", "Hebrew AI Tools", "LLMs"],
       sameAs: ["https://www.linkedin.com/in/sassongal/", "https://github.com/sassongal"],
     },
     publisher: {
@@ -101,14 +135,29 @@ export function softwareAppSchema() {
     "@type": "SoftwareApplication",
     name: "Peroot",
     applicationCategory: "ProductivityApplication",
+    applicationSubCategory: "AI Writing Tool",
     operatingSystem: "Web",
-    description: "מחולל פרומפטים מקצועי בעברית - שדרג כל פרומפט באמצעות AI מתקדם",
+    description:
+      "מחולל פרומפטים מקצועי בעברית — שדרג כל פרומפט באמצעות AI מתקדם. תומך ב-ChatGPT, Claude, Gemini, Midjourney, Runway ועוד. כולל 480+ תבניות, דירוג איכות ומצב מחקר מעמיק.",
     url: SITE_URL,
     inLanguage: "he",
+    featureList: [
+      "שיפור אוטומטי של פרומפטים בעברית",
+      "480+ תבניות פרומפטים מוכנות",
+      "דירוג איכות ב-9 ממדים",
+      "תמיכה ב-ChatGPT, Claude, Gemini, DeepSeek",
+      "מצב תמונות: Midjourney, DALL-E, Flux, Stable Diffusion",
+      "מצב וידאו: Runway, Sora, Kling, Veo 3",
+      "מצב מחקר מעמיק",
+      "בניית סוכני AI",
+      "ספרייה אישית עם מועדפים",
+      "תוסף Chrome לשיפור מוטבע",
+      "קלט קולי בעברית",
+    ],
     author: {
       "@type": "Organization",
-      name: "Peroot",
-      url: SITE_URL,
+      name: "JoyaTech",
+      url: "https://joya-tech.net",
     },
     offers: {
       "@type": "Offer",
