@@ -8,7 +8,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Peroot (פירוט) — מחולל פרומפטים בעברית | חינם ל-ChatGPT ו-Claude",
   description:
-    "הנדסת פרומפטים בעברית בחינם. Peroot משדרג כל פרומפט למבנה מקצועי עם דירוג איכות — תוצאות טובות יותר ב-ChatGPT, Claude, Gemini ו-Midjourney. נסו עכשיו.",
+    "לכתוב פרומפטים טובים יותר בשניות. Peroot משדרג כל פרומפט למבנה מקצועי עם דירוג איכות — תוצאות טובות יותר ב-ChatGPT, Claude, Gemini ו-Midjourney. חינם.",
   alternates: { canonical: "/" },
 };
 

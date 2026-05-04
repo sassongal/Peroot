@@ -11,17 +11,17 @@ import { PromptSearch } from "@/components/features/library/PromptSearch";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: "ספריית פרומפטים בעברית - כל הקטגוריות",
+  title: "ספריית פרומפטים בעברית — 480+ תבניות מוכנות | Peroot",
   description:
-    "מאות פרומפטים מקצועיים בעברית לכל תחום: שיווק, מכירות, פיתוח, עיצוב, תוכן ועוד. בחרו קטגוריה וגלו פרומפטים מוכנים לשימוש ב-ChatGPT, Claude ו-Gemini.",
+    "480+ תבניות פרומפטים מוכנות בעברית: פרומפטים לשיווק, פרומפטים לפיתוח, פרומפטים לתמונות, פרומפטים לחינוך ועוד 25 קטגוריות. העתיקו ושדרגו עם Peroot.",
   alternates: {
     canonical: "/prompts",
     languages: { "he-IL": "/prompts" },
   },
   openGraph: {
-    title: "ספריית פרומפטים בעברית | Peroot",
+    title: "ספריית פרומפטים בעברית — 480+ תבניות | Peroot",
     description:
-      "מאות פרומפטים מקצועיים בעברית לכל תחום. גלו, העתיקו ושדרגו פרומפטים ב-ChatGPT, Claude ו-Gemini.",
+      "480+ תבניות פרומפטים מוכנות בעברית. פרומפטים לשיווק, פיתוח, תמונות, חינוך ועוד — העתיקו ושדרגו.",
     url: `${SITE_URL}/prompts`,
     siteName: "Peroot",
     locale: "he_IL",

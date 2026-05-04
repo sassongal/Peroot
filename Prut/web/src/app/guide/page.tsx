@@ -35,23 +35,25 @@ const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _guideOg = `${_SITE}/api/og?title=${encodeURIComponent("מדריך כתיבת פרומפטים")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini")}&category=${encodeURIComponent("מדריכים")}`;
 
 export const metadata: Metadata = {
-  title: "מדריך כתיבת פרומפטים | פירוט - Peroot",
+  title: "איך לכתוב פרומפט טוב בעברית — המדריך המלא | Peroot",
   description:
-    "המדריך המלא לכתיבת פרומפטים מקצועיים בעברית. למדו טכניקות מתקדמות, דוגמאות מעשיות וטיפים מקצועיים לשימוש ב-ChatGPT, Claude ו-Gemini.",
+    "איך לכתוב פרומפט טוב? המדריך המלא בעברית לכתיבת פרומפטים מקצועיים ל-ChatGPT, Claude ו-Gemini. טכניקות Chain of Thought, Few-Shot, Role Play, פרומפטים לתמונות ובניית סוכני AI.",
   alternates: { canonical: "/guide" },
   openGraph: {
-    title: "מדריך כתיבת פרומפטים מקצועיים | פירוט",
-    description: "המדריך המלא בעברית לכתיבת פרומפטים שמייצרים תוצאות מדויקות מ-AI",
+    title: "איך לכתוב פרומפט טוב — המדריך המלא בעברית | Peroot",
+    description:
+      "מאפס לפרומפטים שמייצרים תוצאות. 5 עקרונות זהב, טכניקות מתקדמות ודוגמאות מעשיות לכל מודל AI.",
     url: `${_SITE}/guide`,
     siteName: "Peroot",
     locale: "he_IL",
     type: "article",
-    images: [{ url: _guideOg, width: 1200, height: 630, alt: "מדריך כתיבת פרומפטים בעברית" }],
+    images: [{ url: _guideOg, width: 1200, height: 630, alt: "איך לכתוב פרומפט טוב בעברית" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "מדריך כתיבת פרומפטים מקצועיים | פירוט",
-    description: "המדריך המלא בעברית לכתיבת פרומפטים שמייצרים תוצאות מדויקות מ-AI",
+    title: "איך לכתוב פרומפט טוב — המדריך המלא בעברית | Peroot",
+    description:
+      "מאפס לפרומפטים שמייצרים תוצאות. 5 עקרונות זהב, טכניקות מתקדמות ודוגמאות מעשיות לכל מודל AI.",
     images: [_guideOg],
   },
 };
