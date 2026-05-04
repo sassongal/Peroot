@@ -130,6 +130,11 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(60, "1 m"),
     prefix: "@peroot/ratelimit:questions",
   }),
+  faqChat: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "1 m"),
+    prefix: "@peroot/ratelimit:faq-chat",
+  }),
 };
 
 type RateLimitTier =
@@ -155,7 +160,8 @@ type RateLimitTier =
   | "siteSearchUser"
   | "publicPromptFetch"
   | "passwordReset"
-  | "questions";
+  | "questions"
+  | "faqChat";
 
 interface RateLimitResult {
   success: boolean;
