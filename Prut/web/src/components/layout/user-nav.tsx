@@ -85,7 +85,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
           {isOpen && !user && (
             <>
               <div className="fixed inset-0 z-100" onClick={() => setIsOpen(false)} />
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-(--glass-border) rounded-2xl shadow-2xl overflow-hidden z-101 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute top-full end-0 mt-2 w-48 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-(--glass-border) rounded-2xl shadow-2xl overflow-hidden z-101 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-2 space-y-1">
                   <Link
                     href="/login"

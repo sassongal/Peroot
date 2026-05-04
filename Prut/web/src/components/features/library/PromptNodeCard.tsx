@@ -310,7 +310,7 @@ export function PromptNodeCard({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute top-full mt-1 left-0 w-56 rounded-xl border border-white/15 bg-slate-900/98 backdrop-blur-md shadow-2xl z-10 overflow-hidden"
+              className="absolute top-full mt-1 start-0 w-56 rounded-xl border border-white/15 bg-slate-900/98 backdrop-blur-md shadow-2xl z-10 overflow-hidden"
             >
               {/* Move to folder */}
               <button
