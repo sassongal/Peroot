@@ -65,7 +65,7 @@ export function TagNodePanel({
       />
       {/* Panel */}
       <div
-        className="fixed top-0 right-0 h-full w-full max-w-[340px] z-[150] flex flex-col bg-white dark:bg-slate-950 border-l border-slate-200/60 dark:border-white/10 shadow-2xl animate-in slide-in-from-right duration-200"
+        className="fixed top-0 end-0 h-full w-full max-w-[340px] z-[150] flex flex-col bg-white dark:bg-slate-950 border-s border-slate-200/60 dark:border-white/10 shadow-2xl animate-in slide-in-from-end duration-200"
         dir="rtl"
         role="dialog"
         aria-label={nodeLabel}

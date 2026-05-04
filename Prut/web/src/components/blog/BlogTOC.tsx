@@ -100,7 +100,7 @@ export function BlogTOC({ content }: BlogTOCProps) {
                 onClick={() => handleClick(id)}
                 className={[
                   "w-full text-right text-sm px-3 py-1.5 rounded-lg transition-colors leading-snug",
-                  "border-r-2",
+                  "border-s-2",
                   isActive
                     ? "text-amber-400 border-amber-400 bg-amber-500/5"
                     : "text-slate-500 border-transparent hover:text-slate-300 hover:border-slate-600",

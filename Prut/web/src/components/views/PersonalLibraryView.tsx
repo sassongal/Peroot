@@ -124,7 +124,7 @@ export function PersonalLibraryView({
   // Open graph view when parent signals via prop (race-condition-free).
   useEffect(() => {
     if (!openToGraph) return;
-    setLocalViewType("graph");
+    setLocalViewType("graph"); // eslint-disable-line react-hooks/set-state-in-effect
     onGraphOpened?.();
   }, [openToGraph]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -814,7 +814,7 @@ export function PersonalLibraryView({
         aria-modal="true"
         aria-label="תיקיות הספרייה האישית"
         className={cn(
-          "fixed top-0 right-0 h-full w-72 max-w-[85vw] z-50 bg-[#0A0A0F] border-l border-(--glass-border) shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
+          "fixed top-0 end-0 h-full w-72 max-w-[85vw] z-50 bg-[#0A0A0F] border-s border-(--glass-border) shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
           sidebarOpen ? "translate-x-0" : "translate-x-full",
         )}
       >

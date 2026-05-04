@@ -610,7 +610,7 @@ export default function GuidePage() {
                     כמה טובים כמו ההנחיות שמקבלים. אותו מודל, עם פרומפט שונה, יכול לייצר תוצאה גרועה
                     או תוצאה מצוינת.
                   </p>
-                  <div className="border-r-2 border-amber-500/60 pr-4 mt-2">
+                  <div className="border-s-2 border-amber-500/60 ps-4 mt-2">
                     <p className="text-foreground text-sm leading-relaxed italic">
                       &ldquo;Prompt Engineering הוא המיומנות החשובה ביותר שמנהלים, יוצרים ויזמים
                       יכולים לפתח בעשור הקרוב. זה לא קוד ולא AI, זה פשוט יכולת לתקשר ביעילות עם הכלי

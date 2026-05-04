@@ -1561,3 +1561,31 @@ input[type="number"] {
   .chip-shimmer { animation: none !important; }
 }
 
+/* ── Regulation 35 / IS 5568 accessibility preference overrides ─────────── */
+html.a11y-contrast-high { filter: contrast(1.4); }
+html.a11y-contrast-invert { filter: invert(1) hue-rotate(180deg); }
+html.a11y-text-115 { font-size: 115%; }
+html.a11y-text-130 { font-size: 130%; }
+html.a11y-text-150 { font-size: 150%; }
+html.a11y-lines-relaxed { line-height: 1.9; }
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+html.a11y-links a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* Counter-invert widget when invert mode is active */
+html.a11y-contrast-invert #a11y-widget-panel,
+html.a11y-contrast-invert #a11y-widget-trigger {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* Print reset */
+@media print {
+  html[class*="a11y-"] { filter: none !important; font-size: 100% !important; line-height: normal !important; }
+}
+

@@ -107,6 +107,11 @@ export default function AccessibilityPage() {
             האתר נבנה בטכנולוגיית React/Next.js ומיישם ניהול פוקוס, ARIA Roles ותיוגים סמנטיים כדי
             להנגיש אלמנטים דינמיים כגון מודאלים ותפריטים נפתחים באופן עקבי.
           </p>
+          <p>
+            <strong>כלי נגישות אישי:</strong> ניתן להתאים את תצוגת האתר בלחיצה על כפתור הנגישות
+            בפינה השמאלית-תחתונה של המסך, או בקיצור מקלדת <kbd>Alt+A</kbd>. הכלי מאפשר שינוי
+            ניגודיות, גודל טקסט, ריווח שורות, הפחתת אנימציות והדגשת קישורים. ההגדרות נשמרות בדפדפן.
+          </p>
         </section>
 
         <section className="space-y-4">
@@ -158,7 +163,7 @@ export default function AccessibilityPage() {
         </section>
 
         <footer className="pt-12 text-center text-sm text-muted-foreground">
-          תאריך עדכון הצהרה: ינואר 2026
+          תאריך עדכון הצהרה: מאי 2026
         </footer>
       </div>
     </main>

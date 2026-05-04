@@ -154,6 +154,8 @@ import { SentryUserProvider } from "@/components/providers/SentryUserProvider";
 
 import { Footer } from "@/components/layout/Footer";
 import { DeferredWidgets, DeferredCookieConsent } from "@/components/layout/DeferredWidgets";
+import { A11yWidget } from "@/components/ui/A11yWidget";
+import { A11Y_BOOTSTRAP_SCRIPT } from "@/lib/a11y-prefs";
 
 export default async function RootLayout({
   children,
@@ -208,6 +210,10 @@ export default async function RootLayout({
             __html: `try{var t=localStorage.getItem('peroot-theme');if(t)document.documentElement.classList.add(t)}catch(e){}`,
           }}
         />
+        {/* Accessibility preferences FOUC prevention — applies saved a11y CSS
+            classes synchronously before first paint so users on high-contrast
+            or large-text settings never see a flash of unstyled content. */}
+        <script dangerouslySetInnerHTML={{ __html: A11Y_BOOTSTRAP_SCRIPT }} />
         {/* PWA Splash Screens */}
         <link
           rel="apple-touch-startup-image"
@@ -233,6 +239,7 @@ export default async function RootLayout({
         <VercelAnalytics />
         <ServiceWorkerRegistration />
         <SentryUserProvider />
+        <A11yWidget />
         <PostHogProvider>
           <a href="#main-content" className="skip-link" suppressHydrationWarning>
             {locale === "he" ? "דלג לתוכן הראשי" : "Skip to main content"}

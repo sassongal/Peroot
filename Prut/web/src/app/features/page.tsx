@@ -70,7 +70,7 @@ function LibraryMockup() {
         <span className="text-muted-foreground mr-auto text-[10px]">ספרייה אישית</span>
       </div>
       <div className="flex" style={{ height: 180 }}>
-        <div className="w-28 bg-secondary/60 border-l border-border p-2 shrink-0 space-y-0.5">
+        <div className="w-28 bg-secondary/60 border-s border-border p-2 shrink-0 space-y-0.5">
           {folders.map((f, i) => (
             <div
               key={f}
