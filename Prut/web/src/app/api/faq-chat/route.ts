@@ -26,6 +26,9 @@ export async function POST(req: NextRequest) {
   if (!question || typeof question !== "string" || question.trim().length === 0) {
     return NextResponse.json({ error: "שאלה חסרה" }, { status: 400 });
   }
+  if (question.length > 2000) {
+    return NextResponse.json({ error: "שאלה ארוכה מדי" }, { status: 400 });
+  }
 
   const apiKey = process.env.GEMINI_FAQ_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) {

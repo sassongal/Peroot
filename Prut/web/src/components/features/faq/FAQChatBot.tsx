@@ -91,19 +91,23 @@ export function FAQChatBot() {
       const decoder = new TextDecoder();
       let assistantText = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        assistantText += decoder.decode(value, { stream: true });
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            role: "assistant",
-            content: assistantText,
-            sources: context,
-          };
-          return updated;
-        });
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          assistantText += decoder.decode(value, { stream: true });
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              role: "assistant",
+              content: assistantText,
+              sources: context,
+            };
+            return updated;
+          });
+        }
+      } finally {
+        reader.releaseLock();
       }
     } catch {
       setMessages((prev) => {
