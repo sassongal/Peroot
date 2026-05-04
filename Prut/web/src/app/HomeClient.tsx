@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiPath } from "@/lib/api-path";
 import { toast } from "sonner";
@@ -1561,7 +1569,7 @@ function PageContent() {
 export default function HomeClient() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     wrapperRef.current?.classList.add("hydrated");
   }, []);
 
