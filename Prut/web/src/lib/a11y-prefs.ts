@@ -77,7 +77,9 @@ function _save(): void {
 }
 
 function _notify(): void {
-  applyPrefsToElement(document.documentElement, _state);
+  if (typeof window !== "undefined") {
+    applyPrefsToElement(document.documentElement, _state);
+  }
   _listeners.forEach((l) => l());
 }
 

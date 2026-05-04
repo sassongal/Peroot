@@ -118,14 +118,36 @@ export function A11yWidget() {
     return () => window.removeEventListener("keydown", handler);
   }, [open]);
 
-  // Focus trap: move focus into panel when it opens.
+  // Focus trap: cycle focus within panel while open.
   useEffect(() => {
-    if (open && panelRef.current) {
-      const firstFocusable = panelRef.current.querySelector<HTMLElement>(
-        "button, [href], input, [tabindex]:not([tabindex='-1'])",
-      );
-      firstFocusable?.focus();
+    if (!open || !panelRef.current) return;
+    const panel = panelRef.current;
+    const focusables = Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (!focusables.length) return;
+    focusables[0].focus();
+
+    function trap(e: KeyboardEvent) {
+      if (e.key !== "Tab") return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
+    panel.addEventListener("keydown", trap);
+    return () => panel.removeEventListener("keydown", trap);
   }, [open]);
 
   function announce(msg: string) {
