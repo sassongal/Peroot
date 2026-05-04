@@ -114,6 +114,7 @@ function PageContent() {
     filteredLibrary,
     libraryPrompts,
     personalLibrary,
+    isPersonalLoaded,
     incrementUseCount,
     handleToggleFavorite,
   } = useLibraryContext();
@@ -1470,6 +1471,7 @@ function PageContent() {
             history={history}
             onRestore={handleRestore}
             recentPersonalPrompts={recentPersonalPrompts}
+            isPersonalLoaded={isPersonalLoaded}
             onUsePrompt={handleUsePrompt}
             incrementUseCount={incrementUseCount}
             onNavToPersonalLibrary={() => setViewMode("personal")}

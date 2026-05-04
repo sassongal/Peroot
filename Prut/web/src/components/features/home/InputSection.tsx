@@ -58,6 +58,7 @@ interface InputSectionProps {
 
   // Recent personal prompts
   recentPersonalPrompts: PersonalPrompt[];
+  isPersonalLoaded: boolean;
   onUsePrompt: (prompt: LibraryPrompt | PersonalPrompt) => void;
   incrementUseCount: (id: string) => void;
   onNavToPersonalLibrary: () => void;
@@ -128,6 +129,7 @@ export const InputSection = memo<InputSectionProps>(
     history,
     onRestore,
     recentPersonalPrompts,
+    isPersonalLoaded,
     onUsePrompt,
     incrementUseCount,
     onNavToPersonalLibrary,
@@ -281,60 +283,68 @@ export const InputSection = memo<InputSectionProps>(
           </div>
         )}
 
-        {/* Recent Personal Prompts Widget */}
-        {recentPersonalPrompts.length > 0 && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs font-medium text-amber-600/80 dark:text-amber-400/80">
-                  פרומפטים אחרונים מהספרייה
-                </span>
-              </div>
-              <button
-                onClick={onNavToPersonalLibrary}
-                className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
-              >
-                לכל הספרייה &larr;
-              </button>
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {recentPersonalPrompts.map((prompt) => (
+        {/* Recent Personal Prompts Widget — skeleton reserves space while library loads
+            so the footer is already off-screen on first paint (prevents CLS) */}
+        {!isPersonalLoaded ? (
+          <div className="mt-3 min-h-[120px]" aria-hidden="true" />
+        ) : (
+          recentPersonalPrompts.length > 0 && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-xs font-medium text-amber-600/80 dark:text-amber-400/80">
+                    פרומפטים אחרונים מהספרייה
+                  </span>
+                </div>
                 <button
-                  key={prompt.id}
-                  onClick={() => {
-                    onUsePrompt(prompt);
-                    incrementUseCount(prompt.id);
-                  }}
-                  className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/4 dark:bg-amber-500/2 hover:bg-amber-500/8 dark:hover:bg-amber-500/6 transition-all cursor-pointer text-start group"
-                  dir="rtl"
+                  onClick={onNavToPersonalLibrary}
+                  className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    {prompt.is_pinned && (
-                      <span className="text-amber-400 text-[10px]">&#128204;</span>
-                    )}
-                    <p
-                      className="text-sm text-(--text-secondary) font-medium truncate flex-1"
-                      title={prompt.title}
-                    >
-                      {prompt.title}
-                    </p>
-                  </div>
-                  <p className="text-xs text-(--text-muted) mt-1 truncate" title={prompt.use_case}>
-                    {prompt.use_case}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10">
-                      {prompt.personal_category || "כללי"}
-                    </span>
-                    {prompt.use_count > 0 && (
-                      <span className="text-xs text-(--text-muted)">x{prompt.use_count}</span>
-                    )}
-                  </div>
+                  לכל הספרייה &larr;
                 </button>
-              ))}
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {recentPersonalPrompts.map((prompt) => (
+                  <button
+                    key={prompt.id}
+                    onClick={() => {
+                      onUsePrompt(prompt);
+                      incrementUseCount(prompt.id);
+                    }}
+                    className="shrink-0 w-48 md:w-64 p-3 rounded-xl border border-amber-500/15 dark:border-amber-500/10 bg-amber-500/4 dark:bg-amber-500/2 hover:bg-amber-500/8 dark:hover:bg-amber-500/6 transition-all cursor-pointer text-start group"
+                    dir="rtl"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      {prompt.is_pinned && (
+                        <span className="text-amber-400 text-[10px]">&#128204;</span>
+                      )}
+                      <p
+                        className="text-sm text-(--text-secondary) font-medium truncate flex-1"
+                        title={prompt.title}
+                      >
+                        {prompt.title}
+                      </p>
+                    </div>
+                    <p
+                      className="text-xs text-(--text-muted) mt-1 truncate"
+                      title={prompt.use_case}
+                    >
+                      {prompt.use_case}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600/70 dark:text-amber-400/70 border border-amber-500/10">
+                        {prompt.personal_category || "כללי"}
+                      </span>
+                      {prompt.use_count > 0 && (
+                        <span className="text-xs text-(--text-muted)">x{prompt.use_count}</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {/* Prompt of the Day + Surprise Me — wrapped in a fixed-height
