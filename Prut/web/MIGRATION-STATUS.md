@@ -82,6 +82,9 @@ Legend: ⬜ Not started | 🟡 In progress | ✅ Complete | 🔴 Blocked | ⏸�
 [2026-05-05] [PHASE-4] CF peroot-cron worker deployed — 4 schedules active + CRON_SECRET set | OK
 [2026-05-05] [PHASE-4] Deleted junk \\r binding from peroot worker (Windows CRLF artifact) | OK
 [2026-05-05] [PHASE-4] npm run build:cloudflare running — awaiting .open-next/worker.js to deploy main app
+[2026-05-06] [PHASE-4] Committed pending changes (tsconfig, cron-worker tsconfig, workers-types, faq-chat improvements) | OK
+[2026-05-06] [PHASE-4] Local build:cloudflare fails on Windows (EPERM symlink — requires Developer Mode or admin). CI (Linux) will succeed. Pushing to Workers Builds. | OK
+[2026-05-06] [PHASE-5] models.ts updated: groq singleton → createGroq factory, all 4 providers gated by CF_AI_GATEWAY_URL | CF_AI_GATEWAY_URL secret pushed to peroot worker | OK
 ```
 
 ---

@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { groq } from "@ai-sdk/groq";
+import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { LanguageModel } from "ai";
 
@@ -11,20 +11,29 @@ export type ModelId =
   | "gpt-oss-20b"
   | "mistral-small";
 
-// Server-side Google provider - no Referer header needed.
-// API key restrictions should use "None" or IP-based (not HTTP referrer)
-// since this runs in Vercel serverless functions, not the browser.
+const cfGateway = process.env.CF_AI_GATEWAY_URL;
+
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  ...(cfGateway ? { baseURL: `${cfGateway}/google-ai-studio/v1` } : {}),
 });
 
 // Backup Google provider — used when primary key is revoked/leaked.
 // Skipped automatically if GOOGLE_GENERATIVE_AI_API_KEY_BACKUP is not set.
 const googleBackup = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP,
+  ...(cfGateway ? { baseURL: `${cfGateway}/google-ai-studio/v1` } : {}),
 });
 
-const mistralProvider = createMistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistralProvider = createMistral({
+  apiKey: process.env.MISTRAL_API_KEY,
+  ...(cfGateway ? { baseURL: `${cfGateway}/mistral` } : {}),
+});
+
+const groqProvider = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
+  ...(cfGateway ? { baseURL: `${cfGateway}/groq` } : {}),
+});
 
 interface ModelConfig {
   id: ModelId;
@@ -63,7 +72,7 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
   "llama-4-scout": {
     id: "llama-4-scout",
     provider: "groq",
-    model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+    model: groqProvider("meta-llama/llama-4-scout-17b-16e-instruct"),
     label: "Llama 4 Scout (Groq)",
     contextWindow: 512000,
     supportsVision: false,
@@ -71,7 +80,7 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
   "gpt-oss-20b": {
     id: "gpt-oss-20b",
     provider: "groq",
-    model: groq("openai/gpt-oss-20b"),
+    model: groqProvider("openai/gpt-oss-20b"),
     label: "GPT-OSS 20B (Groq)",
     contextWindow: 32768,
     supportsVision: false,
