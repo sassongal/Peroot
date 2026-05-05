@@ -1,0 +1,23 @@
+name: Content Factory Cron
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # Monday 09:00 UTC
+  workflow_dispatch:      # Allow manual trigger for testing
+
+jobs:
+  run-content-factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger content-factory
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://www.peroot.space/api/cron/content-factory)
+          echo "Response: $response"
+          if [ "$response" != "200" ]; then
+            echo "Content factory failed with status $response"
+            exit 1
+          fi

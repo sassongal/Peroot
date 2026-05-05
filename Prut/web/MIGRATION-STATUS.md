@@ -7,9 +7,9 @@
 
 ## Current Phase
 
-**Phase:** Phase 3 — Code Compatibility (middleware fix verified)
+**Phase:** Phase 4 — Parallel Deploy (awaiting Cloudflare CI build on branch push)
 **Started:** 2026-05-05
-**Last activity:** 2026-05-05 — Renamed `src/proxy.ts` → `src/middleware.ts` (Edge runtime). OpenNext Cloudflare build now passes the middleware check and full Next.js compilation. Remaining error is Windows-only EPERM symlink (env, not code).
+**Last activity:** 2026-05-05 — Phase 3 complete (CSP, VercelAnalytics, seo-console). Phase 3.5 complete (cron-worker + GH Actions). Push branch → Cloudflare auto-builds preview URL.
 
 ---
 
@@ -21,9 +21,9 @@
 | 1 | Inventory & Audit | ✅ | 2026-05-05 | 2026-05-05 | GREEN — 2 new issues (J, K), both fixable |
 | 2 | Cloudflare Setup | ⬜ | — | — | — |
 | 2.5 | DNS Transfer to Cloudflare | ⬜ | — | — | — |
-| 3 | Code Compatibility | 🟡 | 2026-05-05 | — | proxy.ts→middleware.ts rename verified. Build passes middleware check + Next.js compile. Windows-only EPERM symlink in copyTracedFiles — non-blocking for CF CI/Linux. |
-| 3.5 | Cron Job Migration | ⬜ | — | — | — |
-| 4 | Parallel Deploy | ⬜ | — | — | — |
+| 3 | Code Compatibility | ✅ | 2026-05-05 | 2026-05-05 | All fixes applied: middleware.ts, CSP, VercelAnalytics no-op, seo-console existsSync, build scripts. |
+| 3.5 | Cron Job Migration | ✅ | 2026-05-05 | 2026-05-05 | cron-worker/ for 4 jobs + GitHub Actions for content-factory. Awaiting CRON_SECRET in GH secrets. |
+| 4 | Parallel Deploy | 🟡 | 2026-05-05 | — | Awaiting Cloudflare CI build + preview URL smoke tests. |
 | 5 | AI Gateway Setup | ⬜ | — | — | — |
 | 6 | Internal Testing (48h) | ⬜ | — | — | — |
 | 7 | Canary 10% | ⬜ | — | — | — |
@@ -71,6 +71,12 @@ Legend: ⬜ Not started | 🟡 In progress | ✅ Complete | 🔴 Blocked | ⏸�
 [2026-05-05] [PHASE-2] Set compatibility_flags=[nodejs_compat], compatibility_date=2026-05-05 on worker | OK | Continue
 [2026-05-05] [PHASE-2] Bound KV namespace PEROOT_NEXT_CACHE as NEXT_CACHE_WORKERS_KV | OK | Continue
 [2026-05-05] [PHASE-2] Pushed 43 env vars (incl ADMIN_EMAILS) as secrets to peroot worker | OK | Phase 2 nearly complete
+[2026-05-05] [PHASE-3] Fixed Issue B: removed va.vercel-scripts.com + vitals.vercel-insights.com from CSP | OK | Continue
+[2026-05-05] [PHASE-3] Fixed Issue G: VercelAnalytics.tsx → no-op (packages already removed in prev commit) | OK | Continue
+[2026-05-05] [PHASE-3] Fixed Issue J: seo-console existsSync → const sitemapExists = true | OK | Continue
+[2026-05-05] [PHASE-3] Added build:cloudflare, preview:cloudflare, deploy:cloudflare scripts to package.json | OK | PHASE 3 COMPLETE
+[2026-05-05] [PHASE-3.5] Created cron-worker/index.ts + cron-worker/wrangler.toml for 4 CF Cron Trigger jobs | OK | Continue
+[2026-05-05] [PHASE-3.5] Created .github/workflows/cron-content-factory.yml (GitHub Actions, weekly Mon 09:00 UTC) | OK | PHASE 3.5 COMPLETE — awaiting CRON_SECRET in GH secrets + manual trigger test
 ```
 
 ---
