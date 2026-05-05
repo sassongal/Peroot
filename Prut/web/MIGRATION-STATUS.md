@@ -85,6 +85,7 @@ Legend: ⬜ Not started | 🟡 In progress | ✅ Complete | 🔴 Blocked | ⏸�
 [2026-05-06] [PHASE-4] Committed pending changes (tsconfig, cron-worker tsconfig, workers-types, faq-chat improvements) | OK
 [2026-05-06] [PHASE-4] Local build:cloudflare fails on Windows (EPERM symlink — requires Developer Mode or admin). CI (Linux) will succeed. Pushing to Workers Builds. | OK
 [2026-05-06] [PHASE-5] models.ts updated: groq singleton → createGroq factory, all 4 providers gated by CF_AI_GATEWAY_URL | CF_AI_GATEWAY_URL secret pushed to peroot worker | OK
+[2026-05-06] [PHASE-4] Triggering GitHub Actions deploy via status board push — GH Actions workflow added in same commit as previous push, needs new push to activate | OK
 ```
 
 ---
