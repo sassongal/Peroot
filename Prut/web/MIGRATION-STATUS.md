@@ -19,8 +19,8 @@
 |---|---|---|---|---|---|
 | 0 | Pre-flight Checks | ✅ | 2026-05-05 | 2026-05-05 | ISR→KV confirmed, all access confirmed |
 | 1 | Inventory & Audit | ✅ | 2026-05-05 | 2026-05-05 | GREEN — 2 new issues (J, K), both fixable |
-| 2 | Cloudflare Setup | ⬜ | — | — | — |
-| 2.5 | DNS Transfer to Cloudflare | ⬜ | — | — | — |
+| 2 | Cloudflare Setup | ✅ | 2026-05-05 | 2026-05-05 | Worker + KV + 43 secrets pushed. Junk \r binding deleted. |
+| 2.5 | DNS Transfer to Cloudflare | ✅ | 2026-05-05 | 2026-05-05 | Zone active, CF NS: carla.ns.cloudflare.com/rudy.ns.cloudflare.com. DNS still pointing to Vercel. |
 | 3 | Code Compatibility | ✅ | 2026-05-05 | 2026-05-05 | All fixes applied: middleware.ts, CSP, VercelAnalytics no-op, seo-console existsSync, build scripts. |
 | 3.5 | Cron Job Migration | ✅ | 2026-05-05 | 2026-05-05 | cron-worker/ for 4 jobs + GitHub Actions for content-factory. Awaiting CRON_SECRET in GH secrets. |
 | 4 | Parallel Deploy | 🟡 | 2026-05-05 | — | Awaiting Cloudflare CI build + preview URL smoke tests. |
@@ -77,6 +77,11 @@ Legend: ⬜ Not started | 🟡 In progress | ✅ Complete | 🔴 Blocked | ⏸�
 [2026-05-05] [PHASE-3] Added build:cloudflare, preview:cloudflare, deploy:cloudflare scripts to package.json | OK | PHASE 3 COMPLETE
 [2026-05-05] [PHASE-3.5] Created cron-worker/index.ts + cron-worker/wrangler.toml for 4 CF Cron Trigger jobs | OK | Continue
 [2026-05-05] [PHASE-3.5] Created .github/workflows/cron-content-factory.yml (GitHub Actions, weekly Mon 09:00 UTC) | OK | PHASE 3.5 COMPLETE — awaiting CRON_SECRET in GH secrets + manual trigger test
+[2026-05-05] [PHASE-4] CRON_SECRET added to GitHub repo secrets via API (HTTP 201) | OK
+[2026-05-05] [PHASE-4] Supabase auth redirect URLs updated: added peroot.gal-f78.workers.dev/** | OK via Management API
+[2026-05-05] [PHASE-4] CF peroot-cron worker deployed — 4 schedules active + CRON_SECRET set | OK
+[2026-05-05] [PHASE-4] Deleted junk \\r binding from peroot worker (Windows CRLF artifact) | OK
+[2026-05-05] [PHASE-4] npm run build:cloudflare running — awaiting .open-next/worker.js to deploy main app
 ```
 
 ---
