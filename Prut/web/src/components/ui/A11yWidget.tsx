@@ -169,7 +169,7 @@ export function A11yWidget() {
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-[49] bg-black/40"
+          className="fixed inset-0 z-[59] bg-black/40"
           aria-hidden="true"
           onClick={() => setOpen(false)}
         />
@@ -184,7 +184,7 @@ export function A11yWidget() {
         aria-label="כלי נגישות"
         dir="rtl"
         className={[
-          "fixed top-0 start-0 h-full w-72 max-w-[85vw] z-50 flex flex-col bg-background border-e border-border shadow-2xl transition-transform duration-300 overflow-y-auto",
+          "fixed top-0 start-0 h-full w-72 max-w-[85vw] z-[60] flex flex-col bg-background border-e border-border shadow-2xl transition-transform duration-300 overflow-y-auto",
           open ? "translate-x-0" : "rtl:translate-x-full ltr:-translate-x-full",
         ].join(" ")}
       >

@@ -13,7 +13,7 @@ type Message = {
   sources?: FAQItem[];
 };
 
-const SCORE_THRESHOLD = 0.3;
+const SCORE_THRESHOLD = 0.15;
 const FALLBACK_MSG =
   "לא מצאתי מידע על זה בתוכן העזרה. אשמח אם תפנה/י לדף יצירת קשר: peroot.space/contact";
 const WELCOME_MSG = "שלום! אני כאן לעזור עם כל שאלה על Peroot. שאל/י חופשי!";
