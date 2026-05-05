@@ -946,12 +946,15 @@ export async function POST(req: Request) {
     //     length) so we don't downgrade requests where the engine assembled
     //     a long context-rich prompt around a short raw input.
     const renderedLength = engineOutput.systemPrompt.length + engineOutput.userPrompt.length;
+    // Route by raw prompt length (user's actual input), NOT renderedLength.
+    // renderedLength includes the ~3-5k char system prompt so it always
+    // exceeds 200 and selectModelByLength never fired for flash-lite.
     const preferredModel: ModelId =
       contextBlocks.length > 0
         ? selectEngineModel({ blocks: contextBlocks })
         : isRefinement
           ? "gemini-2.5-flash"
-          : selectModelByLength(renderedLength);
+          : selectModelByLength(prompt.length);
     const contextTokens = contextBlocks.reduce((sum, b) => sum + (b.injected?.tokenCount ?? 0), 0);
     // Rough token estimate: system + user prompt chars ÷ 4, plus injected context
     const estimatedInputTokens =

@@ -148,34 +148,50 @@ type PerootProviderOptions = {
 };
 
 /**
- * Build provider-specific options for a given task. This is where we disable
- * the reasoning mode for tasks that need every output token for the actual
- * response rather than internal thinking.
+ * Build provider-specific options for a given task. Controls Gemini's thinking
+ * (reasoning) token budget per task type.
  *
- * Root cause: Gemini's thinking tokens count against maxOutputTokens. For
- * image/video JSON tasks the reasoning was consuming 700-1000+ tokens,
- * leaving only 60-100 tokens of actual JSON output — which cut responses
- * at ~130-180 characters, mid-string (observed in activity_logs.details).
- * Passing thinkingBudget: 0 via providerOptions.google turns reasoning OFF
- * entirely so the full budget is available for actual output tokens.
+ * Background: Gemini thinking tokens count against maxOutputTokens and generate
+ * BEFORE the first visible output token, directly increasing time-to-first-token.
+ * Live measurements showed ~2,500 thinking tokens for enhance and ~5,400 for agent,
+ * adding 4-12s of pre-stream latency on top of actual generation time.
  *
- * Non-Google providers silently ignore the `google` key in providerOptions
- * so it's safe to pass unconditionally on the fallback chain.
+ * Strategy:
+ *   - image/video/chain/classify: thinkingBudget=0 (disabled). These produce
+ *     structured/JSON output where the explicit format instructions in the system
+ *     prompt are sufficient — reasoning was consuming 700-1000+ tokens and cutting
+ *     JSON mid-value.
+ *   - enhance/research/agent: bounded budget. GENIUS_ANALYSIS already provides an
+ *     explicit 12-step chain-of-thought in the system prompt, so unlimited thinking
+ *     gives sharply diminishing quality returns. 1024 is the minimum meaningful
+ *     Gemini budget; research/agent get more room for synthesis and planning.
+ *
+ * Non-Google providers silently ignore the `google` key in providerOptions.
  *
  * @internal Exported for tests only.
  */
 export function buildProviderOptions(task?: string): PerootProviderOptions | undefined {
-  // Only tasks that produce long structured output need thinking disabled.
-  // Enhance/agent/research actually benefit from the reasoning mode, so
-  // we leave them with default thinking behavior.
   const thinkingDisabledTasks = new Set(["image", "video", "chain", "classify"]);
-  if (!task || !thinkingDisabledTasks.has(task)) {
-    return undefined;
+  if (thinkingDisabledTasks.has(task ?? "")) {
+    return {
+      google: {
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
+      },
+    };
   }
+  // Bounded thinking for quality tasks. 1024 is the minimum non-zero Gemini
+  // budget; research/agent get extra room because they require deeper synthesis.
+  const budgets: Record<string, number> = {
+    enhance: 1024,
+    research: 2048,
+    agent: 2048,
+  };
   return {
     google: {
       thinkingConfig: {
-        thinkingBudget: 0,
+        thinkingBudget: budgets[task ?? "enhance"] ?? 1024,
       },
     },
   };
