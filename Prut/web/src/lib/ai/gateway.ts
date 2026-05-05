@@ -229,12 +229,12 @@ export class AIGateway {
    * Includes circuit breaker (skip failing providers) and concurrency limiter
    * (queue excess requests instead of overwhelming providers).
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- StreamTextResult's
-  // generic parameter requires ai SDK's ToolSet type. Using `unknown` breaks
+  // StreamTextResult's generic parameter requires ai SDK's ToolSet type. Using `unknown` breaks
   // the constraint; importing ToolSet leaks provider internals into our API.
   // `any` here is isolated to the return position and narrowed by callers.
   static async generateStream(
     params: GatewayParams & { task?: string; userTier?: "free" | "pro" | "guest" },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ result: StreamTextResult<Record<string, any>, any>; modelId: ModelId }> {
     // Acquire a concurrency slot (waits in queue if at capacity)
     await acquireSlot();
@@ -292,6 +292,8 @@ export class AIGateway {
         // Provider API key checks
         if (config.provider === "groq" && !process.env.GROQ_API_KEY) continue;
         if (config.provider === "mistral" && !process.env.MISTRAL_API_KEY) continue;
+        if (config.provider === "google-backup" && !process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP)
+          continue;
 
         try {
           logger.info(`[AIGateway] Attempting: ${config.label}...`);
@@ -418,6 +420,8 @@ export class AIGateway {
         }
         if (config.provider === "groq" && !process.env.GROQ_API_KEY) continue;
         if (config.provider === "mistral" && !process.env.MISTRAL_API_KEY) continue;
+        if (config.provider === "google-backup" && !process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP)
+          continue;
 
         try {
           logger.info(`[AIGateway] generateFull: ${config.label}...`);

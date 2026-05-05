@@ -5,6 +5,7 @@ import { LanguageModel } from "ai";
 
 export type ModelId =
   | "gemini-2.5-flash"
+  | "gemini-2.5-flash-backup"
   | "gemini-2.5-flash-lite"
   | "llama-4-scout"
   | "gpt-oss-20b"
@@ -17,11 +18,17 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
+// Backup Google provider — used when primary key is revoked/leaked.
+// Skipped automatically if GOOGLE_GENERATIVE_AI_API_KEY_BACKUP is not set.
+const googleBackup = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP,
+});
+
 const mistralProvider = createMistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 interface ModelConfig {
   id: ModelId;
-  provider: "google" | "groq" | "mistral";
+  provider: "google" | "google-backup" | "groq" | "mistral";
   model: LanguageModel;
   label: string;
   contextWindow: number;
@@ -34,6 +41,14 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
     provider: "google",
     model: google("gemini-2.5-flash"),
     label: "Gemini 2.5 Flash (Primary)",
+    contextWindow: 1000000,
+    supportsVision: true,
+  },
+  "gemini-2.5-flash-backup": {
+    id: "gemini-2.5-flash-backup",
+    provider: "google-backup",
+    model: googleBackup("gemini-2.5-flash"),
+    label: "Gemini 2.5 Flash (Backup Key)",
     contextWindow: 1000000,
     supportsVision: true,
   },
@@ -73,6 +88,7 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
 
 export const FALLBACK_ORDER: ModelId[] = [
   "gemini-2.5-flash", // Best quality, free tier on Google
+  "gemini-2.5-flash-backup", // Same model, backup API key (skipped if key not set)
   "mistral-small", // Fast, free tier on Mistral
   "gemini-2.5-flash-lite", // Lighter Google backup
   "llama-4-scout", // Free on Groq
@@ -85,16 +101,41 @@ type TaskType = "enhance" | "research" | "agent" | "image" | "video" | "chain" |
 export const TASK_ROUTING: Record<string, ModelId[]> = {
   enhance: [
     "gemini-2.5-flash",
+    "gemini-2.5-flash-backup",
     "mistral-small",
     "gemini-2.5-flash-lite",
     "llama-4-scout",
     "gpt-oss-20b",
   ],
-  research: ["gemini-2.5-flash", "mistral-small", "gemini-2.5-flash-lite", "llama-4-scout"],
-  agent: ["gemini-2.5-flash", "mistral-small", "llama-4-scout", "gpt-oss-20b"],
-  image: ["gemini-2.5-flash", "gemini-2.5-flash-lite", "mistral-small", "llama-4-scout"],
-  video: ["gemini-2.5-flash", "gemini-2.5-flash-lite", "mistral-small"],
-  chain: ["gemini-2.5-flash", "mistral-small", "llama-4-scout", "gpt-oss-20b"],
+  research: [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-backup",
+    "mistral-small",
+    "gemini-2.5-flash-lite",
+    "llama-4-scout",
+  ],
+  agent: [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-backup",
+    "mistral-small",
+    "llama-4-scout",
+    "gpt-oss-20b",
+  ],
+  image: [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-backup",
+    "gemini-2.5-flash-lite",
+    "mistral-small",
+    "llama-4-scout",
+  ],
+  video: ["gemini-2.5-flash", "gemini-2.5-flash-backup", "gemini-2.5-flash-lite", "mistral-small"],
+  chain: [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-backup",
+    "mistral-small",
+    "llama-4-scout",
+    "gpt-oss-20b",
+  ],
   // Lightweight internal tasks (category suggestion, tagging). Flash Lite is
   // the cheapest Google model and handles simple JSON classification well.
   classify: ["gemini-2.5-flash-lite", "mistral-small", "llama-4-scout"],
