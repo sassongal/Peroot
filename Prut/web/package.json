@@ -56,8 +56,6 @@
     "@types/three": "^0.184.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.1",
-    "@vercel/analytics": "^2.0.1",
-    "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.42",
     "clsx": "^2.1.1",
     "diff-match-patch": "^1.0.5",
@@ -86,6 +84,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "16.2.3",
+    "@opennextjs/cloudflare": "^1.19.6",
     "@playwright/test": "^1.58.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -111,6 +110,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "wrangler": "^4.87.0"
   }
 }

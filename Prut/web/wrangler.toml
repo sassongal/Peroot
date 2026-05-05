@@ -1,0 +1,23 @@
+name = "peroot"
+main = ".open-next/worker.js"
+compatibility_date = "2026-05-05"
+compatibility_flags = ["nodejs_compat"]
+
+# Static assets served from .open-next/assets at the edge
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+# Workers KV for ISR/SSG cache (Issue F resolution)
+[[kv_namespaces]]
+binding = "NEXT_CACHE_WORKERS_KV"
+id = "2ee309d1c9c845078a95506c063c1352"
+
+# Observability: keep logs for debugging
+[observability]
+enabled = true
+
+# Workers Logs sample rate (1.0 = log everything, lower for cost control later)
+[observability.logs]
+enabled = true
+head_sampling_rate = 1.0

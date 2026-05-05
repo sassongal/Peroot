@@ -14,7 +14,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { NextRequest } from "next/server";
-import { needsAuth, isStateChangingMethod, isCsrfExempt, validateCsrfOrigin } from "../proxy";
+import { needsAuth, isStateChangingMethod, isCsrfExempt, validateCsrfOrigin } from "../middleware";
 
 function makeRequest(opts: {
   pathname: string;

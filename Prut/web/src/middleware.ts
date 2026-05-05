@@ -143,7 +143,7 @@ export function validateCsrfOrigin(request: NextRequest): NextResponse | null {
   return null;
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // CSRF protection: validate origin for state-changing API requests
   const csrfResponse = validateCsrfOrigin(request);
   if (csrfResponse) {

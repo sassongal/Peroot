@@ -42,6 +42,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cloudflare / opennextjs
+.open-next/
+.wrangler/
+
 # worktrees
 .worktrees
 
@@ -53,6 +57,7 @@ next-env.d.ts
 
 # local experimentation / audit output
 tools/crewai-ui-audit/
+graphify-out/
 
 # tooling / AI config
 .claude/

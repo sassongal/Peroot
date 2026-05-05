@@ -14,12 +14,12 @@ on April 15, 2026. This is the first dev session on the new machine.
 **Vercel project:** web (team: sassongals-projects)
 **Supabase project:** ravinxlujmlvxhgbjxti
 
-### Next.js 16 middleware — CRITICAL
-Next.js 16 renamed `middleware.ts` → `proxy.ts`. The active middleware file is `src/proxy.ts`.
-- **NEVER create `src/middleware.ts`** — having both files causes a fatal build error:
-  `Both middleware file and proxy file are detected. Please use proxy.ts only.`
-- All middleware logic (Supabase session refresh, CSRF, admin guard, maintenance) lives in `src/proxy.ts`
-- The exported function is named `proxy` and there is `export const config = { matcher: [...] }`
+### Next.js 16 middleware — CRITICAL (updated 2026-05-05 for Cloudflare migration)
+The active middleware file is `src/middleware.ts` (legacy filename, **Edge runtime**).
+- We migrated from `proxy.ts` → `middleware.ts` because `@opennextjs/cloudflare` only accepts Edge middleware. `proxy.ts` runs on Node.js, which OpenNext hard-blocks.
+- **NEVER create `src/proxy.ts` alongside `src/middleware.ts`** — Next.js 16 errors with: `Both middleware file and proxy file are detected.`
+- All middleware logic (Supabase session refresh, CSRF, admin guard, maintenance) lives in `src/middleware.ts`
+- Exported function is named `middleware`; `export const config = { matcher: [...] }` — **no `runtime` field** (Edge is the default for `middleware.ts` and the only valid runtime there)
 
 ### Known local dev quirks (Windows-specific):
 - `@react-pdf/renderer` v4 is fully installed and working (verified 2026-04-29).
