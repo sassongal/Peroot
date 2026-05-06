@@ -3,15 +3,16 @@ account_id = "f78ded495dd768bd57b691493c39c5b5"
 main = ".open-next/worker.js"
 compatibility_date = "2026-05-05"
 compatibility_flags = ["nodejs_compat"]
+minify = true
 
 # Static assets served from .open-next/assets at the edge
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
 
-# Workers KV for ISR/SSG cache (Issue F resolution)
+# Workers KV for ISR cache — binding name required by @opennextjs/cloudflare v1.19.6+
 [[kv_namespaces]]
-binding = "NEXT_CACHE_WORKERS_KV"
+binding = "NEXT_INC_CACHE_KV"
 id = "2ee309d1c9c845078a95506c063c1352"
 
 # Observability: keep logs for debugging
