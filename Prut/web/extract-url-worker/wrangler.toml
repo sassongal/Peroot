@@ -1,0 +1,13 @@
+name = "peroot-extract-url"
+account_id = "f78ded495dd768bd57b691493c39c5b5"
+main = "index.ts"
+compatibility_date = "2026-05-05"
+compatibility_flags = ["nodejs_compat"]
+minify = true
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1.0

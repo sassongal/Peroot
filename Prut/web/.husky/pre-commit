@@ -1,2 +1,10 @@
 #!/usr/bin/env sh
-npx lint-staged
+# Husky runs from the git root, but the Next.js app lives in Prut/web.
+# cd into the app dir and call lint-staged via its bin path so this
+# works on Windows Git Bash where npx may not find local binaries.
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+APP_DIR="$HOOK_DIR/.."
+cd "$APP_DIR"
+PATH="$APP_DIR/node_modules/.bin:$PATH"
+export PATH
+node "$APP_DIR/node_modules/lint-staged/bin/lint-staged.js"

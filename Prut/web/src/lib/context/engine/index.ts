@@ -5,7 +5,8 @@ import { randomUUID } from "node:crypto";
 import { getContextLimits } from "@/lib/plans";
 import { logger } from "@/lib/logger";
 import type { ContextBlock, ProcessAttachmentInput, PipelineError, DocumentType } from "./types";
-import { dispatchFile, extractImage } from "./extract";
+import { extractImage } from "./extract";
+import { extractUrlRemote, dispatchFileRemote } from "./extract/remote";
 import { computeSha256, detectDocumentType } from "./classify";
 import { enrichContent } from "./enrich";
 import { compressToLimit, type CompressionStrategy } from "./compress";
@@ -50,14 +51,13 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
       if (!input.buffer || !input.filename || !input.mimeType) {
         throw new Error("file input requires buffer, filename, mimeType");
       }
-      const r = await dispatchFile(input.buffer, input.filename, input.mimeType);
+      const r = await dispatchFileRemote(input.buffer, input.filename, input.mimeType);
       rawText = r.text;
       extractMeta = r.metadata;
       sourceTitle = input.filename;
     } else if (input.type === "url") {
       if (!input.url) throw new Error("url input requires url");
-      const { extractUrl } = await import("./extract/url");
-      const r = await extractUrl(input.url, { jinaFallback: limits.jinaFallback });
+      const r = await extractUrlRemote(input.url, { jinaFallback: limits.jinaFallback });
       rawText = r.text;
       extractMeta = r.metadata;
       sourceTitle = (r.metadata.title as string | undefined) ?? input.url;

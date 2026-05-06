@@ -35,11 +35,11 @@
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
-      "npx prettier --write",
-      "npx eslint --fix"
+      "node ./node_modules/prettier/bin/prettier.cjs --write",
+      "node ./node_modules/eslint/bin/eslint.js --fix"
     ],
     "*.{json,md,yml,yaml}": [
-      "npx prettier --write"
+      "node ./node_modules/prettier/bin/prettier.cjs --write"
     ]
   },
   "dependencies": {

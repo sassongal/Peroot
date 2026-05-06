@@ -1,30 +1,32 @@
-import * as Sentry from "@sentry/nextjs";
+// On Cloudflare Workers, the @sentry/nextjs Node SDK is too heavy and pulls in
+// ~3-5 MiB of server bundle (OpenTelemetry, agent runtime). Disable when building
+// for Cloudflare. Client-side Sentry is unaffected (sentry.client.config.ts).
+const isCloudflareBuild =
+  process.env.NEXT_RUNTIME === "edge" ||
+  process.env.CF_PAGES === "1" ||
+  process.env.CLOUDFLARE_WORKERS === "1";
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  enabled: process.env.NODE_ENV === "production",
+if (!isCloudflareBuild) {
+  // Lazy-import so the entire Sentry Node SDK is excluded from CF bundle
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const Sentry = require("@sentry/nextjs");
 
-  // Performance tracing — match client rate
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-
-  // Capture console.error as Sentry events — catches unhandled server-side errors
-  // that aren't thrown exceptions (e.g. logger.error calls)
-  integrations: [Sentry.captureConsoleIntegration({ levels: ["error"] })],
-
-  // Never send user emails / IP addresses — GDPR
-  sendDefaultPii: false,
-
-  // Drop noisy server-side events
-  beforeSend(event, hint) {
-    const err = hint?.originalException;
-    if (err instanceof Error) {
-      const msg = err.message?.toLowerCase() ?? "";
-      // Supabase auth "not found" is expected for unauthenticated requests
-      if (msg.includes("jwt expired") || msg.includes("invalid refresh token")) return null;
-      // Next.js aborted requests (user navigated away)
-      if (msg.includes("the operation was aborted") || msg.includes("socket hang up")) return null;
-    }
-    return event;
-  },
-});
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV,
+    enabled: process.env.NODE_ENV === "production",
+    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+    integrations: [Sentry.captureConsoleIntegration({ levels: ["error"] })],
+    sendDefaultPii: false,
+    beforeSend(event: unknown, hint: { originalException?: unknown }) {
+      const err = hint?.originalException;
+      if (err instanceof Error) {
+        const msg = err.message?.toLowerCase() ?? "";
+        if (msg.includes("jwt expired") || msg.includes("invalid refresh token")) return null;
+        if (msg.includes("the operation was aborted") || msg.includes("socket hang up"))
+          return null;
+      }
+      return event;
+    },
+  });
+}

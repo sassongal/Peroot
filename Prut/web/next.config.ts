@@ -49,6 +49,10 @@ const nextConfig: NextConfig = {
     "jsdom",
     "@mozilla/readability",
     "@napi-rs/canvas",
+    "@react-pdf/renderer",
+    "jsondiffpatch",
+    "posthog-node",
+    "resend",
   ],
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "posthog-js", "@sentry/nextjs"],
@@ -120,4 +124,11 @@ const sentryWebpackPluginOptions = {
   disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
 };
 
-export default withBundleAnalyzer(withSentryConfig(nextConfig, sentryWebpackPluginOptions));
+// On Cloudflare Workers, skip @sentry/nextjs server wrapping entirely — it adds
+// ~3-5 MiB to the server bundle and OpenTelemetry instrumentation does not work
+// on Workers anyway. Client-side Sentry is unaffected.
+const isCloudflareBuild = process.env.CLOUDFLARE_WORKERS === "1";
+
+export default isCloudflareBuild
+  ? withBundleAnalyzer(nextConfig)
+  : withBundleAnalyzer(withSentryConfig(nextConfig, sentryWebpackPluginOptions));

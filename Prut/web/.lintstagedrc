@@ -1,4 +1,7 @@
 {
-  "*.{ts,tsx}": ["npx eslint --fix", "npx prettier --write"],
-  "*.{json,yml}": ["npx prettier --write"]
+  "*.{ts,tsx}": [
+    "node ./node_modules/eslint/bin/eslint.js --fix",
+    "node ./node_modules/prettier/bin/prettier.cjs --write"
+  ],
+  "*.{json,yml}": ["node ./node_modules/prettier/bin/prettier.cjs --write"]
 }

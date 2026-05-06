@@ -15,6 +15,17 @@ binding = "ASSETS"
 binding = "NEXT_INC_CACHE_KV"
 id = "2ee309d1c9c845078a95506c063c1352"
 
+# Service Bindings — sibling Workers that hold heavy extraction deps
+# (jsdom + mammoth + xlsx + pdfjs-dist, ~7 MiB) so the main script stays
+# under the 10 MiB Workers Paid limit. Free intra-CF transport.
+[[services]]
+binding = "EXTRACT_URL"
+service = "peroot-extract-url"
+
+[[services]]
+binding = "EXTRACT_FILE"
+service = "peroot-extract-file"
+
 # Observability: keep logs for debugging
 [observability]
 enabled = true

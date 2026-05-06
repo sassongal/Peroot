@@ -29,8 +29,16 @@ jobs:
           cache: npm
           cache-dependency-path: Prut/web/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (main)
         run: npm ci --legacy-peer-deps
+
+      - name: Install dependencies (extract-url-worker)
+        working-directory: Prut/web/extract-url-worker
+        run: npm install --no-package-lock --no-audit --no-fund
+
+      - name: Install dependencies (extract-file-worker)
+        working-directory: Prut/web/extract-file-worker
+        run: npm install --no-package-lock --no-audit --no-fund
 
       - name: Build for Cloudflare
         run: npm run build:cloudflare
@@ -43,7 +51,42 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_DISABLE_WEBPACK_PLUGIN: "1"
 
-      - name: Deploy to Cloudflare Workers
+      # Deploy sibling Workers FIRST so the main Worker's Service Bindings
+      # resolve on first deploy. Wrangler errors out if the bound service
+      # doesn't exist yet.
+      - name: Deploy peroot-extract-url
+        working-directory: Prut/web/extract-url-worker
         run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Push EXTRACT_SECRET to peroot-extract-url
+        working-directory: Prut/web/extract-url-worker
+        if: ${{ secrets.EXTRACT_SECRET != '' }}
+        run: echo "${{ secrets.EXTRACT_SECRET }}" | npx wrangler secret put EXTRACT_SECRET
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy peroot-extract-file
+        working-directory: Prut/web/extract-file-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Push EXTRACT_SECRET to peroot-extract-file
+        working-directory: Prut/web/extract-file-worker
+        if: ${{ secrets.EXTRACT_SECRET != '' }}
+        run: echo "${{ secrets.EXTRACT_SECRET }}" | npx wrangler secret put EXTRACT_SECRET
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy main peroot Worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Push EXTRACT_SECRET to main peroot Worker
+        if: ${{ secrets.EXTRACT_SECRET != '' }}
+        run: echo "${{ secrets.EXTRACT_SECRET }}" | npx wrangler secret put EXTRACT_SECRET
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

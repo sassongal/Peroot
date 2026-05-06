@@ -1,0 +1,22 @@
+{
+  "name": "peroot-extract-file-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "mammoth": "^1.8.0",
+    "papaparse": "^5.4.1",
+    "pdfjs-dist": "^4.7.76",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250506.0",
+    "@types/papaparse": "^5.3.15",
+    "typescript": "^5.6.3",
+    "wrangler": "^4.87.0"
+  }
+}
