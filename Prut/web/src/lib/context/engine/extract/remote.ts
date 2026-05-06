@@ -34,17 +34,21 @@ export async function extractUrlRemote(
 ): Promise<UrlExtractionResult> {
   const endpoint = process.env.EXTRACT_URL_HTTP_ENDPOINT!;
   const secret = process.env.EXTRACT_SECRET!;
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-internal-secret": secret,
-    },
-    body: JSON.stringify({ url, jinaFallback: opts.jinaFallback, timeoutMs: opts.timeoutMs }),
-  });
-  const payload = (await res.json()) as
-    | { ok: true; result: UrlExtractionResult }
-    | { ok: false; error: string; userFacing?: boolean };
+  const ac = new AbortController();
+  const timeoutMs = opts.timeoutMs ?? 35_000;
+  const t = setTimeout(() => ac.abort(), timeoutMs + 5_000);
+  let res: Response;
+  try {
+    res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-internal-secret": secret },
+      body: JSON.stringify({ url, jinaFallback: opts.jinaFallback, timeoutMs }),
+      signal: ac.signal,
+    });
+  } finally {
+    clearTimeout(t);
+  }
+  const payload = await parseWorkerResponse<UrlExtractionResult>(res);
   if (!payload.ok) {
     const e = new Error(payload.error) as Error & { userFacing?: boolean };
     if (payload.userFacing) e.userFacing = true;
@@ -75,16 +79,35 @@ export async function dispatchFileRemote(
   form.set("file", new Blob([ab], { type: mimeType || "application/octet-stream" }), filename);
   form.set("format", format);
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { "x-internal-secret": secret },
-    body: form,
-  });
-  const payload = (await res.json()) as
-    | { ok: true; result: FileDispatchResult }
-    | { ok: false; error: string };
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 60_000);
+  let res: Response;
+  try {
+    res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "x-internal-secret": secret },
+      body: form,
+      signal: ac.signal,
+    });
+  } finally {
+    clearTimeout(t);
+  }
+  const payload = await parseWorkerResponse<FileDispatchResult>(res);
   if (!payload.ok) throw new Error(payload.error);
   return payload.result;
+}
+
+async function parseWorkerResponse<T>(
+  res: Response,
+): Promise<{ ok: true; result: T } | { ok: false; error: string; userFacing?: boolean }> {
+  const ct = res.headers.get("content-type") ?? "";
+  if (!ct.includes("application/json")) {
+    const body = await res.text().catch(() => "");
+    return { ok: false, error: `Worker ${res.status}: ${body.slice(0, 200) || "empty body"}` };
+  }
+  return (await res.json()) as
+    | { ok: true; result: T }
+    | { ok: false; error: string; userFacing?: boolean };
 }
 
 const SUPPORTED_EXT: Record<string, string> = {
