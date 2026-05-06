@@ -92,6 +92,7 @@ Legend: ⬜ Not started | 🟡 In progress | ✅ Complete | 🔴 Blocked | ⏸�
 [2026-05-06] [PHASE-4] Build 0c9d089f queued (commit 92f98b9c) — awaiting Workers Builds to pick up with all fixes applied
 [2026-05-06] [PHASE-4] GitHub reconnect created 2 new triggers (db06e7b1 prod, a95cef42 nonprod) — root_dir fixed (leading space removed), all 10 env vars re-added to both triggers via CF API
 [2026-05-06] [PHASE-4] Pushing status update to trigger new Workers Builds run with fully configured triggers
+[2026-05-06] [PHASE-4] Root cause: GH Actions never ran because workflow files were only on cloudflare-migration (not main). Fixed: added workflows to main. Pushing to test push event trigger.
 ```
 
 ---
