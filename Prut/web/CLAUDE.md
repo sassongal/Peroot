@@ -126,6 +126,16 @@ middleware.ts               # Auth guard + CSRF + maintenance mode
 
 ---
 
+## Hybrid CPU Offload (Cloudflare Workers)
+The two heaviest extraction routes (`/api/context/extract-{url,file}`) offload jsdom/pdfjs/mammoth/xlsx parsing to sibling Cloudflare Workers when these env vars are set:
+- `EXTRACT_URL_HTTP_ENDPOINT` → https://peroot-extract-url.gal-f78.workers.dev
+- `EXTRACT_FILE_HTTP_ENDPOINT` → https://peroot-extract-file.gal-f78.workers.dev
+- `EXTRACT_SECRET` (shared HMAC; set in Vercel + as a Wrangler secret on each Worker)
+
+Bridge: `src/lib/context/engine/extract/remote.ts` (fetch + FormData only — no heavy deps). Dispatch is gated in `src/lib/context/engine/index.ts`. Unset env → in-process fallback (zero behavior change). Worker source lives on the `cloudflare-migration` archive branch under `extract-url-worker/` and `extract-file-worker/`.
+
+---
+
 ## AI Gateway — Fallback Chain
 ```
 gemini-2.5-flash (primary)
