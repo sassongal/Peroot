@@ -124,56 +124,69 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
   },
 };
 
-export const FALLBACK_ORDER: ModelId[] = [
+const HAS_BACKUP_KEY = Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP);
+
+// Drop the backup model from any chain when its key isn't configured —
+// otherwise every fallback wastes a round-trip waiting for the circuit
+// breaker to open on the missing-key error.
+const dropBackupIfMissing = (ids: ModelId[]): ModelId[] =>
+  HAS_BACKUP_KEY ? ids : ids.filter((id) => id !== "gemini-2.5-flash-backup");
+
+export const FALLBACK_ORDER: ModelId[] = dropBackupIfMissing([
   "gemini-2.5-flash", // Best quality, free tier on Google
   "gemini-2.5-flash-backup", // Same model, backup API key (skipped if key not set)
   "mistral-small", // Fast, free tier on Mistral
   "gemini-2.5-flash-lite", // Lighter Google backup
   "llama-4-scout", // Free on Groq
   "gpt-oss-20b", // Free on Groq
-];
+]);
 
 type TaskType = "enhance" | "research" | "agent" | "image" | "video" | "chain" | "classify";
 
 // All models are free/low-cost — no expensive pro models in any route
 export const TASK_ROUTING: Record<string, ModelId[]> = {
-  enhance: [
+  enhance: dropBackupIfMissing([
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
     "mistral-small",
     "gemini-2.5-flash-lite",
     "llama-4-scout",
     "gpt-oss-20b",
-  ],
-  research: [
+  ]),
+  research: dropBackupIfMissing([
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
     "mistral-small",
     "gemini-2.5-flash-lite",
     "llama-4-scout",
-  ],
-  agent: [
+  ]),
+  agent: dropBackupIfMissing([
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
     "mistral-small",
     "llama-4-scout",
     "gpt-oss-20b",
-  ],
-  image: [
+  ]),
+  image: dropBackupIfMissing([
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
     "gemini-2.5-flash-lite",
     "mistral-small",
     "llama-4-scout",
-  ],
-  video: ["gemini-2.5-flash", "gemini-2.5-flash-backup", "gemini-2.5-flash-lite", "mistral-small"],
-  chain: [
+  ]),
+  video: dropBackupIfMissing([
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-backup",
+    "gemini-2.5-flash-lite",
+    "mistral-small",
+  ]),
+  chain: dropBackupIfMissing([
     "gemini-2.5-flash",
     "gemini-2.5-flash-backup",
     "mistral-small",
     "llama-4-scout",
     "gpt-oss-20b",
-  ],
+  ]),
   // Lightweight internal tasks (category suggestion, tagging). Flash Lite is
   // the cheapest Google model and handles simple JSON classification well.
   classify: ["gemini-2.5-flash-lite", "mistral-small", "llama-4-scout"],
