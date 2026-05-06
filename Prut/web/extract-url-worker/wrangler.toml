@@ -1,0 +1,22 @@
+name = "peroot-extract-url"
+account_id = "f78ded495dd768bd57b691493c39c5b5"
+main = "index.ts"
+compatibility_date = "2026-05-05"
+compatibility_flags = ["nodejs_compat"]
+minify = true
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1.0
+
+# Per-IP rate limit: 60 requests / 60s. Legit Vercel egress is ~1-10/min,
+# so this only bites if the shared secret leaks and abuse hammers from a
+# single source. namespace_id is an account-scoped arbitrary integer.
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
