@@ -86,6 +86,12 @@ Legend: ⬜ Not started | 🟡 In progress | ✅ Complete | 🔴 Blocked | ⏸�
 [2026-05-06] [PHASE-4] Local build:cloudflare fails on Windows (EPERM symlink — requires Developer Mode or admin). CI (Linux) will succeed. Pushing to Workers Builds. | OK
 [2026-05-06] [PHASE-5] models.ts updated: groq singleton → createGroq factory, all 4 providers gated by CF_AI_GATEWAY_URL | CF_AI_GATEWAY_URL secret pushed to peroot worker | OK
 [2026-05-06] [PHASE-4] Triggering GitHub Actions deploy via status board push — GH Actions workflow added in same commit as previous push, needs new push to activate | OK
+[2026-05-06] [PHASE-4] Workers Builds root cause found: OOM during TS check + wrong deploy cmd (pages→workers) + missing env vars | Fixed all 3 via Cloudflare API
+[2026-05-06] [PHASE-4] Workers Builds trigger updated: build_cmd=npm run build:cloudflare, deploy_cmd=npx wrangler deploy, NODE_OPTIONS=--max-old-space-size=4096, all NEXT_PUBLIC_* vars set
+[2026-05-06] [PHASE-4] generateStaticParams fix: /prompts/[slug]/[id] now returns [] when SUPABASE_SERVICE_ROLE_KEY absent (Workers KV ISR handles runtime) | OK
+[2026-05-06] [PHASE-4] Build 0c9d089f queued (commit 92f98b9c) — awaiting Workers Builds to pick up with all fixes applied
+[2026-05-06] [PHASE-4] GitHub reconnect created 2 new triggers (db06e7b1 prod, a95cef42 nonprod) — root_dir fixed (leading space removed), all 10 env vars re-added to both triggers via CF API
+[2026-05-06] [PHASE-4] Pushing status update to trigger new Workers Builds run with fully configured triggers
 ```
 
 ---
