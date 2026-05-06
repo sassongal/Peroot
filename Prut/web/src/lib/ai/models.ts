@@ -15,7 +15,16 @@ import { LanguageModel } from "ai";
  * When unset, providers use their default upstream URL (current behaviour).
  */
 const CF_GATEWAY = process.env.CF_AI_GATEWAY_URL?.replace(/\/$/, "");
-const gatewayBase = (provider: string) => (CF_GATEWAY ? `${CF_GATEWAY}/${provider}` : undefined);
+// CF AI Gateway requires the upstream provider's API version segment in the path,
+// because the AI SDK appends the route (e.g. "/models/..." or "/chat/completions")
+// directly to the baseURL we hand it. Without these suffixes the gateway 404s.
+const PROVIDER_SUFFIX: Record<string, string> = {
+  "google-ai-studio": "/v1beta",
+  groq: "/v1",
+  mistral: "/v1",
+};
+const gatewayBase = (provider: string) =>
+  CF_GATEWAY ? `${CF_GATEWAY}/${provider}${PROVIDER_SUFFIX[provider] ?? ""}` : undefined;
 
 export type ModelId =
   | "gemini-2.5-flash"
