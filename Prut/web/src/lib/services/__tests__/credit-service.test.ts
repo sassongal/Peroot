@@ -737,7 +737,7 @@ describe("CreditService", () => {
       delete process.env.ALLOW_LEGACY_CREDIT_FALLBACK;
     });
 
-    it("pro tier skips daily reset in legacy fallback", async () => {
+    it("pro tier bumps last_prompt_at in legacy fallback (admin last-activity tracking)", async () => {
       process.env.ALLOW_LEGACY_CREDIT_FALLBACK = "1";
       serviceClientMock = buildQueryClient({
         rpc: mockRpc(null, {
@@ -749,17 +749,24 @@ describe("CreditService", () => {
         error: null,
       });
 
+      const updateChain = {
+        update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      };
+      const fromFn = vi.fn().mockReturnValue(updateChain);
       const client = {
         rpc: rpcFn,
-        from: vi.fn(), // should NOT be called for pro tier
+        from: fromFn,
       } as unknown as import("@supabase/supabase-js").SupabaseClient;
 
       const result = await checkAndDecrementCredits("user-pro", "pro", client);
 
       expect(result.allowed).toBe(true);
       expect(result.remaining).toBe(50);
-      // from() should not be called since pro tier skips daily reset
-      expect(client.from).not.toHaveBeenCalled();
+      // last_prompt_at is bumped for all tiers (admin views read it as last-activity)
+      expect(fromFn).toHaveBeenCalledWith("profiles");
+      expect(updateChain.update).toHaveBeenCalledWith(
+        expect.objectContaining({ last_prompt_at: expect.any(String) }),
+      );
       delete process.env.ALLOW_LEGACY_CREDIT_FALLBACK;
     });
 

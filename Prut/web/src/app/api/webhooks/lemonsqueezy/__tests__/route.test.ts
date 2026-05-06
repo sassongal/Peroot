@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import crypto from 'node:crypto';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import crypto from "node:crypto";
 
 // ---------------------------------------------------------------------------
 // Mocks — declared before the module under test is imported
@@ -38,14 +38,14 @@ const mockSupabase = {
   rpc: mockRpc.mockResolvedValue({ data: null, error: null }),
 };
 
-vi.mock('@/lib/supabase/service', () => ({
+vi.mock("@/lib/supabase/service", () => ({
   createServiceClient: () => mockSupabase,
 }));
 
 // EmailService mock
-const mockEmailSend = vi.fn().mockResolvedValue({ id: 'email-123' });
+const mockEmailSend = vi.fn().mockResolvedValue({ id: "email-123" });
 const mockEmailLog = vi.fn().mockResolvedValue(undefined);
-vi.mock('@/lib/emails/service', () => ({
+vi.mock("@/lib/emails/service", () => ({
   EmailService: {
     send: (...args: unknown[]) => mockEmailSend(...args),
     logEmail: (...args: unknown[]) => mockEmailLog(...args),
@@ -53,7 +53,7 @@ vi.mock('@/lib/emails/service', () => ({
 }));
 
 // Churn email template mock
-vi.mock('@/lib/emails/reengagement-templates', () => ({
+vi.mock("@/lib/emails/reengagement-templates", () => ({
   churnEmail: (name: string, url: string) => ({
     subject: `Churn: ${name}`,
     html: `<p>churn for ${name} ${url}</p>`,
@@ -61,7 +61,7 @@ vi.mock('@/lib/emails/reengagement-templates', () => ({
 }));
 
 // Logger mock (suppress output in tests)
-vi.mock('@/lib/logger', () => ({
+vi.mock("@/lib/logger", () => ({
   logger: {
     info: vi.fn(),
     warn: vi.fn(),
@@ -72,17 +72,17 @@ vi.mock('@/lib/logger', () => ({
 // ---------------------------------------------------------------------------
 // Import the handler AFTER mocks are registered
 // ---------------------------------------------------------------------------
-import { POST } from '../route';
+import { POST } from "../route";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const WEBHOOK_SECRET = 'test-webhook-secret-123';
+const WEBHOOK_SECRET = "test-webhook-secret-123";
 
 /** Compute a valid HMAC-SHA256 hex signature for a given body string. */
 function sign(body: string, secret: string = WEBHOOK_SECRET): string {
-  return crypto.createHmac('sha256', secret).update(body).digest('hex');
+  return crypto.createHmac("sha256", secret).update(body).digest("hex");
 }
 
 /** Build a minimal LemonSqueezy webhook event payload. */
@@ -97,9 +97,9 @@ function buildEvent(
   } = {},
 ) {
   const {
-    dataId = 'sub_123',
-    userId = 'user-abc-def',
-    status = 'active',
+    dataId = "sub_123",
+    userId = "user-abc-def",
+    status = "active",
     attributes = {},
     customData = {},
   } = overrides;
@@ -115,10 +115,10 @@ function buildEvent(
         customer_id: 42,
         variant_id: 100,
         status,
-        product_name: 'Pro',
-        user_email: 'test@example.com',
-        user_name: 'Test User',
-        renews_at: '2025-02-01T00:00:00Z',
+        product_name: "Pro",
+        user_email: "test@example.com",
+        user_name: "Test User",
+        renews_at: "2025-02-01T00:00:00Z",
         ends_at: null,
         trial_ends_at: null,
         ...attributes,
@@ -130,21 +130,18 @@ function buildEvent(
 /** Create a Request with correct signature header. */
 function makeRequest(body: string, signatureOverride?: string): Request {
   const sig = signatureOverride ?? sign(body);
-  return new Request('https://example.com/api/webhooks/lemonsqueezy', {
-    method: 'POST',
+  return new Request("https://example.com/api/webhooks/lemonsqueezy", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'X-Signature': sig,
+      "Content-Type": "application/json",
+      "X-Signature": sig,
     },
     body,
   });
 }
 
 /** Shortcut: build event, serialize, sign, return Request + parsed event. */
-function signedRequest(
-  eventName: string,
-  overrides: Parameters<typeof buildEvent>[1] = {},
-) {
+function signedRequest(eventName: string, overrides: Parameters<typeof buildEvent>[1] = {}) {
   const event = buildEvent(eventName, overrides);
   const body = JSON.stringify(event);
   return { request: makeRequest(body), event, body };
@@ -161,9 +158,9 @@ beforeEach(() => {
   process.env = {
     ...originalEnv,
     LEMONSQUEEZY_WEBHOOK_SECRET: WEBHOOK_SECRET,
-    SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
-    NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-    NEXT_PUBLIC_SITE_URL: 'https://www.peroot.space',
+    SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
+    NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",
+    NEXT_PUBLIC_SITE_URL: "https://www.peroot.space",
   };
 
   // Default: dedup insert succeeds (no duplicate)
@@ -174,13 +171,18 @@ beforeEach(() => {
   });
   mockUpsert.mockReturnValue({ data: null, error: null });
   // Default: profile select returns a free user
+  const defaultSingle = vi.fn().mockResolvedValue({
+    data: { plan_tier: "free", tags: [], credits_balance: 2 },
+    error: null,
+  });
   mockSelect.mockReturnValue({
     eq: vi.fn().mockReturnValue({
-      single: vi.fn().mockResolvedValue({
-        data: { plan_tier: 'free', tags: [], credits_balance: 2 },
-        error: null,
-      }),
+      single: defaultSingle,
+      maybeSingle: defaultSingle,
+      eq: vi.fn().mockReturnValue({ single: defaultSingle, maybeSingle: defaultSingle }),
     }),
+    single: defaultSingle,
+    maybeSingle: defaultSingle,
   });
   mockRpc.mockResolvedValue({ data: null, error: null });
 });
@@ -193,60 +195,60 @@ afterEach(() => {
 // TESTS
 // ---------------------------------------------------------------------------
 
-describe('POST /api/webhooks/lemonsqueezy', () => {
+describe("POST /api/webhooks/lemonsqueezy", () => {
   // =========================================================================
   // 1. Missing webhook secret
   // =========================================================================
-  describe('webhook secret validation', () => {
-    it('returns 500 when LEMONSQUEEZY_WEBHOOK_SECRET is missing', async () => {
+  describe("webhook secret validation", () => {
+    it("returns 500 when LEMONSQUEEZY_WEBHOOK_SECRET is missing", async () => {
       delete process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
 
-      const { request } = signedRequest('subscription_created');
+      const { request } = signedRequest("subscription_created");
       const res = await POST(request);
 
       expect(res.status).toBe(500);
-      expect(await res.text()).toBe('Webhook secret not configured');
+      expect(await res.text()).toBe("Webhook secret not configured");
     });
   });
 
   // =========================================================================
   // 2. HMAC signature verification
   // =========================================================================
-  describe('HMAC signature verification', () => {
-    it('returns 401 when X-Signature header is missing', async () => {
-      const event = buildEvent('subscription_created');
+  describe("HMAC signature verification", () => {
+    it("returns 401 when X-Signature header is missing", async () => {
+      const event = buildEvent("subscription_created");
       const body = JSON.stringify(event);
       // Request with empty signature
-      const request = new Request('https://example.com/api/webhooks/lemonsqueezy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const request = new Request("https://example.com/api/webhooks/lemonsqueezy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body,
       });
 
       const res = await POST(request);
 
       expect(res.status).toBe(401);
-      expect(await res.text()).toBe('Invalid signature');
+      expect(await res.text()).toBe("Invalid signature");
     });
 
-    it('returns 401 when HMAC signature is invalid', async () => {
-      const event = buildEvent('subscription_created');
+    it("returns 401 when HMAC signature is invalid", async () => {
+      const event = buildEvent("subscription_created");
       const body = JSON.stringify(event);
-      const request = makeRequest(body, 'definitely-not-a-valid-signature');
+      const request = makeRequest(body, "definitely-not-a-valid-signature");
 
       const res = await POST(request);
 
       expect(res.status).toBe(401);
-      expect(await res.text()).toBe('Invalid signature');
+      expect(await res.text()).toBe("Invalid signature");
     });
 
-    it('returns 401 when body is tampered after signing', async () => {
-      const event = buildEvent('subscription_created');
+    it("returns 401 when body is tampered after signing", async () => {
+      const event = buildEvent("subscription_created");
       const originalBody = JSON.stringify(event);
       const sig = sign(originalBody);
 
       // Tamper with the body
-      const tampered = JSON.stringify({ ...event, extra: 'tampered' });
+      const tampered = JSON.stringify({ ...event, extra: "tampered" });
       const request = makeRequest(tampered, sig);
 
       const res = await POST(request);
@@ -254,8 +256,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       expect(res.status).toBe(401);
     });
 
-    it('returns 200 when HMAC signature is valid', async () => {
-      const { request } = signedRequest('subscription_created');
+    it("returns 200 when HMAC signature is valid", async () => {
+      const { request } = signedRequest("subscription_created");
       const res = await POST(request);
 
       expect(res.status).toBe(200);
@@ -265,22 +267,22 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 3. Missing event name / missing user_id / missing attributes
   // =========================================================================
-  describe('payload validation', () => {
-    it('returns 400 when event_name is missing', async () => {
-      const event = { meta: {}, data: { id: '123', attributes: {} } };
+  describe("payload validation", () => {
+    it("returns 400 when event_name is missing", async () => {
+      const event = { meta: {}, data: { id: "123", attributes: {} } };
       const body = JSON.stringify(event);
       const request = makeRequest(body);
 
       const res = await POST(request);
 
       expect(res.status).toBe(400);
-      expect(await res.text()).toBe('Missing event name');
+      expect(await res.text()).toBe("Missing event name");
     });
 
-    it('returns 400 when subscription event has no attributes', async () => {
+    it("returns 400 when subscription event has no attributes", async () => {
       const event = {
-        meta: { event_name: 'subscription_created', custom_data: { user_id: 'u1' } },
-        data: { id: '123' },
+        meta: { event_name: "subscription_created", custom_data: { user_id: "u1" } },
+        data: { id: "123" },
       };
       const body = JSON.stringify(event);
       const request = makeRequest(body);
@@ -288,11 +290,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       const res = await POST(request);
 
       expect(res.status).toBe(400);
-      expect(await res.text()).toBe('Missing subscription data');
+      expect(await res.text()).toBe("Missing subscription data");
     });
 
-    it('returns 400 when subscription event has no user_id in custom_data', async () => {
-      const event = buildEvent('subscription_created');
+    it("returns 400 when subscription event has no user_id in custom_data", async () => {
+      const event = buildEvent("subscription_created");
       // Remove user_id
       (event.meta.custom_data as Record<string, unknown>).user_id = undefined;
       const body = JSON.stringify(event);
@@ -301,11 +303,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       const res = await POST(request);
 
       expect(res.status).toBe(400);
-      expect(await res.text()).toBe('Missing user_id in custom_data');
+      expect(await res.text()).toBe("Missing user_id in custom_data");
     });
 
-    it('returns 500 when malformed JSON body causes processing error', async () => {
-      const body = 'not-json-at-all';
+    it("returns 500 when malformed JSON body causes processing error", async () => {
+      const body = "not-json-at-all";
       const request = makeRequest(body);
 
       // JSON.parse will throw, caught by outer try/catch → 500
@@ -320,8 +322,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 4. subscription_created
   // =========================================================================
-  describe('subscription_created', () => {
-    it('upserts subscription, sets pro tier, and grants 150 credits', async () => {
+  describe("subscription_created", () => {
+    it("upserts subscription, sets pro tier, and grants 150 credits", async () => {
       // Track calls per table
       const insertCalls: Array<{ table: string; args: unknown[] }> = [];
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
@@ -331,11 +333,12 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'free', tags: [], credits_balance: 2 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2 }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "free", tags: [], credits_balance: 2 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2 }
+                : null,
           error: null,
         });
 
@@ -359,6 +362,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
             return {
               eq: vi.fn().mockReturnValue({
                 single: singleFn,
+                maybeSingle: singleFn,
+                eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
               }),
               single: singleFn,
             };
@@ -368,47 +373,48 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_created', {
-        userId: 'user-new-pro',
-        status: 'active',
+      const { request } = signedRequest("subscription_created", {
+        userId: "user-new-pro",
+        status: "active",
       });
       const res = await POST(request);
 
       expect(res.status).toBe(200);
 
       // Verify subscription upserted
-      const subUpsert = upsertCalls.find(c => c.table === 'subscriptions');
+      const subUpsert = upsertCalls.find((c) => c.table === "subscriptions");
       expect(subUpsert).toBeDefined();
       expect(subUpsert!.args[0]).toMatchObject({
-        user_id: 'user-new-pro',
-        lemonsqueezy_subscription_id: 'sub_123',
-        status: 'active',
-        plan_name: 'Pro',
+        user_id: "user-new-pro",
+        lemonsqueezy_subscription_id: "sub_123",
+        status: "active",
+        plan_name: "Pro",
       });
 
       // Verify plan_tier set to 'pro'
-      const profileUpdates = updateCalls.filter(c => c.table === 'profiles');
-      const tierUpdate = profileUpdates.find(c =>
-        (c.args[0] as Record<string, unknown>).plan_tier === 'pro'
+      const profileUpdates = updateCalls.filter((c) => c.table === "profiles");
+      const tierUpdate = profileUpdates.find(
+        (c) => (c.args[0] as Record<string, unknown>).plan_tier === "pro",
       );
       expect(tierUpdate).toBeDefined();
 
       // Verify credits set to 150
-      const creditsUpdate = profileUpdates.find(c =>
-        (c.args[0] as Record<string, unknown>).credits_balance === 150
+      const creditsUpdate = profileUpdates.find(
+        (c) => (c.args[0] as Record<string, unknown>).credits_balance === 150,
       );
       expect(creditsUpdate).toBeDefined();
     });
 
-    it('removes churn tag when a previously-churned user resubscribes', async () => {
+    it("removes churn tag when a previously-churned user resubscribes", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'free', tags: ['churn', 'other'], credits_balance: 2 }
-            : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "free", tags: ["churn", "other"], credits_balance: 2 }
+              : null,
           error: null,
         });
 
@@ -420,7 +426,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -428,32 +438,33 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_created', {
-        userId: 'churned-user',
-        status: 'active',
+      const { request } = signedRequest("subscription_created", {
+        userId: "churned-user",
+        status: "active",
       });
       const res = await POST(request);
 
       expect(res.status).toBe(200);
 
       // Find the update that removes the churn tag
-      const tagUpdate = updateCalls.find(c =>
-        c.table === 'profiles' &&
-        Array.isArray((c.args[0] as Record<string, unknown>).tags) &&
-        !(c.args[0] as Record<string, unknown[]>).tags!.includes('churn')
+      const tagUpdate = updateCalls.find(
+        (c) =>
+          c.table === "profiles" &&
+          Array.isArray((c.args[0] as Record<string, unknown>).tags) &&
+          !(c.args[0] as Record<string, unknown[]>).tags!.includes("churn"),
       );
       expect(tagUpdate).toBeDefined();
       // Ensure 'other' tag is preserved
-      expect((tagUpdate!.args[0] as Record<string, string[]>).tags).toContain('other');
-      expect((tagUpdate!.args[0] as Record<string, string[]>).tags).not.toContain('churn');
+      expect((tagUpdate!.args[0] as Record<string, string[]>).tags).toContain("other");
+      expect((tagUpdate!.args[0] as Record<string, string[]>).tags).not.toContain("churn");
     });
   });
 
   // =========================================================================
   // 5. subscription_updated
   // =========================================================================
-  describe('subscription_updated', () => {
-    it('updates subscription status via .update().eq()', async () => {
+  describe("subscription_updated", () => {
+    it("updates subscription status via .update().eq()", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
       const eqCalls: Array<{ table: string; field: string; value: unknown }> = [];
 
@@ -463,9 +474,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           return { data: null, error: null };
         });
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 120 }
-            : null,
+          data: table === "profiles" ? { plan_tier: "pro", tags: [], credits_balance: 120 } : null,
           error: null,
         });
 
@@ -477,7 +486,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -485,29 +498,29 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_updated', {
-        status: 'active',
+      const { request } = signedRequest("subscription_updated", {
+        status: "active",
       });
       const res = await POST(request);
 
       expect(res.status).toBe(200);
 
       // Should update subscriptions table by lemonsqueezy_subscription_id
-      const subUpdate = updateCalls.find(c => c.table === 'subscriptions');
+      const subUpdate = updateCalls.find((c) => c.table === "subscriptions");
       expect(subUpdate).toBeDefined();
       const subEq = eqCalls.find(
-        c => c.table === 'subscriptions' && c.field === 'lemonsqueezy_subscription_id'
+        (c) => c.table === "subscriptions" && c.field === "lemonsqueezy_subscription_id",
       );
       expect(subEq).toBeDefined();
-      expect(subEq!.value).toBe('sub_123');
+      expect(subEq!.value).toBe("sub_123");
     });
   });
 
   // =========================================================================
   // 6. subscription_cancelled
   // =========================================================================
-  describe('subscription_cancelled', () => {
-    it('marks subscription as cancelled but keeps pro access (status still has access until period end)', async () => {
+  describe("subscription_cancelled", () => {
+    it("marks subscription as cancelled but keeps pro access (status still has access until period end)", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
@@ -517,11 +530,12 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         // so plan_tier goes to 'free'. This is expected behavior — the handler is
         // status-driven, not ends_at-driven.
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 100 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2 }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: [], credits_balance: 100 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2 }
+                : null,
           error: null,
         });
 
@@ -533,7 +547,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -541,10 +559,10 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_cancelled', {
-        status: 'cancelled',
+      const { request } = signedRequest("subscription_cancelled", {
+        status: "cancelled",
         attributes: {
-          ends_at: '2025-03-01T00:00:00Z',
+          ends_at: "2025-03-01T00:00:00Z",
         },
       });
       const res = await POST(request);
@@ -553,8 +571,9 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
 
       // Subscription record should have status 'cancelled'
       const subUpdate = updateCalls.find(
-        c => c.table === 'subscriptions' &&
-          (c.args[0] as Record<string, unknown>).status === 'cancelled'
+        (c) =>
+          c.table === "subscriptions" &&
+          (c.args[0] as Record<string, unknown>).status === "cancelled",
       );
       expect(subUpdate).toBeDefined();
     });
@@ -563,19 +582,20 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 7. subscription_expired — churn flow
   // =========================================================================
-  describe('subscription_expired', () => {
-    it('revokes pro tier, resets credits to daily_free_limit, adds churn tag, sends emails', async () => {
+  describe("subscription_expired", () => {
+    it("revokes pro tier, resets credits to daily_free_limit, adds churn tag, sends emails", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
       const rpcCalls: Array<{ fn: string; args: unknown }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 80 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 3, contact_email: 'admin@peroot.space' }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: [], credits_balance: 80 }
+              : table === "site_settings"
+                ? { daily_free_limit: 3, contact_email: "admin@peroot.space" }
+                : null,
           error: null,
         });
 
@@ -587,7 +607,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -599,9 +623,9 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         return Promise.resolve({ data: null, error: null });
       });
 
-      const { request } = signedRequest('subscription_expired', {
-        userId: 'pro-user-expiring',
-        status: 'expired',
+      const { request } = signedRequest("subscription_expired", {
+        userId: "pro-user-expiring",
+        status: "expired",
       });
       const res = await POST(request);
 
@@ -609,63 +633,65 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
 
       // plan_tier should be set to 'free'
       const tierUpdate = updateCalls.find(
-        c => c.table === 'profiles' &&
-          (c.args[0] as Record<string, unknown>).plan_tier === 'free'
+        (c) =>
+          c.table === "profiles" && (c.args[0] as Record<string, unknown>).plan_tier === "free",
       );
       expect(tierUpdate).toBeDefined();
 
       // credits_balance should be reset to daily_free_limit (3)
       const creditsReset = updateCalls.find(
-        c => c.table === 'profiles' &&
-          (c.args[0] as Record<string, unknown>).credits_balance === 3
+        (c) =>
+          c.table === "profiles" && (c.args[0] as Record<string, unknown>).credits_balance === 3,
       );
       expect(creditsReset).toBeDefined();
       expect((creditsReset!.args[0] as Record<string, unknown>).churned_at).toBeDefined();
 
       // churn tag should be added
       const tagUpdate = updateCalls.find(
-        c => c.table === 'profiles' &&
+        (c) =>
+          c.table === "profiles" &&
           Array.isArray((c.args[0] as Record<string, unknown>).tags) &&
-          (c.args[0] as Record<string, string[]>).tags.includes('churn')
+          (c.args[0] as Record<string, string[]>).tags.includes("churn"),
       );
       expect(tagUpdate).toBeDefined();
 
       // Credit ledger RPC should be called with negative delta
-      const ledgerCall = rpcCalls.find(c => c.fn === 'log_credit_change');
+      const ledgerCall = rpcCalls.find((c) => c.fn === "log_credit_change");
       expect(ledgerCall).toBeDefined();
       const ledgerArgs = ledgerCall!.args as Record<string, unknown>;
-      expect(ledgerArgs.p_reason).toBe('churn_revoke');
+      expect(ledgerArgs.p_reason).toBe("churn_revoke");
       expect(ledgerArgs.p_delta).toBeLessThanOrEqual(0);
       expect(ledgerArgs.p_balance_after).toBe(3);
 
       // Churn email sent to user
       expect(mockEmailSend).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: 'test@example.com',
-          emailType: 'churn_notification',
-        })
+          to: "test@example.com",
+          emailType: "churn_notification",
+        }),
       );
 
       // Admin churn alert sent
       expect(mockEmailSend).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: 'admin@peroot.space',
-          emailType: 'admin_churn_alert',
-        })
+          to: "admin@peroot.space",
+          emailType: "admin_churn_alert",
+        }),
       );
     });
 
-    it('does not add duplicate churn tag if already present', async () => {
+    it("does not add duplicate churn tag if already present", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: ['churn'], credits_balance: 50 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2 }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: ["churn"], credits_balance: 50 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2 }
+                : null,
           error: null,
         });
 
@@ -677,7 +703,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -685,8 +715,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_expired', {
-        status: 'expired',
+      const { request } = signedRequest("subscription_expired", {
+        status: "expired",
       });
       const res = await POST(request);
 
@@ -694,8 +724,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
 
       // Should NOT have an update that adds churn tag again (already present)
       const tagUpdates = updateCalls.filter(
-        c => c.table === 'profiles' &&
-          Array.isArray((c.args[0] as Record<string, unknown>).tags)
+        (c) => c.table === "profiles" && Array.isArray((c.args[0] as Record<string, unknown>).tags),
       );
       // The handler checks existingTags.includes('churn') and skips if true
       expect(tagUpdates.length).toBe(0);
@@ -705,17 +734,15 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 8. subscription_payment_success — monthly credit grant
   // =========================================================================
-  describe('subscription_payment_success', () => {
-    it('grants 150 monthly credits and logs to credit ledger', async () => {
+  describe("subscription_payment_success", () => {
+    it("grants 150 monthly credits and logs to credit ledger", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
       const rpcCalls: Array<{ fn: string; args: unknown }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 30 }
-            : null,
+          data: table === "profiles" ? { plan_tier: "pro", tags: [], credits_balance: 30 } : null,
           error: null,
         });
 
@@ -727,7 +754,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -739,8 +770,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         return Promise.resolve({ data: null, error: null });
       });
 
-      const { request } = signedRequest('subscription_payment_success', {
-        status: 'active',
+      const { request } = signedRequest("subscription_payment_success", {
+        status: "active",
       });
       const res = await POST(request);
 
@@ -748,35 +779,36 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
 
       // Credits should be set to exactly 150 (reset, not additive)
       const creditsUpdate = updateCalls.find(
-        c => c.table === 'profiles' &&
-          (c.args[0] as Record<string, unknown>).credits_balance === 150
+        (c) =>
+          c.table === "profiles" && (c.args[0] as Record<string, unknown>).credits_balance === 150,
       );
       expect(creditsUpdate).toBeDefined();
       expect(
-        (creditsUpdate!.args[0] as Record<string, unknown>).credits_refreshed_at
+        (creditsUpdate!.args[0] as Record<string, unknown>).credits_refreshed_at,
       ).toBeDefined();
 
       // Ledger entry
-      const ledgerCall = rpcCalls.find(c => c.fn === 'log_credit_change');
+      const ledgerCall = rpcCalls.find((c) => c.fn === "log_credit_change");
       expect(ledgerCall).toBeDefined();
       const ledgerArgs = ledgerCall!.args as Record<string, unknown>;
       expect(ledgerArgs.p_delta).toBe(150);
       expect(ledgerArgs.p_balance_after).toBe(150);
-      expect(ledgerArgs.p_reason).toBe('subscription_grant');
-      expect(ledgerArgs.p_source).toBe('webhook');
+      expect(ledgerArgs.p_reason).toBe("subscription_grant");
+      expect(ledgerArgs.p_source).toBe("webhook");
     });
 
-    it('does NOT grant credits when subscription status is not active', async () => {
+    it("does NOT grant credits when subscription status is not active", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 30 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2 }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: [], credits_balance: 30 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2 }
+                : null,
           error: null,
         });
 
@@ -788,7 +820,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -796,8 +832,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_payment_success', {
-        status: 'cancelled',
+      const { request } = signedRequest("subscription_payment_success", {
+        status: "cancelled",
       });
       const res = await POST(request);
 
@@ -805,19 +841,17 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
 
       // Should NOT set credits to 150
       const creditsUpdate = updateCalls.find(
-        c => c.table === 'profiles' &&
-          (c.args[0] as Record<string, unknown>).credits_balance === 150
+        (c) =>
+          c.table === "profiles" && (c.args[0] as Record<string, unknown>).credits_balance === 150,
       );
       expect(creditsUpdate).toBeUndefined();
     });
 
-    it('logs LemonSqueezy-sent payment receipt email', async () => {
+    it("logs LemonSqueezy-sent payment receipt email", async () => {
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 30 }
-            : null,
+          data: table === "profiles" ? { plan_tier: "pro", tags: [], credits_balance: 30 } : null,
           error: null,
         });
 
@@ -828,7 +862,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           })),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -836,11 +874,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_payment_success', {
-        status: 'active',
+      const { request } = signedRequest("subscription_payment_success", {
+        status: "active",
         attributes: {
-          user_email: 'buyer@example.com',
-          product_name: 'Peroot Pro',
+          user_email: "buyer@example.com",
+          product_name: "Peroot Pro",
         },
       });
       const res = await POST(request);
@@ -850,11 +888,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       // EmailService.logEmail should be called for the LS-sent receipt
       expect(mockEmailLog).toHaveBeenCalledWith(
         expect.objectContaining({
-          emailTo: 'buyer@example.com',
-          source: 'lemonsqueezy',
-          emailType: 'subscription_payment_success',
-          subject: 'Payment Receipt',
-        })
+          emailTo: "buyer@example.com",
+          source: "lemonsqueezy",
+          emailType: "subscription_payment_success",
+          subject: "Payment Receipt",
+        }),
       );
     });
   });
@@ -862,18 +900,18 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 9. Idempotency — duplicate event detection
   // =========================================================================
-  describe('idempotency', () => {
-    it('returns 200 and skips processing when dedup insert fails (duplicate)', async () => {
+  describe("idempotency", () => {
+    it("returns 200 and skips processing when dedup insert fails (duplicate)", async () => {
       // Simulate unique constraint violation on webhook_events insert
       let insertCallCount = 0;
       mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'webhook_events') {
+        if (table === "webhook_events") {
           return {
             insert: vi.fn().mockImplementation(() => {
               insertCallCount++;
               if (insertCallCount > 1) {
                 // Second insert = duplicate
-                return { data: null, error: { code: '23505', message: 'unique violation' } };
+                return { data: null, error: { code: "23505", message: "unique violation" } };
               }
               return { data: null, error: null };
             }),
@@ -884,9 +922,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         }
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'free', tags: [], credits_balance: 2 }
-            : null,
+          data: table === "profiles" ? { plan_tier: "free", tags: [], credits_balance: 2 } : null,
           error: null,
         });
         return {
@@ -894,7 +930,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           update: vi.fn().mockReturnValue({ eq: eqFn }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -903,23 +943,23 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       });
 
       // First request — should process normally
-      const { request: req1 } = signedRequest('subscription_created', { dataId: 'sub_dedup' });
+      const { request: req1 } = signedRequest("subscription_created", { dataId: "sub_dedup" });
       const res1 = await POST(req1);
       expect(res1.status).toBe(200);
 
       // Second request with same event — dedup insert fails
-      const { request: req2 } = signedRequest('subscription_created', { dataId: 'sub_dedup' });
+      const { request: req2 } = signedRequest("subscription_created", { dataId: "sub_dedup" });
       const res2 = await POST(req2);
       expect(res2.status).toBe(200);
-      expect(await res2.text()).toBe('Already processed');
+      expect(await res2.text()).toBe("Already processed");
     });
   });
 
   // =========================================================================
   // 10. Unknown event types — graceful handling
   // =========================================================================
-  describe('unknown event types', () => {
-    it('returns 200 for unknown non-subscription events (no crash)', async () => {
+  describe("unknown event types", () => {
+    it("returns 200 for unknown non-subscription events (no crash)", async () => {
       mockSupabase.from.mockImplementation(() => ({
         insert: vi.fn().mockReturnValue({ data: null, error: null }),
         update: vi.fn().mockReturnValue({
@@ -927,11 +967,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         }),
       }));
 
-      signedRequest('order_created');
+      signedRequest("order_created");
       // Manually build since our helper sets subscription attributes
       const event = {
-        meta: { event_name: 'order_created', custom_data: {} },
-        data: { id: 'ord_1', attributes: { status: 'paid' } },
+        meta: { event_name: "order_created", custom_data: {} },
+        data: { id: "ord_1", attributes: { status: "paid" } },
       };
       const body = JSON.stringify(event);
       const req = makeRequest(body);
@@ -947,16 +987,17 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 11. subscription_resumed — credit grant
   // =========================================================================
-  describe('subscription_resumed', () => {
-    it('grants 150 credits when subscription is resumed with active status', async () => {
+  describe("subscription_resumed", () => {
+    it("grants 150 credits when subscription is resumed with active status", async () => {
       const updateCalls: Array<{ table: string; args: unknown[] }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'free', tags: ['churn'], credits_balance: 2 }
-            : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "free", tags: ["churn"], credits_balance: 2 }
+              : null,
           error: null,
         });
 
@@ -968,7 +1009,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -976,8 +1021,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_resumed', {
-        status: 'active',
+      const { request } = signedRequest("subscription_resumed", {
+        status: "active",
       });
       const res = await POST(request);
 
@@ -985,8 +1030,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
 
       // Credits granted
       const creditsUpdate = updateCalls.find(
-        c => c.table === 'profiles' &&
-          (c.args[0] as Record<string, unknown>).credits_balance === 150
+        (c) =>
+          c.table === "profiles" && (c.args[0] as Record<string, unknown>).credits_balance === 150,
       );
       expect(creditsUpdate).toBeDefined();
     });
@@ -995,8 +1040,8 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 12. ACTIVE_STATUSES coverage — past_due and on_trial keep pro
   // =========================================================================
-  describe('ACTIVE_STATUSES edge cases', () => {
-    it.each(['active', 'on_trial', 'past_due', 'paid'])(
+  describe("ACTIVE_STATUSES edge cases", () => {
+    it.each(["active", "on_trial", "past_due", "paid"])(
       'status "%s" is treated as active pro',
       async (status) => {
         const updateCalls: Array<{ table: string; args: unknown[] }> = [];
@@ -1004,9 +1049,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         mockSupabase.from.mockImplementation((table: string) => {
           const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
           const singleFn = vi.fn().mockResolvedValue({
-            data: table === 'profiles'
-              ? { plan_tier: 'free', tags: [], credits_balance: 2 }
-              : null,
+            data: table === "profiles" ? { plan_tier: "free", tags: [], credits_balance: 2 } : null,
             error: null,
           });
 
@@ -1018,7 +1061,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
             }),
             upsert: vi.fn().mockReturnValue({ data: null, error: null }),
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({ single: singleFn }),
+              eq: vi.fn().mockReturnValue({
+                single: singleFn,
+                maybeSingle: singleFn,
+                eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+              }),
               single: singleFn,
             }),
             eq: eqFn,
@@ -1026,20 +1073,20 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           };
         });
 
-        const { request } = signedRequest('subscription_updated', { status });
+        const { request } = signedRequest("subscription_updated", { status });
         const res = await POST(request);
 
         expect(res.status).toBe(200);
 
         const tierUpdate = updateCalls.find(
-          c => c.table === 'profiles' &&
-            (c.args[0] as Record<string, unknown>).plan_tier === 'pro'
+          (c) =>
+            c.table === "profiles" && (c.args[0] as Record<string, unknown>).plan_tier === "pro",
         );
         expect(tierUpdate).toBeDefined();
       },
     );
 
-    it.each(['cancelled', 'expired', 'paused', 'unpaid'])(
+    it.each(["cancelled", "expired", "paused", "unpaid"])(
       'status "%s" is treated as inactive (free tier)',
       async (status) => {
         const updateCalls: Array<{ table: string; args: unknown[] }> = [];
@@ -1047,11 +1094,12 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         mockSupabase.from.mockImplementation((table: string) => {
           const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
           const singleFn = vi.fn().mockResolvedValue({
-            data: table === 'profiles'
-              ? { plan_tier: 'free', tags: [], credits_balance: 2 }
-              : table === 'site_settings'
-                ? { daily_free_limit: 2 }
-                : null,
+            data:
+              table === "profiles"
+                ? { plan_tier: "free", tags: [], credits_balance: 2 }
+                : table === "site_settings"
+                  ? { daily_free_limit: 2 }
+                  : null,
             error: null,
           });
 
@@ -1063,7 +1111,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
             }),
             upsert: vi.fn().mockReturnValue({ data: null, error: null }),
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({ single: singleFn }),
+              eq: vi.fn().mockReturnValue({
+                single: singleFn,
+                maybeSingle: singleFn,
+                eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+              }),
               single: singleFn,
             }),
             eq: eqFn,
@@ -1071,14 +1123,14 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           };
         });
 
-        const { request } = signedRequest('subscription_updated', { status });
+        const { request } = signedRequest("subscription_updated", { status });
         const res = await POST(request);
 
         expect(res.status).toBe(200);
 
         const tierUpdate = updateCalls.find(
-          c => c.table === 'profiles' &&
-            (c.args[0] as Record<string, unknown>).plan_tier === 'free'
+          (c) =>
+            c.table === "profiles" && (c.args[0] as Record<string, unknown>).plan_tier === "free",
         );
         expect(tierUpdate).toBeDefined();
       },
@@ -1088,10 +1140,10 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 13. Database error handling
   // =========================================================================
-  describe('database error handling', () => {
-    it('returns 500 when subscription_created upsert fails', async () => {
+  describe("database error handling", () => {
+    it("returns 500 when subscription_created upsert fails", async () => {
       mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'webhook_events') {
+        if (table === "webhook_events") {
           return {
             insert: vi.fn().mockReturnValue({ data: null, error: null }),
             update: vi.fn().mockReturnValue({
@@ -1099,17 +1151,17 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
             }),
           };
         }
-        if (table === 'subscriptions') {
+        if (table === "subscriptions") {
           return {
             upsert: vi.fn().mockReturnValue({
               data: null,
-              error: { code: '42P01', message: 'relation does not exist' },
+              error: { code: "42P01", message: "relation does not exist" },
             }),
           };
         }
         const eqFn = vi.fn().mockReturnValue({ data: null, error: null });
         const singleFn = vi.fn().mockResolvedValue({
-          data: { plan_tier: 'free', tags: [], credits_balance: 2 },
+          data: { plan_tier: "free", tags: [], credits_balance: 2 },
           error: null,
         });
         return {
@@ -1117,7 +1169,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           update: vi.fn().mockReturnValue({ eq: eqFn }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -1125,20 +1181,20 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_created');
+      const { request } = signedRequest("subscription_created");
       const res = await POST(request);
 
       expect(res.status).toBe(500);
       // DB error throws inside handleSubscriptionEvent and is caught by the
       // route's generic catch — response body is now the generic processing error.
-      expect(await res.text()).toBe('Processing error');
+      expect(await res.text()).toBe("Processing error");
     });
 
-    it('falls back to upsert when subscription update fails for non-created events', async () => {
+    it("falls back to upsert when subscription update fails for non-created events", async () => {
       const upsertCalls: Array<{ table: string; args: unknown[] }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'webhook_events') {
+        if (table === "webhook_events") {
           return {
             insert: vi.fn().mockReturnValue({ data: null, error: null }),
             update: vi.fn().mockReturnValue({
@@ -1146,25 +1202,33 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
             }),
           };
         }
-        if (table === 'subscriptions') {
+        if (table === "subscriptions") {
+          const subSingle = vi.fn().mockResolvedValue({ data: null, error: null });
           return {
             update: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 data: null,
-                error: { code: 'PGRST116', message: 'not found' },
+                error: { code: "PGRST116", message: "not found" },
               }),
             }),
             upsert: vi.fn().mockImplementation((...args: unknown[]) => {
               upsertCalls.push({ table, args });
               return { data: null, error: null };
             }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: subSingle,
+                maybeSingle: subSingle,
+                eq: vi.fn().mockReturnValue({ single: subSingle, maybeSingle: subSingle }),
+              }),
+              single: subSingle,
+              maybeSingle: subSingle,
+            }),
           };
         }
         const eqFn = vi.fn().mockReturnValue({ data: null, error: null });
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 100 }
-            : null,
+          data: table === "profiles" ? { plan_tier: "pro", tags: [], credits_balance: 100 } : null,
           error: null,
         });
         return {
@@ -1172,7 +1236,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           update: vi.fn().mockReturnValue({ eq: eqFn }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -1180,13 +1248,13 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_updated', { status: 'active' });
+      const { request } = signedRequest("subscription_updated", { status: "active" });
       const res = await POST(request);
 
       expect(res.status).toBe(200);
 
       // Should have tried upsert as fallback
-      const subUpsert = upsertCalls.find(c => c.table === 'subscriptions');
+      const subUpsert = upsertCalls.find((c) => c.table === "subscriptions");
       expect(subUpsert).toBeDefined();
     });
   });
@@ -1194,31 +1262,32 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 14. Missing SUPABASE_SERVICE_ROLE_KEY
   // =========================================================================
-  describe('server configuration', () => {
-    it('returns 500 when SUPABASE_SERVICE_ROLE_KEY is missing', async () => {
+  describe("server configuration", () => {
+    it("returns 500 when SUPABASE_SERVICE_ROLE_KEY is missing", async () => {
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      const { request } = signedRequest('subscription_created');
+      const { request } = signedRequest("subscription_created");
       const res = await POST(request);
 
       expect(res.status).toBe(500);
-      expect(await res.text()).toBe('Server configuration error');
+      expect(await res.text()).toBe("Server configuration error");
     });
   });
 
   // =========================================================================
   // 15. Email error resilience
   // =========================================================================
-  describe('email error resilience', () => {
-    it('does not fail the webhook when churn email sending throws', async () => {
+  describe("email error resilience", () => {
+    it("does not fail the webhook when churn email sending throws", async () => {
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 80 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2, contact_email: 'admin@test.com' }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: [], credits_balance: 80 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2, contact_email: "admin@test.com" }
+                : null,
           error: null,
         });
 
@@ -1229,7 +1298,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           })),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -1238,10 +1311,10 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       });
 
       // Make email send throw
-      mockEmailSend.mockRejectedValue(new Error('Resend API down'));
+      mockEmailSend.mockRejectedValue(new Error("Resend API down"));
 
-      const { request } = signedRequest('subscription_expired', {
-        status: 'expired',
+      const { request } = signedRequest("subscription_expired", {
+        status: "expired",
       });
       const res = await POST(request);
 
@@ -1253,18 +1326,19 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 16. Credit ledger delta calculation
   // =========================================================================
-  describe('credit ledger delta calculation', () => {
-    it('computes correct negative delta on churn (80 credits -> 2 free limit)', async () => {
+  describe("credit ledger delta calculation", () => {
+    it("computes correct negative delta on churn (80 credits -> 2 free limit)", async () => {
       const rpcCalls: Array<{ fn: string; args: unknown }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 80 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2 }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: [], credits_balance: 80 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2 }
+                : null,
           error: null,
         });
 
@@ -1275,7 +1349,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           })),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -1287,12 +1365,12 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         return Promise.resolve({ data: null, error: null });
       });
 
-      const { request } = signedRequest('subscription_expired', {
-        status: 'expired',
+      const { request } = signedRequest("subscription_expired", {
+        status: "expired",
       });
       await POST(request);
 
-      const ledgerCall = rpcCalls.find(c => c.fn === 'log_credit_change');
+      const ledgerCall = rpcCalls.find((c) => c.fn === "log_credit_change");
       expect(ledgerCall).toBeDefined();
       const args = ledgerCall!.args as Record<string, unknown>;
       // delta = min(0, 2 - 80) = -78
@@ -1300,17 +1378,18 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
       expect(args.p_balance_after).toBe(2);
     });
 
-    it('skips ledger entry when delta is zero (balance already at free limit)', async () => {
+    it("skips ledger entry when delta is zero (balance already at free limit)", async () => {
       const rpcCalls: Array<{ fn: string; args: unknown }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
         const eqFn = vi.fn().mockImplementation(() => ({ data: null, error: null }));
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'pro', tags: [], credits_balance: 2 }
-            : table === 'site_settings'
-              ? { daily_free_limit: 2 }
-              : null,
+          data:
+            table === "profiles"
+              ? { plan_tier: "pro", tags: [], credits_balance: 2 }
+              : table === "site_settings"
+                ? { daily_free_limit: 2 }
+                : null,
           error: null,
         });
 
@@ -1321,7 +1400,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           })),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -1333,13 +1416,13 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         return Promise.resolve({ data: null, error: null });
       });
 
-      const { request } = signedRequest('subscription_expired', {
-        status: 'expired',
+      const { request } = signedRequest("subscription_expired", {
+        status: "expired",
       });
       await POST(request);
 
       // delta = min(0, 2 - 2) = 0 → RPC should NOT be called
-      const ledgerCall = rpcCalls.find(c => c.fn === 'log_credit_change');
+      const ledgerCall = rpcCalls.find((c) => c.fn === "log_credit_change");
       expect(ledgerCall).toBeUndefined();
     });
   });
@@ -1347,13 +1430,13 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
   // =========================================================================
   // 17. Webhook event marked as processed
   // =========================================================================
-  describe('webhook event lifecycle', () => {
-    it('marks webhook_events row as processed after successful handling', async () => {
+  describe("webhook event lifecycle", () => {
+    it("marks webhook_events row as processed after successful handling", async () => {
       const webhookUpdateCalls: Array<{ args: unknown[] }> = [];
       const webhookEqCalls: Array<{ field: string; value: unknown }> = [];
 
       mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'webhook_events') {
+        if (table === "webhook_events") {
           return {
             insert: vi.fn().mockReturnValue({ data: null, error: null }),
             update: vi.fn().mockImplementation((...args: unknown[]) => {
@@ -1369,9 +1452,7 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         }
         const eqFn = vi.fn().mockReturnValue({ data: null, error: null });
         const singleFn = vi.fn().mockResolvedValue({
-          data: table === 'profiles'
-            ? { plan_tier: 'free', tags: [], credits_balance: 2 }
-            : null,
+          data: table === "profiles" ? { plan_tier: "free", tags: [], credits_balance: 2 } : null,
           error: null,
         });
         return {
@@ -1379,7 +1460,11 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
           update: vi.fn().mockReturnValue({ eq: eqFn }),
           upsert: vi.fn().mockReturnValue({ data: null, error: null }),
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ single: singleFn }),
+            eq: vi.fn().mockReturnValue({
+              single: singleFn,
+              maybeSingle: singleFn,
+              eq: vi.fn().mockReturnValue({ single: singleFn, maybeSingle: singleFn }),
+            }),
             single: singleFn,
           }),
           eq: eqFn,
@@ -1387,20 +1472,20 @@ describe('POST /api/webhooks/lemonsqueezy', () => {
         };
       });
 
-      const { request } = signedRequest('subscription_created');
+      const { request } = signedRequest("subscription_created");
       await POST(request);
 
       // Verify webhook_events was updated with processed=true
       expect(webhookUpdateCalls.length).toBeGreaterThanOrEqual(1);
       const processedUpdate = webhookUpdateCalls.find(
-        c => (c.args[0] as Record<string, unknown>).processed === true
+        (c) => (c.args[0] as Record<string, unknown>).processed === true,
       );
       expect(processedUpdate).toBeDefined();
 
       // Verify the correct dedup key was used in the eq filter
-      const keyEq = webhookEqCalls.find(c => c.field === 'event_name');
+      const keyEq = webhookEqCalls.find((c) => c.field === "event_name");
       expect(keyEq).toBeDefined();
-      expect(keyEq!.value).toBe('subscription_created:sub_123');
+      expect(keyEq!.value).toBe("subscription_created:sub_123:");
     });
   });
 });

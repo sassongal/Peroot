@@ -42,12 +42,15 @@ const google = createGoogleGenerativeAI({
   baseURL: gatewayBase("google-ai-studio"),
 });
 
-// Backup Google provider — used when primary key is revoked/leaked.
-// Skipped automatically if GOOGLE_GENERATIVE_AI_API_KEY_BACKUP is not set.
-const googleBackup = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP,
-  baseURL: gatewayBase("google-ai-studio"),
-});
+// Backup Google provider — only constructed when GOOGLE_GENERATIVE_AI_API_KEY_BACKUP
+// is set. When unset, it's omitted from AVAILABLE_MODELS entirely so nothing can
+// route to a provider with no credentials.
+const googleBackup = process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP
+  ? createGoogleGenerativeAI({
+      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP,
+      baseURL: gatewayBase("google-ai-studio"),
+    })
+  : null;
 
 const mistralProvider = createMistral({
   apiKey: process.env.MISTRAL_API_KEY,
@@ -62,7 +65,7 @@ const groq = CF_GATEWAY
 // importing from `@ai-sdk/{google,groq,mistral}` directly. Keeping the same
 // import surface (`google("model-id")`, etc.) means callers don't need any
 // other code changes.
-export { google, googleBackup, groq, mistralProvider };
+export { google, groq, mistralProvider };
 
 interface ModelConfig {
   id: ModelId;
@@ -73,7 +76,7 @@ interface ModelConfig {
   supportsVision: boolean;
 }
 
-export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
+export const AVAILABLE_MODELS: Partial<Record<ModelId, ModelConfig>> = {
   "gemini-2.5-flash": {
     id: "gemini-2.5-flash",
     provider: "google",
@@ -82,14 +85,18 @@ export const AVAILABLE_MODELS: Record<ModelId, ModelConfig> = {
     contextWindow: 1000000,
     supportsVision: true,
   },
-  "gemini-2.5-flash-backup": {
-    id: "gemini-2.5-flash-backup",
-    provider: "google-backup",
-    model: googleBackup("gemini-2.5-flash"),
-    label: "Gemini 2.5 Flash (Backup Key)",
-    contextWindow: 1000000,
-    supportsVision: true,
-  },
+  ...(googleBackup
+    ? {
+        "gemini-2.5-flash-backup": {
+          id: "gemini-2.5-flash-backup" as const,
+          provider: "google-backup" as const,
+          model: googleBackup("gemini-2.5-flash"),
+          label: "Gemini 2.5 Flash (Backup Key)",
+          contextWindow: 1000000,
+          supportsVision: true,
+        },
+      }
+    : {}),
   "gemini-2.5-flash-lite": {
     id: "gemini-2.5-flash-lite",
     provider: "google",

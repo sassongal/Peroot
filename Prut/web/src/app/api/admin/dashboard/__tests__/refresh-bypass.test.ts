@@ -36,6 +36,7 @@ function makeQuery() {
   q.select = chain;
   q.neq = chain;
   q.eq = chain;
+  q.in = chain;
   q.gte = chain;
   q.lte = chain;
   q.order = chain;
@@ -57,6 +58,12 @@ vi.mock("@/lib/supabase/service", () => ({
     from: () => makeQuery(),
     rpc: rpcMock,
   }),
+}));
+
+// ─── Mock @/lib/admin/ls-mrr (network-touching helper) ───────────────────────
+
+vi.mock("@/lib/admin/ls-mrr", () => ({
+  getLsMrr: vi.fn().mockResolvedValue(null),
 }));
 
 // ─── Mock @/lib/admin/admin-security (used internally by withAdmin) ───────────
@@ -110,7 +117,7 @@ describe("GET /api/admin/dashboard", () => {
 
     // redis.get must have been called
     expect(redisGet).toHaveBeenCalledTimes(1);
-    expect(redisGet).toHaveBeenCalledWith("admin:dashboard:v1");
+    expect(redisGet).toHaveBeenCalledWith("admin:dashboard:v3");
 
     // redis.set must NOT have been called (we returned early from cache)
     expect(redisSet).not.toHaveBeenCalled();

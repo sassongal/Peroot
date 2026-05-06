@@ -93,6 +93,8 @@ vi.mock("@/lib/ai/enhance-cache", () => ({
   buildCacheKey: () => null,
   getCached: async () => null,
   setCached: async () => {},
+  getRuntimeCacheVersion: async () => 1,
+  deleteCached: async () => {},
 }));
 vi.mock("@/lib/ai/inflight-lock", () => ({
   acquireInflightLock: async () => ({ acquired: true, release: async () => {} }),

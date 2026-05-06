@@ -164,6 +164,7 @@ vi.mock("@/lib/ai/enhance-cache", () => ({
   getCached: (...args: unknown[]) => mockGetCached(...args),
   setCached: (...args: unknown[]) => mockSetCached(...args),
   deleteCached: (...args: unknown[]) => mockDeleteCached(...args),
+  getRuntimeCacheVersion: async () => 1,
   ENGINE_VERSION: "test-engine-version",
 }));
 
@@ -194,6 +195,7 @@ vi.mock("@/lib/engines", () => ({
   getEngine: vi.fn(async () => ({
     generate: (...args: unknown[]) => mockGenerate(...args),
     generateRefinement: (...args: unknown[]) => mockGenerateRefinement(...args),
+    finalizeOutput: (output: unknown) => output,
   })),
 }));
 
@@ -322,7 +324,7 @@ function setupAuthenticatedUser(
 
   // Background jobs -- no-op
   mockEnqueueJob.mockResolvedValue(undefined);
-  mockRefundCredit.mockResolvedValue(undefined);
+  mockRefundCredit.mockResolvedValue({ success: true });
 }
 
 /** Configure mocks for a guest (unauthenticated) user. */
@@ -335,7 +337,7 @@ function setupGuestUser() {
     remaining: 4,
     reset: Date.now() + 60000,
   });
-  mockRefundCredit.mockResolvedValue(undefined);
+  mockRefundCredit.mockResolvedValue({ success: true });
 }
 
 /**
@@ -405,7 +407,7 @@ beforeEach(() => {
     modelId: "gemini-2.5-flash",
   });
   mockCheckAndDecrementCredits.mockResolvedValue({ allowed: true, remaining: 5 });
-  mockRefundCredit.mockResolvedValue(undefined);
+  mockRefundCredit.mockResolvedValue({ success: true });
   mockCheckRateLimit.mockResolvedValue({
     success: true,
     limit: 10,
@@ -578,7 +580,7 @@ describe("POST /api/enhance", () => {
         remaining: 99,
       });
       mockEnqueueJob.mockResolvedValue(undefined);
-      mockRefundCredit.mockResolvedValue(undefined);
+      mockRefundCredit.mockResolvedValue({ success: true });
       setupMockStream();
 
       const req = makeRequest(VALID_BODY, {
@@ -619,7 +621,7 @@ describe("POST /api/enhance", () => {
         remaining: 50,
       });
       mockEnqueueJob.mockResolvedValue(undefined);
-      mockRefundCredit.mockResolvedValue(undefined);
+      mockRefundCredit.mockResolvedValue({ success: true });
       setupMockStream();
 
       const req = makeRequest(VALID_BODY, {
@@ -1327,6 +1329,15 @@ describe("POST /api/enhance", () => {
         },
       });
       mockSupabaseFrom.mockImplementation((table: string) => {
+        if (table === "history") {
+          const builder = mockQueryBuilder({ data: [] });
+          builder.insert = historyInsert;
+          return builder;
+        }
+        return mockQueryBuilder({ data: null });
+      });
+      // History insert on cache-hit path goes through the service client
+      mockServiceFrom.mockImplementation((table: string) => {
         if (table === "history") {
           const builder = mockQueryBuilder({ data: [] });
           builder.insert = historyInsert;

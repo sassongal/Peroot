@@ -25,7 +25,7 @@ Next.js 16 renamed `middleware.ts` → `proxy.ts`. The active middleware file is
 - `@react-pdf/renderer` v4 is fully installed and working (verified 2026-04-29).
   Still load it via dynamic import in `src/lib/export/download-prompt-pdf.tsx` — it
   dispatches to browser APIs at module init, so a top-level import would break SSR.
-- `husky` git hooks may not run on Windows. Run `npm run precommit` (lint-staged) before committing, or `npm run preflight` (lint + typecheck + test) before pushing.
+- `husky` git hooks work on Windows via Git-for-Windows `sh.exe`. `scripts/setup-git-hooks.mjs` runs at `npm install` and points `core.hooksPath` at `.husky/`. If hooks ever stop firing, re-run `node scripts/setup-git-hooks.mjs`.
 - `@next/bundle-analyzer` is gated by `process.env.ANALYZE === "true"` in next.config.ts (no-op unless the env var is set).
 - `NODE_ENV` warning on startup is cosmetic — Next.js sets it automatically, ignore it.
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` missing — rate limiting degraded locally, not blocking.
