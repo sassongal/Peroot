@@ -1,4 +1,5 @@
 name = "peroot"
+account_id = "f78ded495dd768bd57b691493c39c5b5"
 main = ".open-next/worker.js"
 compatibility_date = "2026-05-05"
 compatibility_flags = ["nodejs_compat"]
