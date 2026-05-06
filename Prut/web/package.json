@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "node --max-old-space-size=4096 ./node_modules/eslint/bin/eslint.js",
     "bench:prompts": "node scripts/benchmark-prompts.mjs",
     "tailwind:canonicalize": "node scripts/canonicalize-tailwind-classes.mjs",
     "test:engines-live": "tsx scripts/test-engines-live.ts",

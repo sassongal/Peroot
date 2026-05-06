@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   // subscription_updated (e.g. expired → active after trial payment) would
   // collide with the first and be silently dropped.
   const subUpdatedAt =
-    (event.data?.attributes as Record<string, unknown> | undefined)?.updated_at ?? "";
+    (event.data?.attributes as Record<string, unknown> | undefined)?.updated_at ?? "none";
   const dedupKey = `${eventName}:${event.data?.id || "unknown"}:${subUpdatedAt}`;
   const { error: dedupError } = await supabase.from("webhook_events").insert({
     event_name: dedupKey,

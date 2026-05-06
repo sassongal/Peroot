@@ -1485,7 +1485,7 @@ describe("POST /api/webhooks/lemonsqueezy", () => {
       // Verify the correct dedup key was used in the eq filter
       const keyEq = webhookEqCalls.find((c) => c.field === "event_name");
       expect(keyEq).toBeDefined();
-      expect(keyEq!.value).toBe("subscription_created:sub_123:");
+      expect(keyEq!.value).toBe("subscription_created:sub_123:none");
     });
   });
 });
