@@ -67,6 +67,9 @@ const CAPABILITY_BADGE: Record<string, { label: string; className: string }> = {
 export const revalidate = 86400; // 24h ISR — prompt content is stable
 
 export async function generateStaticParams() {
+  // Skip static generation when service credentials are absent (CI/Cloudflare build).
+  // Workers KV ISR handles caching at runtime.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return [];
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("public_library_prompts")
