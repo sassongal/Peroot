@@ -58,6 +58,12 @@ const groq = CF_GATEWAY
   ? createGroq({ apiKey: process.env.GROQ_API_KEY, baseURL: gatewayBase("groq") })
   : defaultGroq;
 
+// Re-exported so callers route through the optional CF AI Gateway instead of
+// importing from `@ai-sdk/{google,groq,mistral}` directly. Keeping the same
+// import surface (`google("model-id")`, etc.) means callers don't need any
+// other code changes.
+export { google, googleBackup, groq, mistralProvider };
+
 interface ModelConfig {
   id: ModelId;
   provider: "google" | "google-backup" | "groq" | "mistral";

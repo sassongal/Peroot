@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import type { ModelMessage } from "ai";
-import { google } from "@ai-sdk/google";
+import { google } from "@/lib/ai/models";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { selectEnrichPrompt } from "./prompts";

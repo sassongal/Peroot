@@ -1,6 +1,5 @@
-
 import { createClient } from "@/lib/supabase/server";
-import { google } from "@ai-sdk/google";
+import { google } from "@/lib/ai/models";
 import { generateText } from "ai";
 import { logger } from "@/lib/logger";
 
@@ -9,22 +8,22 @@ import { logger } from "@/lib/logger";
  * Stores the result in user_style_personality table.
  */
 export async function analyzeUserStyle(userId: string) {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    // 1. Fetch the user's library (top 15 items)
-    const { data: library } = await supabase
-        .from('personal_library')
-        .select('title, prompt, use_case, personal_category')
-        .eq('user_id', userId)
-        .order('use_count', { ascending: false })
-        .limit(15);
-    
-    if (!library || library.length < 3) return null; // Not enough data to build a persona
+  // 1. Fetch the user's library (top 15 items)
+  const { data: library } = await supabase
+    .from("personal_library")
+    .select("title, prompt, use_case, personal_category")
+    .eq("user_id", userId)
+    .order("use_count", { ascending: false })
+    .limit(15);
 
-    // 2. Synthesize using AI
-    const libraryText = library.map(p => `[${p.title}]\n${p.prompt}`).join('\n\n---\n\n');
+  if (!library || library.length < 3) return null; // Not enough data to build a persona
 
-    const analyzerPrompt = `
+  // 2. Synthesize using AI
+  const libraryText = library.map((p) => `[${p.title}]\n${p.prompt}`).join("\n\n---\n\n");
+
+  const analyzerPrompt = `
     Analyze the following prompt engineering styles for this user.
     Identify recurring patterns in:
     - Tone (e.g. professional, direct, creative, technical)
@@ -45,31 +44,32 @@ export async function analyzeUserStyle(userId: string) {
     ---
     `.trim();
 
-    try {
-        const { text } = await generateText({
-            model: google('gemini-2.5-flash-lite'),
-            system: "You are a behavioral linguistics expert specializing in AI Prompt Engineering. Return only valid JSON.",
-            prompt: analyzerPrompt
-        });
+  try {
+    const { text } = await generateText({
+      model: google("gemini-2.5-flash-lite"),
+      system:
+        "You are a behavioral linguistics expert specializing in AI Prompt Engineering. Return only valid JSON.",
+      prompt: analyzerPrompt,
+    });
 
-        const result = JSON.parse(text);
+    const result = JSON.parse(text);
 
-        // 3. Persist to DB
-        const { error } = await supabase
-            .from('user_style_personality')
-            .upsert({
-                user_id: userId,
-                style_tokens: result.tokens || [],
-                preferred_format: result.preferred_format,
-                personality_brief: result.personality_brief,
-                last_analyzed_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
-        
-        if (error) throw error;
-        return result;
+    // 3. Persist to DB
+    const { error } = await supabase.from("user_style_personality").upsert(
+      {
+        user_id: userId,
+        style_tokens: result.tokens || [],
+        preferred_format: result.preferred_format,
+        personality_brief: result.personality_brief,
+        last_analyzed_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
 
-    } catch (e) {
-        logger.error("[analyzeUserStyle] Error:", e);
-        return null;
-    }
+    if (error) throw error;
+    return result;
+  } catch (e) {
+    logger.error("[analyzeUserStyle] Error:", e);
+    return null;
+  }
 }

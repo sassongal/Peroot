@@ -46,7 +46,11 @@ export async function POST(req: NextRequest) {
       ? contextItems.map((item) => `שאלה: ${item.question}\nתשובה: ${item.answer}`).join("\n\n")
       : "אין מידע זמין.";
 
-  const google = createGoogleGenerativeAI({ apiKey });
+  const cfGateway = process.env.CF_AI_GATEWAY_URL?.replace(/\/$/, "");
+  const google = createGoogleGenerativeAI({
+    apiKey,
+    baseURL: cfGateway ? `${cfGateway}/google-ai-studio/v1beta` : undefined,
+  });
 
   const result = await streamText({
     model: google("gemini-2.5-flash-lite"),

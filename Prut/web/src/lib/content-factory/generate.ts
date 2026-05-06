@@ -8,17 +8,19 @@
  *         gemini-2.5-flash-lite for prompt batch generation (cost savings).
  */
 
-import { generateText } from 'ai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
+import { generateText } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
+const cfGateway = process.env.CF_AI_GATEWAY_URL?.replace(/\/$/, "");
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+  baseURL: cfGateway ? `${cfGateway}/google-ai-studio/v1beta` : undefined,
 });
 
 // ---------------------------------------------------------------------------
@@ -27,7 +29,7 @@ const google = createGoogleGenerativeAI({
 
 interface BlogGenerationParams {
   topic?: string;
-  template?: 'guide' | 'listicle' | 'comparison' | 'faq';
+  template?: "guide" | "listicle" | "comparison" | "faq";
   existingTitles: string[];
   existingCategories: string[];
   existingPromptTitles: string[]; // used for internal linking suggestions
@@ -79,9 +81,9 @@ interface GeneratedPrompt {
  */
 function parseJsonResponse<T>(raw: string): T {
   let cleaned = raw
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```\s*$/i, "")
     .trim();
 
   try {
@@ -89,14 +91,14 @@ function parseJsonResponse<T>(raw: string): T {
   } catch (firstError) {
     // Gemini often puts unescaped newlines/tabs inside JSON string values
     // (especially in HTML content fields). Fix them before retrying.
-    logger.warn('[ContentFactory] First JSON parse failed, attempting repair...');
+    logger.warn("[ContentFactory] First JSON parse failed, attempting repair...");
 
     // Fix unescaped control characters inside JSON string values
     // Replace literal newlines/tabs/carriage returns that aren't already escaped
     cleaned = cleaned
-      .replace(/(?<=:"[^"]*)\n/g, '\\n')
-      .replace(/(?<=:"[^"]*)\r/g, '\\r')
-      .replace(/(?<=:"[^"]*)\t/g, '\\t');
+      .replace(/(?<=:"[^"]*)\n/g, "\\n")
+      .replace(/(?<=:"[^"]*)\r/g, "\\r")
+      .replace(/(?<=:"[^"]*)\t/g, "\\t");
 
     try {
       return JSON.parse(cleaned) as T;
@@ -107,10 +109,10 @@ function parseJsonResponse<T>(raw: string): T {
         try {
           // Aggressive cleanup: replace all control characters in string values
           const aggressive = jsonMatch[0].replace(/[\x00-\x1F\x7F]/g, (ch) => {
-            if (ch === '\n') return '\\n';
-            if (ch === '\r') return '\\r';
-            if (ch === '\t') return '\\t';
-            return '';
+            if (ch === "\n") return "\\n";
+            if (ch === "\r") return "\\r";
+            if (ch === "\t") return "\\t";
+            return "";
           });
           return JSON.parse(aggressive) as T;
         } catch {
@@ -126,26 +128,20 @@ function parseJsonResponse<T>(raw: string): T {
 // generateBlogPost
 // ---------------------------------------------------------------------------
 
-export async function generateBlogPost(
-  params: BlogGenerationParams
-): Promise<GeneratedBlogPost> {
+export async function generateBlogPost(params: BlogGenerationParams): Promise<GeneratedBlogPost> {
   const {
     topic,
-    template = 'guide',
+    template = "guide",
     existingTitles,
     existingCategories,
     existingPromptTitles,
   } = params;
 
-  const templateInstructions: Record<NonNullable<BlogGenerationParams['template']>, string> = {
-    guide:
-      'מדריך מעמיק ומקצועי עם שלבים ברורים, דוגמאות מעשיות, וטיפים מתקדמים. 2000-2500 מילים.',
-    listicle:
-      'רשימה מעשית עם X פרומפטים/טיפים, כל אחד עם הסבר קצר ודוגמה. 1000-1500 מילים.',
-    comparison:
-      'השוואה מעמיקה בין שני כלים/שיטות/גישות עם טבלת יתרונות וחסרונות. 1500-2000 מילים.',
-    faq:
-      'שאלות ותשובות מקצועיות, כל תשובה מפורטת עם דוגמאות. 1000-1500 מילים.',
+  const templateInstructions: Record<NonNullable<BlogGenerationParams["template"]>, string> = {
+    guide: "מדריך מעמיק ומקצועי עם שלבים ברורים, דוגמאות מעשיות, וטיפים מתקדמים. 2000-2500 מילים.",
+    listicle: "רשימה מעשית עם X פרומפטים/טיפים, כל אחד עם הסבר קצר ודוגמה. 1000-1500 מילים.",
+    comparison: "השוואה מעמיקה בין שני כלים/שיטות/גישות עם טבלת יתרונות וחסרונות. 1500-2000 מילים.",
+    faq: "שאלות ותשובות מקצועיות, כל תשובה מפורטת עם דוגמאות. 1000-1500 מילים.",
   };
 
   const system = `אתה כותב תוכן מקצועי בעברית עבור אתר peroot.space — מחולל פרומפטים מקצועי בעברית.
@@ -201,13 +197,13 @@ export async function generateBlogPost(
 
 סוג מאמר: ${templateInstructions[template]}
 
-קטגוריות קיימות באתר (בחר מתוכן): ${existingCategories.join(', ')}
+קטגוריות קיימות באתר (בחר מתוכן): ${existingCategories.join(", ")}
 
 כותרות מאמרים קיימים (אל תחזור עליהם):
-${existingTitles.slice(0, 50).join('\n')}
+${existingTitles.slice(0, 50).join("\n")}
 
 פרומפטים קיימים בספרייה (לקישורים פנימיים):
-${existingPromptTitles.slice(0, 30).join('\n')}
+${existingPromptTitles.slice(0, 30).join("\n")}
 
 ## דרישות קריטיות:
 1. וודא שהנושא שבחרת לא מכוסה כבר ברשימת הכותרות למעלה — גם לא בניסוח אחר.
@@ -218,7 +214,7 @@ ${existingPromptTitles.slice(0, 30).join('\n')}
   const startTime = Date.now();
 
   const { text, usage } = await generateText({
-    model: google('gemini-2.5-flash'),
+    model: google("gemini-2.5-flash"),
     system,
     prompt: userPrompt,
     temperature: 0.8,
@@ -226,7 +222,7 @@ ${existingPromptTitles.slice(0, 30).join('\n')}
 
   const durationMs = Date.now() - startTime;
   logger.info(
-    `[ContentFactory] Blog generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? 'unknown'}`
+    `[ContentFactory] Blog generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? "unknown"}`,
   );
 
   return parseJsonResponse<GeneratedBlogPost>(text);
@@ -240,17 +236,9 @@ export async function generatePromptBatch(params: PromptGenerationParams): Promi
   prompts: GeneratedPrompt[];
   usage: { totalTokens: number };
 }> {
-  const {
-    topic,
-    category,
-    existingTitles,
-    existingCategories,
-    count = 5,
-  } = params;
+  const { topic, category, existingTitles, existingCategories, count = 5 } = params;
 
-  const categoryList = existingCategories
-    .map((c) => `${c.id}: ${c.name_he}`)
-    .join('\n');
+  const categoryList = existingCategories.map((c) => `${c.id}: ${c.name_he}`).join("\n");
 
   const system = `אתה מומחה ליצירת פרומפטים מקצועיים בעברית עבור peroot.space — מחולל פרומפטים מקצועי בעברית.
 
@@ -314,7 +302,7 @@ ${categoryInstruction}
 ${categoryList}
 
 כותרות פרומפטים קיימים (אל תחזור עליהם):
-${existingTitles.slice(0, 100).join('\n')}
+${existingTitles.slice(0, 100).join("\n")}
 
 ## דרישות קריטיות:
 1. וודא שכל פרומפט שונה באופן מהותי מהכותרות הקיימות למעלה — גם בנושא וגם בזווית.
@@ -325,7 +313,7 @@ ${existingTitles.slice(0, 100).join('\n')}
   const startTime = Date.now();
 
   const { text, usage } = await generateText({
-    model: google('gemini-2.5-flash-lite'),
+    model: google("gemini-2.5-flash-lite"),
     system,
     prompt: userPrompt,
     temperature: 0.8,
@@ -333,7 +321,7 @@ ${existingTitles.slice(0, 100).join('\n')}
 
   const durationMs = Date.now() - startTime;
   logger.info(
-    `[ContentFactory] ${count} prompts generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? 'unknown'}`
+    `[ContentFactory] ${count} prompts generated in ${durationMs}ms, tokens: ${usage?.totalTokens ?? "unknown"}`,
   );
 
   const parsed = parseJsonResponse<{ prompts: GeneratedPrompt[] }>(text);
@@ -364,19 +352,16 @@ export async function getGenerationContext(supabase: SupabaseClient): Promise<{
 }> {
   const [blogResult, promptResult, categoryResult] = await Promise.all([
     supabase
-      .from('blog_posts')
-      .select('title, slug, category')
-      .order('created_at', { ascending: false })
+      .from("blog_posts")
+      .select("title, slug, category")
+      .order("created_at", { ascending: false })
       .limit(100),
     supabase
-      .from('public_library_prompts')
-      .select('title, category_id')
-      .eq('is_active', true)
+      .from("public_library_prompts")
+      .select("title, category_id")
+      .eq("is_active", true)
       .limit(200),
-    supabase
-      .from('library_categories')
-      .select('id, name_he')
-      .order('sort_order'),
+    supabase.from("library_categories").select("id, name_he").order("sort_order"),
   ]);
 
   return {
@@ -384,10 +369,8 @@ export async function getGenerationContext(supabase: SupabaseClient): Promise<{
     existingBlogSlugs: (blogResult.data ?? []).map((b: { slug: string }) => b.slug),
     existingPromptTitles: (promptResult.data ?? []).map((p: { title: string }) => p.title),
     existingCategories: categoryResult.data ?? [],
-    blogCategories: Array.from(new Set(
-      (blogResult.data ?? [])
-        .map((b: { category: string }) => b.category)
-        .filter(Boolean)
-    )),
+    blogCategories: Array.from(
+      new Set((blogResult.data ?? []).map((b: { category: string }) => b.category).filter(Boolean)),
+    ),
   };
 }
