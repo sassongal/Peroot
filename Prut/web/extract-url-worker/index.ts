@@ -13,6 +13,8 @@ import { extractUrl } from "./url";
 
 interface Env {
   EXTRACT_SECRET: string;
+  EXTRACT_CACHE?: KVNamespace;
+  KV_TTL_SECONDS?: string;
 }
 
 interface RequestBody {
@@ -21,14 +23,17 @@ interface RequestBody {
   timeoutMs?: number;
 }
 
+const DEFAULT_TTL = 60 * 60 * 24 * 30;
+const MAX_CACHE_BYTES = 24 * 1024 * 1024;
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (request.method !== "POST") {
       return json({ ok: false, error: "Method not allowed" }, 405);
     }
 
     const secret = request.headers.get("x-internal-secret");
-    if (!env.EXTRACT_SECRET || secret !== env.EXTRACT_SECRET) {
+    if (!env.EXTRACT_SECRET || !timingSafeEqual(secret ?? "", env.EXTRACT_SECRET)) {
       return json({ ok: false, error: "Unauthorized" }, 401);
     }
 
@@ -43,12 +48,35 @@ export default {
       return json({ ok: false, error: "Missing url" }, 400);
     }
 
+    const cacheKey = env.EXTRACT_CACHE
+      ? `url:${await sha256(`${normalizeUrlForCache(body.url)}|jina=${body.jinaFallback ? 1 : 0}`)}`
+      : null;
+    if (cacheKey && env.EXTRACT_CACHE) {
+      try {
+        const hit = await env.EXTRACT_CACHE.get(cacheKey, "json");
+        if (hit) return json({ ok: true, result: hit }, 200, { "x-extract-cache": "HIT" });
+      } catch (err) {
+        console.warn("kv.get failed", err);
+      }
+    }
+
     try {
       const result = await extractUrl(body.url, {
         jinaFallback: Boolean(body.jinaFallback),
         timeoutMs: body.timeoutMs,
       });
-      return json({ ok: true, result }, 200);
+      if (cacheKey && env.EXTRACT_CACHE) {
+        const serialized = JSON.stringify(result);
+        if (serialized.length <= MAX_CACHE_BYTES) {
+          const ttl = Number(env.KV_TTL_SECONDS) || DEFAULT_TTL;
+          ctx.waitUntil(
+            env.EXTRACT_CACHE.put(cacheKey, serialized, { expirationTtl: ttl }).catch((err) =>
+              console.warn("kv.put failed", err),
+            ),
+          );
+        }
+      }
+      return json({ ok: true, result }, 200, { "x-extract-cache": "MISS" });
     } catch (err) {
       const e = err as Error & { userFacing?: boolean };
       return json(
@@ -63,9 +91,40 @@ export default {
   },
 };
 
-function json(payload: unknown, status: number): Response {
+function normalizeUrlForCache(raw: string): string {
+  try {
+    const u = new URL(raw.trim());
+    // Host is case-insensitive; path/query/fragment are not (RFC 3986 §6.2.2.1).
+    u.hostname = u.hostname.toLowerCase();
+    u.protocol = u.protocol.toLowerCase();
+    return u.href;
+  } catch {
+    return raw.trim();
+  }
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function sha256(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function json(
+  payload: unknown,
+  status: number,
+  extraHeaders: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8" },
+    headers: { "content-type": "application/json; charset=utf-8", ...extraHeaders },
   });
 }
