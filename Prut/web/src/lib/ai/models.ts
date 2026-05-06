@@ -1,7 +1,21 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { groq } from "@ai-sdk/groq";
+import { groq as defaultGroq, createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { LanguageModel } from "ai";
+
+/**
+ * Optional Cloudflare AI Gateway pass-through.
+ * When CF_AI_GATEWAY_URL is set (e.g.
+ *   https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>),
+ * each provider's baseURL is rewritten to the gateway's per-provider path.
+ * Cloudflare proxies the request to the upstream provider using the same
+ * API key we already pass, and we get caching + observability + rate-limit
+ * controls in the CF dashboard for free.
+ *
+ * When unset, providers use their default upstream URL (current behaviour).
+ */
+const CF_GATEWAY = process.env.CF_AI_GATEWAY_URL?.replace(/\/$/, "");
+const gatewayBase = (provider: string) => (CF_GATEWAY ? `${CF_GATEWAY}/${provider}` : undefined);
 
 export type ModelId =
   | "gemini-2.5-flash"
@@ -16,15 +30,24 @@ export type ModelId =
 // since this runs in Vercel serverless functions, not the browser.
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  baseURL: gatewayBase("google-ai-studio"),
 });
 
 // Backup Google provider — used when primary key is revoked/leaked.
 // Skipped automatically if GOOGLE_GENERATIVE_AI_API_KEY_BACKUP is not set.
 const googleBackup = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_BACKUP,
+  baseURL: gatewayBase("google-ai-studio"),
 });
 
-const mistralProvider = createMistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistralProvider = createMistral({
+  apiKey: process.env.MISTRAL_API_KEY,
+  baseURL: gatewayBase("mistral"),
+});
+
+const groq = CF_GATEWAY
+  ? createGroq({ apiKey: process.env.GROQ_API_KEY, baseURL: gatewayBase("groq") })
+  : defaultGroq;
 
 interface ModelConfig {
   id: ModelId;
