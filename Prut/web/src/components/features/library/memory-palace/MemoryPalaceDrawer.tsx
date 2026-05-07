@@ -146,7 +146,16 @@ export function MemoryPalaceDrawer({
                   onNodeDoubleClick={handleDoubleClick}
                 />
               </motion.div>
-              <PalaceNeighborList nodes={nodes} links={links} onSelect={handleNodeClick} />
+              <PalaceNeighborList
+                nodes={nodes}
+                links={links}
+                onSelect={handleNodeClick}
+                onNavigate={(id) => {
+                  handleNodeClick(id);
+                  onOpenPrompt(id);
+                  onClose();
+                }}
+              />
             </motion.div>
           </motion.div>
         </>

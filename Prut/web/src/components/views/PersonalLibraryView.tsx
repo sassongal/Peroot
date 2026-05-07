@@ -125,6 +125,23 @@ export function PersonalLibraryView({
     return () => window.removeEventListener("peroot:open-chains", handler);
   }, []);
 
+  // Scroll to a prompt card when Memory Palace emits navigate event.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { id } = (e as CustomEvent<{ id: string }>).detail;
+      // Two rAFs: first lets React expand the card, second lets layout settle.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          document
+            .querySelector(`[data-prompt-id="${id}"]`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }),
+      );
+    };
+    window.addEventListener("peroot:scroll-to-prompt", handler);
+    return () => window.removeEventListener("peroot:scroll-to-prompt", handler);
+  }, []);
+
   // Open graph view when parent signals via prop (race-condition-free).
   useEffect(() => {
     if (!openToGraph) return;
@@ -172,6 +189,23 @@ export function PersonalLibraryView({
 
   // Expanded card ids
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Memory Palace: last prompt whose card was opened (drives palace center)
+  const [lastOpenedPromptId, setLastOpenedPromptId] = useState<string | null>(null);
+
+  // Wrapper that tracks which id was just added so the Palace auto-centers on it.
+  const setExpandedIdsTracked = useCallback((updater: React.SetStateAction<Set<string>>) => {
+    setExpandedIds((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      for (const id of next) {
+        if (!prev.has(id)) {
+          setLastOpenedPromptId(id);
+          break;
+        }
+      }
+      return next;
+    });
+  }, []);
 
   // Memory Palace mobile drawer
   const [drawerCenter, setDrawerCenter] = useState<string | null>(null);
@@ -650,7 +684,7 @@ export function PersonalLibraryView({
     selectAllVisible,
     clearSelection,
     expandedIds,
-    setExpandedIds,
+    setExpandedIds: setExpandedIdsTracked,
     openMenuId,
     setOpenMenuId,
     showMoveSubMenu,
@@ -863,8 +897,10 @@ export function PersonalLibraryView({
           <MemoryPalaceSidebar
             prompts={filteredPersonalLibrary}
             selectedPromptId={selectedPromptId}
+            lastOpenedPromptId={lastOpenedPromptId}
             onSelectPrompt={setSelectedPromptId}
             onOpenPrompt={(id) => {
+              setLastOpenedPromptId(id);
               setSelectedPromptId(id);
               setExpandedIds((prev) => {
                 const next = new Set(prev);
@@ -889,8 +925,9 @@ export function PersonalLibraryView({
         prompts={filteredPersonalLibrary}
         onClose={() => setDrawerCenter(null)}
         onOpenPrompt={(id) => {
+          setLastOpenedPromptId(id);
           setSelectedPromptId(id);
-          setExpandedIds((prev) => {
+          setExpandedIdsTracked((prev) => {
             const next = new Set(prev);
             next.add(id);
             return next;
