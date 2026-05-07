@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
@@ -25,22 +25,31 @@ interface UseHomeMediaStateProps {
 
 export function useHomeMediaState(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _props: UseHomeMediaStateProps
+  _props: UseHomeMediaStateProps,
 ): HomeMediaState {
   const [imagePlatform, setImagePlatform] = useState<ImagePlatform>("general");
-  const [imageOutputFormat, setImageOutputFormat] =
-    useState<ImageOutputFormat>("text");
+  const [imageOutputFormat, setImageOutputFormat] = useState<ImageOutputFormat>("text");
   const [imageAspectRatio, setImageAspectRatio] = useState("");
   const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>("general");
   const [videoAspectRatio, setVideoAspectRatio] = useState("");
-  const [targetModel, setTargetModel] = useState<TargetModel>(() => {
-    if (typeof window !== "undefined") {
+  // Always start with "general" on both server and client to prevent hydration
+  // mismatch. Persisted value is restored in a post-mount effect below.
+  const [targetModel, setTargetModel] = useState<TargetModel>("general");
+
+  useEffect(() => {
+    try {
       const stored = localStorage.getItem("peroot_target_model");
       const valid: TargetModel[] = ["chatgpt", "claude", "gemini", "general"];
-      if (stored && valid.includes(stored as TargetModel)) return stored as TargetModel;
+      if (stored && valid.includes(stored as TargetModel)) {
+        // Hydration-safe restore of persisted preference: must run post-mount
+        // so server (no localStorage) and first client render match.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTargetModel(stored as TargetModel);
+      }
+    } catch {
+      // localStorage unavailable — ignore
     }
-    return "general";
-  });
+  }, []);
 
   const handleSetTargetModel = useCallback((model: TargetModel) => {
     setTargetModel(model);

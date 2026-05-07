@@ -169,16 +169,31 @@ function PageContent() {
   const [imageAspectRatio, setImageAspectRatio] = useState("");
   const [videoPlatform, setVideoPlatform] = useState<VideoPlatform>("general");
   const [videoAspectRatio, setVideoAspectRatio] = useState("");
-  const [targetModel, setTargetModel] = useState<TargetModel>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("peroot_target_model") as TargetModel) || "general";
+  // Always start with "general" on both server and client to prevent hydration
+  // mismatch. Persisted value is restored in a post-mount effect below.
+  const [targetModel, setTargetModel] = useState<TargetModel>("general");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("peroot_target_model");
+      const valid: TargetModel[] = ["chatgpt", "claude", "gemini", "general"];
+      if (stored && valid.includes(stored as TargetModel)) {
+        // Hydration-safe restore of persisted preference: must run post-mount
+        // so server (no localStorage) and first client render match.
+        setTargetModel(stored as TargetModel);
+      }
+    } catch {
+      // localStorage unavailable — ignore
     }
-    return "general";
-  });
+  }, []);
 
   const handleSetTargetModel = useCallback((model: TargetModel) => {
     setTargetModel(model);
-    localStorage.setItem("peroot_target_model", model);
+    try {
+      localStorage.setItem("peroot_target_model", model);
+    } catch {
+      // QuotaExceededError or unavailable — state updated, persistence skipped
+    }
   }, []);
 
   const inputRef = useRef(ps.input);

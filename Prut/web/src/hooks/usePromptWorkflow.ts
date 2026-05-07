@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import type { Question } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { logger } from "@/lib/logger";
@@ -79,10 +79,9 @@ const initialState: PromptState = {
   error: null,
   selectedCategory: "General",
   selectedTone: "Professional",
-  selectedCapability:
-    (typeof window !== "undefined"
-      ? (localStorage.getItem("peroot_last_mode") as CapabilityMode)
-      : null) || CapabilityMode.STANDARD,
+  // Always start with STANDARD on both server and client to prevent hydration
+  // mismatch. The persisted value is restored in a post-mount effect below.
+  selectedCapability: CapabilityMode.STANDARD,
   questions: [],
   detectedCategory: "",
   questionAnswers: {},
@@ -252,6 +251,22 @@ function promptReducer(state: PromptState, action: PromptAction): PromptState {
 
 export function usePromptWorkflow() {
   const [state, dispatch] = useReducer(promptReducer, initialState);
+
+  // Restore persisted capability mode after mount to avoid SSR hydration mismatch.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("peroot_last_mode") as CapabilityMode | null;
+      if (saved && saved !== state.selectedCapability) {
+        const valid = Object.values(CapabilityMode).includes(saved);
+        if (valid) dispatch({ type: "SET_CAPABILITY", payload: saved });
+      }
+    } catch {
+      // localStorage unavailable — ignore
+    }
+    // Run once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return { state, dispatch };
 }
 

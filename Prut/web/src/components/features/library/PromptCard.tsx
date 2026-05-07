@@ -6,9 +6,15 @@ import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { DateBadge } from "@/components/ui/DateBadge";
 import { calculatePromptStrength, getStrengthInfo } from "@/lib/prompt-strength";
 import {
-  Star, Plus, Copy, BookOpen, ImageIcon,
-  ChevronDown, ChevronUp,
-  CheckSquare, Square,
+  Star,
+  Plus,
+  Copy,
+  BookOpen,
+  ImageIcon,
+  ChevronDown,
+  ChevronUp,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -60,8 +66,12 @@ export function PromptCard({
   const variableCount = prompt.variables.length;
 
   const favStarLabel = guestFavoriteHints
-    ? (isFavorite ? "הסר ממועדפים מקומיים" : "הוסף למועדפים במכשיר זה — התחבר לסנכרון בענן")
-    : (isFavorite ? "הסר ממועדפים" : "הוסף למועדפים");
+    ? isFavorite
+      ? "הסר ממועדפים מקומיים"
+      : "הוסף למועדפים במכשיר זה — התחבר לסנכרון בענן"
+    : isFavorite
+      ? "הסר ממועדפים"
+      : "הוסף למועדפים";
 
   return (
     <div
@@ -69,7 +79,7 @@ export function PromptCard({
         "rounded-xl md:rounded-2xl border border-(--glass-border) bg-black/5 dark:bg-black/30 transition-colors relative group",
         !isBlurred && "hover:bg-white/4",
         !isBlurred && (isSelected || selectionMode) && "ring-2 ring-amber-500/50 bg-amber-500/5",
-        isBlurred && "blur-sm pointer-events-none select-none"
+        isBlurred && "blur-sm pointer-events-none select-none",
       )}
       aria-hidden={isBlurred ? "true" : undefined}
       onMouseEnter={() => setHovered(true)}
@@ -77,32 +87,56 @@ export function PromptCard({
     >
       {/* Selection Checkbox */}
       {!isBlurred && (
-        <div className={cn(
-          "absolute top-3 start-3 z-10 transition-opacity duration-200",
-          (isSelected || selectionMode) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        )}>
-          <button onClick={(e) => { e.stopPropagation(); onToggleSelection(); }} aria-label={isSelected ? "בטל בחירה" : "בחר פריט"}>
-            {isSelected
-              ? <CheckSquare className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-500/20" />
-              : <Square className="w-5 h-5 text-(--text-muted) hover:text-(--text-secondary)" />}
+        <div
+          className={cn(
+            "absolute top-3 start-3 z-10 transition-opacity duration-200",
+            isSelected || selectionMode ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          )}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelection();
+            }}
+            aria-label={isSelected ? "בטל בחירה" : "בחר פריט"}
+          >
+            {isSelected ? (
+              <CheckSquare className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-500/20" />
+            ) : (
+              <Square className="w-5 h-5 text-(--text-muted) hover:text-(--text-secondary)" />
+            )}
           </button>
         </div>
       )}
 
-      {/* Compact Header - always visible */}
-      <button
-        type="button"
+      {/* Compact Header - always visible.
+          Rendered as a div (not button) so the favorite/copy/use buttons inside
+          remain valid HTML (button-in-button is a hydration error). */}
+      <div
+        role="button"
+        tabIndex={isBlurred ? -1 : 0}
         onClick={() => !isBlurred && onToggleExpand()}
-        className="w-full text-right p-3 md:p-4 flex items-center gap-3 cursor-pointer"
+        onKeyDown={(e) => {
+          if (isBlurred) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggleExpand();
+          }
+        }}
+        aria-expanded={isExpanded}
+        className="w-full text-right p-3 md:p-4 flex items-center gap-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 rounded-xl"
         dir="rtl"
       >
         {/* Favorite star */}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
           className={cn(
             "shrink-0 p-1.5 rounded-full transition-colors",
-            isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-(--text-muted)"
+            isFavorite ? "text-yellow-400" : "text-slate-600 hover:text-(--text-muted)",
           )}
           aria-pressed={isFavorite}
           title={favStarLabel}
@@ -113,11 +147,18 @@ export function PromptCard({
 
         {/* Title + meta */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm md:text-base text-slate-800 dark:text-slate-100 font-semibold leading-tight truncate">{prompt.title}</h3>
+          <h3 className="text-sm md:text-base text-slate-800 dark:text-slate-100 font-semibold leading-tight truncate">
+            {prompt.title}
+          </h3>
           <div className="flex items-center gap-1.5 flex-wrap mt-1">
             <CapabilityBadge mode={prompt.capability_mode} />
             {/* Strength badge */}
-            <span className={cn("text-[9px] md:text-[10px] px-1.5 py-0.5 rounded-full border font-medium", strengthInfo.colorClass)}>
+            <span
+              className={cn(
+                "text-[9px] md:text-[10px] px-1.5 py-0.5 rounded-full border font-medium",
+                strengthInfo.colorClass,
+              )}
+            >
               {strength.score}
             </span>
             {/* Variables pill */}
@@ -145,14 +186,19 @@ export function PromptCard({
         </div>
 
         {/* Quick actions on hover (desktop) */}
-        <div className={cn(
-          "flex items-center gap-1 shrink-0 transition-opacity duration-150",
-          hovered && !isBlurred ? "opacity-100" : "opacity-0 pointer-events-none",
-          "max-md:hidden"
-        )}>
+        <div
+          className={cn(
+            "flex items-center gap-1 shrink-0 transition-opacity duration-150",
+            hovered && !isBlurred ? "opacity-100" : "opacity-0 pointer-events-none",
+            "max-md:hidden",
+          )}
+        >
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onCopy(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopy();
+            }}
             className="p-1.5 rounded-md hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors"
             title="העתק"
           >
@@ -160,7 +206,10 @@ export function PromptCard({
           </button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onUsePrompt(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUsePrompt();
+            }}
             className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] font-medium text-(--text-primary) transition-colors"
           >
             השתמש
@@ -174,15 +223,16 @@ export function PromptCard({
           </span>
           {popularityCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
-              {popularityCount > 99 ? '99+' : popularityCount}
+              {popularityCount > 99 ? "99+" : popularityCount}
             </span>
           )}
-          {isExpanded
-            ? <ChevronUp className="w-4 h-4 text-(--text-muted)" />
-            : <ChevronDown className="w-4 h-4 text-(--text-muted)" />
-          }
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-(--text-muted)" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-(--text-muted)" />
+          )}
         </div>
-      </button>
+      </div>
 
       {/* Mobile quick actions - always visible */}
       {!isBlurred && !isExpanded && (
@@ -208,7 +258,10 @@ export function PromptCard({
       {isExpanded && !isBlurred && (
         <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 border-t border-(--glass-border)">
           {/* Prompt text */}
-          <div className="text-xs md:text-sm text-(--text-secondary) leading-relaxed mt-3 whitespace-pre-wrap max-h-48 overflow-y-auto" dir="rtl">
+          <div
+            className="text-xs md:text-sm text-(--text-secondary) leading-relaxed mt-3 whitespace-pre-wrap max-h-48 overflow-y-auto"
+            dir="rtl"
+          >
             {prompt.prompt}
           </div>
 
