@@ -23,6 +23,7 @@ import { PromptGraphView } from "@/components/features/library/PromptGraphView";
 import { LibraryBottomNav } from "@/components/features/library/LibraryBottomNav";
 import { GuestGraphPreview } from "@/components/features/library/GuestGraphPreview";
 import { MemoryPalaceSidebar } from "@/components/features/library/memory-palace/MemoryPalaceSidebar";
+import { MemoryPalaceDrawer } from "@/components/features/library/memory-palace/MemoryPalaceDrawer";
 import type { PersonalLibrarySharedState } from "./personal-library/types";
 import { useHistory } from "@/hooks/useHistory";
 import type { HistoryItem } from "@/hooks/useHistory";
@@ -171,6 +172,9 @@ export function PersonalLibraryView({
 
   // Expanded card ids
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Memory Palace mobile drawer
+  const [drawerCenter, setDrawerCenter] = useState<string | null>(null);
 
   // Dropdown for per-card more menu
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -705,6 +709,7 @@ export function PersonalLibraryView({
     getPaginationPages,
     getStyledPromptMarkup,
     extractVariablesFromPrompt,
+    onShowConnections: (id: string) => setDrawerCenter(id),
   };
 
   // ─── Guest gate ────────────────────────────────────────────────────────────
@@ -876,6 +881,22 @@ export function PersonalLibraryView({
 
       {/* Mobile bottom navigation */}
       <LibraryBottomNav shared={shared} />
+
+      {/* Memory Palace mobile drawer */}
+      <MemoryPalaceDrawer
+        open={drawerCenter !== null}
+        centerPromptId={drawerCenter}
+        prompts={filteredPersonalLibrary}
+        onClose={() => setDrawerCenter(null)}
+        onOpenPrompt={(id) => {
+          setSelectedPromptId(id);
+          setExpandedIds((prev) => {
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+          });
+        }}
+      />
     </div>
   );
 }

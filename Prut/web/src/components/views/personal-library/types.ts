@@ -109,6 +109,9 @@ export interface PersonalLibrarySharedState {
   localViewType: "grid" | "graph";
   setLocalViewType: React.Dispatch<React.SetStateAction<"grid" | "graph">>;
 
+  // Memory Palace mobile drawer trigger (optional)
+  onShowConnections?: (promptId: string) => void;
+
   // Import ref
   importFileRef: React.RefObject<HTMLInputElement | null>;
 

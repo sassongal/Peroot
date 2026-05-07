@@ -23,6 +23,7 @@ import {
   Folder,
   MoreHorizontal,
   Link2,
+  Network,
 } from "lucide-react";
 import { Type, Eraser, Maximize2, Minimize2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -111,6 +112,7 @@ export function PersonalLibraryPromptCard({
     allPersonalCategories,
     getStyledPromptMarkup,
     extractVariablesFromPrompt,
+    onShowConnections,
   } = shared;
 
   const isExpanded = expandedIds.has(prompt.id);
@@ -350,6 +352,19 @@ export function PersonalLibraryPromptCard({
           >
             <Copy className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
+          {onShowConnections && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onShowConnections(prompt.id);
+              }}
+              title="קשרים"
+              aria-label="הצג קשרים"
+              className="md:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+            >
+              <Network className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
