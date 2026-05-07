@@ -64,7 +64,7 @@ export function MiniGraph2D({
         "link",
         d3
           .forceLink(simLinks)
-          .id((d: never) => (d as Sim).id)
+          .id((d: d3.SimulationNodeDatum) => (d as unknown as Sim).id)
           .distance(80),
       )
       .force("center", d3.forceCenter(width / 2, height / 2))
