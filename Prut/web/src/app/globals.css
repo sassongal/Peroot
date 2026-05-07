@@ -10,7 +10,7 @@
   --color-foreground: var(--foreground);
 
   /* Fonts */
-  --font-serif: var(--font-frank);
+  --font-serif: var(--font-varela);
   --font-sans: var(--font-alef);
   --font-mono: var(--font-jb-mono); /* IBM Plex Mono */
 

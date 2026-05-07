@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Frank_Ruhl_Libre, Alef, IBM_Plex_Mono } from "next/font/google";
+import { Varela_Round, Alef, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 import { GlobalContextWrapper } from "@/components/layout/GlobalContextWrapper";
@@ -10,10 +10,10 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
-const frankRuhl = Frank_Ruhl_Libre({
-  weight: ["400", "700"],
+const varelaRound = Varela_Round({
+  weight: "400",
   subsets: ["hebrew", "latin"],
-  variable: "--font-frank",
+  variable: "--font-varela",
   display: "swap",
 });
 
@@ -232,7 +232,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${frankRuhl.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col overflow-x-hidden`}
+        className={`${varelaRound.variable} ${alef.variable} ${ibmPlexMono.variable} antialiased min-h-screen relative flex flex-col overflow-x-hidden`}
         suppressHydrationWarning
       >
         <DeferredWidgets />
