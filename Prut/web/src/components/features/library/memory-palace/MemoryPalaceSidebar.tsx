@@ -64,14 +64,16 @@ export function MemoryPalaceSidebar({
     }
   }, [isCollapsed, prompts.length]);
 
+  const effectiveCenterId = selectedPromptId ?? prompts[0]?.id ?? null;
+
   const { nodes, links } = useMemo<{ nodes: GraphNode[]; links: GraphLink[] }>(() => {
-    if (!selectedPromptId) return { nodes: [], links: [] };
+    if (!effectiveCenterId) return { nodes: [], links: [] };
     return computeNeighborhood({
-      centerId: selectedPromptId,
+      centerId: effectiveCenterId,
       prompts,
       usageEvents,
     });
-  }, [selectedPromptId, prompts, usageEvents]);
+  }, [effectiveCenterId, prompts, usageEvents]);
 
   useEffect(() => {
     if (isCollapsed) return;
@@ -83,12 +85,12 @@ export function MemoryPalaceSidebar({
   if (prompts.length < MIN_PROMPTS) return null;
 
   const handleNodeClick = (id: string) => {
-    if (id === selectedPromptId) return;
+    if (id === effectiveCenterId) return;
     const linkToTarget = links.find(
       (l) => (typeof l.target === "string" ? l.target : (l.target as { id: string }).id) === id,
     );
     trackPalaceNodeClicked({
-      fromId: selectedPromptId ?? "",
+      fromId: effectiveCenterId ?? "",
       toId: id,
       edgeType: (linkToTarget?.type as "similarity" | "cooccurrence" | "both") ?? "similarity",
       hopIndex: hopIndex + 1,
@@ -111,7 +113,7 @@ export function MemoryPalaceSidebar({
   return (
     <aside
       dir="rtl"
-      className="hidden lg:flex flex-col border-s border-(--glass-border) bg-black/20 transition-all duration-200"
+      className="hidden md:flex flex-col border-s border-(--glass-border) bg-black/20 transition-all duration-200"
       style={{ width: isCollapsed ? 32 : 320 }}
       aria-label="Memory Palace — שכנים של הפרומפט הנבחר"
     >
