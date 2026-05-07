@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import { computeNeighborhood, type GraphNode, type GraphLink } from "../graph-utils";
 import type { PersonalPrompt } from "@/lib/types";
@@ -29,6 +29,7 @@ export function MemoryPalaceDrawer({
   onClose,
   onOpenPrompt,
 }: Props) {
+  const reduceMotion = useReducedMotion();
   const [usageEvents, setUsageEvents] = useState<PromptUsageEvent[]>([]);
   const [activeId, setActiveId] = useState<string | null>(centerPromptId);
 
@@ -93,7 +94,9 @@ export function MemoryPalaceDrawer({
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 32 }}
+            transition={
+              reduceMotion ? { duration: 0.01 } : { type: "spring", stiffness: 360, damping: 32 }
+            }
           >
             <div className="flex items-center justify-between p-3 border-b border-(--glass-border)">
               <span className="text-sm font-medium">קרבה</span>
@@ -112,7 +115,7 @@ export function MemoryPalaceDrawer({
               animate="visible"
               variants={{
                 hidden: {},
-                visible: { transition: { staggerChildren: 0.05 } },
+                visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.05 } },
               }}
             >
               <motion.div
