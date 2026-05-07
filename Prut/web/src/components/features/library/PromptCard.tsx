@@ -39,6 +39,7 @@ interface PromptCardProps {
   onImageClick?: (url: string, title: string) => void;
   /** When true, star button copy explains local-only favorites for guests. */
   guestFavoriteHints?: boolean;
+  onShowConnections?: () => void;
 }
 
 export function PromptCard({
@@ -59,6 +60,7 @@ export function PromptCard({
   onExportImage,
   onImageClick,
   guestFavoriteHints = false,
+  onShowConnections,
 }: PromptCardProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -255,6 +257,20 @@ export function PromptCard({
             <Copy className="w-3.5 h-3.5" />
             העתק
           </button>
+          {onShowConnections && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onShowConnections();
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] rounded-lg border border-(--glass-border) text-(--text-muted) text-xs hover:bg-white/10 transition-colors"
+              aria-label="הצג קשרים"
+              title="הצג קשרים"
+            >
+              <Network className="w-3.5 h-3.5" />
+              קשרים
+            </button>
+          )}
           <button
             onClick={handleUse}
             className="flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] rounded-lg bg-white text-black text-xs hover:bg-slate-200 transition-colors"
