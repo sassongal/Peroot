@@ -51,7 +51,7 @@
 .pillTrack {
   display: flex;
   gap: 3px;
-  background: #15152a;
+  background: transparent;
   border-radius: 999px;
   padding: 4px;
 }
