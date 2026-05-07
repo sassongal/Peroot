@@ -26,7 +26,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { error } = await supabase.from("prompt_usage_events").insert({
+  const { error } = await supabase.from("personal_library_usage_events").insert({
     user_id: user.id,
     prompt_id: id,
     source: parse.data.source,

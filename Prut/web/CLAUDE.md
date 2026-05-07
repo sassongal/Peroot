@@ -193,7 +193,7 @@ Admin routes check `role = 'admin'` in profiles table.
 - **Desktop:** `MemoryPalaceSidebar` mounted inside `PersonalLibraryView`, collapsible, persisted via `peroot_palace_collapsed` localStorage key
 - **Mobile:** `MemoryPalaceDrawer` triggered by 🕸️ button on each `PromptCard`, 50vh height, framer-motion stagger reveal
 - **Engine:** `computeNeighborhood()` in `graph-utils.ts` — combines Jaccard similarity (60%) + 24h co-occurrence (40%), max 19 neighbors
-- **Data:** `prompt_usage_events` table tracks every prompt use; backfilled from `last_used_at` on migration; 90d retention window
+- **Data:** `personal_library_usage_events` table tracks every prompt use; backfilled from `personal_library.last_used_at` on migration; 90d retention window. Distinct from the unrelated `prompt_usage_events` analytics table.
 - **Analytics (release blocker):** PostHog events in `memory-palace/palace-analytics.ts` — success metric is `palace_navigated_to_prompt` (target ≥25% of opens)
 - **Hidden when:** user has <5 prompts (graph needs critical mass)
 - **Spec:** `docs/superpowers/specs/2026-05-07-graph-memory-palace-design.md`

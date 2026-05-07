@@ -11,7 +11,7 @@ export async function GET() {
   }
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
-    .from("prompt_usage_events")
+    .from("personal_library_usage_events")
     .select("id, user_id, prompt_id, used_at, session_id, source")
     .eq("user_id", user.id)
     .gte("used_at", since)
