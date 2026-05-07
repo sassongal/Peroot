@@ -5,6 +5,7 @@ import { LibraryPrompt } from "@/lib/types";
 import { CapabilityBadge } from "@/components/ui/CapabilityBadge";
 import { DateBadge } from "@/components/ui/DateBadge";
 import { calculatePromptStrength, getStrengthInfo } from "@/lib/prompt-strength";
+import { trackUsage } from "@/lib/usage/track-usage";
 import {
   Star,
   Plus,
@@ -15,6 +16,7 @@ import {
   ChevronUp,
   CheckSquare,
   Square,
+  Network,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -59,6 +61,15 @@ export function PromptCard({
   guestFavoriteHints = false,
 }: PromptCardProps) {
   const [hovered, setHovered] = useState(false);
+
+  const handleUse = () => {
+    trackUsage(prompt.id, "library");
+    onUsePrompt();
+  };
+  const handleCopy = () => {
+    trackUsage(prompt.id, "library");
+    onCopy();
+  };
 
   const strength = useMemo(() => calculatePromptStrength(prompt), [prompt]);
   const strengthInfo = getStrengthInfo(strength.score);
@@ -197,7 +208,7 @@ export function PromptCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onCopy();
+              handleCopy();
             }}
             className="p-1.5 rounded-md hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors"
             title="העתק"
@@ -208,7 +219,7 @@ export function PromptCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onUsePrompt();
+              handleUse();
             }}
             className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-[10px] font-medium text-(--text-primary) transition-colors"
           >
@@ -238,14 +249,14 @@ export function PromptCard({
       {!isBlurred && !isExpanded && (
         <div className="flex items-center gap-1 px-3 pb-2 md:hidden" dir="rtl">
           <button
-            onClick={onCopy}
+            onClick={handleCopy}
             className="flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] rounded-lg border border-(--glass-border) text-(--text-muted) text-xs hover:bg-white/10 transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             העתק
           </button>
           <button
-            onClick={onUsePrompt}
+            onClick={handleUse}
             className="flex items-center gap-1 px-2.5 py-1.5 min-h-[44px] rounded-lg bg-white text-black text-xs hover:bg-slate-200 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -302,7 +313,7 @@ export function PromptCard({
           {/* Action buttons */}
           <div className="flex items-center gap-1.5 pt-1 flex-wrap" dir="rtl">
             <button
-              onClick={onUsePrompt}
+              onClick={handleUse}
               className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg bg-white text-black text-xs md:text-sm hover:bg-slate-200 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -317,7 +328,7 @@ export function PromptCard({
               <span className="hidden md:inline text-sm">שמור</span>
             </button>
             <button
-              onClick={onCopy}
+              onClick={handleCopy}
               className="shrink-0 flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] justify-center rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-black/5 dark:bg-white/10 transition-colors cursor-pointer"
               title="העתק"
             >
