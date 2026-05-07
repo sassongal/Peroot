@@ -195,16 +195,19 @@ export function PersonalLibraryView({
 
   // Wrapper that tracks which id was just added so the Palace auto-centers on it.
   const setExpandedIdsTracked = useCallback((updater: React.SetStateAction<Set<string>>) => {
+    let newId: string | null = null;
     setExpandedIds((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
       for (const id of next) {
         if (!prev.has(id)) {
-          setLastOpenedPromptId(id);
+          newId = id;
           break;
         }
       }
       return next;
     });
+    // Outside the updater to avoid setState-inside-setState anti-pattern.
+    if (newId) setLastOpenedPromptId(newId);
   }, []);
 
   // Memory Palace mobile drawer

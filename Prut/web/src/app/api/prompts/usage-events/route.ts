@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function GET() {
   const supabase = await createClient();
@@ -8,6 +9,11 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ events: [] }, { status: 401 });
+  }
+
+  const rateLimit = await checkRateLimit(user.id, "usageEvents");
+  if (!rateLimit.success) {
+    return NextResponse.json({ events: [] }, { status: 429 });
   }
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase

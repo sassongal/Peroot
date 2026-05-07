@@ -675,11 +675,12 @@ function computeCooccurrence(centerId: string, events: PromptUsageEvent[]): Map<
   if (events.length === 0) return counts;
 
   type Tagged = { id: string; t: number; isCenter: boolean };
-  const tagged: Tagged[] = events.map((e) => ({
-    id: e.prompt_id,
-    t: new Date(e.used_at).getTime(),
-    isCenter: e.prompt_id === centerId,
-  }));
+  const tagged: Tagged[] = events
+    .map((e) => {
+      const t = new Date(e.used_at).getTime();
+      return isNaN(t) ? null : { id: e.prompt_id, t, isCenter: e.prompt_id === centerId };
+    })
+    .filter((e): e is Tagged => e !== null);
   tagged.sort((a, b) => a.t - b.t);
 
   if (!tagged.some((e) => e.isCenter)) return counts;
