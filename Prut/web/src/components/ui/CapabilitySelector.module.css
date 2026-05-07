@@ -55,6 +55,9 @@
   border-radius: 999px;
   padding: 4px;
 }
+@media (min-width: 768px) {
+  .pillTrack { display: none; }
+}
 
 .pillBtn {
   flex: 1;
@@ -144,8 +147,11 @@
 
 /* ── DESKTOP: Luxury Gem Cards ────────────────────────────────────────────── */
 .deskRow {
-  display: flex;
+  display: none;
   gap: 8px;
+}
+@media (min-width: 768px) {
+  .deskRow { display: flex; }
 }
 
 .deskBtn {

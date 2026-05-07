@@ -407,7 +407,7 @@ export function CapabilitySelector({
   return (
     <>
       {/* ── Mobile: Rising Pill Track (hidden on md+) ── */}
-      <div className={cn("md:hidden", styles.pillTrack)}>
+      <div className={styles.pillTrack}>
         {modes.map((mode) => {
           const config = CAPABILITY_CONFIGS[mode];
           const modeStyle = MODE_STYLES[mode];
@@ -460,7 +460,7 @@ export function CapabilitySelector({
       </div>
 
       {/* ── Desktop: Luxury Gem Cards (hidden below md) ── */}
-      <div className={cn("hidden md:flex", styles.deskRow)}>
+      <div className={styles.deskRow}>
         {modes.map((mode) => {
           const config = CAPABILITY_CONFIGS[mode];
           const modeStyle = MODE_STYLES[mode];
