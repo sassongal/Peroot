@@ -2,7 +2,7 @@
 -- 32 new AGENT_BUILDER prompts across: marketing, sales, education, general, creative
 
 INSERT INTO public.public_library_prompts
-  (id, title, category_id, use_case, prompt, variables, output_format, quality_checks, capability_mode)
+  (id, title, category_id, use_case, prompt, variables, output_format, quality_checks)
 VALUES
 
 -- ═══ קטגוריה: marketing (ab_059–ab_066) ═══
@@ -39,7 +39,7 @@ VALUES
 - דרגת קדימות: Quick Win vs. Strategic Bet
 - סדר ביצוע מומלץ בין ה-{{hypothesis_count}} ניסויים',
  ARRAY['page_type', 'current_conversion', 'hypothesis_count'],
- '{{hypothesis_count}} השערות A/B עם מבנה If/Then/Because + סדר ביצוע',
+ 'השערות A/B עם מבנה If/Then/Because + סדר ביצוע',
  ARRAY['מבנה If/Then/Because', 'Sample Size', 'KPI ברור', 'סדר ביצוע']),
 
 ('ab_061', 'סוכן תכנון השקת מוצר', 'marketing',
@@ -575,3 +575,14 @@ VALUES
  ARRAY['Hook זכיר', 'Rhyme Scheme', 'Bridge', 'Lyric Analysis'])
 
 ON CONFLICT (id) DO NOTHING;
+
+-- Ensure correct capability mode for all prompts in this migration
+UPDATE public.public_library_prompts
+SET capability_mode = 'AGENT_BUILDER'
+WHERE id IN (
+  'ab_059','ab_060','ab_061','ab_062','ab_063','ab_064','ab_065','ab_066',
+  'ab_067','ab_068','ab_069','ab_070','ab_071','ab_072','ab_073',
+  'ab_074','ab_075','ab_076','ab_077','ab_078','ab_079',
+  'ab_080','ab_081','ab_082','ab_083','ab_084','ab_085','ab_086',
+  'ab_087','ab_088','ab_089','ab_090'
+);
