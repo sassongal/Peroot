@@ -1,0 +1,590 @@
+/* src/components/features/prompt-improver/ResultSection.module.css */
+
+/* ── Expanding icon button (top toolbar) ──────────────────────── */
+.xBtn {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 0 9px;
+  min-width: 34px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.xBtn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+  padding: 0 13px 0 11px;
+  gap: 6px;
+}
+.xBtn:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.xBtn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.xBtnGold {
+  background: rgba(253, 190, 0, 0.08);
+  border-color: rgba(253, 190, 0, 0.2);
+  color: #FDBE00;
+}
+.xBtnGold:hover {
+  background: rgba(253, 190, 0, 0.16);
+  border-color: rgba(253, 190, 0, 0.35);
+}
+
+.xBtnLabel {
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-width 0.28s ease, opacity 0.2s ease;
+  font-family: var(--font-alef), sans-serif;
+  letter-spacing: 0.01em;
+}
+.xBtn:hover .xBtnLabel {
+  max-width: 100px;
+  opacity: 1;
+}
+
+/* ── Platform row (gem buttons) ───────────────────────────────── */
+.platformRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.platformRow::-webkit-scrollbar { display: none; }
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.28);
+  text-transform: uppercase;
+  font-family: var(--font-varela), sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gemBtn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--gem-border);
+  background: var(--gem-bg);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.gemBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.gemBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--gem-glow);
+}
+.gemBtn:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.gemBtn:hover .gemName { color: #fff; }
+
+.gemIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gem-icon-bg);
+  box-shadow: 0 0 12px var(--gem-glow);
+  flex-shrink: 0;
+}
+.gemIcon svg { width: 18px; height: 18px; }
+
+.gemName {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--font-alef), sans-serif;
+  letter-spacing: 0.01em;
+  transition: color 0.18s;
+}
+
+.gemGpt   { --gem-bg: rgba(16,163,127,0.1);  --gem-border: rgba(16,163,127,0.22);  --gem-glow: rgba(16,163,127,0.28);  --gem-icon-bg: rgba(16,163,127,0.18); }
+.gemClaude{ --gem-bg: rgba(207,121,90,0.1);  --gem-border: rgba(207,121,90,0.22);  --gem-glow: rgba(207,121,90,0.28);  --gem-icon-bg: rgba(207,121,90,0.18); }
+.gemGemini{ --gem-bg: rgba(66,133,244,0.1);  --gem-border: rgba(66,133,244,0.22);  --gem-glow: rgba(66,133,244,0.28);  --gem-icon-bg: rgba(66,133,244,0.18); }
+
+.vsep {
+  width: 1px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.09);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+.waBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(37, 211, 102, 0.1);
+  border: 1px solid rgba(37, 211, 102, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.waBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.28);
+  background: rgba(37, 211, 102, 0.18);
+}
+.waBtn:focus-visible {
+  outline: 2px solid #25d366;
+  outline-offset: 2px;
+}
+.waBtn svg { width: 22px; height: 22px; }
+
+/* ── Bottom bar buttons ───────────────────────────────────────── */
+.btnBack {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-alef), sans-serif;
+  letter-spacing: 0.01em;
+  transition: all 0.18s;
+  min-height: 44px;
+}
+.btnBack:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.btnBack:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.btnBack svg { width: 14px; height: 14px; opacity: 0.65; }
+
+/* "עוד אפשרויות" — text that collapses to icon when panel is open */
+.moreBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(130, 120, 200, 0.2);
+  background: rgba(130, 120, 200, 0.07);
+  color: rgba(160, 150, 230, 0.65);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-alef), sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.moreBtn:hover {
+  background: rgba(130, 120, 200, 0.14);
+  color: rgba(180, 170, 255, 0.9);
+  border-color: rgba(130, 120, 200, 0.35);
+}
+.moreBtn:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.moreBtn svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  transition: transform 0.25s;
+}
+.moreBtnOpen {
+  padding: 0 10px;
+  gap: 0;
+  min-width: 36px;
+  width: 36px;
+  border-color: rgba(130, 120, 200, 0.35);
+  background: rgba(130, 120, 200, 0.14);
+  color: rgba(180, 170, 255, 0.9);
+}
+.moreBtnOpen .moreBtnLabel {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+.moreBtnOpen svg { transform: rotate(90deg); }
+
+.moreBtnLabel {
+  font-size: 12px;
+  max-width: 90px;
+  overflow: hidden;
+  transition: max-width 0.25s ease, opacity 0.2s ease;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+/* שפר שוב — icon-only with tooltip */
+.btnRefine {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(253, 190, 0, 0.18);
+  background: rgba(253, 190, 0, 0.07);
+  color: #FDBE00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s;
+  flex-shrink: 0;
+  min-height: 36px;
+}
+.btnRefine:hover {
+  background: rgba(253, 190, 0, 0.16);
+  box-shadow: 0 4px 16px rgba(253, 190, 0, 0.2);
+}
+.btnRefine:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.btnRefine svg { width: 15px; height: 15px; }
+.btnRefine::after {
+  content: 'שפר שוב · קרדיט';
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a28;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-alef), sans-serif;
+  padding: 4px 9px;
+  border-radius: 7px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.btnRefine:hover::after { opacity: 1; }
+
+/* Primary copy button */
+.btnCopy {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #FDBE00 0%, #f59e0b 100%);
+  color: #080808;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-varela), sans-serif;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 20px rgba(253, 190, 0, 0.28);
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.btnCopy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(253, 190, 0, 0.42);
+}
+.btnCopy:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.btnCopy svg { width: 16px; height: 16px; }
+
+/* ── "עוד אפשרויות" panel ─────────────────────────────────────── */
+.morePanel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  background: rgba(14, 14, 20, 0.98);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  transition: max-height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease, padding 0.22s;
+}
+.morePanelOpen {
+  max-height: 200px;
+  opacity: 1;
+  padding: 10px 10px 12px;
+}
+
+.morePanelLabel {
+  width: 100%;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.22);
+  text-transform: uppercase;
+  padding: 2px 6px 5px;
+  font-family: var(--font-varela), sans-serif;
+}
+
+.mpItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-alef), sans-serif;
+  transition: all 0.16s;
+  min-height: 44px;
+}
+.mpItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.mpItem:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.mpItem svg { width: 14px; height: 14px; opacity: 0.5; }
+
+.mpItemDisabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.savedBadge {
+  font-size: 10px;
+  color: rgba(253, 190, 0, 0.7);
+  font-weight: 700;
+}
+
+.mpItemDanger {
+  border-color: rgba(239, 68, 68, 0.12);
+  color: rgba(239, 68, 68, 0.65);
+}
+.mpItemDanger:hover {
+  background: rgba(239, 68, 68, 0.07);
+  color: rgba(239, 68, 68, 0.95);
+}
+
+/* ── Credit confirmation popup ───────────────────────────────── */
+.popupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.popup {
+  width: 340px;
+  max-width: 90vw;
+  background: linear-gradient(145deg, #16162a 0%, #0e0e1c 100%);
+  border: 1px solid rgba(253, 190, 0, 0.18);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(253, 190, 0, 0.1), 0 20px 60px rgba(0, 0, 0, 0.7);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.popupHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.popupIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(253, 190, 0, 0.1);
+  border: 1px solid rgba(253, 190, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(253, 190, 0, 0.15);
+  color: #FDBE00;
+}
+.popupIconWrap svg { width: 20px; height: 20px; }
+
+.popupTitle {
+  font-family: var(--font-varela), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+.popupSub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
+  font-family: var(--font-alef), sans-serif;
+}
+
+.popupBody {
+  padding: 16px 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  line-height: 1.7;
+  font-family: var(--font-alef), sans-serif;
+}
+
+.creditRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(253, 190, 0, 0.07);
+  border: 1px solid rgba(253, 190, 0, 0.14);
+}
+.creditIconWrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(253, 190, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #FDBE00;
+}
+.creditIconWrap svg { width: 14px; height: 14px; }
+.creditText {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-alef), sans-serif;
+  color: rgba(255, 255, 255, 0.8);
+}
+.creditText span { color: #FDBE00; }
+.creditText small {
+  display: block;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+.popupActions {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px 18px;
+}
+.popCancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-alef), sans-serif;
+  transition: all 0.18s;
+  min-height: 44px;
+}
+.popCancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.popCancel:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+.popConfirm {
+  flex: 1.6;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #FDBE00 0%, #f59e0b 100%);
+  color: #080808;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font-varela), sans-serif;
+  box-shadow: 0 4px 16px rgba(253, 190, 0, 0.28);
+  transition: all 0.18s;
+  min-height: 44px;
+}
+.popConfirm:hover { box-shadow: 0 6px 22px rgba(253, 190, 0, 0.42); }
+.popConfirm:focus-visible {
+  outline: 2px solid #FDBE00;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xBtn, .xBtnLabel, .gemBtn, .waBtn, .moreBtn, .moreBtnLabel, .morePanel, .popup {
+    animation: none !important;
+    transition: none !important;
+  }
+}
