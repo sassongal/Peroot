@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -77,8 +77,6 @@ interface ResultSectionProps {
   /** Preset refinement instructions (דלתות מהירות) — runs true refine, not re-enhance from scratch */
   onQuickRefine?: (instruction: string) => void;
   onRetryStream?: () => void;
-  onResetToOriginal?: () => void;
-  iterationCount?: number;
   originalPrompt?: string;
   onShare?: () => void;
   onReset?: () => void;
@@ -135,8 +133,6 @@ export function ResultSection({
   onImproveAgain,
   onQuickRefine,
   onRetryStream,
-  onResetToOriginal,
-  iterationCount,
   originalPrompt,
   onShare,
   onReset,
@@ -146,11 +142,6 @@ export function ResultSection({
   creditsLeft,
 }: ResultSectionProps) {
   const t = useI18n();
-  const isMac = useMemo(
-    () => typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform),
-    [],
-  );
-  const copyShortcutHint = isMac ? "⌘⇧C" : "Ctrl+⇧C";
   // Pro users can toggle the watermark off; free users always get the watermark.
   const [proWatermarkEnabled, setProWatermarkEnabled] = useState(false);
   // P3 — score breakdown drawer state. Computed lazily on click so we
