@@ -46,7 +46,7 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     icon: "MessageSquare",
     color: "sky",
     description: "Standard LLM text generation and chat",
-    descriptionHe: "יצירת טקסט וצ׳אט רגיל",
+    descriptionHe: "יצירת פרומפט למצב ברירת מחדל",
   },
   [CapabilityMode.DEEP_RESEARCH]: {
     mode: CapabilityMode.DEEP_RESEARCH,
@@ -55,7 +55,7 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     icon: "Globe",
     color: "emerald",
     description: "Web search with citations and reasoning",
-    descriptionHe: "חיפוש ברשת עם מקורות ושרשרת חשיבה",
+    descriptionHe: 'יצירת פרומפט עבור פונקציית "מחקר מעמיק"',
   },
   [CapabilityMode.IMAGE_GENERATION]: {
     mode: CapabilityMode.IMAGE_GENERATION,
@@ -64,7 +64,7 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     icon: "Palette",
     color: "purple",
     description: "Generate images with GPT Image 2 or Midjourney",
-    descriptionHe: "יצירת תמונות עם GPT Image 2 או Midjourney",
+    descriptionHe: "יצירת פרומפט לתמונות לכל המנועים",
     optionalFields: ["aspect_ratio", "style"],
   },
   [CapabilityMode.AGENT_BUILDER]: {
@@ -74,7 +74,7 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     icon: "Bot",
     color: "amber",
     description: "Configure custom GPTs and AI agents",
-    descriptionHe: "הגדרת GPT מותאמים וסוכני AI",
+    descriptionHe: "יצירת פרומפט לתפעול מצב סוכן",
     requiredFields: ["system_instructions"],
   },
   [CapabilityMode.VIDEO_GENERATION]: {
@@ -84,7 +84,7 @@ export const CAPABILITY_CONFIGS: Record<CapabilityMode, CapabilityConfig> = {
     icon: "Video",
     color: "rose",
     description: "Generate prompts for AI video platforms",
-    descriptionHe: "יצירת פרומפטים לסרטוני AI",
+    descriptionHe: "יצירת פרומפט לסרטון בכל המנועים",
     requiredFields: ["camera_movement", "duration"],
     optionalFields: ["style", "mood"],
   },

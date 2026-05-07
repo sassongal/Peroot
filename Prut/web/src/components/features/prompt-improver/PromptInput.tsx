@@ -284,7 +284,7 @@ export function PromptInput({
 
       {/* Capability Mode Selector */}
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-xs text-(--text-muted) uppercase tracking-widest mb-2 px-1">
+        <div className="text-sm font-semibold text-(--text-muted) uppercase tracking-widest mb-2 px-1">
           {t.prompt_generator.capability_mode}
         </div>
         <CapabilitySelector
