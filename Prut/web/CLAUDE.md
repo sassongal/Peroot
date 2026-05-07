@@ -189,6 +189,15 @@ Admin routes check `role = 'admin'` in profiles table.
 - `addPrompt` is actually `addPromptWithSuggestion` in LibraryDataContext — auto-categorizes via AI (non-blocking) for saves to "כללי" by authenticated users
 - `PersonalLibrarySharedState` is defined in `src/components/views/personal-library/types.ts` — extend it when adding new shared state
 
+## Memory Palace (Graph Sidebar/Drawer)
+- **Desktop:** `MemoryPalaceSidebar` mounted inside `PersonalLibraryView`, collapsible, persisted via `peroot_palace_collapsed` localStorage key
+- **Mobile:** `MemoryPalaceDrawer` triggered by 🕸️ button on each `PromptCard`, 50vh height, framer-motion stagger reveal
+- **Engine:** `computeNeighborhood()` in `graph-utils.ts` — combines Jaccard similarity (60%) + 24h co-occurrence (40%), max 19 neighbors
+- **Data:** `prompt_usage_events` table tracks every prompt use; backfilled from `last_used_at` on migration; 90d retention window
+- **Analytics (release blocker):** PostHog events in `memory-palace/palace-analytics.ts` — success metric is `palace_navigated_to_prompt` (target ≥25% of opens)
+- **Hidden when:** user has <5 prompts (graph needs critical mass)
+- **Spec:** `docs/superpowers/specs/2026-05-07-graph-memory-palace-design.md`
+
 ## Context Engine (useContextAttachments)
 - Files/images: `stage: "uploading"` set immediately on attachment creation
 - URLs: extract hostname as display name, `stage: "extracting"` set immediately  
