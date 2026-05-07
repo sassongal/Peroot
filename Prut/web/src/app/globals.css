@@ -213,7 +213,20 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-color: var(--surface-body);
-    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+
+/* View Transitions: smooth theme switch with GPU cross-fade, no per-element transition needed */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 150ms;
+  animation-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0ms;
   }
 }
 

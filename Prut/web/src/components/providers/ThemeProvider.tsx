@@ -42,7 +42,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setTheme((prev) => {
       const next: Theme = prev === "dark" ? "light" : "dark";
       localStorage.setItem("peroot-theme", next);
-      applyTheme(next);
+      if (document.startViewTransition) {
+        document.startViewTransition(() => applyTheme(next));
+      } else {
+        applyTheme(next);
+      }
       return next;
     });
   }, []);
