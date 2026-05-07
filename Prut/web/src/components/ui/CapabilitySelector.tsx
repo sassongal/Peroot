@@ -4,7 +4,7 @@ import { CapabilityMode, CAPABILITY_CONFIGS } from "@/lib/capability-mode";
 import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./CapabilitySelector.module.css";
 
@@ -384,12 +384,16 @@ export function CapabilitySelector({
 }: CapabilitySelectorProps) {
   const router = useRouter();
   const modes = Object.values(CapabilityMode);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
 
   useEffect(() => {
     if (isGuest && value !== CapabilityMode.STANDARD) {
-      onChange(CapabilityMode.STANDARD);
+      onChangeRef.current(CapabilityMode.STANDARD);
     }
-  }, [isGuest]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isGuest, value]);
 
   function handleClick(mode: CapabilityMode) {
     if (COMING_SOON_MODES.has(mode)) {

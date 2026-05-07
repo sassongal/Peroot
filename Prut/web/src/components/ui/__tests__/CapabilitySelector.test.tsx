@@ -58,6 +58,15 @@ describe("CapabilitySelector", () => {
     expect(toast).toHaveBeenCalled();
   });
 
+  it("isGuest=true: non-standard desktop card calls toast, does not call onChange", async () => {
+    const { toast } = await import("sonner");
+    const onChange = vi.fn();
+    render(<CapabilitySelector value={CapabilityMode.STANDARD} onChange={onChange} isGuest />);
+    fireEvent.click(screen.getByTestId(`card-${CapabilityMode.DEEP_RESEARCH}`));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(toast).toHaveBeenCalled();
+  });
+
   it("disabled=true: all pill buttons are disabled", () => {
     render(<CapabilitySelector value={CapabilityMode.STANDARD} onChange={vi.fn()} disabled />);
     const pills = screen.getAllByTestId(/^pill-/);
