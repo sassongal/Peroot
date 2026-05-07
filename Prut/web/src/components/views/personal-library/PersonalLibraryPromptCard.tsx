@@ -198,6 +198,7 @@ export function PersonalLibraryPromptCard({
   return (
     <div
       key={prompt.id}
+      data-prompt-id={prompt.id}
       draggable={!isEditing}
       onDragStart={(event) => handlePersonalDragStart(event, prompt)}
       onDragEnd={handlePersonalDragEnd}

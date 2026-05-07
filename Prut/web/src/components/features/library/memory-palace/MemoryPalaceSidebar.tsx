@@ -20,6 +20,7 @@ import {
 interface Props {
   prompts: PersonalPrompt[];
   selectedPromptId: string | null;
+  lastOpenedPromptId?: string | null;
   onSelectPrompt: (id: string) => void;
   onOpenPrompt: (id: string) => void;
 }
@@ -29,6 +30,7 @@ const MIN_PROMPTS = 5;
 export function MemoryPalaceSidebar({
   prompts,
   selectedPromptId,
+  lastOpenedPromptId,
   onSelectPrompt,
   onOpenPrompt,
 }: Props) {
@@ -64,7 +66,7 @@ export function MemoryPalaceSidebar({
     }
   }, [isCollapsed, prompts.length]);
 
-  const effectiveCenterId = selectedPromptId ?? prompts[0]?.id ?? null;
+  const effectiveCenterId = lastOpenedPromptId ?? selectedPromptId ?? prompts[0]?.id ?? null;
 
   const { nodes, links } = useMemo<{ nodes: GraphNode[]; links: GraphLink[] }>(() => {
     if (!effectiveCenterId) return { nodes: [], links: [] };
@@ -139,7 +141,15 @@ export function MemoryPalaceSidebar({
             onNodeClick={handleNodeClick}
             onNodeDoubleClick={handleNodeDoubleClick}
           />
-          <PalaceNeighborList nodes={nodes} links={links} onSelect={handleNodeClick} />
+          <PalaceNeighborList
+            nodes={nodes}
+            links={links}
+            onSelect={handleNodeClick}
+            onNavigate={(id) => {
+              handleNodeClick(id);
+              onOpenPrompt(id);
+            }}
+          />
         </div>
       )}
     </aside>
