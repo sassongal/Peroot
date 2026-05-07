@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Network } from "lucide-react";
 import { computeNeighborhood, type GraphNode, type GraphLink } from "../graph-utils";
 import type { PersonalPrompt } from "@/lib/types";
 import type { PromptUsageEvent } from "@/lib/usage/usage-types";
+import { USAGE_TRACKED_EVENT } from "@/lib/usage/track-usage";
 import { MiniGraph2D } from "./MiniGraph2D";
 import { PalaceNeighborList } from "./PalaceNeighborList";
 import { usePalaceState } from "./usePalaceState";
@@ -36,11 +37,25 @@ export function MemoryPalaceSidebar({
   const [hopIndex, setHopIndex] = useState(0);
 
   useEffect(() => {
-    if (isCollapsed || usageEvents.length > 0) return;
-    fetch("/api/prompts/usage-events")
-      .then((r) => (r.ok ? r.json() : { events: [] }))
-      .then((d) => setUsageEvents(d.events ?? []))
-      .catch(() => setUsageEvents([]));
+    if (isCollapsed) return;
+    let cancelled = false;
+    const fetchEvents = () => {
+      fetch("/api/prompts/usage-events")
+        .then((r) => (r.ok ? r.json() : { events: [] }))
+        .then((d) => {
+          if (!cancelled) setUsageEvents(d.events ?? []);
+        })
+        .catch(() => {
+          if (!cancelled) setUsageEvents([]);
+        });
+    };
+    if (usageEvents.length === 0) fetchEvents();
+    const onUsageTracked = () => fetchEvents();
+    window.addEventListener(USAGE_TRACKED_EVENT, onUsageTracked);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(USAGE_TRACKED_EVENT, onUsageTracked);
+    };
   }, [isCollapsed, usageEvents.length]);
 
   useEffect(() => {

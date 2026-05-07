@@ -72,16 +72,20 @@ export function MiniGraph2D({
 
     for (let i = 0; i < 100; i++) sim.tick();
 
-    const result: Positioned[] = simNodes.map((s) => {
-      const meta = nodes.find((n) => n.id === s.id)!;
-      return {
-        id: s.id,
-        x: s.x ?? width / 2,
-        y: s.y ?? height / 2,
-        isCenter: !!meta.isCenter,
-        title: meta.prompt?.title ?? "",
-        category: meta.prompt?.category ?? "general",
-      };
+    const metaById = new Map(nodes.map((n) => [n.id, n]));
+    const result: Positioned[] = simNodes.flatMap((s) => {
+      const meta = metaById.get(s.id);
+      if (!meta) return [];
+      return [
+        {
+          id: s.id,
+          x: s.x ?? width / 2,
+          y: s.y ?? height / 2,
+          isCenter: !!meta.isCenter,
+          title: meta.prompt?.title ?? "",
+          category: meta.prompt?.category ?? "general",
+        },
+      ];
     });
 
     setPositions(result);
