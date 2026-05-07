@@ -22,6 +22,7 @@ import { PersonalLibrarySidebar } from "./personal-library/PersonalLibrarySideba
 import { PromptGraphView } from "@/components/features/library/PromptGraphView";
 import { LibraryBottomNav } from "@/components/features/library/LibraryBottomNav";
 import { GuestGraphPreview } from "@/components/features/library/GuestGraphPreview";
+import { MemoryPalaceSidebar } from "@/components/features/library/memory-palace/MemoryPalaceSidebar";
 import type { PersonalLibrarySharedState } from "./personal-library/types";
 import { useHistory } from "@/hooks/useHistory";
 import type { HistoryItem } from "@/hooks/useHistory";
@@ -63,6 +64,8 @@ export function PersonalLibraryView({
     personalLibrary,
     selectedCapabilityFilter,
     isPersonalLoaded,
+    selectedPromptId,
+    setSelectedPromptId,
     // Pagination
     page: ctxPage,
     totalCount: ctxTotalCount,
@@ -847,7 +850,24 @@ export function PersonalLibraryView({
           </aside>
 
           {/* Main Content */}
-          <PersonalLibraryGrid shared={shared} viewProps={{ onUsePrompt, onCopyText }} />
+          <div className="flex-1 min-w-0">
+            <PersonalLibraryGrid shared={shared} viewProps={{ onUsePrompt, onCopyText }} />
+          </div>
+
+          {/* Memory Palace sidebar (desktop only) */}
+          <MemoryPalaceSidebar
+            prompts={filteredPersonalLibrary}
+            selectedPromptId={selectedPromptId}
+            onSelectPrompt={setSelectedPromptId}
+            onOpenPrompt={(id) => {
+              setSelectedPromptId(id);
+              setExpandedIds((prev) => {
+                const next = new Set(prev);
+                next.add(id);
+                return next;
+              });
+            }}
+          />
         </div>
       )}
 
