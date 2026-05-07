@@ -3,11 +3,14 @@
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
+  BookOpen,
   Check,
   ChevronRight,
   Copy,
   ExternalLink,
   HelpCircle,
+  MoreHorizontal,
+  Pencil,
   Plus,
   RotateCcw,
   Share2,
@@ -31,9 +34,9 @@ import { BeforeAfterSplit } from "@/components/ui/BeforeAfterSplit";
 import { ScoreDelta } from "@/components/ui/ScoreDelta";
 import { ScoreBreakdownDrawer } from "@/components/ui/ScoreBreakdownDrawer";
 import { EnhancedScorer, type EnhancedScore } from "@/lib/engines/scoring/enhanced-scorer";
-import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { QUICK_REFINE_ACTIONS } from "@/lib/constants";
 import { trackFeatureUse } from "@/lib/analytics";
+import styles from "./ResultSection.module.css";
 
 const blinkKeyframes = `
 @keyframes peroot-blink {
@@ -84,6 +87,8 @@ interface ResultSectionProps {
   capabilityMode?: CapabilityMode;
   /** Selected platform for image/video modes (e.g. 'midjourney', 'runway') */
   selectedPlatform?: string;
+  /** Remaining free credits today — shown in the "שפר שוב" confirm popup */
+  creditsLeft?: number;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -138,6 +143,7 @@ export function ResultSection({
   isAuthenticated = false,
   capabilityMode,
   selectedPlatform,
+  creditsLeft,
 }: ResultSectionProps) {
   const t = useI18n();
   const isMac = useMemo(
@@ -150,6 +156,9 @@ export function ResultSection({
   // P3 — score breakdown drawer state. Computed lazily on click so we
   // don't run EnhancedScorer on every render (it's cheap but no reason to).
   const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null>(null);
+  const [showMorePanel, setShowMorePanel] = useState(false);
+  const [showRefineConfirm, setShowRefineConfirm] = useState(false);
+  const [savedToLibrary, setSavedToLibrary] = useState(false);
 
   const openScoreBreakdown = () => {
     const textToScore = displayCompletion || "";
@@ -157,49 +166,6 @@ export function ResultSection({
     const computed = EnhancedScorer.score(textToScore, capabilityMode ?? CapabilityMode.STANDARD);
     setBreakdownScore(computed);
   };
-
-  // Pre-compute the score breakdown for the PDF export. We use useMemo so
-  // the scorer only runs when the generated prompt or the mode actually
-  // changes — clicking "export" must be instant, not re-score on every
-  // click. Mirrors the drawer's Hebrew label map so the printed table
-  // matches what the user sees on screen.
-  const pdfBreakdown = useMemo(() => {
-    if (!completion) return null;
-    const labels: Record<string, string> = {
-      length: "אורך",
-      role: "תפקיד",
-      task: "משימה",
-      context: "הקשר",
-      specificity: "ספציפיות",
-      format: "פורמט פלט",
-      constraints: "מגבלות",
-      structure: "מבנה",
-      channel: "ערוץ / פלטפורמה",
-      examples: "דוגמאות",
-      clarity: "בהירות",
-      groundedness: "עיגון במקורות",
-      safety: "גבולות ובטיחות",
-      measurability: "מדידות",
-      framework: "מסגרת",
-      subject: "נושא",
-      style: "סגנון",
-      composition: "קומפוזיציה",
-      lighting: "תאורה",
-      color: "צבע",
-      quality: "איכות טכנית",
-      motion: "תנועה",
-    };
-    const s = EnhancedScorer.score(completion, capabilityMode ?? CapabilityMode.STANDARD);
-    return {
-      breakdown: s.breakdown.map((d) => ({
-        label: labels[d.dimension] ?? d.dimension,
-        score: d.score,
-        maxScore: d.maxScore,
-      })),
-      strengths: s.strengths,
-      weaknesses: s.topWeaknesses,
-    };
-  }, [completion, capabilityMode]);
 
   const isInterrupted = streamPhase === "interrupted";
 
@@ -326,42 +292,59 @@ export function ResultSection({
             })()
           ) : (
             <div className="p-4 flex-1">
-              {/* Inline toolbar — lives above the result text so it never
-                  overlaps the "אחרי/לפני" tabs inside BeforeAfterSplit.
-                  The "הצג שינויים" diff toggle was removed: the score
-                  drawer (opened by clicking the score pill in the header)
-                  already surfaces per-dimension strengths and gaps, so
-                  the extra diff button became redundant noise. */}
-              <div className="flex items-center justify-end gap-2 mb-3" dir="rtl">
-                <ExportPdfButton
-                  title={displayCompletion.slice(0, 60)}
-                  original={originalPrompt ?? ""}
-                  enhanced={displayCompletion}
-                  score={
-                    completionScore
-                      ? {
-                          before:
-                            improvementDelta > 0
-                              ? Math.max(0, completionScore.score - improvementDelta)
-                              : null,
-                          after: completionScore.score,
-                        }
-                      : null
-                  }
-                  breakdown={pdfBreakdown?.breakdown}
-                  strengths={pdfBreakdown?.strengths}
-                  weaknesses={pdfBreakdown?.weaknesses}
-                  disabled={isLoading || !completion}
-                />
-                <button
-                  onClick={() => handleCopy(displayCompletion)}
-                  disabled={isLoading}
-                  className="p-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-(--text-primary) transition-colors min-h-11 min-w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={t.result_section.copy_tooltip}
-                  aria-label={copied ? "הועתק" : "העתק פרומפט"}
+              {/* ── Top toolbar: Reset · Save to Library · Copy ── */}
+              <div className="flex items-center justify-between mb-3" dir="rtl">
+                {/* Stage chip */}
+                <div
+                  className="flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide"
+                  style={{
+                    background: "rgba(253,190,0,0.07)",
+                    border: "1px solid rgba(253,190,0,0.16)",
+                    color: "#FDBE00",
+                    fontFamily: "var(--font-varela)",
+                  }}
                 >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </button>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FDBE00] shadow-[0_0_8px_#FDBE00] animate-pulse shrink-0" />
+                  פרומפט מוכן
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {/* לאפס */}
+                  {onReset && (
+                    <button
+                      onClick={onReset}
+                      className={styles.xBtn}
+                      aria-label="לאפס"
+                      disabled={isLoading}
+                    >
+                      <RotateCcw className="w-[15px] h-[15px] shrink-0" />
+                      <span className={styles.xBtnLabel}>לאפס</span>
+                    </button>
+                  )}
+                  {/* שמור בספריה */}
+                  <button
+                    onClick={onSave}
+                    className={cn(styles.xBtn, styles.xBtnGold)}
+                    aria-label="שמור בספריה"
+                    disabled={isLoading}
+                  >
+                    <BookOpen className="w-[15px] h-[15px] shrink-0" />
+                    <span className={styles.xBtnLabel}>שמור בספריה</span>
+                  </button>
+                  {/* העתק */}
+                  <button
+                    onClick={() => handleCopy(displayCompletion)}
+                    className={styles.xBtn}
+                    aria-label={copied ? "הועתק" : "העתק"}
+                    disabled={isLoading}
+                  >
+                    {copied ? (
+                      <Check className="w-[15px] h-[15px] shrink-0" />
+                    ) : (
+                      <Copy className="w-[15px] h-[15px] shrink-0" />
+                    )}
+                    <span className={styles.xBtnLabel}>העתק</span>
+                  </button>
+                </div>
               </div>
               <BeforeAfterSplit
                 original={originalPrompt ?? ""}
@@ -372,19 +355,14 @@ export function ResultSection({
             </div>
           )}
 
-          {/* AI Platform Quick-Launch Bar */}
-          {/* 5.2 Mobile: grid-cols-2 on mobile, flex on sm+ */}
+          {/* ── Platform row — gem-style, single flex row ── */}
           {!isLoading && (
-            <div className="px-4 py-4 border-t border-(--glass-border) bg-linear-to-r from-black/2 dark:from-white/2 to-transparent">
-              <div
-                className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 justify-center"
-                dir="rtl"
-              >
-                <span className="col-span-2 text-xs text-slate-500 text-center sm:inline sm:col-span-1 sm:ms-2 sm:text-start">
-                  פתח ב:
-                </span>
-
-                {/* Target platform link - shown for image/video modes with a specific platform selected */}
+            <div className="px-4 py-3 border-t border-(--glass-border)">
+              <div className="flex items-center gap-2 mb-2">
+                <span className={styles.sectionLabel}>פתח ב</span>
+              </div>
+              <div className={styles.platformRow} dir="rtl">
+                {/* Target platform (image/video modes) */}
                 {selectedPlatform &&
                   selectedPlatform !== "general" &&
                   GENERATION_PLATFORM_URLS[selectedPlatform] &&
@@ -397,59 +375,75 @@ export function ResultSection({
                           window.open(plat.url, "_blank");
                           toast.success(`${t.toasts.copied} - ${plat.name} נפתח!`);
                         }}
-                        className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border-2 text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none col-span-2 sm:col-span-1 font-medium"
+                        className={cn(styles.gemBtn)}
                         style={{
-                          borderColor: `${plat.color}40`,
-                          backgroundColor: `${plat.color}15`,
-                          color: plat.color,
+                          ["--gem-bg" as string]: `${plat.color}1a`,
+                          ["--gem-border" as string]: `${plat.color}38`,
+                          ["--gem-glow" as string]: `${plat.color}40`,
+                          ["--gem-icon-bg" as string]: `${plat.color}2e`,
                         }}
-                        title={`העתק ופתח ב-${plat.name}`}
+                        aria-label={`פתח ב-${plat.name}`}
                       >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>פתח ב-{plat.name}</span>
+                        <div className={styles.gemIcon}>
+                          <ExternalLink style={{ width: 18, height: 18, color: plat.color }} />
+                        </div>
+                        <span className={styles.gemName}>{plat.name}</span>
                       </button>
                     );
                   })()}
 
+                {/* ChatGPT */}
                 <button
                   onClick={() => {
                     handleCopy(displayCompletion);
                     window.open("https://chat.openai.com/", "_blank");
                     toast.success(`${t.toasts.copied} - ChatGPT נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#10a37f]/10 hover:border-[#10a37f]/30 text-(--text-secondary) hover:text-[#10a37f] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                  title="העתק והפתח ב-ChatGPT"
+                  className={cn(styles.gemBtn, styles.gemGpt)}
+                  aria-label="ChatGPT"
                 >
-                  <ChatGPTIcon className="w-4 h-4" />
-                  <span>ChatGPT</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                  <div className={styles.gemIcon}>
+                    <ChatGPTIcon className="w-[18px] h-[18px]" />
+                  </div>
+                  <span className={styles.gemName}>ChatGPT</span>
                 </button>
+
+                {/* Claude */}
                 <button
                   onClick={() => {
                     handleCopy(displayCompletion);
                     window.open("https://claude.ai/new", "_blank");
                     toast.success(`${t.toasts.copied} - Claude נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#d97706]/10 hover:border-[#d97706]/30 text-(--text-secondary) hover:text-[#d97706] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                  title="העתק והפתח ב-Claude"
+                  className={cn(styles.gemBtn, styles.gemClaude)}
+                  aria-label="Claude"
                 >
-                  <ClaudeIcon className="w-4 h-4" />
-                  <span>Claude</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                  <div className={styles.gemIcon}>
+                    <ClaudeIcon className="w-[18px] h-[18px]" />
+                  </div>
+                  <span className={styles.gemName}>Claude</span>
                 </button>
+
+                {/* Gemini */}
                 <button
                   onClick={() => {
                     handleCopy(displayCompletion);
                     window.open("https://gemini.google.com/", "_blank");
                     toast.success(`${t.toasts.copied} - Gemini נפתח!`);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#4285f4]/10 hover:border-[#4285f4]/30 text-(--text-secondary) hover:text-[#4285f4] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
-                  title="העתק והפתח ב-Gemini"
+                  className={cn(styles.gemBtn, styles.gemGemini)}
+                  aria-label="Gemini"
                 >
-                  <GeminiIcon className="w-4 h-4" />
-                  <span>Gemini</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                  <div className={styles.gemIcon}>
+                    <GeminiIcon className="w-[18px] h-[18px]" />
+                  </div>
+                  <span className={styles.gemName}>Gemini</span>
                 </button>
+
+                {/* Separator */}
+                <div className={styles.vsep} aria-hidden />
+
+                {/* WhatsApp — icon only */}
                 <button
                   onClick={() => {
                     const text = encodeURIComponent(
@@ -457,143 +451,73 @@ export function ResultSection({
                     );
                     window.open(`https://wa.me/?text=${text}`, "_blank");
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 rounded-lg border border-(--glass-border) bg-(--glass-bg) hover:bg-[#25d366]/10 hover:border-[#25d366]/30 text-(--text-secondary) hover:text-[#25d366] text-sm transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+                  className={styles.waBtn}
+                  aria-label="שתף בוואטסאפ"
                   title="שתף בוואטסאפ"
                 >
-                  <WhatsAppIcon className="w-4 h-4" />
-                  <span>WhatsApp</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                  <WhatsAppIcon className="w-[22px] h-[22px]" />
                 </button>
               </div>
             </div>
           )}
 
-          <div className="p-4 bg-(--glass-bg) border-t border-(--glass-border) mt-auto space-y-3">
-            {/*
-              Action bar — two wrapping groups on one wrap-enabled row.
-
-              Left group: navigation (back, reset, back-to-original).
-              Right group: actions. Ordered from least to most important so
-              the visually dominant "העתק פרומפט" ends on the inline-end
-              (start of the line in RTL, since the group is justify-end),
-              never clipped. The WhatsApp icon button was removed — the
-              full "פתח ב:" bar above already has a labeled WhatsApp link,
-              and the redundant icon was what pushed the copy button off
-              the line in the screenshot.
-
-              `flex-wrap` on both the outer row and each inner group means
-              every button stays visible at every viewport width. The
-              primary copy button is `shrink-0` so even after wrapping it
-              keeps its full label + shortcut hint.
-            */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
+          {/* ── Bottom bar ── */}
+          <div className="p-3 bg-(--glass-bg) border-t border-(--glass-border) mt-auto">
+            <div className="flex items-center justify-between gap-2 flex-wrap" dir="rtl">
+              {/* Left: nav */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={onBack}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-200 hover:bg-amber-500/20 hover:border-amber-500/70 hover:text-amber-800 dark:hover:text-amber-100 shadow-sm shadow-amber-500/10 transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:outline-none"
-                  dir="rtl"
+                  className={styles.btnBack}
                   aria-label={t.result_section.back_to_edit}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-[14px] h-[14px]" style={{ opacity: 0.65 }} />
                   {t.result_section.back_to_edit}
                 </button>
-                {onReset && (
-                  <button
-                    onClick={onReset}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-sky-500/45 bg-sky-500/10 text-sky-800 dark:text-sky-100 hover:bg-sky-500/18 hover:border-sky-500/65 shadow-sm shadow-sky-500/10 transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-sky-400/55 focus-visible:outline-none"
-                    title="לאפס ולהתחיל מחדש"
-                    dir="rtl"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    לאפס
-                  </button>
-                )}
-                {onResetToOriginal && (iterationCount ?? 0) > 0 && (
-                  <button
-                    onClick={onResetToOriginal}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                    title="חזור לפרומפט המקורי שלך"
-                    dir="rtl"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    חזור למקור
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap justify-end">
-                {onShare && (
-                  <button
-                    onClick={onShare}
-                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                    title="שתף"
-                    aria-label="שתף"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    שתף
-                  </button>
-                )}
                 <button
-                  onClick={onSave}
-                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                  title={t.result_section.save}
-                  aria-label={t.result_section.save}
+                  onClick={() => setShowMorePanel((v) => !v)}
+                  className={cn(styles.moreBtn, showMorePanel && styles.moreBtnOpen)}
+                  aria-expanded={showMorePanel}
+                  aria-label="עוד אפשרויות"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  {t.result_section.save}
+                  <MoreHorizontal className="w-[13px] h-[13px]" />
+                  <span className={styles.moreBtnLabel}>&nbsp;עוד אפשרויות</span>
                 </button>
-                {onSaveAsFavorite && (
-                  <button
-                    onClick={onSaveAsFavorite}
-                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/5 text-amber-600 dark:text-amber-300 text-xs hover:bg-amber-500/15 transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
-                    title="שמור ומסמן כמועדף"
-                    aria-label="שמור ומסמן כמועדף"
-                  >
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    שמור למועדפים
-                  </button>
-                )}
-                {onSaveAsTemplate && placeholders.length > 0 && (
-                  <button
-                    onClick={onSaveAsTemplate}
-                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg border border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs hover:bg-purple-500/10 transition-colors cursor-pointer min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:outline-none"
-                    title="שמור כתבנית לשימוש חוזר"
-                    aria-label="שמור כתבנית"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    שמור כתבנית
-                  </button>
-                )}
+              </div>
+              {/* Right: actions */}
+              <div className="flex items-center gap-2">
                 {onImproveAgain && (
                   <button
-                    onClick={onImproveAgain}
-                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-medium transition-colors cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                    onClick={() => setShowRefineConfirm(true)}
+                    className={styles.btnRefine}
+                    aria-label="שפר שוב"
+                    disabled={isLoading}
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    {t.result?.improve_again || "שפר שוב"}
-                    {(iterationCount ?? 0) > 0 && (
-                      <span className="bg-amber-500/30 text-amber-200 text-[10px] px-1.5 py-0.5 rounded-full">
-                        #{iterationCount}
-                      </span>
-                    )}
+                    <Pencil className="w-[15px] h-[15px]" />
                   </button>
                 )}
                 <button
                   onClick={() => handleCopy(displayCompletion)}
-                  className="shrink-0 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg accent-gradient text-black font-semibold text-xs hover:shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer min-h-11 focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:outline-none"
+                  className={styles.btnCopy}
+                  disabled={isLoading}
+                  aria-label={copied ? t.result_section.copied : t.result_section.copy_button}
                 >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied ? t.result_section.copied : t.result_section.copy_button}
-                  {!copied && (
-                    <kbd className="hidden sm:inline text-[10px] opacity-50 font-normal font-mono bg-black/15 px-1.5 py-0.5 rounded">
-                      {copyShortcutHint}
-                    </kbd>
+                  {copied ? (
+                    <Check className="w-[16px] h-[16px]" />
+                  ) : (
+                    <Copy className="w-[16px] h-[16px]" />
                   )}
+                  {copied ? t.result_section.copied : t.result_section.copy_button}
                 </button>
               </div>
             </div>
 
+            {/* Quick refine actions */}
             {onQuickRefine && completion.trim() && !isLoading && (
-              <div className="flex flex-col gap-2 pt-1" dir="rtl">
+              <div
+                className="flex flex-col gap-2 pt-2 mt-2 border-t border-(--glass-border)"
+                dir="rtl"
+              >
                 <span className="text-[10px] font-medium text-(--text-muted)">
                   דלתות מהירות — שיפור על בסיס התוצאה:
                 </span>
@@ -615,7 +539,7 @@ export function ResultSection({
               </div>
             )}
 
-            {/* Pro watermark toggle - only visible to Pro users */}
+            {/* Pro watermark toggle */}
             {isPro && (
               <div className="flex items-center justify-end gap-2 pt-1" dir="rtl">
                 <label className="flex items-center gap-2 cursor-pointer select-none group min-h-[44px] px-2 -mx-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5">
@@ -631,10 +555,63 @@ export function ResultSection({
                 </label>
               </div>
             )}
+          </div>
 
-            {/* Feedback row — removed disabled thumbs-up/down (no product
-                meaning). Save-to-personal button above already carries the
-                "keeper" signal; no need for a second rating layer. */}
+          {/* ── More panel (slides below card bottom) ── */}
+          <div
+            className={cn(styles.morePanel, showMorePanel && styles.morePanelOpen)}
+            data-testid="more-panel"
+          >
+            <div className={styles.morePanelLabel}>עוד אפשרויות</div>
+
+            {onSaveAsFavorite && (
+              <button onClick={onSaveAsFavorite} className={styles.mpItem}>
+                <Star className="w-[14px] h-[14px]" style={{ opacity: 0.5 }} />
+                שמור במועדפים
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                if (!savedToLibrary) {
+                  onSave();
+                  setSavedToLibrary(true);
+                }
+              }}
+              className={cn(styles.mpItem, savedToLibrary && styles.mpItemDisabled)}
+              data-testid="more-save-library"
+              aria-disabled={savedToLibrary}
+            >
+              <BookOpen className="w-[14px] h-[14px]" style={{ opacity: 0.5 }} />
+              {savedToLibrary ? (
+                <>
+                  שמור בספריה <span className={styles.savedBadge}>✓ נשמר</span>
+                </>
+              ) : (
+                "שמור בספריה"
+              )}
+            </button>
+
+            {onShare && (
+              <button onClick={onShare} className={styles.mpItem}>
+                <Share2 className="w-[14px] h-[14px]" style={{ opacity: 0.5 }} />
+                שתף קישור
+              </button>
+            )}
+
+            {onSaveAsTemplate && (
+              <button onClick={onSaveAsTemplate} className={styles.mpItem}>
+                <Copy className="w-[14px] h-[14px]" style={{ opacity: 0.5 }} />
+                שמור כתבנית
+              </button>
+            )}
+
+            {onReset && (
+              <button onClick={onReset} className={cn(styles.mpItem, styles.mpItemDanger)}>
+                <RotateCcw className="w-[14px] h-[14px]" style={{ opacity: 0.5 }} />
+                לאפס הכל
+              </button>
+            )}
           </div>
         </div>
 
@@ -787,6 +764,59 @@ export function ResultSection({
               : "ציון הפרומפט"
         }
       />
+
+      {/* ── Credit confirmation popup ── */}
+      {showRefineConfirm && (
+        <div
+          className={styles.popupOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="אישור שיפור נוסף"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowRefineConfirm(false);
+          }}
+        >
+          <div className={styles.popup} data-testid="credit-popup">
+            <div className={styles.popupHeader}>
+              <div className={styles.popupIconWrap}>
+                <Pencil />
+              </div>
+              <div>
+                <div className={styles.popupTitle}>לשפר את הפרומפט שוב?</div>
+                <div className={styles.popupSub}>שיפור נוסף ישתמש בקרדיט אחד</div>
+              </div>
+            </div>
+            <div className={styles.popupBody}>
+              Peroot תריץ סבב שיפור נוסף על הפרומפט הנוכחי ותייצר גרסה משופרת חדשה.
+              {creditsLeft !== undefined && (
+                <div className={styles.creditRow}>
+                  <div className={styles.creditIconWrap}>
+                    <RotateCcw />
+                  </div>
+                  <div className={styles.creditText}>
+                    <span>קרדיט אחד</span> יצרף לשיפור זה
+                    <small>נותרו לך {creditsLeft} קרדיטים היום</small>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={styles.popupActions}>
+              <button className={styles.popCancel} onClick={() => setShowRefineConfirm(false)}>
+                ביטול
+              </button>
+              <button
+                className={styles.popConfirm}
+                onClick={() => {
+                  setShowRefineConfirm(false);
+                  onImproveAgain?.();
+                }}
+              >
+                שפר שוב ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
