@@ -345,12 +345,12 @@ function PageContent() {
     }
   }, []);
 
-  // Identify user in PostHog when logged in
+  // Identify user in PostHog when logged in (include plan so server-side funnels segment correctly)
   useEffect(() => {
     if (user) {
-      identifyUser(user.id, { email: user.email });
+      identifyUser(user.id, { email: user.email, plan: isPro ? "pro" : "free" });
     }
-  }, [user]);
+  }, [user, isPro]);
 
   // Fetch credits + onboarding status in a single query
   useEffect(() => {
