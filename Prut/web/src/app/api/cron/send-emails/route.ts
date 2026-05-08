@@ -11,7 +11,7 @@ import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
 import { verifyCronSecret } from "@/lib/cron-auth";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   const authFailure = verifyCronSecret(request);

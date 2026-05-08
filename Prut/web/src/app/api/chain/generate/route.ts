@@ -10,7 +10,7 @@ import type { GeneratedChain, GeneratedChainStep } from "@/lib/chain-types";
 
 const CHAIN_CREDIT_COST = 2;
 
-export const maxDuration = 30;
+export const maxDuration = 120;
 
 const RequestSchema = z.object({
   goal: z.string().min(3).max(2000),

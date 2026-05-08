@@ -39,7 +39,7 @@ import { AVAILABLE_MODELS, selectModelByLength, type ModelId } from "@/lib/ai/mo
 import { memoryFlags } from "@/lib/memory/injection-flags";
 import { extractFacts, mergeFactsForUser } from "@/lib/intelligence/fact-extractor";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // In-memory per-instance cache. Subscription upgrades may take up to 15s to reflect.
 // Acceptable trade-off vs Redis round-trip on every request.
