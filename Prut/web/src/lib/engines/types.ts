@@ -59,7 +59,7 @@ export interface EngineInput {
    *  layers the profile's system prompt and dimension weights onto this run. */
   modelProfileSlug?: ModelProfileSlug;
   /** Force output language — overrides the engine's default (Hebrew) */
-  outputLanguage?: "hebrew" | "english";
+  outputLanguage?: "hebrew" | "english" | "arabic" | "russian";
   /** Tier for context token budget enforcement in renderInjection */
   tier?: PlanTier;
   /** Context attachments (files, URLs, images) */

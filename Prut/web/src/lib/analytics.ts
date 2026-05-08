@@ -111,8 +111,10 @@ export function trackShare(platform: string, url: string) {
 export function identifyUser(userId: string, properties?: Record<string, unknown>) {
   if (typeof window !== "undefined" && analytics) {
     analytics.identify(userId, properties);
-    // Force-enable replay for Pro users (overrides remote sample rate).
-    if (properties?.plan === "pro") {
+    // Opt Pro users into session replay — sampling rate is still controlled
+    // by the PostHog remote config; this just ensures Pro sessions are eligible.
+    // Only starts if posthog-js consent/opt-out state allows it.
+    if (properties?.plan === "pro" && !analytics.has_opted_out_capturing()) {
       analytics.startSessionRecording();
     }
   }

@@ -34,6 +34,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
+  // Verify the prompt belongs to this user before recording usage (prevents cross-user graph poisoning).
+  const { data: owned } = await supabase
+    .from("personal_library")
+    .select("id")
+    .eq("id", idParse.data.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!owned) {
+    return NextResponse.json({ error: "not found" }, { status: 404 });
+  }
+
   const { error } = await supabase.from("personal_library_usage_events").insert({
     user_id: user.id,
     prompt_id: idParse.data.id,
