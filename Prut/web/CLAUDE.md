@@ -136,6 +136,19 @@ Bridge: `src/lib/context/engine/extract/remote.ts` (fetch + FormData only — no
 
 ---
 
+## Output Language Flow
+End-to-end pipeline that routes the user's voice-picker selection into engine prompts and DB:
+1. **Voice picker UI** → `src/app/HomeClient.tsx:176` `voiceLang` state (`VoiceLang`, e.g. `he-IL`)
+2. **Mapping** → `src/hooks/useVoiceRecorder.ts:15` `voiceLangToOutputLang()` → `OutputLanguage` (`hebrew | english | arabic | russian`)
+3. **API payload** → `src/hooks/usePromptEnhance.ts:387,533` and `HomeClient.tsx:750` send `output_language` only when ≠ `hebrew` (Hebrew is default, omitted)
+4. **Cache key isolation** → `src/lib/ai/enhance-cache.ts:121` includes `outputLanguage` so different languages don't collide
+5. **Engine override block** → `src/lib/engines/base-engine.ts:258` `buildLanguageOverride()` injects a language directive when ≠ Hebrew; consumed by `standard-engine.ts`, `research-engine.ts`, `agent-engine.ts`
+6. **DB persistence** → `history.output_language` column (CHECK constraint on the 4 allowed values, migration `20260508000000_history_output_language.sql`)
+
+When adding a new language: extend `OutputLanguage` type (`engines/types.ts:64`), add to `LANG_NAMES` map (`base-engine.ts`), add to `voiceLangToOutputLang` mapping, extend the DB CHECK constraint.
+
+---
+
 ## AI Gateway — Fallback Chain
 ```
 gemini-2.5-flash (primary)
