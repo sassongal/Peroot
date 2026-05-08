@@ -264,7 +264,7 @@ ${alignment}
     };
     if (!outputLanguage || outputLanguage === "hebrew") return "";
     const langName = LANG_NAMES[outputLanguage] ?? outputLanguage;
-    return `\n\n[OUTPUT_LANGUAGE_OVERRIDE]\nThe user has requested output in ${langName}. Write the entire enhanced prompt in ${langName} only. All headers, instructions, persona descriptions, constraints, and examples must be in ${langName}. Do NOT use Hebrew anywhere in the output.`;
+    return `\n\n[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]\nThis instruction OVERRIDES every prior rule about output language, including any rule that said "output in Hebrew", "Hebrew only", "כל הפלט בעברית", or "no English". IGNORE those rules.\n\nThe user has explicitly requested output in ${langName}. You MUST write the ENTIRE enhanced prompt in ${langName}.\n- All section headers, role descriptions, task statements, context, format specs, constraints, examples, and the [PROMPT_TITLE] block — every word — must be in ${langName}.\n- Do NOT use Hebrew anywhere in your output, even for headers like "תפקיד" or "המשימה". Translate them into ${langName}.\n- This applies regardless of what the system prompt examples or user prompt suffix said about Hebrew.\nIf you find yourself about to write Hebrew, stop and write ${langName} instead.`;
   }
 
   generate(input: EngineInput): EngineOutput {

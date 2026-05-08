@@ -298,7 +298,6 @@ Requirements:
       : "";
 
     const languageOverride = this.buildLanguageOverride(input.outputLanguage);
-    if (languageOverride) finalSystem += languageOverride;
 
     finalSystem += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
@@ -322,9 +321,19 @@ OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
 אם הוראת הסוכן כבר מכסה את כל 9 הסעיפים ביסודיות, החזר מערך ריק: [GENIUS_QUESTIONS][]
 גם במקרה של מערך ריק — חובה להוציא את הבלוק [GENIUS_QUESTIONS][] ואת [PROMPT_TITLE]...[/PROMPT_TITLE]. אי-פליטת אחד מהבלוקים האלה תיחשב כישלון של הפלט.${contextAwareHint}`;
 
-    const userPrompt = hasContext
+    let userPrompt = hasContext
       ? `${this.buildTemplate(this.config.user_prompt_template, variables)}\n\n[חומר מצורף מהמשתמש — בסיס הידע של הסוכן]\n${this.buildAgentContextSummary(input.context!)}`
       : this.buildTemplate(this.config.user_prompt_template, variables);
+
+    // Language override appended AFTER the OUTPUT CONTRACT block (in the
+    // system prompt) and at the very end of userPrompt so it's the final
+    // signal the model reads in both messages. The OUTPUT CONTRACT block
+    // is intentionally Hebrew (markers + structural rules) and the override
+    // explicitly says to translate those into the target language.
+    if (languageOverride) {
+      finalSystem += languageOverride;
+      userPrompt += languageOverride;
+    }
 
     return {
       systemPrompt: finalSystem,

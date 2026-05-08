@@ -180,9 +180,17 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
     }
 
     // Language override must be last — after all injected blocks — so it
-    // is the final authoritative instruction the model sees.
+    // is the final authoritative instruction the model sees. Append to BOTH
+    // systemPrompt and userPrompt: the user_prompt_template explicitly says
+    // "Output ONLY the final Hebrew prompt. No English." which is the last
+    // text the model reads on the happy path. Without overriding it there,
+    // the model follows the user-prompt instruction even when the system
+    // prompt requested another language.
     const languageOverride = this.buildLanguageOverride(input.outputLanguage);
-    if (languageOverride) result.systemPrompt += languageOverride;
+    if (languageOverride) {
+      result.systemPrompt += languageOverride;
+      result.userPrompt += languageOverride;
+    }
 
     return result;
   }
