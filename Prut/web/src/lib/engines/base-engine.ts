@@ -262,9 +262,28 @@ ${alignment}
       arabic: "Arabic",
       russian: "Russian",
     };
+    const TITLE_HINTS: Record<string, string> = {
+      english: "a short descriptive English title",
+      arabic: "عنوان وصفي قصير بالعربية",
+      russian: "короткое описательное название на русском",
+    };
     if (!outputLanguage || outputLanguage === "hebrew") return "";
     const langName = LANG_NAMES[outputLanguage] ?? outputLanguage;
-    return `\n\n[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]\nThis instruction OVERRIDES every prior rule about output language, including any rule that said "output in Hebrew", "Hebrew only", "כל הפלט בעברית", or "no English". IGNORE those rules.\n\nThe user has explicitly requested output in ${langName}. You MUST write the ENTIRE enhanced prompt in ${langName}.\n- All section headers, role descriptions, task statements, context, format specs, constraints, examples, and the [PROMPT_TITLE] block — every word — must be in ${langName}.\n- Do NOT use Hebrew anywhere in your output, even for headers like "תפקיד" or "המשימה". Translate them into ${langName}.\n- This applies regardless of what the system prompt examples or user prompt suffix said about Hebrew.\nIf you find yourself about to write Hebrew, stop and write ${langName} instead.`;
+    const titleHint = TITLE_HINTS[outputLanguage] ?? `a short descriptive title in ${langName}`;
+    return `\n\n[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]
+This instruction OVERRIDES every prior rule about output language, including any rule that said "output in Hebrew", "Hebrew only", "הפלט בעברית", "כל הפלט בעברית", "no English", or any Hebrew demonstration string. IGNORE those rules entirely.
+
+The user has explicitly requested output in ${langName}. You MUST write the ENTIRE enhanced prompt in ${langName}.
+
+ABSOLUTE RULES:
+1. EVERY word of your output must be in ${langName}: section headers, role descriptions, task statements, context, format specs, constraints, examples, GOOD/BAD demonstrations, and the [PROMPT_TITLE] block.
+2. The [PROMPT_TITLE] block MUST be in ${langName}. Replace any Hebrew placeholder you saw in the system prompt (such as "שם קצר ותיאורי בעברית") with ${titleHint}. Format: [PROMPT_TITLE]${titleHint}[/PROMPT_TITLE].
+3. Any "example", "good", or "bad" demonstration text shown in the system prompt above is for STRUCTURE only — translate the wording into ${langName} when you produce examples. NEVER copy a Hebrew example verbatim.
+4. Do NOT preserve Hebrew quotes, Hebrew sample sentences, or Hebrew tone-of-voice illustrations. Rewrite them in ${langName}.
+5. Hebrew section names like "תפקיד", "המשימה", "הקשר ורקע", "פורמט פלט", "הנחיות ומגבלות", "דוגמאות" must be translated into ${langName} headers.
+6. Do NOT switch back to Hebrew in trailing blocks (title, questions, contracts). Stay in ${langName} from the very first character to the very last.
+
+SELF-CHECK BEFORE EMITTING: scan your output. If you see ANY Hebrew character (\u0590-\u05FF range), STOP, rewrite that segment in ${langName}, and only then emit the response. A response containing even a single Hebrew word is a FAILED response.`;
   }
 
   generate(input: EngineInput): EngineOutput {

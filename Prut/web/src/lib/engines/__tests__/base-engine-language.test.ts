@@ -20,20 +20,26 @@ describe("BaseEngine language override", () => {
   it("generate() with hebrew outputLanguage produces no override block", () => {
     const engine = new StandardEngine(MIN_CONFIG);
     const out = engine.generate({ ...BASE_INPUT, outputLanguage: "hebrew" });
-    expect(out.systemPrompt).not.toContain("[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]");
+    expect(out.systemPrompt).not.toContain(
+      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+    );
   });
 
   it("generate() with arabic outputLanguage injects override", () => {
     const engine = new StandardEngine(MIN_CONFIG);
     const out = engine.generate({ ...BASE_INPUT, outputLanguage: "arabic" });
-    expect(out.systemPrompt).toContain("[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]");
+    expect(out.systemPrompt).toContain(
+      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+    );
     expect(out.systemPrompt).toContain("Arabic");
   });
 
   it("generate() with russian outputLanguage injects override", () => {
     const engine = new StandardEngine(MIN_CONFIG);
     const out = engine.generate({ ...BASE_INPUT, outputLanguage: "russian" });
-    expect(out.systemPrompt).toContain("[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]");
+    expect(out.systemPrompt).toContain(
+      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+    );
     expect(out.systemPrompt).toContain("Russian");
   });
 
@@ -44,7 +50,9 @@ describe("BaseEngine language override", () => {
       outputLanguage: "english",
       previousResult: "previous enhanced prompt",
     });
-    expect(out.systemPrompt).toContain("[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]");
+    expect(out.systemPrompt).toContain(
+      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+    );
   });
 
   it("generateRefinement() with hebrew outputLanguage keeps Hebrew rule", () => {
@@ -55,7 +63,9 @@ describe("BaseEngine language override", () => {
       previousResult: "previous",
     });
     expect(out.systemPrompt).toContain("עברית");
-    expect(out.systemPrompt).not.toContain("[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]");
+    expect(out.systemPrompt).not.toContain(
+      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+    );
   });
 
   it("generateRefinement() with undefined outputLanguage keeps Hebrew rule", () => {
@@ -65,6 +75,8 @@ describe("BaseEngine language override", () => {
       previousResult: "previous",
     });
     expect(out.systemPrompt).toContain("עברית");
-    expect(out.systemPrompt).not.toContain("[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY]");
+    expect(out.systemPrompt).not.toContain(
+      "[OUTPUT_LANGUAGE_OVERRIDE — HIGHEST PRIORITY — READ THIS LAST]",
+    );
   });
 });
