@@ -3,6 +3,8 @@ import type { PlanTier } from "@/lib/context/engine/types";
 
 export type TargetModel = "chatgpt" | "claude" | "gemini" | "general";
 
+export type OutputLanguage = "hebrew" | "english";
+
 /** DB-driven slug of a model_profiles row. Free-form string so new
  *  profiles can be added without TypeScript releases. */
 export type ModelProfileSlug = string;

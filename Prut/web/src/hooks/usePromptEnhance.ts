@@ -19,7 +19,7 @@ import type { useContextAttachments } from "@/hooks/useContextAttachments";
 import type { useI18n } from "@/context/I18nContext";
 import type { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import type { VideoPlatform } from "@/lib/video-platforms";
-import type { TargetModel } from "@/lib/engines/types";
+import type { TargetModel, OutputLanguage } from "@/lib/engines/types";
 import type { LibraryPrompt, Question } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import type React from "react";
@@ -56,6 +56,7 @@ interface UsePromptEnhanceParams {
   videoPlatform: VideoPlatform;
   videoAspectRatio: string;
   targetModel: TargetModel;
+  outputLanguage: OutputLanguage;
   // Callbacks
   addToHistory: ReturnType<typeof useHistory>["addToHistory"];
   incrementUsage: ReturnType<typeof usePromptLimits>["incrementUsage"];
@@ -97,6 +98,7 @@ export function usePromptEnhance({
   videoPlatform,
   videoAspectRatio,
   targetModel,
+  outputLanguage,
   addToHistory,
   incrementUsage,
   t,
@@ -382,6 +384,7 @@ export function usePromptEnhance({
       ...(contextPayload.length > 0 && { context: contextPayload }),
       ...(capabilitySupportsTargetModel(ps.selectedCapability) &&
         targetModel !== "general" && { target_model: targetModel }),
+      ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
     });
 
     const result = processStreamResult("Enhance", {
@@ -527,6 +530,7 @@ export function usePromptEnhance({
         ...(contextPayloadRefine.length > 0 && { context: contextPayloadRefine }),
         ...(capabilitySupportsTargetModel(ctx?.mode || ps.selectedCapability) &&
           targetModel !== "general" && { target_model: targetModel }),
+        ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
       });
 
       const answeredIds = ps.questions
