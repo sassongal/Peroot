@@ -10,6 +10,7 @@ import { SupportedPlatforms } from "@/components/features/landing/SupportedPlatf
 import type { ContextAttachment } from "@/lib/context/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { TargetModel } from "@/lib/engines/types";
+import type { VoiceLang } from "@/hooks/useVoiceRecorder";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { HistoryItem } from "@/hooks/useHistory";
@@ -89,6 +90,10 @@ interface InputSectionProps {
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
 
+  // Voice language
+  voiceLang: VoiceLang;
+  setVoiceLang: (lang: VoiceLang) => void;
+
   // Credits
   creditsRemaining?: number | null;
   // Voice interim text callback
@@ -153,6 +158,8 @@ export const InputSection = memo<InputSectionProps>(
     contextTier,
     targetModel,
     setTargetModel,
+    voiceLang,
+    setVoiceLang,
     creditsRemaining,
     isNewUser,
     user,
@@ -226,6 +233,8 @@ export const InputSection = memo<InputSectionProps>(
           hasAttachments={contextAttachments.length > 0}
           targetModel={targetModel}
           setTargetModel={setTargetModel}
+          voiceLang={voiceLang}
+          setVoiceLang={setVoiceLang}
           creditsRemaining={creditsRemaining}
           onInterimChange={onInterimChange}
         />
