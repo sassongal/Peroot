@@ -1,10 +1,9 @@
-export type {
-  PromptEntity,
-} from './types';
+export type { PromptEntity, PromptScoreSnapshot, PromptSource, PromptVisibility } from "./types";
 
 export {
   fromHistoryRow,
   fromSharedPromptRow,
   fromPersonalLibraryRow,
   fromAiPromptRow,
-} from './adapters';
+  fromPublicLibraryRow,
+} from "./adapters";
