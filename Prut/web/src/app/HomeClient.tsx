@@ -1565,6 +1565,7 @@ function PageContent() {
             onReset={() => dispatch({ type: "RESET" })}
             isAuthenticated={!!user}
             capabilityMode={ps.generationContext?.mode || ps.selectedCapability}
+            creditsLeft={creditsRemaining ?? undefined}
             selectedPlatform={
               ps.generationContext?.modeParams?.image_platform ||
               ps.generationContext?.modeParams?.video_platform ||

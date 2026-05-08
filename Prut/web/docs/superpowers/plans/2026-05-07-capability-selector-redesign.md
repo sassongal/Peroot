@@ -1,6 +1,6 @@
 # CapabilitySelector Redesign Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace the horizontal-scroll pill row in `CapabilitySelector.tsx` with a Rising Pill Track (mobile) and Luxury Gem Cards (desktop), using inline SVG icons, smoke particles, and spring animations.
 
@@ -27,7 +27,7 @@
 **Files:**
 - Create: `src/components/ui/CapabilitySelector.module.css`
 
-- [ ] **Step 1: Create the CSS module**
+- [x] **Step 1: Create the CSS module**
 
 ```css
 /* src/components/ui/CapabilitySelector.module.css */
@@ -336,7 +336,7 @@
 }
 ```
 
-- [ ] **Step 2: Verify the file exists**
+- [x] **Step 2: Verify the file exists**
 
 ```bash
 ls src/components/ui/CapabilitySelector.module.css
@@ -344,7 +344,7 @@ ls src/components/ui/CapabilitySelector.module.css
 
 Expected: file listed.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/ui/CapabilitySelector.module.css
@@ -358,11 +358,11 @@ git commit -m "feat(capability-selector): add CSS module for Rising Pill + Gem C
 **Files:**
 - Modify: `src/components/ui/CapabilitySelector.tsx`
 
-- [ ] **Step 1: Write the failing test first** (see Task 3 — write it before the implementation)
+- [x] **Step 1: Write the failing test first** (see Task 3 — write it before the implementation)
 
 Skip to Task 3, write the test, then come back here.
 
-- [ ] **Step 2: Replace the entire file content**
+- [x] **Step 2: Replace the entire file content**
 
 ```tsx
 // src/components/ui/CapabilitySelector.tsx
@@ -700,7 +700,7 @@ export function CapabilitySelector({
 }
 ```
 
-- [ ] **Step 3: Run TypeScript check**
+- [x] **Step 3: Run TypeScript check**
 
 ```bash
 npm run typecheck 2>&1 | head -40
@@ -708,7 +708,7 @@ npm run typecheck 2>&1 | head -40
 
 Expected: zero errors. If you see `"--pill-bg" is not assignable to CSSProperties` — that's expected and safe; TypeScript doesn't know about custom properties but the runtime works fine. Cast is already handled by `as React.CSSProperties`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 npm test -- src/components/ui/__tests__/CapabilitySelector.test.tsx
@@ -716,7 +716,7 @@ npm test -- src/components/ui/__tests__/CapabilitySelector.test.tsx
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/ui/CapabilitySelector.tsx
@@ -732,7 +732,7 @@ git commit -m "feat(capability-selector): rewrite with Rising Pill + Luxury Gem 
 
 > Do this BEFORE Task 2 Step 2. Come back to Task 2 Step 3 after.
 
-- [ ] **Step 1: Create the test file**
+- [x] **Step 1: Create the test file**
 
 ```tsx
 // src/components/ui/__tests__/CapabilitySelector.test.tsx
@@ -817,7 +817,7 @@ describe("CapabilitySelector", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests — expect failures (implementation not done yet)**
+- [x] **Step 2: Run the tests — expect failures (implementation not done yet)**
 
 ```bash
 npm test -- src/components/ui/__tests__/CapabilitySelector.test.tsx
@@ -825,11 +825,11 @@ npm test -- src/components/ui/__tests__/CapabilitySelector.test.tsx
 
 Expected: tests fail because `data-testid` attributes don't exist yet. This confirms tests are real.
 
-- [ ] **Step 3: Now go do Task 2 Step 2 (write the component)**
+- [x] **Step 3: Now go do Task 2 Step 2 (write the component)**
 
 Return here after Task 2 is committed.
 
-- [ ] **Step 4: Run tests again — expect all pass**
+- [x] **Step 4: Run tests again — expect all pass**
 
 ```bash
 npm test -- src/components/ui/__tests__/CapabilitySelector.test.tsx
@@ -837,7 +837,7 @@ npm test -- src/components/ui/__tests__/CapabilitySelector.test.tsx
 
 Expected: 9/9 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/ui/__tests__/CapabilitySelector.test.tsx
@@ -850,7 +850,7 @@ git commit -m "test(capability-selector): add Rising Pill + Gem Cards unit tests
 
 **Files:** none — manual QA only
 
-- [ ] **Step 1: Start dev server**
+- [x] **Step 1: Start dev server**
 
 ```bash
 npm run dev
@@ -858,7 +858,7 @@ npm run dev
 
 Navigate to `http://localhost:3000`. The CapabilitySelector appears in the home prompt input area.
 
-- [ ] **Step 2: Mobile viewport check**
+- [x] **Step 2: Mobile viewport check**
 
 In DevTools, set viewport to 390×844 (iPhone 14). Verify:
 - All 5 buttons visible in one row — no horizontal scroll
@@ -868,7 +868,7 @@ In DevTools, set viewport to 390×844 (iPhone 14). Verify:
 - 3 smoke particles drift upward from active button
 - Atom orbital SVG icon visible
 
-- [ ] **Step 3: Desktop viewport check**
+- [x] **Step 3: Desktop viewport check**
 
 Set viewport to 1280×800. Verify:
 - Pill track hidden, Gem Cards visible (5 horizontal cards)
@@ -877,7 +877,7 @@ Set viewport to 1280×800. Verify:
 - Clicking "בונה סוכנים": card floats up 6px, amber border glows, CPU chip icon scales up, amber "בונה סוכנים" label appears, description text reveals
 - Thin amber topbar appears at top of selected card
 
-- [ ] **Step 4: Guest user check**
+- [x] **Step 4: Guest user check**
 
 Temporarily set `isGuest={true}` in the parent component call, reload. Verify:
 - Standard mode works
@@ -885,11 +885,11 @@ Temporarily set `isGuest={true}` in the parent component call, reload. Verify:
 
 Revert the temporary `isGuest` change.
 
-- [ ] **Step 5: prefers-reduced-motion check**
+- [x] **Step 5: prefers-reduced-motion check**
 
 In DevTools → Rendering → Emulate prefers-reduced-motion → reduce. Verify smoke particles stop and mode transitions snap without animation.
 
-- [ ] **Step 6: Run full test suite**
+- [x] **Step 6: Run full test suite**
 
 ```bash
 npm test
@@ -899,7 +899,7 @@ npm run lint
 
 Expected: zero failures.
 
-- [ ] **Step 7: Final commit**
+- [x] **Step 7: Final commit**
 
 ```bash
 git add -A

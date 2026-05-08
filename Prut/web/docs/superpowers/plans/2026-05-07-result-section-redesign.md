@@ -1,6 +1,6 @@
 # ResultSection Redesign Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Redesign `ResultSection.tsx` with gem-style platform buttons, an expanding top toolbar, a collapsible "עוד אפשרויות" panel, and a credit-confirmation popup for "שפר שוב".
 
@@ -25,7 +25,7 @@
 **Files:**
 - Create: `src/components/features/prompt-improver/ResultSection.module.css`
 
-- [ ] **Step 1: Create the CSS module file**
+- [x] **Step 1: Create the CSS module file**
 
 ```css
 /* src/components/features/prompt-improver/ResultSection.module.css */
@@ -620,14 +620,14 @@
 }
 ```
 
-- [ ] **Step 2: Verify the file was created**
+- [x] **Step 2: Verify the file was created**
 
 ```bash
 ls src/components/features/prompt-improver/ResultSection.module.css
 ```
 Expected: file listed.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.module.css
@@ -641,7 +641,7 @@ git commit -m "style(result-section): add CSS module for redesigned zones"
 **Files:**
 - Create: `src/components/features/prompt-improver/__tests__/ResultSection.test.tsx`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 // src/components/features/prompt-improver/__tests__/ResultSection.test.tsx
@@ -778,14 +778,14 @@ describe("ResultSection — redesign", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests — all should FAIL (component not yet modified)**
+- [x] **Step 2: Run tests — all should FAIL (component not yet modified)**
 
 ```bash
 npx vitest run src/components/features/prompt-improver/__tests__/ResultSection.test.tsx
 ```
 Expected: multiple FAIL (missing elements, wrong structure).
 
-- [ ] **Step 3: Commit the tests**
+- [x] **Step 3: Commit the tests**
 
 ```bash
 git add src/components/features/prompt-improver/__tests__/ResultSection.test.tsx
@@ -799,7 +799,7 @@ git commit -m "test(result-section): add tests for redesign behaviors (red)"
 **Files:**
 - Modify: `src/components/features/prompt-improver/ResultSection.tsx`
 
-- [ ] **Step 1: Add new prop `creditsLeft` to `ResultSectionProps` interface (around line 51)**
+- [x] **Step 1: Add new prop `creditsLeft` to `ResultSectionProps` interface (around line 51)**
 
 Current:
 ```tsx
@@ -820,7 +820,7 @@ Replace the closing `}` of the interface with:
 }
 ```
 
-- [ ] **Step 2: Add new state variables inside the component (after the existing `useState` declarations, around line 152)**
+- [x] **Step 2: Add new state variables inside the component (after the existing `useState` declarations, around line 152)**
 
 After `const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null>(null);`, add:
 
@@ -830,7 +830,7 @@ After `const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null
   const [savedToLibrary, setSavedToLibrary] = useState(false);
 ```
 
-- [ ] **Step 3: Destructure the new prop in the function signature (around line 141)**
+- [x] **Step 3: Destructure the new prop in the function signature (around line 141)**
 
 Add `creditsLeft,` to the destructured props list, after `selectedPlatform,`:
 ```tsx
@@ -839,32 +839,32 @@ Add `creditsLeft,` to the destructured props list, after `selectedPlatform,`:
 }: ResultSectionProps) {
 ```
 
-- [ ] **Step 4: Remove the `pdfBreakdown` useMemo (lines 166–202) — no longer needed after ExportPdfButton removal**
+- [x] **Step 4: Remove the `pdfBreakdown` useMemo (lines 166–202) — no longer needed after ExportPdfButton removal**
 
 Delete from `// Pre-compute the score breakdown for the PDF export.` through the closing `}, [completion, capabilityMode]);` (inclusive).
 
-- [ ] **Step 5: Remove the `ExportPdfButton` import (line 34)**
+- [x] **Step 5: Remove the `ExportPdfButton` import (line 34)**
 
 Remove:
 ```tsx
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 ```
 
-- [ ] **Step 6: Add CSS module import after the existing imports**
+- [x] **Step 6: Add CSS module import after the existing imports**
 
 Add at the top of the imports:
 ```tsx
 import styles from "./ResultSection.module.css";
 ```
 
-- [ ] **Step 7: Run typecheck**
+- [x] **Step 7: Run typecheck**
 
 ```bash
 npx tsc --noEmit 2>&1 | head -20
 ```
 Expected: no new errors (only existing ones if any).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.tsx
@@ -878,7 +878,7 @@ git commit -m "refactor(result-section): add state, creditsLeft prop, remove Exp
 **Files:**
 - Modify: `src/components/features/prompt-improver/ResultSection.tsx` (lines 335–365 area)
 
-- [ ] **Step 1: Replace the inline toolbar block**
+- [x] **Step 1: Replace the inline toolbar block**
 
 Find this block (around lines 335–365):
 ```tsx
@@ -946,7 +946,7 @@ Replace with:
               </div>
 ```
 
-- [ ] **Step 2: Add `BookOpen` to the lucide-react import (line 4)**
+- [x] **Step 2: Add `BookOpen` to the lucide-react import (line 4)**
 
 Change:
 ```tsx
@@ -984,14 +984,14 @@ import {
 } from "lucide-react";
 ```
 
-- [ ] **Step 3: Run typecheck**
+- [x] **Step 3: Run typecheck**
 
 ```bash
 npx tsc --noEmit 2>&1 | head -20
 ```
 Expected: no new errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.tsx
@@ -1005,7 +1005,7 @@ git commit -m "feat(result-section): redesign top toolbar with expanding icon bu
 **Files:**
 - Modify: `src/components/features/prompt-improver/ResultSection.tsx` (lines 375–469 area)
 
-- [ ] **Step 1: Replace the entire "AI Platform Quick-Launch Bar" block**
+- [x] **Step 1: Replace the entire "AI Platform Quick-Launch Bar" block**
 
 Find this block (around lines 375–469):
 ```tsx
@@ -1128,14 +1128,14 @@ Replace with:
           )}
 ```
 
-- [ ] **Step 2: Run typecheck**
+- [x] **Step 2: Run typecheck**
 
 ```bash
 npx tsc --noEmit 2>&1 | head -20
 ```
 Expected: no new errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.tsx
@@ -1149,7 +1149,7 @@ git commit -m "feat(result-section): gem-style platform row with branded icons"
 **Files:**
 - Modify: `src/components/features/prompt-improver/ResultSection.tsx` (lines 471–638 area)
 
-- [ ] **Step 1: Replace the entire bottom `<div className="p-4 bg-(--glass-bg) border-t ...">` block**
+- [x] **Step 1: Replace the entire bottom `<div className="p-4 bg-(--glass-bg) border-t ...">` block**
 
 Find this opening tag (around line 471):
 ```tsx
@@ -1309,14 +1309,14 @@ Replace everything from that line through its closing `</div>` (before `</div>` 
           </div>
 ```
 
-- [ ] **Step 2: Run typecheck**
+- [x] **Step 2: Run typecheck**
 
 ```bash
 npx tsc --noEmit 2>&1 | head -20
 ```
 Expected: no new errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.tsx
@@ -1330,7 +1330,7 @@ git commit -m "feat(result-section): redesign bottom bar and more panel"
 **Files:**
 - Modify: `src/components/features/prompt-improver/ResultSection.tsx`
 
-- [ ] **Step 1: Add the popup JSX at the end of the return, just before the final closing `</div>`**
+- [x] **Step 1: Add the popup JSX at the end of the return, just before the final closing `</div>`**
 
 Find the last `</div>` in the return (after `</ScoreBreakdownDrawer>`, around line 789):
 ```tsx
@@ -1396,21 +1396,21 @@ Insert the popup between `<ScoreBreakdownDrawer ... />` and `</div>`:
       )}
 ```
 
-- [ ] **Step 2: Run typecheck**
+- [x] **Step 2: Run typecheck**
 
 ```bash
 npx tsc --noEmit 2>&1 | head -20
 ```
 Expected: no new errors.
 
-- [ ] **Step 3: Run the full test suite**
+- [x] **Step 3: Run the full test suite**
 
 ```bash
 npx vitest run src/components/features/prompt-improver/__tests__/ResultSection.test.tsx
 ```
 Expected: all 12 tests PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.tsx
@@ -1424,7 +1424,7 @@ git commit -m "feat(result-section): credit confirmation popup for שפר שוב
 **Files:**
 - Modify: `src/components/features/prompt-improver/ResultSection.tsx`
 
-- [ ] **Step 1: Remove unused lucide imports**
+- [x] **Step 1: Remove unused lucide imports**
 
 After the redesign, these lucide icons are no longer used: `HelpCircle` (still used in variables panel — keep), `Plus` (still used — keep), `RefreshCw` (no longer used — remove), `Star` (moved to more panel — keep).
 
@@ -1437,28 +1437,28 @@ npx eslint src/components/features/prompt-improver/ResultSection.tsx --rule '{"n
 
 Remove any flagged unused imports.
 
-- [ ] **Step 2: Run full vitest suite**
+- [x] **Step 2: Run full vitest suite**
 
 ```bash
 npx vitest run
 ```
 Expected: all existing tests pass (1012+/1012+).
 
-- [ ] **Step 3: Run typecheck**
+- [x] **Step 3: Run typecheck**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -v "node_modules" | head -20
 ```
 Expected: no errors introduced by this change.
 
-- [ ] **Step 4: Run lint**
+- [x] **Step 4: Run lint**
 
 ```bash
 npx eslint src/components/features/prompt-improver/ --max-warnings 0 2>&1 | tail -5
 ```
 Expected: 0 warnings or errors.
 
-- [ ] **Step 5: Final commit**
+- [x] **Step 5: Final commit**
 
 ```bash
 git add src/components/features/prompt-improver/ResultSection.tsx

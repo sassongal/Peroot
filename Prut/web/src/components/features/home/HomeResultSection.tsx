@@ -59,6 +59,7 @@ export interface HomeResultSectionProps {
   isAuthenticated: boolean;
   capabilityMode: CapabilityMode;
   selectedPlatform?: string;
+  creditsLeft?: number;
 
   // SmartRefinement props
   questions: Question[];
@@ -98,6 +99,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
     isAuthenticated,
     capabilityMode,
     selectedPlatform,
+    creditsLeft,
     questions,
     questionsLoading = false,
     questionAnswers,
@@ -138,6 +140,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
             isAuthenticated={isAuthenticated}
             capabilityMode={capabilityMode}
             selectedPlatform={selectedPlatform}
+            creditsLeft={creditsLeft}
           />
         </ErrorBoundary>
 
