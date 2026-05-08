@@ -35,7 +35,8 @@ import { LibraryPrompt, PersonalPrompt, Question } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
-import { TargetModel } from "@/lib/engines/types";
+import { TargetModel, OutputLanguage } from "@/lib/engines/types";
+import { voiceLangToOutputLang, type VoiceLang } from "@/hooks/useVoiceRecorder";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
@@ -172,6 +173,8 @@ function PageContent() {
   // Always start with "general" on both server and client to prevent hydration
   // mismatch. Persisted value is restored in a post-mount effect below.
   const [targetModel, setTargetModel] = useState<TargetModel>("general");
+  const [voiceLang, setVoiceLang] = useState<VoiceLang>("he-IL");
+  const outputLanguage: OutputLanguage = voiceLangToOutputLang(voiceLang);
 
   useEffect(() => {
     try {
@@ -744,6 +747,7 @@ function PageContent() {
       ...(currentModeParams && { mode_params: currentModeParams }),
       ...(contextPayload.length > 0 && { context: contextPayload }),
       ...(targetModel !== "general" && { target_model: targetModel }),
+      ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
       ...(detectedLang === "en" && { mode_params: { ...currentModeParams, input_language: "en" } }),
     });
 
@@ -872,6 +876,7 @@ function PageContent() {
         iteration: ps.iterationCount + 1,
         ...(contextPayloadRefine.length > 0 && { context: contextPayloadRefine }),
         ...(targetModel !== "general" && { target_model: targetModel }),
+        ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
       });
 
       const answeredIds = ps.questions
@@ -1517,6 +1522,8 @@ function PageContent() {
             contextIsOverLimit={context.isOverLimit}
             targetModel={targetModel}
             setTargetModel={handleSetTargetModel}
+            voiceLang={voiceLang}
+            setVoiceLang={setVoiceLang}
             contextLimits={{
               maxFiles: PLAN_CONTEXT_LIMITS[isPro ? "pro" : "free"].maxFiles,
               tokenLimit: PLAN_CONTEXT_LIMITS[isPro ? "pro" : "free"].total,
