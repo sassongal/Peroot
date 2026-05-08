@@ -255,6 +255,18 @@ ${alignment}
     }
   }
 
+  protected buildLanguageOverride(outputLanguage: string | undefined): string {
+    const LANG_NAMES: Record<string, string> = {
+      hebrew: "Hebrew",
+      english: "English",
+      arabic: "Arabic",
+      russian: "Russian",
+    };
+    if (!outputLanguage || outputLanguage === "hebrew") return "";
+    const langName = LANG_NAMES[outputLanguage] ?? outputLanguage;
+    return `\n\n[OUTPUT_LANGUAGE_OVERRIDE]\nThe user has requested output in ${langName}. Write the entire enhanced prompt in ${langName} only. All headers, instructions, persona descriptions, constraints, and examples must be in ${langName}. Do NOT use Hebrew anywhere in the output.`;
+  }
+
   generate(input: EngineInput): EngineOutput {
     const variables: Record<string, string> = {
       input: escapeTemplateVars(input.prompt),
@@ -356,10 +368,7 @@ ${alignment}
 
     const variableRegistryBlock = this.getVariableRegistryBlock(input.category);
 
-    const languageOverride =
-      input.outputLanguage === "english"
-        ? `\n\n[OUTPUT_LANGUAGE_OVERRIDE]\nThe user has requested an ENGLISH output. Write the entire enhanced prompt in English only. All headers, instructions, persona descriptions, constraints, and examples must be in English. Do NOT use Hebrew anywhere in the output.`
-        : "";
+    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
 
     const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
     const imageAttachments = (input.context as unknown as ContextBlock[])
@@ -434,6 +443,7 @@ ${alignment}
     }
 
     const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
 
     return {
       systemPrompt: `אתה מהנדס פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מקצוענות מושלמת, על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.
@@ -442,7 +452,7 @@ ${modelHints ? `\n${modelHints}\n` : ""}
 1. שלב את כל התשובות והמשוב לתוך הפרומפט - אל תתעלם מאף פרט, גם הקטן ביותר.
 2. שמור ושפר את המבנה המקצועי: תפקיד, משימה, הקשר, פורמט, מגבלות.
 3. שפר את הדיוק והספציפיות בכל מקום שאפשר - החלף הוראות מעורפלות בהוראות מדידות.
-4. הפלט חייב להיות בעברית בלבד.
+${input.outputLanguage && input.outputLanguage !== "hebrew" ? `4. Write the entire output in ${{ english: "English", arabic: "Arabic", russian: "Russian" }[input.outputLanguage] ?? input.outputLanguage} only.` : "4. הפלט חייב להיות בעברית בלבד."}
 5. אל תוסיף הסברים - רק את הפרומפט המשודרג.
 6. כל גרסה חדשה חייבת להיות טובה משמעותית מהקודמת - לא רק שינוי קוסמטי.
 7. אם התשובות חושפות כיוון חדש - הרחב את הפרומפט בהתאם, אל תשאיר פערים.
@@ -457,7 +467,7 @@ ${iterationGuidance}
 ${this.getSystemIdentity()}
 
 ${this.getVariableRegistryBlock(input.category)}
-
+${languageOverride}
 `,
       userPrompt: `הפרומפט הנוכחי:
 ---

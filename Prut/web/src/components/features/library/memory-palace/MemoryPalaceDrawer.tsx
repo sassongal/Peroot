@@ -33,9 +33,13 @@ export function MemoryPalaceDrawer({
   const reduceMotion = useReducedMotion();
   const [usageEvents, setUsageEvents] = useState<PromptUsageEvent[]>([]);
   const [activeId, setActiveId] = useState<string | null>(centerPromptId);
+  const [hopIndex, setHopIndex] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveId(centerPromptId);
+
+    setHopIndex(0);
   }, [centerPromptId]);
 
   useEffect(() => {
@@ -75,8 +79,9 @@ export function MemoryPalaceDrawer({
       fromId: activeId ?? "",
       toId: id,
       edgeType: (linkToTarget?.type as "similarity" | "cooccurrence" | "both") ?? "similarity",
-      hopIndex: 1,
+      hopIndex: hopIndex + 1,
     });
+    setHopIndex((h) => h + 1);
     setActiveId(id);
   };
 

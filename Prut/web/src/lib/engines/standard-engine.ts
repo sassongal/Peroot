@@ -209,6 +209,7 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
     // shows expansion (raw → enhanced); round 3+ shows surgical precision.
     const refinementBlock = getRefinementExamplesBlock("text", "standard", iteration);
     const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
 
     return {
       systemPrompt: `אתה ארכיטקט פרומפטים ברמה הגבוהה ביותר. משימתך: לשדרג את הפרומפט הקיים לרמת מושלמות על בסיס המשוב, התשובות והפרטים החדשים שהמשתמש סיפק.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ""}
@@ -234,7 +235,7 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
    - Context Scaffolding לבנייה שיטתית של הקשר
    - Anti-Hallucination למניעת המצאת עובדות
 4. בדוק ספציפיות, מדידות, וניתנות לפעולה - החלף כל הוראה מעורפלת בהוראה מדויקת ומדידה.
-5. הפלט חייב להיות בעברית בלבד.
+${input.outputLanguage && input.outputLanguage !== "hebrew" ? `5. Write the entire output in ${{ english: "English", arabic: "Arabic", russian: "Russian" }[input.outputLanguage] ?? input.outputLanguage} only.` : "5. הפלט חייב להיות בעברית בלבד."}
 6. אל תוסיף הסברים - רק את הפרומפט המשודרג.
 7. כל גרסה חדשה חייבת להיות שיפור משמעותי - לא שינוי קוסמטי.
 ${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים כירורגיים ודיוק קיצוני בלבד.` : iteration === 2 ? "\nזהו סבב חידוד שני - חפש את הפערים שנותרו, לא את מה שכבר טוב." : ""}
@@ -245,7 +246,7 @@ ${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוס
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
 לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים בעלי ההשפעה הגבוהה ביותר שנותרו - ספציפיות, מדידות, ניתנות לפעולה. החזר מערך ריק [] אם הפרומפט כעת מקיף ומלא.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]${languageOverride}`,
 
       userPrompt: `הפרומפט הנוכחי:
 ---
