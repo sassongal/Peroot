@@ -85,14 +85,15 @@ function IconStandard({ size }: { size: 24 | 36 }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-        stroke="#5376A4"
+        stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <polyline
         points="13 8 10 12 14 12 11 17"
-        stroke="#7aaed4"
+        stroke="currentColor"
+        strokeOpacity="0.7"
         strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -104,14 +105,14 @@ function IconStandard({ size }: { size: 24 | 36 }) {
 function IconResearch({ size }: { size: 24 | 36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="2.2" fill="#456F52" opacity="0.8" />
-      <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="#456F52" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="2.2" fill="currentColor" opacity="0.8" />
+      <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="currentColor" strokeWidth="1.5" />
       <ellipse
         cx="12"
         cy="12"
         rx="9"
         ry="3.5"
-        stroke="#456F52"
+        stroke="currentColor"
         strokeWidth="1.5"
         transform="rotate(60 12 12)"
       />
@@ -120,7 +121,7 @@ function IconResearch({ size }: { size: 24 | 36 }) {
         cy="12"
         rx="9"
         ry="3.5"
-        stroke="#456F52"
+        stroke="currentColor"
         strokeWidth="1.5"
         transform="rotate(120 12 12)"
       />
@@ -131,14 +132,14 @@ function IconResearch({ size }: { size: 24 | 36 }) {
 function IconImage({ size }: { size: 24 | 36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="9.5" stroke="#AC5050" strokeWidth="1.5" />
-      <circle cx="12" cy="12" r="4" stroke="#AC5050" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
       <line
         x1="12"
         y1="2.5"
         x2="12"
         y2="8"
-        stroke="#AC5050"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -147,7 +148,7 @@ function IconImage({ size }: { size: 24 | 36 }) {
         y1="16"
         x2="12"
         y2="21.5"
-        stroke="#AC5050"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -156,7 +157,7 @@ function IconImage({ size }: { size: 24 | 36 }) {
         y1="5.2"
         x2="9"
         y2="9"
-        stroke="#AC5050"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -165,7 +166,7 @@ function IconImage({ size }: { size: 24 | 36 }) {
         y1="15"
         x2="18.8"
         y2="18.8"
-        stroke="#AC5050"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -174,7 +175,7 @@ function IconImage({ size }: { size: 24 | 36 }) {
         y1="12"
         x2="8"
         y2="12"
-        stroke="#AC5050"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -183,7 +184,7 @@ function IconImage({ size }: { size: 24 | 36 }) {
         y1="12"
         x2="21.5"
         y2="12"
-        stroke="#AC5050"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -200,18 +201,26 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         width="10"
         height="10"
         rx="2"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.6"
-        fill="#FDBE00"
+        fill="currentColor"
         fillOpacity="0.12"
       />
-      <line x1="9" y1="7" x2="9" y2="4" stroke="#FDBE00" strokeWidth="1.5" strokeLinecap="round" />
+      <line
+        x1="9"
+        y1="7"
+        x2="9"
+        y2="4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <line
         x1="12"
         y1="7"
         x2="12"
         y2="4"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -220,7 +229,7 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="7"
         x2="15"
         y2="4"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -229,7 +238,7 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="17"
         x2="9"
         y2="20"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -238,7 +247,7 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="17"
         x2="12"
         y2="20"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -247,17 +256,25 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="17"
         x2="15"
         y2="20"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-      <line x1="7" y1="9" x2="4" y2="9" stroke="#FDBE00" strokeWidth="1.5" strokeLinecap="round" />
+      <line
+        x1="7"
+        y1="9"
+        x2="4"
+        y2="9"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <line
         x1="7"
         y1="12"
         x2="4"
         y2="12"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -266,7 +283,7 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="15"
         x2="4"
         y2="15"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -275,7 +292,7 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="9"
         x2="17"
         y2="9"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -284,7 +301,7 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="12"
         x2="17"
         y2="12"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -293,11 +310,11 @@ function IconAgent({ size }: { size: 24 | 36 }) {
         y1="15"
         x2="17"
         y2="15"
-        stroke="#FDBE00"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-      <circle cx="12" cy="12" r="2" fill="#FDBE00" opacity="0.5" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5" />
     </svg>
   );
 }
@@ -305,17 +322,22 @@ function IconAgent({ size }: { size: 24 | 36 }) {
 function IconVideo({ size }: { size: 24 | 36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="2" y="8" width="20" height="13" rx="2" stroke="#6468d4" strokeWidth="1.6" />
-      <path d="M2 12h20" stroke="#6468d4" strokeWidth="1.5" />
-      <path d="M7 8V4M12 8V4M17 8V4" stroke="#6468d4" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="2" y="8" width="20" height="13" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M2 12h20" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M7 8V4M12 8V4M17 8V4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <path
         d="M2 12l5-4M7 12l5-4M12 12l5-4M17 12l5-4"
-        stroke="#6468d4"
+        stroke="currentColor"
         strokeWidth="1.3"
         opacity="0.6"
         strokeLinecap="round"
       />
-      <polygon points="10,16 10,19 14,17.5" fill="#6468d4" opacity="0.8" />
+      <polygon points="10,16 10,19 14,17.5" fill="currentColor" opacity="0.8" />
     </svg>
   );
 }
@@ -442,6 +464,7 @@ export function CapabilitySelector({
                   "--pill-bg": modeStyle.pillBg,
                   "--pill-shadow": modeStyle.pillShadow,
                   "--pill-border": modeStyle.pillBorder,
+                  color: modeStyle.topbarColor,
                 } as React.CSSProperties
               }
               className={cn(
@@ -498,6 +521,7 @@ export function CapabilitySelector({
                   "--desk-glow": modeStyle.deskGlow,
                   "--topbar-color": modeStyle.topbarColor,
                   "--blob-color": modeStyle.blobColor,
+                  color: modeStyle.topbarColor,
                 } as React.CSSProperties
               }
               className={cn(
