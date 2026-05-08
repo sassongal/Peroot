@@ -20,7 +20,7 @@ import { InputScoreBreakdown } from "./InputScoreBreakdown";
 import { QuickImprovementChips } from "./QuickImprovementChips";
 import type { TargetModel } from "@/lib/engines/types";
 import { TargetModelSelect } from "@/components/features/prompt-improver/TargetModelSelect";
-import { useVoiceRecorder, VOICE_LANGUAGES, VoiceLang } from "@/hooks/useVoiceRecorder";
+import { useVoiceRecorder, VOICE_LANGUAGES, type VoiceLang } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/context/AuthContext";
@@ -60,6 +60,9 @@ interface PromptInputProps {
   // Target model
   targetModel: TargetModel;
   setTargetModel: (model: TargetModel) => void;
+  // Voice language (lifted to parent so HomeClient can derive outputLanguage)
+  voiceLang: VoiceLang;
+  setVoiceLang: (lang: VoiceLang) => void;
   // Credits
   creditsRemaining?: number | null;
   // Voice interim text callback — lets parent include interim speech in scoring
@@ -178,6 +181,8 @@ export function PromptInput({
   hasAttachments,
   targetModel,
   setTargetModel,
+  voiceLang,
+  setVoiceLang,
   creditsRemaining,
   onInterimChange,
 }: PromptInputProps) {
@@ -191,7 +196,6 @@ export function PromptInput({
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlValue, setUrlValue] = useState("");
   const [interimResult, setInterimResult] = useState("");
-  const [voiceLang, setVoiceLang] = useState<VoiceLang>("he-IL");
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false);

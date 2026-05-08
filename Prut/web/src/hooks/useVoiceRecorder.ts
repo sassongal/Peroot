@@ -4,13 +4,19 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { logger } from "@/lib/logger";
 
 export const VOICE_LANGUAGES = [
-  { code: "he-IL", label: "עברית", flag: "🇮🇱", short: "HE" },
-  { code: "en-US", label: "English", flag: "🇺🇸", short: "EN" },
-  { code: "ar-SA", label: "العربية", flag: "🇸🇦", short: "AR" },
-  { code: "ru-RU", label: "Русский", flag: "🇷🇺", short: "RU" },
+  { code: "he-IL", label: "עברית", flag: "🇮🇱", short: "HE", outputLang: "hebrew" },
+  { code: "en-US", label: "English", flag: "🇺🇸", short: "EN", outputLang: "english" },
+  { code: "ar-SA", label: "العربية", flag: "🇸🇦", short: "AR", outputLang: "arabic" },
+  { code: "ru-RU", label: "Русский", flag: "🇷🇺", short: "RU", outputLang: "russian" },
 ] as const;
 
 export type VoiceLang = (typeof VOICE_LANGUAGES)[number]["code"];
+
+export function voiceLangToOutputLang(
+  code: VoiceLang,
+): "hebrew" | "english" | "arabic" | "russian" {
+  return VOICE_LANGUAGES.find((l) => l.code === code)?.outputLang ?? "hebrew";
+}
 
 interface UseVoiceRecorderProps {
   /**
