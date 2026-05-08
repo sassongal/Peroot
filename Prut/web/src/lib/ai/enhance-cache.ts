@@ -32,6 +32,7 @@ interface EnhanceCacheKeyInput {
   tone?: string;
   category?: string;
   targetModel?: string;
+  outputLanguage?: string;
   /**
    * The authenticated user ID. REQUIRED for the key to resolve — guests
    * (no userId) never hit the cache, and per-user scoping prevents the
@@ -117,6 +118,7 @@ export function buildCacheKey(input: EnhanceCacheKeyInput): string | null {
     input.targetModel ?? "general",
     input.modelProfileSlug ?? "",
     String(input.cacheVersion ?? 0),
+    input.outputLanguage ?? "hebrew",
   ];
   const hash = createHash("sha256").update(parts.join("\u0000")).digest("hex");
   // userId lives in the hash AND as a key prefix so that bulk operations

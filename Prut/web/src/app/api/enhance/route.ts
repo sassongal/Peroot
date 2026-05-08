@@ -685,6 +685,7 @@ export async function POST(req: Request) {
                       : "web",
                   input_source: inputSource,
                   cost_funnel_stage: 1,
+                  output_language: output_language || "hebrew",
                   updated_at: new Date().toISOString(),
                 })
                 .then(({ error: histErr }) => {
@@ -743,6 +744,7 @@ export async function POST(req: Request) {
       hasContext: !!(contextAttachments && contextAttachments.length > 0),
       hasPersonalization: !!(userHistory.length > 0 || userPersonality),
       isRefinement,
+      outputLanguage: output_language ?? "hebrew",
     });
 
     if (bypassCache && cacheKey) {
@@ -812,6 +814,7 @@ export async function POST(req: Request) {
                       : "web",
                   input_source: inputSource,
                   cost_funnel_stage: 2,
+                  output_language: output_language || "hebrew",
                   updated_at: new Date().toISOString(),
                 })
                 .then(({ error: histErr }) => {
@@ -845,8 +848,7 @@ export async function POST(req: Request) {
                     ),
                     iteration: iteration || 0,
                     json_output: engineOutput.outputFormat === "json",
-                    // Non-null marker so admins can filter cache-hit rows
-                    // in activity_logs without adding a new column.
+                    output_language: output_language || "hebrew",
                     cache_hit: true,
                   },
                 })
@@ -1107,6 +1109,7 @@ export async function POST(req: Request) {
                         : "web",
                     input_source: inputSource,
                     cost_funnel_stage: 3,
+                    output_language: output_language || "hebrew",
                     updated_at: new Date().toISOString(),
                   })
                   .then(({ error: histErr }) => {
@@ -1149,6 +1152,7 @@ export async function POST(req: Request) {
                     // in src/lib/engines/types.ts. Lets us A/B-test the
                     // L2/L3 layers by joining on these fields.
                     injection: engineOutput.injectionStats || null,
+                    output_language: output_language || "hebrew",
                   },
                 })
                 .then(({ error: actErr }) => {
