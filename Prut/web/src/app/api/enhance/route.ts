@@ -98,7 +98,7 @@ const RequestSchema = z.object({
   iteration: z.number().int().min(0).optional(),
   target_model: z.enum(["chatgpt", "claude", "gemini", "general"]).default("general").optional(),
   model_profile_slug: z.string().max(64).optional(),
-  output_language: z.enum(["hebrew", "english"]).optional(),
+  output_language: z.enum(["hebrew", "english", "arabic", "russian"]).optional(),
   // Accepts both the legacy shape { type, name, content } and the new
   // ContextBlock shape { id, type, sha256, stage, display, injected }.
   // All fields are explicitly typed and size-bounded — no passthrough() —
