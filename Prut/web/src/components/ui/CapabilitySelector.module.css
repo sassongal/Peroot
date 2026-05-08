@@ -130,7 +130,7 @@
 .pillLabel {
   font-size: 10px;
   font-weight: 700;
-  color: rgba(253,190,0,0.5);
+  color: var(--text-muted);
   opacity: 0;
   max-height: 0;
   overflow: hidden;
@@ -142,7 +142,7 @@
 .pillBtnActive .pillLabel {
   opacity: 1;
   max-height: 16px;
-  color: #FDBE00;
+  color: var(--text-primary);
 }
 
 /* ── DESKTOP: Luxury Gem Cards ────────────────────────────────────────────── */
@@ -270,19 +270,19 @@
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.03em;
-  color: rgba(255,255,255,0.25);
+  color: var(--text-muted);
   position: relative;
   z-index: 1;
   white-space: nowrap;
   transition: color 0.25s;
 }
-.deskBtnActive .deskName { color: #FDBE00; }
+.deskBtnActive .deskName { color: var(--text-primary); }
 
 .deskDesc {
   font-size: 10px;
   font-weight: 500;
   line-height: 1.5;
-  color: rgba(255,255,255,0.35);
+  color: var(--text-muted);
   text-align: center;
   max-height: 0;
   opacity: 0;
