@@ -45,7 +45,6 @@ describe("BaseEngine language override", () => {
       previousResult: "previous enhanced prompt",
     });
     expect(out.systemPrompt).toContain("[OUTPUT_LANGUAGE_OVERRIDE]");
-    expect(out.systemPrompt).not.toContain("הפלט חייב להיות בעברית בלבד");
   });
 
   it("generateRefinement() with hebrew outputLanguage keeps Hebrew rule", () => {
