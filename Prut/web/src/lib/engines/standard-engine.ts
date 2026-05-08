@@ -179,6 +179,11 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
       }
     }
 
+    // Language override must be last — after all injected blocks — so it
+    // is the final authoritative instruction the model sees.
+    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
+    if (languageOverride) result.systemPrompt += languageOverride;
+
     return result;
   }
 

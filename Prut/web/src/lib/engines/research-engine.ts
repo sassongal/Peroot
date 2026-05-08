@@ -122,6 +122,10 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
       result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your research brief passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
     }
 
+    // Language override must be last — after all injected blocks.
+    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
+    if (languageOverride) result.systemPrompt += languageOverride;
+
     return result;
   }
 
