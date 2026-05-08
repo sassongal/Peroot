@@ -1,4 +1,3 @@
-
 import { BaseEngine } from "./base-engine";
 import { EngineConfig, EngineInput, EngineOutput } from "./types";
 import { CapabilityMode } from "../capability-mode";
@@ -13,10 +12,11 @@ import { getConceptClassificationBlock } from "./skills/concept-classification";
 
 export class ResearchEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
-      super(config ?? {
-          mode: CapabilityMode.DEEP_RESEARCH,
-          name: "Deep Research Engine",
-          system_prompt_template: `You are a Lead Intelligence Analyst and Deep Research Architect - trained in elite analytical methodologies (Unit 8200, McKinsey MECE, CIA Structured Analytic Techniques). Your mission: build the most thorough, rigorous research prompt possible that will extract maximum-depth insights from AI deep research tools (ChatGPT Deep Research, Gemini Deep Research, Perplexity Pro, Claude).
+    super(
+      config ?? {
+        mode: CapabilityMode.DEEP_RESEARCH,
+        name: "Deep Research Engine",
+        system_prompt_template: `You are a Lead Intelligence Analyst and Deep Research Architect - trained in elite analytical methodologies (Unit 8200, McKinsey MECE, CIA Structured Analytic Techniques). Your mission: build the most thorough, rigorous research prompt possible that will extract maximum-depth insights from AI deep research tools (ChatGPT Deep Research, Gemini Deep Research, Perplexity Pro, Claude).
 
 CRITICAL RULES:
 1. Output ONLY the resulting research prompt. No conversational filler, no explanations.
@@ -73,83 +73,89 @@ Structure the output as a professional intelligence brief:
 - "בצע ניתוח SWOT או מיפוי בעלי עניין (stakeholder mapping) כשרלוונטי למחקר עסקי/אסטרטגי"
 
 Tone: {{tone}}.`,
-          user_prompt_template: `Build an elite deep research prompt in Hebrew for the following topic. Apply the full research architecture: define sub-questions, methodology, source requirements, and structured output format.
+        user_prompt_template: `Build an elite deep research prompt in Hebrew for the following topic. Apply the full research architecture: define sub-questions, methodology, source requirements, and structured output format.
 
 Research topic: {{input}}
 
 Output ONLY the Hebrew research prompt. No meta-text.`,
-      });
+      },
+    );
   }
 
   generate(input: EngineInput): EngineOutput {
-      const result = super.generate(input);
-      result.outputFormat = "markdown";
-      result.requiredFields = ["citations", "summary"];
+    const result = super.generate(input);
+    result.outputFormat = "markdown";
+    result.requiredFields = ["citations", "summary"];
 
-      // Research-specific context framing: treat attachments as primary sources
-      if (input.context && input.context.length > 0) {
-          result.systemPrompt += `\n\n[RESEARCH_SOURCE_DIRECTIVE]
+    // Research-specific context framing: treat attachments as primary sources
+    if (input.context && input.context.length > 0) {
+      result.systemPrompt += `\n\n[RESEARCH_SOURCE_DIRECTIVE]
 החומר המצורף הוא **מקור ראשוני** למחקר — לא רקע כללי:
 1. צטט נתונים, מספרים ומסקנות ספציפיות מהמקורות בפרומפט המחקר שאתה בונה.
 2. הנח את הכלי לבצע אימות צולב (cross-verification) של טענות מהחומר מול מקורות חיצוניים.
 3. הגדר את החומר כ"מקור מוסמך" בסעיף דרישות מקורות וראיות, עם דירוג ◉ מאומת.
 4. שלב את תת-הנושאים מהחומר בפירוק MECE של שאלת המחקר.
 5. אל תסכם את החומר — שלב את תוכנו ישירות בהנחיות המתודולוגיה.`;
-      }
+    }
 
-      // Inject concept classification (LLM-level semantic understanding)
-      result.systemPrompt += getConceptClassificationBlock('text');
+    // Inject concept classification (LLM-level semantic understanding)
+    result.systemPrompt += getConceptClassificationBlock("text");
 
-      // Inject skill-based few-shot examples, mistakes, and scoring criteria
-      const examplesBlock = getExamplesBlock('text', 'research', input.prompt, 3);
-      const mistakesBlock = getMistakesBlock('text', 'research');
-      const scoringBlock = getScoringBlock('text', 'research');
+    // Inject skill-based few-shot examples, mistakes, and scoring criteria
+    const examplesBlock = getExamplesBlock("text", "research", input.prompt, 3);
+    const mistakesBlock = getMistakesBlock("text", "research");
+    const scoringBlock = getScoringBlock("text", "research");
 
-      if (examplesBlock) result.systemPrompt += examplesBlock;
-      if (mistakesBlock) result.systemPrompt += mistakesBlock;
+    if (examplesBlock) result.systemPrompt += examplesBlock;
+    if (mistakesBlock) result.systemPrompt += mistakesBlock;
 
-      // Chain-of-Thought reasoning — research questions almost always benefit
-      // from explicit decomposition, so we apply the same length heuristic to
-      // skip only the most trivial inputs.
-      const concept = input.prompt || '';
-      if (concept.trim().length > 30) {
-          const cotBlock = getChainOfThoughtBlock('text', 'research', concept);
-          if (cotBlock) result.systemPrompt += cotBlock;
-      }
+    // Chain-of-Thought reasoning — research questions almost always benefit
+    // from explicit decomposition, so we apply the same length heuristic to
+    // skip only the most trivial inputs.
+    const concept = input.prompt || "";
+    if (concept.trim().length > 30) {
+      const cotBlock = getChainOfThoughtBlock("text", "research", concept);
+      if (cotBlock) result.systemPrompt += cotBlock;
+    }
 
-      if (scoringBlock) {
-          result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your research brief passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
-      }
+    if (scoringBlock) {
+      result.systemPrompt += `\n\n<internal_quality_check hidden="true">\nSilently verify your research brief passes this quality gate (do NOT include any of this in output):${scoringBlock}</internal_quality_check>`;
+    }
 
-      return result;
+    return result;
   }
 
   generateRefinement(input: EngineInput): EngineOutput {
-      if (!input.previousResult) throw new Error("Previous result required for refinement");
+    if (!input.previousResult) throw new Error("Previous result required for refinement");
 
-      const iteration = input.iteration || 1;
-      const instruction = (input.refinementInstruction || "חזק את מתודולוגיית המחקר, דרישות המקורות, ואיכות הראיות.").trim().slice(0, 2000);
+    const iteration = input.iteration || 1;
+    const instruction = (
+      input.refinementInstruction || "חזק את מתודולוגיית המחקר, דרישות המקורות, ואיכות הראיות."
+    )
+      .trim()
+      .slice(0, 2000);
 
-      let answersBlock = "";
-      if (input.answers && Object.keys(input.answers).length > 0) {
-          const pairs = Object.entries(input.answers)
-              .filter(([, v]) => v.trim())
-              .map(([key, answer]) => `- [${key}] ${answer}`)
-              .join("\n");
-          if (pairs) {
-              answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;
-          }
+    let answersBlock = "";
+    if (input.answers && Object.keys(input.answers).length > 0) {
+      const pairs = Object.entries(input.answers)
+        .filter(([, v]) => v.trim())
+        .map(([key, answer]) => `- [${key}] ${answer}`)
+        .join("\n");
+      if (pairs) {
+        answersBlock = `\n\nתשובות המשתמש לשאלות ההבהרה:\n${pairs}\n`;
       }
+    }
 
-      const identity = this.getSystemIdentity();
+    const identity = this.getSystemIdentity();
 
-      // Pull a refinement example calibrated to the current iteration so the
-      // model can see exactly how a research prompt evolves between rounds.
-      const refinementBlock = getRefinementExamplesBlock('text', 'research', iteration);
-      const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+    // Pull a refinement example calibrated to the current iteration so the
+    // model can see exactly how a research prompt evolves between rounds.
+    const refinementBlock = getRefinementExamplesBlock("text", "research", iteration);
+    const modelHints = BaseEngine.getModelAdaptationHints(input.targetModel);
+    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
 
-      return {
-          systemPrompt: `אתה אנליסט מחקר בכיר ברמת מודיעין - מומחה בבניית פרומפטי מחקר עמוק. משימתך: לשדרג את פרומפט המחקר הקיים לרמת מושלמות מתודולוגית על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ''}
+    return {
+      systemPrompt: `אתה אנליסט מחקר בכיר ברמת מודיעין - מומחה בבניית פרומפטי מחקר עמוק. משימתך: לשדרג את פרומפט המחקר הקיים לרמת מושלמות מתודולוגית על בסיס המשוב והפרטים החדשים שסופקו.${refinementBlock}${modelHints ? `\n\n${modelHints}\n` : ""}
 
 כללי שדרוג מחקר:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.
@@ -171,27 +177,27 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
 4. הפלט חייב להיות בעברית בלבד.
 5. אל תוסיף הסברים - רק את פרומפט המחקר המשודרג.
 6. כל גרסה חדשה חייבת לייצר מחקר עמוק ואמין יותר - לא שיפור קוסמטי.
-${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. המחקר כבר ברמה גבוהה - התמקד בחיזוק מתודולוגי כירורגי ודיוק ראיות בלבד.` : iteration === 2 ? '\nזהו סבב חידוד שני - חפש את הפערים המתודולוגיים שנותרו, לא את מה שכבר חזק.' : ''}
+${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. המחקר כבר ברמה גבוהה - התמקד בחיזוק מתודולוגי כירורגי ודיוק ראיות בלבד.` : iteration === 2 ? "\nזהו סבב חידוד שני - חפש את הפערים המתודולוגיים שנותרו, לא את מה שכבר חזק." : ""}
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ''}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
+${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
 [PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
 
 לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים המתודולוגיים הגבוהים ביותר שנותרו - פירוק תת-שאלות, דרישות מקורות, או היקף המחקר. החזר מערך ריק [] אם פרומפט המחקר עכשיו מקיף ומלא.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]${languageOverride}`,
 
-          userPrompt: `פרומפט המחקר הנוכחי:
+      userPrompt: `פרומפט המחקר הנוכחי:
 ---
 ${input.previousResult}
 ---
 ${answersBlock}
-${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ''}
+${instruction ? `הוראות נוספות מהמשתמש: ${instruction}` : ""}
 
 שלב את כל המידע החדש לתוך פרומפט מחקר מעודכן ומשודרג בעברית. בדוק ספציפית: האם תת-השאלות MECE? האם דרישות המקורות מספיק מחמירות? האם פרוטוקול האימות הצולב חזק? אלה האזורים בעלי ההשפעה הגבוהה ביותר על עומק ואמינות המחקר.`,
 
-          outputFormat: "markdown",
-          requiredFields: [],
-      };
+      outputFormat: "markdown",
+      requiredFields: [],
+    };
   }
 }

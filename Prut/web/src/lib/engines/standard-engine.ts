@@ -235,7 +235,7 @@ Output ONLY the final Hebrew prompt. No English. No meta-text. No preamble.`,
    - Context Scaffolding לבנייה שיטתית של הקשר
    - Anti-Hallucination למניעת המצאת עובדות
 4. בדוק ספציפיות, מדידות, וניתנות לפעולה - החלף כל הוראה מעורפלת בהוראה מדויקת ומדידה.
-${input.outputLanguage && input.outputLanguage !== "hebrew" ? `5. Write the entire output in ${{ english: "English", arabic: "Arabic", russian: "Russian" }[input.outputLanguage] ?? input.outputLanguage} only.` : "5. הפלט חייב להיות בעברית בלבד."}
+5. הפלט חייב להיות בעברית בלבד.
 6. אל תוסיף הסברים - רק את הפרומפט המשודרג.
 7. כל גרסה חדשה חייבת להיות שיפור משמעותי - לא שינוי קוסמטי.
 ${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כבר ברמה גבוהה - התמקד בשיפורים כירורגיים ודיוק קיצוני בלבד.` : iteration === 2 ? "\nזהו סבב חידוד שני - חפש את הפערים שנותרו, לא את מה שכבר טוב." : ""}
