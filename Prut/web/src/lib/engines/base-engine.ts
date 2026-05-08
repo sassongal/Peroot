@@ -387,7 +387,13 @@ SELF-CHECK BEFORE EMITTING: scan your output. If you see ANY Hebrew character (\
 
     const variableRegistryBlock = this.getVariableRegistryBlock(input.category);
 
-    const languageOverride = this.buildLanguageOverride(input.outputLanguage);
+    // NOTE: language override is intentionally NOT applied here.
+    // Subclasses (StandardEngine, ResearchEngine, AgentEngine) append it
+    // LAST — after their own injected blocks (examples, mistakes, scoring,
+    // CoT, OUTPUT CONTRACT) — so the override is the final authoritative
+    // instruction the model reads. Any new engine extending BaseEngine
+    // MUST append `this.buildLanguageOverride(input.outputLanguage)` to
+    // BOTH systemPrompt and userPrompt at the end of its generate() path.
 
     const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
     const imageAttachments = (input.context as unknown as ContextBlock[])

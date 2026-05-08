@@ -147,6 +147,8 @@ End-to-end pipeline that routes the user's voice-picker selection into engine pr
 
 When adding a new language: extend `OutputLanguage` type (`engines/types.ts:64`), add to `LANG_NAMES` map (`base-engine.ts`), add to `voiceLangToOutputLang` mapping, extend the DB CHECK constraint.
 
+**Mode coverage:** Standard, Research, and Agent engines apply the override. Image and Video engines deliberately do NOT — Midjourney/SD/DALL-E/Imagen/Veo platforms require English prompts for best generation quality, so the voice picker is silently ignored for those modes.
+
 ---
 
 ## AI Gateway — Fallback Chain
