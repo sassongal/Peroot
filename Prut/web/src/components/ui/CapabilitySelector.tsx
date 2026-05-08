@@ -464,7 +464,6 @@ export function CapabilitySelector({
                   "--pill-bg": modeStyle.pillBg,
                   "--pill-shadow": modeStyle.pillShadow,
                   "--pill-border": modeStyle.pillBorder,
-                  color: modeStyle.topbarColor,
                 } as React.CSSProperties
               }
               className={cn(
@@ -475,7 +474,7 @@ export function CapabilitySelector({
             >
               <span aria-hidden className={styles.pillHighlight} />
               <PillSmoke />
-              <span className={styles.iconWrap}>
+              <span className={styles.iconWrap} style={{ color: modeStyle.topbarColor }}>
                 <Icon size={24} />
               </span>
               <span className={styles.pillLabel}>
@@ -521,7 +520,6 @@ export function CapabilitySelector({
                   "--desk-glow": modeStyle.deskGlow,
                   "--topbar-color": modeStyle.topbarColor,
                   "--blob-color": modeStyle.blobColor,
-                  color: modeStyle.topbarColor,
                 } as React.CSSProperties
               }
               className={cn(
@@ -534,7 +532,7 @@ export function CapabilitySelector({
                 <span aria-hidden className={styles.blobGlow} />
                 <span aria-hidden className={styles.deskTopbar} />
                 <DeskSmoke />
-                <span className={styles.iconWrapLg}>
+                <span className={styles.iconWrapLg} style={{ color: modeStyle.topbarColor }}>
                   <Icon size={36} />
                 </span>
                 <span className={styles.deskName}>
