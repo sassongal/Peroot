@@ -487,6 +487,7 @@ export async function POST(req: Request) {
       targetModel: target_model || "general",
       isRefinement,
       contextFingerprint,
+      outputLanguage: output_language,
     });
     if (!lock.acquired) {
       // Credits not yet decremented — no refund needed.

@@ -52,6 +52,12 @@ interface InflightLockInput {
    * payloads (or null for no attachments).
    */
   contextFingerprint?: string | null;
+  /**
+   * Voice-picker output language. Without this, switching language and
+   * re-submitting the same prompt within the 35s TTL would 409 even though
+   * it's a legitimately distinct request that lands in a different cache slot.
+   */
+  outputLanguage?: string;
 }
 
 interface AcquiredLock {
@@ -83,6 +89,7 @@ export function buildInflightKey(input: InflightLockInput): string | null {
     input.targetModel ?? "general",
     input.isRefinement ? "1" : "0",
     input.contextFingerprint ?? "",
+    input.outputLanguage ?? "hebrew",
   ];
   const hash = createHash("sha256").update(parts.join("\u0000")).digest("hex");
   return `${LOCK_PREFIX}:${input.userId}:${hash}`;
