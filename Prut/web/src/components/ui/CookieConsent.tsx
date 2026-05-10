@@ -13,8 +13,8 @@ export function CookieConsent() {
     // Show banner if user hasn't consented yet
     const consent = localStorage.getItem(CONSENT_KEY);
     if (!consent) {
-      // Small delay so it doesn't flash on page load
-      const timer = setTimeout(() => setVisible(true), 1500);
+      // Delay so it doesn't clash with onboarding overlay or splash screen
+      const timer = setTimeout(() => setVisible(true), 3500);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -27,7 +27,7 @@ export function CookieConsent() {
   const handleDecline = () => {
     localStorage.setItem(CONSENT_KEY, "declined");
     // Disable PostHog tracking
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const w = window as unknown as { posthog?: { opt_out_capturing: () => void } };
       if (w.posthog) w.posthog.opt_out_capturing();
     }
@@ -49,7 +49,10 @@ export function CookieConsent() {
         <div className="flex-1">
           <p className="text-sm text-muted-foreground leading-relaxed">
             אנחנו משתמשים בעוגיות לשיפור חווית השימוש ולניתוח נתונים.{" "}
-            <a href="/privacy" className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 underline underline-offset-2">
+            <a
+              href="/privacy"
+              className="text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 underline underline-offset-2"
+            >
               מדיניות פרטיות
             </a>
           </p>

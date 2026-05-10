@@ -452,6 +452,29 @@ export function ResultSection({
             </div>
           )}
 
+          {/* Guest registration nudge — visible after a successful result */}
+          {!isAuthenticated && !isLoading && !!completion && (
+            <div
+              className="mx-3 mb-2 px-3 py-2.5 rounded-xl bg-amber-500/8 border border-amber-500/25 flex items-center justify-between gap-3"
+              dir="rtl"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 leading-snug">
+                  שמרו את הפרומפט שלכם
+                </p>
+                <p className="text-[11px] text-amber-700/70 dark:text-amber-400/70">
+                  הירשמו בחינם וקבלו 2 שיפורים ביום
+                </p>
+              </div>
+              <a
+                href="/login"
+                className="shrink-0 text-xs font-bold text-white bg-amber-500 hover:bg-amber-400 transition-colors px-3 py-1.5 rounded-lg"
+              >
+                הירשמו בחינם
+              </a>
+            </div>
+          )}
+
           {/* ── Bottom bar ── */}
           <div className="p-3 bg-(--glass-bg) border-t border-(--glass-border) mt-auto">
             <div className="flex items-center justify-between gap-2 flex-wrap" dir="rtl">

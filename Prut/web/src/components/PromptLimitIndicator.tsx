@@ -94,17 +94,29 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
     );
   }
 
-  // ----- Guest user -----
+  // ----- Guest user — quota used up: prominent register CTA -----
+  if (remainingPrompts <= 0) {
+    return (
+      <Link
+        href="/login"
+        className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl border border-amber-500/50 bg-amber-500/10 backdrop-blur-md transition-all hover:bg-amber-500/20 animate-pulse"
+      >
+        <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+        <span className="text-xs font-bold text-amber-700 dark:text-amber-300">הירשמו בחינם</span>
+        <span className="hidden sm:inline text-[10px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-full">
+          2/יום
+        </span>
+      </Link>
+    );
+  }
+
+  // ----- Guest user — still has quota -----
   return (
     <Link
       href="/login"
-      className={`flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl border backdrop-blur-md transition-all hover:bg-black/10 dark:hover:bg-black/60 ${
-        remainingPrompts <= 1
-          ? "border-red-500/50 bg-red-500/10"
-          : "border-[var(--glass-border)] bg-[var(--glass-bg)]"
-      }`}
+      className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md transition-all hover:bg-black/10 dark:hover:bg-black/60"
     >
-      <Sparkles className={`w-4 h-4 ${remainingPrompts <= 1 ? "text-red-400" : "text-blue-400"}`} />
+      <Sparkles className="w-4 h-4 text-blue-400" />
       <span className="text-xs font-medium text-[var(--text-primary)]">
         {remainingPrompts}/{totalAllowed}
         <span className="text-[var(--text-muted)] font-normal hidden md:inline">
