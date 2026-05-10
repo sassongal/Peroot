@@ -11,7 +11,7 @@ import { applyModelTagWrapper, shouldSkipLLM } from "@/lib/engines/score-gate";
 import type { ModelProfile } from "@/lib/engines/types";
 import { selectEngineModel } from "@/lib/ai/context-router";
 import type { ContextBlock } from "@/lib/context/engine/types";
-import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, parseCapabilityMode, capabilityModeToDbMode } from "@/lib/capability-mode";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
@@ -663,6 +663,7 @@ export async function POST(req: Request) {
           outputTokens: 0,
           durationMs: 0,
           endpoint: "enhance",
+          engineMode: capabilityModeToDbMode(parseCapabilityMode(capability_mode)),
           cacheHit: false,
         });
 
@@ -778,6 +779,7 @@ export async function POST(req: Request) {
           outputTokens: 0,
           durationMs: cacheLatencyMs,
           endpoint: "enhance",
+          engineMode: capabilityModeToDbMode(parseCapabilityMode(capability_mode)),
           cacheHit: true,
         });
 
@@ -1040,6 +1042,7 @@ export async function POST(req: Request) {
               outputTokens: usage?.outputTokens ?? usage?.completionTokens ?? 0,
               durationMs,
               endpoint: "enhance",
+              engineMode: capabilityModeToDbMode(parseCapabilityMode(capability_mode)),
               cacheHit: false,
             });
 

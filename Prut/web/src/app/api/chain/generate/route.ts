@@ -200,6 +200,7 @@ export async function POST(req: Request) {
       outputTokens: chainUsageTyped?.outputTokens ?? chainUsageTyped?.completionTokens ?? 0,
       durationMs: Date.now() - chainStartTime,
       endpoint: "chain",
+      engineMode: "chain",
     });
 
     // Parse JSON — refund credits on failure

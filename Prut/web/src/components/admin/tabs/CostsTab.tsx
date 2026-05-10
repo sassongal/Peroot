@@ -53,6 +53,13 @@ interface ManualCostEntry {
   created_at?: string;
 }
 
+interface ModeRow {
+  mode: string;
+  totalCost: number;
+  requestCount: number;
+  avgCostPerRequest: number;
+}
+
 interface CostsData {
   summary: {
     totalCost: number;
@@ -61,6 +68,7 @@ interface CostsData {
     avgCostPerPrompt: number;
   };
   byProvider: ProviderRow[];
+  byMode?: ModeRow[];
   byUser: UserCostRow[];
   monthly: MonthlyRow[];
 }
@@ -741,6 +749,68 @@ export default function CostsTab() {
           )}
         </div>
       </div>
+
+      {/* ── By Mode ── */}
+      {(data?.byMode?.length ?? 0) > 0 && (
+        <div className="space-y-4 px-2">
+          <h2 className="text-[9px] font-black uppercase tracking-widest text-zinc-700">
+            Cost by Engine Mode
+          </h2>
+          <div className="rounded-[48px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="text-left px-8 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-700">
+                    Mode
+                  </th>
+                  <th className="text-right px-6 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-700">
+                    Requests
+                  </th>
+                  <th className="text-right px-6 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-700">
+                    Total Cost
+                  </th>
+                  <th className="text-right px-8 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-700">
+                    Avg / Request
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.byMode ?? []).map((row) => {
+                  const labels: Record<string, string> = {
+                    standard: "Standard",
+                    deep_research: "Deep Research",
+                    agent_builder: "Agent Builder",
+                    image_generation: "Image Generation",
+                    video_generation: "Video Generation",
+                    chain: "Prompt Chain",
+                    test: "Admin Test",
+                    unknown: "Unknown (pre-tracking)",
+                  };
+                  return (
+                    <tr
+                      key={row.mode}
+                      className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+                    >
+                      <td className="px-8 py-3 font-semibold text-zinc-300">
+                        {labels[row.mode] ?? row.mode}
+                      </td>
+                      <td className="px-6 py-3 text-right text-zinc-500 tabular-nums">
+                        {fmt(row.requestCount)}
+                      </td>
+                      <td className="px-6 py-3 text-right text-amber-400 font-black tabular-nums">
+                        {fmtCost(row.totalCost)}
+                      </td>
+                      <td className="px-8 py-3 text-right text-zinc-500 tabular-nums">
+                        {fmtCost(row.avgCostPerRequest)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── Manual Costs ── */}
       <div className="space-y-4 px-2">

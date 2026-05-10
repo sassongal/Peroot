@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 
-const CACHE_KEY_PREFIX = "admin:costs:v1:";
+const CACHE_KEY_PREFIX = "admin:costs:v2:";
 const CACHE_TTL = 300; // 5 minutes
 
 /**
@@ -54,7 +54,7 @@ export const GET = withAdmin(async (req) => {
     let baseQuery = supabase
       .from("api_usage_logs")
       .select(
-        "estimated_cost_usd, input_tokens, output_tokens, provider, model, user_id, created_at",
+        "estimated_cost_usd, input_tokens, output_tokens, provider, model, user_id, created_at, engine_mode",
       )
       .gte("created_at", from)
       .lte("created_at", to)
@@ -135,6 +135,25 @@ export const GET = withAdmin(async (req) => {
     }
 
     const byProvider = Array.from(providerMap.values()).sort((a, b) => b.totalCost - a.totalCost);
+
+    // --- By engine mode ---
+    const modeMap = new Map<string, { mode: string; totalCost: number; requestCount: number }>();
+    for (const row of rows) {
+      const mode = (row as { engine_mode?: string | null }).engine_mode ?? "unknown";
+      const existing = modeMap.get(mode);
+      if (existing) {
+        existing.totalCost += row.estimated_cost_usd ?? 0;
+        existing.requestCount += 1;
+      } else {
+        modeMap.set(mode, { mode, totalCost: row.estimated_cost_usd ?? 0, requestCount: 1 });
+      }
+    }
+    const byMode = Array.from(modeMap.values())
+      .map((m) => ({
+        ...m,
+        avgCostPerRequest: m.requestCount > 0 ? m.totalCost / m.requestCount : 0,
+      }))
+      .sort((a, b) => b.totalCost - a.totalCost);
 
     // --- Top 10 users by cost ---
     const userMap = new Map<string, { user_id: string; totalCost: number; requestCount: number }>();
@@ -220,7 +239,7 @@ export const GET = withAdmin(async (req) => {
       });
     }
 
-    const payload = { summary, byProvider, byUser, monthly, truncated };
+    const payload = { summary, byProvider, byMode, byUser, monthly, truncated };
 
     try {
       await redis.set(cacheKey, payload, { ex: CACHE_TTL });
