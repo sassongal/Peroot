@@ -1,13 +1,25 @@
 <p class="lede">Sora 2 הוא מודל יצירת הווידאו המתקדם של OpenAI, שפורסם בסוף 2024 ומאפשר יצירת סרטוני וידאו באיכות קולנועית מפרומפט טקסטואלי בלבד, כולל שליטה בתנועת מצלמה, תאורה, וסגנון ויזואלי. לפי נתוני OpenAI שפורסמו ינואר 2025, Sora 2 מסוגל לייצר סרטונים ברזולוציה של עד 1080p ובמשך של עד 20 שניות, עם שיפור של פי ארבעה בעקביות הפיזיקה לעומת הדור הראשון. הכתיבה נכונה לפרומפטים ל-Sora 2 היא מיומנות נפרדת ממה שעובד עם מודלי שפה — היא קרובה יותר לכתיבת תסריט קולנועי מאשר לשאילת שאלות.</p>
 
-<aside class="tldr">
-  <strong>בקצרה:</strong>
-  <ul>
-    <li>פרומפטים ל-Sora 2 צריכים לכלול סצנה, תנועת מצלמה, תאורה וסגנון ויזואלי — לא רק "מה לצלם"</li>
-    <li>אנגלית מייצרת תוצאות טובות יותר מעברית בשלב הנוכחי — אבל כדאי לתכנן בעברית ולתרגם</li>
-    <li>5 הטעויות הנפוצות ביותר: פרומפט קצר מדי, פנים לא מתוארות, אין תנועת מצלמה, לוח צבעים לא מוגדר, אין ציון משך</li>
-  </ul>
-</aside>
+<div class="article-stats-grid">
+  <div class="article-stat-box">
+    <div class="article-stat-number">20שנ׳</div>
+    <div class="article-stat-label">משך מקסימלי לסרטון ב-Sora 2</div>
+  </div>
+  <div class="article-stat-box">
+    <div class="article-stat-number">1080p</div>
+    <div class="article-stat-label">רזולוציית פלט מקסימלית</div>
+  </div>
+  <div class="article-stat-box">
+    <div class="article-stat-number">5</div>
+    <div class="article-stat-label">מרכיבי פרומפט קולנועי לתוצאה מושלמת</div>
+  </div>
+</div>
+
+<div class="article-editorial-voice">
+  ב-Peroot יש מצב ייעודי לשיפור פרומפטים לווידאו — הוא מוסיף אוטומטית תנועת מצלמה, תאורה, וסגנון ויזואלי לכל רעיון גולמי.
+</div>
+
+<hr class="article-divider" />
 
 <h2>סקירה כללית</h2>
 <p>יצירת וידאו בעזרת AI עברה שינוי טקטוני עם הגעת Sora 2. הדור הראשון של כלי הווידאו — כולל Runway Gen-2 וכלים דומים — ייצר סרטונים שנחשבו ל"מרשים לאחוז הנוכחי של הטכנולוגיה" אבל ברורים בגבולותיהם: פיזיקה לא עקבית, תנועה מלאכותית, וחוסר שליטה בתנועת מצלמה. Sora 2 שינה את כל זה.</p>
@@ -16,19 +28,34 @@
 
 <p>עבור מי שעובד בתחומי שיווק, פרסום, יצירת תוכן, או סטוריטלינג ויזואלי — Sora 2 פותח אפשרויות שנדרשה עבורן בעבר קבוצה שלמה של מצלמן, מנהל תאורה ועורך. אבל הכלי הזה הוא עוצמתי רק כשמדברים אליו נכון. מדריך זה נועד ללמד בדיוק איך לעשות את זה. אם מחפשים השוואה בין Sora 2 לכלים אחרים, ניתן לעיין ב<a href="/blog/ai-video-prompts-sora-runway-kling">השוואת כלי וידאו: Sora, Runway ו-Kling</a>.</p>
 
+<hr class="article-divider" />
+
 <h2>מהו Sora 2 ואיך הוא שונה מהדור הקודם?</h2>
 <p>Sora 1 הוצג לעולם בפברואר 2024 כהדגמת יכולת. הוא יצר סרטונים מרשימים, אבל גרסת ה-API לא הייתה זמינה לציבור הרחב. Sora 2 הגיע בנובמבר 2024 עם גישה רחבה יותר לחברי ChatGPT Plus ו-Pro, עם יכולות שונות לחלוטין.</p>
 
-<p>ההבדלים המרכזיים: ראשית, <strong>שליטה בתנועת מצלמה</strong> — ב-Sora 2 ניתן לציין "dolly zoom", "tracking shot", "bird's eye view" ועוד עשרות סוגי תנועות מצלמה קולנועיות. ב-Sora 1, תנועת המצלמה הייתה אקראית. שנית, <strong>עקביות פיזיקלית</strong> — אובייקטים מתנהגים כפי שמצופה מהם בעולם האמיתי. שלישית, <strong>עקביות בין סצנות</strong> — כאשר יוצרים סדרה של קליפים, ניתן לשמור על עקביות של דמויות, פנים ואובייקטים. רביעית, <strong>סגנונות ויזואליים</strong> — מאנימציה בסגנון Pixar ועד נאוור ריאליזם קולנועי, הגמישות הסגנונית גדלה פי כמה.</p>
+<div class="article-highlight-box">
+  <strong>ארבעת השיפורים המרכזיים ב-Sora 2:</strong>
+  <ul>
+    <li><strong>שליטה בתנועת מצלמה</strong> — "dolly zoom", "tracking shot", "bird's eye view" ועוד עשרות סוגי תנועות מצלמה קולנועיות</li>
+    <li><strong>עקביות פיזיקלית</strong> — אובייקטים מתנהגים כפי שמצופה מהם בעולם האמיתי</li>
+    <li><strong>עקביות בין סצנות</strong> — ניתן לשמור על עקביות של דמויות, פנים ואובייקטים לאורך קליפים</li>
+    <li><strong>סגנונות ויזואליים</strong> — מאנימציה בסגנון Pixar ועד נאוור ריאליזם קולנועי</li>
+  </ul>
+</div>
 
 <p>ההבדל שהכי משנה בפועל: ב-Sora 1, פרומפט פשוט ("כלב רץ בפארק") נתן תוצאה סבירה. ב-Sora 2, אותו פרומפט ייתן תוצאה בינונית — אבל פרומפט מפורט ומקצועי יניב תוצאה שנראית כמו קטע מסרט. הפערים בין פרומפט טוב לפרומפט בינוני הם גדולים הרבה יותר ב-Sora 2 מאשר ב-Sora 1. ניתן גם לעיין ב<a href="/blog/ai-image-prompts-dalle-flux-ideogram">פרומפטים לתמונות: DALL-E, Flux ו-Ideogram</a> להשוואה של עקרונות דומים ביצירת תמונות סטטיות.</p>
+
+<hr class="article-divider" />
 
 <h2>מבנה פרומפט קולנועי ל-Sora 2</h2>
 
 <h3>סצנה ונושא</h3>
-<p>הרכיב הראשון בכל פרומפט ל-Sora 2 הוא תיאור הסצנה — מה קורה, היכן, ומי הדמויות המעורבות. חשוב לתאר את הסצנה כפי שמנהל מצלמה היה כותב אותה, לא כפי שמתאר אותה בשפה יומיומית. "אישה צועדת ברחוב" הוא תיאור חלש. "אישה בת 30, לבושה בג'קט עור שחור, צועדת בצעדים נחושים לאורך מדרכה עירונית מוארת ניאון בלילה" הוא תיאור שיניב סצנה ויזואלית עשירה.</p>
+<p>הרכיב הראשון בכל פרומפט ל-Sora 2 הוא תיאור הסצנה — מה קורה, היכן, ומי הדמויות המעורבות. חשוב לתאר את הסצנה כפי שמנהל מצלמה היה כותב אותה, לא כפי שמתאר אותה בשפה יומיומית.</p>
 
-<p>כלל אצבע לתיאור נושא: ציינו גיל משוער, לבוש בולט, הבעה רגשית ופעולה ספציפית. לחפצים — ציינו חומר, מצב ומיקום. לסצנות טבע — ציינו מזג אוויר, שעת יום ואלמנט תנועה אחד (גל, ענן, עלים). ספציפיות שווה עושר ויזואלי.</p>
+<div class="article-callout-tip">
+  <div class="article-callout-title">כלל אצבע לתיאור נושא</div>
+  <p>ציינו גיל משוער, לבוש בולט, הבעה רגשית ופעולה ספציפית. לחפצים — ציינו חומר, מצב ומיקום. לסצנות טבע — ציינו מזג אוויר, שעת יום ואלמנט תנועה אחד (גל, ענן, עלים). ספציפיות שווה עושר ויזואלי.</p>
+</div>
 
 <h3>תנועת מצלמה</h3>
 <p>תנועת המצלמה היא ה"כח הסודי" של Sora 2 שרוב המשתמשים החדשים מפספסים. ציון מפורש של תנועת המצלמה הוא ההבדל בין סרטון סטטי ומשעמם לסרטון דינמי ומרתק. האפשרויות העיקריות שעובדות ב-Sora 2:</p>
@@ -42,64 +69,133 @@
 <h3>סגנון ויזואלי</h3>
 <p>הגדרת סגנון ויזואלי מאפשרת לשלוט בלוק האמנותי של הסרטון. Sora 2 מכיר מגוון רחב של סגנונות: <strong>Photorealistic</strong> — ריאליסטי כמצולם במצלמה אמיתית. <strong>Studio Ghibli animation style</strong> — אנימציה ידנית בסגנון יפני. <strong>Wes Anderson symmetrical aesthetic</strong> — קומפוזיציה סימטרית ופלטת צבעים פסטל. <strong>Documentary style handheld</strong> — מצלמה נייד, תחושת דוקומנטרי. <strong>8mm vintage film</strong> — תחושת פילם ישן עם גרין ופגמים. <strong>Minimalist white background product shot</strong> — רקע לבן לצילום מוצר.</p>
 
-<p>ניתן לשלב סגנונות: "photorealistic with a slight film grain and warm vintage color grading" הוא סגנון חוקי ויתן תוצאה מוגדרת. לרוב הפרויקטים המסחריים, photorealistic הוא הבחירה הבטוחה להתחיל איתה.</p>
+<div class="article-callout-tip">
+  <div class="article-callout-title">שילוב סגנונות</div>
+  <p>ניתן לשלב סגנונות: "photorealistic with a slight film grain and warm vintage color grading" הוא סגנון חוקי ויתן תוצאה מוגדרת. לרוב הפרויקטים המסחריים, photorealistic הוא הבחירה הבטוחה להתחיל איתה.</p>
+</div>
+
+<hr class="article-divider" />
 
 <h2>חמש הטעויות שהורגות פרומפטים לווידאו</h2>
-<p><strong>טעות 1: פרומפט קצר מדי.</strong> "כלב רץ בפארק" — זו לא הוראת עבודה, זה כותרת. Sora 2 זקוק לפחות 3–4 משפטים כדי להבין את הסצנה. פרומפט קצר מדי מייצר תוצאה גנרית שנראית כמו stock footage. כדאי לכתוב לפחות 60–100 מילים לפרומפט של Sora 2. זה נראה הרבה, אבל כל מילה תורמת לדיוק הסרטון.</p>
 
-<p><strong>טעות 2: פנים לא מתוארות.</strong> כשיש דמות אנושית בסצנה ולא מתארים את פניה, Sora 2 יייצר פנים אקראיות שעשויות להיראות מוזרות. כדאי לתאר: גיל כללי, צבע שיער, ביטוי פנים, ולפעמים אתניות כשרלוונטי. "a middle-aged man with salt-and-pepper hair, calm expression" עדיף בהרבה על "a man".</p>
+<div class="article-callout-warning">
+  <div class="article-callout-title">5 טעויות קריטיות שכדאי להימנע מהן</div>
+  <ul>
+    <li><strong>טעות 1: פרומפט קצר מדי.</strong> "כלב רץ בפארק" — זו לא הוראת עבודה, זה כותרת. Sora 2 זקוק לפחות 3–4 משפטים. כדאי לכתוב לפחות 60–100 מילים לפרומפט.</li>
+    <li><strong>טעות 2: פנים לא מתוארות.</strong> כשיש דמות אנושית בסצנה ולא מתארים את פניה, Sora 2 יייצר פנים אקראיות שעשויות להיראות מוזרות. תאר: גיל כללי, צבע שיער, ביטוי פנים.</li>
+    <li><strong>טעות 3: אין תנועת מצלמה.</strong> כשלא מציינים תנועת מצלמה, Sora 2 בוחר לבד — ולפעמים הבחירה שלו אינה מתאימה לסצנה.</li>
+    <li><strong>טעות 4: לוח צבעים לא מוגדר.</strong> "a sunset scene" יכול לייצר שקיעה בכתום-אדום, בסגול-ורוד, או בצהוב-לבן. "a sunset scene with warm amber and deep magenta hues" — מדויק.</li>
+    <li><strong>טעות 5: אין ציון משך הסרטון.</strong> Sora 2 יכול לייצר סרטונים מ-2 שניות ועד 20 שניות. תמיד לציין: "duration: approximately X seconds".</li>
+  </ul>
+</div>
 
-<p><strong>טעות 3: אין תנועת מצלמה.</strong> כשלא מציינים תנועת מצלמה, Sora 2 בוחר לבד — ולפעמים הבחירה שלו אינה מתאימה לסצנה. ציון מפורש של תנועת מצלמה מוסיף מקצועיות לתוצאה ומבטיח שהדינמיקה הוויזואלית תהיה מה שרצינו.</p>
-
-<p><strong>טעות 4: לוח צבעים לא מוגדר.</strong> "a sunset scene" יכול לייצר שקיעה בכתום-אדום, בסגול-ורוד, או בצהוב-לבן — תלוי ב"שיקול דעת" של המודל. "a sunset scene with warm amber and deep magenta hues" מוגדר ומדויק. לוח צבעים הוא אחד הפרמטרים שהכי קל להוסיף ושיש לו את ההשפעה הגדולה ביותר על האסתטיקה.</p>
-
-<p><strong>טעות 5: אין ציון משך הסרטון.</strong> Sora 2 יכול לייצר סרטונים מ-2 שניות ועד 20 שניות. כשלא מציינים — המודל בוחר לבד, לרוב בין 5 ל-10 שניות. לפרסומת, 6 שניות עשויות להיות נכונות; לדמו מוצר, 15 שניות. תמיד לציין: "duration: approximately X seconds".</p>
+<hr class="article-divider" />
 
 <h2>דוגמאות עבודה — לפני ואחרי</h2>
 
 <h3>דוגמה 1: סצנת רחוב</h3>
-<p><strong>לפני (פרומפט חלש):</strong> "רחוב בלילה עם אנשים"</p>
-<p><strong>אחרי (פרומפט מקצועי):</strong> "A rain-slicked urban street at midnight in Tokyo. Neon signs in Japanese and English reflect in the wet pavement. A lone figure in a dark coat walks away from camera, shoulders hunched against light rain. Slow dolly forward following the figure. Moody noir atmosphere with deep blue and magenta color palette. Photorealistic, cinematic grain. Duration: 8 seconds."</p>
+
+<div class="article-before-after">
+  <div class="article-before-box">
+    <h4>פרומפט חלש</h4>
+    <p>"רחוב בלילה עם אנשים"</p>
+  </div>
+  <div class="article-after-box">
+    <h4>פרומפט מקצועי</h4>
+    <p>"A rain-slicked urban street at midnight in Tokyo. Neon signs in Japanese and English reflect in the wet pavement. A lone figure in a dark coat walks away from camera, shoulders hunched against light rain. Slow dolly forward following the figure. Moody noir atmosphere with deep blue and magenta color palette. Photorealistic, cinematic grain. Duration: 8 seconds."</p>
+  </div>
+</div>
+
 <p>ההבדל בתוצאה: הפרומפט השני מייצר סצנה שנראית כמו פרומו לסרט נואר. הפרומפט הראשון מייצר רחוב גנרי לחלוטין. ההשקעה בכתיבת פרומפט מפורט מחזירה את עצמה בתוצאה שאפשר להשתמש בה.</p>
 
 <h3>דוגמה 2: דמות מדברת</h3>
-<p><strong>לפני (פרומפט חלש):</strong> "אישה מדברת למצלמה"</p>
-<p><strong>אחרי (פרומפט מקצועי):</strong> "A professional woman in her mid-30s, dark shoulder-length hair, business casual attire (navy blazer), seated at a clean desk with bookshelves behind. She speaks directly to camera with a confident, warm expression. Static medium shot, slightly low angle. Soft office lighting with a window light source from the left. Depth of field blur on background. Photorealistic. Duration: 6 seconds."</p>
+
+<div class="article-before-after">
+  <div class="article-before-box">
+    <h4>פרומפט חלש</h4>
+    <p>"אישה מדברת למצלמה"</p>
+  </div>
+  <div class="article-after-box">
+    <h4>פרומפט מקצועי</h4>
+    <p>"A professional woman in her mid-30s, dark shoulder-length hair, business casual attire (navy blazer), seated at a clean desk with bookshelves behind. She speaks directly to camera with a confident, warm expression. Static medium shot, slightly low angle. Soft office lighting with a window light source from the left. Depth of field blur on background. Photorealistic. Duration: 6 seconds."</p>
+  </div>
+</div>
+
 <p>הפרומפט השני מייצר תוצאה שמתאימה לוידאו עסקי, מצגת, או תוכן LinkedIn. חשוב לשים לב שלא ניתן לשלוט בדיוק על מה הדמות "אומרת" — Sora 2 ייצר תנועות שפתיים, אבל לא ניתן להוסיף קול אמיתי בשלב הנוכחי.</p>
 
 <h3>דוגמה 3: אנימציה מופשטת</h3>
-<p><strong>לפני (פרומפט חלש):</strong> "אנימציה מגניבה"</p>
-<p><strong>אחרי (פרומפט מקצועי):</strong> "Abstract fluid animation: liquid metallic spheres of silver and gold slowly merge and separate in zero gravity. Dreamy, meditative atmosphere. Soft ambient lighting with specular highlights. Loopable motion, smooth and hypnotic. Minimalist white background. Style: contemporary digital art, 4K clean render. Duration: 10 seconds."</p>
+
+<div class="article-before-after">
+  <div class="article-before-box">
+    <h4>פרומפט חלש</h4>
+    <p>"אנימציה מגניבה"</p>
+  </div>
+  <div class="article-after-box">
+    <h4>פרומפט מקצועי</h4>
+    <p>"Abstract fluid animation: liquid metallic spheres of silver and gold slowly merge and separate in zero gravity. Dreamy, meditative atmosphere. Soft ambient lighting with specular highlights. Loopable motion, smooth and hypnotic. Minimalist white background. Style: contemporary digital art, 4K clean render. Duration: 10 seconds."</p>
+  </div>
+</div>
+
 <p>ל-"אנימציה מגניבה" אין הגדרה שמובנת למודל. "liquid metallic spheres" עם "zero gravity" ו"loopable motion" הן הגדרות שניתן לממש ומייצרות תוכן מתאים לרקעים, מצגות, או הדגמות.</p>
 
+<hr class="article-divider" />
+
 <h2>איך לעשות זאת — צעד אחר צעד</h2>
-<ol>
-  <li>
-    <h3>הגדרת הסצנה</h3>
-    <p>השלב הראשון הוא לתאר בפירוט מה קורה בסרטון. כדאי לענות על: מה המיקום (חדר, רחוב, טבע, סטודיו)? מה קורה בסצנה (פעולה, מצב, מעבר)? מי הדמויות ומה הן עושות? כדאי לכתוב את התיאור בגוף ראשון כמו שמנהל מצלמה היה כותב — "a woman walks through a market", לא "יש אישה שהולכת בשוק". תיאור סצנה טוב כולל לפחות 3 אלמנטים ספציפיים: מיקום, פעולה, ומאפיין ויזואלי בולט אחד (צבע, אור, חפץ).</p>
-    <p>דוגמה: "מטבח" עמום — מודרני? כפרי? מסעדה? כל אחד ייצור תוצאה שונה. ספציפיות מוקדמת חוסכת גרסאות חוזרות.</p>
-  </li>
-  <li>
-    <h3>בחירת תנועת מצלמה</h3>
-    <p>לאחר שהסצנה מוגדרת, כדאי לבחור תנועת מצלמה שתשרת אותה. השאלה המנחה: מה ה"תחושה" שרוצים שהצופה ירגיש? אינטימיות ומתח? Slow dolly in. חירות ואנרגיה? Aerial tracking shot. יציבות ואמינות? Static locked-off shot. מסתורין? Low angle with slight rotation. כדאי לאחסן רשימה אישית של תנועות מצלמה שאוהבים ולהשתמש בה שוב ושוב.</p>
-    <p>אם לא בטוחים, "slow dolly in" הוא הבחירה הבטוחה ביותר — היא מוסיפה דינמיקה בלי להיות מוגזמת ועובדת טוב עם רוב הסצנות. תנועות מהירות מאוד (rapid pan, quick zoom) לפעמים מייצרות artifacts ב-Sora 2 — כדאי להימנע מהן בגרסה הנוכחית.</p>
-  </li>
-  <li>
-    <h3>הגדרת תאורה</h3>
-    <p>תאורה היא הצעד שהכי הרבה אנשים מדלגים עליו ושמשנה הכי הרבה את התוצאה. בשלב זה, כדאי לציין: מקור האור הראשי (שמש, נורה, ניאון, חלון), כיוון האור (מלפנים, מהצד, מאחור), עוצמה (רכה ומפוזרת vs קשה וחדה), ולוח הצבעים הרגשי (חם/קר, בהיר/כהה).</p>
-    <p>המינוח הבא עובד היטב ב-Sora 2 ומוציא תוצאות עקביות: "warm golden hour backlight", "cool blue moonlight from upper left", "dramatic rim lighting against dark background", "flat even overcast daylight". כדאי לשמור מינוחים שעובדים ולשכפל אותם בפרומפטים הבאים.</p>
-  </li>
-  <li>
-    <h3>ציון משך הסרטון</h3>
-    <p>תמיד לציין בסוף הפרומפט: "Duration: X seconds" כאשר X הוא בין 2 ל-20. לרוב הפרסומות: 6–8 שניות. לתוכן מדיה חברתית: 8–15 שניות. לסרטון הדגמה: 15–20 שניות. לאפקטים ורקעים: 4–6 שניות בלולאה. ציון משך מדויק גם משפיע על כמות הפרטים שהמודל ידחוס לתוך הסרטון — סרטון של 20 שניות מאפשר מסלול עלילתי ויזואלי שסרטון של 6 שניות אינו מאפשר.</p>
-    <p>אם יוצרים סדרה של קליפים שצריכים להתחבר, חשוב לוודא שמשך כל קליפ מאפשר מעבר חלק. שתי שניות של "ריפוד" בתחילת ובסוף כל קליפ הן ממלצה מקובלת לעריכה מאוחרת.</p>
-  </li>
-  <li>
-    <h3>בדיקה ועידון</h3>
-    <p>לאחר קבלת הסרטון הראשון, כדאי לעבור על רשימת הבדיקה הבאה: האם תנועת המצלמה עובדת עם הסצנה? האם הצבעים תואמים את הטון הרצוי? האם יש artifacts מוזרים בגפיים, פנים, או חפצים? האם הפיזיקה (תנועת בד, נוזלים, שיער) נראית טבעית? האם המשך נכון?</p>
-    <p>בדרך כלל, עידון של 1–2 פרמטרים ספציפיים בין גרסה לגרסה מביא ל תוצאה מוצלחת תוך 3–4 ניסיונות. אם משנים יותר מדי בבת-אחת, קשה לדעת מה עשה את ההבדל. כדאי לרשום מה שינוי בכל גרסה ולבנות ידע אישי על מה עובד עבורכם. ניתן לשפר ולהשוות פרומפטים בצורה מהירה דרך <a href="/?capability_mode=VIDEO_GENERATION">שיפור פרומפטים לווידאו ב-Peroot</a>.</p>
-  </li>
-</ol>
+
+<div class="article-steps-container">
+  <div class="article-step">
+    <div class="article-step-number">1</div>
+    <div class="article-step-content">
+      <div class="article-step-title">הגדרת הסצנה</div>
+      <div class="article-step-description">
+        <p>השלב הראשון הוא לתאר בפירוט מה קורה בסרטון. כדאי לענות על: מה המיקום (חדר, רחוב, טבע, סטודיו)? מה קורה בסצנה (פעולה, מצב, מעבר)? מי הדמויות ומה הן עושות? כדאי לכתוב את התיאור בגוף ראשון כמו שמנהל מצלמה היה כותב — "a woman walks through a market", לא "יש אישה שהולכת בשוק". תיאור סצנה טוב כולל לפחות 3 אלמנטים ספציפיים: מיקום, פעולה, ומאפיין ויזואלי בולט אחד (צבע, אור, חפץ).</p>
+        <p>דוגמה: "מטבח" עמום — מודרני? כפרי? מסעדה? כל אחד ייצור תוצאה שונה. ספציפיות מוקדמת חוסכת גרסאות חוזרות.</p>
+      </div>
+    </div>
+  </div>
+  <div class="article-step">
+    <div class="article-step-number">2</div>
+    <div class="article-step-content">
+      <div class="article-step-title">בחירת תנועת מצלמה</div>
+      <div class="article-step-description">
+        <p>לאחר שהסצנה מוגדרת, כדאי לבחור תנועת מצלמה שתשרת אותה. השאלה המנחה: מה ה"תחושה" שרוצים שהצופה ירגיש? אינטימיות ומתח? Slow dolly in. חירות ואנרגיה? Aerial tracking shot. יציבות ואמינות? Static locked-off shot. מסתורין? Low angle with slight rotation. כדאי לאחסן רשימה אישית של תנועות מצלמה שאוהבים ולהשתמש בה שוב ושוב.</p>
+        <p>אם לא בטוחים, "slow dolly in" הוא הבחירה הבטוחה ביותר — היא מוסיפה דינמיקה בלי להיות מוגזמת ועובדת טוב עם רוב הסצנות. תנועות מהירות מאוד (rapid pan, quick zoom) לפעמים מייצרות artifacts ב-Sora 2 — כדאי להימנע מהן בגרסה הנוכחית.</p>
+      </div>
+    </div>
+  </div>
+  <div class="article-step">
+    <div class="article-step-number">3</div>
+    <div class="article-step-content">
+      <div class="article-step-title">הגדרת תאורה</div>
+      <div class="article-step-description">
+        <p>תאורה היא הצעד שהכי הרבה אנשים מדלגים עליו ושמשנה הכי הרבה את התוצאה. בשלב זה, כדאי לציין: מקור האור הראשי (שמש, נורה, ניאון, חלון), כיוון האור (מלפנים, מהצד, מאחור), עוצמה (רכה ומפוזרת vs קשה וחדה), ולוח הצבעים הרגשי (חם/קר, בהיר/כהה).</p>
+        <p>המינוח הבא עובד היטב ב-Sora 2 ומוציא תוצאות עקביות: "warm golden hour backlight", "cool blue moonlight from upper left", "dramatic rim lighting against dark background", "flat even overcast daylight". כדאי לשמור מינוחים שעובדים ולשכפל אותם בפרומפטים הבאים.</p>
+      </div>
+    </div>
+  </div>
+  <div class="article-step">
+    <div class="article-step-number">4</div>
+    <div class="article-step-content">
+      <div class="article-step-title">ציון משך הסרטון</div>
+      <div class="article-step-description">
+        <p>תמיד לציין בסוף הפרומפט: "Duration: X seconds" כאשר X הוא בין 2 ל-20. לרוב הפרסומות: 6–8 שניות. לתוכן מדיה חברתית: 8–15 שניות. לסרטון הדגמה: 15–20 שניות. לאפקטים ורקעים: 4–6 שניות בלולאה. ציון משך מדויק גם משפיע על כמות הפרטים שהמודל ידחוס לתוך הסרטון.</p>
+        <p>אם יוצרים סדרה של קליפים שצריכים להתחבר, חשוב לוודא שמשך כל קליפ מאפשר מעבר חלק. שתי שניות של "ריפוד" בתחילת ובסוף כל קליפ הן ממלצה מקובלת לעריכה מאוחרת.</p>
+      </div>
+    </div>
+  </div>
+  <div class="article-step">
+    <div class="article-step-number">5</div>
+    <div class="article-step-content">
+      <div class="article-step-title">בדיקה ועידון</div>
+      <div class="article-step-description">
+        <p>לאחר קבלת הסרטון הראשון, כדאי לעבור על רשימת הבדיקה הבאה: האם תנועת המצלמה עובדת עם הסצנה? האם הצבעים תואמים את הטון הרצוי? האם יש artifacts מוזרים בגפיים, פנים, או חפצים? האם הפיזיקה (תנועת בד, נוזלים, שיער) נראית טבעית? האם המשך נכון?</p>
+        <p>בדרך כלל, עידון של 1–2 פרמטרים ספציפיים בין גרסה לגרסה מביא לתוצאה מוצלחת תוך 3–4 ניסיונות. אם משנים יותר מדי בבת-אחת, קשה לדעת מה עשה את ההבדל. כדאי לרשום מה שינוי בכל גרסה ולבנות ידע אישי על מה עובד עבורכם. ניתן לשפר ולהשוות פרומפטים בצורה מהירה דרך <a href="/?capability_mode=VIDEO_GENERATION">שיפור פרומפטים לווידאו ב-Peroot</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="article-divider" />
 
 <h2>שאלות נפוצות</h2>
 
@@ -118,6 +214,8 @@
 <h3>למה הסרטון יוצא באיכות נמוכה?</h3>
 <p>הסיבות הנפוצות: פרומפט קצר מדי; רזולוציה נמוכה בהגדרות (480p במקום 1080p); יצירה בשעות עומס — כדאי לנסות בבוקר מוקדם; תנועת מצלמה מהירה מדי ("rapid pan") שמייצרת artifacts; ורנדרינג של טקסט קריא, שהוא עדיין אתגר. לכל בעיה יש פתרון — שיפור הפרומפט ורזולוציה גבוהה יותר.</p>
 
+<hr class="article-divider" />
+
 <h2>סיכום</h2>
 <p>Sora 2 הוא כלי עוצמתי שמשנה את מה שניתן ליצור בתקציב צנוע. הגישה הנכונה אליו היא כמו גישה לכל כלי יצירה מקצועי — נדרשת השקעה בלמידת השפה שלו. המינוח הקולנועי, תנועות המצלמה, לוחות הצבעים, ואורכי הסרטון הם השפה הזאת.</p>
 
@@ -125,4 +223,8 @@
 
 <p>עם ההתפתחות המהירה של השוק, ניתן לצפות שעד סוף 2026 Sora 2 יתמוך בסרטונים ארוכים יותר, בשמע סינכרוני ובעקביות טובה יותר של דמויות. העקרונות כאן — תיאור מפורט, מינוח קולנועי, ואיטרציה — ישארו רלוונטיים לכל גרסה עתידית.</p>
 
-<p class="cta"><a href="/?capability_mode=VIDEO_GENERATION">לשיפור פרומפטים לווידאו ב-Peroot</a></p>
+<div class="article-cta-box">
+  <h3>רוצים פרומפטים לווידאו מקצועיים?</h3>
+  <p>Peroot מוסיף אוטומטית את כל המרכיבים הקולנועיים לפרומפט הווידאו שלכם.</p>
+  <a href="/?capability_mode=VIDEO_GENERATION" class="article-cta-button">לשיפור פרומפטים לווידאו</a>
+</div>
