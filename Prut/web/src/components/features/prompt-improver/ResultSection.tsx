@@ -23,6 +23,7 @@ import { PromptScore } from "@/lib/engines/base-engine";
 import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon } from "@/components/ui/AIPlatformIcons";
 import type { StreamPhase } from "@/hooks/usePromptWorkflow";
 import { ReferralShareCTA } from "@/components/features/referral/ReferralShareCTA";
+import { ThinkingStagesIndicator } from "@/components/features/prompt-improver/ThinkingStagesIndicator";
 import { CapabilityMode } from "@/lib/capability-mode";
 import {
   getVariableLabel,
@@ -264,20 +265,24 @@ export function ResultSection({
                     ? "Gemini Image"
                     : "";
               return (
-                <div className="p-8 space-y-4" dir="rtl">
-                  {isJsonPlatform && (
-                    <div className="flex items-center gap-2 text-sm text-(--text-muted) mb-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-(--accent-text) animate-pulse shrink-0" />
-                      <span>מייצר פרמטרים עבור {platformLabel}... (ללא הצגה מתקדמת)</span>
+                <div dir="rtl">
+                  {isJsonPlatform ? (
+                    <div className="p-8 space-y-4">
+                      <div className="flex items-center gap-2 text-sm text-(--text-muted) mb-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-(--accent-text) animate-pulse shrink-0" />
+                        <span>מייצר פרמטרים עבור {platformLabel}... (ללא הצגה מתקדמת)</span>
+                      </div>
+                      <div className="animate-pulse space-y-4">
+                        <div className="h-4 bg-(--glass-border) rounded w-3/4" />
+                        <div className="h-4 bg-(--glass-border) rounded w-full" />
+                        <div className="h-4 bg-(--glass-border) rounded w-5/6" />
+                        <div className="h-4 bg-(--glass-border) rounded w-2/3" />
+                        <div className="h-4 bg-(--glass-border) rounded w-4/5" />
+                      </div>
                     </div>
+                  ) : (
+                    <ThinkingStagesIndicator streamPhase={streamPhase ?? "sending"} />
                   )}
-                  <div className="animate-pulse space-y-4">
-                    <div className="h-4 bg-(--glass-border) rounded w-3/4" />
-                    <div className="h-4 bg-(--glass-border) rounded w-full" />
-                    <div className="h-4 bg-(--glass-border) rounded w-5/6" />
-                    <div className="h-4 bg-(--glass-border) rounded w-2/3" />
-                    <div className="h-4 bg-(--glass-border) rounded w-4/5" />
-                  </div>
                 </div>
               );
             })()
