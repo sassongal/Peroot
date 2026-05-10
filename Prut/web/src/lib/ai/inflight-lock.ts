@@ -31,11 +31,11 @@ import { logger } from "@/lib/logger";
  */
 
 const LOCK_PREFIX = "peroot:enhance:inflight";
-// Set just above the /api/enhance route's `maxDuration = 30s` so a slow
+// Set just above the /api/enhance route's `maxDuration = 300s` so a slow
 // enhancement (large context, slow provider) cannot let its lock expire
 // while still running — that would let a duplicate request acquire a fresh
 // lock and run concurrently, double-charging the user's credits.
-const DEFAULT_TTL_MS = 35_000;
+const DEFAULT_TTL_MS = 305_000;
 
 interface InflightLockInput {
   userId?: string;

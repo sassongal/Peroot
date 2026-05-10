@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
 import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { logger } from "@/lib/logger";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import type { GeneratedChain, GeneratedChainStep } from "@/lib/chain-types";
@@ -17,8 +18,8 @@ const RequestSchema = z.object({
   max_steps: z.number().int().min(2).max(6).default(4),
   user_context: z
     .object({
-      role: z.string().optional(),
-      recent_categories: z.array(z.string()).optional(),
+      role: z.string().max(200).optional(),
+      recent_categories: z.array(z.string().max(100)).max(10).optional(),
     })
     .optional(),
 });
@@ -125,6 +126,16 @@ export async function POST(req: Request) {
       ]);
       isAdmin = !!adminRole || profile?.plan_tier === "admin";
       tier = isAdmin ? "admin" : (profile?.plan_tier as "free" | "pro") || "free";
+
+      // Rate limit before credit decrement — hard barrier independent of credit balance.
+      const rateLimitTier = isAdmin ? "pro" : tier === "free" ? "free" : "pro";
+      const rl = await checkRateLimit(userId!, rateLimitTier);
+      if (!rl.success) {
+        return NextResponse.json(
+          { error: "יותר מדי בקשות. נסה שוב מאוחר יותר", code: "too_many_requests" },
+          { status: 429, headers: { "Retry-After": String(rl.reset) } },
+        );
+      }
 
       // Admins bypass credit decrement entirely (mirrors /api/enhance behavior).
       if (!isAdmin) {
