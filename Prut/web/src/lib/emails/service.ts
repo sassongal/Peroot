@@ -28,6 +28,7 @@ export class EmailService {
     emailType = "transactional",
     metadata = {},
     replyTo,
+    listUnsubscribeUrl,
   }: {
     to: string | string[];
     subject: string;
@@ -36,10 +37,18 @@ export class EmailService {
     emailType?: string;
     metadata?: Record<string, unknown>;
     replyTo?: string;
+    listUnsubscribeUrl?: string;
   }) {
     if (!this.resend) {
       logger.warn("[EmailService] Resend not configured. Skipping email.");
       return null;
+    }
+
+    const headers: Record<string, string> = {};
+    if (listUnsubscribeUrl) {
+      headers["List-Unsubscribe"] =
+        `<${listUnsubscribeUrl}>, <mailto:${this.defaultReplyTo}?subject=unsubscribe>`;
+      headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
     }
 
     try {
@@ -51,6 +60,7 @@ export class EmailService {
             subject,
             replyTo: replyTo || this.defaultReplyTo,
             html: `<div dir="rtl" style="font-family: sans-serif;">${html}</div>`,
+            ...(Object.keys(headers).length > 0 && { headers }),
           });
           if (error) throw error;
           return data;
@@ -132,15 +142,14 @@ export class EmailService {
    * Presets: Welcome Email
    */
   static async sendWelcome(to: string, name?: string, userId?: string) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space";
     return this.send({
       to,
       subject: "ברוכים הבאים ל-Peroot! הדרך שלך לפרומפטים מושלמים מתחילה כאן",
       userId,
       emailType: "welcome",
-      html: welcomeEmail({
-        name,
-        appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.peroot.space",
-      }),
+      listUnsubscribeUrl: `${appUrl}/api/email/unsubscribe`,
+      html: welcomeEmail({ name, appUrl }),
     });
   }
 }
