@@ -1,0 +1,110 @@
+{
+  "how-to-write-good-prompt": {
+    "title": "איך לכתוב פרומפט טוב — המדריך המלא ל-2026",
+    "excerpt": "מדריך מעשי לכתיבת פרומפטים שמייצרים תוצאות מדויקות. כללים, דוגמאות, ושגיאות נפוצות שכדאי להכיר.",
+    "meta_title": "איך לכתוב פרומפט טוב | מדריך 2026 | Peroot",
+    "meta_description": "מדריך מלא לכתיבת פרומפטים אפקטיביים בעברית. עקרונות, תבניות, ודוגמאות מעשיות שיביאו תוצאות טובות יותר מ-ChatGPT, Claude ו-Gemini.",
+    "tags": ["פרומפט אנג׳ינירינג", "מדריך", "טכניקות", "מתחילים"],
+    "category": "מדריכים",
+    "thumbnail_url": "/images/blog/guides.svg",
+    "read_time": "10 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-03-15T08:00:00Z"
+  },
+  "gpt-5-vs-claude-opus-4-hebrew-2026": {
+    "title": "GPT-5 מול Claude Opus 4 — השוואה מלאה לעברית 2026",
+    "excerpt": "השוואה מעשית בין שני המודלים המובילים: דיוק, מהירות, איכות עברית, ומחיר. למי כדאי לבחור מה.",
+    "meta_title": "GPT-5 מול Claude Opus 4 בעברית | השוואה 2026 | Peroot",
+    "meta_description": "השוואה מקיפה בין GPT-5 ל-Claude Opus 4 לעברית: יכולות שיחה, איכות תרגום, מחיר, ומהירות. מה לבחור ב-2026.",
+    "tags": ["השוואות", "gpt-5", "claude", "מודלים"],
+    "category": "השוואות",
+    "thumbnail_url": "/images/blog/comparisons.svg",
+    "read_time": "12 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T08:00:00Z"
+  },
+  "sora-2-video-prompts-guide-hebrew": {
+    "title": "Sora 2 — מדריך מלא לפרומפטים לווידאו ב-2026",
+    "excerpt": "איך לבנות פרומפט מקצועי ל-Sora 2: מבנה קולנועי, תאורה, תנועה, וטעויות שכדאי להימנע מהן.",
+    "meta_title": "Sora 2 פרומפטים לווידאו | מדריך עברית 2026 | Peroot",
+    "meta_description": "מדריך מקיף לכתיבת פרומפטים ל-Sora 2: מבנה קולנועי, פירוט סצנה, תנועת מצלמה, ודוגמאות עובדות. הופכים רעיון לסרטון בעברית.",
+    "tags": ["sora", "וידאו", "פרומפטים", "מדריך"],
+    "category": "תמונות",
+    "thumbnail_url": "/images/blog/images.svg",
+    "read_time": "11 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T09:00:00Z"
+  },
+  "mcp-model-context-protocol-guide": {
+    "title": "MCP — מהו Model Context Protocol ולמה זה חשוב לכל משתמש",
+    "excerpt": "הסבר פשוט על MCP — הפרוטוקול שמחבר מודלים של AI לכלים חיצוניים. למה כל משתמש מתקדם צריך להבין אותו.",
+    "meta_title": "MCP Model Context Protocol | מדריך מלא | Peroot",
+    "meta_description": "מהו Model Context Protocol, איך הוא עובד, ולמה הוא משנה את הדרך שבה משתמשים ב-AI. דוגמאות לשימושים מעשיים בעברית.",
+    "tags": ["mcp", "פרומפט אנג׳ינירינג", "כלים", "אינטגרציה"],
+    "category": "פרומפט אנג׳ינירינג",
+    "thumbnail_url": "/images/blog/prompt-engineering.svg",
+    "read_time": "9 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T10:00:00Z"
+  },
+  "agentic-ai-build-agents-no-code": {
+    "title": "סוכני AI ללא קוד — בונים סוכן מחקר עם Peroot Agent Builder",
+    "excerpt": "מדריך מעשי לבניית סוכן AI שמבצע משימות מורכבות עבורך — בלי לכתוב שורת קוד.",
+    "meta_title": "בונים סוכני AI ללא קוד | Peroot Agent Builder",
+    "meta_description": "מדריך צעד אחר צעד לבניית סוכן מחקר עם Peroot Agent Builder. הגדרת מטרה, כלים, וגבולות — והכל ללא קוד.",
+    "tags": ["סוכנים", "מדריך", "agent-builder", "אוטומציה"],
+    "category": "מדריכים",
+    "thumbnail_url": "/images/blog/guides.svg",
+    "read_time": "13 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T11:00:00Z"
+  },
+  "voice-prompting-hebrew-guide": {
+    "title": "פרומפטים בקול בעברית — המדריך המלא לדיבור עם AI",
+    "excerpt": "איך משתמשים בהקלטה קולית לפרומפטים, איך בוחרים שפת פלט, ואילו שגיאות הגייה האלגוריתם הכי מתבלבל מהן.",
+    "meta_title": "פרומפטים בקול בעברית | מדריך מלא | Peroot",
+    "meta_description": "מדריך מקיף לפרומפטים קוליים בעברית: בחירת שפת פלט, הקלטה ברורה, וטריקים לדיבור עם AI שמבין אותך מהפעם הראשונה.",
+    "tags": ["קול", "voice", "מדריך", "מתחילים"],
+    "category": "מדריכים",
+    "thumbnail_url": "/images/blog/guides.svg",
+    "read_time": "10 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T12:00:00Z"
+  },
+  "long-context-prompts-200k-tokens": {
+    "title": "פרומפטים לחלון של 200K טוקנים — איך מנצלים זיכרון ארוך",
+    "excerpt": "טכניקות מעשיות לעבודה עם חלונות הקשר ארוכים: chunking, סיכום הדרגתי, וציטוטים מקור.",
+    "meta_title": "פרומפטים לחלון 200K טוקנים | מדריך 2026 | Peroot",
+    "meta_description": "איך מנצלים נכון חלון הקשר של 200,000 טוקנים: chunking, סיכומים, ציטוטים, וניהול זיכרון בפרומפטים ארוכים.",
+    "tags": ["context", "פרומפט אנג׳ינירינג", "טוקנים", "מתקדם"],
+    "category": "פרומפט אנג׳ינירינג",
+    "thumbnail_url": "/images/blog/prompt-engineering.svg",
+    "read_time": "11 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T13:00:00Z"
+  },
+  "prompt-injection-security-guide": {
+    "title": "Prompt Injection — איך מגנים על המידע העסקי שלכם מ-AI",
+    "excerpt": "התקפות על מודלים של AI הופכות נפוצות. מדריך מעשי למשתמש העסקי על זיהוי, מניעה, והתמודדות.",
+    "meta_title": "Prompt Injection — מדריך אבטחה לעסקים | Peroot",
+    "meta_description": "מדריך מקיף ל-prompt injection: מהן ההתקפות, איך לזהות, ואיך להגן על נתונים עסקיים בפרומפטים. דוגמאות וטכניקות הגנה.",
+    "tags": ["אבטחה", "טעויות", "עסקים", "injection"],
+    "category": "טעויות נפוצות",
+    "thumbnail_url": "/images/blog/mistakes.svg",
+    "read_time": "12 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T14:00:00Z"
+  },
+  "multimodal-prompts-text-image-voice": {
+    "title": "פרומפטים מולטימודליים — שילוב טקסט, תמונה וקול",
+    "excerpt": "Gemini 2.5 ו-GPT-5 קוראים תמונה, מבינים קול ומגיבים בטקסט. מדריך מעשי לשילוב כל הקלטים בפרומפט אחד.",
+    "meta_title": "פרומפטים מולטימודליים | מדריך 2026 | Peroot",
+    "meta_description": "איך משלבים טקסט, תמונה וקול בפרומפט אחד: דוגמאות עבודה עם Gemini 2.5 ו-GPT-5, וטעויות שגרורות חוסר דיוק.",
+    "tags": ["מולטימודלי", "מדריך", "gemini", "gpt-5"],
+    "category": "מדריכים",
+    "thumbnail_url": "/images/blog/guides.svg",
+    "read_time": "11 דקות קריאה",
+    "author": "צוות Peroot",
+    "published_at": "2026-05-10T15:00:00Z"
+  }
+}
