@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   BookOpen,
@@ -150,6 +151,8 @@ export function ResultSection({
   const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null>(null);
   const [showMorePanel, setShowMorePanel] = useState(false);
   const [showRefineConfirm, setShowRefineConfirm] = useState(false);
+  const [showGuestCopyNudge, setShowGuestCopyNudge] = useState(false);
+  const guestNudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [savedToLibrary, setSavedToLibrary] = useState(false);
 
   const openScoreBreakdown = () => {
@@ -191,7 +194,18 @@ export function ResultSection({
     const shouldWatermark =
       forceWatermark !== undefined ? forceWatermark : isPro ? proWatermarkEnabled : true;
     onCopy(text, shouldWatermark);
+    if (!isAuthenticated) {
+      setShowGuestCopyNudge(true);
+      if (guestNudgeTimerRef.current) clearTimeout(guestNudgeTimerRef.current);
+      guestNudgeTimerRef.current = setTimeout(() => setShowGuestCopyNudge(false), 8000);
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      if (guestNudgeTimerRef.current) clearTimeout(guestNudgeTimerRef.current);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -471,12 +485,12 @@ export function ResultSection({
                   הירשמו בחינם וקבלו 2 שיפורים ביום
                 </p>
               </div>
-              <a
+              <Link
                 href="/login"
                 className="shrink-0 text-xs font-bold text-white bg-amber-500 hover:bg-amber-400 transition-colors px-3 py-1.5 rounded-lg"
               >
                 הירשמו בחינם
-              </a>
+              </Link>
             </div>
           )}
 
@@ -530,6 +544,29 @@ export function ResultSection({
                 </button>
               </div>
             </div>
+
+            {/* Guest copy nudge — appears after guest copies, auto-dismisses in 8s */}
+            {showGuestCopyNudge && !isAuthenticated && (
+              <div
+                className="mt-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                dir="rtl"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 leading-snug">
+                    ✓ הועתק! הירשמו לשמור לספרייה
+                  </p>
+                  <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/70">
+                    +2 שיפורים ביום, היסטוריה ושרשראות פרומפטים
+                  </p>
+                </div>
+                <Link
+                  href="/login"
+                  className="shrink-0 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors px-3 py-1.5 rounded-lg"
+                >
+                  הירשמו בחינם
+                </Link>
+              </div>
+            )}
 
             {/* Quick refine actions */}
             {onQuickRefine && completion.trim() && !isLoading && (
