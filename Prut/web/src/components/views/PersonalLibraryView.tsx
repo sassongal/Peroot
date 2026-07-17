@@ -26,6 +26,7 @@ import { MemoryPalaceSidebar } from "@/components/features/library/memory-palace
 import { MemoryPalaceDrawer } from "@/components/features/library/memory-palace/MemoryPalaceDrawer";
 import type { PersonalLibrarySharedState } from "./personal-library/types";
 import { useHistory } from "@/hooks/useHistory";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { HistoryItem } from "@/hooks/useHistory";
 import { CapabilityMode } from "@/lib/capability-mode";
 
@@ -102,6 +103,11 @@ export function PersonalLibraryView({
 
   // Graph vs grid view toggle.
   const [localViewType, setLocalViewType] = useState<"grid" | "graph">("grid");
+  // List density — persisted via the SSR-safe useLocalStorage hook.
+  const [density, setDensity] = useLocalStorage<"comfortable" | "compact">(
+    "peroot:library-density",
+    "comfortable",
+  );
   // All prompts for graph mode — fetched without pagination when graph activates
   const [graphPrompts, setGraphPrompts] = useState<PersonalPrompt[]>([]);
   const [graphLoading, setGraphLoading] = useState(false);
@@ -730,6 +736,8 @@ export function PersonalLibraryView({
     setNewMoveCategoryInput,
     localViewType,
     setLocalViewType,
+    density,
+    setDensity,
     importFileRef,
     handleSearchChange,
     handleSortChange,

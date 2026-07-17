@@ -14,6 +14,8 @@ import {
   Info,
   LayoutGrid,
   Network,
+  Rows3,
+  Rows4,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
@@ -57,6 +59,8 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     setFolder,
     localViewType,
     setLocalViewType,
+    density,
+    setDensity,
   } = shared;
 
   // When a search or capability filter is active, the count reflects matches —
@@ -121,6 +125,40 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
               <Network className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Density toggle — only meaningful in grid view */}
+          {localViewType === "grid" && (
+            <div className="hidden md:flex items-center rounded-lg border border-(--glass-border) overflow-hidden">
+              <button
+                onClick={() => setDensity("comfortable")}
+                aria-pressed={density === "comfortable"}
+                title="תצוגה מרווחת"
+                aria-label="תצוגה מרווחת"
+                className={cn(
+                  "p-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  density === "comfortable"
+                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+                    : "text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+                )}
+              >
+                <Rows3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setDensity("compact")}
+                aria-pressed={density === "compact"}
+                title="תצוגה צפופה"
+                aria-label="תצוגה צפופה"
+                className={cn(
+                  "p-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
+                  density === "compact"
+                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+                    : "text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
+                )}
+              >
+                <Rows4 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Full library — hidden on mobile; surfaced as a chip in the mobile tabs row below */}
           <button

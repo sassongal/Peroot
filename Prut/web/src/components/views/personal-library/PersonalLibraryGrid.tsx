@@ -368,7 +368,12 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
             cards only multiply into columns on viewports where that layout fits. */}
         {!isLoading && displayItems.length > 0 && (
           <div
-            className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(440px,100%),1fr))]"
+            className={cn(
+              "grid",
+              shared.density === "compact"
+                ? "gap-1.5 [grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr))]"
+                : "gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(440px,100%),1fr))]",
+            )}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) =>
               handlePersonalDropToEnd(

@@ -24,6 +24,7 @@ import {
   MoreHorizontal,
   Link2,
   Network,
+  GripVertical,
 } from "lucide-react";
 import { Type, Eraser, Maximize2, Minimize2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -220,7 +221,11 @@ export function PersonalLibraryPromptCard({
       <div
         className={cn(
           "flex items-center gap-2 px-3 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-          isExpanded ? "py-3 border-b border-white/8" : "py-2.5",
+          isExpanded
+            ? "py-3 border-b border-white/8"
+            : shared.density === "compact"
+              ? "py-1.5"
+              : "py-2.5",
         )}
         onClick={toggleExpand}
         role="button"
@@ -236,6 +241,18 @@ export function PersonalLibraryPromptCard({
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
+        {/* Drag-handle hint — signals the row is draggable to reorder. Desktop
+            hover-only (drag-reorder isn't a touch gesture); hidden in selection
+            mode where the checkbox owns the leading slot. */}
+        {!selectionMode && (
+          <span
+            aria-hidden
+            title="גרור לשינוי סדר"
+            className="hidden @sm/plcard:flex shrink-0 -ms-1 text-(--text-muted) opacity-0 group-hover:opacity-40 transition-opacity cursor-grab"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+          </span>
+        )}
         {/* Checkbox */}
         <button
           onClick={(e) => {

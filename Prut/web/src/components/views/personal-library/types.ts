@@ -109,6 +109,10 @@ export interface PersonalLibrarySharedState {
   localViewType: "grid" | "graph";
   setLocalViewType: React.Dispatch<React.SetStateAction<"grid" | "graph">>;
 
+  // List density (comfortable = roomy rows; compact = denser, more per screen)
+  density: "comfortable" | "compact";
+  setDensity: React.Dispatch<React.SetStateAction<"comfortable" | "compact">>;
+
   // Memory Palace mobile drawer trigger (optional)
   onShowConnections?: (promptId: string) => void;
 
