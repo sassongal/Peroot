@@ -141,6 +141,13 @@ export interface WithUserOptions {
    * suggestions returning `() => NextResponse.json({ questions: [] })`.
    */
   onRateLimit?: () => Response;
+  /**
+   * Force the service-role client for `ctx.db` even under cookie auth. For the
+   * rare route that must bypass RLS regardless of how the caller authenticated
+   * (e.g. a table without user-facing RLS policies). Handlers must still scope
+   * every query by `ctx.user.id`.
+   */
+  forceServiceClient?: boolean;
   /** Credits to charge (opt-in). Charged only on a 2xx; auto-refunded otherwise. */
   credits?: number;
   /** Allow unauthenticated requests (rate-limited by IP). Default false. */
@@ -239,7 +246,7 @@ export function withUser<C = unknown>(
       const user = auth.user;
       if (!user && !opts.allowGuest) return errors.unauthorized();
 
-      const db = auth.isBearer ? deps.createServiceClient() : rlsClient;
+      const db = opts.forceServiceClient || auth.isBearer ? deps.createServiceClient() : rlsClient;
 
       // Lazy, memoised tier/admin resolution.
       let tierCache: { tier: Tier; isAdmin: boolean } | undefined;

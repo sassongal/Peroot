@@ -1,32 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { withUser } from "@/lib/api-middleware";
 
 /**
  * GET /api/p/batch?ids=a,b,c
  * Returns { prompts: { id: text } } for authenticated users. Used by the
- * category grid (PromptCardBodyGate) so 60 cards can fetch in a single
- * round-trip rather than 60. Guests get 401; the grid renders preview-only
- * text in server HTML until this endpoint succeeds.
+ * category grid so many cards fetch in a single round-trip. Guests get 401.
+ * Auth + publicPromptFetch rate-limit owned by withUser; reads
+ * public_library_prompts via the service-role client (forceServiceClient).
  */
-export async function GET(req: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
-    }
-
-    const rl = await checkRateLimit(user.id, "publicPromptFetch");
-    if (!rl.success) {
-      return NextResponse.json({ error: "יותר מדי בקשות", code: "too_many_requests" }, { status: 429 });
-    }
-
+export const GET = withUser(
+  async (req, ctx) => {
     const raw = req.nextUrl.searchParams.get("ids") ?? "";
     const ids = raw
       .split(",")
@@ -38,23 +22,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ prompts: {} });
     }
 
-    const service = createServiceClient();
-    const { data } = await service
-      .from("public_library_prompts")
-      .select("id, prompt")
-      .in("id", ids)
-      .eq("is_active", true);
+    try {
+      const { data } = await ctx.db
+        .from("public_library_prompts")
+        .select("id, prompt")
+        .in("id", ids)
+        .eq("is_active", true);
 
-    const map: Record<string, string> = {};
-    for (const row of data ?? []) {
-      if (row.id && typeof row.prompt === "string") map[row.id] = row.prompt;
+      const map: Record<string, string> = {};
+      for (const row of data ?? []) {
+        if (row.id && typeof row.prompt === "string") map[row.id] = row.prompt;
+      }
+      return NextResponse.json(
+        { prompts: map },
+        { headers: { "Cache-Control": "private, max-age=300" } },
+      );
+    } catch (e) {
+      logger.error("[api/p/batch] error:", e);
+      return NextResponse.json(
+        { error: "שגיאת שרת פנימית", code: "internal_error" },
+        { status: 500 },
+      );
     }
-    return NextResponse.json(
-      { prompts: map },
-      { headers: { "Cache-Control": "private, max-age=300" } },
-    );
-  } catch (e) {
-    logger.error("[api/p/batch] error:", e);
-    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
-  }
-}
+  },
+  { rateLimit: "publicPromptFetch", forceServiceClient: true },
+);

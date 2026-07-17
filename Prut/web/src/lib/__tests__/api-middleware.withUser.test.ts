@@ -92,6 +92,17 @@ describe("withUser · auth", () => {
     expect(db).toBe(serviceSentinel);
   });
 
+  it("forces the service-role client when forceServiceClient is set, even under cookie auth", async () => {
+    const deps = makeDeps(); // cookie auth (isBearer false → normally the RLS client)
+    let db: SupabaseClient | undefined;
+    const handler = vi.fn(async (_req, ctx) => {
+      db = ctx.db;
+      return ok();
+    });
+    await withUser(handler, { rateLimit: "none", forceServiceClient: true }, deps)(makeReq(), {});
+    expect(db).toBe(serviceSentinel);
+  });
+
   it("401 invalid_token when bearer token is rejected", async () => {
     const deps = makeDeps({
       resolveAuth: vi.fn(async () => ({ status: "invalid_token" }) as const),

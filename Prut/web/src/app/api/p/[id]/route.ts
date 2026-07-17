@@ -1,63 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { withUser } from "@/lib/api-middleware";
 
 /**
  * GET /api/p/[id]
- * Returns the full prompt body for an authenticated user. Guests get 401
- * so the prompt text never leaks into public HTML/ISR. The /prompts/[slug]/[id]
- * page renders a short preview in server HTML and the PromptBodyGate client
- * component fetches the full text from here on mount.
+ * Returns the full prompt body for an authenticated user. Guests get 401 so the
+ * prompt text never leaks into public HTML/ISR. Auth (cookie or Bearer) + the
+ * publicPromptFetch rate-limit owned by withUser; the query reads
+ * public_library_prompts via the service-role client (forceServiceClient).
  */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const supabase = await createClient();
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-
-    const {
-      data: { user },
-    } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
-    }
-
-    const rl = await checkRateLimit(user.id, "publicPromptFetch");
-    if (!rl.success) {
-      return NextResponse.json(
-        { error: "יותר מדי בקשות", code: "too_many_requests" },
-        { status: 429 },
-      );
-    }
-
-    const { id } = await params;
+export const GET = withUser<{ params: Promise<{ id: string }> }>(
+  async (_req, ctx, routeContext) => {
+    const { id } = await routeContext.params;
     if (!id || !/^[\w-]{2,128}$/i.test(id)) {
       return NextResponse.json({ error: "מזהה לא תקין", code: "invalid_id" }, { status: 400 });
     }
 
-    const service = createServiceClient();
-    const { data, error } = await service
-      .from("public_library_prompts")
-      .select("id, prompt, variables")
-      .eq("id", id)
-      .eq("is_active", true)
-      .maybeSingle();
+    try {
+      const { data, error } = await ctx.db
+        .from("public_library_prompts")
+        .select("id, prompt, variables")
+        .eq("id", id)
+        .eq("is_active", true)
+        .maybeSingle();
 
-    if (error || !data) {
-      return NextResponse.json({ error: "לא נמצא", code: "not_found" }, { status: 404 });
+      if (error || !data) {
+        return NextResponse.json({ error: "לא נמצא", code: "not_found" }, { status: 404 });
+      }
+
+      return NextResponse.json(data, { headers: { "Cache-Control": "private, max-age=300" } });
+    } catch (e) {
+      logger.error("[api/p/[id]] error:", e);
+      return NextResponse.json(
+        { error: "שגיאת שרת פנימית", code: "internal_error" },
+        { status: 500 },
+      );
     }
-
-    return NextResponse.json(data, {
-      headers: { "Cache-Control": "private, max-age=300" },
-    });
-  } catch (e) {
-    logger.error("[api/p/[id]] error:", e);
-    return NextResponse.json(
-      { error: "שגיאת שרת פנימית", code: "internal_error" },
-      { status: 500 },
-    );
-  }
-}
+  },
+  { rateLimit: "publicPromptFetch", forceServiceClient: true },
+);
