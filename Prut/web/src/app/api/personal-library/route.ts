@@ -1,45 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
+import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { withUser } from "@/lib/api-middleware";
 
 /**
  * GET /api/personal-library
- * Returns the user's personal prompt library.
- * Supports Bearer token auth (Chrome extension).
+ * Returns the user's personal prompt library (web + Chrome extension).
+ * Auth + client scoping owned by withUser.
  */
-export async function GET(req: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-
-    const {
-      data: { user },
-    } = bearerToken ? await supabase.auth.getUser(bearerToken) : await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
-    }
-
-    const rateLimit = await checkRateLimit(user.id, "personalLibrary");
-    if (!rateLimit.success) {
-      return NextResponse.json(
-        { error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" },
-        { status: 429 },
-      );
-    }
-
-    // Use service role to bypass RLS for Bearer token requests
-    const client = bearerToken ? createServiceClient() : supabase;
-
-    const { data, error } = await client
+export const GET = withUser(
+  async (_req, ctx) => {
+    const { data, error } = await ctx.db
       .from("personal_library")
       .select(
         "id, title, prompt, category, personal_category, use_case, tags, use_count, sort_index, created_at",
       )
-      .eq("user_id", user.id)
+      .eq("user_id", ctx.user!.id)
       .order("sort_index", { ascending: true })
       .order("created_at", { ascending: false })
       .limit(2000);
@@ -53,11 +28,6 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ items: data || [] });
-  } catch (error) {
-    logger.error("[personal-library] Error:", error);
-    return NextResponse.json(
-      { error: "שגיאת שרת פנימית", code: "internal_error" },
-      { status: 500 },
-    );
-  }
-}
+  },
+  { rateLimit: "personalLibrary" },
+);

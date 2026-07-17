@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 import { AIGateway } from "@/lib/ai/gateway";
 import { logger } from "@/lib/logger";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { withUser } from "@/lib/api-middleware";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 
 // ---------------------------------------------------------------------------
@@ -19,37 +18,11 @@ Rules:
 
 // ---------------------------------------------------------------------------
 // POST /api/personal-library/suggest-category
+// Auth + rate-limit (personalLibrary bucket) owned by withUser. No credits.
 // ---------------------------------------------------------------------------
 
-export async function POST(req: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : undefined;
-
-    const {
-      data: { user },
-    } = bearerToken
-      ? await supabase.auth.getUser(bearerToken)
-      : await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "נדרשת התחברות", code: "auth_required" },
-        { status: 401 }
-      );
-    }
-
-    const rateLimit = await checkRateLimit(user.id, 'personalLibrary');
-    if (!rateLimit.success) {
-      return NextResponse.json(
-        { error: "חרגת ממגבלת הבקשות. נסה שוב מאוחר יותר", code: "rate_limited" },
-        { status: 429 }
-      );
-    }
-
+export const POST = withUser(
+  async (req, ctx) => {
     const body = await req.json();
     const { promptText, existingCategories } = body as {
       promptText: string;
@@ -57,10 +30,7 @@ export async function POST(req: NextRequest) {
     };
 
     if (!promptText || typeof promptText !== "string") {
-      return NextResponse.json(
-        { error: "promptText is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "promptText is required" }, { status: 400 });
     }
 
     const cats = Array.isArray(existingCategories) ? existingCategories : [];
@@ -78,10 +48,15 @@ export async function POST(req: NextRequest) {
 
     // Track usage for the cost dashboard. Fire-and-forget.
     const usageTyped = usage as
-        | { inputTokens?: number; outputTokens?: number; promptTokens?: number; completionTokens?: number }
-        | undefined;
+      | {
+          inputTokens?: number;
+          outputTokens?: number;
+          promptTokens?: number;
+          completionTokens?: number;
+        }
+      | undefined;
     trackApiUsage({
-      userId: user.id,
+      userId: ctx.user!.id,
       modelId,
       inputTokens: usageTyped?.inputTokens ?? usageTyped?.promptTokens ?? 0,
       outputTokens: usageTyped?.outputTokens ?? usageTyped?.completionTokens ?? 0,
@@ -95,7 +70,7 @@ export async function POST(req: NextRequest) {
       logger.warn("[suggest-category] Failed to parse model response:", text);
       return NextResponse.json(
         { error: "שגיאה בעיבוד ההצעה", code: "parse_failed" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -106,7 +81,7 @@ export async function POST(req: NextRequest) {
       logger.warn("[suggest-category] Invalid JSON from model:", jsonMatch[0]);
       return NextResponse.json(
         { error: "שגיאה בעיבוד ההצעה", code: "parse_failed" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -115,11 +90,6 @@ export async function POST(req: NextRequest) {
       suggestedTags: parsed.tags || [],
       isNewCategory: parsed.isNew ?? !cats.includes(parsed.category),
     });
-  } catch (error) {
-    logger.error("[suggest-category] Error:", error);
-    return NextResponse.json(
-      { error: "שגיאת שרת פנימית", code: "internal_error" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { rateLimit: "personalLibrary" },
+);
