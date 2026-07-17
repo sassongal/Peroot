@@ -171,6 +171,28 @@ describe("withUser · rate limiting", () => {
     await withUser(ok, { rateLimit: "none" }, deps)(makeReq(), {});
     expect(deps.checkRateLimit).not.toHaveBeenCalled();
   });
+
+  it("uses a custom rate-limit key when rateLimitKey is provided", async () => {
+    const deps = makeDeps();
+    await withUser(
+      ok,
+      { rateLimit: "free", rateLimitKey: ({ user }) => `achievement:${user!.id}` },
+      deps,
+    )(makeReq(), {});
+    expect(deps.checkRateLimit).toHaveBeenCalledWith("achievement:u1", "free");
+  });
+
+  it("passes the client IP to rateLimitKey for guests", async () => {
+    const deps = makeDeps({
+      resolveAuth: vi.fn(async () => ({ status: "ok", user: null, isBearer: false }) as const),
+    });
+    await withUser(
+      ok,
+      { rateLimit: "guest", allowGuest: true, rateLimitKey: ({ ip }) => `evt:${ip}` },
+      deps,
+    )(makeReq({ "x-real-ip": "5.5.5.5" }), {});
+    expect(deps.checkRateLimit).toHaveBeenCalledWith("evt:5.5.5.5", "guest");
+  });
 });
 
 // --- credits: charged only on a 2xx ---------------------------------------

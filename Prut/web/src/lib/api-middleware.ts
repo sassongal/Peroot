@@ -129,6 +129,12 @@ export interface UserCtx {
 export interface WithUserOptions {
   /** Rate-limit bucket, a tier->bucket function, or "none". Required. */
   rateLimit: Bucket | ((tier: Tier) => Bucket) | "none";
+  /**
+   * Custom rate-limit key. Default keys on the user id (or client IP for
+   * guests); override to namespace a route within a shared bucket, e.g.
+   * `({ user }) => \`achievement:${user!.id}\``.
+   */
+  rateLimitKey?: (args: { user: User | null; ip: string | null }) => string;
   /** Credits to charge (opt-in). Charged only on a 2xx; auto-refunded otherwise. */
   credits?: number;
   /** Allow unauthenticated requests (rate-limited by IP). Default false. */
@@ -262,7 +268,12 @@ export function withUser<C = unknown>(
       // Rate limit.
       if (opts.rateLimit !== "none" && !bypass) {
         const bucket = typeof opts.rateLimit === "function" ? opts.rateLimit(tier) : opts.rateLimit;
-        const identifier = user ? user.id : clientIp(req);
+        const ip = clientIp(req);
+        const identifier = opts.rateLimitKey
+          ? opts.rateLimitKey({ user, ip })
+          : user
+            ? user.id
+            : ip;
         if (!identifier) {
           return errors.badRequest("לא ניתן לזהות את מקור הבקשה", "unidentified_source");
         }
