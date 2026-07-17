@@ -205,7 +205,10 @@ export function PersonalLibraryPromptCard({
       onDragOver={(event) => handlePersonalDragOver(event, prompt)}
       onDrop={(event) => handlePersonalDrop(event, prompt)}
       className={cn(
-        "group rounded-xl border transition-all duration-200",
+        // @container/plcard: the card responds to ITS OWN width, not the
+        // viewport — so it lays out correctly whether it's a full-width mobile
+        // row or a narrow cell in the multi-column grid on a wide monitor.
+        "group @container/plcard rounded-xl border transition-all duration-200",
         "border-white/8 bg-white/2.5 hover:bg-white/4",
         isDragging && "opacity-50 scale-[0.98]",
         isDragOver && "border-amber-500/40 bg-amber-500/5",
@@ -273,7 +276,7 @@ export function PersonalLibraryPromptCard({
         </button>
 
         {/* Capability badge — hidden on mobile collapsed (shown in expanded meta row) */}
-        <div className="hidden sm:block shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="hidden @sm/plcard:block shrink-0" onClick={(e) => e.stopPropagation()}>
           <CapabilityBadge mode={prompt.capability_mode} className="scale-90 origin-center" />
         </div>
 
@@ -290,8 +293,8 @@ export function PersonalLibraryPromptCard({
             )}
           </div>
           {/* Mobile-only meta line — dates + category always visible on small screens.
-              Desktop uses the inline md:flex row below. */}
-          <div className="flex sm:hidden items-center gap-1.5 text-[10px] text-(--text-muted) mt-0.5 flex-wrap">
+              Desktop uses the inline @md/plcard:flex row below. */}
+          <div className="flex @sm/plcard:hidden items-center gap-1.5 text-[10px] text-(--text-muted) mt-0.5 flex-wrap">
             <CapabilityBadge
               mode={prompt.capability_mode}
               showLabel={false}
@@ -311,7 +314,7 @@ export function PersonalLibraryPromptCard({
             )}
           </div>
           {/* sm+ meta line (same as before, excluding capability badge which is in the row) */}
-          <div className="hidden sm:flex md:hidden items-center gap-2 text-[10px] text-(--text-muted) mt-0.5">
+          <div className="hidden @sm/plcard:flex @md/plcard:hidden items-center gap-2 text-[10px] text-(--text-muted) mt-0.5">
             <DateBadge mode="compact" entity={entity} />
             <span className="opacity-50">·</span>
             <span className="truncate">
@@ -327,7 +330,7 @@ export function PersonalLibraryPromptCard({
         </div>
 
         {/* Meta: use count + category + date (desktop) */}
-        <span className="hidden md:flex items-center gap-2 text-xs text-(--text-muted) shrink-0">
+        <span className="hidden @md/plcard:flex items-center gap-2 text-xs text-(--text-muted) shrink-0">
           {prompt.use_count > 0 && <span>שומש {prompt.use_count}x</span>}
           <span className="px-1.5 py-0.5 rounded bg-(--glass-bg) text-(--text-muted)">
             {prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}
@@ -338,7 +341,7 @@ export function PersonalLibraryPromptCard({
         {/* Quick actions (collapsed) — always visible on mobile (no hover),
             hover-revealed on desktop. Bigger tap targets on mobile. */}
         <div
-          className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          className="flex items-center gap-0.5 shrink-0 opacity-100 @md/plcard:opacity-0 @md/plcard:group-hover:opacity-100 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -349,9 +352,9 @@ export function PersonalLibraryPromptCard({
             }}
             title="העתק"
             aria-label="העתק פרומפט"
-            className="p-2 md:p-1.5 rounded-lg bg-amber-500/5 text-amber-500 dark:text-amber-400 hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center cursor-pointer"
+            className="p-2 @md/plcard:p-1.5 rounded-lg bg-amber-500/5 text-amber-500 dark:text-amber-400 hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center cursor-pointer"
           >
-            <Copy className="w-4 h-4 md:w-3.5 md:h-3.5" />
+            <Copy className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
           </button>
           {onShowConnections && (
             <button
@@ -361,7 +364,7 @@ export function PersonalLibraryPromptCard({
               }}
               title="קשרים"
               aria-label="הצג קשרים"
-              className="md:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+              className="@md/plcard:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
             >
               <Network className="w-4 h-4" />
             </button>
@@ -374,9 +377,9 @@ export function PersonalLibraryPromptCard({
             }}
             title="השתמש"
             aria-label="השתמש בפרומפט"
-            className="hidden sm:flex p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 items-center justify-center"
+            className="hidden @sm/plcard:flex p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 items-center justify-center"
           >
-            <ArrowRight className="w-4 h-4 md:w-3.5 md:h-3.5" />
+            <ArrowRight className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
           </button>
           <div className="relative">
             <button
@@ -389,9 +392,9 @@ export function PersonalLibraryPromptCard({
               }}
               title="עוד"
               aria-label="פעולות נוספות"
-              className="p-2 md:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 md:min-h-0 md:min-w-0 flex items-center justify-center"
+              className="p-2 @md/plcard:p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-11 min-w-11 @md/plcard:min-h-0 @md/plcard:min-w-0 flex items-center justify-center"
             >
-              <MoreHorizontal className="w-4 h-4 md:w-3.5 md:h-3.5" />
+              <MoreHorizontal className="w-4 h-4 @md/plcard:w-3.5 @md/plcard:h-3.5" />
             </button>
             {isMenuOpen && (
               <div
@@ -792,7 +795,7 @@ export function PersonalLibraryPromptCard({
                   ) : (
                     <span className="text-blue-400/80">חדש</span>
                   )}
-                  <span className="hidden md:inline text-(--text-muted)">
+                  <span className="hidden @md/plcard:inline text-(--text-muted)">
                     {prompt.personal_category || PERSONAL_DEFAULT_CATEGORY}
                   </span>
                 </div>
