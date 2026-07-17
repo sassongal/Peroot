@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Plus, Play, Pencil, Trash2, Pin, HelpCircle, Copy, Download, Wand2 } from "lucide-react";
+import {
+  Link2,
+  Plus,
+  Play,
+  Pencil,
+  Trash2,
+  Pin,
+  HelpCircle,
+  Copy,
+  Download,
+  Wand2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { PersonalPrompt } from "@/lib/types";
@@ -16,18 +27,17 @@ interface ChainsSectionProps {
   chains: PromptChain[];
   personalPrompts: PersonalPrompt[];
   onAddChain: (
-    chain: Omit<PromptChain, 'id' | 'use_count' | 'last_used_at' | 'created_at' | 'updated_at'>
+    chain: Omit<PromptChain, "id" | "use_count" | "last_used_at" | "created_at" | "updated_at">,
   ) => Promise<string>;
   onUpdateChain: (
     id: string,
-    updates: Partial<Pick<PromptChain, 'title' | 'description' | 'steps' | 'is_pinned'>>
+    updates: Partial<Pick<PromptChain, "title" | "description" | "steps" | "is_pinned">>,
   ) => Promise<void>;
   onDeleteChain: (id: string) => Promise<void>;
   onIncrementUseCount: (id: string) => Promise<void>;
   onUseStep: (promptText: string) => void;
   onDuplicateChain?: (chain: PromptChain) => Promise<string>;
   onExportChain?: (chain: PromptChain) => string;
-  onImportChain?: (json: string) => Promise<string>;
 }
 
 export function ChainsSection({
@@ -47,11 +57,7 @@ export function ChainsSection({
   const [runningChain, setRunningChain] = useState<PromptChain | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
-  const handleSave = async (
-    title: string,
-    description: string,
-    steps: PromptChain['steps']
-  ) => {
+  const handleSave = async (title: string, description: string, steps: PromptChain["steps"]) => {
     if (editingChain) {
       await onUpdateChain(editingChain.id, { title, description, steps });
     } else {
@@ -62,7 +68,11 @@ export function ChainsSection({
     setEditingChain(null);
   };
 
-  const handleAutoSave = async (title: string, description: string, steps: PromptChain["steps"]) => {
+  const handleAutoSave = async (
+    title: string,
+    description: string,
+    steps: PromptChain["steps"],
+  ) => {
     const id = await onAddChain({ title, description, steps, is_pinned: false });
     markFeatureUsed("peroot_used_chains");
     markFeatureUsed("peroot_used_auto_chain");
@@ -84,27 +94,37 @@ export function ChainsSection({
     <div
       className={cn(
         "overflow-hidden transition-all duration-300 ease-in-out",
-        showHelp ? "max-h-[500px] opacity-100 mt-3" : "max-h-0 opacity-0"
+        showHelp ? "max-h-[500px] opacity-100 mt-3" : "max-h-0 opacity-0",
       )}
     >
-      <div className="bg-(--glass-bg) border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-muted) space-y-2" dir="rtl">
+      <div
+        className="bg-(--glass-bg) border border-(--glass-border) rounded-xl p-4 text-sm text-(--text-muted) space-y-2"
+        dir="rtl"
+      >
         <p className="font-medium text-(--text-secondary)">איך עובדות שרשראות פרומפטים?</p>
         <ul className="space-y-1.5 list-disc list-inside text-xs leading-relaxed">
           <li>שרשרת היא סדרה של פרומפטים שרצים אחד אחרי השני</li>
           <li>התוצאה של כל שלב יכולה לשמש כקלט אוטומטי לשלב הבא</li>
-          <li>לחצו על <strong className="text-amber-400">צור שרשרת</strong> והוסיפו שלבים מהספרייה האישית או כתבו חדשים</li>
+          <li>
+            לחצו על <strong className="text-amber-400">צור שרשרת</strong> והוסיפו שלבים מהספרייה
+            האישית או כתבו חדשים
+          </li>
           <li>גררו שלבים כדי לשנות את הסדר</li>
-          <li>לחצו <strong className="text-amber-400">הפעל</strong> כדי להריץ את השרשרת שלב אחרי שלב</li>
+          <li>
+            לחצו <strong className="text-amber-400">הפעל</strong> כדי להריץ את השרשרת שלב אחרי שלב
+          </li>
           <li>בתוך ה-Runner אפשר לפתוח כל שלב ישירות ב-ChatGPT / Claude / Gemini בלחיצה</li>
         </ul>
         <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-2.5 space-y-1 mt-2">
           <p className="text-[11px] font-semibold text-amber-400">דוגמה:</p>
           <p className="text-[11px] leading-relaxed">
-            &quot;מחקר שוק &lt;br&gt;→ סיכום ל-5 נקודות &lt;br&gt;→ פוסט לינקדאין&quot; — הפלט של השלב הראשון נזרק אוטומטית לשני, ואז לשלישי.
+            &quot;מחקר שוק &lt;br&gt;→ סיכום ל-5 נקודות &lt;br&gt;→ פוסט לינקדאין&quot; — הפלט של
+            השלב הראשון נזרק אוטומטית לשני, ואז לשלישי.
           </p>
         </div>
         <div className="text-[10px] text-(--text-muted)/80 pt-1.5 border-t border-(--glass-border) mt-2">
-          <strong>מה נשמר:</strong> הכותרת, התיאור, כל השלבים עם המשתנים, וסדר השלבים. הפלטים שאתם מדביקים בזמן הריצה נשמרים רק באותו session (לא עולים לשרת).
+          <strong>מה נשמר:</strong> הכותרת, התיאור, כל השלבים עם המשתנים, וסדר השלבים. הפלטים שאתם
+          מדביקים בזמן הריצה נשמרים רק באותו session (לא עולים לשרת).
         </div>
       </div>
     </div>
@@ -170,7 +190,9 @@ export function ChainsSection({
             onClick={() => setShowHelp(!showHelp)}
             className={cn(
               "p-1 rounded-lg transition-colors cursor-pointer",
-              showHelp ? "text-amber-400 bg-amber-500/10" : "text-(--text-muted) hover:text-amber-400 hover:bg-(--glass-bg)"
+              showHelp
+                ? "text-amber-400 bg-amber-500/10"
+                : "text-(--text-muted) hover:text-amber-400 hover:bg-(--glass-bg)",
             )}
             aria-label="עזרה על שרשראות"
             title="מה זה שרשראות?"
@@ -203,20 +225,18 @@ export function ChainsSection({
 
       {/* Chain Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {chains.map(chain => (
+        {chains.map((chain) => (
           <div
             key={chain.id}
             className={cn(
               "group border border-(--glass-border) rounded-xl p-4 bg-(--glass-bg) hover:bg-(--glass-bg) transition-colors",
-              chain.is_pinned && "border-amber-500/20 bg-amber-500/2"
+              chain.is_pinned && "border-amber-500/20 bg-amber-500/2",
             )}
           >
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  {chain.is_pinned && (
-                    <Pin className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  )}
+                  {chain.is_pinned && <Pin className="w-3 h-3 text-amber-400 fill-amber-400" />}
                   <h4 className="text-sm font-medium text-(--text-secondary) truncate">
                     {chain.title}
                   </h4>
@@ -232,7 +252,7 @@ export function ChainsSection({
                     "p-1.5 rounded-lg transition-colors",
                     chain.is_pinned
                       ? "text-amber-400"
-                      : "text-(--text-muted) hover:text-(--text-secondary)"
+                      : "text-(--text-muted) hover:text-(--text-secondary)",
                   )}
                   title={chain.is_pinned ? "בטל הצמדה" : "הצמד"}
                 >
@@ -247,7 +267,9 @@ export function ChainsSection({
                 </button>
                 {onDuplicateChain && (
                   <button
-                    onClick={async () => { await onDuplicateChain(chain); }}
+                    onClick={async () => {
+                      await onDuplicateChain(chain);
+                    }}
                     className="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-secondary) transition-colors"
                     title="שכפל"
                   >
@@ -295,9 +317,8 @@ export function ChainsSection({
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-600">
                 {chain.steps.length} שלבים
-                {chain.steps.some(s => s.variables && s.variables.length > 0) &&
-                  ` · ${chain.steps.reduce((sum, s) => sum + (s.variables?.length || 0), 0)} משתנים`
-                }
+                {chain.steps.some((s) => s.variables && s.variables.length > 0) &&
+                  ` · ${chain.steps.reduce((sum, s) => sum + (s.variables?.length || 0), 0)} משתנים`}
                 {chain.use_count > 0 ? ` · שומש ${chain.use_count}x` : ""}
               </span>
               <button
@@ -341,10 +362,7 @@ export function ChainsSection({
 
       {/* Auto Chain Builder Modal */}
       {showAutoBuilder && (
-        <AutoChainBuilder
-          onSaveChain={handleAutoSave}
-          onClose={() => setShowAutoBuilder(false)}
-        />
+        <AutoChainBuilder onSaveChain={handleAutoSave} onClose={() => setShowAutoBuilder(false)} />
       )}
     </div>
   );

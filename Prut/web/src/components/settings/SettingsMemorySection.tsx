@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Brain, X, Plus, Loader2, Info } from "lucide-react";
+import { toast } from "sonner";
 import { useUserMemory } from "@/hooks/useUserMemory";
 import { cn } from "@/lib/utils";
 
@@ -36,13 +37,18 @@ export function SettingsMemorySection() {
     const result = await addFact(newFact.trim(), newCategory);
     if (result.success) {
       setNewFact("");
+    } else {
+      toast.error(result.error || "שגיאה בשמירת העובדה");
     }
     setIsAdding(false);
   };
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
-    await deleteFact(id);
+    const result = await deleteFact(id);
+    if (!result.success) {
+      toast.error("שגיאה במחיקת העובדה");
+    }
     setDeletingId(null);
   };
 
