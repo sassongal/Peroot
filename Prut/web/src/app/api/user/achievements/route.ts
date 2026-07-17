@@ -1,28 +1,14 @@
-
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from "next/server";
+import { withUser } from "@/lib/api-middleware";
 
 /**
  * GET /api/user/achievements
- * 
- * Fetches unlocked achievements for the current user
+ * Fetches unlocked achievements for the current user. Auth owned by withUser.
  */
-export async function GET() {
-    try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const { data } = await supabase
-            .from('user_achievements')
-            .select('*')
-            .eq('user_id', user.id);
-        
-        return NextResponse.json(data || []);
-    } catch {
-        return NextResponse.json({ error: 'Internal error' }, { status: 500 });
-    }
-}
+export const GET = withUser(
+  async (_req, ctx) => {
+    const { data } = await ctx.db.from("user_achievements").select("*").eq("user_id", ctx.user!.id);
+    return NextResponse.json(data || []);
+  },
+  { rateLimit: "none" },
+);
