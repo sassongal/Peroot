@@ -39,6 +39,20 @@ interface PersonalLibraryViewProps {
   onGraphOpened?: () => void;
 }
 
+// Strip server-owned fields so a deleted prompt can be re-added via addPrompts
+// (used by undo-delete). Content/title/category are preserved; use_count and
+// timestamps reset, which is acceptable for an undo.
+function stripForRestore(
+  p: PersonalPrompt,
+): Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count"> {
+  const clone: Partial<PersonalPrompt> = { ...p };
+  delete clone.id;
+  delete clone.created_at;
+  delete clone.updated_at;
+  delete clone.use_count;
+  return clone as Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">;
+}
+
 export function PersonalLibraryView({
   onUsePrompt,
   onCopyText,
@@ -485,12 +499,27 @@ export function PersonalLibraryView({
 
   const handleBatchDelete = async () => {
     if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
+    // Snapshot the full objects before deleting so we can offer undo.
+    const deleted = personalLibrary.filter((p) => selectedIds.has(p.id));
+    const count = deleted.length;
     try {
       await ctx.deletePrompts(Array.from(selectedIds));
-      toast.success("נמחקו בהצלחה");
       clearSelection();
+      toast.success(`${count} פרומפטים נמחקו`, {
+        action: {
+          label: "בטל",
+          onClick: async () => {
+            try {
+              await ctx.addPrompts(deleted.map(stripForRestore));
+              toast.success("הפרומפטים שוחזרו");
+            } catch {
+              toast.error("השחזור נכשל — הפרומפטים לא נמחקו לצמיתות, נסה שוב.");
+            }
+          },
+        },
+      });
     } catch {
-      toast.error("שגיאה במחיקה");
+      toast.error("המחיקה נכשלה. נסה שוב, או רענן את הדף אם הבעיה נמשכת.");
     }
   };
 

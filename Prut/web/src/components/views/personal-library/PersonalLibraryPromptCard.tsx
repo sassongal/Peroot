@@ -445,7 +445,7 @@ export function PersonalLibraryPromptCard({
                               await movePrompts([prompt.id], cat);
                               toast.success(`הועבר לתיקייה "${cat}"`);
                             } catch {
-                              toast.error("שגיאה בהעברה");
+                              toast.error("ההעברה נכשלה, נסה שוב.");
                             }
                             setOpenMenuId(null);
                             setShowMoveSubMenu(false);
@@ -484,7 +484,7 @@ export function PersonalLibraryPromptCard({
                                 await movePrompts([prompt.id], name);
                                 toast.success(`הועבר לתיקייה "${name}"`);
                               } catch {
-                                toast.error("שגיאה בהעברה");
+                                toast.error("ההעברה נכשלה, נסה שוב.");
                               }
                               setOpenMenuId(null);
                               setShowMoveSubMenu(false);
@@ -512,7 +512,7 @@ export function PersonalLibraryPromptCard({
                                 await movePrompts([prompt.id], name);
                                 toast.success(`הועבר לתיקייה "${name}"`);
                               } catch {
-                                toast.error("שגיאה בהעברה");
+                                toast.error("ההעברה נכשלה, נסה שוב.");
                               }
                               setOpenMenuId(null);
                               setShowMoveSubMenu(false);
@@ -689,13 +689,36 @@ export function PersonalLibraryPromptCard({
                     <button
                       onClick={async () => {
                         if (!confirm("האם למחוק פרומפט זה?")) return;
+                        const snapshot: Partial<PersonalPrompt> = { ...prompt };
+                        delete snapshot.id;
+                        delete snapshot.created_at;
+                        delete snapshot.updated_at;
+                        delete snapshot.use_count;
                         try {
                           await deletePrompts([prompt.id]);
-                          toast.success("נמחק בהצלחה");
+                          setOpenMenuId(null);
+                          toast.success("הפרומפט נמחק", {
+                            action: {
+                              label: "בטל",
+                              onClick: async () => {
+                                try {
+                                  await ctx.addPrompts([
+                                    snapshot as Omit<
+                                      PersonalPrompt,
+                                      "id" | "created_at" | "updated_at" | "use_count"
+                                    >,
+                                  ]);
+                                  toast.success("הפרומפט שוחזר");
+                                } catch {
+                                  toast.error("השחזור נכשל, נסה שוב.");
+                                }
+                              },
+                            },
+                          });
                         } catch {
-                          toast.error("שגיאה במחיקה");
+                          toast.error("המחיקה נכשלה. נסה שוב, או רענן את הדף.");
+                          setOpenMenuId(null);
                         }
-                        setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"
                     >
