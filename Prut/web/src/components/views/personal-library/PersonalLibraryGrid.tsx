@@ -349,6 +349,27 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
                     : "לחץ על הכוכב כדי לשמור מועדפים"}
                 </p>
               </div>
+              {/* Teaching first-run: the 3-step flow so a first-timer sees the
+                  payoff (a real sequence, so numbering is earned here). */}
+              {effectiveFolder === "all" && (
+                <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full max-w-lg mx-auto">
+                  {[
+                    { n: "1", t: "כתבו פרומפט גולמי או רעיון" },
+                    { n: "2", t: 'לחצו "שדרג" לגרסה מקצועית' },
+                    { n: "3", t: "שמרו כאן לשימוש חוזר בכל עת" },
+                  ].map((s) => (
+                    <div
+                      key={s.n}
+                      className="flex-1 flex items-center gap-2.5 rounded-xl border border-(--glass-border) bg-black/10 px-3 py-2.5 text-start"
+                    >
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center tabular-nums">
+                        {s.n}
+                      </span>
+                      <span className="text-xs text-(--text-secondary) leading-snug">{s.t}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {effectiveFolder === "all" && (
                 <button
                   onClick={() => setViewMode("home")}

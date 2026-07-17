@@ -18,6 +18,8 @@ interface SearchAutosuggestProps {
   prompts: { id: string; title: string; category: string; use_case?: string }[];
   placeholder?: string;
   className?: string;
+  /** Enable the global "/" shortcut to focus this search (+ shows a hint). */
+  enableGlobalShortcut?: boolean;
 }
 
 export function SearchAutosuggest({
@@ -26,6 +28,7 @@ export function SearchAutosuggest({
   prompts,
   placeholder = "חיפוש פרומפטים...",
   className,
+  enableGlobalShortcut = false,
 }: SearchAutosuggestProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -39,8 +42,27 @@ export function SearchAutosuggest({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setDebouncedQuery(value), 150);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [value]);
+
+  // Global "/" shortcut — focus this search from anywhere in the view, unless
+  // the user is already typing in a field. Esc-to-clear is handled on the input.
+  useEffect(() => {
+    if (!enableGlobalShortcut) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const typing =
+        !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (typing) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [enableGlobalShortcut]);
 
   // Build suggestions
   const suggestions: SuggestItem[] = (() => {
@@ -62,18 +84,15 @@ export function SearchAutosuggest({
 
     // Prompt title matches (max 5)
     const matchedPrompts = prompts
-      .map(p => ({
+      .map((p) => ({
         ...p,
-        score: Math.max(
-          hebrewMatchScore(p.title, q),
-          hebrewMatchScore(p.use_case || "", q)
-        ),
+        score: Math.max(hebrewMatchScore(p.title, q), hebrewMatchScore(p.use_case || "", q)),
       }))
-      .filter(p => p.score > 0)
+      .filter((p) => p.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
-    matchedPrompts.forEach(p => {
+    matchedPrompts.forEach((p) => {
       items.push({ type: "prompt", label: p.title, value: p.title });
     });
 
@@ -93,26 +112,42 @@ export function SearchAutosuggest({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) return;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Esc: close the suggestion list if open, else clear the query, else blur.
+      if (e.key === "Escape") {
+        if (showSuggestions) {
+          setShowSuggestions(false);
+          setActiveIndex(-1);
+        } else if (value) {
+          onChange("");
+        } else {
+          inputRef.current?.blur();
+        }
+        return;
+      }
 
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex(prev => (prev + 1) % suggestions.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
-    } else if (e.key === "Enter" && activeIndex >= 0) {
-      e.preventDefault();
-      const item = suggestions[activeIndex];
-      onChange(item.value);
-      setShowSuggestions(false);
-      setActiveIndex(-1);
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-      setActiveIndex(-1);
-    }
-  }, [showSuggestions, suggestions, activeIndex, onChange]);
+      if (!showSuggestions || suggestions.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev + 1) % suggestions.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+      } else if (e.key === "Enter" && activeIndex >= 0) {
+        e.preventDefault();
+        const item = suggestions[activeIndex];
+        onChange(item.value);
+        setShowSuggestions(false);
+        setActiveIndex(-1);
+      } else if (e.key === "Escape") {
+        setShowSuggestions(false);
+        setActiveIndex(-1);
+      }
+    },
+    [showSuggestions, suggestions, activeIndex, onChange, value],
+  );
 
   const handleSelect = (item: SuggestItem) => {
     onChange(item.value);
@@ -124,6 +159,12 @@ export function SearchAutosuggest({
   return (
     <div ref={containerRef} className={cn("relative", className)}>
       <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
+      {/* "/" shortcut hint — desktop, only while empty */}
+      {enableGlobalShortcut && !value && (
+        <kbd className="absolute left-3 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center rounded border border-(--glass-border) bg-(--glass-bg) px-1.5 py-0.5 text-[10px] font-sans text-(--text-muted) pointer-events-none">
+          /
+        </kbd>
+      )}
       <input
         ref={inputRef}
         dir="rtl"
@@ -152,7 +193,10 @@ export function SearchAutosuggest({
       {value && (
         <button
           type="button"
-          onClick={() => { onChange(""); setShowSuggestions(false); }}
+          onClick={() => {
+            onChange("");
+            setShowSuggestions(false);
+          }}
           className="absolute end-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/10 text-(--text-muted) hover:text-(--text-primary) transition-colors"
           aria-label="נקה חיפוש"
         >
@@ -169,59 +213,70 @@ export function SearchAutosuggest({
           dir="rtl"
         >
           {/* Category section */}
-          {suggestions.some(s => s.type === "category") && (
+          {suggestions.some((s) => s.type === "category") && (
             <>
               <div className="px-3 py-1.5 text-[10px] font-medium text-(--text-muted) uppercase tracking-wider">
                 קטגוריות
               </div>
-              {suggestions.filter(s => s.type === "category").map((item) => {
-                const globalIdx = suggestions.indexOf(item);
-                return (
-                  <button
-                    key={`cat-${item.value}`}
-                    onClick={() => handleSelect(item)}
-                    onMouseEnter={() => setActiveIndex(globalIdx)}
-                    className={cn(
-                      "w-full text-right px-3 py-2 text-sm transition-colors",
-                      globalIdx === activeIndex ? "bg-white/10 text-(--text-primary)" : "text-(--text-secondary) hover:bg-white/5"
-                    )}
-                    role="option"
-                    aria-selected={globalIdx === activeIndex}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+              {suggestions
+                .filter((s) => s.type === "category")
+                .map((item) => {
+                  const globalIdx = suggestions.indexOf(item);
+                  return (
+                    <button
+                      key={`cat-${item.value}`}
+                      onClick={() => handleSelect(item)}
+                      onMouseEnter={() => setActiveIndex(globalIdx)}
+                      className={cn(
+                        "w-full text-right px-3 py-2 text-sm transition-colors",
+                        globalIdx === activeIndex
+                          ? "bg-white/10 text-(--text-primary)"
+                          : "text-(--text-secondary) hover:bg-white/5",
+                      )}
+                      role="option"
+                      aria-selected={globalIdx === activeIndex}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
             </>
           )}
 
           {/* Prompt section */}
-          {suggestions.some(s => s.type === "prompt") && (
+          {suggestions.some((s) => s.type === "prompt") && (
             <>
-              <div className={cn(
-                "px-3 py-1.5 text-[10px] font-medium text-(--text-muted) uppercase tracking-wider",
-                suggestions.some(s => s.type === "category") && "border-t border-(--glass-border)"
-              )}>
+              <div
+                className={cn(
+                  "px-3 py-1.5 text-[10px] font-medium text-(--text-muted) uppercase tracking-wider",
+                  suggestions.some((s) => s.type === "category") &&
+                    "border-t border-(--glass-border)",
+                )}
+              >
                 פרומפטים
               </div>
-              {suggestions.filter(s => s.type === "prompt").map((item) => {
-                const globalIdx = suggestions.indexOf(item);
-                return (
-                  <button
-                    key={`prompt-${item.value}`}
-                    onClick={() => handleSelect(item)}
-                    onMouseEnter={() => setActiveIndex(globalIdx)}
-                    className={cn(
-                      "w-full text-right px-3 py-2 text-sm transition-colors truncate",
-                      globalIdx === activeIndex ? "bg-white/10 text-(--text-primary)" : "text-(--text-secondary) hover:bg-white/5"
-                    )}
-                    role="option"
-                    aria-selected={globalIdx === activeIndex}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+              {suggestions
+                .filter((s) => s.type === "prompt")
+                .map((item) => {
+                  const globalIdx = suggestions.indexOf(item);
+                  return (
+                    <button
+                      key={`prompt-${item.value}`}
+                      onClick={() => handleSelect(item)}
+                      onMouseEnter={() => setActiveIndex(globalIdx)}
+                      className={cn(
+                        "w-full text-right px-3 py-2 text-sm transition-colors truncate",
+                        globalIdx === activeIndex
+                          ? "bg-white/10 text-(--text-primary)"
+                          : "text-(--text-secondary) hover:bg-white/5",
+                      )}
+                      role="option"
+                      aria-selected={globalIdx === activeIndex}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
             </>
           )}
         </div>

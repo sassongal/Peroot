@@ -219,6 +219,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           prompts={filteredPersonalLibrary}
           placeholder="חיפוש..."
           className="w-full md:flex-1 md:min-w-[180px]"
+          enableGlobalShortcut
         />
 
         <div className="flex items-center gap-2 -mx-1 px-1 overflow-x-auto scrollbar-hide pb-0.5 md:overflow-visible md:flex-wrap md:pb-0 md:mx-0 md:px-0">
