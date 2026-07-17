@@ -115,10 +115,16 @@ Then implement `withUser` to green.
 
 ### Phase 2 — Representative migration (validate against the extremes)
 Migrate 4 routes chosen to exercise every path, verifying behavior is unchanged:
-- [ ] `src/app/api/favorites/route.ts` — **Bearer** + cookie, `favorites` bucket (validates the centralized client choice)
-- [ ] `src/app/api/me/route.ts` — **Bearer** + cookie, reads `ctx.tier`
-- [ ] `src/app/api/chain/generate/route.ts` — cookie + credits (2) + streaming `refund()` + tier-varying bucket + `allowGuest`
-- [ ] `src/app/api/folders/route.ts` — cookie-only + `folders` bucket (simplest case)
+- [x] `src/app/api/favorites/route.ts` — **Bearer** + cookie, `favorites` bucket (validates the centralized client choice)
+- [x] `src/app/api/me/route.ts` — **Bearer** + cookie, keeps its own profile read
+- [x] `src/app/api/chain/generate/route.ts` — cookie + credits (2) + tier-varying bucket; handler dropped all manual refund bookkeeping (auto-refund on ≥400)
+- [x] `src/app/api/folders/route.ts` — cookie-only; POST `folders` bucket, GET/PATCH/DELETE `"none"`
+
+**Intentional deltas on `chain/generate`** (client reads only `data.error`, so none break it):
+- insufficient credits: `403 {remaining}` → `402 {code:"insufficient_credits", balance}` (standardized)
+- 429 shape standardized (`rate_limited` + `Retry-After`/`X-RateLimit-*`); guest is now 401 `auth_required` (not a chain-specific message)
+- admins now bypass the rate-limit too (previously charged the `pro` bucket) — matches the Q8 "admins bypass both" decision
+- credit is charged before input validation; an invalid request returns 400 and the charge auto-refunds (net-zero)
 
 ### Phase 3 — Verify & land
 - [ ] `npm run typecheck` · `npm run test` · `npm run lint`

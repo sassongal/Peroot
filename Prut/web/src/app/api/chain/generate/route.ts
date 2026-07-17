@@ -1,10 +1,8 @@
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { AIGateway } from "@/lib/ai/gateway";
 import { ConcurrencyError } from "@/lib/ai/concurrency";
-import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { withUser } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import type { GeneratedChain, GeneratedChainStep } from "@/lib/chain-types";
@@ -91,72 +89,40 @@ function normalizeSteps(rawSteps: unknown[]): GeneratedChainStep[] {
     .filter((s) => s.prompt.length > 0); // Drop empty-prompt steps
 }
 
-export async function POST(req: Request) {
-  let userId: string | undefined;
-  let chargedCredits = false;
+/**
+ * POST /api/chain/generate — build a prompt chain from a goal.
+ *
+ * withUser owns auth (login required), tier resolution, the free/pro rate-limit
+ * bucket, and the CHAIN_CREDIT_COST charge. Refunds are automatic: any response
+ * this handler returns with status >= 400 refunds the charge (only a 2xx keeps
+ * it), so there is no manual refund bookkeeping here. Admins bypass the charge
+ * and the rate limit.
+ */
+export const POST = withUser(
+  async (req, ctx) => {
+    const userId = ctx.user!.id;
 
-  try {
-    const json = await req.json();
-    const { goal, max_steps, user_context } = RequestSchema.parse(json);
-
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    userId = user?.id;
-    const isGuest = !userId;
-
-    let tier: "free" | "pro" | "admin" | "guest" = "guest";
-    let isAdmin = false;
-
-    if (isGuest) {
-      return NextResponse.json({ error: "יש להתחבר כדי לבנות שרשרת פרומפטים." }, { status: 401 });
-    } else {
-      // Resolve tier + admin status. user_roles is authoritative for admin —
-      // overrides plan_tier so admins are never charged credits even if their
-      // profile row is stale (e.g. before grant_admin synced profiles.plan_tier).
-      const [{ data: profile }, { data: adminRole }] = await Promise.all([
-        supabase.from("profiles").select("plan_tier").eq("id", userId).maybeSingle(),
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId!)
-          .eq("role", "admin")
-          .maybeSingle(),
-      ]);
-      isAdmin = !!adminRole || profile?.plan_tier === "admin";
-      tier = isAdmin ? "admin" : (profile?.plan_tier as "free" | "pro") || "free";
-
-      // Rate limit before credit decrement — hard barrier independent of credit balance.
-      const rateLimitTier = isAdmin ? "pro" : tier === "free" ? "free" : "pro";
-      const rl = await checkRateLimit(userId!, rateLimitTier);
-      if (!rl.success) {
+    // Validate input. (withUser charges before the handler runs; an invalid
+    // request returns 400 here and the charge is auto-refunded — net zero.)
+    let input: z.infer<typeof RequestSchema>;
+    try {
+      input = RequestSchema.parse(await req.json());
+    } catch (error) {
+      if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: "יותר מדי בקשות. נסה שוב מאוחר יותר", code: "too_many_requests" },
-          { status: 429, headers: { "Retry-After": String(rl.reset) } },
+          { error: "בקשה לא תקינה", code: "invalid_request", details: error.issues },
+          { status: 400 },
         );
       }
-
-      // Admins bypass credit decrement entirely (mirrors /api/enhance behavior).
-      if (!isAdmin) {
-        const creditResult = await checkAndDecrementCredits(
-          userId!,
-          tier,
-          supabase,
-          CHAIN_CREDIT_COST,
-        );
-        if (!creditResult.allowed) {
-          return NextResponse.json(
-            {
-              error: `אין מספיק קרדיטים. בניית שרשרת עולה ${CHAIN_CREDIT_COST} קרדיטים.`,
-              remaining: creditResult.remaining,
-            },
-            { status: 403 },
-          );
-        }
-        chargedCredits = true;
-      }
+      logger.error("[chain/generate] Bad request body:", error);
+      return NextResponse.json(
+        { error: "שגיאת שרת פנימית", code: "internal_error" },
+        { status: 500 },
+      );
     }
+
+    const { goal, max_steps, user_context } = input;
+    const tier = await ctx.tier();
 
     // Build concise user prompt (minimize tokens)
     let userPrompt = `מטרה: "${goal}"\nמקסימום שלבים: ${max_steps}`;
@@ -166,21 +132,30 @@ export async function POST(req: Request) {
     }
 
     // Use generateFull (non-streaming) — more efficient for JSON output.
-    // Do not pass temperature here: pickDefaults('chain') in gateway.ts
-    // returns 0.4 by design, which is the same value we used to hardcode.
-    // Letting the gateway own it means a future tweak to the chain preset
-    // automatically propagates without callers drifting out of sync.
+    // pickDefaults('chain') owns temperature (0.4) — do not pass it here.
     const chainStartTime = Date.now();
-    const {
-      text: fullText,
-      modelId,
-      usage: chainUsage,
-    } = await AIGateway.generateFull({
-      system: CHAIN_BUILDER_SYSTEM_PROMPT,
-      prompt: userPrompt,
-      task: "chain", // Uses flash-first routing for cost efficiency
-      userTier: tier === "admin" ? "pro" : tier,
-    });
+    let gen: Awaited<ReturnType<typeof AIGateway.generateFull>>;
+    try {
+      gen = await AIGateway.generateFull({
+        system: CHAIN_BUILDER_SYSTEM_PROMPT,
+        prompt: userPrompt,
+        task: "chain", // Uses flash-first routing for cost efficiency
+        userTier: tier === "admin" ? "pro" : tier,
+      });
+    } catch (error) {
+      if (error instanceof ConcurrencyError) {
+        return NextResponse.json(
+          { error: "השרת עמוס. נסה שוב בעוד רגע", code: "server_busy" },
+          { status: 503 },
+        );
+      }
+      logger.error("[chain/generate] Error:", error);
+      return NextResponse.json(
+        { error: "שגיאת שרת פנימית", code: "internal_error" },
+        { status: 500 },
+      );
+    }
+    const { text: fullText, modelId, usage: chainUsage } = gen;
 
     logger.info(`[chain/generate] Model: ${modelId}, response length: ${fullText.length}`);
 
@@ -203,28 +178,26 @@ export async function POST(req: Request) {
       engineMode: "chain",
     });
 
-    // Parse JSON — refund credits on failure
+    // Parse JSON — a >= 400 return auto-refunds the credit.
     const cleaned = extractJSON(fullText);
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(cleaned);
     } catch {
       logger.error("[chain/generate] JSON parse failed:", cleaned.slice(0, 300));
-      if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
       return NextResponse.json(
         { error: "ה-AI החזיר תשובה בפורמט לא תקין. נסה שוב", code: "ai_invalid_format" },
         { status: 500 },
       );
     }
 
-    // Validate structure — refund on incomplete
+    // Validate structure
     if (
       typeof parsed.title !== "string" ||
       !Array.isArray(parsed.steps) ||
       parsed.steps.length === 0
     ) {
       logger.error("[chain/generate] Incomplete chain:", JSON.stringify(parsed).slice(0, 300));
-      if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
       return NextResponse.json(
         { error: "השרשרת שנוצרה אינה שלמה. נסה שוב", code: "ai_incomplete" },
         { status: 500 },
@@ -233,7 +206,6 @@ export async function POST(req: Request) {
 
     const steps = normalizeSteps(parsed.steps);
     if (steps.length < 2) {
-      if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
       return NextResponse.json(
         { error: "Chain must have at least 2 valid steps." },
         { status: 500 },
@@ -248,26 +220,11 @@ export async function POST(req: Request) {
     };
 
     return NextResponse.json(chain);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      // Validation error — no credits were charged yet
-      return NextResponse.json(
-        { error: "בקשה לא תקינה", code: "invalid_request", details: error.issues },
-        { status: 400 },
-      );
-    }
-    // AI or concurrency error after credits were charged — refund
-    if (userId && chargedCredits) await refundCredit(userId, CHAIN_CREDIT_COST);
-    if (error instanceof ConcurrencyError) {
-      return NextResponse.json(
-        { error: "השרת עמוס. נסה שוב בעוד רגע", code: "server_busy" },
-        { status: 503 },
-      );
-    }
-    logger.error("[chain/generate] Error:", error);
-    return NextResponse.json(
-      { error: "שגיאת שרת פנימית", code: "internal_error" },
-      { status: 500 },
-    );
-  }
-}
+  },
+  {
+    // Login required (no guests); free tier uses the "free" bucket, everyone
+    // else "pro". Admins bypass both the bucket and the credit charge.
+    rateLimit: (tier) => (tier === "free" ? "free" : "pro"),
+    credits: CHAIN_CREDIT_COST,
+  },
+);
