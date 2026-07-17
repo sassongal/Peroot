@@ -44,6 +44,7 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     localSearch,
     selectionMode,
     setSelectionMode,
+    selectedIds,
     displayItems,
     selectAllVisible,
     effectiveFolder,
@@ -57,6 +58,11 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     localViewType,
     setLocalViewType,
   } = shared;
+
+  // When a search or capability filter is active, the count reflects matches —
+  // label it "results" so a filtered-down list never reads as the whole library.
+  const isFiltering = localSearch.trim() !== "" || !!selectedCapabilityFilter;
+  const selectedCount = selectedIds.size;
 
   return (
     <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) mb-4 sticky top-0 z-20 md:static bg-[#0A0A0F]/90 md:bg-black/40 backdrop-blur-md md:backdrop-blur-none overflow-x-hidden">
@@ -73,7 +79,14 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
           <div>
             <h2 className="text-xl md:text-3xl font-serif text-(--text-primary)">ספריה אישית</h2>
             <p className="text-xs text-(--text-muted) mt-0.5">
-              {usedTotalCount} פרומפטים · {activeFolderLabel}
+              {isFiltering ? (
+                <span className="text-amber-600 dark:text-amber-400 font-medium">
+                  {usedTotalCount} תוצאות
+                </span>
+              ) : (
+                <>{usedTotalCount} פרומפטים</>
+              )}{" "}
+              · {activeFolderLabel}
             </p>
           </div>
         </div>
@@ -192,10 +205,11 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
                 ? "bg-blue-600 border-blue-500 text-(--text-primary) shadow-lg shadow-blue-900/30"
                 : "border-(--glass-border) text-(--text-muted) hover:text-(--text-primary) hover:bg-(--glass-bg)",
             )}
-            title="ניהול פריטים"
+            title="בחירת פריטים לפעולות מרובות (מחיקה, העברה, תיוג, ייצוא)"
+            aria-pressed={selectionMode}
           >
             <CheckSquare className="w-3.5 h-3.5" />
-            <span>ניהול</span>
+            <span>{selectionMode && selectedCount > 0 ? `נבחרו ${selectedCount}` : "בחירה"}</span>
           </button>
 
           <button
