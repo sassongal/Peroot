@@ -208,6 +208,10 @@
 @layer base {
   html {
     font-size: calc(100% * var(--root-font-scale));
+    /* Kill phantom horizontal scroll from off-canvas drawers/panels parked
+       just past the viewport on mobile. `clip` (not `hidden`) so it doesn't
+       create a scroll container that would break position: sticky. */
+    overflow-x: clip;
   }
 
   body {
