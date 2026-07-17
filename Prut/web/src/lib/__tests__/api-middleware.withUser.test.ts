@@ -193,6 +193,21 @@ describe("withUser · rate limiting", () => {
     )(makeReq({ "x-real-ip": "5.5.5.5" }), {});
     expect(deps.checkRateLimit).toHaveBeenCalledWith("evt:5.5.5.5", "guest");
   });
+
+  it("returns the onRateLimit response instead of 429 when provided (graceful degrade)", async () => {
+    const deps = makeDeps({
+      checkRateLimit: vi.fn(async () => ({ success: false, limit: 10, remaining: 0, reset: 5 })),
+    });
+    const handler = vi.fn(ok);
+    const res = await withUser(
+      handler,
+      { rateLimit: "questions", onRateLimit: () => NextResponse.json({ questions: [] }) },
+      deps,
+    )(makeReq(), {});
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ questions: [] });
+    expect(handler).not.toHaveBeenCalled();
+  });
 });
 
 // --- credits: charged only on a 2xx ---------------------------------------
