@@ -360,10 +360,15 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
             </div>
           )}
 
-        {/* Cards */}
+        {/* Cards — fluid, breakpoint-free responsive grid. Columns are chosen
+            from AVAILABLE width (not viewport), so the library shows 1 column on
+            mobile and adds columns as the window/content-area grows (2 on most
+            laptops, 3–4 on wide monitors) with no breakpoint cliffs. The 440px
+            floor keeps every card wide enough for its desktop row layout, so
+            cards only multiply into columns on viewports where that layout fits. */}
         {!isLoading && displayItems.length > 0 && (
           <div
-            className="space-y-1.5"
+            className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(440px,100%),1fr))]"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) =>
               handlePersonalDropToEnd(
