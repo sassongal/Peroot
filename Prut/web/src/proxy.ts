@@ -251,14 +251,25 @@ export async function proxy(request: NextRequest) {
     // Redirect authenticated non-admins away from the /admin UI pages.
     // /api/admin/* routes are already guarded by withAdmin() — this only
     // catches direct browser navigation to the admin panel.
+    //
+    // Canonical admin source is the user_roles table — the SAME source the
+    // 62 withAdmin()/validateAdminSession() API routes check. The legacy
+    // profiles.plan_tier check is kept as a fallback so an out-of-sync row
+    // can never lock an admin out of the UI. Keep the two in sync; if you
+    // ever drop the fallback, ensure every admin has a user_roles row first.
     const isAdminUiPath = pathname.startsWith("/admin") && !pathname.startsWith("/api/admin");
     if (isAdminUiPath && supabase) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("plan_tier")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (profile?.plan_tier !== "admin") {
+      const [{ data: role }, { data: profile }] = await Promise.all([
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle(),
+        supabase.from("profiles").select("plan_tier").eq("id", user.id).maybeSingle(),
+      ]);
+      const isAdmin = role?.role === "admin" || profile?.plan_tier === "admin";
+      if (!isAdmin) {
         return NextResponse.redirect(new URL("/", request.url));
       }
     }
