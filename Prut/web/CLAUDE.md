@@ -271,3 +271,12 @@ Default five-role triage vocabulary (needs-triage, needs-info, ready-for-agent, 
 ### Domain docs
 
 Single-context — one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
+
+## Design Context
+
+The visual + strategic design system is documented and **normative** — read it before building or changing any UI:
+
+- **[PRODUCT.md](PRODUCT.md)** — register (split: `product` app + `brand` marketing), users, brand personality (*expert · precise · empowering*), anti-references, 5 design principles, accessibility bar (IS 5568 / WCAG 2.0 AA).
+- **[DESIGN.md](DESIGN.md)** — the visual system (Stitch format): obsidian `#080808` + Signal Gold `#F59E0B`, cool-slate light theme `#f8fafc`, Varela Round / Alef / IBM Plex Mono, glass + glow elevation, five engine hues. Named rules: **One Gold** (≤10% gold/screen), **Cool-Neutral** (no warm cream bg), **Readout** (mono = machine-exact only), **Glow-Not-Shadow**.
+
+North Star: **"The Precision Instrument."** Hebrew-first, RTL-native. The impeccable design-detector hook is **on** — it flags slop after UI edits. Use `/impeccable <command>` (craft, critique, audit, polish, …) for design work; every command reads these two files.

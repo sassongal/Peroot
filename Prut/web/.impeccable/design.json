@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "title": "Design System: Peroot",
+  "extensions": {
+    "colorMeta": {
+      "amber":            { "role": "primary", "displayName": "Signal Gold",    "canonical": "#F59E0B", "tonalRamp": ["#2a1c02","#4a3105","#6d4808","#96620a","#c07d0c","#F59E0B","#FBBF24","#fde08a"] },
+      "obsidian":         { "role": "neutral", "displayName": "Obsidian",       "canonical": "#080808", "tonalRamp": ["#080808","#141414","#242424","#3a3a3a","#5a5a5a","#8a8a8a","#c2c2c2","#e2e8f0"] },
+      "surface-light":    { "role": "neutral", "displayName": "Cool Slate",     "canonical": "#f8fafc", "tonalRamp": ["#0f172a","#1e293b","#334155","#64748b","#94a3b8","#cbd5e1","#e2e8f0","#f8fafc"] },
+      "engine-standard":  { "role": "secondary", "displayName": "Engine Blue",  "canonical": "#5376A4" },
+      "engine-research":  { "role": "secondary", "displayName": "Engine Green", "canonical": "#456F52" },
+      "engine-image":     { "role": "secondary", "displayName": "Engine Red",   "canonical": "#AC5050" },
+      "engine-agent":     { "role": "secondary", "displayName": "Engine Amber", "canonical": "#FDBE00" },
+      "engine-video":     { "role": "secondary", "displayName": "Engine Indigo","canonical": "#6468d4" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero and page titles (Varela Round, ceiling ~3.75rem)." },
+      "body":    { "displayName": "Body", "purpose": "Hebrew prose and UI text (Alef, line-height 1.7, measure 65–75ch)." },
+      "label":   { "displayName": "Readout", "purpose": "Machine-exact values only — model IDs, scores, code (IBM Plex Mono)." }
+    },
+    "shadows": [
+      { "name": "engine-glow",  "value": "0 8px 30px rgba(83,118,164,0.25)", "purpose": "Active/hovered capability surface lifts in its own hue (value shown for Standard blue)." },
+      { "name": "gold-focus",   "value": "0 0 0 2px rgba(245,158,11,0.5)", "purpose": "Universal focus-visible ring." },
+      { "name": "inset-sheen",  "value": "inset 0 1px 0 rgba(147,197,217,0.25)", "purpose": "Top-edge highlight so glass reads as a physical surface." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Entrances and reveals (hero-entrance). Exponential ease-out, no bounce." },
+      { "name": "ease-out-state", "value": "ease-out", "purpose": "State transitions (hover/focus), 0.2–0.25s." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single gold-filled action on a screen. Obsidian text for contrast.",
+      "html": "<button class=\"ds-btn-primary\">שדרג פרומפט</button>",
+      "css": ".ds-btn-primary { background: #F59E0B; color: #080808; font-family: 'Varela Round', system-ui, sans-serif; font-weight: 400; padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s ease-out, box-shadow 0.2s ease-out; } .ds-btn-primary:hover { background: #FBBF24; box-shadow: 0 6px 24px rgba(245,158,11,0.35); } .ds-btn-primary:focus-visible { outline: 2px solid rgba(245,158,11,0.7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Everything that isn't the one primary action. Glass on obsidian.",
+      "html": "<button class=\"ds-btn-ghost\">ביטול</button>",
+      "css": ".ds-btn-ghost { background: rgba(255,255,255,0.05); color: #e2e8f0; font-family: 'Varela Round', system-ui, sans-serif; padding: 10px 20px; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; cursor: pointer; transition: background 0.2s ease-out; } .ds-btn-ghost:hover { background: rgba(255,255,255,0.09); } .ds-btn-ghost:focus-visible { outline: 2px solid rgba(245,158,11,0.7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Capability Pill (Standard)",
+      "kind": "chip",
+      "refersTo": "capability-pill",
+      "description": "Signature component: selecting a mode floods its hue into the pill. Shown for Standard (blue).",
+      "html": "<button class=\"ds-pill\"><span>סטנדרטי</span></button>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(83,118,164,0.32); color: #e2e8f0; font-family: 'Alef', system-ui, sans-serif; padding: 8px 16px; border: 1px solid rgba(83,118,164,0.5); border-radius: 999px; box-shadow: 0 0 20px rgba(83,118,164,0.3), inset 0 1px 0 rgba(147,197,217,0.25); cursor: pointer; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "RTL-first field; gold focus ring; placeholder at ≥4.5:1.",
+      "html": "<input class=\"ds-input\" dir=\"rtl\" placeholder=\"תאר/י את הפרומפט שלך...\" />",
+      "css": ".ds-input { background: rgba(255,255,255,0.05); color: #e2e8f0; font-family: 'Alef', system-ui, sans-serif; font-size: 1rem; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus-visible { outline: 2px solid rgba(245,158,11,0.7); outline-offset: 3px; border-color: rgba(245,158,11,0.4); }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "glass-card",
+      "description": "Flat-by-default glass panel; hairline border, no resting shadow.",
+      "html": "<div class=\"ds-card\"><h3>הפרומפט המשופר</h3><p>גרסה מקצועית עם מבנה ברור.</p></div>",
+      "css": ".ds-card { background: rgba(255,255,255,0.04); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 20px; } .ds-card h3 { font-family: 'Varela Round', system-ui, sans-serif; font-weight: 400; margin: 0 0 8px; } .ds-card p { font-family: 'Alef', system-ui, sans-serif; line-height: 1.7; color: #94a3b8; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Precision Instrument",
+    "overview": "Peroot is a finely-machined tool for a craft: turning rough intent into professional prompts, in Hebrew, in seconds. The interface is the instrument's casing — obsidian, quiet, exact — and gold is the single calibrated marking that tells you where the meaning is. It is Hebrew-first and RTL-native, and runs a product register (app) and a brand register (marketing) off one shared token set.",
+    "keyCharacteristics": [
+      "Obsidian-dark signature (#080808) with a true cool light theme (#f8fafc) — both first-class.",
+      "Gold (#F59E0B) is meaning, never decoration — ≤10% of any screen.",
+      "Rounded-geometric display (Varela Round) over humanist body (Alef), both Hebrew-native.",
+      "Depth via tinted glass + soft colored glow, not hard drop shadows.",
+      "Five engine hues, one active at a time — hue never carries meaning alone."
+    ],
+    "rules": [
+      { "name": "The One Gold Rule", "body": "Signal Gold appears on ≤10% of any screen — one primary action, one active state, one score. If two things are gold, one is wrong.", "section": "colors" },
+      { "name": "The Cool-Neutral Rule", "body": "The light surface is cool slate (#f8fafc), never warm cream/sand/paper. Warmth is carried by gold and type, not the body background.", "section": "colors" },
+      { "name": "The Readout Rule", "body": "IBM Plex Mono is reserved for machine-exact values — model IDs, scores, code. Never decorative labels or eyebrows.", "section": "typography" },
+      { "name": "The Glow-Not-Shadow Rule", "body": "Depth is colored light, not gray dark. Elements glow in their own hue on state; no resting neutral drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Signal Gold to ≤10% of any screen.",
+      "Do use Deep Gold (#B45309) for gold text on light and Warm Gold (#FBBF24) on obsidian; reserve #F59E0B for fills/borders/glows.",
+      "Do convey depth with a color-matched glow on state, never a resting gray drop shadow.",
+      "Do design RTL-first; keep Latin tokens (gpt-5, code) LTR inline.",
+      "Do pair Varela Round (display) with Alef (body); reserve IBM Plex Mono for machine-exact values.",
+      "Do hold contrast at IS 5568 / WCAG 2.0 AA in both themes.",
+      "Do ship a prefers-reduced-motion alternative for every animation."
+    ],
+    "donts": [
+      "Don't build generic AI-SaaS: no purple gradient blobs, no hero-metric template, no gradient text, no ChatGPT-clone chrome.",
+      "Don't use a warm cream/sand/beige body background; the light surface is cool slate.",
+      "Don't clutter: one accent hue active at a time, no gold-on-gold.",
+      "Don't go childish or corporate-sterile.",
+      "Don't use a border-left/right greater than 1px as a colored accent stripe.",
+      "Don't use light-gray body text 'for elegance' — bump toward the ink/silver end.",
+      "Don't put tracked-uppercase eyebrows or 01/02/03 markers above every section."
+    ]
+  }
+}
