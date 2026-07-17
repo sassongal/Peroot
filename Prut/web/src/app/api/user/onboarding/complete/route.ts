@@ -1,51 +1,37 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { withUser } from "@/lib/api-middleware";
 
 /**
  * POST /api/user/onboarding/complete
  *
  * Marks in-app onboarding as finished. Welcome email is sent once at signup
  * (auth callback + onboarding_welcome), not here — avoids duplicate automated mail.
+ * Auth owned by withUser.
  */
-export async function POST() {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export const POST = withUser(
+  async (_req, ctx) => {
+    const { error: updateError } = await ctx.db
+      .from("profiles")
+      .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+      .eq("id", ctx.user!.id);
 
-    if (!user) {
-      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
+    if (updateError) {
+      return NextResponse.json(
+        { error: "השלמת ההכרות נכשלה", code: "onboarding_failed" },
+        { status: 500 },
+      );
     }
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ 
-          onboarding_completed: true,
-          updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
-
-    if (updateError) throw updateError;
-
     // Log onboarding completion (fire-and-forget)
-    void supabase.from('activity_logs').insert({
-      user_id: user.id,
-      action: 'onboarding_complete',
-      entity_type: 'profile',
-      entity_id: user.id,
+    void ctx.db.from("activity_logs").insert({
+      user_id: ctx.user!.id,
+      action: "onboarding_complete",
+      entity_type: "profile",
+      entity_id: ctx.user!.id,
       details: {},
     });
 
-    return NextResponse.json({
-        success: true,
-        message: "Onboarding completed successfully"
-    });
-
-  } catch (error) {
-    logger.error("[Onboarding API] Error:", error);
-    return NextResponse.json(
-        { error: "השלמת ההכרות נכשלה", code: "onboarding_failed" }, 
-        { status: 500 }
-    );
-  }
-}
+    return NextResponse.json({ success: true, message: "Onboarding completed successfully" });
+  },
+  { rateLimit: "none" },
+);
