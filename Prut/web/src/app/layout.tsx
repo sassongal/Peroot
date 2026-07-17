@@ -149,6 +149,7 @@ import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { VercelAnalytics } from "@/components/providers/VercelAnalytics";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ConfirmProvider } from "@/components/ui/ConfirmDialog";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { SentryUserProvider } from "@/components/providers/SentryUserProvider";
 
@@ -250,12 +251,14 @@ export default async function RootLayout({
             <QueryProvider>
               <I18nProvider dictionary={dictionary} lang={locale}>
                 <GlobalContextWrapper initialUser={initialUser}>
-                  <ErrorBoundary name="AppRoot">
-                    <main id="main-content" className="grow min-h-[100dvh]">
-                      {children}
-                    </main>
-                  </ErrorBoundary>
-                  <Footer />
+                  <ConfirmProvider>
+                    <ErrorBoundary name="AppRoot">
+                      <main id="main-content" className="grow min-h-[100dvh]">
+                        {children}
+                      </main>
+                    </ErrorBoundary>
+                    <Footer />
+                  </ConfirmProvider>
                 </GlobalContextWrapper>
               </I18nProvider>
             </QueryProvider>

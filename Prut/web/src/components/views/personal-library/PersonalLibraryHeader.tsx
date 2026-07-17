@@ -16,9 +16,11 @@ import {
   Network,
   Rows3,
   Rows4,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { SearchAutosuggest } from "@/components/features/library/SearchAutosuggest";
 import { ActiveFilterChips } from "@/components/features/library/ActiveFilterChips";
 import type { PersonalLibrarySharedState, PersonalLibraryViewProps } from "./types";
@@ -67,6 +69,8 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
   // label it "results" so a filtered-down list never reads as the whole library.
   const isFiltering = localSearch.trim() !== "" || !!selectedCapabilityFilter;
   const selectedCount = selectedIds.size;
+  // One-time contextual hint that surfaces the (easily-missed) graph view.
+  const [showGraphHint, setShowGraphHint] = useLocalStorage("peroot:lib-graph-hint", true);
 
   return (
     <div className="glass-card px-4 md:px-6 py-4 rounded-2xl border border-(--glass-border) mb-4 sticky top-0 z-20 md:static bg-[#0A0A0F]/90 md:bg-black/40 backdrop-blur-md md:backdrop-blur-none overflow-x-hidden">
@@ -208,6 +212,33 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
             בתיקיית מועדפים החיפוש הוא לפי התאמת טקסט (לא חיפוש &quot;דמיון&quot; כמו ב&quot;כל
             הפרומפטים&quot;).
           </span>
+        </div>
+      )}
+
+      {/* One-time hint surfacing the graph view (a powerful, easy-to-miss feature) */}
+      {user && showGraphHint && localViewType === "grid" && usedTotalCount > 2 && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-[11px] text-(--text-secondary)">
+          <Network className="w-3.5 h-3.5 shrink-0 text-amber-500" aria-hidden />
+          <span className="flex-1">
+            נסו את{" "}
+            <button
+              onClick={() => {
+                setLocalViewType("graph");
+                setShowGraphHint(false);
+              }}
+              className="font-medium text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-600 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none rounded"
+            >
+              תצוגת הגרף
+            </button>{" "}
+            — היא מציגה חזותית את הקשרים בין הפרומפטים שלכם.
+          </span>
+          <button
+            onClick={() => setShowGraphHint(false)}
+            className="shrink-0 p-1 rounded text-(--text-muted) hover:text-(--text-primary) focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            aria-label="סגור טיפ"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </div>
       )}
 

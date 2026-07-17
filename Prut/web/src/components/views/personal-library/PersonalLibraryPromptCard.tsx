@@ -37,6 +37,7 @@ import { DateBadge } from "@/components/ui/DateBadge";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { fromPersonalLibraryRow } from "@/lib/prompt-entity";
 import { useLibraryContext } from "@/context/LibraryContext";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { VariableFiller } from "@/components/features/variables/VariableFiller";
 import { usePresets } from "@/hooks/usePresets";
@@ -55,6 +56,7 @@ export function PersonalLibraryPromptCard({
 }: PersonalLibraryPromptCardProps) {
   const { onUsePrompt, onCopyText } = viewProps;
   const ctx = useLibraryContext();
+  const confirmDialog = useConfirm();
   const {
     user,
     favoritePersonalIds,
@@ -688,7 +690,15 @@ export function PersonalLibraryPromptCard({
                     {/* Group 5: Danger */}
                     <button
                       onClick={async () => {
-                        if (!confirm("האם למחוק פרומפט זה?")) return;
+                        if (
+                          !(await confirmDialog({
+                            title: "למחוק את הפרומפט?",
+                            message: "אפשר לבטל מיד לאחר המחיקה.",
+                            danger: true,
+                            confirmLabel: "מחק",
+                          }))
+                        )
+                          return;
                         const snapshot: Partial<PersonalPrompt> = { ...prompt };
                         delete snapshot.id;
                         delete snapshot.created_at;

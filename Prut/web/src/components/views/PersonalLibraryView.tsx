@@ -27,6 +27,7 @@ import { MemoryPalaceDrawer } from "@/components/features/library/memory-palace/
 import type { PersonalLibrarySharedState } from "./personal-library/types";
 import { useHistory } from "@/hooks/useHistory";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import type { HistoryItem } from "@/hooks/useHistory";
 import { CapabilityMode } from "@/lib/capability-mode";
 
@@ -62,6 +63,7 @@ export function PersonalLibraryView({
   onGraphOpened,
 }: PersonalLibraryViewProps) {
   const ctx = useLibraryContext();
+  const confirmDialog = useConfirm();
   const { history } = useHistory();
 
   const {
@@ -498,7 +500,15 @@ export function PersonalLibraryView({
   };
 
   const handleBatchDelete = async () => {
-    if (!confirm(`האם למחוק ${selectedIds.size} פרומפטים מסומנים?`)) return;
+    if (
+      !(await confirmDialog({
+        title: `למחוק ${selectedIds.size} פרומפטים?`,
+        message: "אפשר לבטל מיד לאחר המחיקה.",
+        danger: true,
+        confirmLabel: "מחק",
+      }))
+    )
+      return;
     // Snapshot the full objects before deleting so we can offer undo.
     const deleted = personalLibrary.filter((p) => selectedIds.has(p.id));
     const count = deleted.length;
@@ -607,9 +617,16 @@ export function PersonalLibraryView({
       }
       const confirmMsg =
         skipped > 0
-          ? `ייבוא ${toImport.length} פרומפטים (${skipped} כפולים דולגו). להמשיך?`
-          : `ייבוא ${toImport.length} פרומפטים. להמשיך?`;
-      if (!confirm(confirmMsg)) return;
+          ? `${toImport.length} פרומפטים ייובאו (${skipped} כפולים ידולגו).`
+          : `${toImport.length} פרומפטים ייובאו.`;
+      if (
+        !(await confirmDialog({
+          title: "ייבוא פרומפטים",
+          message: confirmMsg,
+          confirmLabel: "ייבא",
+        }))
+      )
+        return;
       const promptsToAdd = toImport.map((item: Record<string, unknown>) => ({
         title: item.title as string,
         prompt: item.prompt as string,
