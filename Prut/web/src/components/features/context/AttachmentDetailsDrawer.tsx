@@ -51,7 +51,7 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
         >
           <div className="flex items-start justify-between gap-4 p-5 border-b border-(--glass-border)">
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+              <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                 {d.documentType}
               </div>
               <h2 className="font-bold text-lg truncate text-(--text-primary)">{d.title}</h2>
@@ -151,7 +151,7 @@ export function AttachmentDetailsDrawer({ block, onClose, onRefreshEnrich, onRem
             {onRefreshEnrich && (
               <button
                 onClick={onRefreshEnrich}
-                className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
               >
                 רענן תיאור
               </button>

@@ -824,7 +824,7 @@ function SimpleStat({
 }) {
   const colors: Record<string, string> = {
     blue: "text-blue-500 bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500",
-    purple: "text-purple-500 bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500",
+    purple: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20 group-hover:bg-indigo-500",
     emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500",
     amber: "text-amber-500 bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500",
     zinc: "text-zinc-500 bg-zinc-500/10 border-zinc-500/20 group-hover:bg-zinc-500",

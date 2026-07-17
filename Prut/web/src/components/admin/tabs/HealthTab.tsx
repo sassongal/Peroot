@@ -331,7 +331,7 @@ function SectionTitle({
     emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
     indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-    purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    purple: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
     amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
     rose: "text-rose-400 bg-rose-500/10 border-rose-500/20",
   };
@@ -826,7 +826,7 @@ export function HealthTab() {
               {loading && !data ? (
                 <tr>
                   <td colSpan={4} className="px-8 py-16 text-center">
-                    <RefreshCw className="w-8 h-8 animate-spin text-purple-500/20 mx-auto" />
+                    <RefreshCw className="w-8 h-8 animate-spin text-indigo-500/20 mx-auto" />
                   </td>
                 </tr>
               ) : (

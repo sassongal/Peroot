@@ -90,9 +90,9 @@ const ACCENT_MAP: Record<AccentColor, { icon: string; border: string; bg: string
     bg: "bg-blue-500/10 border-blue-500/20",
   },
   purple: {
-    icon: "text-purple-400",
-    border: "hover:border-purple-500/30",
-    bg: "bg-purple-500/10 border-purple-500/20",
+    icon: "text-indigo-400",
+    border: "hover:border-indigo-500/30",
+    bg: "bg-indigo-500/10 border-indigo-500/20",
   },
   emerald: {
     icon: "text-emerald-400",
@@ -246,10 +246,10 @@ function SegmentComparison({
 }) {
   return (
     <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 flex flex-col gap-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-linear-to-br from-purple-600/3 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-indigo-600/3 to-transparent pointer-events-none" />
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-purple-400">
+          <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-indigo-400">
             <Users className="w-5 h-5" />
           </div>
           <div>

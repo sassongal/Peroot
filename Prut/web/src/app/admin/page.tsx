@@ -98,7 +98,7 @@ function initials(id: string): string {
 const PLAN_BADGE: Record<string, string> = {
   pro: "bg-blue-500/15 text-blue-400 border-blue-500/25",
   free: "bg-zinc-800 text-zinc-500 border-white/5",
-  premium: "bg-purple-500/15 text-purple-400 border-purple-500/25",
+  premium: "bg-indigo-500/15 text-indigo-400 border-indigo-500/25",
 };
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
@@ -198,11 +198,11 @@ const ACCENT: Record<
     bar: "bg-blue-500",
   },
   purple: {
-    icon: "text-purple-400",
-    border: "group-hover:border-purple-500/30",
-    glow: "group-hover:shadow-purple-500/10",
-    badge: "bg-purple-500/10 text-purple-400",
-    bar: "bg-purple-500",
+    icon: "text-indigo-400",
+    border: "group-hover:border-indigo-500/30",
+    glow: "group-hover:shadow-indigo-500/10",
+    badge: "bg-indigo-500/10 text-indigo-400",
+    bar: "bg-indigo-500",
   },
   emerald: {
     icon: "text-emerald-400",
@@ -459,7 +459,7 @@ function PlanBadge({ tier }: { tier: string }) {
 const ACTION_COLOR: Record<string, string> = {
   signup: "text-emerald-400",
   login: "text-blue-400",
-  generate: "text-purple-400",
+  generate: "text-indigo-400",
   upgrade: "text-amber-400",
   downgrade: "text-rose-400",
   delete: "text-rose-500",
@@ -580,7 +580,7 @@ export default function AdminDashboardPage() {
     {
       label: "Manual ($)",
       value: data.manualCostsMTD,
-      color: "text-purple-400",
+      color: "text-indigo-400",
       stroke: "#a78bfa",
     },
     {
@@ -805,10 +805,10 @@ export default function AdminDashboardPage() {
 
           {/* Cost breakdown donut */}
           <div className="p-8 rounded-[36px] bg-zinc-950 border border-white/5 relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-br from-purple-600/3 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-br from-indigo-600/3 to-transparent pointer-events-none" />
             <div className="relative h-full flex flex-col">
               <div className="flex items-center gap-4 mb-6">
-                <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-purple-400">
+                <div className="p-3.5 rounded-2xl bg-zinc-900 border border-white/5 text-indigo-400">
                   <CircleDollarSign className="w-5 h-5" />
                 </div>
                 <div>

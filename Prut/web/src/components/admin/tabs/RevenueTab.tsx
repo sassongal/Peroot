@@ -137,8 +137,8 @@ const colorMap = {
     glow: "group-hover:shadow-blue-500/10",
   },
   purple: {
-    icon: "text-purple-500 bg-purple-500/10 border-purple-500/20",
-    glow: "group-hover:shadow-purple-500/10",
+    icon: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20",
+    glow: "group-hover:shadow-indigo-500/10",
   },
   rose: {
     icon: "text-rose-500 bg-rose-500/10 border-rose-500/20",
@@ -173,25 +173,22 @@ function KpiCard({
 }) {
   const c = colorMap[color];
 
-  const TrendIcon =
-    trend === "up" ? ArrowUpRight : trend === "down" ? ArrowDownRight : Minus;
+  const TrendIcon = trend === "up" ? ArrowUpRight : trend === "down" ? ArrowDownRight : Minus;
   const trendColor =
-    trend === "up"
-      ? "text-emerald-400"
-      : trend === "down"
-      ? "text-rose-400"
-      : "text-zinc-600";
+    trend === "up" ? "text-emerald-400" : trend === "down" ? "text-rose-400" : "text-zinc-600";
 
   return (
     <div
       className={cn(
         "group p-8 rounded-[40px] bg-zinc-950 border border-white/5 flex flex-col gap-6",
         "transition-all duration-700 hover:border-white/10 hover:shadow-2xl",
-        c.glow
+        c.glow,
       )}
     >
       <div className="flex justify-between items-start">
-        <div className={cn("p-4 rounded-2xl border transition-all duration-700 shadow-2xl", c.icon)}>
+        <div
+          className={cn("p-4 rounded-2xl border transition-all duration-700 shadow-2xl", c.icon)}
+        >
           <Icon className="w-6 h-6" />
         </div>
         <div className="flex items-center gap-2">
@@ -211,7 +208,9 @@ function KpiCard({
             {value}
           </div>
         )}
-        <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">{label}</div>
+        <div className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
+          {label}
+        </div>
         <div className="text-[9px] text-zinc-800 font-bold">{sublabel}</div>
       </div>
     </div>
@@ -243,11 +242,15 @@ function SecondaryCard({
           <div className="h-6 w-20 rounded-lg bg-white/5 animate-pulse" />
         ) : (
           <div className="flex items-center gap-1.5">
-            <div className="text-2xl font-black text-white tracking-tight tabular-nums truncate">{value}</div>
+            <div className="text-2xl font-black text-white tracking-tight tabular-nums truncate">
+              {value}
+            </div>
             {tooltip && <InfoTooltip text={tooltip} position="top" />}
           </div>
         )}
-        <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest truncate">
+          {label}
+        </div>
         <div className="text-[8px] text-zinc-800 font-bold truncate">{sublabel}</div>
       </div>
     </div>
@@ -307,11 +310,7 @@ export default function RevenueTab() {
   }, [fetchRevenue]);
 
   const hasNoData =
-    !loading &&
-    !error &&
-    data &&
-    data.kpi.activeSubs === 0 &&
-    data.kpi.totalUsers === 0;
+    !loading && !error && data && data.kpi.activeSubs === 0 && data.kpi.totalUsers === 0;
 
   const maxMonthly = Math.max(...(data?.monthly ?? []).map((m) => m.activeSubs), 1);
 
@@ -356,7 +355,6 @@ export default function RevenueTab() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000 pb-20 select-none" dir="rtl">
-
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-4">
@@ -400,7 +398,9 @@ export default function RevenueTab() {
             <BarChart3 className="w-12 h-12 text-zinc-700" />
           </div>
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-black text-zinc-600 tracking-tight">No subscription data yet</h2>
+            <h2 className="text-2xl font-black text-zinc-600 tracking-tight">
+              No subscription data yet
+            </h2>
             <p className="text-zinc-800 font-bold text-sm">אין נתוני מנויים להצגה כרגע.</p>
           </div>
         </div>
@@ -481,7 +481,6 @@ export default function RevenueTab() {
 
           {/* ── MRR Trend Chart + Donut Row ───────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2">
-
             {/* Monthly bar chart (spans 2 cols) */}
             <div className="lg:col-span-2 rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6">
               <SectionTitle
@@ -534,11 +533,15 @@ export default function RevenueTab() {
               <div className="flex items-center gap-6 pt-4 border-t border-white/5">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm bg-emerald-600" />
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Active Subs</span>
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                    Active Subs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm bg-emerald-400" />
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">New Subs</span>
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                    New Subs
+                  </span>
                 </div>
               </div>
             </div>
@@ -554,7 +557,7 @@ export default function RevenueTab() {
 
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <RefreshCw className="w-10 h-10 animate-spin text-purple-500/20" />
+                  <RefreshCw className="w-10 h-10 animate-spin text-indigo-500/20" />
                 </div>
               ) : totalBreakdown === 0 ? (
                 <div className="flex items-center justify-center py-16 text-zinc-800 font-black text-[9px] uppercase tracking-widest">
@@ -564,11 +567,22 @@ export default function RevenueTab() {
                 <div className="flex flex-col items-center gap-6">
                   <svg viewBox="0 0 100 100" className="w-40 h-40">
                     {donutPaths.map((p) => (
-                      <path key={p.label} d={p.d} fill={p.color} className="transition-opacity hover:opacity-80" />
+                      <path
+                        key={p.label}
+                        d={p.d}
+                        fill={p.color}
+                        className="transition-opacity hover:opacity-80"
+                      />
                     ))}
                     {/* Center hole */}
                     <circle cx="50" cy="50" r="25" fill="#09090b" />
-                    <text x="50" y="54" textAnchor="middle" className="fill-white text-[10px] font-bold" style={{ fontSize: 10, fontWeight: 900 }}>
+                    <text
+                      x="50"
+                      y="54"
+                      textAnchor="middle"
+                      className="fill-white text-[10px] font-bold"
+                      style={{ fontSize: 10, fontWeight: 900 }}
+                    >
                       {fmtCount(totalBreakdown)}
                     </text>
                   </svg>
@@ -579,7 +593,10 @@ export default function RevenueTab() {
                       return (
                         <div key={seg.key} className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: seg.color }} />
+                            <div
+                              className="w-2.5 h-2.5 rounded-sm"
+                              style={{ background: seg.color }}
+                            />
                             <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider">
                               {seg.label}
                             </span>
@@ -622,7 +639,8 @@ export default function RevenueTab() {
                   </div>
                   {(data?.kpi?.proUsersWithoutSub ?? 0) > 0 && (
                     <div className="text-amber-500/60 font-bold text-[10px]">
-                      {data?.kpi?.proUsersWithoutSub} pro users upgraded manually (no subscription record)
+                      {data?.kpi?.proUsersWithoutSub} pro users upgraded manually (no subscription
+                      record)
                     </div>
                   )}
                 </div>
@@ -637,14 +655,17 @@ export default function RevenueTab() {
                     <span className="w-24 text-center">Since</span>
                   </div>
                   {(data?.subscribers ?? []).map((sub) => {
-                    const isActive = sub.status === 'active' || sub.status === 'on_trial' || sub.status === 'past_due';
-                    const isChurned = sub.status === 'cancelled' || sub.status === 'expired';
+                    const isActive =
+                      sub.status === "active" ||
+                      sub.status === "on_trial" ||
+                      sub.status === "past_due";
+                    const isChurned = sub.status === "cancelled" || sub.status === "expired";
                     return (
                       <div
                         key={sub.id}
                         className={cn(
                           "px-8 py-5 flex items-center gap-4 hover:bg-white/2 transition-all",
-                          isChurned && "opacity-60"
+                          isChurned && "opacity-60",
                         )}
                       >
                         <div className="flex-1 min-w-0">
@@ -652,29 +673,35 @@ export default function RevenueTab() {
                             {sub.customer_name || sub.customer_email || sub.user_id.slice(0, 16)}
                           </div>
                           {sub.customer_name && sub.customer_email && (
-                            <div className="text-[10px] text-zinc-600 truncate">{sub.customer_email}</div>
+                            <div className="text-[10px] text-zinc-600 truncate">
+                              {sub.customer_email}
+                            </div>
                           )}
                         </div>
                         <span className="w-20 text-center text-[9px] font-black uppercase tracking-widest text-zinc-400 flex flex-col items-center gap-0.5">
-                          {sub.plan_name || 'pro'}
+                          {sub.plan_name || "pro"}
                           {sub.is_manual && (
                             <span className="text-[7px] text-amber-500/60">ידני</span>
                           )}
                         </span>
-                        <span className={cn(
-                          "w-24 text-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                          isActive && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-                          isChurned && "bg-red-500/10 border-red-500/20 text-red-400",
-                          !isActive && !isChurned && "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                        )}>
+                        <span
+                          className={cn(
+                            "w-24 text-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                            isActive && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+                            isChurned && "bg-red-500/10 border-red-500/20 text-red-400",
+                            !isActive &&
+                              !isChurned &&
+                              "bg-amber-500/10 border-amber-500/20 text-amber-400",
+                          )}
+                        >
                           {sub.status}
                         </span>
                         <span className="w-28 text-center text-[10px] font-bold text-zinc-500">
                           {sub.renews_at
-                            ? new Date(sub.renews_at).toLocaleDateString('he-IL')
+                            ? new Date(sub.renews_at).toLocaleDateString("he-IL")
                             : sub.ends_at
-                              ? new Date(sub.ends_at).toLocaleDateString('he-IL')
-                              : '-'}
+                              ? new Date(sub.ends_at).toLocaleDateString("he-IL")
+                              : "-"}
                         </span>
                         <span className="w-24 text-center text-[10px] font-bold text-zinc-600">
                           {relativeTime(sub.created_at)}
@@ -718,7 +745,7 @@ export default function RevenueTab() {
                           <span
                             className={cn(
                               "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border",
-                              color
+                              color,
                             )}
                           >
                             {label}
@@ -784,15 +811,19 @@ export default function RevenueTab() {
               {/* Revenue vs Cost bar chart */}
               <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-black text-white tracking-tight">Revenue vs AI Cost (Pro, MTD)</h3>
-                  <span className={cn(
-                    "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border",
-                    data.unitEconomics.grossMarginByTier.pro.marginPct >= 70
-                      ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                      : data.unitEconomics.grossMarginByTier.pro.marginPct >= 40
-                        ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
-                        : "text-rose-400 bg-rose-500/10 border-rose-500/20"
-                  )}>
+                  <h3 className="text-lg font-black text-white tracking-tight">
+                    Revenue vs AI Cost (Pro, MTD)
+                  </h3>
+                  <span
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border",
+                      data.unitEconomics.grossMarginByTier.pro.marginPct >= 70
+                        ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                        : data.unitEconomics.grossMarginByTier.pro.marginPct >= 40
+                          ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                          : "text-rose-400 bg-rose-500/10 border-rose-500/20",
+                    )}
+                  >
                     {fmtPct(data.unitEconomics.grossMarginByTier.pro.marginPct)} margin
                   </span>
                 </div>
@@ -802,25 +833,33 @@ export default function RevenueTab() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
                       <span className="text-zinc-500">Revenue</span>
-                      <span className="text-emerald-400">{fmtILS(data.unitEconomics.grossMarginByTier.pro.revenue)}</span>
+                      <span className="text-emerald-400">
+                        {fmtILS(data.unitEconomics.grossMarginByTier.pro.revenue)}
+                      </span>
                     </div>
                     <div className="h-3.5 rounded-full bg-zinc-900 overflow-hidden">
-                      <div className="h-full bg-emerald-600 rounded-full" style={{ width: '100%' }} />
+                      <div
+                        className="h-full bg-emerald-600 rounded-full"
+                        style={{ width: "100%" }}
+                      />
                     </div>
                   </div>
                   {/* AI Cost */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
                       <span className="text-zinc-500">AI Cost</span>
-                      <span className="text-rose-400">{fmtILS(data.unitEconomics.grossMarginByTier.pro.cost)}</span>
+                      <span className="text-rose-400">
+                        {fmtILS(data.unitEconomics.grossMarginByTier.pro.cost)}
+                      </span>
                     </div>
                     <div className="h-3.5 rounded-full bg-zinc-900 overflow-hidden">
                       <div
                         className="h-full bg-rose-600 rounded-full transition-all duration-700"
                         style={{
-                          width: data.unitEconomics.grossMarginByTier.pro.revenue > 0
-                            ? `${Math.min((data.unitEconomics.grossMarginByTier.pro.cost / data.unitEconomics.grossMarginByTier.pro.revenue) * 100, 100)}%`
-                            : '0%',
+                          width:
+                            data.unitEconomics.grossMarginByTier.pro.revenue > 0
+                              ? `${Math.min((data.unitEconomics.grossMarginByTier.pro.cost / data.unitEconomics.grossMarginByTier.pro.revenue) * 100, 100)}%`
+                              : "0%",
                         }}
                       />
                     </div>
@@ -829,7 +868,9 @@ export default function RevenueTab() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
                       <span className="text-zinc-500">Gross Margin</span>
-                      <span className="text-amber-400">{fmtILS(data.unitEconomics.grossMarginByTier.pro.margin)}</span>
+                      <span className="text-amber-400">
+                        {fmtILS(data.unitEconomics.grossMarginByTier.pro.margin)}
+                      </span>
                     </div>
                     <div className="h-3.5 rounded-full bg-zinc-900 overflow-hidden">
                       <div
@@ -844,25 +885,42 @@ export default function RevenueTab() {
 
                 {/* LTV breakdown */}
                 <div className="flex items-center gap-8 pt-4 border-t border-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-600">
-                  <div>ARPU: <span className="text-white">{fmtILS(data.unitEconomics.ltv.arpu)}/mo</span></div>
-                  <div>Churn Rate: <span className="text-white">{fmtPct(data.unitEconomics.ltv.churnRate)}</span></div>
-                  <div>LTV: <span className="text-white">{fmtILS(data.unitEconomics.ltv.ltv)}</span></div>
+                  <div>
+                    ARPU:{" "}
+                    <span className="text-white">{fmtILS(data.unitEconomics.ltv.arpu)}/mo</span>
+                  </div>
+                  <div>
+                    Churn Rate:{" "}
+                    <span className="text-white">{fmtPct(data.unitEconomics.ltv.churnRate)}</span>
+                  </div>
+                  <div>
+                    LTV: <span className="text-white">{fmtILS(data.unitEconomics.ltv.ltv)}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Cohort MRR Table */}
               <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl p-8 shadow-2xl space-y-6 overflow-x-auto">
                 <div>
-                  <h3 className="text-lg font-black text-white tracking-tight">Cohort MRR Retention</h3>
-                  <p className="text-[10px] text-zinc-600 font-bold mt-1">משתמשי Pro לפי חודש הצטרפות · כל עמודה = חודש מאז הגעה</p>
+                  <h3 className="text-lg font-black text-white tracking-tight">
+                    Cohort MRR Retention
+                  </h3>
+                  <p className="text-[10px] text-zinc-600 font-bold mt-1">
+                    משתמשי Pro לפי חודש הצטרפות · כל עמודה = חודש מאז הגעה
+                  </p>
                 </div>
 
                 <table className="w-full min-w-[480px]">
                   <thead>
                     <tr>
-                      <th className="text-right pb-3 pr-6 text-[9px] font-black uppercase tracking-widest text-zinc-600">Cohort</th>
+                      <th className="text-right pb-3 pr-6 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                        Cohort
+                      </th>
                       {Array.from({ length: 6 }, (_, i) => (
-                        <th key={i} className="text-center pb-3 px-2 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                        <th
+                          key={i}
+                          className="text-center pb-3 px-2 text-[9px] font-black uppercase tracking-widest text-zinc-600"
+                        >
                           M+{i}
                         </th>
                       ))}
@@ -870,31 +928,45 @@ export default function RevenueTab() {
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {data.unitEconomics.cohortMrr.map((row) => {
-                      const month0 = row.months.find(m => m.month === 0);
+                      const month0 = row.months.find((m) => m.month === 0);
                       const baseline = month0?.activeCount ?? 1;
                       return (
                         <tr key={row.cohort} className="hover:bg-white/2 transition-all">
-                          <td className="py-3 pr-6 text-[10px] font-black text-zinc-400">{row.cohort}</td>
+                          <td className="py-3 pr-6 text-[10px] font-black text-zinc-400">
+                            {row.cohort}
+                          </td>
                           {Array.from({ length: 6 }, (_, i) => {
-                            const m = row.months.find(x => x.month === i);
+                            const m = row.months.find((x) => x.month === i);
                             if (!m) {
                               return (
-                                <td key={i} className="py-3 px-2 text-center text-[9px] text-zinc-800 font-bold">
+                                <td
+                                  key={i}
+                                  className="py-3 px-2 text-center text-[9px] text-zinc-800 font-bold"
+                                >
                                   —
                                 </td>
                               );
                             }
                             const retentionPct = baseline > 0 ? m.activeCount / baseline : 0;
-                            const bgOpacity = Math.max(retentionPct * 0.7, m.activeCount > 0 ? 0.08 : 0);
+                            const bgOpacity = Math.max(
+                              retentionPct * 0.7,
+                              m.activeCount > 0 ? 0.08 : 0,
+                            );
                             return (
-                              <td key={i} className="py-3 px-2 text-center" title={`${m.activeCount} users · ${fmtILS(m.mrr)}`}>
+                              <td
+                                key={i}
+                                className="py-3 px-2 text-center"
+                                title={`${m.activeCount} users · ${fmtILS(m.mrr)}`}
+                              >
                                 <div
                                   className="inline-flex flex-col items-center justify-center w-16 h-10 rounded-xl text-white font-black text-[10px] transition-all duration-300"
                                   style={{ background: `rgba(37, 99, 235, ${bgOpacity})` }}
                                 >
                                   <span>{m.activeCount}</span>
                                   {m.mrr > 0 && (
-                                    <span className="text-[8px] text-blue-300/60">{fmtILS(m.mrr)}</span>
+                                    <span className="text-[8px] text-blue-300/60">
+                                      {fmtILS(m.mrr)}
+                                    </span>
                                   )}
                                 </div>
                               </td>

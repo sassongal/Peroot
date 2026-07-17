@@ -59,21 +59,21 @@ const CAPABILITY_MODES = ONBOARDING_MODES.map(({ mode }) => {
 const COLOR_TEXT: Record<string, string> = {
   sky: "text-sky-400",
   emerald: "text-emerald-400",
-  purple: "text-purple-400",
+  purple: "text-indigo-400",
   amber: "text-amber-400",
   rose: "text-rose-400",
 };
 const COLOR_BG: Record<string, string> = {
   sky: "bg-sky-500/10",
   emerald: "bg-emerald-500/10",
-  purple: "bg-purple-500/10",
+  purple: "bg-indigo-500/10",
   amber: "bg-amber-500/10",
   rose: "bg-rose-500/10",
 };
 const COLOR_BORDER: Record<string, string> = {
   sky: "border-sky-500/25",
   emerald: "border-emerald-500/25",
-  purple: "border-purple-500/25",
+  purple: "border-indigo-500/25",
   amber: "border-amber-500/25",
   rose: "border-rose-500/25",
 };
@@ -303,7 +303,7 @@ function Scene1({ onNext }: { onNext: () => void }) {
         {[
           { icon: Zap, value: "2", label: "שיפורים חינם ביום", color: "text-amber-400" },
           { icon: Users, value: "ישראלי", label: "עברית ראשית", color: "text-sky-400" },
-          { icon: Star, value: "5", label: "מצבי AI", color: "text-purple-400" },
+          { icon: Star, value: "5", label: "מצבי AI", color: "text-indigo-400" },
         ].map(({ icon: Icon, value, label, color }) => (
           <div key={label} className="flex flex-col items-center gap-0.5">
             <Icon className={cn("w-3.5 h-3.5 mb-0.5", color)} />

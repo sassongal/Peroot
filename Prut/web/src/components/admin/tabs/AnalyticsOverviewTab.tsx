@@ -123,7 +123,7 @@ function MetricCard({
 }) {
   const colors: Record<string, string> = {
     blue: "from-blue-600/10 to-blue-900/5 text-blue-400 border-blue-500/10",
-    purple: "from-purple-600/10 to-purple-900/5 text-purple-400 border-purple-500/10",
+    purple: "from-indigo-600/10 to-indigo-900/5 text-indigo-400 border-indigo-500/10",
     emerald: "from-emerald-600/10 to-emerald-900/5 text-emerald-400 border-emerald-500/10",
     amber: "from-amber-600/10 to-amber-900/5 text-amber-400 border-amber-500/10",
   };
@@ -503,7 +503,7 @@ export default function AnalyticsOverviewTab() {
       {product.engineBreakdown.length > 0 && (
         <>
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-purple-400" />
+            <Layers className="w-4 h-4 text-indigo-400" />
             <span className="text-xs font-black uppercase tracking-widest text-zinc-500">
               Engine Breakdown
             </span>
@@ -523,7 +523,7 @@ export default function AnalyticsOverviewTab() {
                   </div>
                   <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-linear-to-r from-purple-600 to-blue-500 rounded-full transition-all duration-700"
+                      className="h-full bg-linear-to-r from-indigo-600 to-blue-500 rounded-full transition-all duration-700"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -596,7 +596,7 @@ export default function AnalyticsOverviewTab() {
         {/* Categories */}
         <div className="rounded-3xl border border-white/5 bg-zinc-950 p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
+            <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
               <PieChart className="w-4 h-4" />
             </div>
             <div>
@@ -614,7 +614,7 @@ export default function AnalyticsOverviewTab() {
                 <div key={i} className="space-y-1.5 group cursor-default">
                   <div className="flex justify-between items-end">
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                       <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">
                         {c.category}
                       </span>
@@ -626,7 +626,7 @@ export default function AnalyticsOverviewTab() {
                   </div>
                   <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-linear-to-r from-purple-600 to-indigo-400 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                      className="h-full bg-linear-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)]"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -671,7 +671,7 @@ export default function AnalyticsOverviewTab() {
             {
               label: "נרשמו",
               value: product.summary.totalProfiles,
-              color: "from-purple-600/20 to-purple-600/5 border-purple-500/20",
+              color: "from-indigo-600/20 to-indigo-600/5 border-indigo-500/20",
             },
             {
               label: "יצרו פרומפט",

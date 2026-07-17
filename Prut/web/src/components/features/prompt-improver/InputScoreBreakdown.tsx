@@ -29,7 +29,12 @@ interface InputScoreBreakdownProps {
  * No CSS-variable glass backgrounds inside the panel body, so the drawer
  * remains legible regardless of the underlying page background.
  */
-export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: InputScoreBreakdownProps) {
+export function InputScoreBreakdown({
+  isOpen,
+  onClose,
+  score,
+  inputText,
+}: InputScoreBreakdownProps) {
   // Compute coverage lazily — only when drawer is open
   const coverage = useMemo(() => {
     if (!isOpen || !inputText || !score) return null;
@@ -61,14 +66,12 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
   const levelColor: Record<InputScoreLevel, string> = {
     empty:
       "text-slate-700 dark:text-slate-200 bg-slate-200/80 dark:bg-slate-700/60 border-slate-300 dark:border-slate-600",
-    low:
-      "text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-500/20 border-rose-300 dark:border-rose-500/40",
+    low: "text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-500/20 border-rose-300 dark:border-rose-500/40",
     medium:
       "text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40",
-    high:
-      "text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/40",
+    high: "text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/40",
     elite:
-      "text-violet-800 dark:text-violet-200 bg-violet-100 dark:bg-violet-500/20 border-violet-300 dark:border-violet-500/40",
+      "text-indigo-800 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/40",
   };
 
   return (
@@ -95,7 +98,7 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
           "max-h-[90vh] md:max-h-none overflow-hidden",
           "rounded-t-[28px] md:rounded-t-none md:rounded-s-[28px]",
           "flex flex-col shadow-2xl",
-          "animate-in slide-in-from-bottom md:slide-in-from-right duration-300"
+          "animate-in slide-in-from-bottom md:slide-in-from-right duration-300",
         )}
       >
         {/* Mobile grab handle */}
@@ -107,7 +110,10 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
         <div className="flex items-start justify-between gap-3 p-4 md:p-6 pb-4 border-b border-slate-200 dark:border-slate-700">
           <div className="space-y-2 min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <TrendingUp
+                className="w-5 h-5 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+              />
               <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-50">
                 ציון לייב · לפני שדרוג
               </h2>
@@ -120,7 +126,7 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
               <span
                 className={cn(
                   "px-2.5 md:px-3 py-1 rounded-full text-xs font-bold border",
-                  levelColor[score.level]
+                  levelColor[score.level],
                 )}
               >
                 {score.label}
@@ -187,7 +193,11 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
                   <div
                     className={cn(
                       "h-full rounded-full transition-all",
-                      coverage.coverageRatio >= 0.7 ? "bg-emerald-500" : coverage.coverageRatio >= 0.5 ? "bg-amber-500" : "bg-rose-500"
+                      coverage.coverageRatio >= 0.7
+                        ? "bg-emerald-500"
+                        : coverage.coverageRatio >= 0.5
+                          ? "bg-amber-500"
+                          : "bg-rose-500",
                     )}
                     style={{ width: `${Math.round(coverage.coverageRatio * 100)}%` }}
                   />
@@ -198,7 +208,10 @@ export function InputScoreBreakdown({ isOpen, onClose, score, inputText }: Input
               </div>
               {coverage.tip && (
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 italic flex items-start gap-1.5">
-                  <Lightbulb className="w-3 h-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                  <Lightbulb
+                    className="w-3 h-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+                    aria-hidden="true"
+                  />
                   {coverage.tip}
                 </p>
               )}
@@ -230,9 +243,7 @@ function MissingCard({ item }: { item: InputScoreMissing }) {
         />
         <div className="flex-1 space-y-1 min-w-0">
           <div className="text-sm font-bold text-slate-900 dark:text-slate-50">{item.title}</div>
-          {item.why && (
-            <div className="text-xs text-slate-700 dark:text-slate-300">{item.why}</div>
-          )}
+          {item.why && <div className="text-xs text-slate-700 dark:text-slate-300">{item.why}</div>}
           {item.example && (
             <div className="mt-1.5 text-xs text-amber-900 dark:text-amber-100 bg-amber-100 dark:bg-amber-500/15 rounded-lg px-2.5 py-1.5 border border-amber-300 dark:border-amber-500/30">
               {item.example}

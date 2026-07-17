@@ -19,7 +19,7 @@ export default function AccessibilityPage() {
       <div className="max-w-4xl mx-auto space-y-10">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors mb-4"
+          className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors mb-4"
         >
           <ArrowRight className="w-4 h-4" />
           חזרה לדף הבית
@@ -27,7 +27,7 @@ export default function AccessibilityPage() {
 
         <header className="space-y-4 border-b border-border pb-10">
           <div className="flex items-center gap-4 text-foreground">
-            <AccessibilityIcon className="w-10 h-10 text-purple-500" />
+            <AccessibilityIcon className="w-10 h-10 text-indigo-500" />
             <h1 className="text-4xl md:text-5xl font-serif font-bold">הצהרת נגישות</h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl">
@@ -38,7 +38,7 @@ export default function AccessibilityPage() {
 
         <section className="space-y-6">
           <h2 className="text-2xl text-foreground font-semibold flex items-center gap-2">
-            <div className="w-1 h-6 bg-purple-500 rounded-full" />
+            <div className="w-1 h-6 bg-indigo-500 rounded-full" />
             סטטוס נגישות האתר
           </h2>
           <div className="bg-secondary border border-border rounded-2xl p-6 space-y-4">
@@ -128,7 +128,7 @@ export default function AccessibilityPage() {
         </section>
 
         <section className="space-y-6 pt-6 border-t border-border">
-          <h2 className="text-2xl text-foreground font-semibold underline decoration-purple-500 underline-offset-8 text-center md:text-right">
+          <h2 className="text-2xl text-foreground font-semibold underline decoration-indigo-500 underline-offset-8 text-center md:text-right">
             רכז נגישות ודרכי התקשרות
           </h2>
           <p>
@@ -139,21 +139,21 @@ export default function AccessibilityPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-secondary p-6 rounded-2xl border border-border flex flex-col items-center text-center gap-3">
-              <User className="w-6 h-6 text-purple-400" />
+              <User className="w-6 h-6 text-indigo-400" />
               <span className="text-xs text-muted-foreground uppercase tracking-widest">
                 רכז נגישות
               </span>
               <span className="font-bold text-foreground">גל ששון</span>
             </div>
             <div className="bg-secondary p-6 rounded-2xl border border-border flex flex-col items-center text-center gap-3">
-              <Mail className="w-6 h-6 text-purple-400" />
+              <Mail className="w-6 h-6 text-indigo-400" />
               <span className="text-xs text-muted-foreground uppercase tracking-widest">
                 אימייל
               </span>
               <span className="font-bold text-foreground">gal@joya-tech.net</span>
             </div>
             <div className="bg-secondary p-6 rounded-2xl border border-border flex flex-col items-center text-center gap-3">
-              <Phone className="w-6 h-6 text-purple-400" />
+              <Phone className="w-6 h-6 text-indigo-400" />
               <span className="text-xs text-muted-foreground uppercase tracking-widest">
                 זמן מענה
               </span>

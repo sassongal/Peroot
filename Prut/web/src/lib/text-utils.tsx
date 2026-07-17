@@ -30,121 +30,119 @@ export const extractPlaceholders = extractVariables;
  * should wrap the call in `useMemo(..., [text, values])`.
  */
 interface RenderPromptOptions {
-    /**
-     * The variable key currently hovered in the Variables Panel input
-     * column. When set, the matching chip/mark in the rendered prompt
-     * gets a stronger ring so the user can visually trace
-     * input ↔ prompt position. Used by ResultSection.
-     */
-    hoveredKey?: string | null;
-    /**
-     * Callback fired when the user hovers a chip/mark inside the
-     * rendered prompt. Lets the parent ResultSection sync the highlight
-     * back to the matching input row in the Variables Panel.
-     */
-    onHoverKey?: (key: string | null) => void;
+  /**
+   * The variable key currently hovered in the Variables Panel input
+   * column. When set, the matching chip/mark in the rendered prompt
+   * gets a stronger ring so the user can visually trace
+   * input ↔ prompt position. Used by ResultSection.
+   */
+  hoveredKey?: string | null;
+  /**
+   * Callback fired when the user hovers a chip/mark inside the
+   * rendered prompt. Lets the parent ResultSection sync the highlight
+   * back to the matching input row in the Variables Panel.
+   */
+  onHoverKey?: (key: string | null) => void;
 }
 
 export function renderPromptWithVariables(
-    text: string,
-    values: Record<string, string | undefined> = {},
-    options: RenderPromptOptions = {}
+  text: string,
+  values: Record<string, string | undefined> = {},
+  options: RenderPromptOptions = {},
 ): ReactNode[] {
-    if (!text) return [];
+  if (!text) return [];
 
-    const { hoveredKey = null, onHoverKey } = options;
+  const { hoveredKey = null, onHoverKey } = options;
 
-    // Clone the global regex into a local one so concurrent callers don't
-    // share `lastIndex` state. matchAll would also work but we need the
-    // per-match index for slicing gaps.
-    const regex = new RegExp(VARIABLE_TOKEN_REGEX.source, "g");
-    const parts: ReactNode[] = [];
-    let cursor = 0;
-    let match: RegExpExecArray | null;
+  // Clone the global regex into a local one so concurrent callers don't
+  // share `lastIndex` state. matchAll would also work but we need the
+  // per-match index for slicing gaps.
+  const regex = new RegExp(VARIABLE_TOKEN_REGEX.source, "g");
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+  let match: RegExpExecArray | null;
 
-    while ((match = regex.exec(text)) !== null) {
-        const [full, rawKey] = match;
-        const start = match.index;
+  while ((match = regex.exec(text)) !== null) {
+    const [full, rawKey] = match;
+    const start = match.index;
 
-        // Emit the plain-text gap leading up to this match.
-        if (start > cursor) {
-            parts.push(
-                <Fragment key={`txt-${cursor}`}>{text.slice(cursor, start)}</Fragment>
-            );
-        }
-
-        const key = rawKey.trim();
-        const value = values[key]?.trim();
-        const isHovered = hoveredKey === key;
-
-        // Hover handlers — only attached when the parent provided an
-        // onHoverKey callback. Otherwise the chips behave as before.
-        const hoverProps = onHoverKey
-            ? {
-                  onMouseEnter: () => onHoverKey(key),
-                  onMouseLeave: () => onHoverKey(null),
-              }
-            : {};
-
-        if (value) {
-            // Filled: show the user's value prominently so they can
-            // read the prompt as it will actually run.
-            parts.push(
-                <mark
-                    key={`v-${start}-${key}`}
-                    data-var-key={key}
-                    className={cn(
-                        "rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 border text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 font-semibold transition-all",
-                        isHovered
-                            ? "border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/40 dark:ring-emerald-400/40"
-                            : "border-emerald-500/30 dark:border-emerald-400/30"
-                    )}
-                    title={`${getVariableLabel(key)}: ${value}`}
-                    {...hoverProps}
-                >
-                    {value}
-                </mark>
-            );
-        } else {
-            // Unfilled: show the Hebrew label wrapped in curly braces.
-            // The outer span is forced to dir="ltr" so the `{` and `}`
-            // characters never get re-ordered by the BiDi algorithm in
-            // RTL parents — without this, in a Hebrew-direction container
-            // the brackets can flip to the wrong sides because they are
-            // BiDi neutrals adjacent to strong-RTL Hebrew text. The inner
-            // span carries dir="rtl" so the Hebrew label itself still
-            // reads in its natural direction.
-            parts.push(
-                <span
-                    key={`p-${start}-${key}`}
-                    data-var-key={key}
-                    dir="ltr"
-                    className={cn(
-                        "inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border text-sky-700 dark:text-sky-300 px-1.5 py-0.5 font-medium whitespace-nowrap transition-all",
-                        isHovered
-                            ? "border-sky-500 dark:border-sky-400 ring-2 ring-sky-500/40 dark:ring-sky-400/40"
-                            : "border-sky-500/40 dark:border-sky-400/40"
-                    )}
-                    title={key}
-                    {...hoverProps}
-                >
-                    <span aria-hidden="true">{"{"}</span>
-                    <span dir="rtl" className="px-0.5">
-                        {getVariableLabel(key)}
-                    </span>
-                    <span aria-hidden="true">{"}"}</span>
-                </span>
-            );
-        }
-
-        cursor = start + full.length;
+    // Emit the plain-text gap leading up to this match.
+    if (start > cursor) {
+      parts.push(<Fragment key={`txt-${cursor}`}>{text.slice(cursor, start)}</Fragment>);
     }
 
-    if (cursor < text.length) {
-        parts.push(<Fragment key={`txt-${cursor}`}>{text.slice(cursor)}</Fragment>);
+    const key = rawKey.trim();
+    const value = values[key]?.trim();
+    const isHovered = hoveredKey === key;
+
+    // Hover handlers — only attached when the parent provided an
+    // onHoverKey callback. Otherwise the chips behave as before.
+    const hoverProps = onHoverKey
+      ? {
+          onMouseEnter: () => onHoverKey(key),
+          onMouseLeave: () => onHoverKey(null),
+        }
+      : {};
+
+    if (value) {
+      // Filled: show the user's value prominently so they can
+      // read the prompt as it will actually run.
+      parts.push(
+        <mark
+          key={`v-${start}-${key}`}
+          data-var-key={key}
+          className={cn(
+            "rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 border text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 font-semibold transition-all",
+            isHovered
+              ? "border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/40 dark:ring-emerald-400/40"
+              : "border-emerald-500/30 dark:border-emerald-400/30",
+          )}
+          title={`${getVariableLabel(key)}: ${value}`}
+          {...hoverProps}
+        >
+          {value}
+        </mark>,
+      );
+    } else {
+      // Unfilled: show the Hebrew label wrapped in curly braces.
+      // The outer span is forced to dir="ltr" so the `{` and `}`
+      // characters never get re-ordered by the BiDi algorithm in
+      // RTL parents — without this, in a Hebrew-direction container
+      // the brackets can flip to the wrong sides because they are
+      // BiDi neutrals adjacent to strong-RTL Hebrew text. The inner
+      // span carries dir="rtl" so the Hebrew label itself still
+      // reads in its natural direction.
+      parts.push(
+        <span
+          key={`p-${start}-${key}`}
+          data-var-key={key}
+          dir="ltr"
+          className={cn(
+            "inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border text-sky-700 dark:text-sky-300 px-1.5 py-0.5 font-medium whitespace-nowrap transition-all",
+            isHovered
+              ? "border-sky-500 dark:border-sky-400 ring-2 ring-sky-500/40 dark:ring-sky-400/40"
+              : "border-sky-500/40 dark:border-sky-400/40",
+          )}
+          title={key}
+          {...hoverProps}
+        >
+          <span aria-hidden="true">{"{"}</span>
+          <span dir="rtl" className="px-0.5">
+            {getVariableLabel(key)}
+          </span>
+          <span aria-hidden="true">{"}"}</span>
+        </span>,
+      );
     }
 
-    return parts;
+    cursor = start + full.length;
+  }
+
+  if (cursor < text.length) {
+    parts.push(<Fragment key={`txt-${cursor}`}>{text.slice(cursor)}</Fragment>);
+  }
+
+  return parts;
 }
 
 /**
@@ -187,7 +185,7 @@ export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
           className="text-amber-600 dark:text-amber-400 font-bold"
         >
           {token}
-        </span>
+        </span>,
       );
     } else {
       parts.push(
@@ -196,7 +194,7 @@ export const highlightTextWithPlaceholders = (text: string): ReactNode[] => {
           className="inline-flex items-center rounded-md bg-sky-500/10 dark:bg-sky-400/10 border border-sky-500/40 dark:border-sky-400/40 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 text-[0.85em] font-medium whitespace-nowrap"
         >
           {token}
-        </span>
+        </span>,
       );
     }
     cursor = start + token.length;
@@ -214,7 +212,7 @@ export const STYLE_TEXT_COLORS: Record<string, string> = {
   amber: "text-amber-300",
   emerald: "text-emerald-300",
   blue: "text-amber-300",
-  violet: "text-violet-300",
+  violet: "text-indigo-300",
   slate: "text-slate-200",
 };
 
@@ -223,17 +221,25 @@ export const STYLE_HIGHLIGHT_COLORS: Record<string, string> = {
   pink: "bg-pink-400/20 text-pink-200",
   green: "bg-emerald-400/20 text-emerald-200",
   blue: "bg-sky-400/20 text-sky-200",
-  violet: "bg-violet-400/20 text-violet-200",
+  violet: "bg-indigo-400/20 text-indigo-200",
 };
 
-export const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Pattern-based example values for variable names (personal library filler, etc.). */
 const PLACEHOLDER_SUGGESTIONS: Array<{ pattern: RegExp; suggestions: string[] }> = [
-  { pattern: /קהל|audience|persona/i, suggestions: ["מנהלי שיווק B2B", "בעלי עסקים קטנים", "סטודנטים"] },
-  { pattern: /מטרה|goal|objective|יעד/i, suggestions: ["להגדיל הרשמות", "לשכנע לרכישה", "להסביר תהליך"] },
-  { pattern: /פורמט|format|מבנה|output/i, suggestions: ["רשימה של 5 נקודות", "טבלה קצרה", "פסקה אחת"] },
+  {
+    pattern: /קהל|audience|persona/i,
+    suggestions: ["מנהלי שיווק B2B", "בעלי עסקים קטנים", "סטודנטים"],
+  },
+  {
+    pattern: /מטרה|goal|objective|יעד/i,
+    suggestions: ["להגדיל הרשמות", "לשכנע לרכישה", "להסביר תהליך"],
+  },
+  {
+    pattern: /פורמט|format|מבנה|output/i,
+    suggestions: ["רשימה של 5 נקודות", "טבלה קצרה", "פסקה אחת"],
+  },
   { pattern: /טון|tone|סגנון|style/i, suggestions: ["אסרטיבי", "ידידותי", "מקצועי"] },
   { pattern: /ערוץ|channel|פלטפורמה|platform/i, suggestions: ["לינקדאין", "מייל", "וואטסאפ"] },
   { pattern: /זמן|timeline|תאריך|דדליין/i, suggestions: ["שבועיים", "עד יום חמישי", "סוף החודש"] },
@@ -250,8 +256,7 @@ export function getPlaceholderSuggestions(placeholder: string): string[] {
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-export const stripStyleTokens = (value: string) =>
-  value.replace(STYLE_TOKEN_REGEX, "");
+export const stripStyleTokens = (value: string) => value.replace(STYLE_TOKEN_REGEX, "");
 
 export const toStyledHtml = (value: string) => {
   const escaped = escapeHtml(value);
@@ -268,11 +273,14 @@ export const toStyledHtml = (value: string) => {
     .replace(/\[\[\/hl\]\]/g, "</span>");
 
   const raw = withTokens
-    .replace(PLACEHOLDER_REGEX, (match) => `<span class="text-amber-300 font-semibold">${match}</span>`)
+    .replace(
+      PLACEHOLDER_REGEX,
+      (match) => `<span class="text-amber-300 font-semibold">${match}</span>`,
+    )
     .replace(/\n/g, "<br />");
 
   return sanitizeHtml(raw, {
-    allowedTags: ['span', 'br'],
-    allowedAttributes: { span: ['class'] },
+    allowedTags: ["span", "br"],
+    allowedAttributes: { span: ["class"] },
   });
 };

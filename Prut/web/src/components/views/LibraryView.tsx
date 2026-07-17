@@ -327,7 +327,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
             className={cn(
               "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-all",
               selectionMode
-                ? "bg-purple-600/20 border-purple-500/40 text-purple-300"
+                ? "bg-indigo-600/20 border-indigo-500/40 text-indigo-300"
                 : "border-(--glass-border) text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--glass-bg)",
             )}
             title="מצב בחירה מרובה"
@@ -611,7 +611,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           </div>
           <button
             onClick={() => setShowMoveDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 hover:bg-purple-600/20 rounded-xl text-purple-300 transition-all font-bold text-sm"
+            className="flex items-center gap-2 px-4 py-2 hover:bg-indigo-600/20 rounded-xl text-indigo-300 transition-all font-bold text-sm"
           >
             <FolderInput className="w-4 h-4" />
             שמור לאישי
@@ -647,7 +647,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                 className={cn(
                   "w-full text-right px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between",
                   isCreatingNewMoveCategory
-                    ? "bg-purple-600/20 border-purple-500 text-purple-200"
+                    ? "bg-indigo-600/20 border-indigo-500 text-indigo-200"
                     : "bg-(--glass-bg) border-(--glass-border) text-(--text-secondary) hover:bg-black/5 dark:bg-white/10",
                 )}
               >
@@ -662,7 +662,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
                     value={newMoveCategoryInput}
                     onChange={(e) => setNewMoveCategoryInput(e.target.value)}
                     placeholder="שם הקטגוריה..."
-                    className="w-full bg-black/40 border border-purple-500/50 rounded-lg p-3 text-base text-(--text-primary) focus:outline-none"
+                    className="w-full bg-black/40 border border-indigo-500/50 rounded-lg p-3 text-base text-(--text-primary) focus:outline-none"
                     autoFocus
                   />
                 </div>
@@ -693,7 +693,7 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               <button
                 onClick={handleBatchSave}
                 disabled={!targetMoveCategory && !newMoveCategoryInput.trim()}
-                className="flex-1 bg-purple-600 text-(--text-primary) py-2.5 rounded-lg font-medium disabled:opacity-50 hover:bg-purple-500"
+                className="flex-1 bg-indigo-600 text-(--text-primary) py-2.5 rounded-lg font-medium disabled:opacity-50 hover:bg-indigo-500"
               >
                 שמור
               </button>

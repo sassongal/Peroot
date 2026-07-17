@@ -84,13 +84,13 @@ export function SettingsProfileSection({
               onChange={(e) => setDisplayName(e.target.value)}
               dir="rtl"
               placeholder="שם תצוגה"
-              className="bg-white/5 border border-white/10 focus:border-purple-500/60 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
+              className="bg-white/5 border border-white/10 focus:border-indigo-500/60 rounded-lg px-3 py-2.5 text-white font-bold text-base w-full focus:outline-none transition-colors"
             />
             <button
               type="button"
               onClick={onSaveDisplayName}
               disabled={isSavingName || !displayName.trim()}
-              className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSavingName ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

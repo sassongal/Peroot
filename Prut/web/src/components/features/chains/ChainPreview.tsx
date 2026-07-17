@@ -2,18 +2,49 @@
 
 import { useState, useCallback } from "react";
 import {
-  ArrowDown, Save, Play, ArrowRight, X, Plus, Trash2,
-  Pencil, Check, GripVertical, Search, FileText, Image, Video, Bot,
-  ChevronDown, ChevronUp, Copy,
+  ArrowDown,
+  Save,
+  Play,
+  ArrowRight,
+  X,
+  Plus,
+  Trash2,
+  Pencil,
+  Check,
+  GripVertical,
+  Search,
+  FileText,
+  Image,
+  Video,
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { GeneratedChain, GeneratedChainStep, ChainStepMode, ChainVariable } from "@/lib/chain-types";
+import type {
+  GeneratedChain,
+  GeneratedChainStep,
+  ChainStepMode,
+  ChainVariable,
+} from "@/lib/chain-types";
 
-const MODE_CONFIG: Record<ChainStepMode, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
+const MODE_CONFIG: Record<
+  ChainStepMode,
+  { icon: React.ComponentType<{ className?: string }>; label: string; color: string }
+> = {
   text: { icon: FileText, label: "טקסט", color: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
-  research: { icon: Search, label: "מחקר", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-  image: { icon: Image, label: "תמונה", color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
+  research: {
+    icon: Search,
+    label: "מחקר",
+    color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  },
+  image: {
+    icon: Image,
+    label: "תמונה",
+    color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+  },
   video: { icon: Video, label: "וידאו", color: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
   agent: { icon: Bot, label: "סוכן", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
 };
@@ -40,7 +71,7 @@ export function ChainPreview({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const toggleExpand = (idx: number) => {
-    setExpandedSteps(prev => {
+    setExpandedSteps((prev) => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx);
       else next.add(idx);
@@ -48,38 +79,44 @@ export function ChainPreview({
     });
   };
 
-  const updateStep = useCallback((idx: number, updates: Partial<GeneratedChainStep>) => {
-    const newSteps = [...chain.steps];
-    newSteps[idx] = { ...newSteps[idx], ...updates };
-    onUpdateChain({ ...chain, steps: newSteps });
-  }, [chain, onUpdateChain]);
+  const updateStep = useCallback(
+    (idx: number, updates: Partial<GeneratedChainStep>) => {
+      const newSteps = [...chain.steps];
+      newSteps[idx] = { ...newSteps[idx], ...updates };
+      onUpdateChain({ ...chain, steps: newSteps });
+    },
+    [chain, onUpdateChain],
+  );
 
-  const removeStep = useCallback((idx: number) => {
-    if (chain.steps.length <= 2) {
-      toast.error("שרשרת חייבת לפחות 2 שלבים");
-      return;
-    }
-    const removedStepNum = chain.steps[idx].step_number;
-    const newSteps = chain.steps
-      .filter((_, i) => i !== idx)
-      .map((s, i) => {
-        const step = { ...s, step_number: i + 1 };
-        // Reconnect: if this step pointed to the removed step, point to the one before it
-        if (step.input_from_step === removedStepNum) {
-          step.input_from_step = idx > 0 ? chain.steps[idx - 1].step_number : null;
-          // Renumber after removal
-          if (step.input_from_step !== null) {
-            const newIdx = chain.steps.findIndex(s2 => s2.step_number === step.input_from_step);
-            step.input_from_step = newIdx >= 0 && newIdx < idx ? newIdx + 1 : (i > 0 ? i : null);
+  const removeStep = useCallback(
+    (idx: number) => {
+      if (chain.steps.length <= 2) {
+        toast.error("שרשרת חייבת לפחות 2 שלבים");
+        return;
+      }
+      const removedStepNum = chain.steps[idx].step_number;
+      const newSteps = chain.steps
+        .filter((_, i) => i !== idx)
+        .map((s, i) => {
+          const step = { ...s, step_number: i + 1 };
+          // Reconnect: if this step pointed to the removed step, point to the one before it
+          if (step.input_from_step === removedStepNum) {
+            step.input_from_step = idx > 0 ? chain.steps[idx - 1].step_number : null;
+            // Renumber after removal
+            if (step.input_from_step !== null) {
+              const newIdx = chain.steps.findIndex((s2) => s2.step_number === step.input_from_step);
+              step.input_from_step = newIdx >= 0 && newIdx < idx ? newIdx + 1 : i > 0 ? i : null;
+            }
+          } else if (step.input_from_step !== null && step.input_from_step > removedStepNum) {
+            step.input_from_step = step.input_from_step - 1;
           }
-        } else if (step.input_from_step !== null && step.input_from_step > removedStepNum) {
-          step.input_from_step = step.input_from_step - 1;
-        }
-        return step;
-      });
-    onUpdateChain({ ...chain, steps: newSteps });
-    setEditingStepIdx(null);
-  }, [chain, onUpdateChain]);
+          return step;
+        });
+      onUpdateChain({ ...chain, steps: newSteps });
+      setEditingStepIdx(null);
+    },
+    [chain, onUpdateChain],
+  );
 
   const addStep = useCallback(() => {
     const lastStep = chain.steps[chain.steps.length - 1];
@@ -94,7 +131,7 @@ export function ChainPreview({
     };
     onUpdateChain({ ...chain, steps: [...chain.steps, newStep] });
     setEditingStepIdx(chain.steps.length);
-    setExpandedSteps(prev => new Set([...prev, chain.steps.length]));
+    setExpandedSteps((prev) => new Set([...prev, chain.steps.length]));
   }, [chain, onUpdateChain]);
 
   // Drag and drop reorder
@@ -116,11 +153,13 @@ export function ChainPreview({
     try {
       await navigator.clipboard.writeText(text);
       toast.success("הועתק!");
-    } catch { toast.error("שגיאה בהעתקה"); }
+    } catch {
+      toast.error("שגיאה בהעתקה");
+    }
   };
 
   // Collect all global variables (from all steps, typically step 1)
-  const globalVariables = chain.steps.flatMap(s => s.variables);
+  const globalVariables = chain.steps.flatMap((s) => s.variables);
 
   return (
     <div className="p-6" dir="rtl">
@@ -155,7 +194,9 @@ export function ChainPreview({
         {globalVariables.length > 0 && (
           <>
             <span className="text-slate-700">|</span>
-            <span>{globalVariables.length} משתנים: {globalVariables.map(v => v.label).join(", ")}</span>
+            <span>
+              {globalVariables.length} משתנים: {globalVariables.map((v) => v.label).join(", ")}
+            </span>
           </>
         )}
       </div>
@@ -187,11 +228,11 @@ export function ChainPreview({
                   isEditing
                     ? "border-amber-500/40 bg-amber-500/3"
                     : "border-white/10 bg-white/2 hover:bg-white/4",
-                  dragIndex === idx && "opacity-50 border-amber-500/30"
+                  dragIndex === idx && "opacity-50 border-amber-500/30",
                 )}
                 draggable={!isEditing}
                 onDragStart={() => handleDragStart(idx)}
-                onDragOver={e => handleDragOver(e, idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
                 onDragEnd={handleDragEnd}
               >
                 {/* Step Header */}
@@ -206,7 +247,12 @@ export function ChainPreview({
                   </span>
 
                   {/* Mode badge */}
-                  <span className={cn("text-[10px] px-2 py-0.5 rounded-full border shrink-0", modeConf.color)}>
+                  <span
+                    className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full border shrink-0",
+                      modeConf.color,
+                    )}
+                  >
                     <ModeIcon className="w-3 h-3 inline-block me-1" />
                     {modeConf.label}
                   </span>
@@ -215,7 +261,7 @@ export function ChainPreview({
                   {isEditing ? (
                     <input
                       value={step.title}
-                      onChange={e => updateStep(idx, { title: e.target.value })}
+                      onChange={(e) => updateStep(idx, { title: e.target.value })}
                       className="flex-1 bg-transparent text-sm text-white focus:outline-none border-b border-amber-500/30"
                       autoFocus
                     />
@@ -232,7 +278,7 @@ export function ChainPreview({
                   {step.variables.length > 0 && !isEditing && (
                     <span
                       className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0"
-                      title={step.variables.map(v => v.label).join(", ")}
+                      title={step.variables.map((v) => v.label).join(", ")}
                     >
                       {step.variables.length} משתנים
                     </span>
@@ -261,10 +307,17 @@ export function ChainPreview({
                           onClick={() => toggleExpand(idx)}
                           className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 transition-colors"
                         >
-                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          {isExpanded ? (
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
                         </button>
                         <button
-                          onClick={() => { setEditingStepIdx(idx); setExpandedSteps(prev => new Set([...prev, idx])); }}
+                          onClick={() => {
+                            setEditingStepIdx(idx);
+                            setExpandedSteps((prev) => new Set([...prev, idx]));
+                          }}
                           className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-amber-400 transition-colors"
                           title="ערוך שלב"
                         >
@@ -299,7 +352,7 @@ export function ChainPreview({
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-slate-500 shrink-0">מצב:</span>
                         <div className="flex gap-1.5">
-                          {(Object.keys(MODE_CONFIG) as ChainStepMode[]).map(mode => {
+                          {(Object.keys(MODE_CONFIG) as ChainStepMode[]).map((mode) => {
                             const conf = MODE_CONFIG[mode];
                             const Icon = conf.icon;
                             return (
@@ -308,7 +361,9 @@ export function ChainPreview({
                                 onClick={() => updateStep(idx, { mode })}
                                 className={cn(
                                   "flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] transition-colors",
-                                  step.mode === mode ? conf.color : "border-white/5 text-slate-600 hover:text-slate-400"
+                                  step.mode === mode
+                                    ? conf.color
+                                    : "border-white/5 text-slate-600 hover:text-slate-400",
                                 )}
                               >
                                 <Icon className="w-3 h-3" />
@@ -324,7 +379,7 @@ export function ChainPreview({
                     {isEditing ? (
                       <textarea
                         value={step.prompt}
-                        onChange={e => updateStep(idx, { prompt: e.target.value })}
+                        onChange={(e) => updateStep(idx, { prompt: e.target.value })}
                         className="w-full h-40 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
                         placeholder="הפרומפט המלא..."
                       />
@@ -350,7 +405,14 @@ export function ChainPreview({
                           <span className="text-[11px] text-slate-500">משתנים:</span>
                           <button
                             onClick={() => {
-                              const newVars: ChainVariable[] = [...step.variables, { name: `var_${step.variables.length + 1}`, label: "", default: "" }];
+                              const newVars: ChainVariable[] = [
+                                ...step.variables,
+                                {
+                                  name: `var_${step.variables.length + 1}`,
+                                  label: "",
+                                  default: "",
+                                },
+                              ];
                               updateStep(idx, { variables: newVars });
                             }}
                             className="text-[10px] text-amber-400 hover:text-amber-300 transition-colors"
@@ -362,9 +424,13 @@ export function ChainPreview({
                           <div key={vi} className="flex items-center gap-2">
                             <input
                               value={v.label}
-                              onChange={e => {
+                              onChange={(e) => {
                                 const newVars = [...step.variables];
-                                newVars[vi] = { ...newVars[vi], label: e.target.value, name: e.target.value.replace(/\s+/g, "_") };
+                                newVars[vi] = {
+                                  ...newVars[vi],
+                                  label: e.target.value,
+                                  name: e.target.value.replace(/\s+/g, "_"),
+                                };
                                 updateStep(idx, { variables: newVars });
                               }}
                               placeholder="תווית"
@@ -372,7 +438,7 @@ export function ChainPreview({
                             />
                             <input
                               value={v.default || ""}
-                              onChange={e => {
+                              onChange={(e) => {
                                 const newVars = [...step.variables];
                                 newVars[vi] = { ...newVars[vi], default: e.target.value };
                                 updateStep(idx, { variables: newVars });
@@ -400,7 +466,7 @@ export function ChainPreview({
                         <span className="text-[11px] text-slate-500">פלט צפוי:</span>
                         <input
                           value={step.output_description}
-                          onChange={e => updateStep(idx, { output_description: e.target.value })}
+                          onChange={(e) => updateStep(idx, { output_description: e.target.value })}
                           className="w-full mt-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500/20"
                           placeholder="תיאור הפלט הצפוי..."
                         />

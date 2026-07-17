@@ -175,7 +175,7 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-(--glass-bg) transition-colors focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
         >
           <div className="flex items-center gap-2">
-            <Link2 className="w-4 h-4 text-purple-400" />
+            <Link2 className="w-4 h-4 text-indigo-400" />
             <span className="text-sm font-medium text-(--text-secondary)">שרשראות</span>
             <span className="text-xs text-(--text-muted) bg-(--glass-bg) px-2 py-0.5 rounded-full">
               {chains.length}

@@ -224,7 +224,7 @@ export default async function CategoryPage({ params }: Props) {
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
                           prompt.capability_mode === "IMAGE_GENERATION"
-                            ? "bg-purple-500/10 text-purple-300 border border-purple-500/20"
+                            ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
                             : prompt.capability_mode === "DEEP_RESEARCH"
                               ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
                               : prompt.capability_mode === "AGENT_BUILDER"

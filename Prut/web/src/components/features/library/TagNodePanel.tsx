@@ -75,7 +75,7 @@ export function TagNodePanel({
           {nodeType === "tag" ? (
             <Tag className="w-4 h-4 text-amber-500 shrink-0" />
           ) : (
-            <Library className="w-4 h-4 text-violet-500 shrink-0" />
+            <Library className="w-4 h-4 text-indigo-500 shrink-0" />
           )}
           <span className="flex-1 font-semibold text-slate-900 dark:text-white text-sm truncate">
             {nodeLabel}

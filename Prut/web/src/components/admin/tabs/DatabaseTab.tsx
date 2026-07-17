@@ -52,7 +52,7 @@ function ResourceBar({
 }) {
   const colors: Record<string, string> = {
     blue: "bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4)]",
-    purple: "bg-purple-600 shadow-[0_0_15px_rgba(147,51,234,0.4)]",
+    purple: "bg-indigo-600 shadow-[0_0_15px_rgba(147,51,234,0.4)]",
     emerald: "bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.4)]",
     amber: "bg-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.4)]",
   };

@@ -274,7 +274,7 @@ function SectionContainer({
 }) {
   const colors: Record<string, string> = {
     blue: "text-blue-400 bg-blue-500/5 border-blue-500/10 shadow-blue-500/5",
-    purple: "text-purple-400 bg-purple-500/5 border-purple-500/10 shadow-purple-500/5",
+    purple: "text-indigo-400 bg-indigo-500/5 border-indigo-500/10 shadow-indigo-500/5",
     amber: "text-amber-400 bg-amber-500/5 border-amber-500/10 shadow-amber-500/5",
     rose: "text-rose-400 bg-rose-500/5 border-rose-500/10 shadow-rose-500/5",
     emerald: "text-emerald-400 bg-emerald-500/5 border-emerald-500/10 shadow-emerald-500/5",

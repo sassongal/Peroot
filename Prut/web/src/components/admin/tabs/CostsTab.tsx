@@ -231,7 +231,7 @@ function CostCard({
   const colors: Record<string, string> = {
     blue: "text-blue-500 bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white",
     purple:
-      "text-purple-500 bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500 group-hover:text-white",
+      "text-indigo-500 bg-indigo-500/10 border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white",
     emerald:
       "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white",
     amber:
@@ -279,7 +279,7 @@ function SectionTitle({
 }) {
   const colorMap: Record<string, string> = {
     blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    purple: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
     emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   };
@@ -850,7 +850,7 @@ export default function CostsTab() {
                 "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
                 showAddForm
                   ? "bg-white/5 border border-white/10 text-zinc-400 hover:text-white"
-                  : "bg-purple-600 text-white hover:bg-purple-500 shadow-2xl shadow-purple-600/20",
+                  : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-2xl shadow-indigo-600/20",
               )}
             >
               {showAddForm ? (
@@ -870,7 +870,7 @@ export default function CostsTab() {
         {showAddForm && (
           <form
             onSubmit={handleAddManualCost}
-            className="rounded-[40px] border border-purple-500/20 bg-purple-500/5 p-8 space-y-6"
+            className="rounded-[40px] border border-indigo-500/20 bg-indigo-500/5 p-8 space-y-6"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="flex flex-col gap-2">
@@ -880,7 +880,7 @@ export default function CostsTab() {
                 <select
                   value={formService}
                   onChange={(e) => setFormService(e.target.value)}
-                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-purple-500/40 transition-colors"
+                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-indigo-500/40 transition-colors"
                 >
                   {SERVICE_OPTIONS.map((s) => (
                     <option key={s} value={s}>
@@ -901,7 +901,7 @@ export default function CostsTab() {
                   onChange={(e) => setFormAmount(e.target.value)}
                   placeholder="0.00"
                   required
-                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold placeholder:text-zinc-700 focus:outline-none focus:border-purple-500/40 transition-colors"
+                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500/40 transition-colors"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -913,7 +913,7 @@ export default function CostsTab() {
                   value={formPeriod}
                   onChange={(e) => setFormPeriod(e.target.value)}
                   required
-                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-purple-500/40 transition-colors"
+                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-indigo-500/40 transition-colors"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -925,7 +925,7 @@ export default function CostsTab() {
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   placeholder="Optional notes..."
-                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold placeholder:text-zinc-700 focus:outline-none focus:border-purple-500/40 transition-colors"
+                  className="bg-zinc-900 border border-white/5 text-white rounded-2xl px-4 py-2.5 text-sm font-bold placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500/40 transition-colors"
                 />
               </div>
             </div>
@@ -933,7 +933,7 @@ export default function CostsTab() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-10 py-3 bg-purple-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-purple-500 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                className="px-10 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3"
               >
                 {submitting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -966,7 +966,7 @@ export default function CostsTab() {
                 {loadingManual ? (
                   <tr>
                     <td colSpan={5} className="px-8 py-16 text-center">
-                      <RefreshCw className="w-8 h-8 animate-spin text-purple-500/20 mx-auto" />
+                      <RefreshCw className="w-8 h-8 animate-spin text-indigo-500/20 mx-auto" />
                     </td>
                   </tr>
                 ) : manualEntries.length === 0 ? (
@@ -985,7 +985,7 @@ export default function CostsTab() {
                       className="group hover:bg-white/2 transition-all duration-300"
                     >
                       <td className="px-8 py-5">
-                        <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-wider">
+                        <span className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-wider">
                           {entry.service_name}
                         </span>
                       </td>
@@ -1055,7 +1055,7 @@ export default function CostsTab() {
                       />
                       {m.manualCost > 0 && (
                         <div
-                          className="absolute top-0 w-full bg-purple-600 group-hover:bg-purple-500 transition-colors"
+                          className="absolute top-0 w-full bg-indigo-600 group-hover:bg-indigo-500 transition-colors"
                           style={{
                             height: `${(manualH / totalH) * 100}%`,
                           }}
@@ -1078,7 +1078,7 @@ export default function CostsTab() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm bg-purple-600" />
+              <div className="w-3 h-3 rounded-sm bg-indigo-600" />
               <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
                 Infrastructure
               </span>

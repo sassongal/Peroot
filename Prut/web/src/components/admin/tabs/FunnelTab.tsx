@@ -49,7 +49,10 @@ const STAGE_ICONS: Record<string, LucideIcon> = {
   became_pro: Star,
 };
 
-const BAR_GRADIENTS: Record<string, { from: string; to: string; glow: string; badge: string; ring: string }> = {
+const BAR_GRADIENTS: Record<
+  string,
+  { from: string; to: string; glow: string; badge: string; ring: string }
+> = {
   blue: {
     from: "from-blue-600",
     to: "to-blue-400",
@@ -65,11 +68,11 @@ const BAR_GRADIENTS: Record<string, { from: string; to: string; glow: string; ba
     ring: "border-indigo-500/30",
   },
   purple: {
-    from: "from-purple-600",
-    to: "to-purple-400",
-    glow: "shadow-purple-500/20",
-    badge: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-    ring: "border-purple-500/30",
+    from: "from-indigo-600",
+    to: "to-indigo-400",
+    glow: "shadow-indigo-500/20",
+    badge: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    ring: "border-indigo-500/30",
   },
   emerald: {
     from: "from-emerald-600",
@@ -92,13 +95,23 @@ function overallConversion(stages: FunnelStage[]): string {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SummaryCard({ label, value, sub, icon: Icon, color }: {
-  label: string; value: string; sub?: string; icon: LucideIcon; color: string;
+function SummaryCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: LucideIcon;
+  color: string;
 }) {
   const colors: Record<string, string> = {
     blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
     indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-    purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    purple: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
     emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   };
@@ -112,7 +125,9 @@ function SummaryCard({ label, value, sub, icon: Icon, color }: {
       </div>
       <div className="space-y-1">
         <div className="text-4xl font-black text-white tracking-tighter leading-none">{value}</div>
-        <div className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">{label}</div>
+        <div className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
+          {label}
+        </div>
         {sub && <div className="text-[9px] text-zinc-700 font-bold">{sub}</div>}
       </div>
     </div>
@@ -123,12 +138,14 @@ function DropOffBadge({ pct }: { pct: string }) {
   const val = parseFloat(pct);
   const isHigh = val >= 50;
   return (
-    <div className={cn(
-      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider",
-      isHigh
-        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-        : "bg-red-500/10 border-red-500/20 text-red-400"
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider",
+        isHigh
+          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          : "bg-red-500/10 border-red-500/20 text-red-400",
+      )}
+    >
       <TrendingDown className="w-3 h-3" />
       {pct}% המשיכו
     </div>
@@ -156,14 +173,15 @@ export default function FunnelTab() {
     }
   }, [range]);
 
-  useEffect(() => { fetchFunnel(); }, [fetchFunnel]);
+  useEffect(() => {
+    fetchFunnel();
+  }, [fetchFunnel]);
 
   const stages = data?.stages ?? [];
   const topCount = stages[0]?.count || 1;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-
       {/* Header strip with controls */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-zinc-950/50 p-10 rounded-[40px] border border-white/5">
         <div className="space-y-3">
@@ -171,7 +189,9 @@ export default function FunnelTab() {
             <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
               <TrendingDown className="w-4 h-4" />
             </div>
-            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Conversion Intelligence</span>
+            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">
+              Conversion Intelligence
+            </span>
           </div>
           <p className="text-zinc-500 font-medium tracking-tight text-lg max-w-xl">
             מעקב אחר מסע המשתמש משלב ההרשמה ועד לשדרוג לפרו
@@ -186,7 +206,9 @@ export default function FunnelTab() {
                 onClick={() => setRange(r)}
                 className={cn(
                   "px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                  range === r ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-zinc-500 hover:text-zinc-300"
+                  range === r
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                    : "text-zinc-500 hover:text-zinc-300",
                 )}
               >
                 {RANGE_LABELS[r]}
@@ -208,7 +230,10 @@ export default function FunnelTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-7 rounded-[36px] bg-zinc-950/80 border border-white/5 h-36 animate-pulse" />
+              <div
+                key={i}
+                className="p-7 rounded-[36px] bg-zinc-950/80 border border-white/5 h-36 animate-pulse"
+              />
             ))
           : stages.map((stage) => {
               const Icon = STAGE_ICONS[stage.key] ?? Users;
@@ -232,8 +257,12 @@ export default function FunnelTab() {
             <Star className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-5xl font-black text-white tracking-tighter">{overallConversion(stages)}%</div>
-            <div className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mt-1">Overall Conversion Rate</div>
+            <div className="text-5xl font-black text-white tracking-tighter">
+              {overallConversion(stages)}%
+            </div>
+            <div className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mt-1">
+              Overall Conversion Rate
+            </div>
             <div className="text-xs text-zinc-500 font-medium mt-0.5">מנרשמים לפרו</div>
           </div>
         </div>
@@ -256,7 +285,9 @@ export default function FunnelTab() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <RefreshCw className="w-10 h-10 animate-spin text-white/5" />
-            <span className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Loading Funnel Data...</span>
+            <span className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
+              Loading Funnel Data...
+            </span>
           </div>
         ) : (
           <div className="space-y-3">
@@ -282,11 +313,13 @@ export default function FunnelTab() {
                     </div>
                   )}
 
-                  <div className={cn(
-                    "group relative flex items-center gap-6 p-5 rounded-[24px] border transition-all duration-500 hover:border-opacity-60",
-                    g.ring,
-                    "bg-zinc-900/40 hover:bg-zinc-900/70"
-                  )}>
+                  <div
+                    className={cn(
+                      "group relative flex items-center gap-6 p-5 rounded-[24px] border transition-all duration-500 hover:border-opacity-60",
+                      g.ring,
+                      "bg-zinc-900/40 hover:bg-zinc-900/70",
+                    )}
+                  >
                     <div className={cn("p-3 rounded-2xl border shrink-0", g.badge)}>
                       <Icon className="w-5 h-5" />
                     </div>
@@ -298,7 +331,12 @@ export default function FunnelTab() {
 
                     <div className="flex-1 relative h-10 bg-white/3 rounded-xl overflow-hidden">
                       <div
-                        className={cn("h-full rounded-xl bg-linear-to-r transition-all duration-1000 shadow-lg", g.from, g.to, g.glow)}
+                        className={cn(
+                          "h-full rounded-xl bg-linear-to-r transition-all duration-1000 shadow-lg",
+                          g.from,
+                          g.to,
+                          g.glow,
+                        )}
                         style={{ width: `${widthPct}%`, minWidth: stage.count > 0 ? "2rem" : "0" }}
                       />
                       <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl" />
@@ -308,7 +346,9 @@ export default function FunnelTab() {
                       <div className="text-2xl font-black text-white tabular-nums tracking-tighter">
                         {stage.count.toLocaleString()}
                       </div>
-                      <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">{widthPct.toFixed(1)}%</div>
+                      <div className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                        {widthPct.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -323,14 +363,26 @@ export default function FunnelTab() {
         <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
           <div className="p-8 border-b border-white/5">
             <h2 className="text-xl font-black text-white tracking-tight">פירוט המרות בין שלבים</h2>
-            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider mt-1">Stage-to-Stage Conversion Details</p>
+            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider mt-1">
+              Stage-to-Stage Conversion Details
+            </p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-white/5">
-                  {["From Stage", "To Stage", "Users In", "Users Out", "Conversion", "Drop-off"].map((h) => (
-                    <th key={h} className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
+                  {[
+                    "From Stage",
+                    "To Stage",
+                    "Users In",
+                    "Users Out",
+                    "Conversion",
+                    "Drop-off",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600"
+                    >
                       {h}
                     </th>
                   ))}
@@ -343,25 +395,53 @@ export default function FunnelTab() {
                   const dropped = prev.count - stage.count;
                   const val = parseFloat(pct);
                   return (
-                    <tr key={stage.key} className="group hover:bg-white/2 transition-all duration-300">
+                    <tr
+                      key={stage.key}
+                      className="group hover:bg-white/2 transition-all duration-300"
+                    >
                       <td className="px-8 py-5">
-                        <span className={cn("px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider", BAR_GRADIENTS[prev.color]?.badge ?? "")}>
+                        <span
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider",
+                            BAR_GRADIENTS[prev.color]?.badge ?? "",
+                          )}
+                        >
                           {prev.label}
                         </span>
                       </td>
                       <td className="px-8 py-5">
-                        <span className={cn("px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider", BAR_GRADIENTS[stage.color]?.badge ?? "")}>
+                        <span
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider",
+                            BAR_GRADIENTS[stage.color]?.badge ?? "",
+                          )}
+                        >
                           {stage.label}
                         </span>
                       </td>
-                      <td className="px-8 py-5 text-zinc-300 font-black text-base tabular-nums">{prev.count.toLocaleString()}</td>
-                      <td className="px-8 py-5 text-zinc-300 font-black text-base tabular-nums">{stage.count.toLocaleString()}</td>
+                      <td className="px-8 py-5 text-zinc-300 font-black text-base tabular-nums">
+                        {prev.count.toLocaleString()}
+                      </td>
+                      <td className="px-8 py-5 text-zinc-300 font-black text-base tabular-nums">
+                        {stage.count.toLocaleString()}
+                      </td>
                       <td className="px-8 py-5">
-                        <span className={cn("text-xl font-black tabular-nums", val >= 50 ? "text-emerald-400" : val >= 20 ? "text-amber-400" : "text-red-400")}>
+                        <span
+                          className={cn(
+                            "text-xl font-black tabular-nums",
+                            val >= 50
+                              ? "text-emerald-400"
+                              : val >= 20
+                                ? "text-amber-400"
+                                : "text-red-400",
+                          )}
+                        >
                           {pct}%
                         </span>
                       </td>
-                      <td className="px-8 py-5 text-zinc-600 font-bold text-sm tabular-nums">-{dropped.toLocaleString()}</td>
+                      <td className="px-8 py-5 text-zinc-600 font-bold text-sm tabular-nums">
+                        -{dropped.toLocaleString()}
+                      </td>
                     </tr>
                   );
                 })}

@@ -29,7 +29,7 @@ export function ActiveFilterChips({
   onClearCollection,
   className,
 }: ActiveFilterChipsProps) {
-  const hasAny = !!(searchQuery?.trim()) || !!capabilityFilter || favoritesMode || !!activeCollection;
+  const hasAny = !!searchQuery?.trim() || !!capabilityFilter || favoritesMode || !!activeCollection;
   if (!hasAny) return null;
 
   return (
@@ -48,9 +48,7 @@ export function ActiveFilterChips({
         />
       )}
 
-      {favoritesMode && (
-        <Chip label="מועדפים" onRemove={onClearFavorites} color="yellow" />
-      )}
+      {favoritesMode && <Chip label="מועדפים" onRemove={onClearFavorites} color="yellow" />}
 
       {activeCollection && activeCollectionLabel && (
         <Chip label={activeCollectionLabel} onRemove={onClearCollection} color="amber" />
@@ -70,16 +68,18 @@ function Chip({
 }) {
   const colorClasses = {
     default: "bg-white/5 border-[var(--glass-border)] text-[var(--text-secondary)]",
-    purple: "bg-purple-500/10 border-purple-500/30 text-purple-300",
+    purple: "bg-indigo-500/10 border-indigo-500/30 text-indigo-300",
     yellow: "bg-yellow-500/10 border-yellow-500/30 text-yellow-300",
     amber: "bg-amber-500/10 border-amber-500/30 text-amber-300",
   };
 
   return (
-    <span className={cn(
-      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-colors",
-      colorClasses[color]
-    )}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-colors",
+        colorClasses[color],
+      )}
+    >
       {label}
       {onRemove && (
         <button

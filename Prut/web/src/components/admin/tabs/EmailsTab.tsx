@@ -59,7 +59,7 @@ function AutomationPill({
         "flex items-center gap-2 px-3 py-2 rounded-xl border text-[11px] font-bold",
         active
           ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
-          : "bg-zinc-900 border-white/8 text-zinc-500"
+          : "bg-zinc-900 border-white/8 text-zinc-500",
       )}
     >
       <Icon className="w-3.5 h-3.5 shrink-0 opacity-80" />
@@ -135,9 +135,7 @@ export function EmailsTab() {
       <div
         className={cn(
           "rounded-2xl border p-4 space-y-3",
-          introMuted
-            ? "bg-zinc-900/50 border-white/10"
-            : "bg-amber-500/5 border-amber-500/20"
+          introMuted ? "bg-zinc-900/50 border-white/10" : "bg-amber-500/5 border-amber-500/20",
         )}
       >
         <div className="flex items-center gap-2 text-sm font-black text-white">
@@ -235,9 +233,7 @@ export function EmailsTab() {
         </div>
 
         {recentUnsubscribes.length === 0 ? (
-          <div className="px-5 py-12 text-center text-zinc-600 text-sm">
-            אין רשומות הסרה עדיין
-          </div>
+          <div className="px-5 py-12 text-center text-zinc-600 text-sm">אין רשומות הסרה עדיין</div>
         ) : (
           <div className="divide-y divide-white/5 max-h-[420px] overflow-y-auto">
             {recentUnsubscribes.map((entry, i) => (
@@ -256,8 +252,8 @@ export function EmailsTab() {
                     className={cn(
                       "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full",
                       entry.source === "newsletter"
-                        ? "bg-purple-500/10 text-purple-400"
-                        : "bg-blue-500/10 text-blue-400"
+                        ? "bg-indigo-500/10 text-indigo-400"
+                        : "bg-blue-500/10 text-blue-400",
                     )}
                   >
                     {entry.source === "newsletter" ? "ניוזלטר" : "אונבורדינג"}

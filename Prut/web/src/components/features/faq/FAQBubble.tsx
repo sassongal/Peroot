@@ -78,7 +78,7 @@ export function FAQBubble({ mode = "fixed", defaultOpen = false, onClose }: FAQB
         <div className="p-4 bg-linear-to-t from-white/80 dark:from-black/80 to-transparent border-t border-(--glass-border) relative z-10">
           <button
             onClick={handleFeedback}
-            className="w-full group relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 p-4 text-right"
+            className="w-full group relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 p-4 text-right"
           >
             <div className="relative z-10 flex items-center justify-between">
               <div>

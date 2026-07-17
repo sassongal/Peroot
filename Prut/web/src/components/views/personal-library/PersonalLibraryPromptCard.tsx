@@ -284,7 +284,7 @@ export function PersonalLibraryPromptCard({
               {prompt.title}
             </span>
             {prompt.is_template && (
-              <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase tracking-wider">
+              <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
                 תבנית
               </span>
             )}

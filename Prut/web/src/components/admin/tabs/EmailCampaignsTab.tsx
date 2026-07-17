@@ -91,7 +91,7 @@ function fmtDate(iso: string) {
 
 const colorMap = {
   blue: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-  purple: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+  purple: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20",
   emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
   rose: "text-rose-500 bg-rose-500/10 border-rose-500/20",
   amber: "text-amber-500 bg-amber-500/10 border-amber-500/20",
@@ -574,7 +574,7 @@ export function EmailCampaignsTab() {
         <div className="rounded-[40px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
           {loading ? (
             <div className="flex items-center justify-center py-24">
-              <RefreshCw className="w-10 h-10 animate-spin text-purple-500/20" />
+              <RefreshCw className="w-10 h-10 animate-spin text-indigo-500/20" />
             </div>
           ) : (data?.campaigns ?? []).length === 0 ? (
             <div className="py-24 text-center text-zinc-800 font-black uppercase tracking-widest text-[9px]">
@@ -806,7 +806,7 @@ function GlobalEmailLogs() {
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
+          <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
             <Mail className="w-4 h-4" />
           </div>
           <div>
@@ -835,7 +835,7 @@ function GlobalEmailLogs() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          className="flex-1 min-w-[200px] px-4 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-white placeholder:text-zinc-700 focus:ring-1 focus:ring-purple-500/30 focus:border-purple-500/30"
+          className="flex-1 min-w-[200px] px-4 py-2.5 bg-zinc-900 border border-white/5 rounded-xl text-sm text-white placeholder:text-zinc-700 focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/30"
         />
         <select
           value={sourceFilter}
@@ -873,7 +873,7 @@ function GlobalEmailLogs() {
       <div className="rounded-[32px] border border-white/5 bg-zinc-950/80 overflow-hidden">
         {loading && logs.length === 0 ? (
           <div className="flex items-center justify-center py-20">
-            <RefreshCw className="w-8 h-8 animate-spin text-purple-500/20" />
+            <RefreshCw className="w-8 h-8 animate-spin text-indigo-500/20" />
           </div>
         ) : logs.length === 0 ? (
           <p className="text-center text-zinc-800 font-black uppercase tracking-widest text-[9px] py-20">

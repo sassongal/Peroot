@@ -16,13 +16,13 @@ export const CATEGORY_OPTIONS = [
   { id: "Finance", label: "פיננסים" },
   { id: "Healthcare", label: "בריאות" },
   { id: "Ecommerce", label: "אי־קומרס" },
-  { id: "RealEstate", label: "נדל\"ן" },
+  { id: "RealEstate", label: 'נדל"ן' },
   { id: "Strategy", label: "אסטרטגיה" },
   { id: "Design", label: "עיצוב" },
   { id: "Data", label: "דאטה" },
   { id: "Automation", label: "אוטומציה" },
   { id: "Community", label: "קהילה" },
-  { id: "Nonprofit", label: "מלכ\"ר" },
+  { id: "Nonprofit", label: 'מלכ"ר' },
   { id: "Cooking", label: "בישול" },
   { id: "Travel", label: "טיולים" },
   { id: "Sports", label: "ספורט וכושר" },
@@ -51,13 +51,13 @@ export const CATEGORY_LABELS: Record<string, string> = {
   Finance: "פיננסים",
   Healthcare: "בריאות",
   Ecommerce: "אי־קומרס",
-  RealEstate: "נדל\"ן",
+  RealEstate: 'נדל"ן',
   Strategy: "אסטרטגיה",
   Design: "עיצוב",
   Data: "דאטה",
   Automation: "אוטומציה",
   Community: "קהילה",
-  Nonprofit: "מלכ\"ר",
+  Nonprofit: 'מלכ"ר',
   Cooking: "בישול",
   Travel: "טיולים",
   Sports: "ספורט וכושר",
@@ -82,7 +82,11 @@ export const PROMPT_LIBRARY_COUNT = "540+";
 export const QUICK_REFINE_ACTIONS: readonly { id: string; label: string; instruction: string }[] = [
   { id: "shorter", label: "קצר יותר", instruction: "קצר יותר. שמור על המבנה והדגשים המרכזיים." },
   { id: "assertive", label: "יותר אסרטיבי", instruction: "יותר אסרטיבי, ישיר וממוקד תוצאה." },
-  { id: "practical", label: "יותר פרקטי", instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות." },
+  {
+    id: "practical",
+    label: "יותר פרקטי",
+    instruction: "יותר פרקטי, עם צעדים מדידים ודוגמאות קצרות.",
+  },
 ];
 
 interface PromptCollection {
@@ -102,7 +106,7 @@ export const PROMPT_COLLECTIONS: PromptCollection[] = [
     description: "10 פרומפטים הכי חזקים לשיווק דיגיטלי",
     icon: "TrendingUp",
     categories: ["Marketing", "Social", "SEO"],
-    color: "from-purple-500/20 to-purple-500/5",
+    color: "from-indigo-500/20 to-indigo-500/5",
   },
   {
     id: "startup-pack",

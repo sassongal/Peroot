@@ -144,10 +144,10 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
               else onNavigate("personal");
             }}
             className={cn(
-              "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:outline-none border",
+              "hidden sm:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] min-w-[44px] justify-center sm:justify-start focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:outline-none border",
               viewMode === "personal"
-                ? "bg-purple-500/15 text-purple-500 dark:text-purple-300 border-purple-500/30"
-                : "text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-500/8 border-transparent",
+                ? "bg-indigo-500/15 text-indigo-500 dark:text-indigo-300 border-indigo-500/30"
+                : "text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-500/8 border-transparent",
             )}
             title="גרף הפרומפטים שלי"
             aria-label="פתח גרף הספרייה האישית"

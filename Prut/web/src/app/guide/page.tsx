@@ -281,9 +281,9 @@ const PLATFORMS = [
   },
   {
     name: "Midjourney / DALL-E",
-    color: "from-purple-500/20 to-pink-500/10",
-    border: "border-purple-500/20",
-    dot: "bg-purple-400",
+    color: "from-rose-500/20 to-rose-500/10",
+    border: "border-rose-500/20",
+    dot: "bg-rose-400",
     tips: [
       "תארו סגנון, תאורה, זווית ומצלמה — לא רק את הנושא",
       "השתמשו ב-aspect ratio (--ar 16:9) ו-quality flags (--q 2)",
@@ -700,14 +700,14 @@ export default function GuidePage() {
                 {IMAGE_VIDEO_TIPS.map((tip, i) => (
                   <GlassCard
                     key={i}
-                    className="p-6 md:p-8 bg-linear-to-br from-purple-500/4 to-transparent"
+                    className="p-6 md:p-8 bg-linear-to-br from-rose-500/4 to-transparent"
                   >
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
                         {i < 2 ? (
-                          <Camera className="w-5 h-5 text-purple-400" />
+                          <Camera className="w-5 h-5 text-rose-400" />
                         ) : (
-                          <Video className="w-5 h-5 text-purple-400" />
+                          <Video className="w-5 h-5 text-rose-400" />
                         )}
                       </div>
                       <div>

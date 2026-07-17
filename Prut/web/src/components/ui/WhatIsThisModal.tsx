@@ -38,8 +38,8 @@ const MODES = [
     icon: Palette,
     title: "תמונות",
     desc: "Midjourney, DALL-E, Flux ועוד",
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10",
   },
   {
     icon: Video,
@@ -63,10 +63,12 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
-  // Reset video state when modal closes
-  useEffect(() => {
-    if (!isOpen) setVideoPlaying(false);
-  }, [isOpen]);
+  // Reset video state when the modal is closed — adjust state during render
+  // (React's sanctioned pattern) rather than in an effect, so there's no
+  // cascading-render round-trip.
+  if (!isOpen && videoPlaying) {
+    setVideoPlaying(false);
+  }
 
   // Close on Escape key
   useEffect(() => {

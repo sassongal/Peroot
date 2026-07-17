@@ -111,7 +111,7 @@ function LibraryMockup() {
 function ChainsMockup() {
   const steps = [
     { label: "איסוף מידע", color: "bg-sky-500/20 border-sky-500/40 text-sky-400" },
-    { label: "ניתוח", color: "bg-purple-500/20 border-purple-500/40 text-purple-400" },
+    { label: "ניתוח", color: "bg-rose-500/20 border-rose-500/40 text-rose-400" },
     { label: "כתיבה", color: "bg-amber-500/20 border-amber-500/40 text-amber-400" },
     { label: "עריכה", color: "bg-emerald-500/20 border-emerald-500/40 text-emerald-400" },
   ];
@@ -251,7 +251,7 @@ function VariablesMockup() {
             &#123;נושא&#125;
           </span>
           <span> ל</span>
-          <span className="bg-purple-500/20 border border-purple-500/40 text-purple-400 px-1.5 py-0.5 rounded font-mono">
+          <span className="bg-rose-500/20 border border-rose-500/40 text-rose-400 px-1.5 py-0.5 rounded font-mono">
             &#123;קהל_יעד&#125;
           </span>
         </div>
@@ -259,7 +259,7 @@ function VariablesMockup() {
           {[
             { key: "סוג_תוכן", val: "פוסט לינקדאין", color: "text-sky-400" },
             { key: "נושא", val: "בינה מלאכותית ב-HR", color: "text-amber-400" },
-            { key: "קהל_יעד", val: "מנהלי HR", color: "text-purple-400" },
+            { key: "קהל_יעד", val: "מנהלי HR", color: "text-rose-400" },
           ].map((v) => (
             <div
               key={v.key}
@@ -328,8 +328,8 @@ function SmartImproveMockup() {
     },
     {
       text: "הוסף דוגמה ספציפית",
-      color: "text-purple-400",
-      bg: "bg-purple-500/10 border-purple-500/20",
+      color: "text-rose-400",
+      bg: "bg-rose-500/10 border-rose-500/20",
     },
   ];
   return (
@@ -386,8 +386,8 @@ const WALKTHROUGH = [
     subtitle: "זרימת עבודה אוטומטית בלחיצה אחת",
     description:
       "חברו כמה פרומפטים יחד לתהליך רב-שלבי. הפלט של שלב אחד מזין אוטומטית את הבא — כך שתהליך שלקח שעה הופך לדקה אחת. מושלם לצינורות תוכן, ניתוח שוק, בניית אסטרטגיות.",
-    color: "text-purple-400",
-    accent: "border-purple-500/20 bg-purple-500/5",
+    color: "text-rose-400",
+    accent: "border-rose-500/20 bg-rose-500/5",
     bullets: ["חיבור פרומפטים לרצף", "העברת פלט אוטומטית", "שמירת שרשראות", "הרצה בלחיצה"],
     Mockup: ChainsMockup,
   },
@@ -468,9 +468,9 @@ const WORK_MODES = [
     icon: Palette,
     title: "יצירת תמונות",
     subtitle: "Image Generation",
-    color: "text-purple-400",
-    gradient: "from-purple-500/15 to-purple-500/5",
-    border: "border-purple-500/20",
+    color: "text-rose-400",
+    gradient: "from-rose-500/15 to-rose-500/5",
+    border: "border-rose-500/20",
     platforms: ["Midjourney", "GPT Image 2", "FLUX.2", "Stable Diffusion"],
     bullets: ["ספציפי לכל פלטפורמה", "סגנון ותאורה", "יחס תמונה", "Negative prompts"],
   },

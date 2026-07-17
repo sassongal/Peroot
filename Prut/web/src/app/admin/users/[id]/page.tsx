@@ -167,7 +167,7 @@ function initials(email: string) {
 }
 
 function sourceColor(source: string) {
-  if (source === "extension") return "bg-purple-500/10 border-purple-500/20 text-purple-400";
+  if (source === "extension") return "bg-indigo-500/10 border-indigo-500/20 text-indigo-400";
   return "bg-blue-500/10 border-blue-500/20 text-blue-400";
 }
 
@@ -690,7 +690,7 @@ export default function UserDetailPage() {
                                     <div
                                       className={cn(
                                         "h-full rounded-full transition-all",
-                                        src === "extension" ? "bg-purple-500/60" : "bg-blue-500/60",
+                                        src === "extension" ? "bg-indigo-500/60" : "bg-blue-500/60",
                                       )}
                                       style={{ width: `${pct}%` }}
                                     />
@@ -1147,7 +1147,7 @@ export default function UserDetailPage() {
                           <span className="text-xs font-mono text-blue-400 text-right">
                             {call.input_tokens.toLocaleString()}
                           </span>
-                          <span className="text-xs font-mono text-purple-400 text-right">
+                          <span className="text-xs font-mono text-indigo-400 text-right">
                             {call.output_tokens.toLocaleString()}
                           </span>
                           <span className="text-xs font-mono text-emerald-400 text-right">
@@ -1375,7 +1375,7 @@ function QuickStat({
 }) {
   const colors: Record<string, string> = {
     blue: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-    purple: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+    purple: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20",
     emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
     amber: "text-amber-500 bg-amber-500/10 border-amber-500/20",
   };
@@ -1406,7 +1406,7 @@ function Panel({
 }) {
   const iconColors: Record<string, string> = {
     blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    purple: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
     amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   };
 

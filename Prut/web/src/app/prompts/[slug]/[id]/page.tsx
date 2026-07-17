@@ -48,7 +48,7 @@ interface RelatedRow {
 const CAPABILITY_BADGE: Record<string, { label: string; className: string }> = {
   IMAGE_GENERATION: {
     label: "יצירת תמונה",
-    className: "bg-purple-500/10 text-purple-300 border-purple-500/20",
+    className: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20",
   },
   DEEP_RESEARCH: {
     label: "מחקר מעמיק",

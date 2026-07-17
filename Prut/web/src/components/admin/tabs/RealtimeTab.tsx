@@ -59,7 +59,7 @@ const ACTION_COLORS: Record<string, { bg: string; text: string; dot: string }> =
   update: { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-500" },
   delete: { bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-500" },
   view: { bg: "bg-zinc-500/10", text: "text-zinc-400", dot: "bg-zinc-500" },
-  login: { bg: "bg-purple-500/10", text: "text-purple-400", dot: "bg-purple-500" },
+  login: { bg: "bg-indigo-500/10", text: "text-indigo-400", dot: "bg-indigo-500" },
   logout: { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-500" },
   api: { bg: "bg-cyan-500/10", text: "text-cyan-400", dot: "bg-cyan-500" },
   error: { bg: "bg-red-500/10", text: "text-red-400", dot: "bg-red-500" },
@@ -112,7 +112,7 @@ function CounterCard({
       text: "text-white",
     },
     purple: {
-      icon: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+      icon: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
       text: "text-white",
     },
     amber: {
@@ -168,7 +168,7 @@ function SectionTitle({
   const colorMap: Record<string, string> = {
     blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
     emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    purple: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
     amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   };
   return (

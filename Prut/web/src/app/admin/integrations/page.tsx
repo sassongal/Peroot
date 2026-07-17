@@ -323,10 +323,10 @@ const ACCENT_COLORS = {
     hover: "hover:border-amber-500/20",
   },
   purple: {
-    bg: "bg-purple-500/10",
-    border: "border-purple-500/20",
-    text: "text-purple-400",
-    hover: "hover:border-purple-500/20",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/20",
+    text: "text-indigo-400",
+    hover: "hover:border-indigo-500/20",
   },
   emerald: {
     bg: "bg-emerald-500/10",

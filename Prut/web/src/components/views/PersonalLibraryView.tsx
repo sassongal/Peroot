@@ -805,7 +805,7 @@ export function PersonalLibraryView({
               },
               {
                 Icon: Network,
-                color: "text-purple-500",
+                color: "text-indigo-500",
                 label: "גרף ידע — ויזואליזציה של הקשרים בין הפרומפטים",
               },
               { Icon: History, color: "text-blue-500", label: "היסטוריה — כל הפרומפטים שיצרת" },

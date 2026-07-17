@@ -91,7 +91,7 @@ export const DAYS_SHORT = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳
 
 export const CATEGORY_COLORS: string[] = [
   "bg-blue-500",
-  "bg-purple-500",
+  "bg-indigo-500",
   "bg-emerald-500",
   "bg-amber-500",
   "bg-rose-500",

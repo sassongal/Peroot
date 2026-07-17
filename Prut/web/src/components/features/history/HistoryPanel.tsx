@@ -25,29 +25,29 @@ import { toast } from "sonner";
 
 // Category color mapping for inline-start border accent stripes (RTL-safe logical property)
 const CATEGORY_COLORS: Record<string, string> = {
-  Marketing: "border-s-rose-500",
-  Sales: "border-s-orange-500",
-  CustomerSupport: "border-s-teal-500",
-  Product: "border-s-blue-500",
-  Operations: "border-s-slate-400",
-  HR: "border-s-pink-500",
-  Dev: "border-s-emerald-500",
-  Education: "border-s-indigo-500",
-  Legal: "border-s-gray-400",
-  Creative: "border-s-purple-500",
-  Social: "border-s-sky-500",
-  General: "border-s-amber-500",
-  Finance: "border-s-green-500",
-  Healthcare: "border-s-red-400",
-  Ecommerce: "border-s-yellow-500",
-  RealEstate: "border-s-stone-400",
-  Strategy: "border-s-violet-500",
-  Design: "border-s-fuchsia-500",
-  Data: "border-s-cyan-500",
-  Automation: "border-s-lime-500",
-  Community: "border-s-amber-400",
-  Nonprofit: "border-s-emerald-400",
-  None: "border-s-white/20",
+  Marketing: "bg-rose-500",
+  Sales: "bg-orange-500",
+  CustomerSupport: "bg-teal-500",
+  Product: "bg-blue-500",
+  Operations: "bg-slate-400",
+  HR: "bg-pink-500",
+  Dev: "bg-emerald-500",
+  Education: "bg-indigo-500",
+  Legal: "bg-gray-400",
+  Creative: "bg-indigo-500",
+  Social: "bg-sky-500",
+  General: "bg-amber-500",
+  Finance: "bg-green-500",
+  Healthcare: "bg-red-400",
+  Ecommerce: "bg-yellow-500",
+  RealEstate: "bg-stone-400",
+  Strategy: "bg-indigo-500",
+  Design: "bg-indigo-500",
+  Data: "bg-cyan-500",
+  Automation: "bg-lime-500",
+  Community: "bg-amber-400",
+  Nonprofit: "bg-emerald-400",
+  None: "bg-white/20",
 };
 
 interface HistoryPanelProps {
@@ -193,7 +193,7 @@ export function HistoryPanel({
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="glass-card rounded-xl p-4 animate-pulse border-s-2 border-s-black/10 dark:border-s-white/10"
+                className="glass-card rounded-xl p-4 animate-pulse border border-(--glass-border)"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="h-4 bg-black/5 dark:bg-white/10 rounded-full w-16" />
@@ -240,15 +240,14 @@ export function HistoryPanel({
         )}
 
         {filteredHistory.map((item, index) => {
-          const categoryColor = CATEGORY_COLORS[item.category] || "border-s-white/20";
+          const categoryColor = CATEGORY_COLORS[item.category] || "bg-white/20";
           const isFirst = index === 0;
 
           return (
             <div
               key={item.id}
               className={cn(
-                "rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-4 hover:bg-black/6 dark:hover:bg-white/5 transition-all border-s-2 cursor-pointer",
-                categoryColor,
+                "rounded-xl border border-(--glass-border) bg-black/5 dark:bg-black/30 p-4 hover:bg-black/6 dark:hover:bg-white/5 transition-all cursor-pointer",
                 isFirst && "border-black/15 dark:border-white/20 bg-black/3 dark:bg-white/3",
               )}
               onClick={() => {
@@ -258,6 +257,10 @@ export function HistoryPanel({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
+                  <span
+                    className={cn("inline-block w-1.5 h-1.5 rounded-full shrink-0", categoryColor)}
+                    aria-hidden
+                  />
                   <span
                     className={cn(
                       "text-[10px] px-2 py-0.5 rounded-full border text-(--text-muted)",

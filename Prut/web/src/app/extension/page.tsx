@@ -94,9 +94,9 @@ const KEY_FEATURES = [
     title: "עיצוב עברי-first",
     description:
       "הפאנל פותח מהצד הנכון, הטקסט קרוא מימין לשמאל, והממשק כולו נבנה לחוויה עברית. לא תרגום - מוצר שנולד בעברית.",
-    color: "text-purple-400",
-    gradient: "from-purple-500/10 to-purple-500/5",
-    border: "border-purple-500/20",
+    color: "text-amber-400",
+    gradient: "from-amber-500/10 to-amber-500/5",
+    border: "border-amber-500/20",
   },
 ];
 
@@ -221,9 +221,7 @@ export default function ExtensionPage() {
                       <Icon className="w-6 h-6" />
                     </div>
                     <h3 className="text-base font-bold text-foreground">{s.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {s.desc}
-                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
                   </div>
                 );
               })}
@@ -236,9 +234,7 @@ export default function ExtensionPage() {
               <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
                 מה בתוסף?
               </h2>
-              <p className="text-muted-foreground text-sm">
-                כל מה שציפיתם שיהיה - ועוד קצת
-              </p>
+              <p className="text-muted-foreground text-sm">כל מה שציפיתם שיהיה - ועוד קצת</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -255,9 +251,7 @@ export default function ExtensionPage() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-bold text-foreground">{f.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {f.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
                   </div>
                 );
               })}

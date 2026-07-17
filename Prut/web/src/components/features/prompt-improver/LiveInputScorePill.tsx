@@ -33,9 +33,9 @@ const LEVEL_STYLES: Record<InputScoreLevel, { chip: string; ring: string; icon: 
     icon: "text-emerald-500",
   },
   elite: {
-    chip: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30",
-    ring: "hover:ring-2 hover:ring-violet-500/30",
-    icon: "text-violet-500",
+    chip: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30",
+    ring: "hover:ring-2 hover:ring-indigo-500/30",
+    icon: "text-indigo-500",
   },
 };
 
@@ -71,44 +71,44 @@ export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePil
           "text-xs md:text-sm font-semibold shrink-0 max-w-full",
           "focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
           style.chip,
-          style.ring
+          style.ring,
         )}
         dir="rtl"
       >
-      <span className={cn("relative flex items-center justify-center", style.icon)}>
-        {score.level === "elite" ? (
-          <Sparkles className="w-4 h-4" />
-        ) : score.level === "high" ? (
-          <TrendingUp className="w-4 h-4" />
-        ) : (
-          <AlertCircle className="w-4 h-4" />
-        )}
-      </span>
+        <span className={cn("relative flex items-center justify-center", style.icon)}>
+          {score.level === "elite" ? (
+            <Sparkles className="w-4 h-4" />
+          ) : score.level === "high" ? (
+            <TrendingUp className="w-4 h-4" />
+          ) : (
+            <AlertCircle className="w-4 h-4" />
+          )}
+        </span>
 
-      <span className="flex items-baseline gap-1.5 shrink-0">
-        <span className="font-black tabular-nums text-sm md:text-base">{score.total}</span>
-        <span className="opacity-70 text-[10px] md:text-xs">/100</span>
-        <span className="opacity-80">· {score.label}</span>
-        {score.domain && PROMPT_DOMAIN_LABELS[score.domain] && (
-          <span className="hidden md:inline opacity-60 text-[10px] border-s border-current/20 ps-1.5">
-            {PROMPT_DOMAIN_LABELS[score.domain]}
+        <span className="flex items-baseline gap-1.5 shrink-0">
+          <span className="font-black tabular-nums text-sm md:text-base">{score.total}</span>
+          <span className="opacity-70 text-[10px] md:text-xs">/100</span>
+          <span className="opacity-80">· {score.label}</span>
+          {score.domain && PROMPT_DOMAIN_LABELS[score.domain] && (
+            <span className="hidden md:inline opacity-60 text-[10px] border-s border-current/20 ps-1.5">
+              {PROMPT_DOMAIN_LABELS[score.domain]}
+            </span>
+          )}
+        </span>
+
+        {topMissing && (
+          <span className="hidden md:inline opacity-80 truncate max-w-[180px] border-s border-current/20 ps-2">
+            {topMissing.title}
           </span>
         )}
-      </span>
 
-      {topMissing && (
-        <span className="hidden md:inline opacity-80 truncate max-w-[180px] border-s border-current/20 ps-2">
-          {topMissing.title}
-        </span>
-      )}
+        {topStrength && !topMissing && (
+          <span className="hidden md:inline opacity-80 truncate max-w-[180px] border-s border-current/20 ps-2">
+            ✓ {topStrength}
+          </span>
+        )}
 
-      {topStrength && !topMissing && (
-        <span className="hidden md:inline opacity-80 truncate max-w-[180px] border-s border-current/20 ps-2">
-          ✓ {topStrength}
-        </span>
-      )}
-
-      <Info className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
+        <Info className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
       </button>
 
       {/* Desktop hover tooltip — top 3 missing items */}
@@ -117,13 +117,13 @@ export function LiveInputScorePill({ score, onOpenBreakdown }: LiveInputScorePil
           className="hidden md:block absolute top-full mt-2 left-0 right-0 min-w-[260px] z-50 bg-(--bg-primary) border border-(--glass-border) rounded-xl shadow-lg p-3 space-y-2"
           dir="rtl"
         >
-          <p className="text-[10px] font-bold text-(--text-muted) uppercase tracking-wider mb-1">מה ישפר את הציון</p>
+          <p className="text-[10px] font-bold text-(--text-muted) uppercase tracking-wider mb-1">
+            מה ישפר את הציון
+          </p>
           {tooltipItems.map((item) => (
             <div key={item.key} className="text-xs">
               <span className="font-semibold text-(--text-primary)">{item.title}</span>
-              {item.why && (
-                <span className="text-(--text-muted)"> — {item.why.slice(0, 80)}</span>
-              )}
+              {item.why && <span className="text-(--text-muted)"> — {item.why.slice(0, 80)}</span>}
             </div>
           ))}
         </div>

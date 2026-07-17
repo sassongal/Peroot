@@ -96,16 +96,16 @@ export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
           onClick={() => setLocalViewType(isGraphActive ? "grid" : "graph")}
           aria-pressed={isGraphActive}
           className={cn(
-            "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 rounded-xl transition-colors",
+            "flex flex-col items-center gap-0.5 px-3 py-1 min-h-[56px] min-w-[56px] justify-center relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 rounded-xl transition-colors",
             isGraphActive
-              ? "text-violet-400 bg-violet-500/10"
+              ? "text-indigo-400 bg-indigo-500/10"
               : "text-(--text-muted) hover:text-(--text-secondary)",
           )}
         >
           <Network className="w-5 h-5" />
           <span className="text-[10px] font-medium">גרף</span>
           {isGraphActive && (
-            <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-violet-400" />
+            <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-indigo-400" />
           )}
         </button>
 

@@ -139,20 +139,20 @@ export function ChainBuilder({
         {/* How-it-works intro card — explains chains in 2-3 lines with a
             concrete example. Collapsible so it doesn't get in the way on
             re-visits. */}
-        <div className="mb-5 rounded-xl border border-purple-500/20 bg-purple-500/5 overflow-hidden">
+        <div className="mb-5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 overflow-hidden">
           <button
             type="button"
             onClick={() => setIntroOpen(!introOpen)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-500/10 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-indigo-500/10 transition-colors"
             aria-expanded={introOpen}
           >
-            <div className="flex items-center gap-2 text-purple-300">
+            <div className="flex items-center gap-2 text-indigo-300">
               <HelpCircle className="w-4 h-4" />
               <span className="text-sm font-medium">איך שרשראות עובדות?</span>
             </div>
             <ChevronDown
               className={cn(
-                "w-4 h-4 text-purple-300 transition-transform",
+                "w-4 h-4 text-indigo-300 transition-transform",
                 introOpen && "rotate-180",
               )}
             />
@@ -165,7 +165,7 @@ export function ChainBuilder({
                 לשלבים קטנים שכל אחד מהם מבצע משהו ממוקד.
               </p>
               <div className="rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-[11px] text-slate-400 space-y-1">
-                <div className="text-purple-300 font-semibold">דוגמה: יצירת פוסט לינקדאין</div>
+                <div className="text-indigo-300 font-semibold">דוגמה: יצירת פוסט לינקדאין</div>
                 <div>
                   1. מחקר על הנושא → 2. חילוץ 3 תובנות מרכזיות → 3. כתיבת טיוטה → 4. חידוד טון → 5.
                   הוספת hook

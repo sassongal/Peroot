@@ -54,8 +54,8 @@ export function ImagePlatformSelector({
                 "flex items-center gap-1.5 rounded-lg border transition-all duration-200 px-2.5 py-1.5 snap-start shrink-0",
                 "hover:scale-[1.02] active:scale-[0.98]",
                 isSelected
-                  ? "border-purple-500/50 bg-purple-500/10 text-purple-700 dark:text-purple-300"
-                  : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-purple-500/30 hover:bg-purple-500/5",
+                  ? "border-indigo-500/50 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+                  : "border-(--glass-border) bg-(--glass-bg) text-(--text-muted) hover:border-indigo-500/30 hover:bg-indigo-500/5",
                 disabled && "opacity-50 cursor-not-allowed",
               )}
               aria-pressed={isSelected}
@@ -88,7 +88,7 @@ export function ImagePlatformSelector({
               className={cn(
                 "px-2.5 py-1 text-[11px] font-medium transition-colors",
                 outputFormat === "text"
-                  ? "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+                  ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300"
                   : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
               )}
             >
@@ -101,7 +101,7 @@ export function ImagePlatformSelector({
               className={cn(
                 "px-2.5 py-1 text-[11px] font-medium transition-colors",
                 outputFormat === "json"
-                  ? "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+                  ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300"
                   : "text-(--text-muted) hover:bg-black/5 dark:hover:bg-white/5",
               )}
             >
@@ -125,7 +125,7 @@ export function ImagePlatformSelector({
                 className={cn(
                   "px-2.5 py-1 text-[11px] font-medium transition-colors",
                   aspectRatio === option.value
-                    ? "bg-purple-500/20 text-purple-300"
+                    ? "bg-indigo-500/20 text-indigo-300"
                     : "text-slate-400 hover:bg-white/5",
                 )}
               >
