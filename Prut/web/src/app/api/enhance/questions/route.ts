@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 import { AIGateway } from "@/lib/ai/gateway";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { withUser } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
 import type { Question } from "@/lib/types";
 
@@ -119,77 +118,72 @@ function parseQuestionsFromText(text: string): Question[] {
     }));
 }
 
-export async function POST(request: NextRequest) {
-  let body: z.infer<typeof Schema>;
-  try {
-    const raw = await request.json();
-    const result = Schema.safeParse(raw);
-    if (!result.success) {
+export const POST = withUser(
+  async (request, _ctx) => {
+    let body: z.infer<typeof Schema>;
+    try {
+      const raw = await request.json();
+      const result = Schema.safeParse(raw);
+      if (!result.success) {
+        return NextResponse.json({ error: "גוף הבקשה אינו תקין" }, { status: 400 });
+      }
+      body = result.data;
+    } catch {
       return NextResponse.json({ error: "גוף הבקשה אינו תקין" }, { status: 400 });
     }
-    body = result.data;
-  } catch {
-    return NextResponse.json({ error: "גוף הבקשה אינו תקין" }, { status: 400 });
-  }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "נדרשת התחברות" }, { status: 401 });
-  }
+    const { prompt, enhancedPrompt, category, tone, context, previousQuestionIds = [] } = body;
 
-  const rl = await checkRateLimit(user.id, "questions");
-  if (!rl.success) {
-    return NextResponse.json({ questions: [] }, { status: 200 });
-  }
+    const contextSummary = context
+      ? context
+          .map((c) => {
+            const title = c.display?.title ?? c.type;
+            const text = c.display?.rawText ?? c.display?.summary ?? "";
+            return text ? `[${title}] ${text.slice(0, 500)}` : null;
+          })
+          .filter(Boolean)
+          .join("\n")
+      : "";
 
-  const { prompt, enhancedPrompt, category, tone, context, previousQuestionIds = [] } = body;
+    const userMessage = buildUserMessage(
+      prompt,
+      enhancedPrompt,
+      category,
+      tone,
+      !!(context && context.length > 0),
+      previousQuestionIds,
+      contextSummary,
+    );
 
-  const contextSummary = context
-    ? context
-        .map((c) => {
-          const title = c.display?.title ?? c.type;
-          const text = c.display?.rawText ?? c.display?.summary ?? "";
-          return text ? `[${title}] ${text.slice(0, 500)}` : null;
-        })
-        .filter(Boolean)
-        .join("\n")
-    : "";
-
-  const userMessage = buildUserMessage(
-    prompt,
-    enhancedPrompt,
-    category,
-    tone,
-    !!(context && context.length > 0),
-    previousQuestionIds,
-    contextSummary,
-  );
-
-  try {
-    const result = await AIGateway.generateFull({
-      system: SYSTEM_PROMPT,
-      prompt: userMessage,
-      task: "classify",
-      preferredModel: "gemini-2.5-flash-lite",
-      maxOutputTokens: 1024,
-      temperature: 0.6,
-    });
-
-    let questions: Question[] = [];
     try {
-      questions = parseQuestionsFromText(result.text);
-    } catch {
-      logger.warn("[enhance/questions] Failed to parse questions JSON", {
-        text: result.text.slice(0, 200),
+      const result = await AIGateway.generateFull({
+        system: SYSTEM_PROMPT,
+        prompt: userMessage,
+        task: "classify",
+        preferredModel: "gemini-2.5-flash-lite",
+        maxOutputTokens: 1024,
+        temperature: 0.6,
       });
-    }
 
-    return NextResponse.json({ questions });
-  } catch (err) {
-    logger.error("[enhance/questions] Generation failed", err);
-    return NextResponse.json({ questions: [] });
-  }
-}
+      let questions: Question[] = [];
+      try {
+        questions = parseQuestionsFromText(result.text);
+      } catch {
+        logger.warn("[enhance/questions] Failed to parse questions JSON", {
+          text: result.text.slice(0, 200),
+        });
+      }
+
+      return NextResponse.json({ questions });
+    } catch (err) {
+      logger.error("[enhance/questions] Generation failed", err);
+      return NextResponse.json({ questions: [] });
+    }
+  },
+  {
+    rateLimit: "questions",
+    // Background suggestions must never fail the enhance flow: on a rate-limit
+    // hit, degrade to an empty question list at 200 rather than a 429.
+    onRateLimit: () => NextResponse.json({ questions: [] }),
+  },
+);

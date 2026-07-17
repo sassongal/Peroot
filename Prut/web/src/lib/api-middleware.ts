@@ -135,6 +135,12 @@ export interface WithUserOptions {
    * `({ user }) => \`achievement:${user!.id}\``.
    */
   rateLimitKey?: (args: { user: User | null; ip: string | null }) => string;
+  /**
+   * Graceful-degradation response for a rate-limit hit, in place of the standard
+   * 429. Use for routes that must never fail the caller — e.g. background
+   * suggestions returning `() => NextResponse.json({ questions: [] })`.
+   */
+  onRateLimit?: () => Response;
   /** Credits to charge (opt-in). Charged only on a 2xx; auto-refunded otherwise. */
   credits?: number;
   /** Allow unauthenticated requests (rate-limited by IP). Default false. */
@@ -279,6 +285,7 @@ export function withUser<C = unknown>(
         }
         const rl = await deps.checkRateLimit(identifier, bucket);
         if (!rl.success) {
+          if (opts.onRateLimit) return opts.onRateLimit();
           return errors.rateLimited({ reset: rl.reset, limit: rl.limit, remaining: rl.remaining });
         }
       }
