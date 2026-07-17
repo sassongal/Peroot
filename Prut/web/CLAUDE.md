@@ -126,13 +126,10 @@ middleware.ts               # Auth guard + CSRF + maintenance mode
 
 ---
 
-## Hybrid CPU Offload (Cloudflare Workers)
-The two heaviest extraction routes (`/api/context/extract-{url,file}`) offload jsdom/pdfjs/mammoth/xlsx parsing to sibling Cloudflare Workers when these env vars are set:
-- `EXTRACT_URL_HTTP_ENDPOINT` → https://peroot-extract-url.gal-f78.workers.dev
-- `EXTRACT_FILE_HTTP_ENDPOINT` → https://peroot-extract-file.gal-f78.workers.dev
-- `EXTRACT_SECRET` (shared HMAC; set in Vercel + as a Wrangler secret on each Worker)
+## Context Extraction (in-process)
+Both extraction routes (`/api/context/extract-{url,file}`) parse jsdom/pdfjs/mammoth/xlsx **in-process on Vercel**. The pipeline lives under `src/lib/context/engine/extract/` (`url`, `file-pdf`, `file-office`, `file-text`, `image`, `index`).
 
-Bridge: `src/lib/context/engine/extract/remote.ts` (fetch + FormData only — no heavy deps). Dispatch is gated in `src/lib/context/engine/index.ts`. Unset env → in-process fallback (zero behavior change). Worker source lives on the `cloudflare-migration` archive branch under `extract-url-worker/` and `extract-file-worker/`.
+> Historical note: a Cloudflare Workers CPU-offload bridge (`extract/remote.ts`, gated on `EXTRACT_URL_HTTP_ENDPOINT` / `EXTRACT_FILE_HTTP_ENDPOINT` / `EXTRACT_SECRET`) existed briefly but was **removed** (commit `c5681e4`, "delete CF Worker remote bridge — extraction runs in-process on Vercel Pro"). No `remote.ts` and no `EXTRACT_*` env vars are referenced in the tree anymore. Worker source remains only on the `cloudflare-migration` archive branch.
 
 ---
 
