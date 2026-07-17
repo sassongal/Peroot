@@ -17,15 +17,20 @@
 -- ============================================================================
 
 -- SECTION 1 — CRITICAL: revoke over-exposed privileged functions ---------------
-REVOKE EXECUTE ON FUNCTION public.grant_admin_role(uuid)                         FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.revoke_admin_role(uuid)                        FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.admin_change_tier(uuid, text)                  FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.admin_adjust_credits(uuid, integer)           FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.sync_admin_app_metadata()                      FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.log_credit_change(uuid, integer, integer, text, text) FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.refund_credit(uuid, integer)                   FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.check_and_decrement_credits(uuid, integer)     FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.decrement_credits(uuid, integer)              FROM anon, authenticated;
+-- Revoke from PUBLIC (not just anon/authenticated): these functions carry the
+-- Postgres default PUBLIC EXECUTE grant, so revoking only anon/authenticated
+-- leaves them reachable via the PUBLIC role. service_role keeps its own
+-- explicit grant, so the app (which calls these via createServiceClient) is
+-- unaffected.
+REVOKE EXECUTE ON FUNCTION public.grant_admin_role(uuid)                         FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.revoke_admin_role(uuid)                        FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.admin_change_tier(uuid, text)                  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.admin_adjust_credits(uuid, integer)           FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.sync_admin_app_metadata()                      FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.log_credit_change(uuid, integer, integer, text, text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.refund_credit(uuid, integer)                   FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.check_and_decrement_credits(uuid, integer)     FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.decrement_credits(uuid, integer)              FROM PUBLIC, anon, authenticated;
 
 -- SECTION 2 — pin search_path -------------------------------------------------
 ALTER FUNCTION public.sync_admin_app_metadata()                SET search_path TO 'public';
