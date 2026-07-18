@@ -29,6 +29,26 @@ adapter, leverage, locality) follows the `/codebase-design` skill.
 
 ## Seams
 
+### Extraction  ·  `extract()`  *(deepened 2026-07-18)*
+
+The seam at which an untrusted source (url / file / image) becomes normalized
+text (or image bytes) the pipeline can enrich. `src/lib/context/engine/extract`.
+
+- **Interface:** one `extract(input: ExtractInput) → ExtractResult`. `ExtractInput`
+  is discriminated by `kind` ("url" | "file" | "image"); `ExtractResult` is flat —
+  `{ text; imageBase64?; imageMimeType?; metadata }`. One dispatch site; the five
+  per-source adapters (url, pdf, text, office, image) all speak this one type.
+- **Invariants owned here:** every adapter bounds its memory through
+  `extract/limits.ts` (streaming `readCapped` for HTTP bodies; `assertArchiveWithinLimit`
+  zip-bomb guard for docx/xlsx) — the contract, not per-adapter ad-hoc caps.
+- **Adjacent tables it feeds:** `capability.ts` — one exhaustive
+  `Record<DocumentType, {compression, enrichPrompt, role, priority}>` (replaces four
+  scattered switches; drift is now a compile error). `stage.ts` — `blockStatus(stage)`,
+  the single home of the "warning counts as ready" rule, client-safe so React shares it.
+- **Deliberately outside:** `processAttachment` orchestration, `enrich`, `cache`,
+  `inject` stay. The `context/extract-*` routes keep their own auth (not `withUser`)
+  because they stream SSE with an extraction-quota system, not credits.
+
 ### Credit-gated endpoint  ·  `withUser`  *(designed 2026-07-17; not yet built)*
 
 The seam at which an **authenticated (or guest-allowed) API request** becomes a
