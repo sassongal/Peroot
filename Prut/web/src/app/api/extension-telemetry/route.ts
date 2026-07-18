@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
-import { checkRateLimit } from "@/lib/ratelimit";
 import { logger } from "@/lib/logger";
+import { withUser } from "@/lib/api-middleware";
 
 export const dynamic = "force-dynamic";
 
@@ -48,54 +46,54 @@ const Body = z.object({
     .optional(),
 });
 
-export async function POST(req: Request): Promise<NextResponse> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-
-  const rl = await checkRateLimit(`ext-tel:${user.id}`, "free");
-  if (!rl.success) {
-    return NextResponse.json({ error: "Too many requests", retryAfter: rl.reset }, { status: 429 });
-  }
-
-  let payload: z.infer<typeof Body>;
-  try {
-    payload = Body.parse(await req.json());
-  } catch (err) {
-    // Don't echo Zod's full error to the client — only surface the field paths
-    // so callers can fix bad inputs without us reflecting the values back.
-    const fields =
-      err instanceof z.ZodError
-        ? err.issues.map((i) => i.path.join(".")).filter(Boolean)
-        : undefined;
-    return NextResponse.json(
-      { error: "Invalid body", ...(fields && fields.length ? { fields } : {}) },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const service = createServiceClient();
-    const { error } = await service.from("extension_telemetry_events").insert({
-      user_id: user.id,
-      event: payload.event,
-      site: payload.site ?? null,
-      ext_version: payload.ext_version ?? null,
-      target_model: payload.target_model ?? null,
-      latency_ms: payload.latency_ms ?? null,
-      success: payload.success ?? null,
-      chain_index: payload.chain_index ?? null,
-      meta: payload.meta ?? {},
-    });
-    if (error) {
-      logger.warn("[extension-telemetry] insert failed", { error: error.message });
-      return NextResponse.json({ error: "Insert failed" }, { status: 500 });
+/**
+ * POST /api/extension-telemetry
+ * withUser owns auth + a per-user free-bucket rate limit (keyed ext-tel:<uid>).
+ * Events are written via the service-role client (forceServiceClient), scoped to
+ * ctx.user.id.
+ */
+export const POST = withUser(
+  async (req, ctx): Promise<Response> => {
+    let payload: z.infer<typeof Body>;
+    try {
+      payload = Body.parse(await req.json());
+    } catch (err) {
+      // Only surface the field paths, never the reflected values.
+      const fields =
+        err instanceof z.ZodError
+          ? err.issues.map((i) => i.path.join(".")).filter(Boolean)
+          : undefined;
+      return NextResponse.json(
+        { error: "Invalid body", ...(fields && fields.length ? { fields } : {}) },
+        { status: 400 },
+      );
     }
-    return new NextResponse(null, { status: 204 });
-  } catch (err) {
-    logger.error("[extension-telemetry] threw", { err: (err as Error).message });
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
-  }
-}
+
+    try {
+      const { error } = await ctx.db.from("extension_telemetry_events").insert({
+        user_id: ctx.user!.id,
+        event: payload.event,
+        site: payload.site ?? null,
+        ext_version: payload.ext_version ?? null,
+        target_model: payload.target_model ?? null,
+        latency_ms: payload.latency_ms ?? null,
+        success: payload.success ?? null,
+        chain_index: payload.chain_index ?? null,
+        meta: payload.meta ?? {},
+      });
+      if (error) {
+        logger.warn("[extension-telemetry] insert failed", { error: error.message });
+        return NextResponse.json({ error: "Insert failed" }, { status: 500 });
+      }
+      return new NextResponse(null, { status: 204 });
+    } catch (err) {
+      logger.error("[extension-telemetry] threw", { err: (err as Error).message });
+      return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    }
+  },
+  {
+    rateLimit: "free",
+    rateLimitKey: ({ user }) => `ext-tel:${user!.id}`,
+    forceServiceClient: true,
+  },
+);

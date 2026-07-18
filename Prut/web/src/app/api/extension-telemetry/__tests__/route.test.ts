@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
@@ -29,7 +30,7 @@ function mockAuth(userId: string | null) {
 }
 
 function makeReq(body: unknown) {
-  return new Request("http://localhost/api/extension-telemetry", {
+  return new NextRequest("http://localhost/api/extension-telemetry", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
@@ -61,6 +62,7 @@ describe("POST /api/extension-telemetry", () => {
         latency_ms: 12,
         success: false,
       }),
+      {},
     );
     expect(res.status).toBe(204);
     expect(insertMock).toHaveBeenCalledTimes(1);
@@ -70,7 +72,7 @@ describe("POST /api/extension-telemetry", () => {
   });
 
   it("rejects unknown event types with 400", async () => {
-    const res = await POST(makeReq({ event: "haxx" }));
+    const res = await POST(makeReq({ event: "haxx" }), {});
     expect(res.status).toBe(400);
     expect(insertMock).not.toHaveBeenCalled();
   });
@@ -82,13 +84,13 @@ describe("POST /api/extension-telemetry", () => {
       remaining: 0,
       reset: 60,
     });
-    const res = await POST(makeReq({ event: "chip_click", site: "claude" }));
+    const res = await POST(makeReq({ event: "chip_click", site: "claude" }), {});
     expect(res.status).toBe(429);
   });
 
   it("returns 401 for unauthenticated", async () => {
     mockAuth(null);
-    const res = await POST(makeReq({ event: "chip_click" }));
+    const res = await POST(makeReq({ event: "chip_click" }), {});
     expect(res.status).toBe(401);
   });
 });
