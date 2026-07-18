@@ -34,6 +34,7 @@ interface InputSectionProps {
   selectedCapability: CapabilityMode;
   setSelectedCapability: (cap: CapabilityMode) => void;
   isLoading: boolean;
+  onStop?: () => void;
 
   // Variables
   inputVariables: string[];
@@ -117,6 +118,7 @@ export const InputSection = memo<InputSectionProps>(
     selectedCapability,
     setSelectedCapability,
     isLoading,
+    onStop,
     inputVariables,
     variableValues,
     setVariableValues,
@@ -212,6 +214,7 @@ export const InputSection = memo<InputSectionProps>(
           selectedCapability={selectedCapability}
           setSelectedCapability={setSelectedCapability}
           isLoading={isLoading}
+          onStop={onStop}
           variables={inputVariables}
           variableValues={variableValues}
           setVariableValues={setVariableValues}

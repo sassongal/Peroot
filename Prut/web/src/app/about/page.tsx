@@ -38,7 +38,7 @@ export default function AboutPage() {
         <div className="max-w-3xl mx-auto space-y-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors"
+            className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors py-2 -my-2"
           >
             <ArrowRight className="w-4 h-4" />
             חזרה לדף הבית
@@ -49,16 +49,14 @@ export default function AboutPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-serif text-foreground">הסיפור</h2>
             <p className="text-lg leading-relaxed">
-              Peroot (פירוט) נולד מתוך צורך אמיתי. כשעבדנו עם מודלי AI
-              יום-יום, ראינו שוב ושוב איך פרומפטים גנריים מייצרים תוצאות
-              בינוניות - במיוחד בעברית. הכלים שהיו קיימים בשוק היו כולם באנגלית,
-              ולא הבינו את הניואנסים של השפה העברית.
+              Peroot (פירוט) נולד מתוך צורך אמיתי. כשעבדנו עם מודלי AI יום-יום, ראינו שוב ושוב איך
+              פרומפטים גנריים מייצרים תוצאות בינוניות - במיוחד בעברית. הכלים שהיו קיימים בשוק היו
+              כולם באנגלית, ולא הבינו את הניואנסים של השפה העברית.
             </p>
             <p className="text-lg leading-relaxed">
-              אז בנינו את מה שהיינו רוצים שיהיה לנו: כלי שמבין עברית מהיסוד, לא
-              תרגום מאנגלית. כלי שיודע לשאול את השאלות הנכונות, לבנות מבנה
-              מקצועי, ולהתאים את הפרומפט לכל מודל AI - בין אם זה ChatGPT, Claude,
-              Gemini, או Midjourney.
+              אז בנינו את מה שהיינו רוצים שיהיה לנו: כלי שמבין עברית מהיסוד, לא תרגום מאנגלית. כלי
+              שיודע לשאול את השאלות הנכונות, לבנות מבנה מקצועי, ולהתאים את הפרומפט לכל מודל AI - בין
+              אם זה ChatGPT, Claude, Gemini, או Midjourney.
             </p>
           </section>
 
@@ -81,15 +79,14 @@ export default function AboutPage() {
               - חברת טכנולוגיה ישראלית שמתמחה בפיתוח כלי AI חדשניים.
             </p>
             <p className="text-lg leading-relaxed">
-              ב-JoyaTech אנחנו מאמינים שטכנולוגיה מתקדמת צריכה להיות נגישה
-              לכולם, ובמיוחד לדוברי עברית. המשימה שלנו היא לגשר על הפער
-              הטכנולוגי ולהביא כלים מתקדמים בשפה שלנו - כלים שנבנו מאפס
-              לעברית, לא תרגומים חובבניים מאנגלית.
+              ב-JoyaTech אנחנו מאמינים שטכנולוגיה מתקדמת צריכה להיות נגישה לכולם, ובמיוחד לדוברי
+              עברית. המשימה שלנו היא לגשר על הפער הטכנולוגי ולהביא כלים מתקדמים בשפה שלנו - כלים
+              שנבנו מאפס לעברית, לא תרגומים חובבניים מאנגלית.
             </p>
             <p className="text-lg leading-relaxed">
-              הצוות שלנו משלב ניסיון של שנים בפיתוח תוכנה, בינה מלאכותית,
-              ועיצוב מוצרים דיגיטליים. אנחנו עובדים עם הטכנולוגיות
-              המתקדמות ביותר כדי להפוך רעיונות לכלים שעובדים - פשוט, מהר, ובעברית.
+              הצוות שלנו משלב ניסיון של שנים בפיתוח תוכנה, בינה מלאכותית, ועיצוב מוצרים דיגיטליים.
+              אנחנו עובדים עם הטכנולוגיות המתקדמות ביותר כדי להפוך רעיונות לכלים שעובדים - פשוט,
+              מהר, ובעברית.
             </p>
           </section>
 
@@ -99,31 +96,29 @@ export default function AboutPage() {
               <li className="flex gap-3">
                 <Globe className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-foreground">עברית מהיסוד</strong> - לא
-                  תרגום. המערכת נבנתה לעברית מהשורש, עם הבנה של מבנה השפה
-                  והתרבות.
+                  <strong className="text-foreground">עברית מהיסוד</strong> - לא תרגום. המערכת נבנתה
+                  לעברית מהשורש, עם הבנה של מבנה השפה והתרבות.
                 </span>
               </li>
               <li className="flex gap-3">
                 <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-foreground">כל המודלים, מקום אחד</strong> -
-                  ChatGPT, Claude, Gemini, Midjourney, כלי וידאו AI - הכל תחת
-                  קורת גג אחת.
+                  <strong className="text-foreground">כל המודלים, מקום אחד</strong> - ChatGPT,
+                  Claude, Gemini, Midjourney, כלי וידאו AI - הכל תחת קורת גג אחת.
                 </span>
               </li>
               <li className="flex gap-3">
                 <Users className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-foreground">{PROMPT_LIBRARY_COUNT}+ תבניות מוכנות</strong> -
-                  ספרייה מקצועית ב-30+ קטגוריות לכל תחום עיסוק.
+                  <strong className="text-foreground">{PROMPT_LIBRARY_COUNT}+ תבניות מוכנות</strong>{" "}
+                  - ספרייה מקצועית ב-30+ קטגוריות לכל תחום עיסוק.
                 </span>
               </li>
               <li className="flex gap-3">
                 <Rocket className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-foreground">דירוג איכות בזמן אמת</strong> -
-                  המערכת מודדת כל פרומפט ומציעה שיפורים מיידיים.
+                  <strong className="text-foreground">דירוג איכות בזמן אמת</strong> - המערכת מודדת
+                  כל פרומפט ומציעה שיפורים מיידיים.
                 </span>
               </li>
             </ul>
@@ -132,20 +127,15 @@ export default function AboutPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-serif text-foreground">המשימה שלנו</h2>
             <p className="text-lg leading-relaxed">
-              לאפשר לכל דובר עברית להפיק את המקסימום מכלי AI - בלי לדעת אנגלית,
-              בלי להבין prompt engineering, ובלי לבזבז זמן על ניסוי וטעייה.
-              אנחנו ב-JoyaTech מפתחים את הדור הבא של כלי AI בעברית, ו-Peroot הוא
-              רק ההתחלה.
+              לאפשר לכל דובר עברית להפיק את המקסימום מכלי AI - בלי לדעת אנגלית, בלי להבין prompt
+              engineering, ובלי לבזבז זמן על ניסוי וטעייה. אנחנו ב-JoyaTech מפתחים את הדור הבא של
+              כלי AI בעברית, ו-Peroot הוא רק ההתחלה.
             </p>
           </section>
 
           <section className="border-t border-border pt-8 mt-8">
-            <h2 className="text-2xl font-serif text-foreground mb-4">
-              רוצים ליצור קשר?
-            </h2>
-            <p className="text-lg mb-4">
-              שאלות, הצעות, שיתופי פעולה - תמיד שמחים לשמוע.
-            </p>
+            <h2 className="text-2xl font-serif text-foreground mb-4">רוצים ליצור קשר?</h2>
+            <p className="text-lg mb-4">שאלות, הצעות, שיתופי פעולה - תמיד שמחים לשמוע.</p>
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/contact"

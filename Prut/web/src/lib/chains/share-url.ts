@@ -10,38 +10,44 @@
  * Shape: https://peroot.space/?chain=<base64url>
  */
 
-import type { PromptChain } from '@/hooks/useChains';
+import type { PromptChain } from "@/hooks/useChains";
 
 interface SharedChainPayload {
   title: string;
   description?: string;
-  steps: PromptChain['steps'];
+  steps: PromptChain["steps"];
   /** Protocol version — bump if we ever change the shape. */
   v: 1;
 }
 
 function toBase64Url(str: string): string {
-  if (typeof window === 'undefined') {
-    return Buffer.from(str, 'utf-8')
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
+  if (typeof window === "undefined") {
+    return Buffer.from(str, "utf-8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
   }
   // btoa can't handle unicode directly — round-trip via encodeURIComponent
   const utf8 = unescape(encodeURIComponent(str));
-  return btoa(utf8).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(utf8).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function fromBase64Url(b64: string): string {
-  const padded = b64.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((b64.length + 3) % 4);
-  if (typeof window === 'undefined') {
-    return Buffer.from(padded, 'base64').toString('utf-8');
+  const padded = b64.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b64.length + 3) % 4);
+  if (typeof window === "undefined") {
+    return Buffer.from(padded, "base64").toString("utf-8");
   }
   return decodeURIComponent(escape(atob(padded)));
 }
 
-export function buildChainShareUrl(chain: PromptChain, origin?: string): string {
+/** Max in-URL payload length. Browsers/servers truncate very long URLs, which
+ *  would make the recipient's `?chain=` decode silently fail. */
+const CHAIN_URL_MAX = 2000;
+
+/** Returns the share URL, or null if the encoded chain is too long to fit safely
+ *  in a URL (the caller should fall back to file/JSON export). */
+export function buildChainShareUrl(chain: PromptChain, origin?: string): string | null {
   const payload: SharedChainPayload = {
     v: 1,
     title: chain.title,
@@ -50,8 +56,10 @@ export function buildChainShareUrl(chain: PromptChain, origin?: string): string 
     steps: chain.steps.map(({ ...rest }) => rest),
   };
   const encoded = toBase64Url(JSON.stringify(payload));
-  const base = origin ?? (typeof window !== 'undefined' ? window.location.origin : 'https://peroot.space');
-  return `${base}/?chain=${encoded}`;
+  const base =
+    origin ?? (typeof window !== "undefined" ? window.location.origin : "https://peroot.space");
+  const url = `${base}/?chain=${encoded}`;
+  return url.length > CHAIN_URL_MAX ? null : url;
 }
 
 export function decodeSharedChain(encoded: string): SharedChainPayload | null {

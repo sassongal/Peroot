@@ -1,7 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Play, ChevronLeft, Check, Copy, ArrowDown, Search, FileText, Image, Video, Bot, RotateCcw, ExternalLink, Share2 } from "lucide-react";
+import {
+  X,
+  Play,
+  ChevronLeft,
+  Check,
+  Copy,
+  ArrowDown,
+  Search,
+  FileText,
+  Image,
+  Video,
+  Bot,
+  RotateCcw,
+  ExternalLink,
+  Share2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PromptChain } from "@/hooks/useChains";
 import { buildChainShareUrl } from "@/lib/chains/share-url";
@@ -28,8 +43,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
   const chainCompleteTracked = useRef(false);
 
-  const allCompleted =
-    chain.steps.length > 0 && completedSteps.size === chain.steps.length;
+  const allCompleted = chain.steps.length > 0 && completedSteps.size === chain.steps.length;
   useEffect(() => {
     if (allCompleted && !chainCompleteTracked.current) {
       chainCompleteTracked.current = true;
@@ -41,7 +55,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   if (!step) return null;
 
   const markCompleteAndNext = () => {
-    setCompletedSteps(prev => new Set([...prev, currentStep]));
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
     if (currentStep < chain.steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -74,13 +88,17 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   const handleShare = async () => {
     try {
       const url = buildChainShareUrl(chain);
+      if (!url) {
+        toast.error("השרשרת ארוכה מדי לשיתוף בקישור. השתמשו בייצוא לקובץ.");
+        return;
+      }
       // Prefer native share sheet on mobile (iOS/Android), fall back to
       // clipboard on desktop so the user can paste into chat/email.
-      if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      if (typeof navigator !== "undefined" && "share" in navigator) {
         try {
           await navigator.share({
             title: `שרשרת: ${chain.title}`,
-            text: chain.description || 'שרשרת פרומפטים מ-Peroot',
+            text: chain.description || "שרשרת פרומפטים מ-Peroot",
             url,
           });
           return;
@@ -89,9 +107,9 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         }
       }
       await navigator.clipboard.writeText(url);
-      toast.success('קישור לשיתוף הועתק ללוח');
+      toast.success("קישור לשיתוף הועתק ללוח");
     } catch {
-      toast.error('שיתוף נכשל');
+      toast.error("שיתוף נכשל");
     }
   };
 
@@ -99,21 +117,21 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   // Claude both accept a `?q=` style deep-link but use different query
   // param names. We fall back to URL-encoded clipboard + toast when the
   // platform doesn't support a prompt deep-link (e.g. Gemini).
-  const openInLLM = (target: 'chatgpt' | 'claude' | 'gemini', text: string) => {
+  const openInLLM = (target: "chatgpt" | "claude" | "gemini", text: string) => {
     const encoded = encodeURIComponent(text);
     let url: string | null = null;
-    if (target === 'chatgpt') {
+    if (target === "chatgpt") {
       url = `https://chat.openai.com/?q=${encoded}`;
-    } else if (target === 'claude') {
+    } else if (target === "claude") {
       url = `https://claude.ai/new?q=${encoded}`;
-    } else if (target === 'gemini') {
+    } else if (target === "gemini") {
       url = `https://gemini.google.com/app`;
       // Gemini doesn't accept a prefill param — copy + open
       void navigator.clipboard.writeText(text);
       toast.success("הפרומפט הועתק — הדבק ב-Gemini");
     }
     if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -123,26 +141,29 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
   // user one tab per step with the resolved prompt pre-filled. For
   // Gemini we fall back to concatenating all steps into clipboard and
   // opening a single tab, since Gemini has no query param.
-  const openAllStepsInLLM = (target: 'chatgpt' | 'claude' | 'gemini') => {
-    if (target === 'gemini') {
+  const openAllStepsInLLM = (target: "chatgpt" | "claude" | "gemini") => {
+    if (target === "gemini") {
       const all = chain.steps
         .map((_, i) => `## שלב ${i + 1}\n${getResolvedPrompt(i)}`)
-        .join('\n\n---\n\n');
+        .join("\n\n---\n\n");
       void navigator.clipboard.writeText(all);
-      window.open('https://gemini.google.com/app', '_blank', 'noopener,noreferrer');
-      toast.success('כל השלבים הועתקו — הדבק ב-Gemini');
+      window.open("https://gemini.google.com/app", "_blank", "noopener,noreferrer");
+      toast.success("כל השלבים הועתקו — הדבק ב-Gemini");
       return;
     }
     chain.steps.forEach((_, i) => {
       const encoded = encodeURIComponent(getResolvedPrompt(i));
-      const url = target === 'chatgpt'
-        ? `https://chat.openai.com/?q=${encoded}`
-        : `https://claude.ai/new?q=${encoded}`;
+      const url =
+        target === "chatgpt"
+          ? `https://chat.openai.com/?q=${encoded}`
+          : `https://claude.ai/new?q=${encoded}`;
       setTimeout(() => {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        window.open(url, "_blank", "noopener,noreferrer");
       }, i * 150);
     });
-    toast.success(`נפתחים ${chain.steps.length} טאבים ב-${target === 'chatgpt' ? 'ChatGPT' : 'Claude'}`);
+    toast.success(
+      `נפתחים ${chain.steps.length} טאבים ב-${target === "chatgpt" ? "ChatGPT" : "Claude"}`,
+    );
   };
 
   // Build the prompt with variable substitution and previous output injection
@@ -173,7 +194,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
       <div
         className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-[#0f0f0f] border border-(--glass-border) rounded-2xl p-6 mx-4"
         dir="rtl"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -223,8 +244,8 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                   i === currentStep
                     ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
                     : completedSteps.has(i)
-                    ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
-                    : "bg-(--glass-bg) border-(--glass-border) text-(--text-muted)"
+                      ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                      : "bg-(--glass-bg) border-(--glass-border) text-(--text-muted)",
                 )}
                 title={s.title}
               >
@@ -249,17 +270,19 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
 
           {/* Output description */}
           {step.output_description && (
-            <p className="text-[11px] text-slate-500 mb-2">
-              פלט צפוי: {step.output_description}
-            </p>
+            <p className="text-[11px] text-slate-500 mb-2">פלט צפוי: {step.output_description}</p>
           )}
 
           {/* Variables (step 1 typically) */}
           {step.variables && step.variables.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {step.variables.map((v, vi) => (
-                <span key={vi} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                  {v.label || v.name}{v.default ? `: ${v.default}` : ""}
+                <span
+                  key={vi}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400"
+                >
+                  {v.label || v.name}
+                  {v.default ? `: ${v.default}` : ""}
                 </span>
               ))}
             </div>
@@ -273,17 +296,25 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
         {/* Step Output from previous */}
         {currentStep > 0 && stepOutputs[currentStep - 1] && (
           <div className="mt-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-            <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">פלט שלב קודם</div>
-            <p className="text-xs text-(--text-muted) line-clamp-3">{stepOutputs[currentStep - 1]}</p>
+            <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">
+              פלט שלב קודם
+            </div>
+            <p className="text-xs text-(--text-muted) line-clamp-3">
+              {stepOutputs[currentStep - 1]}
+            </p>
           </div>
         )}
 
         {completedSteps.has(currentStep) && (
           <div className="mt-3">
-            <label className="text-[10px] text-(--text-muted) uppercase tracking-wider">הדבק את הפלט של שלב זה (אופציונלי — יוזרק לשלב הבא):</label>
+            <label className="text-[10px] text-(--text-muted) uppercase tracking-wider">
+              הדבק את הפלט של שלב זה (אופציונלי — יוזרק לשלב הבא):
+            </label>
             <textarea
               value={stepOutputs[currentStep] || ""}
-              onChange={e => setStepOutputs(prev => ({ ...prev, [currentStep]: e.target.value }))}
+              onChange={(e) =>
+                setStepOutputs((prev) => ({ ...prev, [currentStep]: e.target.value }))
+              }
               placeholder="הדבק כאן את התוצאה..."
               className="w-full mt-1 h-20 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg px-3 py-2 text-xs text-(--text-secondary) placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20 resize-none"
             />
@@ -301,7 +332,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
               <button
                 onClick={() => {
                   const allOutputs = chain.steps
-                    .map((s, i) => stepOutputs[i] ? `## ${s.title}\n${stepOutputs[i]}` : null)
+                    .map((s, i) => (stepOutputs[i] ? `## ${s.title}\n${stepOutputs[i]}` : null))
                     .filter(Boolean)
                     .join("\n\n---\n\n");
                   handleCopy(allOutputs);
@@ -358,10 +389,12 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             directly in ChatGPT / Claude / Gemini in a new tab. Gemini
             lacks a deep-link prefill, so we copy and toast a hint. */}
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-(--glass-border)">
-          <span className="text-[10px] text-(--text-muted) uppercase tracking-wider shrink-0">פתח שלב זה ב:</span>
+          <span className="text-[10px] text-(--text-muted) uppercase tracking-wider shrink-0">
+            פתח שלב זה ב:
+          </span>
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => openInLLM('chatgpt', resolvedPrompt)}
+              onClick={() => openInLLM("chatgpt", resolvedPrompt)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors"
               title="פתח ב-ChatGPT"
             >
@@ -369,7 +402,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
               ChatGPT
             </button>
             <button
-              onClick={() => openInLLM('claude', resolvedPrompt)}
+              onClick={() => openInLLM("claude", resolvedPrompt)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors"
               title="פתח ב-Claude"
             >
@@ -377,7 +410,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
               Claude
             </button>
             <button
-              onClick={() => openInLLM('gemini', resolvedPrompt)}
+              onClick={() => openInLLM("gemini", resolvedPrompt)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-(--glass-border) text-(--text-secondary) text-xs hover:bg-(--glass-bg) transition-colors"
               title="העתק ופתח Gemini"
             >
@@ -393,10 +426,12 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
             clipboard and opens a single tab. */}
         {chain.steps.length > 1 && (
           <div className="flex items-center gap-2 mt-3">
-            <span className="text-[10px] text-(--text-muted) uppercase tracking-wider shrink-0">פתח את כל השלבים ב:</span>
+            <span className="text-[10px] text-(--text-muted) uppercase tracking-wider shrink-0">
+              פתח את כל השלבים ב:
+            </span>
             <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => openAllStepsInLLM('chatgpt')}
+                onClick={() => openAllStepsInLLM("chatgpt")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-300 text-xs hover:bg-amber-500/15 transition-colors"
                 title={`פתח ${chain.steps.length} טאבים ב-ChatGPT`}
               >
@@ -404,7 +439,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                 ChatGPT ×{chain.steps.length}
               </button>
               <button
-                onClick={() => openAllStepsInLLM('claude')}
+                onClick={() => openAllStepsInLLM("claude")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-300 text-xs hover:bg-amber-500/15 transition-colors"
                 title={`פתח ${chain.steps.length} טאבים ב-Claude`}
               >
@@ -412,7 +447,7 @@ export function ChainRunner({ chain, onClose, onUseStep }: ChainRunnerProps) {
                 Claude ×{chain.steps.length}
               </button>
               <button
-                onClick={() => openAllStepsInLLM('gemini')}
+                onClick={() => openAllStepsInLLM("gemini")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-300 text-xs hover:bg-amber-500/15 transition-colors"
                 title="העתק הכל ופתח Gemini"
               >

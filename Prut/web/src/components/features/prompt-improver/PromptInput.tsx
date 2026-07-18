@@ -37,6 +37,8 @@ interface PromptInputProps {
   selectedCapability: CapabilityMode;
   setSelectedCapability: (mode: CapabilityMode) => void;
   isLoading: boolean;
+  /** When provided, a "stop" control is shown while a stream is in flight. */
+  onStop?: () => void;
   variables: string[];
   variableValues: Record<string, string>;
   setVariableValues: (values: Record<string, string>) => void;
@@ -160,6 +162,7 @@ export function PromptInput({
   selectedCapability,
   setSelectedCapability,
   isLoading,
+  onStop,
   variables,
   variableValues,
   setVariableValues,
@@ -874,6 +877,16 @@ export function PromptInput({
                   <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
                 )}
               </button>
+              {isLoading && onStop && (
+                <button
+                  type="button"
+                  onClick={onStop}
+                  className="px-4 py-4 rounded-xl border border-(--glass-border) text-(--text-secondary) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-sm font-semibold focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none min-h-[44px]"
+                  aria-label="עצור את השדרוג"
+                >
+                  עצור
+                </button>
+              )}
               {creditsRemaining != null && creditsRemaining >= 0 && (
                 <span
                   className={cn(

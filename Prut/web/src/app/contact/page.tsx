@@ -44,7 +44,7 @@ export default function ContactPage() {
         <div className="max-w-2xl mx-auto space-y-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors mb-8"
+            className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors mb-8 py-2 -my-2"
           >
             <ArrowRight className="w-4 h-4" />
             חזרה לדף הבית

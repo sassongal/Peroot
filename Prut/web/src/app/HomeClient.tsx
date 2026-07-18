@@ -237,7 +237,7 @@ function PageContent() {
   const streamInterruptedRef = useRef(false);
   const questionsAbortRef = useRef<AbortController | null>(null);
 
-  const { startStream } = useStreamingCompletion({
+  const { startStream, abort: abortStream } = useStreamingCompletion({
     onChunk: useCallback(
       (chunk: string) => {
         const acc = streamAccRef.current;
@@ -687,178 +687,186 @@ function PageContent() {
     toast.success(`"${randomPrompt.title}" נטען!`);
   };
 
-  const handleEnhance = useCallback(async () => {
-    if (!ps.input.trim() || ps.isLoading || enhanceCooldownRef.current) return;
+  const handleEnhance = useCallback(
+    async (textOverride?: string) => {
+      // textOverride lets "שפר שוב" refine the generated result instead of the
+      // stale original input (the closure's ps.input hasn't updated yet).
+      const inputText = textOverride ?? ps.input;
+      if (!inputText.trim() || ps.isLoading || enhanceCooldownRef.current) return;
 
-    enhanceCooldownRef.current = true;
-    setTimeout(() => {
-      enhanceCooldownRef.current = false;
-    }, 500);
+      enhanceCooldownRef.current = true;
+      setTimeout(() => {
+        enhanceCooldownRef.current = false;
+      }, 500);
 
-    // Block immediately when credits hit 0 — avoid wasting an API round trip.
-    // Pro/admin: skip — server auto-refreshes at spend time; local counter is stale.
-    if (user && !isProPlan && creditsRemaining !== null && creditsRemaining <= 0) {
-      setShowUpgradeNudge(true);
-      return;
-    }
-
-    if (!canUsePrompt) {
-      if (requiredAction === "login") {
-        showLoginRequired(
-          "יצירת פרומפט",
-          "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!",
-        );
-      } else if (requiredAction === "upgrade") {
+      // Block immediately when credits hit 0 — avoid wasting an API round trip.
+      // Pro/admin: skip — server auto-refreshes at spend time; local counter is stale.
+      if (user && !isProPlan && creditsRemaining !== null && creditsRemaining <= 0) {
         setShowUpgradeNudge(true);
+        return;
       }
-      return;
-    }
 
-    if (context.isOverLimit) {
-      toast.error("יש יותר מדי context — הסירו קובץ לפני שדרוג");
-      return;
-    }
+      if (!canUsePrompt) {
+        if (requiredAction === "login") {
+          showLoginRequired(
+            "יצירת פרומפט",
+            "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!",
+          );
+        } else if (requiredAction === "upgrade") {
+          setShowUpgradeNudge(true);
+        }
+        return;
+      }
 
-    const erroredAttachments = context.attachments.filter((a) => a.status === "error");
-    if (erroredAttachments.length > 0) {
-      toast.warning(
-        `${erroredAttachments.length === 1 ? "קובץ אחד" : `${erroredAttachments.length} קבצים`} לא עובדו בהצלחה ולא יכללו בקונטקסט — הסירו אותם או נסו שוב`,
-        { duration: 5000 },
-      );
-    }
+      if (context.isOverLimit) {
+        toast.error("יש יותר מדי context — הסירו קובץ לפני שדרוג");
+        return;
+      }
 
-    const currentModeParams: Record<string, string> | undefined =
-      ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
-        ? {
-            image_platform: imagePlatform,
-            output_format: imageOutputFormat,
-            ...(imageAspectRatio && { aspect_ratio: imageAspectRatio }),
-          }
-        : ps.selectedCapability === CapabilityMode.VIDEO_GENERATION
+      const erroredAttachments = context.attachments.filter((a) => a.status === "error");
+      if (erroredAttachments.length > 0) {
+        toast.warning(
+          `${erroredAttachments.length === 1 ? "קובץ אחד" : `${erroredAttachments.length} קבצים`} לא עובדו בהצלחה ולא יכללו בקונטקסט — הסירו אותם או נסו שוב`,
+          { duration: 5000 },
+        );
+      }
+
+      const currentModeParams: Record<string, string> | undefined =
+        ps.selectedCapability === CapabilityMode.IMAGE_GENERATION
           ? {
-              video_platform: videoPlatform,
-              ...(videoAspectRatio && { aspect_ratio: videoAspectRatio }),
+              image_platform: imagePlatform,
+              output_format: imageOutputFormat,
+              ...(imageAspectRatio && { aspect_ratio: imageAspectRatio }),
             }
-          : undefined;
+          : ps.selectedCapability === CapabilityMode.VIDEO_GENERATION
+            ? {
+                video_platform: videoPlatform,
+                ...(videoAspectRatio && { aspect_ratio: videoAspectRatio }),
+              }
+            : undefined;
 
-    dispatch({ type: "START_STREAM" });
-    dispatch({ type: "SET_QUESTIONS", payload: [] });
-    dispatch({
-      type: "SET_GENERATION_CONTEXT",
-      payload: {
-        mode: ps.selectedCapability,
-        modeParams: currentModeParams,
-        category: ps.selectedCategory,
-        tone: ps.selectedTone,
-      },
-    });
-    streamAccRef.current = { rawText: "" };
-    streamInterruptedRef.current = false;
+      dispatch({ type: "START_STREAM" });
+      dispatch({ type: "SET_QUESTIONS", payload: [] });
+      dispatch({
+        type: "SET_GENERATION_CONTEXT",
+        payload: {
+          mode: ps.selectedCapability,
+          modeParams: currentModeParams,
+          category: ps.selectedCategory,
+          tone: ps.selectedTone,
+        },
+      });
+      streamAccRef.current = { rawText: "" };
+      streamInterruptedRef.current = false;
 
-    const enhanceStart = Date.now();
-    trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
+      const enhanceStart = Date.now();
+      trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, inputText.length);
 
-    const contextPayload = context.getContextPayload();
+      const contextPayload = context.getContextPayload();
 
-    // Auto-detect input language (Hebrew vs English)
-    const hebrewChars = (ps.input.match(/[\u0590-\u05FF]/g) || []).length;
-    const totalChars = ps.input.replace(/\s/g, "").length;
-    const detectedLang = totalChars > 0 && hebrewChars / totalChars < 0.3 ? "en" : "he";
+      // Auto-detect input language (Hebrew vs English)
+      const hebrewChars = (inputText.match(/[\u0590-\u05FF]/g) || []).length;
+      const totalChars = inputText.replace(/\s/g, "").length;
+      const detectedLang = totalChars > 0 && hebrewChars / totalChars < 0.3 ? "en" : "he";
 
-    await startStream(getApiPath("/api/enhance"), {
-      prompt: ps.input,
-      tone: ps.selectedTone,
-      category: ps.selectedCategory,
-      capability_mode: ps.selectedCapability,
-      ...(currentModeParams && { mode_params: currentModeParams }),
-      ...(contextPayload.length > 0 && { context: contextPayload }),
-      ...(targetModel !== "general" && { target_model: targetModel }),
-      ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
-      ...(detectedLang === "en" && { mode_params: { ...currentModeParams, input_language: "en" } }),
-    });
-
-    questionsAbortRef.current?.abort();
-    const result = processStreamResult("Enhance", {
-      prompt: ps.input,
-      category: ps.selectedCategory,
-      tone: ps.selectedTone,
-      capability_mode: ps.selectedCapability,
-      contextPayload,
-    });
-    if (result.text && !streamInterruptedRef.current) {
-      trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
-      recordUsageSignal("enhance", result.text);
-      if (ps.selectedCapability === CapabilityMode.DEEP_RESEARCH)
-        markFeatureUsed("peroot_used_research");
-      if (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION)
-        markFeatureUsed("peroot_used_image");
-      dispatch({ type: "SET_DETECTED_CATEGORY", payload: ps.selectedCategory });
-
-      addToHistory({
-        original: ps.input,
-        enhanced: result.text,
+      await startStream(getApiPath("/api/enhance"), {
+        prompt: inputText,
         tone: ps.selectedTone,
         category: ps.selectedCategory,
-        title: result.title || ps.input.slice(0, 40) + (ps.input.length > 40 ? "..." : ""),
+        capability_mode: ps.selectedCapability,
+        ...(currentModeParams && { mode_params: currentModeParams }),
+        ...(contextPayload.length > 0 && { context: contextPayload }),
+        ...(targetModel !== "general" && { target_model: targetModel }),
+        ...(outputLanguage !== "hebrew" && { output_language: outputLanguage }),
+        ...(detectedLang === "en" && {
+          mode_params: { ...currentModeParams, input_language: "en" },
+        }),
       });
 
-      if (user && creditsRemaining !== null) {
-        const newCredits = Math.max(0, creditsRemaining - 1);
-        setCreditsRemaining(newCredits);
-        if (newCredits === 0 && !isProPlan) {
-          toast("הקרדיטים נגמרו — הם מתחדשים 24 שעות לאחר השימוש", { duration: 8000 });
+      questionsAbortRef.current?.abort();
+      const result = processStreamResult("Enhance", {
+        prompt: inputText,
+        category: ps.selectedCategory,
+        tone: ps.selectedTone,
+        capability_mode: ps.selectedCapability,
+        contextPayload,
+      });
+      if (result.text && !streamInterruptedRef.current) {
+        trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
+        recordUsageSignal("enhance", result.text);
+        if (ps.selectedCapability === CapabilityMode.DEEP_RESEARCH)
+          markFeatureUsed("peroot_used_research");
+        if (ps.selectedCapability === CapabilityMode.IMAGE_GENERATION)
+          markFeatureUsed("peroot_used_image");
+        dispatch({ type: "SET_DETECTED_CATEGORY", payload: ps.selectedCategory });
+
+        addToHistory({
+          original: inputText,
+          enhanced: result.text,
+          tone: ps.selectedTone,
+          category: ps.selectedCategory,
+          title: result.title || inputText.slice(0, 40) + (inputText.length > 40 ? "..." : ""),
+        });
+
+        if (user && creditsRemaining !== null) {
+          const newCredits = Math.max(0, creditsRemaining - 1);
+          setCreditsRemaining(newCredits);
+          if (newCredits === 0 && !isProPlan) {
+            toast("הקרדיטים נגמרו — הם מתחדשים 24 שעות לאחר השימוש", { duration: 8000 });
+          }
+        }
+        if (!user) {
+          incrementUsage();
+        }
+
+        toast.success(t.prompt_generator.success_toast);
+        discovery.onEnhanceComplete();
+
+        // Pro preview nudge: after 3rd enhance for free users (once per session)
+        if (user && creditsRemaining !== null && creditsRemaining <= 0) {
+          // Already handled by UpgradeNudge
+        } else if (user && !sessionStorage.getItem("pro_nudge_shown")) {
+          const enhanceCount = parseInt(sessionStorage.getItem("session_enhance_count") || "0") + 1;
+          sessionStorage.setItem("session_enhance_count", String(enhanceCount));
+          if (enhanceCount === 3) {
+            sessionStorage.setItem("pro_nudge_shown", "1");
+            setTimeout(() => {
+              toast("משתמשי Pro מקבלים מודלים מתקדמים לתוצאות טובות יותר", {
+                action: { label: "לשדרוג", onClick: () => (window.location.href = "/pricing") },
+                duration: 6000,
+              });
+            }, 2000);
+          }
         }
       }
-      if (!user) {
-        incrementUsage();
-      }
-
-      toast.success(t.prompt_generator.success_toast);
-      discovery.onEnhanceComplete();
-
-      // Pro preview nudge: after 3rd enhance for free users (once per session)
-      if (user && creditsRemaining !== null && creditsRemaining <= 0) {
-        // Already handled by UpgradeNudge
-      } else if (user && !sessionStorage.getItem("pro_nudge_shown")) {
-        const enhanceCount = parseInt(sessionStorage.getItem("session_enhance_count") || "0") + 1;
-        sessionStorage.setItem("session_enhance_count", String(enhanceCount));
-        if (enhanceCount === 3) {
-          sessionStorage.setItem("pro_nudge_shown", "1");
-          setTimeout(() => {
-            toast("משתמשי Pro מקבלים מודלים מתקדמים לתוצאות טובות יותר", {
-              action: { label: "לשדרוג", onClick: () => (window.location.href = "/pricing") },
-              duration: 6000,
-            });
-          }, 2000);
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    ps.input,
-    ps.isLoading,
-    ps.selectedCapability,
-    ps.selectedCategory,
-    ps.selectedTone,
-    canUsePrompt,
-    requiredAction,
-    user,
-    creditsRemaining,
-    dispatch,
-    startStream,
-    inputScore.score,
-    imagePlatform,
-    imageOutputFormat,
-    imageAspectRatio,
-    videoPlatform,
-    videoAspectRatio,
-    targetModel,
-    outputLanguage,
-    addToHistory,
-    incrementUsage,
-    t,
-    discovery.onEnhanceComplete,
-  ]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [
+      ps.input,
+      ps.isLoading,
+      ps.selectedCapability,
+      ps.selectedCategory,
+      ps.selectedTone,
+      canUsePrompt,
+      requiredAction,
+      user,
+      creditsRemaining,
+      dispatch,
+      startStream,
+      inputScore.score,
+      imagePlatform,
+      imageOutputFormat,
+      imageAspectRatio,
+      videoPlatform,
+      videoAspectRatio,
+      targetModel,
+      outputLanguage,
+      addToHistory,
+      incrementUsage,
+      t,
+      discovery.onEnhanceComplete,
+    ],
+  );
 
   const handleRefine = useCallback(
     async (instruction: string) => {
@@ -1328,10 +1336,20 @@ function PageContent() {
   );
 
   const handleImproveAgain = useCallback(() => {
-    dispatch({ type: "SET_INPUT", payload: ps.completion });
+    const text = ps.completion;
+    dispatch({ type: "SET_INPUT", payload: text });
     dispatch({ type: "INCREMENT_ITERATION" });
-    setTimeout(() => handleEnhance(), 0);
+    // Pass the text explicitly so it refines the result, not the stale ps.input.
+    handleEnhance(text);
   }, [dispatch, ps.completion, handleEnhance]);
+
+  // Stop an in-flight stream — keeps whatever partial text arrived, marks it
+  // interrupted so the success branch doesn't save/toast it.
+  const handleStop = useCallback(() => {
+    streamInterruptedRef.current = true;
+    abortStream();
+    dispatch({ type: "STREAM_INTERRUPTED" });
+  }, [abortStream, dispatch]);
 
   const handleDiscoveryCtaClick = useCallback(
     (action: string) => {
@@ -1514,6 +1532,7 @@ function PageContent() {
               dispatch({ type: "SET_CAPABILITY", payload: cap })
             }
             isLoading={ps.isLoading}
+            onStop={handleStop}
             inputVariables={inputVariables}
             variableValues={ps.variableValues}
             setVariableValues={(vals: Record<string, string>) =>

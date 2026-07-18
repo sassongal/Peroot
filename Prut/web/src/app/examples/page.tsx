@@ -10,11 +10,13 @@ const _examplesOg = `${_SITE}/api/og?title=${encodeURIComponent("לפני ואח
 
 export const metadata: Metadata = {
   title: "דוגמאות פרומפטים - לפני ואחרי",
-  description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
+  description:
+    "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
   alternates: { canonical: "/examples" },
   openGraph: {
     title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
-    description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
+    description:
+      "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
     url: `${_SITE}/examples`,
     siteName: "Peroot",
     locale: "he_IL",
@@ -144,7 +146,7 @@ export default function ExamplesPage() {
       <div className="max-w-4xl mx-auto">
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-fit mb-8"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-fit mb-8 py-2 -my-2"
         >
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-[-2px]" />
           <span>חזרה</span>
@@ -160,7 +162,10 @@ export default function ExamplesPage() {
 
         <div className="space-y-8">
           {EXAMPLES.map((example, i) => (
-            <div key={i} className="glass-card rounded-xl border border-border overflow-hidden cursor-pointer">
+            <div
+              key={i}
+              className="glass-card rounded-xl border border-border overflow-hidden cursor-pointer"
+            >
               <div className="p-4 bg-secondary border-b border-border flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1 rounded-full">
                   {example.category}
@@ -173,7 +178,9 @@ export default function ExamplesPage() {
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-red-400/60" />
-                    <span className="text-[10px] font-semibold text-red-400/60 uppercase tracking-wider">לפני</span>
+                    <span className="text-[10px] font-semibold text-red-400/60 uppercase tracking-wider">
+                      לפני
+                    </span>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{example.before}</p>
                 </div>
@@ -182,7 +189,9 @@ export default function ExamplesPage() {
                 <div className="p-6 bg-secondary">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">אחרי - Peroot</span>
+                    <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">
+                      אחרי - Peroot
+                    </span>
                   </div>
                   <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-mono text-xs">
                     {example.after}
@@ -195,9 +204,21 @@ export default function ExamplesPage() {
 
         {/* Cross-links */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-12">
-          <CrossLinkCard href="/guide" title="המדריך המלא לכתיבת פרומפטים" description="5 עקרונות זהב וטכניקות מתקדמות" />
-          <CrossLinkCard href="/prompts" title="עוד תבניות בספריה הציבורית" description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים ב-30+ קטגוריות`} />
-          <CrossLinkCard href="/features" title="גלו את כל מצבי העבודה" description="טקסט, מחקר, תמונות, סרטונים וסוכנים" />
+          <CrossLinkCard
+            href="/guide"
+            title="המדריך המלא לכתיבת פרומפטים"
+            description="5 עקרונות זהב וטכניקות מתקדמות"
+          />
+          <CrossLinkCard
+            href="/prompts"
+            title="עוד תבניות בספריה הציבורית"
+            description={`${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים ב-30+ קטגוריות`}
+          />
+          <CrossLinkCard
+            href="/features"
+            title="גלו את כל מצבי העבודה"
+            description="טקסט, מחקר, תמונות, סרטונים וסוכנים"
+          />
         </div>
 
         {/* CTA */}

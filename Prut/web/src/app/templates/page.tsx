@@ -42,7 +42,10 @@ async function getTemplates(): Promise<LibraryPrompt[]> {
       .order("created_at", { ascending: false })
       .limit(500);
 
-    if (error || !data) return [];
+    // Distinguish a real failure (→ error boundary with retry) from a genuinely
+    // empty result, so an outage doesn't masquerade as "no templates".
+    if (error) throw new Error("templates_load_failed");
+    if (!data) return [];
 
     // Normalize category keys
     const categoryKeyMap = Object.fromEntries(
@@ -59,8 +62,10 @@ async function getTemplates(): Promise<LibraryPrompt[]> {
 
     // Filter to only prompts that contain at least one {variable}
     return mapped.filter((p) => hasPlaceholders(p.prompt));
-  } catch {
-    return [];
+  } catch (e) {
+    // Re-throw real failures to the route error boundary instead of silently
+    // collapsing into an empty grid.
+    throw e instanceof Error ? e : new Error("templates_load_failed");
   }
 }
 
