@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { isIP } from "node:net";
-import * as Sentry from "@sentry/nextjs";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse, after } from "next/server";
@@ -19,14 +18,14 @@ import { enqueueJob } from "@/lib/jobs/queue";
 import { trackApiUsage } from "@/lib/admin/track-api-usage";
 import { logger } from "@/lib/logger";
 import { validateApiKey } from "@/lib/api-auth";
-import { checkAndDecrementCredits, refundCredit } from "@/lib/services/credit-service";
+import { checkAndDecrementCredits } from "@/lib/services/credit-service";
 import {
   resolveGuestId,
   applyGuestCookie,
   buildGuestCookieHeader,
   checkAndDecrementGuestCredits,
-  refundGuestCredit,
 } from "@/lib/guest-service";
+import { refundEnhanceCredit } from "./lib/refund";
 import {
   buildCacheKey,
   deleteCached,
@@ -649,11 +648,12 @@ export async function POST(req: Request) {
         const wrappedText = applyModelTagWrapper(prompt, activeProfile);
 
         // Refund the credit decremented above — stage-1 costs us no LLM tokens.
-        if (userId) {
-          await refundCredit(userId);
-        } else if (guestId && !isRefinement) {
-          await refundGuestCredit(guestId);
-        }
+        await refundEnhanceCredit({
+          userId,
+          guestId,
+          isRefinement,
+          context: { stage: "score-gate" },
+        });
 
         // Track as a zero-token row so the cost dashboard can compute the
         // skip rate without a NULL-handling special case.
@@ -788,11 +788,12 @@ export async function POST(req: Request) {
         // Peroot zero LLM tokens, so the user should not pay a quota unit
         // for them either. Guests get their rolling-window slot restored
         // via the Lua-bounded refundGuestCredit; admins were never charged.
-        if (userId) {
-          await refundCredit(userId);
-        } else if (guestId && !isRefinement) {
-          await refundGuestCredit(guestId);
-        }
+        await refundEnhanceCredit({
+          userId,
+          guestId,
+          isRefinement,
+          context: { stage: "cache-hit" },
+        });
 
         // Cache-hit side effects run AFTER the response is sent so the
         // client gets its bytes immediately and the function duration
@@ -1062,16 +1063,12 @@ export async function POST(req: Request) {
             const shouldRefund =
               textCopy.length === 0 || finishReasonCopy === "error" || isTruncated;
             if (shouldRefund) {
-              if (userId) {
-                const refundResult = await refundCredit(userId);
-                if (!refundResult.success) {
-                  Sentry.captureException(new Error("Credit refund failed in onFinish"), {
-                    extra: { userId, finishReason: finishReasonCopy, error: refundResult.error },
-                  });
-                }
-              } else if (guestId && !isRefinement) {
-                await refundGuestCredit(guestId);
-              }
+              await refundEnhanceCredit({
+                userId,
+                guestId,
+                isRefinement,
+                context: { stage: "live", finishReason: finishReasonCopy },
+              });
               logger.warn("[Enhance] Failed/truncated generation, refunding credit", {
                 userId,
                 guestId,
@@ -1208,11 +1205,12 @@ export async function POST(req: Request) {
     if (error instanceof ConcurrencyError) {
       logger.warn("[EnhanceAPI] Concurrency limit reached:", error.message);
       // Refund credit since we never called AI
-      if (userId) {
-        await refundCredit(userId);
-      } else if (guestId && !isRefinementOuter) {
-        await refundGuestCredit(guestId);
-      }
+      await refundEnhanceCredit({
+        userId,
+        guestId,
+        isRefinement: isRefinementOuter,
+        context: { stage: "concurrency" },
+      });
       return NextResponse.json(
         { error: "השרת עמוס כרגע. נסה שוב בעוד כמה שניות." },
         { status: 503, headers: { "Retry-After": "5" } },
@@ -1221,11 +1219,12 @@ export async function POST(req: Request) {
 
     logger.error("[EnhanceAPI] Error:", error);
     // Best-effort credit refund on failure
-    if (userId) {
-      await refundCredit(userId);
-    } else if (guestId && !isRefinementOuter) {
-      await refundGuestCredit(guestId);
-    }
+    await refundEnhanceCredit({
+      userId,
+      guestId,
+      isRefinement: isRefinementOuter,
+      context: { stage: "error" },
+    });
     return NextResponse.json(
       { error: "שגיאת שרת פנימית, אנא נסה שוב", code: "internal_error" },
       { status: 500 },
