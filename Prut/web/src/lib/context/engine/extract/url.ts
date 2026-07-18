@@ -163,14 +163,42 @@ async function fetchText(url: string, timeoutMs: number): Promise<string> {
     if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_BYTES) {
       throw userFacingError("הדף גדול מדי לעיבוד");
     }
-    const buf = await res.arrayBuffer();
-    if (buf.byteLength > MAX_RESPONSE_BYTES) {
-      throw userFacingError("הדף גדול מדי לעיבוד");
-    }
-    return new TextDecoder().decode(buf);
+    return await readCapped(res, MAX_RESPONSE_BYTES);
   } finally {
     clearTimeout(t);
   }
+}
+
+/**
+ * Read a response body into a string, aborting the moment `maxBytes` is
+ * exceeded. Streams chunk-by-chunk so a server that omits or lies about
+ * content-length cannot OOM us by sending an unbounded body (the previous
+ * `res.arrayBuffer()` buffered the whole body before the size was checked).
+ */
+async function readCapped(res: Response, maxBytes: number): Promise<string> {
+  const reader = res.body?.getReader();
+  if (!reader) {
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > maxBytes) throw userFacingError("הדף גדול מדי לעיבוד");
+    return new TextDecoder().decode(buf);
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        throw userFacingError("הדף גדול מדי לעיבוד");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks.map((c) => Buffer.from(c))));
 }
 
 async function fetchJina(url: string, timeoutMs: number): Promise<string> {
