@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLibrary } from "@/hooks/useLibrary";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
@@ -104,9 +112,32 @@ export function LibraryDataProvider({
   user,
   showLoginRequired,
 }: LibraryDataProviderProps) {
+  // Defer non-critical public library data off the initial render so the large
+  // (~480-prompt) payload + popularity map don't compete with the homepage's
+  // LCP/INP. They load once the browser is idle after first paint; consumers
+  // already show a loading state until then.
+  const [deferredReady, setDeferredReady] = useState(false);
+  useEffect(() => {
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    // The homepage runs continuous animations (marquee), which can starve
+    // requestIdleCallback indefinitely — so pass a hard `timeout` that forces it
+    // to run even if the page never goes idle. Plain setTimeout is the fallback
+    // for browsers without requestIdleCallback (Safari).
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(() => setDeferredReady(true), { timeout: 1500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(() => setDeferredReady(true), 300);
+    return () => clearTimeout(t);
+  }, []);
+
   // --- Library prompts (public) ---
   const { data: libraryPrompts = [], isLoading: isLibraryFetching } = useQuery<LibraryPrompt[]>({
     queryKey: ["library", "prompts"],
+    enabled: deferredReady,
     queryFn: async () => {
       try {
         const pRes = await fetch(getApiPath("/api/library/prompts"));
@@ -125,6 +156,7 @@ export function LibraryDataProvider({
   // --- Popularity ---
   const { data: popularityMap = {} } = useQuery<Record<string, number>>({
     queryKey: ["library", "popularity"],
+    enabled: deferredReady,
     queryFn: async () => {
       try {
         const response = await fetch(getApiPath("/api/library-popularity"));
