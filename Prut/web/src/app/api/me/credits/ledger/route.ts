@@ -1,41 +1,35 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withUser } from "@/lib/api-middleware";
 
 /**
  * GET /api/me/credits/ledger
- * Returns the authenticated user's last 10 credit_ledger entries.
- * RLS already restricts the table to the row owner; we filter by auth.uid()
- * defensively so the endpoint cannot return cross-user rows even if RLS is loosened.
+ * Returns the authenticated user's last 10 credit_ledger entries. RLS already
+ * restricts the table to the row owner; we filter by ctx.user.id defensively so
+ * the endpoint cannot return cross-user rows even if RLS is loosened.
+ * Read-only. Auth owned by withUser.
  */
-export async function GET() {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "נדרשת התחברות", code: "auth_required" }, { status: 401 });
-    }
-
-    const { data, error } = await supabase
+export const GET = withUser(
+  async (_req, ctx) => {
+    const { data, error } = await ctx.db
       .from("credit_ledger")
       .select("id, delta, balance_after, reason, source, created_at")
-      .eq("user_id", user.id)
+      .eq("user_id", ctx.user!.id)
       .order("created_at", { ascending: false })
       .limit(10);
 
     if (error) {
       logger.error("[me/credits/ledger] query error:", error);
-      return NextResponse.json({ error: "טעינת ההיסטוריה נכשלה", code: "load_failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: "טעינת ההיסטוריה נכשלה", code: "load_failed" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json(
       { entries: data ?? [] },
       { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=30" } },
     );
-  } catch (err) {
-    logger.error("[me/credits/ledger] error:", err);
-    return NextResponse.json({ error: "שגיאת שרת פנימית", code: "internal_error" }, { status: 500 });
-  }
-}
+  },
+  { rateLimit: "none" },
+);
