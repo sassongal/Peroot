@@ -38,4 +38,9 @@ describe("StageProgressBar", () => {
     render(<StageProgressBar stage="error" />);
     expect(screen.getByTestId("stage-error")).toBeInTheDocument();
   });
+  it("treats warning as ready (ready pill active, not the error view)", () => {
+    render(<StageProgressBar stage="warning" />);
+    expect(screen.queryByTestId("stage-error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("stage-pill-ready")).toHaveAttribute("data-state", "active");
+  });
 });
