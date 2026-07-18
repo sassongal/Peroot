@@ -1,4 +1,7 @@
+import { PLANS } from "./lemonsqueezy";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+const PRO_PRICE = String(PLANS.pro.price);
 
 export function organizationSchema() {
   return {
@@ -199,14 +202,14 @@ export function pricingSchema() {
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
           "@type": "Offer",
-          price: "10",
+          price: PRO_PRICE,
           priceCurrency: "ILS",
           availability: "https://schema.org/InStock",
           url: `${SITE_URL}/pricing`,
           priceValidUntil: "2027-12-31",
           priceSpecification: {
             "@type": "UnitPriceSpecification",
-            price: "10",
+            price: PRO_PRICE,
             priceCurrency: "ILS",
             unitText: "MONTH",
             referenceQuantity: {

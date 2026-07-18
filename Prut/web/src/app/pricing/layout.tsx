@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { pricingSchema, breadcrumbSchema, faqSchema } from "@/lib/schema";
+import { PLANS } from "@/lib/lemonsqueezy";
 
 export const metadata: Metadata = {
   title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
@@ -98,7 +99,7 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
             <li>תוסף Chrome עם סנכרון מלא</li>
             <li>תמיכה בעדיפות</li>
           </ul>
-          <p>מחיר: ₪3.99 לחודש. יום ניסיון במתנה</p>
+          <p>מחיר: ₪{PLANS.pro.price} לחודש. יום ניסיון במתנה</p>
         </section>
         <section>
           <h2>מערכת הקרדיטים</h2>

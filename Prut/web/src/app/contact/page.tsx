@@ -5,14 +5,17 @@ import { PageHeading } from "@/components/ui/PageHeading";
 import { ContactForm } from "@/components/ui/ContactForm";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
+import { PLANS } from "@/lib/lemonsqueezy";
 
 export const metadata: Metadata = {
   title: "צור קשר",
-  description: "צור קשר עם צוות Peroot - שאלות טכניות, הצעות לשיפור, דיווח על באגים, או בקשות לשיתוף פעולה. זמן מענה ממוצע: עד 24 שעות.",
+  description:
+    "צור קשר עם צוות Peroot - שאלות טכניות, הצעות לשיפור, דיווח על באגים, או בקשות לשיתוף פעולה. זמן מענה ממוצע: עד 24 שעות.",
   alternates: { canonical: "/contact" },
   openGraph: {
     title: "צור קשר | Peroot",
-    description: "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים. זמן מענה ממוצע: עד 24 שעות.",
+    description:
+      "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים. זמן מענה ממוצע: עד 24 שעות.",
     url: "/contact",
     siteName: "Peroot",
     locale: "he_IL",
@@ -34,9 +37,15 @@ export default function ContactPage() {
           { name: "צור קשר", url: "/contact" },
         ])}
       />
-      <main className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 lg:p-24" dir="rtl">
+      <main
+        className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 lg:p-24"
+        dir="rtl"
+      >
         <div className="max-w-2xl mx-auto space-y-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors mb-8"
+          >
             <ArrowRight className="w-4 h-4" />
             חזרה לדף הבית
           </Link>
@@ -44,8 +53,8 @@ export default function ContactPage() {
           <PageHeading title="צור קשר" align="start" />
 
           <p className="text-lg text-foreground leading-relaxed">
-            יש לכם שאלה על השימוש ב-Peroot? הצעה לשיפור? רוצים לדווח על באג?
-            או אולי מעוניינים בשיתוף פעולה? אנחנו כאן בשבילכם.
+            יש לכם שאלה על השימוש ב-Peroot? הצעה לשיפור? רוצים לדווח על באג? או אולי מעוניינים
+            בשיתוף פעולה? אנחנו כאן בשבילכם.
           </p>
 
           {/* Response time info */}
@@ -87,46 +96,54 @@ export default function ContactPage() {
               <details className="group bg-secondary border border-border rounded-xl">
                 <summary className="cursor-pointer p-4 text-foreground font-medium hover:text-amber-600 dark:hover:text-amber-400 transition-colors list-none flex justify-between items-center">
                   מה ההבדל בין התוכנית החינמית ל-Pro?
-                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">
+                    ▼
+                  </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  התוכנית החינמית כוללת 2 קרדיטים ביום וגישה לספריית 480+ הפרומפטים.
-                  תוכנית Pro (₪3.99/חודש) כוללת 150 קרדיטים בחודש, גישה לכל המנועים המתקדמים,
-                  שיפור איטרטיבי, ספריה אישית ללא הגבלה, וסנכרון מלא עם תוסף Chrome.
+                  התוכנית החינמית כוללת 2 קרדיטים ביום וגישה לספריית 480+ הפרומפטים. תוכנית Pro (₪
+                  {PLANS.pro.price}/חודש) כוללת 150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור
+                  איטרטיבי, ספריה אישית ללא הגבלה, וסנכרון מלא עם תוסף Chrome.
                 </div>
               </details>
 
               <details className="group bg-secondary border border-border rounded-xl">
                 <summary className="cursor-pointer p-4 text-foreground font-medium hover:text-amber-600 dark:hover:text-amber-400 transition-colors list-none flex justify-between items-center">
                   מה קורה כשנגמרים הקרדיטים?
-                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">
+                    ▼
+                  </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  בתוכנית החינמית, הקרדיטים מתאפסים כל יום בשעה 14:00. בתוכנית Pro,
-                  150 הקרדיטים מתחדשים בתחילת כל חודש חיוב. אפשר תמיד לשדרג ל-Pro
-                  באמצע חודש ולקבל מיד את מלוא הקרדיטים.
+                  בתוכנית החינמית, הקרדיטים מתאפסים כל יום בשעה 14:00. בתוכנית Pro, 150 הקרדיטים
+                  מתחדשים בתחילת כל חודש חיוב. אפשר תמיד לשדרג ל-Pro באמצע חודש ולקבל מיד את מלוא
+                  הקרדיטים.
                 </div>
               </details>
 
               <details className="group bg-secondary border border-border rounded-xl">
                 <summary className="cursor-pointer p-4 text-foreground font-medium hover:text-amber-600 dark:hover:text-amber-400 transition-colors list-none flex justify-between items-center">
                   איך מבטלים מנוי Pro?
-                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">
+                    ▼
+                  </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  ביטול מנוי הוא פשוט ומיידי - דרך דף ההגדרות באתר או במייל אלינו.
-                  אין התחייבות, אין דמי ביטול. המנוי יישאר פעיל עד סוף תקופת החיוב הנוכחית.
+                  ביטול מנוי הוא פשוט ומיידי - דרך דף ההגדרות באתר או במייל אלינו. אין התחייבות, אין
+                  דמי ביטול. המנוי יישאר פעיל עד סוף תקופת החיוב הנוכחית.
                 </div>
               </details>
 
               <details className="group bg-secondary border border-border rounded-xl">
                 <summary className="cursor-pointer p-4 text-foreground font-medium hover:text-amber-600 dark:hover:text-amber-400 transition-colors list-none flex justify-between items-center">
                   האם הפרומפטים שנוצרים שייכים לי?
-                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">
+                    ▼
+                  </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  כן, באופן מלא. כל פרומפט שאתם יוצרים או משדרגים עם Peroot שייך לכם לחלוטין.
-                  אתם יכולים להשתמש בו, לשתף אותו, או לשנות אותו בכל דרך שתרצו.
+                  כן, באופן מלא. כל פרומפט שאתם יוצרים או משדרגים עם Peroot שייך לכם לחלוטין. אתם
+                  יכולים להשתמש בו, לשתף אותו, או לשנות אותו בכל דרך שתרצו.
                 </div>
               </details>
             </div>

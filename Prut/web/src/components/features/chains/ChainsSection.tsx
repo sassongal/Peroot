@@ -22,6 +22,7 @@ import { AutoChainBuilder } from "./AutoChainBuilder";
 import { ChainPresetsGallery } from "./ChainPresetsGallery";
 import { toast } from "sonner";
 import { markFeatureUsed } from "@/hooks/useFeatureDiscovery";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 interface ChainsSectionProps {
   chains: PromptChain[];
@@ -56,6 +57,45 @@ export function ChainsSection({
   const [editingChain, setEditingChain] = useState<PromptChain | null>(null);
   const [runningChain, setRunningChain] = useState<PromptChain | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const confirmDialog = useConfirm();
+
+  // Delete a chain with confirmation + undo — chains are multi-step and a
+  // mis-tap previously destroyed them permanently with no way back.
+  const handleDeleteChain = async (chain: PromptChain) => {
+    if (
+      !(await confirmDialog({
+        title: "למחוק את השרשרת?",
+        message: `"${chain.title}" (${chain.steps.length} שלבים). אפשר לבטל מיד לאחר המחיקה.`,
+        danger: true,
+        confirmLabel: "מחק",
+      }))
+    )
+      return;
+    const snapshot = {
+      title: chain.title,
+      description: chain.description,
+      steps: chain.steps,
+      is_pinned: chain.is_pinned,
+    };
+    try {
+      await onDeleteChain(chain.id);
+      toast.success("השרשרת נמחקה", {
+        action: {
+          label: "בטל",
+          onClick: async () => {
+            try {
+              await onAddChain(snapshot);
+              toast.success("השרשרת שוחזרה");
+            } catch {
+              toast.error("השחזור נכשל, נסה שוב.");
+            }
+          },
+        },
+      });
+    } catch {
+      toast.error("מחיקת השרשרת נכשלה. נסה שוב.");
+    }
+  };
 
   const handleSave = async (title: string, description: string, steps: PromptChain["steps"]) => {
     if (editingChain) {
@@ -290,7 +330,7 @@ export function ChainsSection({
                   </button>
                 )}
                 <button
-                  onClick={() => onDeleteChain(chain.id)}
+                  onClick={() => handleDeleteChain(chain)}
                   className="p-1.5 rounded-lg text-(--text-muted) hover:text-red-400 transition-colors"
                   title="מחק"
                 >

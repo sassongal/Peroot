@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, ArrowLeft, Mail, Lock, User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -24,9 +24,23 @@ export function AuthForm() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showResetSent, setShowResetSent] = useState(false);
+  const searchParams = useSearchParams();
 
   const isLogin = mode === "login";
   const isReset = mode === "reset";
+
+  // Surface OAuth / recovery failures the auth callback redirected here with
+  // (?error=auth-failed | no-code | …). Derived at render (no effect) so the user
+  // never lands on a blank form after a cancelled Google login or expired link.
+  const errorCode = searchParams.get("error");
+  const urlError = errorCode
+    ? ((
+        {
+          "auth-failed": "ההתחברות נכשלה — ייתכן שהקישור פג תוקף או שההתחברות בוטלה. נסו שוב.",
+          "no-code": "ההתחברות לא הושלמה. נסו שוב.",
+        } as Record<string, string>
+      )[errorCode] ?? "אירעה שגיאה בהתחברות. נסו שוב.")
+    : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,7 +220,7 @@ export function AuthForm() {
 
   // --- Login / Signup form ---
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400" dir="rtl">
       <div className="text-center space-y-1.5">
         <h1 className="text-xl font-bold text-white tracking-tight">
           {isLogin ? "ברוכים השבים" : "הצטרפות לפירוט"}
@@ -217,6 +231,15 @@ export function AuthForm() {
             : "צור חשבון כדי לשמור ולנהל את הפרומפטים שלך"}
         </p>
       </div>
+
+      {urlError && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-[13px] text-red-300"
+        >
+          {urlError}
+        </div>
+      )}
 
       <div className="space-y-5">
         <GoogleButton />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AlertTriangle, Check, CreditCard, Crown, Trash2, Zap } from "lucide-react";
 import type { Subscription } from "@/hooks/useSubscription";
+import { PLANS } from "@/lib/lemonsqueezy";
 
 interface SettingsBillingSectionProps {
   billingSuccess: boolean;
@@ -72,7 +73,7 @@ export function SettingsBillingSection({
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-black font-bold text-sm hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all"
           >
             <Crown className="w-4 h-4" />
-            <span>שדרג ל-Pro - ₪3.99/חודש</span>
+            <span>שדרג ל-Pro - ₪{PLANS.pro.price}/חודש</span>
           </Link>
         )}
 
@@ -162,7 +163,9 @@ export function SettingsBillingSection({
         <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-white">רוצה פרומפטים ללא הגבלה?</p>
-            <p className="text-xs text-slate-500 mt-0.5">שדרג ל-Pro ב-₪3.99 בלבד לחודש</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              שדרג ל-Pro ב-₪{PLANS.pro.price} בלבד לחודש
+            </p>
           </div>
           <Link
             href="/pricing"

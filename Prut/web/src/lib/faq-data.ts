@@ -1,3 +1,5 @@
+import { PLANS } from "./lemonsqueezy";
+
 type FAQItem = {
   question: string;
   answer: string;
@@ -288,8 +290,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   {
     category: "מחיר ותשלום",
     question: "כמה עולה מנוי Pro?",
-    answer:
-      "מנוי Pro עולה ₪49 לחודש (או שווה ערך בדולרים). ניתן לראות את המחיר העדכני בדף /pricing. התשלום מתבצע דרך LemonSqueezy — מנהל תשלומים מאובטח.",
+    answer: `מנוי Pro עולה ₪${PLANS.pro.price} לחודש (או שווה ערך בדולרים). ניתן לראות את המחיר העדכני בדף /pricing. התשלום מתבצע דרך LemonSqueezy — מנהל תשלומים מאובטח.`,
   },
   {
     category: "מחיר ותשלום",

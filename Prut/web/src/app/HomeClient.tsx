@@ -231,6 +231,9 @@ function PageContent() {
   // model output can't cause the "missing middle" bug where the rest of
   // the prompt body is misrouted into the questions buffer and lost.
   const streamAccRef = useRef({ rawText: "" });
+  // Set when the stream is cut mid-response so the success branch can bail out
+  // instead of saving the partial prompt as complete + spending a credit.
+  const streamInterruptedRef = useRef(false);
   const questionsAbortRef = useRef<AbortController | null>(null);
 
   const { startStream } = useStreamingCompletion({
@@ -275,6 +278,7 @@ function PageContent() {
       [dispatch],
     ),
     onInterrupted: useCallback(() => {
+      streamInterruptedRef.current = true;
       dispatch({ type: "STREAM_INTERRUPTED" });
     }, [dispatch]),
   });
@@ -728,6 +732,7 @@ function PageContent() {
       },
     });
     streamAccRef.current = { rawText: "" };
+    streamInterruptedRef.current = false;
 
     const enhanceStart = Date.now();
     trackPromptEnhance(ps.selectedCategory, ps.selectedCapability, ps.input.length);
@@ -759,7 +764,7 @@ function PageContent() {
       capability_mode: ps.selectedCapability,
       contextPayload,
     });
-    if (result.text) {
+    if (result.text && !streamInterruptedRef.current) {
       trackEnhanceComplete(ps.selectedCapability, inputScore.score, Date.now() - enhanceStart);
       recordUsageSignal("enhance", result.text);
       if (ps.selectedCapability === CapabilityMode.DEEP_RESEARCH)
@@ -845,6 +850,7 @@ function PageContent() {
       dispatch({ type: "SET_PREVIOUS_SCORE", payload: completionScore.score });
       dispatch({ type: "START_STREAM" });
       streamAccRef.current = { rawText: "" };
+      streamInterruptedRef.current = false;
 
       const answerParts = ps.questions
         .filter((q) => ps.questionAnswers[String(q.id)]?.trim())
@@ -893,7 +899,7 @@ function PageContent() {
         iteration: ps.iterationCount + 1,
         previousQuestionIds: answeredIds,
       });
-      if (refineResult.text) {
+      if (refineResult.text && !streamInterruptedRef.current) {
         recordUsageSignal("refine", refineResult.text);
         dispatch({ type: "INCREMENT_ITERATION" });
         toast.success("הפרומפט עודכן!");

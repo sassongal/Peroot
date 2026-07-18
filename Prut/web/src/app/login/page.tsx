@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/auth-form";
 import type { Metadata } from "next";
 
@@ -41,7 +42,9 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="rounded-2xl border border-white/6 bg-linear-to-b from-white/5 to-white/2 backdrop-blur-2xl p-7 shadow-[0_16px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] animate-in fade-in slide-in-from-bottom-3 duration-700">
-          <AuthForm />
+          <Suspense fallback={null}>
+            <AuthForm />
+          </Suspense>
         </div>
 
         {/* Footer trust line */}
