@@ -37,24 +37,27 @@ import { DateBadge } from "@/components/ui/DateBadge";
 import { ExportPdfButton } from "@/components/ui/ExportPdfButton";
 import { fromPersonalLibraryRow } from "@/lib/prompt-entity";
 import { useLibraryContext } from "@/context/LibraryContext";
+import { useStyleEditor } from "@/context/LibraryUIContext";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { VariableFiller } from "@/components/features/variables/VariableFiller";
 import { usePresets } from "@/hooks/usePresets";
-import type { PersonalLibrarySharedState, PersonalLibraryViewProps } from "./types";
+import { getStyledPromptMarkup, extractVariablesFromPrompt } from "@/lib/prompt-variables";
+import {
+  usePersonalLibrarySelection,
+  usePersonalLibraryExpanded,
+  usePersonalLibraryCardMenu,
+  usePersonalLibraryFolders,
+  usePersonalLibraryViewPrefs,
+  usePersonalLibraryVersionHistory,
+  usePersonalLibraryActions,
+} from "./context/PersonalLibraryContext";
 
 interface PersonalLibraryPromptCardProps {
   prompt: PersonalPrompt;
-  shared: PersonalLibrarySharedState;
-  viewProps: Pick<PersonalLibraryViewProps, "onUsePrompt" | "onCopyText">;
 }
 
-export function PersonalLibraryPromptCard({
-  prompt,
-  shared,
-  viewProps,
-}: PersonalLibraryPromptCardProps) {
-  const { onUsePrompt, onCopyText } = viewProps;
+export function PersonalLibraryPromptCard({ prompt }: PersonalLibraryPromptCardProps) {
   const ctx = useLibraryContext();
   const confirmDialog = useConfirm();
   const {
@@ -90,12 +93,10 @@ export function PersonalLibraryPromptCard({
 
   const { presets, addPreset, deletePreset } = usePresets();
 
+  const { selectionMode, setSelectionMode, selectedIds, toggleSelection } =
+    usePersonalLibrarySelection();
+  const { expandedIds, setExpandedIds } = usePersonalLibraryExpanded();
   const {
-    selectionMode,
-    selectedIds,
-    toggleSelection,
-    expandedIds,
-    setExpandedIds,
     openMenuId,
     setOpenMenuId,
     showMoveSubMenu,
@@ -104,6 +105,8 @@ export function PersonalLibraryPromptCard({
     setNewMoveInlineName,
     showNewMoveInlineInput,
     setShowNewMoveInlineInput,
+  } = usePersonalLibraryCardMenu();
+  const {
     styleEditorExpanded,
     setStyleEditorExpanded,
     styleTextareaRef,
@@ -111,12 +114,11 @@ export function PersonalLibraryPromptCard({
     clearStyleTokens,
     insertTextAtCursor,
     quickInserts,
-    setVersionHistoryPrompt,
-    allPersonalCategories,
-    getStyledPromptMarkup,
-    extractVariablesFromPrompt,
-    onShowConnections,
-  } = shared;
+  } = useStyleEditor();
+  const { setVersionHistoryPrompt } = usePersonalLibraryVersionHistory();
+  const { allPersonalCategories } = usePersonalLibraryFolders();
+  const { density } = usePersonalLibraryViewPrefs();
+  const { onUsePrompt, onCopyText, onShowConnections } = usePersonalLibraryActions();
 
   const isExpanded = expandedIds.has(prompt.id);
   const isEditing = editingPersonalId === prompt.id;
@@ -173,7 +175,7 @@ export function PersonalLibraryPromptCard({
     longPressTimer.current = setTimeout(() => {
       if (selectionModeRef.current) return;
       navigator.vibrate?.(40);
-      shared.setSelectionMode(true);
+      setSelectionMode(true);
       toggleSelection(prompt.id);
     }, 500);
   };
@@ -265,11 +267,7 @@ export function PersonalLibraryPromptCard({
       <div
         className={cn(
           "flex items-center gap-2 px-3 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none",
-          isExpanded
-            ? "py-3 border-b border-white/8"
-            : shared.density === "compact"
-              ? "py-1.5"
-              : "py-2.5",
+          isExpanded ? "py-3 border-b border-white/8" : density === "compact" ? "py-1.5" : "py-2.5",
         )}
         onClick={toggleExpand}
         role="button"
@@ -707,7 +705,7 @@ export function PersonalLibraryPromptCard({
                     <button
                       onClick={() => {
                         toggleSelection(prompt.id);
-                        shared.setSelectionMode(true);
+                        setSelectionMode(true);
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"

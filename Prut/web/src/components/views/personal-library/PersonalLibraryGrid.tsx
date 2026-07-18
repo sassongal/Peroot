@@ -19,15 +19,15 @@ import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { useChains } from "@/hooks/useChains";
 import { ChainsSection } from "@/components/features/chains/ChainsSection";
 import { PersonalLibraryPromptCard } from "./PersonalLibraryPromptCard";
-import type { PersonalLibrarySharedState, PersonalLibraryViewProps } from "./types";
+import {
+  usePersonalLibraryList,
+  usePersonalLibraryPagination,
+  usePersonalLibraryFolders,
+  usePersonalLibraryViewPrefs,
+  usePersonalLibraryActions,
+} from "./context/PersonalLibraryContext";
 
-interface PersonalLibraryGridProps {
-  shared: PersonalLibrarySharedState;
-  viewProps: Pick<PersonalLibraryViewProps, "onUsePrompt" | "onCopyText">;
-}
-
-export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridProps) {
-  const { onUsePrompt } = viewProps;
+export function PersonalLibraryGrid() {
   const ctx = useLibraryContext();
   const {
     personalQuery,
@@ -40,6 +40,8 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
   } = ctx;
+
+  const { onUsePrompt } = usePersonalLibraryActions();
 
   const {
     chains,
@@ -54,21 +56,23 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
 
   const {
     displayItems,
-    effectiveFolder,
     isLoading,
     localSearch,
     chainsExpanded,
     setChainsExpanded,
     handleSearchChange,
     addPersonalPromptFromLibrary,
-    // Pagination
+  } = usePersonalLibraryList();
+  const { effectiveFolder } = usePersonalLibraryFolders();
+  const { density } = usePersonalLibraryViewPrefs();
+  const {
     usedPage,
     usedPageSize,
     usedTotalCount,
     totalPages,
     handlePageChange,
     getPaginationPages,
-  } = shared;
+  } = usePersonalLibraryPagination();
 
   // Listen for shared-chain imports dispatched by HomeClient after it
   // decodes a `?chain=<base64>` query param on mount. We import via the
@@ -391,7 +395,7 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
           <div
             className={cn(
               "grid",
-              shared.density === "compact"
+              density === "compact"
                 ? "gap-1.5 [grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr))]"
                 : "gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(440px,100%),1fr))]",
             )}
@@ -406,12 +410,7 @@ export function PersonalLibraryGrid({ shared, viewProps }: PersonalLibraryGridPr
             }
           >
             {displayItems.map((prompt) => (
-              <PersonalLibraryPromptCard
-                key={prompt.id}
-                prompt={prompt}
-                shared={shared}
-                viewProps={viewProps}
-              />
+              <PersonalLibraryPromptCard key={prompt.id} prompt={prompt} />
             ))}
           </div>
         )}

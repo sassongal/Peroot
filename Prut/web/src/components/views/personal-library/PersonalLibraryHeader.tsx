@@ -4,8 +4,6 @@ import Link from "next/link";
 import {
   BookOpen,
   Plus,
-  Star,
-  Pin,
   CheckSquare,
   Upload,
   History,
@@ -23,15 +21,17 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { SearchAutosuggest } from "@/components/features/library/SearchAutosuggest";
 import { ActiveFilterChips } from "@/components/features/library/ActiveFilterChips";
-import type { PersonalLibrarySharedState, PersonalLibraryViewProps } from "./types";
+import {
+  usePersonalLibrarySelection,
+  usePersonalLibraryFolders,
+  usePersonalLibraryList,
+  usePersonalLibraryPagination,
+  usePersonalLibraryViewPrefs,
+  usePersonalLibrarySidebar,
+  usePersonalLibraryActions,
+} from "./context/PersonalLibraryContext";
 
-interface PersonalLibraryHeaderProps {
-  shared: PersonalLibrarySharedState;
-  viewProps: Pick<PersonalLibraryViewProps, "handleImportHistory" | "historyLength">;
-}
-
-export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHeaderProps) {
-  const { handleImportHistory, historyLength } = viewProps;
+export function PersonalLibraryHeader() {
   const ctx = useLibraryContext();
   const {
     user,
@@ -41,29 +41,22 @@ export function PersonalLibraryHeader({ shared, viewProps }: PersonalLibraryHead
     setSelectedCapabilityFilter,
   } = ctx;
 
+  const { handleImportHistory, historyLength } = usePersonalLibraryActions();
+  const { selectionMode, setSelectionMode, selectedIds, selectAllVisible } =
+    usePersonalLibrarySelection();
+  const { activeFolderLabel, effectiveFolder, setFolder } = usePersonalLibraryFolders();
+  const { usedTotalCount } = usePersonalLibraryPagination();
   const {
-    activeFolderLabel,
-    usedTotalCount,
     currentSort,
     localSearch,
-    selectionMode,
-    setSelectionMode,
-    selectedIds,
     displayItems,
-    selectAllVisible,
-    effectiveFolder,
-    folderCounts,
-    setSidebarOpen,
-    importFileRef,
     handleSearchChange,
     handleSortChange,
     handleImportFile,
-    setFolder,
-    localViewType,
-    setLocalViewType,
-    density,
-    setDensity,
-  } = shared;
+    importFileRef,
+  } = usePersonalLibraryList();
+  const { setSidebarOpen } = usePersonalLibrarySidebar();
+  const { localViewType, setLocalViewType, density, setDensity } = usePersonalLibraryViewPrefs();
 
   // When a search or capability filter is active, the count reflects matches —
   // label it "results" so a filtered-down list never reads as the whole library.
