@@ -1,4 +1,6 @@
-export const MAX_FILE_SIZE_MB = 10;
+import { MAX_FILE_SIZE_MB } from "./limits";
+
+export { MAX_FILE_SIZE_MB } from "./limits";
 
 export const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
   pdf: "pdf",
@@ -9,21 +11,80 @@ export const SUPPORTED_FILE_EXTENSIONS: Record<string, string> = {
   xls: "xlsx",
 };
 
-export interface FileDispatchResult {
-  text: string;
-  metadata: Record<string, unknown> & { format: string };
+/** The format discriminator carried on every extraction's metadata. */
+export type ExtractFormat = "url" | "pdf" | "txt" | "docx" | "xlsx" | "csv" | "image";
+
+/**
+ * The single metadata shape every adapter speaks. A superset of the per-source
+ * fields — most are optional and only populated by the relevant adapter.
+ */
+export interface ExtractMetadata {
+  format: ExtractFormat;
+  // url
+  title?: string;
+  author?: string;
+  publishedTime?: string;
+  sourceUrl?: string;
+  usedFallback?: "jina";
+  // pdf
+  pages?: number;
+  // text
+  characters?: number;
+  // office
+  rows?: number;
+  columns?: number;
+  sheets?: number;
+  sheetName?: string;
+  warnings?: string[];
+  // image
+  mimeType?: string;
+  sizeMb?: number;
 }
 
 /**
- * Route a file buffer to the right extractor based on MIME type + filename.
- * Dynamic imports keep heavy parsers (pdfjs-dist, mammoth, xlsx) out of
- * routes that never process files (e.g. describe-image).
+ * The single result every extract adapter returns. Text-bearing sources
+ * (url/pdf/txt/office) fill `text`; images fill `imageBase64`/`imageMimeType`
+ * and leave `text` empty (the ENRICH stage does the vision work later).
  */
-export async function dispatchFile(
+export interface ExtractResult {
+  text: string;
+  imageBase64?: string;
+  imageMimeType?: string;
+  metadata: ExtractMetadata;
+}
+
+/** Discriminated input to the extract seam — one shape per source kind. */
+export type ExtractInput =
+  | { kind: "url"; url: string; jinaFallback: boolean }
+  | { kind: "file"; buffer: Buffer; filename: string; mimeType: string }
+  | { kind: "image"; buffer: Buffer; mimeType: string };
+
+/**
+ * The extract seam. One entry, one dispatch, exhaustive over `kind`. Heavy
+ * parsers (pdfjs, mammoth, xlsx, jsdom) are dynamically imported so a route that
+ * only handles images never loads them.
+ */
+export async function extract(input: ExtractInput): Promise<ExtractResult> {
+  switch (input.kind) {
+    case "url": {
+      const { extractUrl } = await import("./url");
+      return extractUrl(input.url, { jinaFallback: input.jinaFallback });
+    }
+    case "image": {
+      const { extractImage } = await import("./image");
+      return extractImage(input.buffer, input.mimeType);
+    }
+    case "file":
+      return dispatchFile(input.buffer, input.filename, input.mimeType);
+  }
+}
+
+/** Route a file buffer to the right format extractor. Private to the seam. */
+async function dispatchFile(
   buffer: Buffer,
   filename: string,
   mimeType: string,
-): Promise<FileDispatchResult> {
+): Promise<ExtractResult> {
   const sizeMb = buffer.length / (1024 * 1024);
   if (sizeMb > MAX_FILE_SIZE_MB) {
     throw new Error(`File size ${sizeMb.toFixed(1)}MB exceeds ${MAX_FILE_SIZE_MB}MB`);
@@ -69,5 +130,3 @@ function resolveFormat(mimeType: string, filename: string): string {
   if (ext && SUPPORTED_FILE_EXTENSIONS[ext]) return SUPPORTED_FILE_EXTENSIONS[ext];
   throw new Error(`Cannot resolve format for MIME "${mimeType}" / extension ".${ext ?? "?"}"`);
 }
-
-export { extractImage } from "./image";
