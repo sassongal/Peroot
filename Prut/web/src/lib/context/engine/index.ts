@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { getContextLimits } from "@/lib/plans";
 import { logger } from "@/lib/logger";
 import type { ContextBlock, ProcessAttachmentInput, PipelineError, DocumentType } from "./types";
-import { dispatchFile, extractImage } from "./extract";
+import { extract, type ExtractInput, type ExtractMetadata } from "./extract";
 import { computeSha256, detectDocumentType } from "./classify";
 import { enrichContent } from "./enrich";
 import { compressToLimit, type CompressionStrategy } from "./compress";
@@ -32,6 +32,24 @@ function getCompressionStrategy(detectedType: DocumentType): CompressionStrategy
   }
 }
 
+/** Map the wide ProcessAttachmentInput to the discriminated ExtractInput,
+ *  validating that each source kind carries the fields it needs (the failures
+ *  land in failedBlock via the extract try/catch). */
+function toExtractInput(input: ProcessAttachmentInput, jinaFallback: boolean): ExtractInput {
+  if (input.type === "url") {
+    if (!input.url) throw new Error("url input requires url");
+    return { kind: "url", url: input.url, jinaFallback };
+  }
+  if (input.type === "image") {
+    if (!input.buffer || !input.mimeType) throw new Error("image input requires buffer, mimeType");
+    return { kind: "image", buffer: input.buffer, mimeType: input.mimeType };
+  }
+  if (!input.buffer || !input.filename || !input.mimeType) {
+    throw new Error("file input requires buffer, filename, mimeType");
+  }
+  return { kind: "file", buffer: input.buffer, filename: input.filename, mimeType: input.mimeType };
+}
+
 export async function processAttachment(input: ProcessAttachmentInput): Promise<ContextBlock> {
   const limits = getContextLimits(input.tier);
   const id = input.id || randomUUID();
@@ -41,37 +59,22 @@ export async function processAttachment(input: ProcessAttachmentInput): Promise<
   onStage?.("extracting");
   let rawText = "";
   let sourceTitle = input.filename ?? input.url ?? "attachment";
-  let extractMeta: Record<string, unknown> = {};
+  let extractMeta: Partial<ExtractMetadata> = {};
   let imageBase64: string | undefined;
   let imageMimeType: string | undefined;
 
   try {
-    if (input.type === "file") {
-      if (!input.buffer || !input.filename || !input.mimeType) {
-        throw new Error("file input requires buffer, filename, mimeType");
-      }
-      const r = await dispatchFile(input.buffer, input.filename, input.mimeType);
-      rawText = r.text;
-      extractMeta = r.metadata;
-      sourceTitle = input.filename;
-    } else if (input.type === "url") {
-      if (!input.url) throw new Error("url input requires url");
-      const { extractUrl } = await import("./extract/url");
-      const r = await extractUrl(input.url, { jinaFallback: limits.jinaFallback });
-      rawText = r.text;
-      extractMeta = r.metadata;
-      sourceTitle = (r.metadata.title as string | undefined) ?? input.url;
-    } else if (input.type === "image") {
-      if (!input.buffer || !input.mimeType) {
-        throw new Error("image input requires buffer, mimeType");
-      }
-      const r = await extractImage(input.buffer, input.mimeType);
-      imageBase64 = r.base64;
-      imageMimeType = r.metadata.mimeType ?? input.mimeType;
-      extractMeta = r.metadata;
-      sourceTitle = input.filename ?? "image";
-      rawText = "";
-    }
+    const r = await extract(toExtractInput(input, limits.jinaFallback));
+    rawText = r.text;
+    extractMeta = r.metadata;
+    imageBase64 = r.imageBase64;
+    imageMimeType = r.imageMimeType;
+    sourceTitle =
+      input.type === "url"
+        ? ((r.metadata.title as string | undefined) ?? input.url ?? "attachment")
+        : input.type === "image"
+          ? (input.filename ?? "image")
+          : (input.filename ?? "attachment");
   } catch (err) {
     return failedBlock(id, input, "extract", err);
   }
@@ -193,7 +196,7 @@ function warningBlock(
   rawText: string,
   title: string,
   detectedType: DocumentType,
-  extractMeta: Record<string, unknown>,
+  extractMeta: Partial<ExtractMetadata>,
   err: unknown,
 ): ContextBlock {
   const message = err instanceof Error ? err.message : String(err);

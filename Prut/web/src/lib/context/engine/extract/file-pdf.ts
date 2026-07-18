@@ -3,24 +3,21 @@
  * and does not pull @napi-rs/canvas, so it works in Vercel Functions
  * without serverExternalPackages gymnastics.
  */
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-import type { TextItem } from 'pdfjs-dist/types/src/display/api';
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { TextItem } from "pdfjs-dist/types/src/display/api";
+import type { ExtractResult } from "./index";
 
-export interface PdfExtractionResult {
-  text: string;
-  metadata: {
-    pages: number;
-    format: 'pdf';
-  };
-}
-
-export async function extractPdf(buffer: Buffer): Promise<PdfExtractionResult> {
+export async function extractPdf(buffer: Buffer): Promise<ExtractResult> {
   const uint8 = new Uint8Array(buffer);
-  const loadingTask = pdfjs.getDocument({ data: uint8, useWorkerFetch: false, isEvalSupported: false });
+  const loadingTask = pdfjs.getDocument({
+    data: uint8,
+    useWorkerFetch: false,
+    isEvalSupported: false,
+  });
   const doc = await Promise.race([
     loadingTask.promise,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('PDF load timed out after 15s')), 15_000),
+      setTimeout(() => reject(new Error("PDF load timed out after 15s")), 15_000),
     ),
   ]);
 
@@ -32,17 +29,17 @@ export async function extractPdf(buffer: Buffer): Promise<PdfExtractionResult> {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
     const strings = content.items
-      .filter((item): item is TextItem => 'str' in item)
+      .filter((item): item is TextItem => "str" in item)
       .map((item) => item.str)
       .filter(Boolean);
-    chunks.push(strings.join(' '));
+    chunks.push(strings.join(" "));
     page.cleanup();
   }
   await doc.cleanup();
   await doc.destroy();
 
   return {
-    text: chunks.join('\n\n').trim(),
-    metadata: { pages, format: 'pdf' },
+    text: chunks.join("\n\n").trim(),
+    metadata: { pages, format: "pdf" },
   };
 }

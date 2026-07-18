@@ -1,12 +1,6 @@
-export interface TextExtractionResult {
-  text: string;
-  metadata: {
-    format: 'txt';
-    characters: number;
-  };
-}
+import type { ExtractResult } from "./index";
 
-export async function extractText(buffer: Buffer): Promise<TextExtractionResult> {
-  const text = buffer.toString('utf-8');
-  return { text, metadata: { format: 'txt', characters: text.length } };
+export async function extractText(buffer: Buffer): Promise<ExtractResult> {
+  const text = buffer.toString("utf-8");
+  return { text, metadata: { format: "txt", characters: text.length } };
 }

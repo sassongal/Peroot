@@ -1,34 +1,17 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import dns from "node:dns/promises";
-
-export interface UrlExtractionResult {
-  text: string;
-  metadata: {
-    format: "url";
-    title?: string;
-    author?: string;
-    publishedTime?: string;
-    sourceUrl: string;
-    usedFallback?: "jina";
-  };
-}
+import { readCapped, userFacingError, MAX_RESPONSE_BYTES } from "./limits";
+import type { ExtractResult } from "./index";
 
 export interface UrlExtractOptions {
   jinaFallback: boolean;
   timeoutMs?: number;
 }
 
-function userFacingError(message: string): Error {
-  const err = new Error(message) as Error & { userFacing: boolean };
-  err.userFacing = true;
-  return err;
-}
-
 const MIN_USEFUL_CHARS = 200;
 const MIN_JINA_CHARS = 100;
 const DEFAULT_TIMEOUT = 12_000;
-const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 // Private/reserved IP ranges — block SSRF.
 // Covers IPv4 RFC-1918/loopback and IPv4-mapped IPv6 (::ffff:10.x, ::ffff:127.x, etc.)
@@ -75,10 +58,7 @@ async function assertPublicDns(hostname: string): Promise<void> {
   }
 }
 
-export async function extractUrl(
-  url: string,
-  opts: UrlExtractOptions,
-): Promise<UrlExtractionResult> {
+export async function extractUrl(url: string, opts: UrlExtractOptions): Promise<ExtractResult> {
   const parsed = assertPublicUrl(url);
   await assertPublicDns(parsed.hostname);
   const normalizedUrl = parsed.href;
@@ -163,11 +143,7 @@ async function fetchText(url: string, timeoutMs: number): Promise<string> {
     if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_BYTES) {
       throw userFacingError("הדף גדול מדי לעיבוד");
     }
-    const buf = await res.arrayBuffer();
-    if (buf.byteLength > MAX_RESPONSE_BYTES) {
-      throw userFacingError("הדף גדול מדי לעיבוד");
-    }
-    return new TextDecoder().decode(buf);
+    return await readCapped(res, MAX_RESPONSE_BYTES);
   } finally {
     clearTimeout(t);
   }
