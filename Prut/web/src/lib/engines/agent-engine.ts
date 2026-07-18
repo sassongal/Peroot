@@ -10,6 +10,7 @@ import {
   getRefinementExamplesBlock,
 } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
+import { TRAILER, renderTrailerInstruction } from "@/lib/prompt-stream/trailer";
 import type { ContextBlock } from "@/lib/context/engine/types";
 
 /** Extract the best available text from an attachment (handles both legacy and ContextBlock shapes). */
@@ -305,10 +306,10 @@ OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
 מיד לאחר הוראת הסוכן המלאה (וכל 9 הסעיפים), אתה חייב להוסיף את שני הבלוקים הבאים. הם אינם "הסבר" או "פרשנות" — הם חלק מהפלט הנדרש, והמערכת downstream תיכשל בלעדיהם.
 
 בלוק 1 — כותרת תיאורית קצרה בעברית בפורמט המדויק:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+${TRAILER.TITLE_OPEN}שם קצר ותיאורי בעברית${TRAILER.TITLE_CLOSE}
 
 בלוק 2 — שאלות הבהרה בפורמט המדויק:
-[GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
+${TRAILER.QUESTIONS}[{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
 
 2-4 שאלות הבהרה ממוקדות לעיצוב הסוכן. השאלות חייבות להתמקד ב:
 - זהות הסוכן (מי הקהל, מה תחום המומחיות המדויק, איזה טון)
@@ -318,8 +319,8 @@ OUTPUT CONTRACT — חובה מוחלטת (חלק בלתי נפרד מהפלט):
 - מנגנוני למידה (משוב, התאמה, אסקלציה)
 
 אל תשאל על CO-STAR, RISEN או מסגרות הנדסת פרומפט - השאלות צריכות לעצב את הסוכן עצמו.
-אם הוראת הסוכן כבר מכסה את כל 9 הסעיפים ביסודיות, החזר מערך ריק: [GENIUS_QUESTIONS][]
-גם במקרה של מערך ריק — חובה להוציא את הבלוק [GENIUS_QUESTIONS][] ואת [PROMPT_TITLE]...[/PROMPT_TITLE]. אי-פליטת אחד מהבלוקים האלה תיחשב כישלון של הפלט.${contextAwareHint}`;
+אם הוראת הסוכן כבר מכסה את כל 9 הסעיפים ביסודיות, החזר מערך ריק: ${TRAILER.QUESTIONS}[]
+גם במקרה של מערך ריק — חובה להוציא את הבלוק ${TRAILER.QUESTIONS}[] ואת ${TRAILER.TITLE_OPEN}...${TRAILER.TITLE_CLOSE}. אי-פליטת אחד מהבלוקים האלה תיחשב כישלון של הפלט.${contextAwareHint}`;
 
     let userPrompt = hasContext
       ? `${this.buildTemplate(this.config.user_prompt_template, variables)}\n\n[חומר מצורף מהמשתמש — בסיס הידע של הסוכן]\n${this.buildAgentContextSummary(input.context!)}`
@@ -417,11 +418,11 @@ ${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הסוכן כבר 
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ""}לאחר הוראת הסוכן המשופרת, הוסף כותרת תיאורית קצרה בעברית:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
-
-לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הגבוהים ביותר שנותרו - זהות הסוכן, תחומי ידע ספציפיים, גבולות, מקרי קצה קריטיים, או מנגנוני למידה ושיפור עצמי. החזר מערך ריק [] אם הוראת הסוכן עכשיו מכסה את כל 9 הסעיפים ביסודיות.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]${languageOverride}`,
+${identity ? `${identity}\n\n` : ""}${renderTrailerInstruction({
+        questionFocus:
+          "ועד 3 שאלות חדשות המכוונות לפערים הגבוהים ביותר שנותרו - זהות הסוכן, תחומי ידע ספציפיים, גבולות, מקרי קצה קריטיים, או מנגנוני למידה ושיפור עצמי. החזר מערך ריק [] אם הוראת הסוכן עכשיו מכסה את כל 9 הסעיפים ביסודיות.",
+        language: input.outputLanguage,
+      })}${languageOverride}`,
 
       userPrompt: `הוראת הסוכן הנוכחית:
 ---

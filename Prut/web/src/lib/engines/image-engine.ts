@@ -17,6 +17,7 @@ import {
 } from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
 import { getPlatformOverrides } from "./platform-overrides";
+import { renderTrailerInstruction } from "@/lib/prompt-stream/trailer";
 
 // ── Platform-specific system prompt fragments ──
 
@@ -878,11 +879,10 @@ ${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כ�
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
-
-לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים הויזואליים הגבוהים ביותר שנותרו - נושא, סגנון, תאורה, קומפוזיציה, או אווירה. החזר מערך ריק [] אם הפרומפט עכשיו מקיף את כל 7 השכבות.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+${identity ? `${identity}\n\n` : ""}${renderTrailerInstruction({
+          questionFocus:
+            "ועד 3 שאלות חדשות המכוונות לפערים הויזואליים הגבוהים ביותר שנותרו - נושא, סגנון, תאורה, קומפוזיציה, או אווירה. החזר מערך ריק [] אם הפרומפט עכשיו מקיף את כל 7 השכבות.",
+        })}`,
 
         userPrompt: `הפרומפט הנוכחי:
 ---
