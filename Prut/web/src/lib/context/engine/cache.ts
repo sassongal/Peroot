@@ -1,5 +1,6 @@
 import { redis } from "@/lib/redis";
 import { logger } from "@/lib/logger";
+import { blockStatus } from "./stage";
 import type { ContextBlock, PlanTier } from "./types";
 
 const TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -40,8 +41,7 @@ export async function putCachedBlock(
     const { display, ...rest } = block;
     const { rawText: _raw, ...displayRest } = display;
     const slim = { ...rest, display: displayRest };
-    const ttl =
-      block.stage === "warning" || block.stage === "error" ? WARNING_TTL_SECONDS : TTL_SECONDS;
+    const ttl = blockStatus(block.stage) !== "ready" ? WARNING_TTL_SECONDS : TTL_SECONDS;
     await redis.set(k, JSON.stringify(slim), { ex: ttl });
   } catch (err) {
     logger.warn("[context-cache] put failed", err);

@@ -4,6 +4,7 @@ import { FileText, Globe, Image as ImageIcon, X } from "lucide-react";
 import { StageProgressBar } from "./StageProgressBar";
 import { AttachmentDetailsDrawer } from "./AttachmentDetailsDrawer";
 import type { ContextBlock, ProcessingStage } from "@/lib/context/engine/types";
+import { blockStatus } from "@/lib/context/engine/stage";
 
 interface Props {
   block?: ContextBlock;
@@ -22,8 +23,8 @@ const ICON: Record<ContextBlock["type"] | "file", React.ComponentType<{ classNam
 export function AttachmentCard({ block, stage, title, onRemove, onRetry }: Props) {
   const [open, setOpen] = useState(false);
   const Icon = ICON[block?.type ?? "file"];
-  const canOpen = stage === "ready" || stage === "warning";
-  const isError = stage === "error";
+  const canOpen = blockStatus(stage) === "ready";
+  const isError = blockStatus(stage) === "error";
 
   // Wrapper div avoids nesting <button> inside <button> (invalid HTML — browsers
   // hoist inner buttons out, breaking stopPropagation and the onRemove handler).

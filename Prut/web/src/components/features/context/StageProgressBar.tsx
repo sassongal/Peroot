@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { AlertTriangle, Check, Loader2, X } from "lucide-react";
 import type { ProcessingStage } from "@/lib/context/engine/types";
+import { blockStatus } from "@/lib/context/engine/stage";
 
 const STAGES: Array<{ id: ProcessingStage; label: string }> = [
   { id: "uploading", label: "מעלה" },
@@ -13,8 +14,8 @@ const STAGES: Array<{ id: ProcessingStage; label: string }> = [
 type PillState = "pending" | "active" | "complete";
 
 function pillState(current: ProcessingStage, pillId: ProcessingStage): PillState {
-  // treat warning as ready for ordering purposes
-  const normalized = current === "warning" ? "ready" : current;
+  // A "ready" projection (ready OR warning) collapses to the ready pill for ordering.
+  const normalized = blockStatus(current) === "ready" ? "ready" : current;
   const order = STAGES.map((s) => s.id);
   const ci = order.indexOf(normalized);
   const pi = order.indexOf(pillId);
@@ -25,7 +26,7 @@ function pillState(current: ProcessingStage, pillId: ProcessingStage): PillState
 }
 
 export function StageProgressBar({ stage }: { stage: ProcessingStage }) {
-  if (stage === "error") {
+  if (blockStatus(stage) === "error") {
     return (
       <div data-testid="stage-error" className="flex items-center gap-2 text-red-600 text-sm">
         <X className="w-4 h-4" />

@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import type { ContextAttachment, AttachmentType } from "@/lib/context/types";
 import type { ProcessingStage } from "@/lib/context/engine/types";
+import { blockStatus } from "@/lib/context/engine/stage";
 import { PLAN_CONTEXT_LIMITS } from "@/lib/plans";
 import { getApiPath } from "@/lib/api-path";
 
@@ -157,7 +158,7 @@ export function useContextAttachments(options: UseContextAttachmentsOptions = {}
 
   const applyBlockUpdate = useCallback((id: string, block: unknown) => {
     const b = block as { stage?: string };
-    const isError = b.stage === "error";
+    const isError = blockStatus(b.stage as ProcessingStage) === "error";
     setAttachments((prev) =>
       prev.map((a) =>
         a.id === id
