@@ -1,95 +1,53 @@
 "use client";
 
-import { useMemo, useRef, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { CAPABILITY_COLORS } from "./graph-utils";
 import { CapabilityMode } from "@/lib/capability-mode";
 
-const ForceGraph3D = dynamic(() => import("react-force-graph-3d").then((m) => m.default), {
-  ssr: false,
-});
+/**
+ * Decorative "here's what the graph looks like" preview shown on the guest
+ * personal-library gate. Rendered as a static SVG (no react-force-graph / THREE.js
+ * and no requestAnimationFrame loop) — it's purely decorative, so the WebGL cost
+ * and never-settling physics of the real graph aren't worth it here. A tiny
+ * CSS opacity pulse gives it life and is disabled under prefers-reduced-motion.
+ */
 
-type DemoNode = { id: string; label: string; capability: CapabilityMode; val: number };
-type DemoLink = { source: string; target: string };
+type DemoNode = {
+  id: string;
+  capability: CapabilityMode;
+  val: number;
+  x: number;
+  y: number;
+};
 
-// Tiny curated set — enough signal to suggest the real graph without clutter.
+// Hand-placed layout over a 320×220 canvas — enough signal to suggest the real
+// graph without clutter.
 const DEMO_NODES: DemoNode[] = [
-  { id: "a", label: "Landing page", capability: CapabilityMode.STANDARD, val: 8 },
-  { id: "b", label: "Hero image", capability: CapabilityMode.IMAGE_GENERATION, val: 10 },
-  { id: "c", label: "Research brief", capability: CapabilityMode.DEEP_RESEARCH, val: 7 },
-  { id: "d", label: "Support agent", capability: CapabilityMode.AGENT_BUILDER, val: 9 },
-  { id: "e", label: "Product video", capability: CapabilityMode.VIDEO_GENERATION, val: 8 },
-  { id: "f", label: "CTA copy", capability: CapabilityMode.STANDARD, val: 6 },
-  { id: "g", label: "Icon set", capability: CapabilityMode.IMAGE_GENERATION, val: 7 },
-  { id: "h", label: "Onboarding flow", capability: CapabilityMode.AGENT_BUILDER, val: 6 },
+  { id: "a", capability: CapabilityMode.STANDARD, val: 8, x: 60, y: 62 },
+  { id: "b", capability: CapabilityMode.IMAGE_GENERATION, val: 10, x: 158, y: 40 },
+  { id: "c", capability: CapabilityMode.DEEP_RESEARCH, val: 7, x: 108, y: 128 },
+  { id: "d", capability: CapabilityMode.AGENT_BUILDER, val: 9, x: 250, y: 66 },
+  { id: "e", capability: CapabilityMode.VIDEO_GENERATION, val: 8, x: 208, y: 150 },
+  { id: "f", capability: CapabilityMode.STANDARD, val: 6, x: 84, y: 182 },
+  { id: "g", capability: CapabilityMode.IMAGE_GENERATION, val: 7, x: 272, y: 158 },
+  { id: "h", capability: CapabilityMode.AGENT_BUILDER, val: 6, x: 168, y: 190 },
 ];
 
-const DEMO_LINKS: DemoLink[] = [
-  { source: "a", target: "b" },
-  { source: "a", target: "f" },
-  { source: "b", target: "g" },
-  { source: "c", target: "a" },
-  { source: "d", target: "h" },
-  { source: "e", target: "b" },
-  { source: "f", target: "h" },
-  { source: "g", target: "e" },
+const DEMO_LINKS: [string, string][] = [
+  ["a", "b"],
+  ["a", "f"],
+  ["b", "g"],
+  ["c", "a"],
+  ["d", "h"],
+  ["e", "b"],
+  ["f", "h"],
+  ["g", "e"],
 ];
+
+const byId: Record<string, DemoNode> = Object.fromEntries(DEMO_NODES.map((n) => [n.id, n]));
 
 export function GuestGraphPreview({ height = 220 }: { height?: number }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fgRef = useRef<any>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(320);
-  const data = useMemo(() => ({ nodes: DEMO_NODES, links: DEMO_LINKS }), []);
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const w = entry.contentRect.width;
-      if (w > 0) setWidth(w);
-    });
-    ro.observe(el);
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 0) setWidth(rect.width);
-    return () => ro.disconnect();
-  }, []);
-
-  // Slow cinematic auto-orbit around the graph centre.
-  // Pauses when tab is hidden so we don't burn GPU on a background tab.
-  useEffect(() => {
-    let raf = 0;
-    let angle = 0;
-    let paused = typeof document !== "undefined" && document.visibilityState === "hidden";
-    const distance = 160;
-    const tick = () => {
-      if (!paused) {
-        const fg = fgRef.current;
-        if (fg?.cameraPosition) {
-          angle += 0.0025;
-          fg.cameraPosition({
-            x: distance * Math.sin(angle),
-            y: 20,
-            z: distance * Math.cos(angle),
-          });
-        }
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    const onVis = () => {
-      paused = document.visibilityState === "hidden";
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, []);
-
   return (
     <div
-      ref={wrapRef}
       className="w-full rounded-2xl overflow-hidden border border-white/10 relative"
       style={{
         height,
@@ -98,33 +56,59 @@ export function GuestGraphPreview({ height = 220 }: { height?: number }) {
       }}
       aria-hidden="true"
     >
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <ForceGraph3D
-        ref={fgRef as any}
-        graphData={data as any}
-        width={width}
-        height={height}
-        nodeId="id"
-        nodeLabel={((n: DemoNode) => n.label) as any}
-        nodeVal={((n: DemoNode) => n.val) as any}
-        nodeColor={((n: DemoNode) => CAPABILITY_COLORS[n.capability]) as any}
-        nodeOpacity={0.95}
-        nodeResolution={16}
-        linkColor={(() => "rgba(148,163,184,0.45)") as any}
-        linkWidth={0.6}
-        linkOpacity={0.7}
-        linkDirectionalParticles={2}
-        linkDirectionalParticleWidth={1.4}
-        linkDirectionalParticleSpeed={0.006}
-        linkDirectionalParticleColor={(() => "rgba(245,158,11,0.9)") as any}
-        backgroundColor="rgba(2,6,23,0)"
-        showNavInfo={false}
-        enableNodeDrag={false}
-        enableNavigationControls={false}
-        cooldownTicks={Infinity}
-        warmupTicks={40}
-        rendererConfig={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-      />
+      <svg
+        viewBox="0 0 320 220"
+        width="100%"
+        height="100%"
+        preserveAspectRatio="xMidYMid slice"
+        role="presentation"
+      >
+        <defs>
+          <filter id="ggp-glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {DEMO_LINKS.map(([s, t], i) => {
+          const a = byId[s];
+          const b = byId[t];
+          return (
+            <line
+              key={i}
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke="rgba(148,163,184,0.4)"
+              strokeWidth={0.8}
+            />
+          );
+        })}
+
+        {DEMO_NODES.map((n, i) => (
+          <circle
+            key={n.id}
+            cx={n.x}
+            cy={n.y}
+            r={4 + n.val * 0.7}
+            fill={CAPABILITY_COLORS[n.capability]}
+            opacity={0.95}
+            filter="url(#ggp-glow)"
+            className="ggp-node"
+            style={{ animationDelay: `${i * 0.32}s` }}
+          />
+        ))}
+      </svg>
+
+      <style>{`
+        .ggp-node { animation: ggp-pulse 3.4s ease-in-out infinite; will-change: opacity; }
+        @keyframes ggp-pulse { 0%,100% { opacity: .7 } 50% { opacity: 1 } }
+        @media (prefers-reduced-motion: reduce) { .ggp-node { animation: none } }
+      `}</style>
     </div>
   );
 }

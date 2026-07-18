@@ -36,24 +36,22 @@ export function TabContent() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const PAGE_SIZE = 20;
 
+  // Page-based: fetch the requested page and REPLACE the list (Prev/Next are page
+  // controls, not infinite scroll). Taking the target page explicitly avoids the
+  // stale-closure bug where Prev/Next read an outdated `page`.
   const loadContent = useCallback(
-    async (reset = false) => {
+    async (targetPage = 1) => {
       setLoading(true);
-      const currentPage = reset ? 1 : page;
       try {
-        const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_SIZE) });
+        const params = new URLSearchParams({ page: String(targetPage), limit: String(PAGE_SIZE) });
         if (contentType !== "all") params.set("type", contentType);
         if (statusFilter !== "all") params.set("status", statusFilter);
         if (search.trim()) params.set("search", search.trim());
         const res = await fetch(getApiPath(`/api/admin/content-factory?${params}`));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: { items: ContentItem[]; hasMore: boolean } = await res.json();
-        if (reset) {
-          setItems(data.items ?? []);
-          setPage(1);
-        } else {
-          setItems((prev) => [...prev, ...(data.items ?? [])]);
-        }
+        setItems(data.items ?? []);
+        setPage(targetPage);
         setHasMore(data.hasMore ?? false);
       } catch {
         toast.error("שגיאה בטעינת תוכן");
@@ -61,11 +59,11 @@ export function TabContent() {
         setLoading(false);
       }
     },
-    [contentType, statusFilter, search, page],
+    [contentType, statusFilter, search],
   );
 
   useEffect(() => {
-    loadContent(true);
+    loadContent(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentType, statusFilter]);
 
@@ -170,7 +168,7 @@ export function TabContent() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && loadContent(true)}
+            onKeyDown={(e) => e.key === "Enter" && loadContent(1)}
             placeholder="חיפוש..."
             className="flex-1 bg-transparent border-none outline-none text-white text-sm font-bold placeholder:text-zinc-700"
           />
@@ -178,7 +176,7 @@ export function TabContent() {
             <button
               onClick={() => {
                 setSearch("");
-                loadContent(true);
+                loadContent(1);
               }}
             >
               <X className="w-3.5 h-3.5 text-zinc-600 hover:text-zinc-300 transition-colors" />
@@ -186,7 +184,7 @@ export function TabContent() {
           )}
         </div>
         <button
-          onClick={() => loadContent(true)}
+          onClick={() => loadContent(1)}
           disabled={loading}
           className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
         >
@@ -301,12 +299,9 @@ export function TabContent() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              if (page > 1) {
-                setPage((p) => p - 1);
-                loadContent();
-              }
+              if (page > 1) loadContent(page - 1);
             }}
-            disabled={page <= 1}
+            disabled={page <= 1 || loading}
             className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <ChevronRight className="w-4 h-4" />
@@ -314,12 +309,9 @@ export function TabContent() {
           <span className="text-[11px] font-black text-zinc-500 px-2">עמוד {page}</span>
           <button
             onClick={() => {
-              if (hasMore) {
-                setPage((p) => p + 1);
-                loadContent();
-              }
+              if (hasMore) loadContent(page + 1);
             }}
-            disabled={!hasMore}
+            disabled={!hasMore || loading}
             className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
