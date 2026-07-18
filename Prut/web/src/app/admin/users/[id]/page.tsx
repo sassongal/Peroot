@@ -325,11 +325,20 @@ export default function UserDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Action failed");
-      toast.success(`Action "${action}" completed`);
+      const ACTION_LABELS: Record<string, string> = {
+        grant_credits: "הקרדיטים נוספו",
+        revoke_credits: "הקרדיטים נשללו",
+        change_tier: "המסלול עודכן",
+        ban: "המשתמש נחסם",
+        unban: "החסימה הוסרה",
+        make_admin: "הוענקו הרשאות מנהל",
+        remove_admin: "הרשאות המנהל הוסרו",
+      };
+      toast.success(ACTION_LABELS[action] ?? "הפעולה בוצעה");
       fetchDetail();
     } catch (err: unknown) {
       logger.error(err);
-      toast.error(err instanceof Error ? err.message : "Action failed");
+      toast.error(err instanceof Error ? err.message : "הפעולה נכשלה");
     } finally {
       setActionLoading(null);
     }
@@ -1296,7 +1305,8 @@ export default function UserDetailPage() {
                   <button
                     onClick={() => {
                       const n = parseInt(creditAmount);
-                      if (!n || n <= 0) return toast.error("Enter a positive number");
+                      if (!n || n <= 0) return toast.error("יש להזין מספר חיובי");
+                      if (!window.confirm(`להעניק ${n} קרדיטים למשתמש זה?`)) return;
                       doAction("grant_credits", n);
                     }}
                     disabled={actionLoading === "grant_credits"}
@@ -1312,7 +1322,8 @@ export default function UserDetailPage() {
                   <button
                     onClick={() => {
                       const n = parseInt(creditAmount);
-                      if (!n || n <= 0) return toast.error("Enter a positive number");
+                      if (!n || n <= 0) return toast.error("יש להזין מספר חיובי");
+                      if (!window.confirm(`לשלול ${n} קרדיטים מהמשתמש זה?`)) return;
                       doAction("revoke_credits", n);
                     }}
                     disabled={actionLoading === "revoke_credits"}

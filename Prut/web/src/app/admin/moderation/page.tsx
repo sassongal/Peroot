@@ -262,7 +262,10 @@ function PromptCard({
         </button>
 
         <button
-          onClick={() => onAction(prompt.id, "remove")}
+          onClick={() => {
+            if (window.confirm("להסיר את הפרומפט מהספרייה הציבורית?"))
+              onAction(prompt.id, "remove");
+          }}
           disabled={acting}
           className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-wider hover:bg-rose-500/20 transition-all active:scale-95 disabled:opacity-50 ms-auto"
         >

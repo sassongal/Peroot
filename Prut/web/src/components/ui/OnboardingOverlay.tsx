@@ -80,17 +80,6 @@ const COLOR_BORDER: Record<string, string> = {
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
-async function markOnboardingComplete(): Promise<void> {
-  try {
-    await fetch(getApiPath("/api/user/onboarding/complete"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    logger.warn("Failed to mark onboarding complete", e);
-  }
-}
-
 // ─── Aurora background ────────────────────────────────────────────────────────
 
 function AuroraBackground() {
@@ -489,21 +478,24 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
   const handleNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
 
-  const handleFinish = async () => {
-    await markOnboardingComplete();
+  // The parent's onComplete handler owns the "mark complete" write
+  // (completeOnboarding), so we don't POST it here too — that was a double write.
+  const awardPioneer = () =>
     fetch(getApiPath("/api/user/achievements/award"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ achievementId: "pioneer" }),
     }).catch((e) => logger.warn("Failed to award pioneer badge", e));
+
+  const handleFinish = () => {
+    awardPioneer();
     setIsVisible(false);
     setTimeout(() => onComplete({ role: "", goal: "" }), 450);
   };
 
-  const handleSkip = async () => {
-    markOnboardingComplete().catch((e) =>
-      logger.warn("Failed to mark onboarding complete on skip", e),
-    );
+  const handleSkip = () => {
+    // Award on skip too — Scene 2 tells the user they already earned the badge.
+    awardPioneer();
     setIsVisible(false);
     setTimeout(() => onComplete({ role: "", goal: "" }), 280);
   };

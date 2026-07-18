@@ -1301,6 +1301,7 @@ function PageContent() {
     try {
       await completeOnboarding();
       setShowOnboarding(false);
+      setIsNewUser(false); // clear so the referral banner / new-user UI don't persist all session
       toast.success("ברוכים הבאים לפירוט! 🎉 הזן את הפרומפט הראשון שלך");
       setTimeout(() => {
         const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
