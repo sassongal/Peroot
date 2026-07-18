@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { computeNeighborhood } from "../graph-utils";
 import type { PersonalPrompt } from "@/lib/types";
 import type { PromptUsageEvent } from "@/lib/usage/usage-types";
@@ -23,7 +23,7 @@ const mkPrompt = (id: string, title: string, prompt: string, tags: string[] = []
 
 describe("computeNeighborhood", () => {
   it("returns center node + ranked neighbors capped at maxNeighbors", () => {
-    const prompts = [
+    const corpus = [
       mkPrompt("c", "linkedin post launch", "write linkedin announcement"),
       mkPrompt("a", "linkedin announcement template", "post on linkedin about launch"),
       mkPrompt("b", "twitter thread", "thread on twitter"),
@@ -31,7 +31,7 @@ describe("computeNeighborhood", () => {
     ];
     const { nodes, links } = computeNeighborhood({
       centerId: "c",
-      prompts,
+      corpus,
       usageEvents: [],
       maxNeighbors: 2,
     });
@@ -42,7 +42,7 @@ describe("computeNeighborhood", () => {
   });
 
   it("co-occurrence boosts neighbors used in the same 24h window", () => {
-    const prompts = [
+    const corpus = [
       mkPrompt("c", "x", "y"),
       mkPrompt("a", "totally unrelated", "blah"),
       mkPrompt("b", "also unrelated", "blah blah"),
@@ -83,7 +83,7 @@ describe("computeNeighborhood", () => {
     ];
     const { nodes, links } = computeNeighborhood({
       centerId: "c",
-      prompts,
+      corpus,
       usageEvents,
       maxNeighbors: 1,
     });
@@ -94,10 +94,10 @@ describe("computeNeighborhood", () => {
   });
 
   it("returns only center when prompt has no neighbors", () => {
-    const prompts = [mkPrompt("c", "alone", "completely alone")];
+    const corpus = [mkPrompt("c", "alone", "completely alone")];
     const { nodes, links } = computeNeighborhood({
       centerId: "c",
-      prompts,
+      corpus,
       usageEvents: [],
     });
     expect(nodes).toHaveLength(1);
@@ -107,9 +107,50 @@ describe("computeNeighborhood", () => {
   it("returns empty when centerId not found", () => {
     const { nodes } = computeNeighborhood({
       centerId: "missing",
-      prompts: [],
+      corpus: [],
       usageEvents: [],
     });
     expect(nodes).toHaveLength(0);
+  });
+
+  // ── Regression: the palace-corpus bug ──────────────────────────────────────
+  // A genuine neighbor that lives OUTSIDE a paginated 15-item slice must be
+  // found when the FULL corpus is scored, and is (correctly) absent when only
+  // the slice is scored. This pins the fix: the Palace must receive the whole
+  // library, never the current page.
+  it("finds a similar neighbor only when it is present in the corpus (page-slice bug)", () => {
+    const center = mkPrompt("c", "linkedin launch post", "write a linkedin launch announcement");
+    const twin = mkPrompt(
+      "twin",
+      "linkedin launch announcement",
+      "linkedin post announcing the launch",
+    );
+    // 14 unrelated fillers — with the center that fills a 15-item page slice.
+    const fillers = Array.from({ length: 14 }, (_, i) =>
+      mkPrompt(`f${i}`, `unrelated topic ${i}`, `some unrelated body number ${i}`),
+    );
+    const pageSlice = [center, ...fillers]; // 15 items — twin paginated off
+    const fullCorpus = [center, ...fillers, twin]; // 16 items — twin included
+
+    const sliced = computeNeighborhood({ centerId: "c", corpus: pageSlice, usageEvents: [] });
+    expect(sliced.nodes.find((n) => n.id === "twin")).toBeUndefined();
+
+    const full = computeNeighborhood({ centerId: "c", corpus: fullCorpus, usageEvents: [] });
+    expect(full.nodes.find((n) => n.id === "twin")).toBeDefined();
+  });
+
+  it("warns in development when centerId is absent from the corpus (precondition tripwire)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { nodes } = computeNeighborhood({
+        centerId: "ghost",
+        corpus: [mkPrompt("c", "present", "present body")],
+        usageEvents: [],
+      });
+      expect(nodes).toHaveLength(0);
+      expect(warn).toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

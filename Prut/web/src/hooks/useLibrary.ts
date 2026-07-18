@@ -221,7 +221,6 @@ export function useLibrary() {
           // malformed localStorage — ignore
         }
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [fetchPage, fetchFolderCounts, applyGuestPagination],
   );
@@ -468,6 +467,9 @@ export function useLibrary() {
 
   return {
     personalLibrary,
+    // Full in-memory guest corpus (empty for authenticated users, who page from
+    // the server). Consumed by useAllPersonalPrompts for the graph / Memory Palace.
+    allLocalItems,
     personalCategories,
     isLoaded,
     // Pagination

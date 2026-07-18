@@ -48,6 +48,7 @@ export const useLibraryContext = () => {
       libraryPrompts: data.libraryPrompts,
       isLibraryFetching: data.isLibraryFetching,
       personalLibrary: data.personalLibrary,
+      allLocalItems: data.allLocalItems,
       personalCategories: data.personalCategories,
       isPersonalLoaded: data.isPersonalLoaded,
       popularityMap: data.popularityMap,
