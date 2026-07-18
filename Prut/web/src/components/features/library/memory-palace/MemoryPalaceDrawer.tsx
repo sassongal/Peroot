@@ -67,7 +67,7 @@ export function MemoryPalaceDrawer({
 
   const { nodes, links } = useMemo<{ nodes: GraphNode[]; links: GraphLink[] }>(() => {
     if (!activeId) return { nodes: [], links: [] };
-    return computeNeighborhood({ centerId: activeId, prompts, usageEvents });
+    return computeNeighborhood({ centerId: activeId, corpus: prompts, usageEvents });
   }, [activeId, prompts, usageEvents]);
 
   const handleNodeClick = (id: string) => {

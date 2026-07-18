@@ -644,7 +644,15 @@ export function expandHull(
 
 export interface NeighborhoodOptions {
   centerId: string;
-  prompts: PersonalPrompt[];
+  /**
+   * The FULL personal-library corpus — every prompt the user owns, never a
+   * paginated page slice or a search-filtered subset. Neighborhood scoring
+   * (Jaccard similarity + co-occurrence) is only meaningful across the whole
+   * library: a genuine neighbor that happens to sit on another page would be
+   * invisible if a slice were passed. Callers wire this from
+   * `useAllPersonalPrompts()`, which owns the full-corpus fetch.
+   */
+  corpus: PersonalPrompt[];
   usageEvents: PromptUsageEvent[];
   maxNeighbors?: number;
   similarityWeight?: number;
@@ -712,22 +720,33 @@ export function computeNeighborhood(opts: NeighborhoodOptions): {
 } {
   const {
     centerId,
-    prompts,
+    corpus,
     usageEvents,
     maxNeighbors = 19,
     similarityWeight = 0.6,
     cooccurrenceWeight = 0.4,
   } = opts;
 
-  const center = prompts.find((p) => p.id === centerId);
-  if (!center) return { nodes: [], links: [] };
+  const center = corpus.find((p) => p.id === centerId);
+  if (!center) {
+    // Precondition tripwire: the center prompt must live in `corpus`. When it
+    // doesn't, the caller almost certainly passed a page slice instead of the
+    // full library (the palace-corpus bug) — surface it loudly in dev.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[computeNeighborhood] centerId "${centerId}" is not in the corpus (${corpus.length} items). ` +
+          "Pass the full personal-library corpus (useAllPersonalPrompts), not a page slice.",
+      );
+    }
+    return { nodes: [], links: [] };
+  }
 
   const centerTokens = tokensFor(center);
   const cooc = computeCooccurrence(centerId, usageEvents);
 
   type Scored = { id: string; sim: number; co: number; total: number };
   const scored: Scored[] = [];
-  for (const p of prompts) {
+  for (const p of corpus) {
     if (p.id === centerId) continue;
     const sim = jaccard(centerTokens, tokensFor(p));
     const co = cooc.get(p.id) ?? 0;
@@ -747,7 +766,7 @@ export function computeNeighborhood(opts: NeighborhoodOptions): {
       isCenter: true,
     },
     ...top
-      .map((s) => prompts.find((p) => p.id === s.id))
+      .map((s) => corpus.find((p) => p.id === s.id))
       .filter((p): p is PersonalPrompt => Boolean(p))
       .map<GraphNode>((p) => ({
         id: p.id,

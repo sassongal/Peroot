@@ -86,3 +86,26 @@ RLS client choice, and error shaping — lives behind this one interface.
 Existing deep module (`src/lib/api-middleware.ts`, ~50 routes). Validates the
 admin session, shapes 401/403/500, and (for `withAdminWrite`) enforces the
 `adminWrite` rate-limit bucket. The proof that the wrapper pattern works here.
+
+### Personal Library corpus  ·  `useAllPersonalPrompts()`  *(built 2026-07-18)*
+
+The seam that hands the graph view and the Memory Palace the **full** personal
+library — every prompt the user owns — as opposed to the paginated
+`personalLibrary` page slice the rest of the library UI runs on. `src/hooks/useAllPersonalPrompts.ts`.
+
+- **Why it exists:** neighborhood scoring (`computeNeighborhood`: Jaccard 0.6 +
+  24h co-occurrence 0.4) is only meaningful across the whole library — a genuine
+  neighbor sitting on another page is invisible if a 15-item slice is passed. The
+  Palace surfaces used to receive `filteredPersonalLibrary` (one page); that was
+  the live empty/wrong-neighborhood bug.
+- **Interface:** `useAllPersonalPrompts({ enabled, userId, guestItems, totalCount }) →
+  { prompts, loading, total, truncatedAt }`. Guests read their in-memory
+  `allLocalItems`; authenticated users get a **lazy**, cached `.limit(2000)` fetch
+  keyed on `totalCount` (refetches when the library changes). `enabled` gates the
+  fetch on a consumer being on screen (graph mode · mobile drawer · desktop palace
+  at ≥5 prompts) and folds in the `authLoaded` stale-JWT guard (the "1-node graph" fix).
+- **Precondition it enforces:** `NeighborhoodOptions.corpus` (renamed from `prompts`)
+  is documented as the full corpus, and `computeNeighborhood` dev-`warn`s when the
+  `centerId` is absent from it — the tripwire that catches a slice being passed again.
+- **Deliberately outside:** search/sort/pagination of the *visible* grid stays on
+  `useLibrary` + `filteredPersonalLibrary`; this seam is corpus-only, unfiltered.

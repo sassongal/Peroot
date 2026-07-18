@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 import { Hash, AtSign, Wand2, LogIn, BookOpen, Star, Network, History } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { useAllPersonalPrompts } from "@/hooks/useAllPersonalPrompts";
 
 import { PersonalLibraryHeader } from "./personal-library/PersonalLibraryHeader";
 import { PersonalLibraryGrid } from "./personal-library/PersonalLibraryGrid";
@@ -80,6 +80,7 @@ export function PersonalLibraryView({
     addPrompt,
     addPrompts,
     personalLibrary,
+    allLocalItems,
     selectedCapabilityFilter,
     isPersonalLoaded,
     selectedPromptId,
@@ -124,12 +125,6 @@ export function PersonalLibraryView({
     "peroot:library-density",
     "comfortable",
   );
-  // All prompts for graph mode — fetched without pagination when graph activates
-  const [graphPrompts, setGraphPrompts] = useState<PersonalPrompt[]>([]);
-  const [graphLoading, setGraphLoading] = useState(false);
-  const [graphTotalCount, setGraphTotalCount] = useState<number | null>(null);
-  const GRAPH_ROW_LIMIT = 2000;
-
   // Chains section collapse
   const [chainsExpanded, setChainsExpanded] = useState(false);
 
@@ -171,43 +166,8 @@ export function PersonalLibraryView({
     onGraphOpened?.();
   }, [openToGraph]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When graph mode activates, fetch ALL personal prompts (no pagination).
-  // filteredPersonalLibrary only has the current page — graph needs the full library.
   const { isLoaded: authLoaded } = useAuth();
   const userId = ctx.user?.id;
-  useEffect(() => {
-    // Gate on authLoaded: firing before AuthContext hydrates can mean a stale
-    // JWT is on the wire, causing RLS to return a truncated result set
-    // (the "1-node graph" bug). created_at is NOT NULL; sort_index is nullable.
-    if (localViewType !== "graph" || !userId || !authLoaded) return;
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (!cancelled) setGraphLoading(true);
-    });
-    createClient()
-      .from("personal_library")
-      .select("*", { count: "exact" })
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(GRAPH_ROW_LIMIT)
-      .then(({ data, count, error }) => {
-        if (cancelled) return;
-        if (error) logger.error("[graph] fetch all prompts failed", error);
-        const rows = (data ?? []) as PersonalPrompt[];
-        if (typeof count === "number" && count > rows.length + 5) {
-          logger.warn("[graph] row count mismatch", {
-            rowsReturned: rows.length,
-            totalCount: count,
-          });
-        }
-        setGraphPrompts(rows);
-        setGraphTotalCount(typeof count === "number" ? count : null);
-        setGraphLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [localViewType, userId, authLoaded]);
 
   // Expanded card ids
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -234,6 +194,25 @@ export function PersonalLibraryView({
 
   // Memory Palace mobile drawer
   const [drawerCenter, setDrawerCenter] = useState<string | null>(null);
+
+  // Full personal-library corpus for the graph AND the Memory Palace — never the
+  // paginated page slice. The palace scores neighbors across the whole library,
+  // so feeding it `filteredPersonalLibrary` (one page) silently hides genuine
+  // neighbors that sit on another page. Lazy: only fetches when a consumer is on
+  // screen (graph mode, the mobile drawer, or the desktop palace which shows at
+  // ≥5 prompts). `authLoaded` gates the fetch so a stale JWT can't truncate RLS.
+  const corpusEnabled =
+    authLoaded && (localViewType === "graph" || drawerCenter !== null || ctxTotalCount >= 5);
+  const {
+    prompts: corpusPrompts,
+    loading: corpusLoading,
+    truncatedAt: corpusTruncatedAt,
+  } = useAllPersonalPrompts({
+    enabled: corpusEnabled,
+    userId,
+    guestItems: allLocalItems,
+    totalCount: ctxTotalCount,
+  });
 
   // Dropdown for per-card more menu
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -927,15 +906,11 @@ export function PersonalLibraryView({
       {localViewType === "graph" ? (
         <ErrorBoundary name="PromptGraphView">
           <PromptGraphView
-            prompts={graphPrompts}
+            prompts={corpusPrompts}
             favoriteIds={favoritePersonalIds}
             onUsePrompt={(p) => onUsePrompt(p)}
-            isLoading={graphLoading}
-            truncatedAt={
-              graphTotalCount !== null && graphTotalCount > graphPrompts.length
-                ? { shown: graphPrompts.length, total: graphTotalCount }
-                : null
-            }
+            isLoading={corpusLoading}
+            truncatedAt={corpusTruncatedAt}
           />
         </ErrorBoundary>
       ) : (
@@ -952,7 +927,7 @@ export function PersonalLibraryView({
 
           {/* Memory Palace sidebar (desktop only) */}
           <MemoryPalaceSidebar
-            prompts={filteredPersonalLibrary}
+            prompts={corpusPrompts}
             selectedPromptId={selectedPromptId}
             lastOpenedPromptId={lastOpenedPromptId}
             onSelectPrompt={setSelectedPromptId}
@@ -979,7 +954,7 @@ export function PersonalLibraryView({
       <MemoryPalaceDrawer
         open={drawerCenter !== null}
         centerPromptId={drawerCenter}
-        prompts={filteredPersonalLibrary}
+        prompts={corpusPrompts}
         onClose={() => setDrawerCenter(null)}
         onOpenPrompt={(id) => {
           setLastOpenedPromptId(id);

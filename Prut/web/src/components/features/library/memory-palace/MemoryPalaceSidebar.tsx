@@ -72,7 +72,7 @@ export function MemoryPalaceSidebar({
     if (!effectiveCenterId) return { nodes: [], links: [] };
     return computeNeighborhood({
       centerId: effectiveCenterId,
-      prompts,
+      corpus: prompts,
       usageEvents,
     });
   }, [effectiveCenterId, prompts, usageEvents]);
