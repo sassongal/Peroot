@@ -9,6 +9,7 @@ import { extract, type ExtractInput, type ExtractMetadata } from "./extract";
 import { computeSha256, detectDocumentType } from "./classify";
 import { enrichContent } from "./enrich";
 import { compressToLimit, type CompressionStrategy } from "./compress";
+import { DOCUMENT_CAPABILITY } from "./capability";
 import { buildInjectedBlock, renderInjection } from "./inject";
 import { getCachedBlock, putCachedBlock } from "./cache";
 
@@ -17,19 +18,7 @@ export { selectEngineModel } from "@/lib/ai/context-router";
 export type { ContextBlock, ProcessAttachmentInput } from "./types";
 
 function getCompressionStrategy(detectedType: DocumentType): CompressionStrategy {
-  switch (detectedType) {
-    case "קוד מקור":
-      return "code";
-    case "טבלת נתונים":
-      return "data";
-    case "חוזה משפטי":
-    case "מסמך משפטי":
-      return "contract";
-    case "מאמר אקדמי":
-      return "academic";
-    default:
-      return "default";
-  }
+  return DOCUMENT_CAPABILITY[detectedType].compression;
 }
 
 /** Map the wide ProcessAttachmentInput to the discriminated ExtractInput,
