@@ -9,6 +9,7 @@ import {
   getRefinementExamplesBlock,
 } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
+import { renderTrailerInstruction } from "@/lib/prompt-stream/trailer";
 
 export class StandardEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -255,11 +256,11 @@ ${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. הפרומפט כ�
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
-
-לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים בעלי ההשפעה הגבוהה ביותר שנותרו - ספציפיות, מדידות, ניתנות לפעולה. החזר מערך ריק [] אם הפרומפט כעת מקיף ומלא.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]${languageOverride}`,
+${identity ? `${identity}\n\n` : ""}${renderTrailerInstruction({
+        questionFocus:
+          "ועד 3 שאלות חדשות המכוונות לפערים בעלי ההשפעה הגבוהה ביותר שנותרו - ספציפיות, מדידות, ניתנות לפעולה. החזר מערך ריק [] אם הפרומפט כעת מקיף ומלא.",
+        language: input.outputLanguage,
+      })}${languageOverride}`,
 
       userPrompt: `הפרומפט הנוכחי:
 ---

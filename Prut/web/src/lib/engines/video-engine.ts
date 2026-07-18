@@ -16,6 +16,7 @@ import {
 } from "./visual-preference-extractor";
 import type { ContextBlock } from "@/lib/context/engine/types";
 import { getPlatformOverrides } from "./platform-overrides";
+import { TRAILER } from "@/lib/prompt-stream/trailer";
 
 // ── Platform-specific system prompt overrides ──
 // Each platform has a unique prompting architecture based on official docs,
@@ -588,13 +589,13 @@ Silently verify before generating (NEVER include any of this in output):
 </internal_quality_check>
 
 After the enhanced prompt, on a new line add a short descriptive Hebrew title:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+${TRAILER.TITLE_OPEN}שם קצר ותיאורי בעברית${TRAILER.TITLE_CLOSE}
 
-Then add [GENIUS_QUESTIONS] followed by up to 3 targeted clarifying questions about cinematic aspects that would most elevate the prompt. Focus on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.${contextQuestionHint}
-Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
-If the prompt is already comprehensive across all 7 layers, return [GENIUS_QUESTIONS][]
+Then add ${TRAILER.QUESTIONS} followed by up to 3 targeted clarifying questions about cinematic aspects that would most elevate the prompt. Focus on: camera angle preference, motion speed/style, lighting mood, color grading, subject identity, or platform-specific constraints.${contextQuestionHint}
+Format: ${TRAILER.QUESTIONS}[{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
+If the prompt is already comprehensive across all 7 layers, return ${TRAILER.QUESTIONS}[]
 
-CRITICAL: Never put the literal substring [GENIUS_QUESTIONS] inside the English video prompt body. Title and follow-up blocks must appear only on new lines after the full prompt.`;
+CRITICAL: Never put the literal substring ${TRAILER.QUESTIONS} inside the English video prompt body. Title and follow-up blocks must appear only on new lines after the full prompt.`;
 
     // Append context summary to user prompt
     let finalUserPrompt = userPrompt;
@@ -689,10 +690,10 @@ ${iteration >= 3 ? `\nThis is refinement round #${iteration}. The prompt is alre
 Platform: ${platform}. Tone: ${input.tone}. Category: ${input.category}.
 
 ${identity ? `${identity}\n\n` : ""}After the improved prompt, on a new line add:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
+${TRAILER.TITLE_OPEN}שם קצר ותיאורי בעברית${TRAILER.TITLE_CLOSE}
 
-Then add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact gaps. ${platformGeniusQuestions[platform] || platformGeniusQuestions.general} Return an empty array [] if the prompt is now comprehensive across all 7 layers.
-Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
+Then add ${TRAILER.QUESTIONS} followed by up to 3 NEW questions targeting the remaining highest-impact gaps. ${platformGeniusQuestions[platform] || platformGeniusQuestions.general} Return an empty array [] if the prompt is now comprehensive across all 7 layers.
+Format: ${TRAILER.QUESTIONS}[{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]`,
 
       userPrompt: `Current video prompt:
 ---

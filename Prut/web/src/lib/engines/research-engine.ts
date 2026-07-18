@@ -9,6 +9,7 @@ import {
   getRefinementExamplesBlock,
 } from "./skills";
 import { getConceptClassificationBlock } from "./skills/concept-classification";
+import { renderTrailerInstruction } from "@/lib/prompt-stream/trailer";
 
 export class ResearchEngine extends BaseEngine {
   constructor(config?: EngineConfig) {
@@ -191,11 +192,11 @@ ${iteration >= 3 ? `\nזהו סבב חידוד #${iteration}. המחקר כבר 
 
 טון: ${input.tone}. קטגוריה: ${input.category}.
 
-${identity ? `${identity}\n\n` : ""}לאחר הפרומפט המשופר, הוסף כותרת תיאורית קצרה בעברית:
-[PROMPT_TITLE]שם קצר ותיאורי בעברית[/PROMPT_TITLE]
-
-לאחר מכן הוסף [GENIUS_QUESTIONS] ועד 3 שאלות חדשות המכוונות לפערים המתודולוגיים הגבוהים ביותר שנותרו - פירוק תת-שאלות, דרישות מקורות, או היקף המחקר. החזר מערך ריק [] אם פרומפט המחקר עכשיו מקיף ומלא.
-פורמט: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]${languageOverride}`,
+${identity ? `${identity}\n\n` : ""}${renderTrailerInstruction({
+        questionFocus:
+          "ועד 3 שאלות חדשות המכוונות לפערים המתודולוגיים הגבוהים ביותר שנותרו - פירוק תת-שאלות, דרישות מקורות, או היקף המחקר. החזר מערך ריק [] אם פרומפט המחקר עכשיו מקיף ומלא.",
+        language: input.outputLanguage,
+      })}${languageOverride}`,
 
       userPrompt: `פרומפט המחקר הנוכחי:
 ---
