@@ -652,7 +652,13 @@ export function PersonalLibraryView({
         use_case: (item.use_case as string) || "",
         source: "imported" as const,
         tags: Array.isArray(item.tags) ? item.tags : [],
-        capability_mode: item.capability_mode as PersonalPrompt["capability_mode"],
+        // Validate against the enum so a bad imported value can't trip the DB
+        // CHECK constraint and abort the whole import.
+        capability_mode: (Object.values(CapabilityMode) as string[]).includes(
+          item.capability_mode as string,
+        )
+          ? (item.capability_mode as PersonalPrompt["capability_mode"])
+          : CapabilityMode.STANDARD,
         prompt_style: item.prompt_style as string | undefined,
       }));
       await addPrompts(promptsToAdd);
@@ -929,6 +935,8 @@ export function PersonalLibraryView({
         role="dialog"
         aria-modal="true"
         aria-label="תיקיות הספרייה האישית"
+        aria-hidden={!sidebarOpen}
+        inert={!sidebarOpen}
         className={cn(
           "fixed top-0 start-0 h-full w-72 max-w-[85vw] z-50 bg-[#0A0A0F] border-e border-(--glass-border) shadow-2xl transition-transform duration-300 md:hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]",
           sidebarOpen ? "translate-x-0" : "translate-x-full",

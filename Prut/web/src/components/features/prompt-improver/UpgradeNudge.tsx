@@ -36,7 +36,7 @@ export default function UpgradeNudge({
         dir="rtl"
       >
         <span className="text-sm text-yellow-300">
-          {t.nudge?.remaining || `נותרו לך ${remaining} קרדיטים החודש`}
+          {t.nudge?.remaining || `נותרו לך ${remaining} קרדיטים היום`}
         </span>
         <button
           onClick={onDismiss}

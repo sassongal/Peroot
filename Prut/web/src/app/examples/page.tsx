@@ -162,10 +162,7 @@ export default function ExamplesPage() {
 
         <div className="space-y-8">
           {EXAMPLES.map((example, i) => (
-            <div
-              key={i}
-              className="glass-card rounded-xl border border-border overflow-hidden cursor-pointer"
-            >
+            <div key={i} className="glass-card rounded-xl border border-border overflow-hidden">
               <div className="p-4 bg-secondary border-b border-border flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1 rounded-full">
                   {example.category}

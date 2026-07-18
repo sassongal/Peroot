@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2, ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -16,6 +16,14 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [done, setDone] = useState(false);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    },
+    [],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +52,7 @@ export default function ResetPasswordPage() {
       } else {
         setDone(true);
         toast.success("הסיסמה עודכנה בהצלחה!");
-        setTimeout(() => {
+        redirectTimer.current = setTimeout(() => {
           router.push("/login");
         }, 2000);
       }
@@ -90,21 +98,15 @@ export default function ResetPasswordPage() {
                 </div>
               </div>
               <h2 className="text-2xl font-bold text-white">הסיסמה עודכנה!</h2>
-              <p className="text-slate-400 text-sm">
-                מיד תועבר/י לדף הכניסה...
-              </p>
+              <p className="text-slate-400 text-sm">מיד תועבר/י לדף הכניסה...</p>
               <Loader2 className="w-5 h-5 animate-spin text-amber-400 mx-auto" />
             </div>
           ) : (
             /* Form state */
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-3">
-                <h1 className="text-3xl font-bold tracking-tight text-white">
-                  הגדרת סיסמה חדשה
-                </h1>
-                <p className="text-sm text-slate-400 font-medium">
-                  בחר/י סיסמה חדשה לחשבון שלך
-                </p>
+                <h1 className="text-3xl font-bold tracking-tight text-white">הגדרת סיסמה חדשה</h1>
+                <p className="text-sm text-slate-400 font-medium">בחר/י סיסמה חדשה לחשבון שלך</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -130,11 +132,7 @@ export default function ResetPasswordPage() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
                     aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
 
@@ -160,11 +158,7 @@ export default function ResetPasswordPage() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
                     aria-label={showConfirm ? "הסתר סיסמה" : "הצג סיסמה"}
                   >
-                    {showConfirm ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
 

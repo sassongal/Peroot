@@ -22,6 +22,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const { isAdmin, isPro, isRoleLoaded } = useAuth();
 
   const getErrorMessage = (err: unknown) =>
@@ -32,6 +33,8 @@ export function UserMenu({ user, position }: UserMenuProps) {
   }, []);
 
   const handleSignOut = async () => {
+    if (isSigningOut) return; // guard against double-submit racing the redirect
+    setIsSigningOut(true);
     try {
       const res = await fetch("/api/auth/signout", { method: "POST" });
       if (!res.ok) throw new Error("signout failed");
@@ -39,6 +42,7 @@ export function UserMenu({ user, position }: UserMenuProps) {
       window.location.href = "/?logged-out=true";
     } catch (err) {
       toast.error(t.auth.logout_error + ": " + getErrorMessage(err));
+      setIsSigningOut(false);
     }
   };
 
@@ -260,7 +264,8 @@ export function UserMenu({ user, position }: UserMenuProps) {
       <div className="flex items-center animate-in slide-in-from-left-4 duration-500">
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2.5 group px-4 py-2 hover:bg-(--glass-bg) rounded-xl transition-all border border-transparent hover:border-(--glass-border)"
+          disabled={isSigningOut}
+          className="flex items-center gap-2.5 group px-4 py-2 hover:bg-(--glass-bg) rounded-xl transition-all border border-transparent hover:border-(--glass-border) disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
           <span className="text-sm font-semibold text-(--text-muted) group-hover:text-(--text-primary) transition-colors">

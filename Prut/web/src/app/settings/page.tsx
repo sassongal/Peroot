@@ -39,7 +39,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const initialSection = searchParams.get("tab") || "profile";
-  const billingSuccess = searchParams.get("success") === "true";
+  const billingSuccessParam = searchParams.get("success") === "true";
   const [activeSection, setActiveSection] = useState<string>(initialSection);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -56,6 +56,9 @@ export default function SettingsPage() {
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
   const { subscription, isPro } = useSubscription();
+  // Only celebrate once the subscription actually reports Pro — visiting
+  // /settings?success=true shouldn't fake a thank-you without a real purchase.
+  const billingSuccess = billingSuccessParam && isPro;
   const [credits, setCredits] = useState<{
     balance: number;
     dailyLimit: number;
@@ -213,7 +216,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
       </main>
     );
   }
@@ -227,7 +230,7 @@ export default function SettingsPage() {
           <p className="text-slate-400">עליך להתחבר כדי לגשת להגדרות החשבון</p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-colors"
           >
             <UserIcon className="w-4 h-4" />
             <span>התחבר עכשיו</span>
@@ -397,7 +400,7 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/10 blur-[150px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/10 blur-[150px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[150px] rounded-full" />
       </div>
 

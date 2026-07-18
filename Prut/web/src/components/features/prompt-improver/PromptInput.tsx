@@ -898,7 +898,7 @@ export function PromptInput({
                         : "text-red-400 border-red-500/20 bg-red-500/5",
                   )}
                 >
-                  {creditsRemaining} credits
+                  {creditsRemaining} קרדיטים
                 </span>
               )}
             </div>
