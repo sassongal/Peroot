@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useI18n } from "@/context/I18nContext";
 import { Crown, Clock, CheckCircle2, X } from "lucide-react";
 
@@ -20,27 +19,6 @@ const PRO_BENEFITS = [
   "שרשראות פרומפטים ומשתנים",
 ];
 
-/** Minutes until next daily credit reset at 14:00 Israel time (UTC+3 in summer) */
-function useTimeUntilReset(): string {
-  return useMemo(() => {
-    const now = new Date();
-    const IL_OFFSET_MS = 3 * 3600_000; // IDT = UTC+3 (Apr–Oct)
-    const ilNow = new Date(now.getTime() + IL_OFFSET_MS);
-
-    // Target: 14:00 IL today; roll to tomorrow if already passed
-    const reset = new Date(ilNow);
-    reset.setUTCHours(14, 0, 0, 0);
-    let msLeft = reset.getTime() - ilNow.getTime();
-    if (msLeft <= 0) msLeft += 86_400_000;
-
-    const h = Math.floor(msLeft / 3_600_000);
-    const m = Math.floor((msLeft % 3_600_000) / 60_000);
-    if (h === 0) return `${m} דקות`;
-    if (m === 0) return `${h} שעות`;
-    return `${h}:${String(m).padStart(2, "0")} שעות`;
-  }, []);
-}
-
 export default function UpgradeNudge({
   type,
   remaining,
@@ -50,7 +28,6 @@ export default function UpgradeNudge({
   onDismiss,
 }: UpgradeNudgeProps) {
   const t = useI18n();
-  const timeUntilReset = useTimeUntilReset();
 
   if (type === "warning") {
     return (
@@ -152,7 +129,7 @@ export default function UpgradeNudge({
             <Clock className="w-3 h-3" />
             {resetDate
               ? `${t.nudge?.wait_for_reset || "המתן לאיפוס"} — ${resetDate}`
-              : `האיפוס בעוד ${timeUntilReset}`}
+              : "הקרדיטים מתחדשים בתוך 24 שעות מהשימוש האחרון"}
           </button>
         </div>
       </div>

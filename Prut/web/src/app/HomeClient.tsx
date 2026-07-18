@@ -417,6 +417,24 @@ function PageContent() {
     }
   }, [ps.error, user, isProPlan]);
 
+  // Fallback feedback for EVERYONE else. Previously a generic failure (HTTP 500,
+  // "No response body", network drop) was surfaced only via the Pro toast and the
+  // rate-limit nudge — so guests and free users whose error wasn't a rate-limit
+  // keyword got zero feedback and silently bounced back to the empty screen.
+  useEffect(() => {
+    if (!ps.error) return;
+    if (user && isProPlan) return; // handled by the Pro toast above
+    const err = ps.error.toLowerCase();
+    const isRateLimit =
+      err.includes("too many") ||
+      err.includes("insufficient") ||
+      err.includes("http 429") ||
+      err.includes("http 403") ||
+      err.includes("quota");
+    if (user && !isProPlan && isRateLimit) return; // free user → upgrade nudge handles it
+    toast.error("השדרוג נכשל. נסו שוב בעוד רגע.");
+  }, [ps.error, user, isProPlan]);
+
   const showLoginRequired = (feature: string, message?: string) => {
     setLoginRequiredConfig({
       feature,
@@ -785,7 +803,7 @@ function PageContent() {
         const newCredits = Math.max(0, creditsRemaining - 1);
         setCreditsRemaining(newCredits);
         if (newCredits === 0 && !isProPlan) {
-          toast("הקרדיטים נגמרו — הם מתחדשים כל יום בשעה 14:00", { duration: 8000 });
+          toast("הקרדיטים נגמרו — הם מתחדשים 24 שעות לאחר השימוש", { duration: 8000 });
         }
       }
       if (!user) {

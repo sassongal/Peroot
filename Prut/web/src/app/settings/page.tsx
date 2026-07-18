@@ -76,127 +76,136 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function getUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        const { data: roleRow } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        setIsAdmin(!!roleRow);
-
-        const [{ data: profile }, { data: settings }] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("display_name, credits_balance, credits_refreshed_at")
-            .eq("id", user.id)
-            .single(),
-          supabase.from("site_settings").select("daily_free_limit").single(),
-        ]);
-        setDisplayName(
-          profile?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "",
-        );
-        setCredits({
-          balance: profile?.credits_balance ?? 0,
-          dailyLimit: settings?.daily_free_limit ?? 2,
-          refreshedAt: profile?.credits_refreshed_at ?? null,
-        });
-
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-        const [
-          { count: totalCount },
-          { count: monthCount },
-          { count: weekCount },
-          { data: recentActivity },
-        ] = await Promise.all([
-          supabase
-            .from("activity_logs")
-            .select("*", { count: "exact", head: true })
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        setUser(user);
+        if (user) {
+          const { data: roleRow } = await supabase
+            .from("user_roles")
+            .select("role")
             .eq("user_id", user.id)
-            .in("action", ["Prmpt Enhance", "Prmpt Refine"]),
-          supabase
-            .from("activity_logs")
-            .select("*", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-            .gte("created_at", startOfMonth),
-          supabase
-            .from("activity_logs")
-            .select("*", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-            .gte("created_at", startOfWeek),
-          supabase
-            .from("activity_logs")
-            .select("created_at, details")
-            .eq("user_id", user.id)
-            .in("action", ["Prmpt Enhance", "Prmpt Refine"])
-            .order("created_at", { ascending: false })
-            .limit(100),
-        ]);
+            .eq("role", "admin")
+            .maybeSingle();
+          setIsAdmin(!!roleRow);
 
-        const catCounts: Record<string, number> = {};
-        const dayCounts: Record<string, number> = {};
-        let streak = 0;
+          const [{ data: profile }, { data: settings }] = await Promise.all([
+            supabase
+              .from("profiles")
+              .select("display_name, credits_balance, credits_refreshed_at")
+              .eq("id", user.id)
+              .single(),
+            supabase.from("site_settings").select("daily_free_limit").single(),
+          ]);
+          setDisplayName(
+            profile?.display_name ||
+              user.user_metadata?.full_name ||
+              user.email?.split("@")[0] ||
+              "",
+          );
+          setCredits({
+            balance: profile?.credits_balance ?? 0,
+            dailyLimit: settings?.daily_free_limit ?? 2,
+            refreshedAt: profile?.credits_refreshed_at ?? null,
+          });
 
-        (recentActivity || []).forEach(
-          (log: { created_at: string; details: { mode?: string } | null }) => {
-            const mode = log.details?.mode || "standard";
-            catCounts[mode] = (catCounts[mode] || 0) + 1;
-            const day = log.created_at.slice(0, 10);
-            dayCounts[day] = (dayCounts[day] || 0) + 1;
-          },
-        );
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+          const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        const today = new Date();
-        for (let i = 0; i < 30; i++) {
-          const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-          const key = d.toISOString().slice(0, 10);
-          if (dayCounts[key]) streak++;
-          else if (i > 0) break;
-        }
+          const [
+            { count: totalCount },
+            { count: monthCount },
+            { count: weekCount },
+            { data: recentActivity },
+          ] = await Promise.all([
+            supabase
+              .from("activity_logs")
+              .select("*", { count: "exact", head: true })
+              .eq("user_id", user.id)
+              .in("action", ["Prmpt Enhance", "Prmpt Refine"]),
+            supabase
+              .from("activity_logs")
+              .select("*", { count: "exact", head: true })
+              .eq("user_id", user.id)
+              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+              .gte("created_at", startOfMonth),
+            supabase
+              .from("activity_logs")
+              .select("*", { count: "exact", head: true })
+              .eq("user_id", user.id)
+              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+              .gte("created_at", startOfWeek),
+            supabase
+              .from("activity_logs")
+              .select("created_at, details")
+              .eq("user_id", user.id)
+              .in("action", ["Prmpt Enhance", "Prmpt Refine"])
+              .order("created_at", { ascending: false })
+              .limit(100),
+          ]);
 
-        const topCategories = Object.entries(catCounts)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 3)
-          .map(([category, count]) => ({ category, count }));
+          const catCounts: Record<string, number> = {};
+          const dayCounts: Record<string, number> = {};
+          let streak = 0;
 
-        const recentDays = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-          const key = d.toISOString().slice(0, 10);
-          recentDays.push({ date: key, count: dayCounts[key] || 0 });
-        }
+          (recentActivity || []).forEach(
+            (log: { created_at: string; details: { mode?: string } | null }) => {
+              const mode = log.details?.mode || "standard";
+              catCounts[mode] = (catCounts[mode] || 0) + 1;
+              const day = log.created_at.slice(0, 10);
+              dayCounts[day] = (dayCounts[day] || 0) + 1;
+            },
+          );
 
-        setUsageStats({
-          totalEnhancements: totalCount || 0,
-          thisMonth: monthCount || 0,
-          thisWeek: weekCount || 0,
-          streak,
-          topCategories,
-          recentDays,
-        });
-
-        try {
-          const refRes = await fetch("/api/referral");
-          if (refRes.ok) {
-            const refData = await refRes.json();
-            setReferral(refData);
+          const today = new Date();
+          for (let i = 0; i < 30; i++) {
+            const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+            const key = d.toISOString().slice(0, 10);
+            if (dayCounts[key]) streak++;
+            else if (i > 0) break;
           }
-        } catch {
-          // Referral system not yet set up
-        } finally {
-          setReferralLoaded(true);
+
+          const topCategories = Object.entries(catCounts)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 3)
+            .map(([category, count]) => ({ category, count }));
+
+          const recentDays = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+            const key = d.toISOString().slice(0, 10);
+            recentDays.push({ date: key, count: dayCounts[key] || 0 });
+          }
+
+          setUsageStats({
+            totalEnhancements: totalCount || 0,
+            thisMonth: monthCount || 0,
+            thisWeek: weekCount || 0,
+            streak,
+            topCategories,
+            recentDays,
+          });
+
+          try {
+            const refRes = await fetch("/api/referral");
+            if (refRes.ok) {
+              const refData = await refRes.json();
+              setReferral(refData);
+            }
+          } catch {
+            // Referral system not yet set up
+          } finally {
+            setReferralLoaded(true);
+          }
         }
+      } catch (err) {
+        console.error("Settings load failed:", err);
+        toast.error("טעינת ההגדרות נכשלה. נסו לרענן את הדף.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     getUser();
   }, [supabase]);

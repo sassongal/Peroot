@@ -58,7 +58,9 @@ export function useSubscription() {
     const vid = (variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || "").trim();
     if (!vid) {
       logger.error("No variant ID configured");
-      return;
+      // Throw so the caller's catch surfaces an error toast instead of the
+      // upgrade button silently flipping back with no feedback.
+      throw new Error("checkout_unconfigured");
     }
 
     try {

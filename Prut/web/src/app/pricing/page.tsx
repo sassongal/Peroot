@@ -370,7 +370,8 @@ export default function PricingPage() {
             <div className="space-y-2">
               <h4 className="font-semibold text-foreground">תוכנית חינם</h4>
               <p className="text-muted-foreground">
-                מקבלים 2 קרדיטים ביום שמתחדשים אוטומטית ב-14:00. כל שדרוג פרומפט = קרדיט אחד.
+                מקבלים 2 קרדיטים ליום שמתחדשים אוטומטית כל 24 שעות מהשימוש האחרון. כל שדרוג פרומפט =
+                קרדיט אחד.
               </p>
             </div>
             <div className="space-y-2">

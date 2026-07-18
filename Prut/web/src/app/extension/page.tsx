@@ -158,7 +158,7 @@ export default function ExtensionPage() {
                     <div className="w-3 h-3 rounded-full bg-white/10" />
                   </div>
                   <div className="flex-1 h-6 rounded-md bg-secondary mx-2 flex items-center px-3">
-                    <span className="text-xs text-slate-600">mail.google.com</span>
+                    <span className="text-xs text-slate-400">mail.google.com</span>
                   </div>
                   <div className="w-7 h-7 rounded-md bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
                     <Chrome className="w-4 h-4 text-amber-400" />
@@ -290,7 +290,7 @@ export default function ExtensionPage() {
               </Link>
             </div>
 
-            <p className="text-slate-600 text-xs">
+            <p className="text-muted-foreground text-xs">
               עד שהתוסף יצא, כל היכולות זמינות ב-
               <Link
                 href="/"

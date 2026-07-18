@@ -29,7 +29,10 @@ export function NewsletterSignup() {
 
   if (status === "success") {
     return (
-      <div className="flex items-center justify-center gap-2 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+      <div
+        role="status"
+        className="flex items-center justify-center gap-2 p-4 bg-green-500/10 border border-green-500/20 rounded-xl"
+      >
         <Check className="w-5 h-5 text-green-400" />
         <span className="text-sm text-green-300">תודה! נעדכן אותך כשיעלה תוכן חדש</span>
       </div>
@@ -38,7 +41,7 @@ export function NewsletterSignup() {
 
   if (status === "error") {
     return (
-      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-3">
+      <div role="alert" className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-3">
         <div className="flex items-center justify-center gap-2">
           <AlertCircle className="w-5 h-5 text-red-400" />
           <span className="text-sm text-red-300">שגיאה בהרשמה. נסה שוב.</span>
@@ -54,7 +57,10 @@ export function NewsletterSignup() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-5 bg-secondary border border-border rounded-xl space-y-3">
+    <form
+      onSubmit={handleSubmit}
+      className="p-5 bg-secondary border border-border rounded-xl space-y-3"
+    >
       <div className="flex items-center gap-2 mb-1">
         <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
         <h3 className="font-semibold text-foreground text-sm">עדכונים ותוכן חדש</h3>
@@ -75,11 +81,7 @@ export function NewsletterSignup() {
           disabled={status === "loading" || !email.trim()}
           className="shrink-0 px-4 py-2.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-semibold hover:bg-amber-500/30 transition-colors disabled:opacity-50"
         >
-          {status === "loading" ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            "הרשמה"
-          )}
+          {status === "loading" ? <Loader2 className="w-4 h-4 animate-spin" /> : "הרשמה"}
         </button>
       </div>
     </form>

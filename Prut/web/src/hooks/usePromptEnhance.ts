@@ -417,7 +417,7 @@ export function usePromptEnhance({
         const newCredits = Math.max(0, creditsRemaining - 1);
         setCreditsRemaining(newCredits);
         if (newCredits === 0) {
-          toast("הקרדיטים נגמרו — הם מתחדשים כל יום בשעה 14:00", {
+          toast("הקרדיטים נגמרו — הם מתחדשים 24 שעות לאחר השימוש", {
             duration: 8000,
           });
         }
