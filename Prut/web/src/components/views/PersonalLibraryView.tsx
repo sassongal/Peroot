@@ -541,7 +541,7 @@ export function PersonalLibraryView({
       // page. Look up across the full graph set too, and report honestly if some
       // selected items aren't loaded instead of silently skipping them.
       const lookup = new Map<string, PersonalPrompt>();
-      [...graphPrompts, ...filteredPersonalLibrary].forEach((p) => lookup.set(p.id, p));
+      [...corpusPrompts, ...filteredPersonalLibrary].forEach((p) => lookup.set(p.id, p));
       const ids = Array.from(selectedIds);
       const found = ids.map((id) => lookup.get(id)).filter((p): p is PersonalPrompt => Boolean(p));
       await Promise.all(
@@ -565,7 +565,7 @@ export function PersonalLibraryView({
 
   const handleBatchExport = () => {
     const lookup = new Map<string, PersonalPrompt>();
-    [...graphPrompts, ...filteredPersonalLibrary].forEach((p) => lookup.set(p.id, p));
+    [...corpusPrompts, ...filteredPersonalLibrary].forEach((p) => lookup.set(p.id, p));
     const items = Array.from(selectedIds)
       .map((id) => lookup.get(id))
       .filter((p): p is PersonalPrompt => Boolean(p));
