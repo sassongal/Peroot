@@ -38,6 +38,7 @@ import { acquireInflightLock } from "@/lib/ai/inflight-lock";
 import { AVAILABLE_MODELS, selectModelByLength, type ModelId } from "@/lib/ai/models";
 import { memoryFlags } from "@/lib/memory/injection-flags";
 import { extractFacts, mergeFactsForUser } from "@/lib/intelligence/fact-extractor";
+import { validateJsonOutput } from "@/app/api/enhance/lib/json-validator";
 
 export const maxDuration = 300;
 
@@ -1002,23 +1003,15 @@ export async function POST(req: Request) {
             let jsonValid: boolean | null = null;
             let jsonError: string | null = null;
             if (isJsonOutput && textCopy.length > 0) {
-              const cleaned = textCopy
-                .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/, "")
-                .replace(/\[GENIUS_QUESTIONS\][\s\S]*$/, "")
-                .replace(/^```(?:json)?\s*/i, "")
-                .replace(/\s*```\s*$/i, "")
-                .trim();
-              try {
-                JSON.parse(cleaned);
-                jsonValid = true;
-              } catch (err) {
-                jsonValid = false;
-                jsonError = err instanceof Error ? err.message : String(err);
+              const result = validateJsonOutput(textCopy);
+              jsonValid = result.jsonValid;
+              jsonError = result.jsonError;
+              if (!jsonValid) {
                 logger.warn("[Enhance] Invalid JSON output", {
                   modelId,
                   capability_mode,
                   error: jsonError,
-                  sample: cleaned.slice(0, 200),
+                  sample: textCopy.slice(0, 200),
                 });
               }
             }

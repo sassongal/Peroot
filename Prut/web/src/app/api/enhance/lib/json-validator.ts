@@ -1,15 +1,15 @@
+import { parseTrailer } from "@/lib/prompt-stream/trailer";
+
 /**
  * Validates that a raw LLM output string contains valid JSON.
  *
- * Before parsing, strips trailing metadata blocks that engines append after the
- * main JSON payload ([PROMPT_TITLE], [GENIUS_QUESTIONS]) and markdown code fences.
+ * Strips the prompt-trailer ([PROMPT_TITLE] / [GENIUS_QUESTIONS]) via the shared
+ * `parseTrailer` seam, then peels any markdown code fences, before parsing.
  */
 export function validateJsonOutput(text: string): { jsonValid: boolean; jsonError: string | null } {
-  const cleaned = text
-    .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]/, '')
-    .replace(/\[GENIUS_QUESTIONS\][\s\S]*$/, '')
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```\s*$/i, '')
+  const cleaned = parseTrailer(text)
+    .body.replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
     .trim();
 
   try {

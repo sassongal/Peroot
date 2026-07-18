@@ -34,6 +34,7 @@ import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt, Question } from "@/lib/types";
 import { BaseEngine } from "@/lib/engines/base-engine";
+import { stripTrailerForDisplay } from "@/lib/prompt-stream/trailer";
 import { EnhancedScorer } from "@/lib/engines/scoring/enhanced-scorer";
 import { scoreInput } from "@/lib/engines/scoring/input-scorer";
 import { TargetModel, OutputLanguage } from "@/lib/engines/types";
@@ -250,23 +251,16 @@ function PageContent() {
         // trailing auxiliary blocks; we never truncate the canonical buffer.
         let displayText = acc.rawText;
 
-        // Hide from the first `[GENIUS_QUESTIONS]` marker onward during
-        // streaming. (Final split uses lastIndexOf — see processStreamResult.)
-        const firstGeniusIdx = displayText.indexOf("[GENIUS_QUESTIONS]");
-        if (firstGeniusIdx !== -1) {
-          displayText = displayText.slice(0, firstGeniusIdx);
-        }
+        // Hide the prompt-trailer for display: everything from the first
+        // line-boundary `[GENIUS_QUESTIONS]` onward (fixing the old indexOf
+        // false-positive on a mid-body echo) plus the [PROMPT_TITLE] block.
+        displayText = stripTrailerForDisplay(displayText);
 
         // Strip <thinking> blocks — both fully-closed and unclosed trailing.
+        // (Not part of the trailer contract, so handled here.)
         displayText = displayText
           .replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, "")
           .replace(/<thinking>[\s\S]*$/gi, "");
-
-        // Strip [PROMPT_TITLE]…[/PROMPT_TITLE] — both closed and unclosed
-        // trailing, so the user never sees the marker flicker mid-stream.
-        displayText = displayText
-          .replace(/\[PROMPT_TITLE\][\s\S]*?\[\/PROMPT_TITLE\]\n?/g, "")
-          .replace(/\[PROMPT_TITLE\][\s\S]*$/g, "");
 
         dispatch({ type: "SET_COMPLETION", payload: displayText });
       },
