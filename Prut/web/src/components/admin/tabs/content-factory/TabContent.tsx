@@ -33,6 +33,7 @@ export function TabContent() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const PAGE_SIZE = 20;
 
   const loadContent = useCallback(
@@ -100,23 +101,32 @@ export function TabContent() {
   };
 
   const bulkDelete = async () => {
+    if (bulkDeleting) return;
     if (!confirm(`למחוק ${selected.size} פריטים?`)) return;
+    setBulkDeleting(true);
     const toDelete = items.filter((i) => selected.has(i.id));
+    const succeeded = new Set<string>();
     for (const item of toDelete) {
       try {
         const endpoint = item.type === "blog" ? "/api/admin/blog" : "/api/admin/library";
-        await fetch(getApiPath(endpoint), {
+        const res = await fetch(getApiPath(endpoint), {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: item.id }),
         });
+        if (res.ok) succeeded.add(item.id);
       } catch {
-        /* continue */
+        /* counts as a failure — not removed from the list below */
       }
     }
-    setItems((prev) => prev.filter((i) => !selected.has(i.id)));
-    setSelected(new Set());
-    toast.success(`נמחקו ${toDelete.length} פריטים`);
+    // Only drop rows that actually deleted; keep failures visible + selected.
+    setItems((prev) => prev.filter((i) => !succeeded.has(i.id)));
+    setSelected((prev) => new Set([...prev].filter((id) => !succeeded.has(id))));
+    const failed = toDelete.length - succeeded.size;
+    if (failed === 0) toast.success(`נמחקו ${succeeded.size} פריטים`);
+    else if (succeeded.size === 0) toast.error("המחיקה נכשלה. נסו שוב.");
+    else toast.error(`נמחקו ${succeeded.size}, ${failed} נכשלו — נסו שוב`);
+    setBulkDeleting(false);
   };
 
   const typeFilterBtns: { key: ContentFilter; label: string }[] = [
@@ -324,10 +334,11 @@ export function TabContent() {
           <div className="w-px h-5 bg-white/10" />
           <button
             onClick={bulkDelete}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-black uppercase tracking-widest hover:bg-rose-500/20 transition-all"
+            disabled={bulkDeleting}
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-black uppercase tracking-widest hover:bg-rose-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            מחק ({selected.size})
+            {bulkDeleting ? "מוחק..." : `מחק (${selected.size})`}
           </button>
           <button
             onClick={() => setSelected(new Set())}

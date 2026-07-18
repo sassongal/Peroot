@@ -43,7 +43,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { useFeatureDiscovery, markFeatureUsed } from "@/hooks/useFeatureDiscovery";
 import { useContextAttachments } from "@/hooks/useContextAttachments";
-import { consumePendingPrompt } from "@/lib/pending-prompt";
+import { consumePendingPrompt, setPendingPrompt } from "@/lib/pending-prompt";
 import { usePromptLimits } from "@/hooks/usePromptLimits";
 import { Clock, Link2 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
@@ -412,6 +412,8 @@ function PageContent() {
     if (!isQuota) return;
     if (!user || code === "guest_quota_exhausted") {
       // Guest hit the limit → the path forward is to sign up, not "upgrade".
+      // Preserve their prompt so it's restored after signup.
+      if (ps.input.trim()) setPendingPrompt({ prompt: ps.input, source: "home-quota-wall" });
       setLoginRequiredConfig({
         feature: "נגמרו הפרומפטים להיום",
         message: "המשך שדרוג פרומפטים דורש התחברות. ההרשמה חינמית ומעניקה עוד קרדיטים!",
@@ -420,7 +422,7 @@ function PageContent() {
     } else if (!isProPlan) {
       setShowUpgradeNudge(true);
     }
-  }, [ps.error, user, isProPlan]);
+  }, [ps.error, ps.input, user, isProPlan]);
 
   // Pro/admin users don't get the upgrade nudge — they need actual error feedback
   // so a silent failure doesn't leave them staring at a blank screen.
@@ -718,6 +720,9 @@ function PageContent() {
 
       if (!canUsePrompt) {
         if (requiredAction === "login") {
+          // Preserve the prompt they just typed so it's restored after signup,
+          // instead of returning them to an empty box at the conversion moment.
+          if (inputText.trim()) setPendingPrompt({ prompt: inputText, source: "home-quota-wall" });
           showLoginRequired(
             "יצירת פרומפט",
             "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!",

@@ -469,19 +469,24 @@ function IndexNowSubmitButton() {
 export default function IntegrationsPage() {
   const [data, setData] = useState<LiveData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       const res = await fetch(getApiPath("/api/admin/integrations"));
       if (res.ok) {
         const json = await res.json();
         setData(json);
         setLastRefresh(new Date());
+      } else {
+        // Don't leave every card stuck on "loading" forever — surface the failure.
+        setError(true);
       }
     } catch {
-      // silently fail - cards show individual status
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -605,6 +610,24 @@ export default function IntegrationsPage() {
           <p className="text-zinc-500 font-medium tracking-tight text-sm md:text-base">
             סטטוס וגישה מהירה לכל השירותים המחוברים לפרויקט Peroot - נתונים בזמן אמת
           </p>
+
+          {error && !loading && (
+            <div
+              role="alert"
+              className="flex items-center justify-between gap-3 mt-2 px-4 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20"
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-bold text-rose-300">
+                <AlertCircle className="w-4 h-4" />
+                טעינת סטטוס השירותים נכשלה — ייתכן שהנתונים אינם עדכניים.
+              </span>
+              <button
+                onClick={fetchData}
+                className="text-[10px] font-black uppercase tracking-widest text-rose-200 hover:text-white transition-colors"
+              >
+                נסה שוב
+              </button>
+            </div>
+          )}
 
           {/* Quick status summary */}
           <div className="flex flex-wrap gap-3 pt-2">

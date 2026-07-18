@@ -122,6 +122,12 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
 
   const handleSave = async () => {
     if (!config) return;
+    // This rewrites the live system prompt that drives every user's generation
+    // for this mode, with no per-field version archive here — confirm first.
+    if (
+      !window.confirm(`לעדכן את ליבת המנוע "${config.mode}"? השינוי ישפיע מיידית על כל המשתמשים.`)
+    )
+      return;
     setSaving(true);
     const supabase = createClient();
 
@@ -183,8 +189,10 @@ export default function EngineEditorPage({ params }: { params: Promise<{ mode: s
         setConfig((c) => (c ? { ...c, default_params: defaultParams } : c));
       }
 
-      // Invalidate logic cache
-      await fetch(getApiPath("/api/prompts/sync"), { method: "POST" });
+      // Invalidate logic cache — the DB write above is meaningless to users if
+      // this fails, so don't report success unless the cache actually flipped.
+      const syncRes = await fetch(getApiPath("/api/prompts/sync"), { method: "POST" });
+      if (!syncRes.ok) throw new Error("cache sync failed");
 
       toast.success("Logic Core Synchronized");
 
