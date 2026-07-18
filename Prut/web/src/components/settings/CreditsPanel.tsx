@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Coins, Crown, Shield, Sparkles } from "lucide-react";
+import { fetchMeQuota } from "@/lib/quota-client";
 import { logger } from "@/lib/logger";
 
 interface Quota {
@@ -53,12 +54,12 @@ export function CreditsPanel() {
     let cancelled = false;
     (async () => {
       try {
-        const [qRes, lRes] = await Promise.all([
-          fetch("/api/me/quota", { credentials: "include" }),
+        const [q, lRes] = await Promise.all([
+          fetchMeQuota(),
           fetch("/api/me/credits/ledger", { credentials: "include" }),
         ]);
         if (cancelled) return;
-        if (qRes.ok) setQuota(await qRes.json());
+        if (q) setQuota(q);
         if (lRes.ok) {
           const json = await lRes.json();
           setLedger(json.entries ?? []);
@@ -82,9 +83,9 @@ export function CreditsPanel() {
 
   if (loading || !quota) {
     return (
-      <div className="rounded-3xl border border-white/5 bg-zinc-950/50 p-8 animate-pulse">
-        <div className="h-6 w-40 bg-zinc-800 rounded mb-4" />
-        <div className="h-12 w-24 bg-zinc-800 rounded" />
+      <div className="rounded-3xl border border-(--glass-border) bg-(--glass-bg) p-8 animate-pulse">
+        <div className="h-6 w-40 bg-black/10 dark:bg-white/10 rounded mb-4" />
+        <div className="h-12 w-24 bg-black/10 dark:bg-white/10 rounded" />
       </div>
     );
   }
@@ -100,7 +101,7 @@ export function CreditsPanel() {
         <Crown className="w-3 h-3" /> Pro
       </span>
     ) : (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-800/60 border border-white/5 text-zinc-300 text-[10px] font-black uppercase tracking-widest">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/5 dark:bg-white/10 border border-(--glass-border) text-(--text-secondary) text-[10px] font-black uppercase tracking-widest">
         <Sparkles className="w-3 h-3" /> חינמי
       </span>
     );
@@ -108,9 +109,12 @@ export function CreditsPanel() {
   void tick;
 
   return (
-    <div className="rounded-3xl border border-white/5 bg-zinc-950/50 p-8 space-y-6" dir="rtl">
+    <div
+      className="rounded-3xl border border-(--glass-border) bg-(--glass-bg) p-8 space-y-6"
+      dir="rtl"
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-black text-white uppercase tracking-[0.25em] flex items-center gap-3">
+        <h3 className="text-sm font-black text-(--text-primary) uppercase tracking-[0.25em] flex items-center gap-3">
           <Coins className="w-4 h-4 text-amber-400" />
           קרדיטים
         </h3>
@@ -121,17 +125,19 @@ export function CreditsPanel() {
         {tier === "admin" ? (
           <span className="text-5xl font-black text-blue-400">∞</span>
         ) : (
-          <span className="text-5xl font-black text-white">{quota.credits_balance}</span>
+          <span className="text-5xl font-black text-(--text-primary)">{quota.credits_balance}</span>
         )}
         {tier === "free" && (
-          <span className="text-xs text-zinc-500 mb-2">/ {quota.daily_limit} ביום</span>
+          <span className="text-xs text-(--text-muted) mb-2">/ {quota.daily_limit} ביום</span>
         )}
       </div>
 
-      {tier === "admin" && <p className="text-xs text-zinc-400">חשבון מנהל — ללא הגבלת שימוש.</p>}
+      {tier === "admin" && (
+        <p className="text-xs text-(--text-secondary)">חשבון מנהל — ללא הגבלת שימוש.</p>
+      )}
 
       {tier === "free" && quota.refresh_at && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-(--text-muted)">
           חידוש בעוד <span className="text-amber-400 font-mono">{timeLeft(quota.refresh_at)}</span>
         </p>
       )}
@@ -147,15 +153,15 @@ export function CreditsPanel() {
       {tier === "pro" && (
         <Link
           href="/settings/subscription"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 border border-white/10 text-zinc-200 text-xs font-black uppercase tracking-widest hover:bg-zinc-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-(--glass-bg) border border-(--glass-border) text-(--text-secondary) text-xs font-black uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
         >
           ניהול מנוי
         </Link>
       )}
 
       {ledger.length > 0 && (
-        <div className="pt-4 border-t border-white/5 space-y-2">
-          <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+        <div className="pt-4 border-t border-(--glass-border) space-y-2">
+          <span className="text-[10px] font-black text-(--text-muted) uppercase tracking-widest">
             פעילות אחרונה
           </span>
           <ul className="space-y-1.5">
@@ -164,9 +170,9 @@ export function CreditsPanel() {
               return (
                 <li
                   key={e.id}
-                  className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-white/2 border border-white/5"
+                  className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-(--glass-border)"
                 >
-                  <span className="text-xs font-bold text-zinc-300">
+                  <span className="text-xs font-bold text-(--text-secondary)">
                     {REASON_LABELS[e.reason] ?? e.reason}
                   </span>
                   <span

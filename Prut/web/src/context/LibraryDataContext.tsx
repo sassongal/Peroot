@@ -54,6 +54,8 @@ interface LibraryDataContextType {
   ) => Promise<string | undefined>;
   removePrompt: (id: string) => Promise<void>;
   updatePrompt: (id: string, updates: Partial<PersonalPrompt>) => Promise<void>;
+  /** Patch local state only (no DB write) — for changes already persisted server-side. */
+  patchPromptLocal: (id: string, updates: Partial<PersonalPrompt>) => void;
   duplicatePrompt: (prompt: PersonalPrompt) => Promise<void>;
   incrementUseCount: (id: string) => Promise<void>;
   togglePin: (id: string) => Promise<void>;
@@ -161,6 +163,7 @@ export function LibraryDataProvider({
     togglePin,
     ratePrompt,
     updatePrompt,
+    patchPromptLocal,
     updatePromptContent,
     bumpPersonalLibraryLastUsed,
     reorderPrompts,
@@ -385,6 +388,7 @@ export function LibraryDataProvider({
       addPrompt: addPromptWithSuggestion,
       removePrompt,
       updatePrompt,
+      patchPromptLocal,
       duplicatePrompt,
       incrementUseCount,
       togglePin,
@@ -428,6 +432,7 @@ export function LibraryDataProvider({
       addPromptWithSuggestion,
       removePrompt,
       updatePrompt,
+      patchPromptLocal,
       duplicatePrompt,
       incrementUseCount,
       togglePin,

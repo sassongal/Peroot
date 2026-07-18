@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from "react";
 
 interface StreamingOptions {
   onChunk: (chunk: string) => void;
@@ -12,7 +12,21 @@ interface StreamingOptions {
   onResponse?: (headers: Headers) => void;
 }
 
-export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted, onResponse }: StreamingOptions) {
+/** Error carrying the server's structured quota/error fields. */
+export interface StreamError extends Error {
+  code?: string;
+  balance?: number;
+  refreshAt?: string | null;
+  status?: number;
+}
+
+export function useStreamingCompletion({
+  onChunk,
+  onDone,
+  onError,
+  onInterrupted,
+  onResponse,
+}: StreamingOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -32,8 +46,8 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
 
       try {
         const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
           signal: controller.signal,
         });
@@ -42,16 +56,23 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
           const errorData = await response
             .json()
             .catch(() => ({ error: `HTTP ${response.status}` }));
-          throw new Error(errorData.error || `HTTP ${response.status}`);
+          // Preserve the server's structured fields so the UI can distinguish
+          // quota_exhausted (→ upgrade CTA + countdown) from a generic 429/500.
+          const err = new Error(errorData.error || `HTTP ${response.status}`) as StreamError;
+          err.code = errorData.code;
+          err.balance = errorData.balance;
+          err.refreshAt = errorData.refresh_at ?? null;
+          err.status = response.status;
+          throw err;
         }
 
         onResponse?.(response.headers);
 
-        if (!response.body) throw new Error('No response body');
+        if (!response.body) throw new Error("No response body");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let accumulated = '';
+        let accumulated = "";
 
         let midStreamInterrupted = false;
         try {
@@ -63,7 +84,7 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
             onChunk(chunk);
           }
         } catch (streamError) {
-          if (streamError instanceof Error && streamError.name === 'AbortError') throw streamError;
+          if (streamError instanceof Error && streamError.name === "AbortError") throw streamError;
           // Mid-stream failure - signal the caller and keep the partial text visible.
           // Do NOT re-throw: the outer catch must not overwrite the interrupted state
           // with a generic error that resets streamPhase back to 'idle'.
@@ -80,14 +101,14 @@ export function useStreamingCompletion({ onChunk, onDone, onError, onInterrupted
           onDone(accumulated);
         }
       } catch (error: unknown) {
-        if (error instanceof Error && error.name === 'AbortError') return;
+        if (error instanceof Error && error.name === "AbortError") return;
         onError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setIsStreaming(false);
         abortControllerRef.current = null;
       }
     },
-    [abort, onChunk, onDone, onError, onInterrupted, onResponse]
+    [abort, onChunk, onDone, onError, onInterrupted, onResponse],
   );
 
   return { startStream, abort, isStreaming };

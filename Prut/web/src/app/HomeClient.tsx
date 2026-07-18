@@ -48,7 +48,7 @@ import { Clock, Link2 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { cn } from "@/lib/utils";
 import { usePromptWorkflow } from "@/hooks/usePromptWorkflow";
-import { useStreamingCompletion } from "@/hooks/useStreamingCompletion";
+import { useStreamingCompletion, type StreamError } from "@/hooks/useStreamingCompletion";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/context/I18nContext";
 import { PromptLimitIndicator } from "@/components/PromptLimitIndicator";
@@ -236,6 +236,9 @@ function PageContent() {
   // instead of saving the partial prompt as complete + spending a credit.
   const streamInterruptedRef = useRef(false);
   const questionsAbortRef = useRef<AbortController | null>(null);
+  // Structured fields from the last stream error (code/balance/refresh_at), so
+  // the UI can distinguish quota_exhausted from a generic failure.
+  const lastStreamErrorRef = useRef<StreamError | null>(null);
 
   const { startStream, abort: abortStream } = useStreamingCompletion({
     onChunk: useCallback(
@@ -274,6 +277,7 @@ function PageContent() {
     }, [dispatch]),
     onError: useCallback(
       (error: Error) => {
+        lastStreamErrorRef.current = error as StreamError;
         dispatch({ type: "SET_ERROR", payload: error.message });
       },
       [dispatch],
@@ -399,16 +403,28 @@ function PageContent() {
   // Show upgrade popup when user hits rate limit or runs out of credits.
   // Never show for Pro/admin — they don't need to upgrade, they need to wait.
   useEffect(() => {
-    if (ps.error && user && !isProPlan) {
-      const err = ps.error.toLowerCase();
-      if (
-        err.includes("too many") ||
-        err.includes("insufficient") ||
-        err.includes("http 429") ||
-        err.includes("http 403")
-      ) {
-        setShowUpgradeNudge(true);
-      }
+    if (!ps.error) return;
+    const code = lastStreamErrorRef.current?.code;
+    // Prefer the server's structured code; fall back to message keywords for
+    // older/edge responses that don't carry one.
+    const err = ps.error.toLowerCase();
+    const isQuota =
+      code === "quota_exhausted" ||
+      code === "guest_quota_exhausted" ||
+      err.includes("too many") ||
+      err.includes("insufficient") ||
+      err.includes("http 429") ||
+      err.includes("http 403");
+    if (!isQuota) return;
+    if (!user || code === "guest_quota_exhausted") {
+      // Guest hit the limit → the path forward is to sign up, not "upgrade".
+      setLoginRequiredConfig({
+        feature: "נגמרו הפרומפטים להיום",
+        message: "המשך שדרוג פרומפטים דורש התחברות. ההרשמה חינמית ומעניקה עוד קרדיטים!",
+      });
+      setIsLoginRequiredModalOpen(true);
+    } else if (!isProPlan) {
+      setShowUpgradeNudge(true);
     }
   }, [ps.error, user, isProPlan]);
 
@@ -839,7 +855,6 @@ function PageContent() {
           }
         }
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [
       ps.input,

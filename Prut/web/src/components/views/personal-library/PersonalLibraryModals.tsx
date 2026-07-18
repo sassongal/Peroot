@@ -16,7 +16,7 @@ interface PersonalLibraryModalsProps {
 export function PersonalLibraryModals({ shared }: PersonalLibraryModalsProps) {
   const ctx = useLibraryContext();
   const confirmDialog = useConfirm();
-  const { personalCategories, updatePrompt, deletePersonalCategory } = ctx;
+  const { personalCategories, patchPromptLocal, deletePersonalCategory } = ctx;
 
   const {
     selectedIds,
@@ -260,9 +260,11 @@ export function PersonalLibraryModals({ shared }: PersonalLibraryModalsProps) {
           promptTitle={versionHistoryPrompt.title}
           onClose={() => setVersionHistoryPrompt(null)}
           onRestore={(content, title) => {
+            // The restore POST (/api/prompts/versions) already persisted the row;
+            // patch local state only to avoid a redundant DB write + extra snapshot.
             const updates: Partial<PersonalPrompt> = { prompt: content };
             if (title) updates.title = title;
-            updatePrompt(versionHistoryPrompt.id, updates);
+            patchPromptLocal(versionHistoryPrompt.id, updates);
           }}
         />
       )}

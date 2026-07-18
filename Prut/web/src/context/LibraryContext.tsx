@@ -71,6 +71,7 @@ export const useLibraryContext = () => {
       addPrompt: data.addPrompt,
       removePrompt: data.removePrompt,
       updatePrompt: data.updatePrompt,
+      patchPromptLocal: data.patchPromptLocal,
       duplicatePrompt: data.duplicatePrompt,
       incrementUseCount: data.incrementUseCount,
       togglePin: data.togglePin,

@@ -180,6 +180,27 @@ export function usePromptMutations({
     [user, supabase, setAllLocalItems, refreshCurrentPage],
   );
 
+  /**
+   * Patch a prompt in local state ONLY — no DB write. For flows where the
+   * server has already persisted the change (e.g. version restore, which POSTs
+   * to /api/prompts/versions) and we just need the UI to reflect it, without a
+   * redundant second write that can spawn an extra version snapshot.
+   */
+  const patchPromptLocal = useCallback(
+    (id: string, updates: Partial<PersonalPrompt>) => {
+      const defined: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(updates)) {
+        if (value !== undefined) defined[key] = value;
+      }
+      if (Object.keys(defined).length === 0) return;
+      const apply = (prev: PersonalPrompt[]) =>
+        prev.map((p) => (p.id === id ? { ...p, ...defined } : p));
+      setPersonalLibrary(apply);
+      setAllLocalItems(apply);
+    },
+    [setPersonalLibrary, setAllLocalItems],
+  );
+
   const ratePrompt = useCallback(
     async (id: string, success: boolean) => {
       const field = success ? "success_count" : "fail_count";
@@ -359,6 +380,7 @@ export function usePromptMutations({
     addPrompt,
     removePrompt,
     updatePrompt,
+    patchPromptLocal,
     ratePrompt,
     incrementUseCount,
     togglePin,
