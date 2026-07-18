@@ -360,9 +360,11 @@ export function PersonalLibraryPromptCard({
         </span>
 
         {/* Quick actions (collapsed) — always visible on mobile (no hover),
-            hover-revealed on desktop. Bigger tap targets on mobile. */}
+            hover-revealed on pointer devices. On touch (hover:none) they stay
+            visible at every width, since the kebab menu lives here and would
+            otherwise be unreachable on a tablet. */}
         <div
-          className="flex items-center gap-0.5 shrink-0 opacity-100 @md/plcard:opacity-0 @md/plcard:group-hover:opacity-100 transition-opacity"
+          className="flex items-center gap-0.5 shrink-0 opacity-100 @md/plcard:opacity-0 @md/plcard:group-hover:opacity-100 [@media(hover:none)]:!opacity-100 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           <button
