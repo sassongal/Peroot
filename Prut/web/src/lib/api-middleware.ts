@@ -246,6 +246,11 @@ export function withUser<C = unknown>(
       const user = auth.user;
       if (!user && !opts.allowGuest) return errors.unauthorized();
 
+      // A service-role client bypasses RLS, so it must never be handed to a
+      // handler without an authenticated user to scope by — otherwise a guest
+      // (allowGuest) request would run privileged, unscoped queries. Refuse it.
+      if (!user && opts.forceServiceClient) return errors.unauthorized();
+
       const db = opts.forceServiceClient || auth.isBearer ? deps.createServiceClient() : rlsClient;
 
       // Lazy, memoised tier/admin resolution.

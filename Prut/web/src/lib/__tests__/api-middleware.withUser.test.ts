@@ -103,6 +103,20 @@ describe("withUser · auth", () => {
     expect(db).toBe(serviceSentinel);
   });
 
+  it("refuses a guest on a forceServiceClient route — never hands service-role to a null user", async () => {
+    const deps = makeDeps({
+      resolveAuth: vi.fn(async () => ({ status: "ok", user: null, isBearer: false }) as const),
+    });
+    const handler = vi.fn(ok);
+    const res = await withUser(
+      handler,
+      { rateLimit: "none", allowGuest: true, forceServiceClient: true },
+      deps,
+    )(makeReq({ "x-real-ip": "1.2.3.4" }), {});
+    expect(res.status).toBe(401);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it("401 invalid_token when bearer token is rejected", async () => {
     const deps = makeDeps({
       resolveAuth: vi.fn(async () => ({ status: "invalid_token" }) as const),
