@@ -249,7 +249,7 @@ export function DatabaseTab() {
               <span>{backupLoading ? "Building Snapshot..." : "Initiate Global Export"}</span>
             </button>
 
-            <div className="grid grid-cols-3 gap-6 pt-10 border-t border-white/5">
+            <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-10 border-t border-white/5">
               <Metric
                 label="Data Nodes"
                 value={dbStats.statsLoading ? "..." : String(dbStats.tableCount)}

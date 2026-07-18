@@ -581,68 +581,70 @@ export function EmailCampaignsTab() {
               No campaigns sent yet
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
-              {/* Table header */}
-              <div className="grid grid-cols-12 gap-4 px-8 py-5 border-b border-white/5">
-                {["נושא", "סגמנט", "נשלח", "נכשל", "תאריך"].map((h) => (
-                  <div
-                    key={h}
-                    className={cn(
-                      "text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em]",
-                      h === "נושא"
-                        ? "col-span-4"
-                        : h === "תאריך"
-                          ? "col-span-3"
-                          : "col-span-2 text-center",
-                    )}
-                  >
-                    {h}
-                  </div>
-                ))}
+            <div className="overflow-x-auto">
+              <div className="divide-y divide-white/5 min-w-[680px]">
+                {/* Table header */}
+                <div className="grid grid-cols-12 gap-4 px-4 sm:px-8 py-5 border-b border-white/5">
+                  {["נושא", "סגמנט", "נשלח", "נכשל", "תאריך"].map((h) => (
+                    <div
+                      key={h}
+                      className={cn(
+                        "text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em]",
+                        h === "נושא"
+                          ? "col-span-4"
+                          : h === "תאריך"
+                            ? "col-span-3"
+                            : "col-span-2 text-center",
+                      )}
+                    >
+                      {h}
+                    </div>
+                  ))}
+                </div>
+
+                {(data?.campaigns ?? []).map((c) => {
+                  const d = c.details ?? {};
+                  const subjectText = d.subject ?? "-";
+                  const seg = d.segment ?? "-";
+                  const sent = d.sent_count ?? 0;
+                  const failed = d.failed_count ?? 0;
+                  const segInfo = SEGMENT_OPTIONS.find((s) => s.value === seg);
+
+                  return (
+                    <div
+                      key={c.id}
+                      className="grid grid-cols-12 gap-4 px-4 sm:px-8 py-5 items-center hover:bg-white/2 transition-all duration-300 group"
+                    >
+                      <div className="col-span-4 font-bold text-zinc-300 text-sm truncate">
+                        {subjectText}
+                      </div>
+                      <div className="col-span-2 flex justify-center">
+                        <span className="px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-wider">
+                          {segInfo?.label ?? seg}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-center">
+                        <span className="text-emerald-400 font-black text-sm tabular-nums">
+                          {fmtCount(sent)}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-center">
+                        <span
+                          className={cn(
+                            "font-black text-sm tabular-nums",
+                            failed > 0 ? "text-rose-400" : "text-zinc-700",
+                          )}
+                        >
+                          {failed > 0 ? fmtCount(failed) : "-"}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-zinc-600 font-bold text-[10px] text-left">
+                        {fmtDate(c.created_at)}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              {(data?.campaigns ?? []).map((c) => {
-                const d = c.details ?? {};
-                const subjectText = d.subject ?? "-";
-                const seg = d.segment ?? "-";
-                const sent = d.sent_count ?? 0;
-                const failed = d.failed_count ?? 0;
-                const segInfo = SEGMENT_OPTIONS.find((s) => s.value === seg);
-
-                return (
-                  <div
-                    key={c.id}
-                    className="grid grid-cols-12 gap-4 px-8 py-5 items-center hover:bg-white/2 transition-all duration-300 group"
-                  >
-                    <div className="col-span-4 font-bold text-zinc-300 text-sm truncate">
-                      {subjectText}
-                    </div>
-                    <div className="col-span-2 flex justify-center">
-                      <span className="px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-wider">
-                        {segInfo?.label ?? seg}
-                      </span>
-                    </div>
-                    <div className="col-span-2 text-center">
-                      <span className="text-emerald-400 font-black text-sm tabular-nums">
-                        {fmtCount(sent)}
-                      </span>
-                    </div>
-                    <div className="col-span-2 text-center">
-                      <span
-                        className={cn(
-                          "font-black text-sm tabular-nums",
-                          failed > 0 ? "text-rose-400" : "text-zinc-700",
-                        )}
-                      >
-                        {failed > 0 ? fmtCount(failed) : "-"}
-                      </span>
-                    </div>
-                    <div className="col-span-2 text-zinc-600 font-bold text-[10px] text-left">
-                      {fmtDate(c.created_at)}
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           )}
         </div>

@@ -234,59 +234,63 @@ export function LibraryTab() {
 
             {/* Prompts table */}
             <div className="rounded-[32px] border border-white/5 bg-zinc-950 overflow-hidden">
-              {/* Header */}
-              <div className="grid grid-cols-12 gap-4 px-8 py-4 border-b border-white/5 text-[9px] font-black text-zinc-700 uppercase tracking-widest">
-                <div className="col-span-5">Title</div>
-                <div className="col-span-3">Mode</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-2">Created</div>
-              </div>
-
-              {promptsLoading ? (
-                <div className="flex items-center justify-center h-40 text-zinc-700 text-xs font-black uppercase tracking-widest">
-                  <Library className="w-5 h-5 animate-pulse mr-3" /> Loading...
-                </div>
-              ) : prompts.length === 0 ? (
-                <div className="flex items-center justify-center h-40 text-zinc-800 text-[10px] font-black uppercase tracking-widest">
-                  No prompts found
-                </div>
-              ) : (
-                prompts.map((p) => (
-                  <div
-                    key={p.id}
-                    className="grid grid-cols-12 gap-4 px-8 py-4 border-b border-white/5 hover:bg-white/2 transition-all duration-200 items-center"
-                  >
-                    <div className="col-span-5 font-bold text-zinc-300 text-sm truncate">
-                      {p.title}
-                    </div>
-                    <div className="col-span-3">
-                      {p.capability_mode && (
-                        <span className="px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-wide">
-                          {p.capability_mode.replace(/_/g, " ")}
-                        </span>
-                      )}
-                    </div>
-                    <div className="col-span-2 flex items-center gap-1.5">
-                      {p.is_active ? (
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5 text-zinc-700" />
-                      )}
-                      <span
-                        className={cn(
-                          "text-[9px] font-black uppercase",
-                          p.is_active ? "text-emerald-500" : "text-zinc-700",
-                        )}
-                      >
-                        {p.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div className="col-span-2 text-zinc-700 text-[10px] font-bold">
-                      {new Date(p.created_at).toLocaleDateString("he-IL")}
-                    </div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[720px]">
+                  {/* Header */}
+                  <div className="grid grid-cols-12 gap-4 px-4 sm:px-8 py-4 border-b border-white/5 text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                    <div className="col-span-5">Title</div>
+                    <div className="col-span-3">Mode</div>
+                    <div className="col-span-2">Status</div>
+                    <div className="col-span-2">Created</div>
                   </div>
-                ))
-              )}
+
+                  {promptsLoading ? (
+                    <div className="flex items-center justify-center h-40 text-zinc-700 text-xs font-black uppercase tracking-widest">
+                      <Library className="w-5 h-5 animate-pulse mr-3" /> Loading...
+                    </div>
+                  ) : prompts.length === 0 ? (
+                    <div className="flex items-center justify-center h-40 text-zinc-800 text-[10px] font-black uppercase tracking-widest">
+                      No prompts found
+                    </div>
+                  ) : (
+                    prompts.map((p) => (
+                      <div
+                        key={p.id}
+                        className="grid grid-cols-12 gap-4 px-4 sm:px-8 py-4 border-b border-white/5 hover:bg-white/2 transition-all duration-200 items-center"
+                      >
+                        <div className="col-span-5 font-bold text-zinc-300 text-sm truncate">
+                          {p.title}
+                        </div>
+                        <div className="col-span-3">
+                          {p.capability_mode && (
+                            <span className="px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-wide">
+                              {p.capability_mode.replace(/_/g, " ")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="col-span-2 flex items-center gap-1.5">
+                          {p.is_active ? (
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5 text-zinc-700" />
+                          )}
+                          <span
+                            className={cn(
+                              "text-[9px] font-black uppercase",
+                              p.is_active ? "text-emerald-500" : "text-zinc-700",
+                            )}
+                          >
+                            {p.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                        <div className="col-span-2 text-zinc-700 text-[10px] font-bold">
+                          {new Date(p.created_at).toLocaleDateString("he-IL")}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Pagination */}

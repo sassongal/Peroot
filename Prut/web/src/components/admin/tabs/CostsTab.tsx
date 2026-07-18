@@ -756,8 +756,8 @@ export default function CostsTab() {
           <h2 className="text-[9px] font-black uppercase tracking-widest text-zinc-700">
             Cost by Engine Mode
           </h2>
-          <div className="rounded-[48px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden shadow-2xl">
-            <table className="w-full text-xs">
+          <div className="rounded-[48px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-x-auto shadow-2xl">
+            <table className="w-full text-xs min-w-[560px]">
               <thead>
                 <tr className="border-b border-white/5">
                   <th className="text-left px-8 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-700">

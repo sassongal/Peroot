@@ -263,7 +263,9 @@ export function PersonalLibraryPromptCard({
           }}
           className={cn(
             "shrink-0 transition-opacity",
-            isSelected || selectionMode ? "opacity-100" : "opacity-0 group-hover:opacity-60",
+            isSelected || selectionMode
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-60 hidden @sm/plcard:inline-flex",
           )}
           aria-label={`בחר את הפרומפט "${prompt.title}"`}
         >
@@ -383,7 +385,7 @@ export function PersonalLibraryPromptCard({
               }}
               title="קשרים"
               aria-label="הצג קשרים"
-              className="@md/plcard:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+              className="hidden @sm/plcard:flex @md/plcard:hidden p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-11 min-w-11 items-center justify-center cursor-pointer"
             >
               <Network className="w-4 h-4" />
             </button>
@@ -576,6 +578,17 @@ export function PersonalLibraryPromptCard({
                     >
                       <Link2 className="w-3.5 h-3.5" /> שתף
                     </button>
+                    {onShowConnections && (
+                      <button
+                        onClick={() => {
+                          onShowConnections(prompt.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
+                      >
+                        <Network className="w-3.5 h-3.5" /> קשרים
+                      </button>
+                    )}
                     <div className="h-px bg-(--glass-bg) my-1" />
                     {/* Group 2: Edit */}
                     <button

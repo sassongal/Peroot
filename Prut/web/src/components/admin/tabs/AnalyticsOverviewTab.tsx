@@ -472,7 +472,7 @@ export default function AnalyticsOverviewTab() {
       </div>
 
       {/* DAU / WAU / MAU */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <div className="rounded-2xl border border-white/5 bg-zinc-950 p-5 text-center space-y-1">
           <div className="text-2xl font-black text-white tabular-nums">
             {product.dau.toLocaleString()}

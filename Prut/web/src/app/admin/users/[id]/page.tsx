@@ -649,7 +649,7 @@ export default function UserDetailPage() {
                 {/* Rank / Stats */}
                 {stats && (
                   <Panel title="Rank & Stats" icon={Trophy} color="purple">
-                    <div className="grid grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                       <InfoRow label="Rank" value={stats.rank_title || "-"} />
                       <InfoRow label="Contribution Score" value={stats.contribution_score ?? 0} />
                       <InfoRow label="Total Copies" value={stats.total_copies ?? 0} />
@@ -1082,7 +1082,7 @@ export default function UserDetailPage() {
             {activeTab === "tokens" && (
               <div className="space-y-4">
                 {/* Token totals */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="rounded-[28px] border border-white/5 bg-zinc-950/80 p-6 space-y-1">
                     <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
                       Total Input Tokens
@@ -1114,50 +1114,54 @@ export default function UserDetailPage() {
                       No API calls recorded
                     </p>
                   ) : (
-                    <div className="divide-y divide-white/5">
-                      {/* Header */}
-                      <div className="px-8 py-3 grid grid-cols-6 gap-4">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 col-span-2">
-                          Model / Engine
-                        </span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
-                          In Tokens
-                        </span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
-                          Out Tokens
-                        </span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
-                          Cost
-                        </span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
-                          When
-                        </span>
-                      </div>
-                      {recentApiCalls.map((call, i) => (
-                        <div
-                          key={i}
-                          className="px-8 py-4 grid grid-cols-6 gap-4 items-center hover:bg-white/2 transition-all"
-                        >
-                          <div className="col-span-2 space-y-0.5">
-                            <p className="text-xs font-bold text-zinc-300 truncate">{call.model}</p>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
-                              {call.engine_mode ?? call.provider}
-                            </p>
-                          </div>
-                          <span className="text-xs font-mono text-blue-400 text-right">
-                            {call.input_tokens.toLocaleString()}
+                    <div className="overflow-x-auto">
+                      <div className="divide-y divide-white/5 min-w-[600px]">
+                        {/* Header */}
+                        <div className="px-4 sm:px-8 py-3 grid grid-cols-6 gap-4">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 col-span-2">
+                            Model / Engine
                           </span>
-                          <span className="text-xs font-mono text-indigo-400 text-right">
-                            {call.output_tokens.toLocaleString()}
+                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                            In Tokens
                           </span>
-                          <span className="text-xs font-mono text-emerald-400 text-right">
-                            {fmtCost(call.cost_usd)}
+                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                            Out Tokens
                           </span>
-                          <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest text-right whitespace-nowrap">
-                            {timeAgo(call.created_at)}
+                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                            Cost
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 text-right">
+                            When
                           </span>
                         </div>
-                      ))}
+                        {recentApiCalls.map((call, i) => (
+                          <div
+                            key={i}
+                            className="px-4 sm:px-8 py-4 grid grid-cols-6 gap-4 items-center hover:bg-white/2 transition-all"
+                          >
+                            <div className="col-span-2 space-y-0.5">
+                              <p className="text-xs font-bold text-zinc-300 truncate">
+                                {call.model}
+                              </p>
+                              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                                {call.engine_mode ?? call.provider}
+                              </p>
+                            </div>
+                            <span className="text-xs font-mono text-blue-400 text-right">
+                              {call.input_tokens.toLocaleString()}
+                            </span>
+                            <span className="text-xs font-mono text-indigo-400 text-right">
+                              {call.output_tokens.toLocaleString()}
+                            </span>
+                            <span className="text-xs font-mono text-emerald-400 text-right">
+                              {fmtCost(call.cost_usd)}
+                            </span>
+                            <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest text-right whitespace-nowrap">
+                              {timeAgo(call.created_at)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1546,7 +1550,7 @@ function EmailsTab({ userId }: { userId: string }) {
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <div className="p-4 rounded-2xl bg-zinc-950 border border-white/5 text-center">
           <div className="text-2xl font-black text-white">{data.summary.totalSent}</div>
           <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">נשלחו</div>

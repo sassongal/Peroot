@@ -21,8 +21,8 @@ export function TabPerformance({ stats }: { stats: ContentFactoryStats | null })
           title="פרומפטים מובילים"
           sub="Top performing prompts by usage"
         />
-        <div className="bg-zinc-950/50 border border-white/5 rounded-3xl overflow-hidden">
-          <table className="w-full">
+        <div className="bg-zinc-950/50 border border-white/5 rounded-3xl overflow-x-auto">
+          <table className="w-full min-w-[560px]">
             <thead>
               <tr className="border-b border-white/5">
                 {["#", "כותרת", "קטגוריה", "שימושים", "מועדפים"].map((h) => (
@@ -74,8 +74,8 @@ export function TabPerformance({ stats }: { stats: ContentFactoryStats | null })
       {/* Top blog posts */}
       <div className="space-y-4">
         <SectionTitle icon={PenTool} color="blue" title="פוסטי בלוג מובילים" sub="Top blog posts" />
-        <div className="bg-zinc-950/50 border border-white/5 rounded-3xl overflow-hidden">
-          <table className="w-full">
+        <div className="bg-zinc-950/50 border border-white/5 rounded-3xl overflow-x-auto">
+          <table className="w-full min-w-[560px]">
             <thead>
               <tr className="border-b border-white/5">
                 {["#", "כותרת", "קטגוריה", "תאריך יצירה"].map((h) => (

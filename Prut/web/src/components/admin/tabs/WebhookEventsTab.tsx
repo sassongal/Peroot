@@ -50,7 +50,7 @@ export default function WebhookEventsTab() {
     void fetchEvents();
   }, [fetchEvents]);
 
-  const failedCount = events.filter(e => !e.processed || e.processing_error).length;
+  const failedCount = events.filter((e) => !e.processed || e.processing_error).length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500" dir="rtl">
@@ -82,7 +82,7 @@ export default function WebhookEventsTab() {
               "px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
               statusFilter === f
                 ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                : "text-(--text-muted) border-white/10 hover:text-(--text-primary)"
+                : "text-(--text-muted) border-white/10 hover:text-(--text-primary)",
             )}
           >
             {f === "all" ? "הכל" : f === "processed" ? "עובד" : "נכשל"}
@@ -95,20 +95,29 @@ export default function WebhookEventsTab() {
         <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/30 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <div className="text-sm text-red-200">
-            <strong>{failedCount}</strong> אירועים נכשלים בחלון הזמן הזה. בדוק את הפרטים למטה כדי לאתר ולתקן.
+            <strong>{failedCount}</strong> אירועים נכשלים בחלון הזמן הזה. בדוק את הפרטים למטה כדי
+            לאתר ולתקן.
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-white/10 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="rounded-xl border border-white/10 overflow-x-auto">
+        <table className="w-full text-sm min-w-[560px]">
           <thead className="bg-white/5">
             <tr>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">סטטוס</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">שם אירוע</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">תאריך</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">שגיאה</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">
+                סטטוס
+              </th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">
+                שם אירוע
+              </th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">
+                תאריך
+              </th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-(--text-muted) uppercase tracking-wider">
+                שגיאה
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -130,10 +139,7 @@ export default function WebhookEventsTab() {
                 return (
                   <tr
                     key={evt.id}
-                    className={cn(
-                      "border-t border-white/5",
-                      isFailed && "bg-red-500/3"
-                    )}
+                    className={cn("border-t border-white/5", isFailed && "bg-red-500/3")}
                   >
                     <td className="px-4 py-3">
                       {isFailed ? (
@@ -154,7 +160,10 @@ export default function WebhookEventsTab() {
                     <td className="px-4 py-3 text-xs text-(--text-muted)">
                       {new Date(evt.created_at).toLocaleString("he-IL")}
                     </td>
-                    <td className="px-4 py-3 text-xs text-red-300/80 max-w-md truncate" title={evt.processing_error ?? ""}>
+                    <td
+                      className="px-4 py-3 text-xs text-red-300/80 max-w-md truncate"
+                      title={evt.processing_error ?? ""}
+                    >
                       {evt.processing_error || "—"}
                     </td>
                   </tr>

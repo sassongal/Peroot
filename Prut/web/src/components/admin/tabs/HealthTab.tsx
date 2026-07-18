@@ -808,8 +808,8 @@ export function HealthTab() {
           title="Storage Overview"
           sub="מספר שורות לפי טבלה"
         />
-        <div className="rounded-[36px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-hidden">
-          <table className="w-full border-collapse">
+        <div className="rounded-[36px] border border-white/5 bg-zinc-950/80 backdrop-blur-3xl overflow-x-auto">
+          <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr className="border-b border-white/5">
                 {["טבלה", 'סה"כ שורות', "24 שעות אחרונות", "צמיחה"].map((h) => (
