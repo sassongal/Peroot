@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AIGateway } from "@/lib/ai/gateway";
 import { withUser } from "@/lib/api-middleware";
 import { logger } from "@/lib/logger";
+import { parseQuestionsJson } from "@/lib/prompt-stream/trailer";
 import type { Question } from "@/lib/types";
 
 export const maxDuration = 30;
@@ -90,34 +91,6 @@ ${contextSummary}`);
   return parts.join("\n");
 }
 
-function parseQuestionsFromText(text: string): Question[] {
-  const cleaned = text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/i, "")
-    .trim();
-
-  const parsed = JSON.parse(cleaned);
-  if (!Array.isArray(parsed)) return [];
-
-  return parsed
-    .filter(
-      (q): q is Record<string, unknown> =>
-        q !== null && typeof q === "object" && typeof q.question === "string",
-    )
-    .map((q) => ({
-      id: typeof q.id === "number" ? q.id : 0,
-      question: String(q.question),
-      description: typeof q.description === "string" ? q.description : "",
-      examples: Array.isArray(q.examples)
-        ? q.examples.filter((e): e is string => typeof e === "string")
-        : [],
-      ...(typeof q.priority === "number" ? { priority: q.priority } : {}),
-      ...(typeof q.category === "string" ? { category: q.category } : {}),
-      ...(typeof q.impactEstimate === "string" ? { impactEstimate: q.impactEstimate } : {}),
-      ...(typeof q.required === "boolean" ? { required: q.required } : {}),
-    }));
-}
-
 export const POST = withUser(
   async (request, _ctx) => {
     let body: z.infer<typeof Schema>;
@@ -165,11 +138,9 @@ export const POST = withUser(
         temperature: 0.6,
       });
 
-      let questions: Question[] = [];
-      try {
-        questions = parseQuestionsFromText(result.text);
-      } catch {
-        logger.warn("[enhance/questions] Failed to parse questions JSON", {
+      const questions: Question[] = parseQuestionsJson(result.text);
+      if (questions.length === 0 && result.text.trim().length > 0) {
+        logger.warn("[enhance/questions] No questions parsed from model output", {
           text: result.text.slice(0, 200),
         });
       }
