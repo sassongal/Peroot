@@ -558,14 +558,24 @@ export function PersonalLibraryView({
       return;
     }
     try {
-      const promises = Array.from(selectedIds).map(async (id) => {
-        const item = filteredPersonalLibrary.find((p) => p.id === id);
-        if (!item) return;
-        const newTags = Array.from(new Set([...(item.tags || []), ...tags]));
-        await ctx.updateTags(id, newTags);
-      });
-      await Promise.all(promises);
-      toast.success("תגיות עודכנו");
+      // Selection can span pages; filteredPersonalLibrary is only the current
+      // page. Look up across the full graph set too, and report honestly if some
+      // selected items aren't loaded instead of silently skipping them.
+      const lookup = new Map<string, PersonalPrompt>();
+      [...graphPrompts, ...filteredPersonalLibrary].forEach((p) => lookup.set(p.id, p));
+      const ids = Array.from(selectedIds);
+      const found = ids.map((id) => lookup.get(id)).filter((p): p is PersonalPrompt => Boolean(p));
+      await Promise.all(
+        found.map((item) =>
+          ctx.updateTags(item.id, Array.from(new Set([...(item.tags || []), ...tags]))),
+        ),
+      );
+      const missing = ids.length - found.length;
+      toast.success(
+        missing > 0
+          ? `תגיות עודכנו ל-${found.length} פריטים. ${missing} לא נטענו — גללו אליהם ונסו שוב.`
+          : "תגיות עודכנו",
+      );
       setShowTagDialog(false);
       setTagsInput("");
       clearSelection();
@@ -575,7 +585,11 @@ export function PersonalLibraryView({
   };
 
   const handleBatchExport = () => {
-    const items = filteredPersonalLibrary.filter((p) => selectedIds.has(p.id));
+    const lookup = new Map<string, PersonalPrompt>();
+    [...graphPrompts, ...filteredPersonalLibrary].forEach((p) => lookup.set(p.id, p));
+    const items = Array.from(selectedIds)
+      .map((id) => lookup.get(id))
+      .filter((p): p is PersonalPrompt => Boolean(p));
     const dataStr =
       "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
     const a = document.createElement("a");
@@ -584,7 +598,10 @@ export function PersonalLibraryView({
     document.body.appendChild(a);
     a.click();
     a.remove();
-    toast.success("יצוא הושלם");
+    const missing = selectedIds.size - items.length;
+    toast.success(
+      missing > 0 ? `יוצאו ${items.length} פריטים (${missing} לא נטענו)` : "יצוא הושלם",
+    );
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {

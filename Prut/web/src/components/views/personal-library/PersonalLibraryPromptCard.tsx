@@ -615,7 +615,7 @@ export function PersonalLibraryPromptCard({
                     <button
                       onClick={() => {
                         onCopyText(prompt.prompt);
-                        toast.success("קישור הועתק!");
+                        toast.success("הפרומפט הועתק — אפשר להדביק ולשתף");
                         setOpenMenuId(null);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-(--text-secondary) hover:bg-black/5 dark:bg-white/10 hover:text-(--text-primary)"
@@ -1019,7 +1019,9 @@ export function PersonalLibraryPromptCard({
                       placeholder="הטקסט של הפרומפט..."
                     />
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-600">{styleDraft.length} תווים</span>
+                      <span className="text-[10px] text-(--text-muted)">
+                        {styleDraft.length} תווים
+                      </span>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => {

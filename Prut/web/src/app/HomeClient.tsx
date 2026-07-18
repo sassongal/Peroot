@@ -29,6 +29,7 @@ import { UserMenu } from "@/components/layout/user-nav";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 import { extractPlaceholders, escapeRegExp } from "@/lib/text-utils";
 import { LibraryPrompt, PersonalPrompt, Question } from "@/lib/types";
@@ -282,6 +283,8 @@ function PageContent() {
       dispatch({ type: "STREAM_INTERRUPTED" });
     }, [dispatch]),
   });
+
+  const confirmDialog = useConfirm();
 
   // Sidebar & mobile FAQ state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -971,9 +974,14 @@ function PageContent() {
 
       if (e.key === "Escape" && !isTyping) {
         if (completionRef.current) {
-          if (confirm("למחוק את התוצאה?")) {
-            dispatch({ type: "SET_COMPLETION", payload: "" });
-          }
+          // Styled, RTL, non-blocking replacement for the native confirm().
+          void confirmDialog({
+            title: "למחוק את התוצאה?",
+            danger: true,
+            confirmLabel: "מחק",
+          }).then((ok) => {
+            if (ok) dispatch({ type: "SET_COMPLETION", payload: "" });
+          });
         }
       }
       // Cmd+Enter or Ctrl+Enter to enhance
@@ -1008,7 +1016,7 @@ function PageContent() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, setViewMode, setSidebarOpen]);
+  }, [dispatch, setViewMode, setSidebarOpen, confirmDialog]);
 
   const handleShare = useCallback(async () => {
     if (!user) {

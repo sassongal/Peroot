@@ -51,7 +51,9 @@ export function PromptLimitIndicator({ creditsBalance }: PromptLimitIndicatorPro
   // ----- Free registered user: credits + upgrade link -----
   if (!isGuest) {
     const isEmpty = displayCredits <= 0;
-    const isLow = !isEmpty && displayCredits <= 3;
+    // Free daily cap is 2, so a "<= 3" threshold painted a FULL balance red
+    // (cried wolf / read as a dark pattern). Only warn at the last credit.
+    const isLow = !isEmpty && displayCredits <= 1;
 
     if (isEmpty) {
       return (

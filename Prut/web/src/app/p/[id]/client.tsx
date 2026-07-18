@@ -2,7 +2,14 @@
 
 import { Copy, Check, Share2, Link } from "lucide-react";
 import { useState, useMemo } from "react";
-import { ChatGPTIcon, ClaudeIcon, GeminiIcon, WhatsAppIcon, TelegramIcon } from "@/components/ui/AIPlatformIcons";
+import { toast } from "sonner";
+import {
+  ChatGPTIcon,
+  ClaudeIcon,
+  GeminiIcon,
+  WhatsAppIcon,
+  TelegramIcon,
+} from "@/components/ui/AIPlatformIcons";
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -18,32 +25,55 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   // Lazy initializers — no cascading setState on mount. SSR gets empty
   // string / false, client rehydrates synchronously on first render.
   const [pageUrl] = useState<string>(() =>
-    typeof window !== 'undefined' ? window.location.href : ''
+    typeof window !== "undefined" ? window.location.href : "",
   );
-  const [canShare] = useState<boolean>(() =>
-    typeof window !== 'undefined' && !!navigator?.share
-  );
+  const [canShare] = useState<boolean>(() => typeof window !== "undefined" && !!navigator?.share);
 
   const handleCopyPrompt = async () => {
-    await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | www.peroot.space");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(prompt + "\n\n- נוצר עם Peroot | www.peroot.space");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("ההעתקה נכשלה. סמנו את הטקסט והעתיקו ידנית.");
+    }
   };
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(pageUrl);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast.error("העתקת הקישור נכשלה.");
+    }
   };
 
   const handleOpenIn = async (url: string) => {
-    await navigator.clipboard.writeText(prompt);
+    // Best-effort copy, but ALWAYS open the LLM tab — a clipboard rejection must
+    // not block the primary action of the public share page.
+    try {
+      await navigator.clipboard.writeText(prompt);
+    } catch {
+      /* clipboard blocked — still open the tab below */
+    }
     window.open(url, "_blank");
   };
 
-  const whatsappMessage = useMemo(() => encodeURIComponent("בדוק את הפרומפט הזה: " + pageUrl), [pageUrl]);
+  const whatsappMessage = useMemo(
+    () => encodeURIComponent("בדוק את הפרומפט הזה: " + pageUrl),
+    [pageUrl],
+  );
   const twitterMessage = encodeURIComponent("בדוק את הפרומפט הזה שנוצר עם Peroot");
-  const telegramText = useMemo(() => encodeURIComponent(prompt.slice(0, 200) + (prompt.length > 200 ? '...' : '') + "\n\n- נוצר עם Peroot | www.peroot.space"), [prompt]);
+  const telegramText = useMemo(
+    () =>
+      encodeURIComponent(
+        prompt.slice(0, 200) +
+          (prompt.length > 200 ? "..." : "") +
+          "\n\n- נוצר עם Peroot | www.peroot.space",
+      ),
+    [prompt],
+  );
 
   return (
     <div className="p-4 bg-white/2 border-t border-white/5 flex flex-col gap-4">
@@ -88,7 +118,12 @@ export function SharePageClient({ prompt }: { prompt: string }) {
 
         {/* Twitter/X */}
         <button
-          onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${twitterMessage}`, "_blank")}
+          onClick={() =>
+            window.open(
+              `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${twitterMessage}`,
+              "_blank",
+            )
+          }
           className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs transition-all cursor-pointer min-h-[44px]"
         >
           <XIcon className="w-3.5 h-3.5" />
@@ -97,7 +132,12 @@ export function SharePageClient({ prompt }: { prompt: string }) {
 
         {/* Telegram */}
         <button
-          onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${telegramText}`, "_blank")}
+          onClick={() =>
+            window.open(
+              `https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${telegramText}`,
+              "_blank",
+            )
+          }
           className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-[#0088cc]/10 hover:border-[#0088cc]/30 text-slate-300 hover:text-[#0088cc] text-xs transition-all cursor-pointer min-h-[44px]"
         >
           <TelegramIcon className="w-3.5 h-3.5" />
@@ -109,13 +149,23 @@ export function SharePageClient({ prompt }: { prompt: string }) {
           onClick={handleCopyLink}
           className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-amber-500/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-400 text-xs transition-all cursor-pointer min-h-[44px]"
         >
-          {linkCopied ? <Check className="w-3.5 h-3.5 text-amber-400" /> : <Link className="w-3.5 h-3.5" />}
+          {linkCopied ? (
+            <Check className="w-3.5 h-3.5 text-amber-400" />
+          ) : (
+            <Link className="w-3.5 h-3.5" />
+          )}
           <span>{linkCopied ? "הקישור הועתק!" : "העתק קישור"}</span>
         </button>
 
         {canShare && (
           <button
-            onClick={() => navigator.share({ title: 'פרומפט מ-Peroot', text: prompt.slice(0, 200), url: pageUrl })}
+            onClick={() =>
+              navigator.share({
+                title: "פרומפט מ-Peroot",
+                text: prompt.slice(0, 200),
+                url: pageUrl,
+              })
+            }
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-white/10 bg-white/3 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer min-h-[44px]"
           >
             <Share2 className="w-3.5 h-3.5" />

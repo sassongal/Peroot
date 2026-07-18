@@ -51,15 +51,12 @@ export function useResultActions({
   history,
   showLoginRequired,
 }: UseResultActionsParams) {
-
   // ── Copy ──────────────────────────────────────────────────────────────────
 
   const handleCopyText = useCallback(
     async (text: string, withWatermark?: boolean) => {
       const shouldWatermark = withWatermark !== undefined ? withWatermark : !isPro;
-      const finalText = shouldWatermark
-        ? `${text}\n\n- נוצר עם Peroot | www.peroot.space`
-        : text;
+      const finalText = shouldWatermark ? `${text}\n\n- נוצר עם Peroot | www.peroot.space` : text;
       await navigator.clipboard.writeText(finalText);
       dispatch({ type: "SET_COPIED", payload: true });
       setTimeout(() => dispatch({ type: "SET_COPIED", payload: false }), 2000);
@@ -94,14 +91,27 @@ export function useResultActions({
       if (!res.ok) throw new Error("Share failed");
       const { id } = await res.json();
       const shareUrl = `${window.location.origin}/p/${id}`;
-      await navigator.clipboard.writeText(shareUrl);
       markFeatureUsed("peroot_used_share");
-      toast.success("קישור שיתוף נוצר");
+      // The share already succeeded — never turn a clipboard rejection (unfocused
+      // doc / permission) into a "share failed" error that loses the URL.
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("קישור שיתוף הועתק ללוח");
+      } catch {
+        toast.success("קישור שיתוף נוצר", { description: shareUrl, duration: 10000 });
+      }
     } catch (error) {
       logger.error("[share] Error:", error);
       toast.error("שגיאה בשיתוף");
     }
-  }, [user, ps.completion, ps.input, ps.selectedCategory, ps.selectedCapability, showLoginRequired]);
+  }, [
+    user,
+    ps.completion,
+    ps.input,
+    ps.selectedCategory,
+    ps.selectedCapability,
+    showLoginRequired,
+  ]);
 
   // ── Save to personal library ───────────────────────────────────────────────
 
@@ -115,8 +125,7 @@ export function useResultActions({
       title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
       prompt: ps.completion,
       category: ps.detectedCategory || ps.selectedCategory,
-      personal_category:
-        getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
+      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
       capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual",
@@ -147,8 +156,7 @@ export function useResultActions({
       title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
       prompt: ps.completion,
       category: ps.detectedCategory || ps.selectedCategory,
-      personal_category:
-        getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
+      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
       capability_mode: ps.selectedCapability,
       use_case: "נשמר מהתוצאה",
       source: "manual",
@@ -185,9 +193,7 @@ export function useResultActions({
     const variables = [...new Set(varMatches.map((v) => v.replace(/[{}]/g, "")))];
 
     if (variables.length === 0) {
-      toast.error(
-        "הפרומפט לא מכיל משתנים {variable} — הוסיפו משתנים כדי ליצור תבנית",
-      );
+      toast.error("הפרומפט לא מכיל משתנים {variable} — הוסיפו משתנים כדי ליצור תבנית");
       return;
     }
 
@@ -195,8 +201,7 @@ export function useResultActions({
       title: ps.input.slice(0, 30) + (ps.input.length > 30 ? "..." : ""),
       prompt: ps.completion,
       category: ps.detectedCategory || ps.selectedCategory,
-      personal_category:
-        getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
+      personal_category: getCategoryLabel(ps.selectedCategory) || PERSONAL_DEFAULT_CATEGORY,
       capability_mode: ps.selectedCapability,
       use_case: "תבנית לשימוש חוזר",
       source: "manual",

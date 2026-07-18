@@ -257,10 +257,15 @@
   outline-offset: 3px;
 }
 
-/* 5.5 Keyboard Accessibility: global focus ring for interactive elements */
+/* 5.5 Keyboard Accessibility: global focus ring for interactive elements.
+   Inputs are included because their utility `focus:outline-none` out-specifies
+   the global outline; the ring is a box-shadow, so it survives. */
 button:focus-visible,
 a:focus-visible,
-[role="button"]:focus-visible {
+[role="button"]:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   @apply ring-2 ring-amber-500/50 outline-none;
 }
 
