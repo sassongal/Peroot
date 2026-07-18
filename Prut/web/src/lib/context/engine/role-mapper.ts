@@ -1,45 +1,35 @@
-import type { DocumentType } from './types';
+import type { DocumentType } from "./types";
+import { DOCUMENT_CAPABILITY, type ExpertRole } from "./capability";
 
-export interface ExpertRole {
-  role: string;
-  tone: string;
-  focusAreas: string[];
-}
+export type { ExpertRole } from "./capability";
 
-export const DOCUMENT_TYPE_TO_ROLE: Record<string, ExpertRole> = {
-  'חוזה משפטי':   { role: 'יועץ משפטי בכיר',       tone: 'פורמלי, זהיר, מדויק',        focusAreas: ['סעיפי סיכון', 'חובות וזכויות', 'תנאי סיום'] },
-  'מאמר אקדמי':  { role: 'חוקר בתחום התוכן',        tone: 'ניתוחי, מתודי, מבוסס ראיות',  focusAreas: ['תזה מרכזית', 'ממצאים', 'מגבלות מתודולוגיות'] },
-  'דף שיווקי':    { role: 'מומחה פרפורמנס מרקטינג', tone: 'משכנע, ממוקד תועלת',         focusAreas: ['Value proposition', 'Call to action', 'Objection handling'] },
-  'טבלת נתונים':  { role: 'אנליסט נתונים',          tone: 'כמותי, מדויק, מובנה',         focusAreas: ['מגמות', 'חריגים', 'מדדי מפתח'] },
-  'קוד מקור':     { role: 'מהנדס תוכנה בכיר',       tone: 'טכני, מדויק',                focusAreas: ['ארכיטקטורה', 'באגים פוטנציאליים', 'ביצועים'] },
-  'אימייל/התכתבות': { role: 'מומחה תקשורת עסקית',  tone: 'ממוקד, מכבד',                focusAreas: ['הקשר', 'אינטרס הדובר', 'צעד הבא'] },
-  'תמונה':        { role: 'מומחה ויזואל ו-UX',      tone: 'תיאורי, מדויק',              focusAreas: ['הרכב', 'צבעים', 'טקסט חזותי'] },
-  'דף אינטרנט':   { role: 'content strategist',     tone: 'מובנה, שימושי',               focusAreas: ['מסר מרכזי', 'קהל יעד', 'דגשים'] },
-  'generic':      { role: 'מומחה תוכן רב-תחומי',    tone: 'ניטרלי, מאוזן',              focusAreas: ['העיקר', 'פרטים רלוונטיים', 'חסרים אפשריים'] },
-};
+/** Derived from the capability table — one role per DocumentType. */
+export const DOCUMENT_TYPE_TO_ROLE: Record<string, ExpertRole> = Object.fromEntries(
+  (Object.keys(DOCUMENT_CAPABILITY) as DocumentType[]).map((t) => [t, DOCUMENT_CAPABILITY[t].role]),
+);
 
-const PRIORITY: DocumentType[] = [
-  'חוזה משפטי', 'קוד מקור', 'מאמר אקדמי', 'טבלת נתונים',
-  'דף שיווקי', 'אימייל/התכתבות', 'דף אינטרנט', 'תמונה',
-];
+/** Types with a non-null priority, ordered by it (the historical PRIORITY array). */
+const PRIORITY: DocumentType[] = (Object.keys(DOCUMENT_CAPABILITY) as DocumentType[])
+  .filter((t) => DOCUMENT_CAPABILITY[t].priority !== null)
+  .sort((a, b) => DOCUMENT_CAPABILITY[a].priority! - DOCUMENT_CAPABILITY[b].priority!);
 
 export function resolveRole(documentTypes: string[]): ExpertRole {
   for (const type of PRIORITY) {
-    if (documentTypes.includes(type)) return DOCUMENT_TYPE_TO_ROLE[type];
+    if (documentTypes.includes(type)) return DOCUMENT_CAPABILITY[type].role;
   }
-  return DOCUMENT_TYPE_TO_ROLE['generic'];
+  return DOCUMENT_CAPABILITY["generic"].role;
 }
 
 export function renderRoleBlock(documentTypes: string[]): string {
-  if (documentTypes.length === 0) return '';
+  if (documentTypes.length === 0) return "";
   const role = resolveRole(documentTypes);
-  const typeLabel = PRIORITY.find((t) => documentTypes.includes(t)) ?? 'generic';
+  const typeLabel = PRIORITY.find((t) => documentTypes.includes(t)) ?? "generic";
   return [
     '━━━ התאמת מומחה ע"ב קונטקסט ━━━',
     `המשתמש סיפק קונטקסט מסוג "${typeLabel}". בעת יצירת הפרומפט:`,
     `- אמץ נקודת מבט של: ${role.role}`,
     `- טון: ${role.tone}`,
-    `- התמקד ב: ${role.focusAreas.join(' · ')}`,
-    '━━━',
-  ].join('\n');
+    `- התמקד ב: ${role.focusAreas.join(" · ")}`,
+    "━━━",
+  ].join("\n");
 }
