@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
@@ -67,12 +68,12 @@ describe("GET /api/extension-config", () => {
 
   it("returns 401 for unauthenticated user", async () => {
     mockAuth(null);
-    const res = await GET(new Request("http://localhost/api/extension-config"));
+    const res = await GET(new NextRequest("http://localhost/api/extension-config"), {});
     expect(res.status).toBe(401);
   });
 
   it("returns the active config + active profile metadata", async () => {
-    const res = await GET(new Request("http://localhost/api/extension-config"));
+    const res = await GET(new NextRequest("http://localhost/api/extension-config"), {});
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.version).toBe("2026-04-29-1");
