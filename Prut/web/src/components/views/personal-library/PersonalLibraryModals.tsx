@@ -7,27 +7,24 @@ import { useLibraryContext } from "@/context/LibraryContext";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { VersionHistoryModal } from "@/components/features/library/VersionHistoryModal";
-import type { PersonalLibrarySharedState } from "./types";
+import {
+  usePersonalLibrarySelection,
+  usePersonalLibraryFolders,
+  usePersonalLibraryBatchDialogs,
+  usePersonalLibraryVersionHistory,
+} from "./context/PersonalLibraryContext";
 
-interface PersonalLibraryModalsProps {
-  shared: PersonalLibrarySharedState;
-}
-
-export function PersonalLibraryModals({ shared }: PersonalLibraryModalsProps) {
+export function PersonalLibraryModals() {
   const ctx = useLibraryContext();
   const confirmDialog = useConfirm();
   const { personalCategories, patchPromptLocal, deletePersonalCategory } = ctx;
 
+  const { selectedIds, clearSelection } = usePersonalLibrarySelection();
+  const { effectiveFolder, folderCounts, setFolder, handleFolderRename } =
+    usePersonalLibraryFolders();
   const {
-    selectedIds,
-    clearSelection,
-    effectiveFolder,
     folderContextMenu,
     setFolderContextMenu,
-    folderCounts,
-    setFolder,
-    handleFolderRename,
-    // Batch dialogs
     showMoveDialog,
     setShowMoveDialog,
     showTagDialog,
@@ -40,15 +37,12 @@ export function PersonalLibraryModals({ shared }: PersonalLibraryModalsProps) {
     setIsCreatingNewMoveCategory,
     newMoveCategoryInput,
     setNewMoveCategoryInput,
-    // Batch handlers
     handleBatchDelete,
     handleBatchMove,
     handleBatchTag,
     handleBatchExport,
-    // Version history
-    versionHistoryPrompt,
-    setVersionHistoryPrompt,
-  } = shared;
+  } = usePersonalLibraryBatchDialogs();
+  const { versionHistoryPrompt, setVersionHistoryPrompt } = usePersonalLibraryVersionHistory();
 
   return (
     <>

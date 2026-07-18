@@ -7,8 +7,10 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
+import { Hash, AtSign, Wand2 } from "lucide-react";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { PersonalPrompt, LibraryPrompt } from "@/lib/types";
 import { toast } from "sonner";
@@ -16,8 +18,51 @@ import type { User } from "@supabase/supabase-js";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { logger } from "@/lib/logger";
 import { hebrewFuzzyMatch } from "@/lib/hebrew-search";
+import { stripStyleTokens } from "@/lib/text-utils";
 import { useLibraryData } from "./LibraryDataContext";
 import { useFavoritesContext } from "./FavoritesContext";
+
+// ---------------------------------------------------------------------------
+// Style editor — helpers for the per-prompt visual style editor. These used to
+// live in PersonalLibraryView and be prop-drilled; they belong beside the
+// `styleDraft` / `openStyleEditor` / `saveStylePrompt` state they manipulate, so
+// they live here and are exposed through a focused `useStyleEditor()` selector.
+// ---------------------------------------------------------------------------
+
+export interface QuickInsert {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  text: string;
+}
+
+const QUICK_INSERTS: QuickInsert[] = [
+  { label: "שם", icon: AtSign, text: "{name}" },
+  { label: "חברה", icon: Hash, text: "{company}" },
+  { label: "תעשייה", icon: Hash, text: "{industry}" },
+  { label: "מוצר", icon: Hash, text: "{product}" },
+  { label: "קהל יעד", icon: Hash, text: "{target_audience}" },
+  { label: "טון", icon: Wand2, text: "{tone}" },
+];
+
+export interface StyleEditorContextType {
+  styleEditorExpanded: boolean;
+  setStyleEditorExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  styleTextareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  applyStyleToken: (prefix: string, value: string) => void;
+  clearStyleTokens: () => void;
+  insertTextAtCursor: (text: string) => void;
+  quickInserts: QuickInsert[];
+}
+
+const StyleEditorCtx = createContext<StyleEditorContextType | undefined>(undefined);
+
+export function useStyleEditor() {
+  const context = useContext(StyleEditorCtx);
+  if (!context) {
+    throw new Error("useStyleEditor must be used within a LibraryUIProvider");
+  }
+  return context;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -360,6 +405,69 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     [styleDraft, user, data],
   );
 
+  // --- Style Editor helpers (relocated from PersonalLibraryView) ---
+  const [styleEditorExpanded, setStyleEditorExpanded] = useState(false);
+  const styleTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const applyStyleToken = useCallback((prefix: string, value: string) => {
+    const textarea = styleTextareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    if (start === end) return;
+    const selected = text.slice(start, end);
+    const before = text.slice(0, start);
+    const after = text.slice(end);
+    const token = `<${prefix}:${value}>${selected}</${prefix}>`;
+    setStyleDraft(before + token + after);
+    requestAnimationFrame(() => {
+      if (textarea) {
+        textarea.selectionStart = start + token.length;
+        textarea.selectionEnd = start + token.length;
+        textarea.focus();
+      }
+    });
+  }, []);
+
+  const clearStyleTokens = useCallback(() => {
+    setStyleDraft(stripStyleTokens(styleDraft));
+  }, [styleDraft]);
+
+  const insertTextAtCursor = useCallback(
+    (text: string) => {
+      const textarea = styleTextareaRef.current;
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const before = styleDraft.slice(0, start);
+      const after = styleDraft.slice(start);
+      const nextText = before + text + after;
+      setStyleDraft(nextText);
+      requestAnimationFrame(() => {
+        if (textarea) {
+          const newPos = start + text.length;
+          textarea.selectionStart = newPos;
+          textarea.selectionEnd = newPos;
+          textarea.focus();
+        }
+      });
+    },
+    [styleDraft],
+  );
+
+  const styleEditorValue = useMemo<StyleEditorContextType>(
+    () => ({
+      styleEditorExpanded,
+      setStyleEditorExpanded,
+      styleTextareaRef,
+      applyStyleToken,
+      clearStyleTokens,
+      insertTextAtCursor,
+      quickInserts: QUICK_INSERTS,
+    }),
+    [styleEditorExpanded, applyStyleToken, clearStyleTokens, insertTextAtCursor],
+  );
+
   // --- Value ---
   const value = useMemo<LibraryUIContextType>(
     () => ({
@@ -452,7 +560,11 @@ export function LibraryUIProvider({ children, user }: LibraryUIProviderProps) {
     ],
   );
 
-  return <LibraryUICtx.Provider value={value}>{children}</LibraryUICtx.Provider>;
+  return (
+    <LibraryUICtx.Provider value={value}>
+      <StyleEditorCtx.Provider value={styleEditorValue}>{children}</StyleEditorCtx.Provider>
+    </LibraryUICtx.Provider>
+  );
 }
 
 // ---------------------------------------------------------------------------

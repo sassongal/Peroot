@@ -3,34 +3,21 @@
 import { BookOpen, Star, Network, FolderOpen, Sparkles, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
-import type { PersonalLibrarySharedState } from "@/components/views/personal-library/types";
-
-interface LibraryBottomNavProps {
-  shared: Pick<
-    PersonalLibrarySharedState,
-    | "effectiveFolder"
-    | "folderCounts"
-    | "setFolder"
-    | "setSidebarOpen"
-    | "localViewType"
-    | "setLocalViewType"
-  >;
-}
+import {
+  usePersonalLibraryFolders,
+  usePersonalLibrarySidebar,
+  usePersonalLibraryViewPrefs,
+} from "@/components/views/personal-library/context/PersonalLibraryContext";
 
 const FOLDER_TABS = [
   { key: "all", label: "הכל", icon: BookOpen },
   { key: "favorites", label: "מועדפים", icon: Star },
 ] as const;
 
-export function LibraryBottomNav({ shared }: LibraryBottomNavProps) {
-  const {
-    effectiveFolder,
-    folderCounts,
-    setFolder,
-    setSidebarOpen,
-    localViewType,
-    setLocalViewType,
-  } = shared;
+export function LibraryBottomNav() {
+  const { effectiveFolder, folderCounts, setFolder } = usePersonalLibraryFolders();
+  const { setSidebarOpen } = usePersonalLibrarySidebar();
+  const { localViewType, setLocalViewType } = usePersonalLibraryViewPrefs();
   const { setViewMode } = useLibraryContext();
 
   const isGraphActive = localViewType === "graph";

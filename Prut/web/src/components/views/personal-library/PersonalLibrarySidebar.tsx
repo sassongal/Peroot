@@ -12,21 +12,25 @@ import {
   LayoutTemplate,
   History,
 } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useLibraryContext } from "@/context/LibraryContext";
 import { PERSONAL_DEFAULT_CATEGORY } from "@/lib/constants";
 import { CapabilityFilter } from "@/components/ui/CapabilityFilter";
-import type { PersonalLibrarySharedState } from "./types";
+import {
+  usePersonalLibraryFolders,
+  usePersonalLibrarySidebar,
+} from "./context/PersonalLibraryContext";
 
 interface PersonalLibrarySidebarProps {
-  shared: PersonalLibrarySharedState;
   isMobile?: boolean;
 }
 
-export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLibrarySidebarProps) {
+export function PersonalLibrarySidebar({ isMobile = false }: PersonalLibrarySidebarProps) {
   const ctx = useLibraryContext();
   const {
     personalCategories,
+    filteredPersonalLibrary,
     renamingCategory,
     renameCategoryInput,
     setRenameCategoryInput,
@@ -37,19 +41,21 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
     personalCapabilityCounts,
   } = ctx;
 
-  const {
-    effectiveFolder,
-    folderCounts,
-    allDisplayItems,
-    setSidebarOpen,
-    showNewFolderInput,
-    setShowNewFolderInput,
-    newFolderName,
-    setNewFolderName,
-    handleAddNewFolder,
-    setFolder,
-    handleFolderContextMenu,
-  } = shared;
+  const { effectiveFolder, folderCounts, setFolder, handleFolderContextMenu, addFolder } =
+    usePersonalLibraryFolders();
+  const { setSidebarOpen } = usePersonalLibrarySidebar();
+
+  // New-folder input is purely local to the sidebar — kept out of shared state
+  // so typing a folder name never re-renders the rest of the library.
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+
+  const handleAddNewFolder = async () => {
+    if (!newFolderName.trim()) return;
+    await addFolder(newFolderName.trim());
+    setNewFolderName("");
+    setShowNewFolderInput(false);
+  };
 
   const virtualFolders = [
     { key: "all", label: "כל הפרומפטים", icon: BookOpen },
@@ -63,7 +69,7 @@ export function PersonalLibrarySidebar({ shared, isMobile = false }: PersonalLib
     new Set([
       PERSONAL_DEFAULT_CATEGORY,
       ...personalCategories,
-      ...(allDisplayItems.map((p) => p.personal_category).filter(Boolean) as string[]),
+      ...(filteredPersonalLibrary.map((p) => p.personal_category).filter(Boolean) as string[]),
     ]),
   );
 
