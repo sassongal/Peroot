@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 import { withUser } from "@/lib/api-middleware";
 
 const Schema = z.object({
@@ -30,7 +31,13 @@ export const POST = withUser(
       capability_mode,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      logger.error("[feedback] insert failed:", error);
+      return NextResponse.json(
+        { error: "שמירת המשוב נכשלה", code: "save_failed" },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({ ok: true });
   },
   { rateLimit: "none" },

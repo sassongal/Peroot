@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 import { withUser } from "@/lib/api-middleware";
 
 const MAX_FACTS = 100;
@@ -17,7 +18,10 @@ export const GET = withUser(
       .order("updated_at", { ascending: false })
       .limit(MAX_FACTS);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      logger.error("[user/memory] query failed:", error);
+      return NextResponse.json({ error: "פעולה נכשלה", code: "operation_failed" }, { status: 500 });
+    }
     return NextResponse.json({ facts: data ?? [] });
   },
   { rateLimit: "none", forceServiceClient: true },
@@ -71,7 +75,10 @@ export const POST = withUser(
       .select("id, fact, category, source, confidence, created_at, updated_at")
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      logger.error("[user/memory] query failed:", error);
+      return NextResponse.json({ error: "פעולה נכשלה", code: "operation_failed" }, { status: 500 });
+    }
     return NextResponse.json({ fact: data });
   },
   { rateLimit: "none", forceServiceClient: true },
@@ -104,7 +111,10 @@ export const DELETE = withUser(
       .eq("id", parsed.data.id)
       .eq("user_id", ctx.user!.id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      logger.error("[user/memory] query failed:", error);
+      return NextResponse.json({ error: "פעולה נכשלה", code: "operation_failed" }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   },
   { rateLimit: "none", forceServiceClient: true },
