@@ -52,7 +52,7 @@ describe("GET /api/site-search", () => {
 
   it("returns empty for short query", async () => {
     const req = new NextRequest("http://localhost/api/site-search?q=a");
-    const res = await GET(req);
+    const res = await GET(req, {});
     const json = await res.json();
     expect(json.results).toEqual([]);
     expect(mockFrom).not.toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe("GET /api/site-search", () => {
   it("does not apply rate limit when sanitization yields empty query", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } });
     const req = new NextRequest("http://localhost/api/site-search?q=...");
-    const res = await GET(req);
+    const res = await GET(req, {});
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.results).toEqual([]);
@@ -87,7 +87,7 @@ describe("GET /api/site-search", () => {
     });
 
     const req = new NextRequest("http://localhost/api/site-search?q=מאמר");
-    const res = await GET(req);
+    const res = await GET(req, {});
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.guestRestricted).toBe(true);
@@ -105,7 +105,7 @@ describe("GET /api/site-search", () => {
       reset: Date.now() + 5000,
     });
     const req = new NextRequest("http://localhost/api/site-search?q=hello");
-    const res = await GET(req);
+    const res = await GET(req, {});
     expect(res.status).toBe(429);
   });
 
@@ -146,7 +146,7 @@ describe("GET /api/site-search", () => {
     });
 
     const req = new NextRequest("http://localhost/api/site-search?q=בדיקה");
-    const res = await GET(req);
+    const res = await GET(req, {});
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.guestRestricted).toBe(false);
