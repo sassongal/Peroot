@@ -217,8 +217,14 @@ export function usePromptMutations({
           .update({ [field]: currentVal + 1 })
           .eq("id", id)
           .eq("user_id", user.id);
-        if (error) logger.error("[useLibrary] ratePrompt error:", error);
-        // Optimistic update to visible page
+        if (error) {
+          // Do NOT apply the UI increment on a failed write — that leaves the
+          // card showing a rating the server never recorded (silent divergence).
+          logger.error("[useLibrary] ratePrompt error:", error);
+          toast.error("שמירת הדירוג נכשלה. נסו שוב.");
+          return;
+        }
+        // Apply the increment to the visible page only after the write succeeds.
         setPersonalLibrary((prev) =>
           prev.map((p) =>
             p.id === id
