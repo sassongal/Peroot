@@ -51,7 +51,6 @@ export const useLibraryContext = () => {
       allLocalItems: data.allLocalItems,
       personalCategories: data.personalCategories,
       isPersonalLoaded: data.isPersonalLoaded,
-      popularityMap: data.popularityMap,
       libraryCapabilityCounts: data.libraryCapabilityCounts,
       personalCapabilityCounts: data.personalCapabilityCounts,
       // Pagination

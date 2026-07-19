@@ -69,7 +69,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
     handleToggleFavorite,
     setViewMode,
     addPrompt,
-    popularityMap,
     selectedCapabilityFilter,
     setSelectedCapabilityFilter,
     libraryCapabilityCounts,
@@ -193,23 +192,17 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
       if (aFavorite !== bFavorite) return aFavorite ? -1 : 1;
 
       switch (librarySort) {
-        case "title":
-          return a.title.localeCompare(b.title);
         case "newest":
           return 0;
         case "rating":
-        // "Rating" sort is kept for backward compat — with rate-prompts
-        // removed, it now behaves identically to "popularity".
-        case "popularity":
-        default: {
-          const aP = popularityMap[a.id] ?? 0;
-          const bP = popularityMap[b.id] ?? 0;
-          if (aP !== bP) return bP - aP;
+        // "Rating" is kept for backward compat but no longer has a data source
+        // (rate-prompts + popularity were removed) — falls back to alphabetical.
+        case "title":
+        default:
           return a.title.localeCompare(b.title);
-        }
       }
     });
-  }, [collectionFilteredLibrary, librarySort, favoriteLibraryIds, popularityMap]);
+  }, [collectionFilteredLibrary, librarySort, favoriteLibraryIds]);
 
   const totalCount = sortedPrompts.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
@@ -369,13 +362,10 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
           />
           <select
             value={librarySort}
-            onChange={(e) =>
-              setLibrarySort(e.target.value as "popularity" | "title" | "newest" | "rating")
-            }
+            onChange={(e) => setLibrarySort(e.target.value as "title" | "newest" | "rating")}
             className="shrink-0 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg py-2.5 px-2.5 min-h-[44px] text-base md:text-sm text-(--text-primary) focus:outline-none focus:border-black/15 dark:border-white/30"
             aria-label="מיון פרומפטים"
           >
-            <option value="popularity">פופולריות</option>
             <option value="title">א-ב</option>
             <option value="newest">חדש</option>
             <option value="rating">דירוג</option>
@@ -481,7 +471,6 @@ export function LibraryView({ onUsePrompt, onCopyText }: LibraryViewProps) {
               guestFavoriteHints={isGuest}
               isFavorite={favoriteLibraryIds.has(prompt.id)}
               isExpanded={expandedIds.has(prompt.id)}
-              popularityCount={popularityMap[prompt.id] ?? 0}
               categoryLabel={categoryLabel}
               selectionMode={selectionMode}
               isSelected={selectedIds.has(prompt.id)}

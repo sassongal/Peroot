@@ -34,9 +34,6 @@ interface LibraryDataContextType {
   personalCategories: string[];
   isPersonalLoaded: boolean;
 
-  // Popularity
-  popularityMap: Record<string, number>;
-
   // Pagination
   page: number;
   pageSize: number;
@@ -151,24 +148,6 @@ export function LibraryDataProvider({
       return [];
     },
     placeholderData: [],
-  });
-
-  // --- Popularity ---
-  const { data: popularityMap = {} } = useQuery<Record<string, number>>({
-    queryKey: ["library", "popularity"],
-    enabled: deferredReady,
-    queryFn: async () => {
-      try {
-        const response = await fetch(getApiPath("/api/library-popularity"));
-        if (!response.ok) throw new Error(`Failed to load popularity: ${response.status}`);
-        const data = await response.json();
-        return data?.popularity ?? {};
-      } catch (error) {
-        logger.warn("Failed to load popularity map", error);
-        return {};
-      }
-    },
-    placeholderData: {},
   });
 
   // --- useLibrary hook ---
@@ -402,7 +381,6 @@ export function LibraryDataProvider({
       allLocalItems,
       personalCategories,
       isPersonalLoaded,
-      popularityMap,
       page,
       pageSize,
       totalCount,
@@ -446,7 +424,6 @@ export function LibraryDataProvider({
       allLocalItems,
       personalCategories,
       isPersonalLoaded,
-      popularityMap,
       page,
       pageSize,
       totalCount,
