@@ -101,7 +101,7 @@ export default function ContactPage() {
                   </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  התוכנית החינמית כוללת 2 קרדיטים ביום וגישה לספריית 480+ הפרומפטים. תוכנית Pro (₪
+                  התוכנית החינמית כוללת קרדיט אחד ביום וגישה לספריית 480+ הפרומפטים. תוכנית Pro (₪
                   {PLANS.pro.price}/חודש) כוללת 150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור
                   איטרטיבי, ספריה אישית ללא הגבלה, וסנכרון מלא עם תוסף Chrome.
                 </div>

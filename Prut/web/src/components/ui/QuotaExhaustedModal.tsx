@@ -36,10 +36,10 @@ export function QuotaExhaustedModal({
   if (!isOpen) return null;
 
   const isGuest = variant === "guest";
-  const title = isGuest ? "הפרומפט היומי שלך מוצה" : "המכסה היומית הסתיימה";
+  const title = isGuest ? "כדי ליצור צריך חשבון" : "המכסה היומית הסתיימה";
   const body = isGuest
-    ? "אורחים מקבלים פרומפט אחד ביום. הירשם בחינם כדי לקבל 2 פרומפטים וגישה לכל המנועים — מחקר, תמונה, וידאו ובניית סוכנים."
-    : "ניצלת את 2 הפרומפטים היומיים. שדרג ל-Pro ל-150 פרומפטים בחודש, ללא הגבלת מנועים.";
+    ? "ההרשמה חינמית ופותחת את כל המנועים — מחקר, תמונה, וידאו ובניית סוכנים — ואת כל ספריות הפרומפטים."
+    : "ניצלת את המכסה היומית שלך. שדרג ל-Pro ל-150 פרומפטים בחודש, ללא הגבלת מנועים.";
   const primaryHref = isGuest ? "/login" : "/pricing";
   const primaryLabel = isGuest ? "הירשם בחינם" : "שדרג ל-Pro";
   const PrimaryIcon = isGuest ? LogIn : Sparkles;

@@ -541,7 +541,7 @@ export async function POST(req: Request) {
             releaseInflightLock = null;
             const res = NextResponse.json(
               {
-                error: "מכסת האורח מוצתה. הירשם לקבלת 2 פרומפטים וגישה לכל המנועים.",
+                error: "יש להתחבר כדי ליצור פרומפטים. ההרשמה חינמית וגישה לכל המנועים.",
                 balance: 0,
                 refresh_at: guestResult.refreshAt?.toISOString() ?? null,
                 code: "guest_quota_exhausted",

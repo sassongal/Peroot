@@ -56,7 +56,7 @@ export function SettingsBillingSection({
               <p className="text-xs text-slate-500">
                 {isPro
                   ? `סטטוס: פעיל${subscription.renews_at ? ` · מתחדש ב-${new Date(subscription.renews_at).toLocaleDateString("he-IL")}` : ""}`
-                  : "2 קרדיטים ביום"}
+                  : "קרדיט אחד ביום"}
               </p>
             </div>
           </div>

@@ -2,10 +2,10 @@ export const PLANS = {
   free: {
     name: "Free",
     nameHe: "חינם",
-    creditsPerDay: 2,
+    creditsPerDay: 1,
     trialDays: 0,
     features: [
-      "2 קרדיטים ליום (מתחדשים כל 24 שעות)",
+      "קרדיט אחד ליום (מתחדש כל 24 שעות)",
       "גישה לספריית 480+ פרומפטים",
       "שיתוף פרומפטים",
       "תוסף Chrome לשדרוג מהיר",

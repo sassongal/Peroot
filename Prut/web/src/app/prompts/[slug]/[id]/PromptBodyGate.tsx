@@ -97,7 +97,7 @@ export function PromptBodyGate({ promptId, previewText, title, slug, capabilityM
                 התחבר לצפייה בפרומפט המלא
               </h3>
               <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                ההרשמה חינמית — 2 פרומפטים ביום, גישה לכל המנועים וספרייה אישית.
+                ההרשמה חינמית — גישה לכל המנועים, כל ספריות הפרומפטים וספרייה אישית.
               </p>
               <div className="flex flex-col items-center gap-2">
                 <button

@@ -19,7 +19,7 @@ export function churnEmail(
       <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 20px 0;">
         <p style="font-weight: bold; margin: 0 0 8px 0;">מה שעדיין זמין לך בתוכנית החינם:</p>
         <ul style="margin: 0; padding: 0 20px; font-size: 14px;">
-          <li>2 קרדיטים ליום (מתחדשים כל 24 שעות)</li>
+          <li>קרדיט אחד ליום (מתחדש כל 24 שעות)</li>
           <li>גישה לספריית הפרומפטים</li>
           <li>שיתוף פרומפטים</li>
         </ul>

@@ -182,7 +182,7 @@ export function pricingSchema() {
         "@type": "Product",
         name: "Peroot Free",
         description:
-          "תוכנית חינמית עם 2 קרדיטים ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
+          "תוכנית חינמית עם קרדיט אחד ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
         image: `${SITE_URL}/assets/branding/logo.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {
