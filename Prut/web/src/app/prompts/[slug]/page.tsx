@@ -39,7 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "קטגוריה לא נמצאה" };
   }
 
-  const title = `${categoryData.labelHe} - ספריית פרומפטים בעברית | Peroot`;
+  // No " | Peroot" suffix here — the root layout's title template ("%s | Peroot")
+  // appends it, so hardcoding it produced a doubled "… | Peroot | Peroot".
+  const title = `${categoryData.labelHe} - ספריית פרומפטים בעברית`;
   const description = categoryData.descriptionHe;
   const canonicalUrl = `/prompts/${slug}`;
   const ogImage = `${SITE_URL}/api/og?title=${encodeURIComponent(categoryData.labelHe)}&subtitle=${encodeURIComponent(categoryData.descriptionHe)}&category=${encodeURIComponent(categoryData.labelHe)}`;

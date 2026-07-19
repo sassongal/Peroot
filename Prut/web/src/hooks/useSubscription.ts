@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getApiPath } from "@/lib/api-path";
 import { logger } from "@/lib/logger";
+import { trackCheckoutOpened } from "@/lib/analytics";
 
 export type SubscriptionStatus =
   | "free"
@@ -76,6 +77,7 @@ export function useSubscription() {
       }
 
       const { url } = await res.json();
+      trackCheckoutOpened("pro_monthly");
       window.location.href = url;
     } catch (error) {
       logger.error("[Checkout]", error);

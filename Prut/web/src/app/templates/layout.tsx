@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: "תבניות פרומפטים | Peroot - תבניות AI מוכנות בעברית",
+  title: "תבניות פרומפטים AI מוכנות בעברית",
   description:
     "תבניות פרומפטים מוכנות לשימוש בעברית, חינם. בחרו תבנית, מלאו את המשתנים, וקבלו פרומפט מושלם בשניות עבור ChatGPT, Claude ו-Gemini.",
   alternates: {
@@ -30,17 +30,12 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "תבניות פרומפטים מוכנות | Peroot",
-    description:
-      "תבניות פרומפטים בעברית עם משתנים - בחרו, מלאו, העתיקו. חינם.",
+    description: "תבניות פרומפטים בעברית עם משתנים - בחרו, מלאו, העתיקו. חינם.",
     images: [`${SITE_URL}/assets/branding/logo.png`],
   },
   robots: { index: true, follow: true },
 };
 
-export default function TemplatesLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function TemplatesLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

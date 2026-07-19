@@ -11,7 +11,7 @@ import { PromptSearch } from "@/components/features/library/PromptSearch";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: "ספריית פרומפטים בעברית — 480+ תבניות מוכנות | Peroot",
+  title: "ספריית פרומפטים בעברית — 480+ תבניות מוכנות",
   description:
     "480+ תבניות פרומפטים מוכנות בעברית: פרומפטים לשיווק, פרומפטים לפיתוח, פרומפטים לתמונות, פרומפטים לחינוך ועוד 25 קטגוריות. העתיקו ושדרגו עם Peroot.",
   alternates: {

@@ -30,7 +30,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const guides = await getAllGuides();
   const guide = getGuide(slug, guides);
-  if (!guide) return { title: "מדריך לא נמצא | Peroot" };
+  if (!guide) return { title: "מדריך לא נמצא" };
 
   const ogUrl = `/api/og?title=${encodeURIComponent(guide.title)}&subtitle=${encodeURIComponent(guide.platform)}&category=${encodeURIComponent(guide.category === "image" ? "תמונות" : "סרטונים")}`;
 
@@ -54,18 +54,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function GuidePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const guides = await getAllGuides();
   const rawGuide = getGuide(slug, guides);
   if (!rawGuide) notFound();
 
   // Enrich guide with fresh data from skill files (single source of truth for examples/mistakes)
-  const guide = enrichGuideFromSkills(rawGuide, { mergeMode: 'append' });
+  const guide = enrichGuideFromSkills(rawGuide, { mergeMode: "append" });
 
   const relatedGuides = guide.relatedSlugs
     .map((s: string) => guides.find((g) => g.slug === s))
@@ -179,7 +175,9 @@ export default async function GuidePage({
             <ul className="space-y-2">
               {guide.rules.map((rule, i) => (
                 <li key={i} className="flex gap-3 text-muted-foreground">
-                  <span className="font-bold shrink-0" style={{ color: guide.color }}>{i + 1}.</span>
+                  <span className="font-bold shrink-0" style={{ color: guide.color }}>
+                    {i + 1}.
+                  </span>
                   <span>{rule}</span>
                 </li>
               ))}
@@ -204,7 +202,9 @@ export default async function GuidePage({
                   <tbody>
                     {guide.params.map((p, i) => (
                       <tr key={i} className="border-b border-[hsl(var(--border))] last:border-0">
-                        <td className="p-3 font-mono text-xs" style={{ color: guide.color }}>{p.name}</td>
+                        <td className="p-3 font-mono text-xs" style={{ color: guide.color }}>
+                          {p.name}
+                        </td>
                         <td className="p-3 text-muted-foreground font-mono text-xs">{p.values}</td>
                         <td className="p-3 text-muted-foreground">{p.description}</td>
                       </tr>
@@ -221,13 +221,21 @@ export default async function GuidePage({
               דוגמאות מעשיות
             </h2>
             {guide.examples.map((ex, i) => (
-              <div key={i} className="space-y-2 p-4 rounded-xl border border-[hsl(var(--border))] bg-muted/20">
+              <div
+                key={i}
+                className="space-y-2 p-4 rounded-xl border border-[hsl(var(--border))] bg-muted/20"
+              >
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm" style={{ color: guide.color }}>קונספט:</span>
+                  <span className="font-bold text-sm" style={{ color: guide.color }}>
+                    קונספט:
+                  </span>
                   <span className="text-foreground font-medium">{ex.concept}</span>
                 </div>
                 <div className="bg-background rounded-lg p-3 border border-[hsl(var(--border))]">
-                  <p className="font-mono text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap" dir="ltr">
+                  <p
+                    className="font-mono text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap"
+                    dir="ltr"
+                  >
                     {ex.prompt}
                   </p>
                 </div>
@@ -272,11 +280,11 @@ export default async function GuidePage({
                 <details key={i} className="group border border-[hsl(var(--border))] rounded-xl">
                   <summary className="p-4 font-bold text-foreground cursor-pointer list-none flex items-center justify-between">
                     {f.question}
-                    <span className="text-muted-foreground group-open:rotate-180 transition-transform">▾</span>
+                    <span className="text-muted-foreground group-open:rotate-180 transition-transform">
+                      ▾
+                    </span>
                   </summary>
-                  <div className="px-4 pb-4 text-muted-foreground leading-relaxed">
-                    {f.answer}
-                  </div>
+                  <div className="px-4 pb-4 text-muted-foreground leading-relaxed">{f.answer}</div>
                 </details>
               ))}
             </section>

@@ -35,7 +35,7 @@ const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _guideOg = `${_SITE}/api/og?title=${encodeURIComponent("מדריך כתיבת פרומפטים")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini")}&category=${encodeURIComponent("מדריכים")}`;
 
 export const metadata: Metadata = {
-  title: "איך לכתוב פרומפט טוב בעברית — המדריך המלא | Peroot",
+  title: "איך לכתוב פרומפט טוב בעברית — המדריך המלא",
   description:
     "איך לכתוב פרומפט טוב? המדריך המלא בעברית לכתיבת פרומפטים מקצועיים ל-ChatGPT, Claude ו-Gemini. טכניקות Chain of Thought, Few-Shot, Role Play, פרומפטים לתמונות ובניית סוכני AI.",
   alternates: { canonical: "/guide" },

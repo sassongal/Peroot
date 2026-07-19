@@ -99,7 +99,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!prompt || !categoryData) return { title: "פרומפט לא נמצא" };
 
-  const title = `${prompt.title} — ${categoryData.labelHe} | Peroot`;
+  // No " | Peroot" suffix — the root title template appends it (avoids a doubled
+  // "… | Peroot | Peroot").
+  const title = `${prompt.title} — ${categoryData.labelHe}`;
   const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 100)?.trim() || "";
   const description = `${baseDesc.slice(0, 100)} — פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`;
   const canonicalUrl = `/prompts/${slug}/${id}`;

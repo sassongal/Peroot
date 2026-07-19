@@ -17,6 +17,7 @@ import {
   trackPromptEnhance,
   trackEnhanceComplete,
   trackPromptCopy,
+  trackPaywallHit,
   identifyUser,
 } from "@/lib/analytics";
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
@@ -449,6 +450,7 @@ function PageContent() {
         setIsLoginRequiredModalOpen(true);
       }
     } else if (!isProPlan) {
+      trackPaywallHit("daily_limit", "enhance_error");
       if (structured) {
         setQuotaModal({ variant: "free", refreshAt });
       } else {
@@ -756,6 +758,7 @@ function PageContent() {
       // Block immediately when credits hit 0 — avoid wasting an API round trip.
       // Pro/admin: skip — server auto-refreshes at spend time; local counter is stale.
       if (user && !isProPlan && creditsRemaining !== null && creditsRemaining <= 0) {
+        trackPaywallHit("daily_limit", "preflight");
         setShowUpgradeNudge(true);
         return;
       }
@@ -770,6 +773,7 @@ function PageContent() {
             "כדי ליצור פרומפטים מקצועיים, יש להתחבר לחשבון. ההרשמה חינמית!",
           );
         } else if (requiredAction === "upgrade") {
+          trackPaywallHit("daily_limit", "required_action");
           setShowUpgradeNudge(true);
         }
         return;

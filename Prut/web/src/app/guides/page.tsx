@@ -6,14 +6,13 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title: "מדריכי פרומפטים לפלטפורמות AI | Peroot",
+  title: "מדריכי פרומפטים לפלטפורמות AI",
   description:
     "מדריכים מקצועיים ליצירת פרומפטים מושלמים לכל פלטפורמת AI — מידג׳רני, FLUX, GPT Image, Stable Diffusion, Runway, Kling, Sora ועוד. טיפים מעשיים, דוגמאות ומבנה אופטימלי.",
   alternates: { canonical: "/guides" },
   openGraph: {
     title: "מדריכי פרומפטים לפלטפורמות AI | Peroot",
-    description:
-      "מדריכים מקצועיים ליצירת פרומפטים מושלמים לכל פלטפורמת AI — תמונות וסרטונים",
+    description: "מדריכים מקצועיים ליצירת פרומפטים מושלמים לכל פלטפורמת AI — תמונות וסרטונים",
     url: "/guides",
     locale: "he_IL",
     type: "website",
@@ -35,22 +34,113 @@ interface PlatformCard {
 }
 
 const IMAGE_CARDS: PlatformCard[] = [
-  { slug: "image-prompts", title: "מדריך כללי — תמונות", platform: "כל הפלטפורמות", description: "עקרונות אוניברסליים ליצירת תמונות מדהימות עם AI", icon: "📸", color: "#64748b" },
-  { slug: "midjourney", title: "Midjourney v7", platform: "Midjourney", description: "שפה טבעית, פרמטרים מתקדמים, ו-Omni Reference לעקביות דמויות", icon: "✨", color: "#f59e0b" },
-  { slug: "gpt-image", title: "GPT Image", platform: "OpenAI", description: "יצירת תמונות מקורית של GPT-4o — טקסט מדויק ותיאורים עשירים", icon: "🎨", color: "#10b981" },
-  { slug: "flux", title: "FLUX.2", platform: "Black Forest Labs", description: "צבעי hex מדויקים, מפרט מצלמה, ופרומפטים מובנים ב-JSON", icon: "⚡", color: "#ec4899" },
-  { slug: "stable-diffusion", title: "Stable Diffusion", platform: "Stability AI", description: "מילות מפתח עם משקלות, LoRA, ופרומפטים שליליים — SDXL ו-SD3.5", icon: "🔮", color: "#8b5cf6" },
-  { slug: "imagen", title: "Google Imagen 4", platform: "Google", description: "רזולוציית 2K, תיאורים נרטיביים עשירים, טקסט מדויק בתמונות", icon: "🌟", color: "#f97316" },
-  { slug: "gemini-image", title: "Gemini Image", platform: "Google DeepMind", description: "עקביות של עד 5 דמויות, 14 תמונות ייחוס, תמיכה בטקסט ממוקד", icon: "💎", color: "#3b82f6" },
+  {
+    slug: "image-prompts",
+    title: "מדריך כללי — תמונות",
+    platform: "כל הפלטפורמות",
+    description: "עקרונות אוניברסליים ליצירת תמונות מדהימות עם AI",
+    icon: "📸",
+    color: "#64748b",
+  },
+  {
+    slug: "midjourney",
+    title: "Midjourney v7",
+    platform: "Midjourney",
+    description: "שפה טבעית, פרמטרים מתקדמים, ו-Omni Reference לעקביות דמויות",
+    icon: "✨",
+    color: "#f59e0b",
+  },
+  {
+    slug: "gpt-image",
+    title: "GPT Image",
+    platform: "OpenAI",
+    description: "יצירת תמונות מקורית של GPT-4o — טקסט מדויק ותיאורים עשירים",
+    icon: "🎨",
+    color: "#10b981",
+  },
+  {
+    slug: "flux",
+    title: "FLUX.2",
+    platform: "Black Forest Labs",
+    description: "צבעי hex מדויקים, מפרט מצלמה, ופרומפטים מובנים ב-JSON",
+    icon: "⚡",
+    color: "#ec4899",
+  },
+  {
+    slug: "stable-diffusion",
+    title: "Stable Diffusion",
+    platform: "Stability AI",
+    description: "מילות מפתח עם משקלות, LoRA, ופרומפטים שליליים — SDXL ו-SD3.5",
+    icon: "🔮",
+    color: "#8b5cf6",
+  },
+  {
+    slug: "imagen",
+    title: "Google Imagen 4",
+    platform: "Google",
+    description: "רזולוציית 2K, תיאורים נרטיביים עשירים, טקסט מדויק בתמונות",
+    icon: "🌟",
+    color: "#f97316",
+  },
+  {
+    slug: "gemini-image",
+    title: "Gemini Image",
+    platform: "Google DeepMind",
+    description: "עקביות של עד 5 דמויות, 14 תמונות ייחוס, תמיכה בטקסט ממוקד",
+    icon: "💎",
+    color: "#3b82f6",
+  },
 ];
 
 const VIDEO_CARDS: PlatformCard[] = [
-  { slug: "video-prompts", title: "מדריך כללי — סרטונים", platform: "כל הפלטפורמות", description: "ארכיטקטורת 7 שכבות ליצירת סרטוני AI קולנועיים", icon: "🎥", color: "#64748b" },
-  { slug: "runway", title: "Runway Gen-4", platform: "Runway", description: "Director Mode, 4 רכיבים מרכזיים, תנועת מצלמה מקצועית", icon: "🎬", color: "#06b6d4" },
-  { slug: "kling", title: "Kling 3.0", platform: "Kuaishou", description: "פיזיקה מתקדמת, 4K, אודיו מקורי, Motion Brush, 3-15 שניות", icon: "🎯", color: "#f43f5e" },
-  { slug: "sora", title: "Sora 2", platform: "OpenAI", description: "מבנה סטוריבורד, דיאלוג מסונכרן, character refs, עד 20 שניות", icon: "🌀", color: "#a855f7" },
-  { slug: "veo", title: "Google Veo 3.1", platform: "Google DeepMind", description: "הפלטפורמה היחידה עם אודיו מקורי — דיאלוג, SFX, מוזיקה", icon: "🎵", color: "#22c55e" },
-  { slug: "minimax", title: "Minimax Hailuo 2.3", platform: "MiniMax", description: "תנועות גוף והבעות פנים ברמת כוריאוגרפיה, סינטקס [מצלמה]", icon: "💃", color: "#f59e0b" },
+  {
+    slug: "video-prompts",
+    title: "מדריך כללי — סרטונים",
+    platform: "כל הפלטפורמות",
+    description: "ארכיטקטורת 7 שכבות ליצירת סרטוני AI קולנועיים",
+    icon: "🎥",
+    color: "#64748b",
+  },
+  {
+    slug: "runway",
+    title: "Runway Gen-4",
+    platform: "Runway",
+    description: "Director Mode, 4 רכיבים מרכזיים, תנועת מצלמה מקצועית",
+    icon: "🎬",
+    color: "#06b6d4",
+  },
+  {
+    slug: "kling",
+    title: "Kling 3.0",
+    platform: "Kuaishou",
+    description: "פיזיקה מתקדמת, 4K, אודיו מקורי, Motion Brush, 3-15 שניות",
+    icon: "🎯",
+    color: "#f43f5e",
+  },
+  {
+    slug: "sora",
+    title: "Sora 2",
+    platform: "OpenAI",
+    description: "מבנה סטוריבורד, דיאלוג מסונכרן, character refs, עד 20 שניות",
+    icon: "🌀",
+    color: "#a855f7",
+  },
+  {
+    slug: "veo",
+    title: "Google Veo 3.1",
+    platform: "Google DeepMind",
+    description: "הפלטפורמה היחידה עם אודיו מקורי — דיאלוג, SFX, מוזיקה",
+    icon: "🎵",
+    color: "#22c55e",
+  },
+  {
+    slug: "minimax",
+    title: "Minimax Hailuo 2.3",
+    platform: "MiniMax",
+    description: "תנועות גוף והבעות פנים ברמת כוריאוגרפיה, סינטקס [מצלמה]",
+    icon: "💃",
+    color: "#f59e0b",
+  },
 ];
 
 function PlatformCardComponent({ card }: { card: PlatformCard }) {
@@ -58,21 +148,28 @@ function PlatformCardComponent({ card }: { card: PlatformCard }) {
     <Link
       href={`/guides/${card.slug}`}
       className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-(--glass-border) bg-(--glass-bg) hover:border-opacity-60 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg"
-      style={{
-        "--card-color": card.color,
-        borderColor: `${card.color}15`,
-      } as React.CSSProperties}
+      style={
+        {
+          "--card-color": card.color,
+          borderColor: `${card.color}15`,
+        } as React.CSSProperties
+      }
     >
       {/* Color accent top line */}
       <div
         className="absolute top-0 right-5 left-5 h-[2px] rounded-full opacity-40 group-hover:opacity-80 transition-opacity"
-        style={{ background: `linear-gradient(90deg, ${card.color}, ${card.color}40, transparent)` }}
+        style={{
+          background: `linear-gradient(90deg, ${card.color}, ${card.color}40, transparent)`,
+        }}
       />
 
       <div className="flex items-center gap-3">
         <span className="text-2xl">{card.icon}</span>
         <div>
-          <h3 className="font-bold text-foreground group-hover:text-(--card-color) transition-colors" style={{ "--card-color": card.color } as React.CSSProperties}>
+          <h3
+            className="font-bold text-foreground group-hover:text-(--card-color) transition-colors"
+            style={{ "--card-color": card.color } as React.CSSProperties}
+          >
             {card.title}
           </h3>
           <span className="text-xs text-muted-foreground">{card.platform}</span>
@@ -81,7 +178,10 @@ function PlatformCardComponent({ card }: { card: PlatformCard }) {
 
       <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
 
-      <span className="text-xs font-medium mt-auto pt-2 flex items-center gap-1 transition-colors" style={{ color: card.color }}>
+      <span
+        className="text-xs font-medium mt-auto pt-2 flex items-center gap-1 transition-colors"
+        style={{ color: card.color }}
+      >
         קרא את המדריך
         <ArrowRight className="w-3 h-3 rotate-180" />
       </span>
