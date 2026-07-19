@@ -41,6 +41,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
       prompt: template.prompt,
       category: template.category,
       is_template: true,
+      capability_mode: template.capability_mode,
       source: "templates",
     });
     router.push("/?ref=templates");

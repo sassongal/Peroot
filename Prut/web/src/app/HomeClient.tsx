@@ -22,7 +22,7 @@ import {
 import { useHistory, HistoryItem } from "@/hooks/useHistory";
 import { PERSONAL_DEFAULT_CATEGORY, getCategoryLabel } from "@/lib/constants";
 import { PLAN_CONTEXT_LIMITS } from "@/lib/plans";
-import { CapabilityMode } from "@/lib/capability-mode";
+import { CapabilityMode, parseCapabilityMode } from "@/lib/capability-mode";
 import { ImagePlatform, ImageOutputFormat } from "@/lib/media-platforms";
 import { VideoPlatform } from "@/lib/video-platforms";
 import { UserMenu } from "@/components/layout/user-nav";
@@ -1133,6 +1133,16 @@ function PageContent() {
         dispatch({ type: "SET_QUESTIONS", payload: [] });
       }
 
+      // Route the prompt to its engine (image/video/research/agent). Selecting
+      // the capability here mirrors clicking the capability button — the normal
+      // free/credit Pro-gating still applies at enhance time, so this can't
+      // bypass gating. Only override for non-STANDARD; STANDARD keeps whatever
+      // the user already had selected.
+      const cap = parseCapabilityMode(prompt.capability_mode);
+      if (cap !== CapabilityMode.STANDARD) {
+        dispatch({ type: "SET_CAPABILITY", payload: cap });
+      }
+
       setViewMode("home");
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -1181,6 +1191,7 @@ function PageContent() {
         prompt: text,
         category: pending.category ?? PERSONAL_DEFAULT_CATEGORY,
         is_template: !!pending.is_template,
+        capability_mode: pending.capability_mode,
       } as unknown as LibraryPrompt);
       toast.success("הפרומפט נטען");
     };

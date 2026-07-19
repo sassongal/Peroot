@@ -20,6 +20,9 @@ interface PendingPrompt {
   prompt: string;
   category?: string;
   is_template?: boolean;
+  /** Engine mode (IMAGE_GENERATION / VIDEO_GENERATION / DEEP_RESEARCH / ...) so
+   *  a Pro template lands on its actual engine instead of plain STANDARD. */
+  capability_mode?: string;
   source?: string; // analytics hint: "templates" | "prompts-library" | ...
 }
 
