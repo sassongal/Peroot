@@ -25,7 +25,6 @@ interface PromptCardProps {
   isBlurred?: boolean;
   isFavorite: boolean;
   isExpanded: boolean;
-  popularityCount: number;
   categoryLabel: string;
   selectionMode: boolean;
   isSelected: boolean;
@@ -47,7 +46,6 @@ export function PromptCard({
   isBlurred = false,
   isFavorite,
   isExpanded,
-  popularityCount,
   categoryLabel,
   selectionMode,
   isSelected,
@@ -229,16 +227,11 @@ export function PromptCard({
           </button>
         </div>
 
-        {/* Right side: category + popularity + expand icon */}
+        {/* Right side: category + expand icon */}
         <div className="flex items-center gap-2 shrink-0">
           <span className="hidden md:inline text-[10px] px-2 py-0.5 rounded-full border border-(--glass-border) text-(--text-muted)">
             {categoryLabel}
           </span>
-          {popularityCount > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
-              {popularityCount > 99 ? "99+" : popularityCount}
-            </span>
-          )}
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-(--text-muted)" />
           ) : (
