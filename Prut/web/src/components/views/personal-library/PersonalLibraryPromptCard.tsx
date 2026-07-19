@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { memo, useRef, useEffect, useState } from "react";
 import {
   Star,
   ArrowRight,
@@ -57,7 +57,7 @@ interface PersonalLibraryPromptCardProps {
   prompt: PersonalPrompt;
 }
 
-export function PersonalLibraryPromptCard({ prompt }: PersonalLibraryPromptCardProps) {
+function PersonalLibraryPromptCardImpl({ prompt }: PersonalLibraryPromptCardProps) {
   const ctx = useLibraryContext();
   const confirmDialog = useConfirm();
   const {
@@ -1135,3 +1135,8 @@ export function PersonalLibraryPromptCard({ prompt }: PersonalLibraryPromptCardP
     </div>
   );
 }
+
+// Memoized: the card takes a single `prompt` prop and reads the rest from
+// focused contexts, so any grid re-render (pagination, sort, corpus arrival)
+// re-rendered every visible card. React.memo skips cards whose prompt is unchanged.
+export const PersonalLibraryPromptCard = memo(PersonalLibraryPromptCardImpl);

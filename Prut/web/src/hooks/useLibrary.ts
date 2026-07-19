@@ -292,13 +292,20 @@ export function useLibrary() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allLocalItems));
-      localStorage.setItem(getCategoriesKey(null), JSON.stringify(personalCategories));
-      persistOrderMap(null, allLocalItems);
-    } else {
-      localStorage.setItem(getCategoriesKey(user.id), JSON.stringify(personalCategories));
-      persistOrderMap(user.id, personalLibrary);
+    try {
+      if (!user) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allLocalItems));
+        localStorage.setItem(getCategoriesKey(null), JSON.stringify(personalCategories));
+        persistOrderMap(null, allLocalItems);
+      } else {
+        localStorage.setItem(getCategoriesKey(user.id), JSON.stringify(personalCategories));
+        persistOrderMap(user.id, personalLibrary);
+      }
+    } catch (e) {
+      // localStorage quota exceeded / disabled — never let it throw inside the
+      // effect (that would crash the render). Guests can hit the ~5MB cap once
+      // their local library grows large.
+      logger.warn("[useLibrary] failed to persist library to localStorage", e);
     }
   }, [allLocalItems, personalLibrary, personalCategories, isLoaded, user]);
 
