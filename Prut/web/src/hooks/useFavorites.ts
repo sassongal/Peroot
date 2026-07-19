@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 type FavoriteType = "library" | "personal";
 
@@ -175,44 +176,58 @@ export function useFavorites() {
     const shouldRemove = favorites.some(
       (fav) => fav.item_type === itemType && fav.item_id === itemId,
     );
+    const snapshot = favorites; // captured for rollback if the DB write fails
     setFavorites((prev) => {
       if (shouldRemove) {
         return prev.filter((fav) => !(fav.item_type === itemType && fav.item_id === itemId));
       }
+      // Dedup guard: a rapid double-click on a stale render must not push a
+      // duplicate entry (the derived Sets hide it, but length-based logic overcounts).
+      if (prev.some((fav) => fav.item_type === itemType && fav.item_id === itemId)) return prev;
       return [...prev, { item_type: itemType, item_id: itemId }];
     });
 
-    if (shouldRemove) {
-      await supabase
-        .from("prompt_favorites")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("item_type", itemType)
-        .eq("item_id", itemId);
-      void supabase.from("activity_logs").insert({
-        user_id: user.id,
-        action: "favorite_remove",
-        entity_type: itemType,
-        entity_id: itemId,
-        details: {},
-      });
-    } else {
-      await supabase
-        .from("prompt_favorites")
-        .upsert(
-          { user_id: user.id, item_type: itemType, item_id: itemId },
-          { onConflict: "user_id,item_type,item_id" },
-        );
-      void supabase.from("activity_logs").insert({
-        user_id: user.id,
-        action: "favorite_add",
-        entity_type: itemType,
-        entity_id: itemId,
-        details: {},
-      });
+    try {
+      if (shouldRemove) {
+        const { error } = await supabase
+          .from("prompt_favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("item_type", itemType)
+          .eq("item_id", itemId);
+        if (error) throw error;
+        void supabase.from("activity_logs").insert({
+          user_id: user.id,
+          action: "favorite_remove",
+          entity_type: itemType,
+          entity_id: itemId,
+          details: {},
+        });
+      } else {
+        const { error } = await supabase
+          .from("prompt_favorites")
+          .upsert(
+            { user_id: user.id, item_type: itemType, item_id: itemId },
+            { onConflict: "user_id,item_type,item_id" },
+          );
+        if (error) throw error;
+        void supabase.from("activity_logs").insert({
+          user_id: user.id,
+          action: "favorite_add",
+          entity_type: itemType,
+          entity_id: itemId,
+          details: {},
+        });
+      }
+      return true;
+    } catch (err) {
+      // Roll back the optimistic toggle so the star reflects the true server
+      // state instead of silently losing the change on the next reload.
+      setFavorites(snapshot);
+      logger.error("[favorites] toggle failed — rolled back", err);
+      toast.error("שמירת המועדף נכשלה. בדקו את החיבור ונסו שוב.");
+      return false;
     }
-
-    return true;
   };
 
   return {
