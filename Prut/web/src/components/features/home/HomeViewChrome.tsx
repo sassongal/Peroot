@@ -90,7 +90,7 @@ interface HomeViewChromeProps {
   // Onboarding
   showOnboarding: boolean;
   user: unknown;
-  onOnboardingComplete: () => void;
+  onOnboardingComplete: (data: { role: string; goal: string }) => void;
 
   // Fixed overlays (sidebar drawer, mobile FAQ panel) — rendered as siblings of the main content div
   overlays?: React.ReactNode;

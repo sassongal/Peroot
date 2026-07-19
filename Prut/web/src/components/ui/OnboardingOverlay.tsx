@@ -30,6 +30,18 @@ interface OnboardingOverlayProps {
 
 const TOTAL_STEPS = 2;
 
+// Role picker on the finish scene. The id is handed back through onComplete so the
+// home view can seed a role-relevant first prompt into the input — turning the
+// onboarding from a decorative splash into a real activation step.
+const ROLES: { id: string; label: string; Icon: ComponentType<{ className?: string }> }[] = [
+  { id: "marketing", label: "שיווק ותוכן", Icon: MessageSquare },
+  { id: "business", label: "עסקים ויזמות", Icon: Zap },
+  { id: "dev", label: "פיתוח וקוד", Icon: Bot },
+  { id: "creative", label: "עיצוב ויצירה", Icon: Palette },
+  { id: "study", label: "לימודים והוראה", Icon: Star },
+  { id: "other", label: "משהו אחר", Icon: Rocket },
+];
+
 const ICON_BY_NAME: Record<IconName, ComponentType<{ className?: string }>> = {
   MessageSquare,
   Globe,
@@ -342,7 +354,15 @@ function Scene1({ onNext }: { onNext: () => void }) {
 
 // ─── Scene 2 — Pioneer badge + Launch ────────────────────────────────────────
 
-function Scene2({ onFinish }: { onFinish: () => void }) {
+function Scene2({
+  onFinish,
+  role,
+  onRole,
+}: {
+  onFinish: () => void;
+  role: string;
+  onRole: (id: string) => void;
+}) {
   const [badgeIn, setBadgeIn] = useState(false);
   const prefersReduced = useReducedMotion();
 
@@ -419,19 +439,52 @@ function Scene2({ onFinish }: { onFinish: () => void }) {
         </p>
       </motion.div>
 
-      {/* Tip card */}
+      {/* Role picker — the answer seeds a tailored first prompt into the input */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.85 }}
-        className="w-full max-w-[22rem] px-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-sm text-white/60 leading-relaxed text-right"
+        className="w-full max-w-[24rem]"
       >
-        <p className="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider mb-2">
-          איך מתחילים?
+        <p
+          id="onboarding-role-label"
+          className="text-[13px] font-semibold text-white/70 mb-3 text-center"
+        >
+          במה נתחיל? נכין לך פרומפט ראשון
         </p>
-        <p>
-          הזן כל פרומפט שיש לך — לChatGPT, Claude, Midjourney, כל AI — ופירוט ישפר אותו אוטומטית
-        </p>
+        <div
+          role="radiogroup"
+          aria-labelledby="onboarding-role-label"
+          className="grid grid-cols-2 gap-2.5"
+        >
+          {ROLES.map(({ id, label, Icon }) => {
+            const active = role === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => onRole(active ? "" : id)}
+                className={cn(
+                  "flex items-center gap-2.5 px-3.5 py-3 min-h-[48px] rounded-xl border text-right transition-all cursor-pointer",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60",
+                  active
+                    ? "bg-amber-500/15 border-amber-400/55 text-white"
+                    : "bg-white/[0.04] border-white/[0.1] text-white/70 hover:bg-white/[0.07] hover:border-white/20",
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "w-4 h-4 shrink-0 transition-colors",
+                    active ? "text-amber-300" : "text-white/45",
+                  )}
+                />
+                <span className="text-[13px] font-medium leading-tight">{label}</span>
+              </button>
+            );
+          })}
+        </div>
       </motion.div>
 
       {/* Final CTA */}
@@ -473,6 +526,7 @@ function Scene2({ onFinish }: { onFinish: () => void }) {
 
 export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const [step, setStep] = useState(1);
+  const [role, setRole] = useState("");
   const [isVisible, setIsVisible] = useState(true);
   const prefersReduced = useReducedMotion();
 
@@ -490,14 +544,15 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const handleFinish = () => {
     awardPioneer();
     setIsVisible(false);
-    setTimeout(() => onComplete({ role: "", goal: "" }), 450);
+    setTimeout(() => onComplete({ role, goal: "" }), 450);
   };
 
   const handleSkip = () => {
     // Award on skip too — Scene 2 tells the user they already earned the badge.
+    // Skipping before Scene 2 means no role was chosen, so nothing gets seeded.
     awardPioneer();
     setIsVisible(false);
-    setTimeout(() => onComplete({ role: "", goal: "" }), 280);
+    setTimeout(() => onComplete({ role, goal: "" }), 280);
   };
 
   const trapRef = useFocusTrap<HTMLDivElement>(isVisible);
@@ -572,7 +627,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
             className="flex-1 min-h-0 flex flex-col"
           >
             {step === 1 && <Scene1 onNext={handleNext} />}
-            {step === 2 && <Scene2 onFinish={handleFinish} />}
+            {step === 2 && <Scene2 onFinish={handleFinish} role={role} onRole={setRole} />}
           </motion.div>
         </AnimatePresence>
       </div>

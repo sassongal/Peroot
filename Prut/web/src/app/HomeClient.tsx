@@ -90,8 +90,22 @@ const HomeResultSection = dynamic(
     loading: () => <div className="animate-pulse rounded-xl bg-[var(--glass-bg)] h-64" />,
   },
 );
+const QuotaExhaustedModal = dynamic(
+  () => import("@/components/ui/QuotaExhaustedModal").then((m) => m.QuotaExhaustedModal),
+  { ssr: false, loading: () => null },
+);
 
 // Constants
+
+// First-prompt seeds keyed by the role chosen in onboarding. Each is a real,
+// improvable prompt so the new user's first "פרט" click produces an obvious win.
+const ONBOARDING_SEED_PROMPTS: Record<string, string> = {
+  marketing: "כתוב פוסט לרשתות החברתיות שמשווק את המוצר החדש שלי",
+  business: "כתוב אימייל מקצועי ללקוח פוטנציאלי שמציג את השירות שלי",
+  dev: "כתוב פונקציה בפייתון שמקבלת רשימת מספרים ומחזירה אותה ממוינת",
+  creative: "צור תיאור לתמונה של נוף הרים בזריחה בסגנון ציור שמן",
+  study: "הסבר לי בצורה פשוטה וברורה איך עובד תהליך הפוטוסינתזה",
+};
 
 const getPromptKey = (text: string) => {
   const normalized = text.trim().slice(0, 500);
@@ -300,6 +314,12 @@ function PageContent() {
     feature?: string;
   }>({});
   const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
+  // Quota-exhausted modal — shown for the *structured* server quota error, which
+  // carries a refreshAt so we can render a live countdown to the reset.
+  const [quotaModal, setQuotaModal] = useState<{
+    variant: "guest" | "free";
+    refreshAt: string | null;
+  } | null>(null);
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
   const [showWhatIsThis, setShowWhatIsThis] = useState(false);
 
@@ -410,17 +430,30 @@ function PageContent() {
       err.includes("http 429") ||
       err.includes("http 403");
     if (!isQuota) return;
+    // The structured server error (quota_exhausted / guest_quota_exhausted) carries
+    // a refreshAt, so it drives the richer countdown modal. Fuzzy keyword-matched
+    // errors (no timing) fall back to the login modal / upgrade nudge.
+    const structured = code === "quota_exhausted" || code === "guest_quota_exhausted";
+    const refreshAt = lastStreamErrorRef.current?.refreshAt ?? null;
     if (!user || code === "guest_quota_exhausted") {
       // Guest hit the limit → the path forward is to sign up, not "upgrade".
       // Preserve their prompt so it's restored after signup.
       if (ps.input.trim()) setPendingPrompt({ prompt: ps.input, source: "home-quota-wall" });
-      setLoginRequiredConfig({
-        feature: "נגמרו הפרומפטים להיום",
-        message: "המשך שדרוג פרומפטים דורש התחברות. ההרשמה חינמית ומעניקה עוד קרדיטים!",
-      });
-      setIsLoginRequiredModalOpen(true);
+      if (structured) {
+        setQuotaModal({ variant: "guest", refreshAt });
+      } else {
+        setLoginRequiredConfig({
+          feature: "נגמרו הפרומפטים להיום",
+          message: "המשך שדרוג פרומפטים דורש התחברות. ההרשמה חינמית ומעניקה עוד קרדיטים!",
+        });
+        setIsLoginRequiredModalOpen(true);
+      }
     } else if (!isProPlan) {
-      setShowUpgradeNudge(true);
+      if (structured) {
+        setQuotaModal({ variant: "free", refreshAt });
+      } else {
+        setShowUpgradeNudge(true);
+      }
     }
   }, [ps.error, ps.input, user, isProPlan]);
 
@@ -1297,24 +1330,40 @@ function PageContent() {
     toast.success("כל ההיסטוריה יובאה!");
   }, [user, history, addPrompts]);
 
-  const handleOnboardingComplete = useCallback(async () => {
-    try {
-      await completeOnboarding();
-      setShowOnboarding(false);
-      setIsNewUser(false); // clear so the referral banner / new-user UI don't persist all session
-      toast.success("ברוכים הבאים לפירוט! 🎉 הזן את הפרומפט הראשון שלך");
-      setTimeout(() => {
-        const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
-        if (textarea) {
-          textarea.focus();
-          textarea.scrollIntoView({ behavior: "smooth", block: "center" });
+  const handleOnboardingComplete = useCallback(
+    async (data?: { role: string; goal: string }) => {
+      try {
+        await completeOnboarding();
+        setShowOnboarding(false);
+        setIsNewUser(false); // clear so the referral banner / new-user UI don't persist all session
+
+        // Seed a role-relevant first prompt so activation is one click away rather
+        // than a blank box. Only seed when the box is empty (never clobber typing).
+        const seed = data?.role ? ONBOARDING_SEED_PROMPTS[data.role] : undefined;
+        const seeded = Boolean(seed && !inputRef.current.trim());
+        if (seeded) {
+          dispatch({ type: "SET_INPUT", payload: seed! });
         }
-      }, 600);
-    } catch (e) {
-      logger.error("[Onboarding] Error:", e);
-      toast.error("שגיאה בשמירת נתוני Onboarding");
-    }
-  }, [completeOnboarding]);
+        toast.success(
+          seeded
+            ? "ברוכים הבאים! 🎉 הכנו לך פרומפט לדוגמה — לחץ 'פרט' לראות את הקסם"
+            : "ברוכים הבאים לפירוט! 🎉 הזן את הפרומפט הראשון שלך",
+        );
+        setTimeout(() => {
+          const textarea = document.querySelector('textarea[dir="rtl"]') as HTMLTextAreaElement;
+          if (textarea) {
+            textarea.focus();
+            if (seeded) textarea.setSelectionRange(seed!.length, seed!.length);
+            textarea.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 600);
+      } catch (e) {
+        logger.error("[Onboarding] Error:", e);
+        toast.error("שגיאה בשמירת נתוני Onboarding");
+      }
+    },
+    [completeOnboarding, dispatch],
+  );
 
   const prefetchPersonalLibrary = useCallback(() => {
     import("@/components/views/PersonalLibraryView");
@@ -1487,6 +1536,12 @@ function PageContent() {
   return (
     <>
       {topNavBar}
+      <QuotaExhaustedModal
+        isOpen={!!quotaModal}
+        variant={quotaModal?.variant ?? "free"}
+        refreshAt={quotaModal?.refreshAt ?? null}
+        onClose={() => setQuotaModal(null)}
+      />
       <HomeViewChrome
         viewMode={viewMode}
         onTabChange={handleMobileTabChange}
