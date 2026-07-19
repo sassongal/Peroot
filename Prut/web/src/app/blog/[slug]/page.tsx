@@ -84,7 +84,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: "מאמר לא נמצא" };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
-  const title = post.meta_title || post.title;
+  // Strip any trailing "| Peroot" the author baked into meta_title — the root
+  // layout's title template ("%s | Peroot") appends the brand exactly once.
+  // Without this, older posts whose meta_title already ends in "| Peroot"
+  // render a doubled "… | Peroot | Peroot" tab title (and OG/twitter title).
+  const title = (post.meta_title || post.title).replace(/\s*\|\s*Peroot\s*$/i, "").trim();
   const description = post.meta_description || post.excerpt || "";
 
   // Dynamic OG image with title + category styling

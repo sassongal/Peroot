@@ -57,3 +57,9 @@ peroot-mcp-server/dist/
 
 # Windows PowerShell redirect artifact (> NUL creates a literal "nul" file)
 **/nul
+
+# Local AI tooling config — contains secrets (MCP tokens etc.); never commit
+.mcp.json
+**/.mcp.json
+.claude/
+**/.claude/
