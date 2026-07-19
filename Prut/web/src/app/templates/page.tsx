@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_LABELS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { extractVariables } from "@/lib/variable-utils";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, faqSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
@@ -9,9 +10,13 @@ import { PageHeading } from "@/components/ui/PageHeading";
 import { TemplateGrid } from "./TemplateGrid";
 import type { LibraryPrompt } from "@/lib/types";
 
+// ISR: template data is public + near-static; a cookieless fetch (below) keeps
+// this cacheable instead of forcing a live DB query on every request.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "תבניות פרומפטים עם משתנים - Peroot",
-  description: `${PROMPT_LIBRARY_COUNT}+ תבניות פרומפטים מוכנות לשימוש עם שדות למילוי. שדרגו כל תבנית עם AI ותתאימו אותה לצרכים שלכם.`,
+  description: `${PROMPT_LIBRARY_COUNT} תבניות פרומפטים מוכנות לשימוש עם שדות למילוי. שדרגו כל תבנית עם AI ותתאימו אותה לצרכים שלכם.`,
   alternates: { canonical: "/templates" },
   openGraph: {
     title: "תבניות פרומפטים עם משתנים - Peroot",
@@ -25,15 +30,11 @@ export const metadata: Metadata = {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
-/** Check if a prompt contains at least one {variable} placeholder */
-function hasPlaceholders(text: string): boolean {
-  return /{[^}]+}/.test(text);
-}
-
-/** Server-side fetch of library prompts that contain {variable} placeholders */
+/** Server-side fetch of library prompts that contain {variable} placeholders.
+ *  Cookieless service client + ISR (revalidate below) — public data only. */
 async function getTemplates(): Promise<LibraryPrompt[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     const { data, error } = await supabase
       .from("public_library_prompts")
@@ -60,8 +61,11 @@ async function getTemplates(): Promise<LibraryPrompt[]> {
         }) as LibraryPrompt,
     );
 
-    // Filter to only prompts that contain at least one {variable}
-    return mapped.filter((p) => hasPlaceholders(p.prompt));
+    // Filter to only prompts that contain at least one FILLABLE variable, using
+    // the same strict tokenizer the fill UI uses (extractVariables) — so the
+    // card's "N משתנים" count matches what the Variables Panel actually renders,
+    // and prompts with only JSON-ish/over-long `{...}` are not shown as templates.
+    return mapped.filter((p) => extractVariables(p.prompt).length > 0);
   } catch (e) {
     // Re-throw real failures to the route error boundary instead of silently
     // collapsing into an empty grid.

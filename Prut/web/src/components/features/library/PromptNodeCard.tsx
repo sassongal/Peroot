@@ -691,10 +691,11 @@ export function PromptNodeCard({
                     ? "text-amber-300 border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15"
                     : "text-slate-300 hover:text-white border-white/10 hover:bg-white/6"
                 }`}
-                title="הוסף למועדפים"
+                title={isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}
+                aria-pressed={isFavorite}
               >
                 <Star className={`w-3.5 h-3.5 ${isFavorite ? "fill-current" : ""}`} />
-                {isFavorite ? "מועדף" : "מועדף"}
+                {isFavorite ? "מועדף" : "הוסף"}
               </button>
               <button
                 onClick={handlePin}
