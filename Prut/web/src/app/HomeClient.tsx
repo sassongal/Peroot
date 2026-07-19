@@ -1146,14 +1146,36 @@ function PageContent() {
     const pending = consumePendingPrompt();
     if (!pending) return;
     pendingConsumedRef.current = true;
-    handleUsePrompt({
-      id: pending.id ?? `pending-${Date.now()}`,
-      title: pending.title ?? "",
-      prompt: pending.prompt,
-      category: pending.category ?? PERSONAL_DEFAULT_CATEGORY,
-      is_template: !!pending.is_template,
-    } as unknown as LibraryPrompt);
-    toast.success("הפרומפט נטען");
+
+    const load = async () => {
+      let text = pending.prompt;
+      // Public-library CTAs (/prompts/[id]) can only stash the 160-char PREVIEW
+      // — the full body is auth-gated. Now that the user is on the (authed) home
+      // page, fetch the full prompt by id so the input isn't a truncated "…".
+      // Templates and the home quota-wall already carry their full text.
+      if (pending.id && !pending.is_template && pending.source === "prompts-library") {
+        try {
+          const res = await fetch(getApiPath(`/api/p/${pending.id}`));
+          if (res.ok) {
+            const data = await res.json();
+            if (data && typeof data.prompt === "string" && data.prompt.trim()) {
+              text = data.prompt;
+            }
+          }
+        } catch {
+          /* keep the preview fallback — still usable */
+        }
+      }
+      handleUsePrompt({
+        id: pending.id ?? `pending-${Date.now()}`,
+        title: pending.title ?? "",
+        prompt: text,
+        category: pending.category ?? PERSONAL_DEFAULT_CATEGORY,
+        is_template: !!pending.is_template,
+      } as unknown as LibraryPrompt);
+      toast.success("הפרומפט נטען");
+    };
+    void load();
   }, [handleUsePrompt]);
 
   const handleBackToLibrary = useCallback(() => {
