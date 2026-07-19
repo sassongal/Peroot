@@ -317,6 +317,16 @@ export function useLibrary() {
     setPageState(nextPage);
   }, []);
 
+  // Clamp the page when a mutation (e.g. deleting the last item(s) on a high
+  // page) drops totalCount below the current page's range — otherwise the grid
+  // renders a blank page with a stranded pagination strip. Re-setting the page
+  // re-triggers the page fetch/slice.
+  useEffect(() => {
+    if (totalCount === 0) return;
+    const lastPage = Math.max(1, Math.ceil(totalCount / pageSize));
+    if (page > lastPage) setPageState(lastPage);
+  }, [totalCount, page, pageSize]);
+
   const setActiveFolder = useCallback((folder: string | null) => {
     setActiveFolderState(folder);
     setPageState(1);
