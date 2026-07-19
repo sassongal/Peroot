@@ -158,6 +158,14 @@ export interface ShellValue {
   corpusPrompts: PersonalPrompt[];
   corpusLoading: boolean;
   corpusTruncatedAt: { shown: number; total: number } | null;
+  /**
+   * Stable library size (from useLibrary), available on the first paint — used
+   * to decide whether the Memory Palace sidebar mounts and reserves its width,
+   * WITHOUT waiting for the lazy `corpusPrompts` fetch. Gating the palace's
+   * visibility on the async corpus caused a 3→2 column layout shift when it
+   * mounted late (the corpus arrives seconds after the grid).
+   */
+  libraryCount: number;
   lastOpenedPromptId: string | null;
   setLastOpenedPromptId: React.Dispatch<React.SetStateAction<string | null>>;
   setExpandedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -948,6 +956,7 @@ export function PersonalLibraryProvider({
       corpusPrompts,
       corpusLoading,
       corpusTruncatedAt,
+      libraryCount: ctxTotalCount,
       lastOpenedPromptId,
       setLastOpenedPromptId,
       setExpandedIds,
@@ -959,6 +968,7 @@ export function PersonalLibraryProvider({
       corpusPrompts,
       corpusLoading,
       corpusTruncatedAt,
+      ctxTotalCount,
       lastOpenedPromptId,
       drawerCenter,
       setExpandedIdsTracked,

@@ -132,6 +132,7 @@ function PersonalLibraryLayout() {
     corpusPrompts,
     corpusLoading,
     corpusTruncatedAt,
+    libraryCount,
     lastOpenedPromptId,
     setLastOpenedPromptId,
     setExpandedIds,
@@ -201,6 +202,7 @@ function PersonalLibraryLayout() {
           {/* Memory Palace sidebar (desktop only) */}
           <MemoryPalaceSidebar
             prompts={corpusPrompts}
+            promptCount={libraryCount}
             selectedPromptId={selectedPromptId}
             lastOpenedPromptId={lastOpenedPromptId}
             onSelectPrompt={setSelectedPromptId}

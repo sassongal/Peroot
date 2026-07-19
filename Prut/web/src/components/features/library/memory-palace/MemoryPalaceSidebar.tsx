@@ -18,7 +18,14 @@ import {
 } from "./palace-analytics";
 
 interface Props {
+  /** Full library corpus for neighborhood scoring (lazy — may be empty briefly). */
   prompts: PersonalPrompt[];
+  /**
+   * Stable library size, available on first paint. Drives the mount/visibility
+   * decision so the sidebar reserves its 320px immediately instead of appearing
+   * late (once `prompts` finishes loading) and reflowing the grid 3→2 columns.
+   */
+  promptCount: number;
   selectedPromptId: string | null;
   lastOpenedPromptId?: string | null;
   onSelectPrompt: (id: string) => void;
@@ -29,6 +36,7 @@ const MIN_PROMPTS = 5;
 
 export function MemoryPalaceSidebar({
   prompts,
+  promptCount,
   selectedPromptId,
   lastOpenedPromptId,
   onSelectPrompt,
@@ -62,9 +70,9 @@ export function MemoryPalaceSidebar({
 
   useEffect(() => {
     if (!isCollapsed) {
-      trackPalaceOpened({ viewport: "desktop", promptCount: prompts.length });
+      trackPalaceOpened({ viewport: "desktop", promptCount });
     }
-  }, [isCollapsed, prompts.length]);
+  }, [isCollapsed, promptCount]);
 
   const effectiveCenterId = lastOpenedPromptId ?? selectedPromptId ?? prompts[0]?.id ?? null;
 
@@ -79,12 +87,16 @@ export function MemoryPalaceSidebar({
 
   useEffect(() => {
     if (isCollapsed) return;
-    if (prompts.length < MIN_PROMPTS) trackPalaceEmpty("too_few_prompts");
+    if (promptCount < MIN_PROMPTS) trackPalaceEmpty("too_few_prompts");
     else if (!selectedPromptId) trackPalaceEmpty("no_selection");
     else if (nodes.length === 1) trackPalaceEmpty("no_neighbors");
-  }, [isCollapsed, prompts.length, selectedPromptId, nodes.length]);
+  }, [isCollapsed, promptCount, selectedPromptId, nodes.length]);
 
-  if (prompts.length < MIN_PROMPTS) return null;
+  // Mount decision uses the stable library size (promptCount), NOT the lazily
+  // loaded `prompts` corpus — otherwise the sidebar appears late and reflows
+  // the grid from 3 to 2 columns. Width is reserved from first paint; the
+  // neighborhood inside fills in once `prompts` arrives.
+  if (promptCount < MIN_PROMPTS) return null;
 
   const handleNodeClick = (id: string) => {
     if (id === effectiveCenterId) return;
