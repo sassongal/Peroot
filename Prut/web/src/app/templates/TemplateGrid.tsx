@@ -9,18 +9,10 @@ import { CATEGORY_LABELS } from "@/lib/constants";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { setPendingPrompt } from "@/lib/pending-prompt";
 import { hebrewFuzzyMatch, hebrewMatchScore } from "@/lib/hebrew-search";
+import { extractVariables } from "@/lib/variable-utils";
 
 interface TemplateGridProps {
   templates: LibraryPrompt[];
-}
-
-/** Extract {variable} placeholders from a prompt string */
-function extractPlaceholders(text: string): string[] {
-  const matches = text.match(/{[^}]+}/g) || [];
-  const unique = new Set(
-    matches.map((m) => m.replace(/[{}]/g, "").trim())
-  );
-  return Array.from(unique).filter(Boolean);
 }
 
 /** Group templates by category and return sorted groups */
@@ -92,8 +84,8 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
   // When searching, we render a flat ranked list — section grouping would
   // re-shuffle results away from the relevance order computed in `filtered`.
   const grouped = useMemo(
-    () => (isSearching ? [["__results__", filtered]] as const : groupByCategory(filtered)),
-    [filtered, isSearching]
+    () => (isSearching ? ([["__results__", filtered]] as const) : groupByCategory(filtered)),
+    [filtered, isSearching],
   );
 
   const allChipCount = isSearching ? filtered.length : templates.length;
@@ -142,7 +134,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
               "px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium border transition-all whitespace-nowrap min-h-[36px]",
               !activeCategory
                 ? "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
-                : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5",
             )}
           >
             הכל ({allChipCount})
@@ -150,14 +142,12 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
           {categories.map(({ id, label, count }) => (
             <button
               key={id}
-              onClick={() =>
-                setActiveCategory(activeCategory === id ? null : id)
-              }
+              onClick={() => setActiveCategory(activeCategory === id ? null : id)}
               className={cn(
                 "px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium border transition-all whitespace-nowrap min-h-[36px]",
                 activeCategory === id
                   ? "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
-                  : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-amber-500/20 hover:bg-amber-500/5",
               )}
             >
               {label} ({count})
@@ -169,14 +159,8 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
       {/* Search results header (only when searching) */}
       {isSearching && filtered.length > 0 && (
         <div className="flex items-center gap-3 mb-5 pb-3 border-b border-border">
-          <h2 className="text-lg md:text-xl font-serif text-foreground">
-            תוצאות חיפוש
-          </h2>
-          <span
-            className="text-xs text-muted-foreground"
-            aria-live="polite"
-            aria-atomic="true"
-          >
+          <h2 className="text-lg md:text-xl font-serif text-foreground">תוצאות חיפוש</h2>
+          <span className="text-xs text-muted-foreground" aria-live="polite" aria-atomic="true">
             {filtered.length} תוצאות עבור &quot;{trimmedQuery}&quot;
           </span>
         </div>
@@ -192,19 +176,16 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
                 <h2 className="text-lg md:text-xl font-serif text-foreground">
                   {CATEGORY_LABELS[category] || category}
                 </h2>
-                <span className="text-xs text-muted-foreground">
-                  {items.length} תבניות
-                </span>
+                <span className="text-xs text-muted-foreground">{items.length} תבניות</span>
               </div>
             )}
 
             {/* Cards grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {items.map((template) => {
-                const placeholders = extractPlaceholders(template.prompt);
+                const placeholders = extractVariables(template.prompt);
                 const isAdvanced =
-                  template.capability_mode &&
-                  template.capability_mode !== CapabilityMode.STANDARD;
+                  template.capability_mode && template.capability_mode !== CapabilityMode.STANDARD;
 
                 return (
                   <article

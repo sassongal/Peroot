@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { CATEGORY_SLUG_MAP, HEBREW_SLUG_TO_ENGLISH } from "@/lib/category-slugs";
-import { CATEGORY_LABELS } from "@/lib/constants";
+import { CATEGORY_LABELS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, promptCollectionSchema, howToSchema, faqSchema } from "@/lib/schema";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
@@ -97,8 +97,11 @@ export default async function CategoryPage({ params }: Props) {
     notFound();
   }
 
-  // Fetch prompts for this category from Supabase
-  const supabase = await createClient();
+  // Fetch prompts for this category from Supabase. Cookieless service client so
+  // the page stays statically ISR-cacheable (revalidate=3600) — a cookie-bound
+  // client forces dynamic rendering and voids the cache. Only public
+  // (is_active=true) data is read; no user session is needed here.
+  const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("public_library_prompts")
     .select(
@@ -347,8 +350,8 @@ export default async function CategoryPage({ params }: Props) {
               רוצים פרומפטים מותאמים אישית?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-              הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספריה אישית וגישה ל-480+
-              פרומפטים.
+              הצטרפו ל-Peroot וצרו פרומפטים מקצועיים בשניות. שדרוג אוטומטי, ספריה אישית וגישה ל-
+              {PROMPT_LIBRARY_COUNT} פרומפטים.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link

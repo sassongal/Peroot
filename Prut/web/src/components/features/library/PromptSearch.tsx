@@ -34,7 +34,9 @@ export function PromptSearch() {
     setLoading(true);
     setSearched(true);
     try {
-      const res = await fetch(getApiPath(`/api/library/search?q=${encodeURIComponent(q.trim())}&limit=12`));
+      const res = await fetch(
+        getApiPath(`/api/library/search?q=${encodeURIComponent(q.trim())}&limit=12`),
+      );
       if (res.ok) {
         const data = await res.json();
         setResults(Array.isArray(data) ? data : data.prompts || []);
@@ -48,12 +50,15 @@ export function PromptSearch() {
 
   // Debounce search
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-  const debouncedSearch = useCallback((value: string) => {
-    setQuery(value);
-    if (timer) clearTimeout(timer);
-    const t = setTimeout(() => handleSearch(value), 300);
-    setTimer(t);
-  }, [timer, handleSearch]);
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      setQuery(value);
+      if (timer) clearTimeout(timer);
+      const t = setTimeout(() => handleSearch(value), 300);
+      setTimer(t);
+    },
+    [timer, handleSearch],
+  );
 
   const clear = () => {
     setQuery("");
@@ -103,9 +108,7 @@ export function PromptSearch() {
 
       {!loading && results.length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-muted-foreground mb-2">
-            נמצאו {results.length} תוצאות:
-          </p>
+          <p className="text-xs text-muted-foreground mb-2">נמצאו {results.length} תוצאות:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {results.map((result) => {
               const categorySlug = CATEGORY_ID_TO_SLUG[result.category_id] || "general";
@@ -114,10 +117,10 @@ export function PromptSearch() {
               return (
                 <Link
                   key={result.id}
-                  href={`/prompts/${categorySlug}`}
+                  href={`/prompts/${categorySlug}/${result.id}`}
                   className={cn(
                     "flex flex-col gap-1.5 p-3 rounded-xl border border-border bg-secondary",
-                    "hover:bg-white/6 hover:border-amber-500/30 transition-all group"
+                    "hover:bg-white/6 hover:border-amber-500/30 transition-all group",
                   )}
                 >
                   <div className="flex items-center gap-2">
@@ -129,9 +132,7 @@ export function PromptSearch() {
                     {result.title}
                   </h4>
                   {result.use_case && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {result.use_case}
-                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{result.use_case}</p>
                   )}
                 </Link>
               );

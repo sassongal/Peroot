@@ -170,6 +170,11 @@ export function useLibraryFetch({
           );
         }
 
+        // Pinned items always float to top — this MUST be the primary sort, so
+        // it is chained BEFORE the sort key (PostgREST emits ORDER BY in call
+        // order). Chaining it after made is_pinned a mere tiebreaker.
+        query = query.order("is_pinned", { ascending: false });
+
         switch (opts.sortBy) {
           case "title":
             query = query.order("title", { ascending: true });
@@ -191,9 +196,6 @@ export function useLibraryFetch({
             query = query.order("updated_at", { ascending: false });
             break;
         }
-
-        // Pinned items always float to top
-        query = query.order("is_pinned", { ascending: false });
 
         const offset = (opts.page - 1) * opts.pageSize;
         const { data, count, error } = await query.range(offset, offset + opts.pageSize - 1);
