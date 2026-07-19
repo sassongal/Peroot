@@ -292,7 +292,7 @@ async function legacyCheckAndDecrement(
       .select("daily_free_limit")
       .single();
 
-    const dailyLimit = siteSettings?.daily_free_limit ?? 2;
+    const dailyLimit = siteSettings?.daily_free_limit ?? 1;
 
     const { data: refreshData } = await queryClient
       .from("profiles")

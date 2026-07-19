@@ -739,6 +739,15 @@ function PageContent() {
       const inputText = textOverride ?? ps.input;
       if (!inputText.trim() || ps.isLoading || enhanceCooldownRef.current) return;
 
+      // Guests can't create at all — every enhance attempt (including the very
+      // first) routes straight to the register wall. Preserve their text so it's
+      // restored after they sign up.
+      if (!user) {
+        if (inputText.trim()) setPendingPrompt({ prompt: inputText, source: "home-quota-wall" });
+        showLoginRequired("שיפור פרומפט");
+        return;
+      }
+
       enhanceCooldownRef.current = true;
       setTimeout(() => {
         enhanceCooldownRef.current = false;

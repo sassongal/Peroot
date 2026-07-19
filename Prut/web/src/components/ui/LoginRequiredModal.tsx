@@ -57,42 +57,48 @@ export function LoginRequiredModal({
 
         <div className="flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-full bg-linear-to-br from-amber-500/10 to-yellow-500/10 flex items-center justify-center border border-(--glass-border)">
-            <Image src="/images/peroot_logo_pack/logo_dark_240.png" alt="לוגו פרוט" width={40} height={40} className="block dark:hidden w-10 h-10" style={{ width: 'auto', height: 'auto' }} />
-            <Image src="/images/peroot_logo_pack/logo_dark_navbar_2x.png" alt="לוגו פרוט" width={40} height={40} className="hidden dark:block w-10 h-10" style={{ width: 'auto', height: 'auto' }} />
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_240.png"
+              alt="לוגו פרוט"
+              width={40}
+              height={40}
+              className="block dark:hidden w-10 h-10"
+              style={{ width: "auto", height: "auto" }}
+            />
+            <Image
+              src="/images/peroot_logo_pack/logo_dark_navbar_2x.png"
+              alt="לוגו פרוט"
+              width={40}
+              height={40}
+              className="hidden dark:block w-10 h-10"
+              style={{ width: "auto", height: "auto" }}
+            />
           </div>
 
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-(--text-primary)">{title}</h2>
-            <p className="text-(--text-muted) text-sm leading-relaxed">
-              {message}
-            </p>
-            {feature && (
-              <p className="text-xs text-slate-500 mt-2">
-                תכונה: {feature}
-              </p>
-            )}
+            <p className="text-(--text-muted) text-sm leading-relaxed">{message}</p>
+            {feature && <p className="text-xs text-slate-500 mt-2">תכונה: {feature}</p>}
           </div>
 
           <div className="w-full space-y-3 pt-2">
-            <p className="text-xs text-slate-500">
-              משתמשים מחוברים נהנים מ:
-            </p>
+            <p className="text-xs text-slate-500">עם חשבון חינמי תקבלו:</p>
             <ul className="text-xs text-(--text-muted) space-y-1.5 text-right">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                פרומפט חינמי כל יום
+                יצירה ושיפור של פרומפטים מקצועיים
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                שמירת פרומפטים לספריה אישית
+                המערכת לומדת ושומרת את הסגנון וההעדפות שלכם
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                מועדפים והיסטוריה
+                גישה לכל ספריות הפרומפטים, התבניות והספרייה הציבורית
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                גישה לספריית פרומפטים מלאה
+                מועדפים, היסטוריה וסנכרון עם תוסף Chrome
               </li>
             </ul>
           </div>
@@ -103,7 +109,7 @@ export function LoginRequiredModal({
               className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-linear-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 rounded-xl text-white font-semibold transition-all shadow-lg"
             >
               <LogIn className="w-5 h-5" />
-              התחבר עכשיו
+              הירשם בחינם
             </Link>
             <button
               onClick={onClose}

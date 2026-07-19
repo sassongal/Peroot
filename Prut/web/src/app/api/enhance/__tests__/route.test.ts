@@ -504,28 +504,25 @@ describe("POST /api/enhance", () => {
   // 4. Authentication
   // -----------------------------------------------------------------------
   describe("authentication", () => {
-    it("allows guest access with IP-based rate limiting (guest tier)", async () => {
+    it("rejects a guest with 401 login_required (no unauthenticated enhance)", async () => {
       setupGuestUser();
       setupMockStream();
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(200);
-      expect(mockCheckRateLimit).toHaveBeenCalledWith("127.0.0.1", "guest");
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.code).toBe("login_required");
+      // Guests are rejected before any rate-limit / credit work runs.
+      expect(mockCheckRateLimit).not.toHaveBeenCalled();
     });
 
-    it("returns 400 when no identifier is available (no user, no IP)", async () => {
+    it("rejects an unauthenticated request even with no IP (401 login_required)", async () => {
       mockGetUser.mockResolvedValue({ data: { user: null } });
       mockSupabaseFrom.mockReturnValue(mockQueryBuilder({ data: null }));
-      mockCheckRateLimit.mockResolvedValue({
-        success: true,
-        limit: 5,
-        remaining: 4,
-        reset: Date.now() + 60000,
-      });
 
-      // Request without any IP headers
+      // Request without any IP headers — still a guest, still rejected.
       const req = new Request("http://localhost/api/enhance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -533,9 +530,9 @@ describe("POST /api/enhance", () => {
       });
       const res = await POST(req);
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
       const body = await res.json();
-      expect(body.code).toBe("unidentified_source");
+      expect(body.code).toBe("login_required");
     });
 
     // -------------------------------------------------------------------
@@ -654,25 +651,22 @@ describe("POST /api/enhance", () => {
   // 5 & 6. Rate limiting
   // -----------------------------------------------------------------------
   describe("rate limiting", () => {
-    it("returns 429 when guest is rate limited", async () => {
+    it("rejects a guest before rate limiting even runs (401 login_required)", async () => {
       setupGuestUser();
-      const resetTime = Math.floor(Date.now() / 1000) + 3600;
       mockCheckRateLimit.mockResolvedValue({
         success: false,
         limit: 5,
         remaining: 0,
-        reset: resetTime,
+        reset: Math.floor(Date.now() / 1000) + 3600,
       });
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(429);
+      expect(res.status).toBe(401);
       const body = await res.json();
-      expect(body.code).toBe("too_many_requests");
-      expect(body.reset_at).toBe(resetTime);
-      expect(res.headers.get("Retry-After")).toBe(resetTime.toString());
-      expect(mockCheckRateLimit).toHaveBeenCalledWith("127.0.0.1", "guest");
+      expect(body.code).toBe("login_required");
+      expect(mockCheckRateLimit).not.toHaveBeenCalled();
     });
 
     it("returns 429 when free-tier user is rate limited", async () => {
@@ -732,14 +726,14 @@ describe("POST /api/enhance", () => {
       expect(body.balance).toBe(0);
     });
 
-    it("does not check credits for guest users", async () => {
+    it("rejects a guest before any credit check (401 login_required)", async () => {
       setupGuestUser();
       setupMockStream();
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(401);
       expect(mockCheckAndDecrementCredits).not.toHaveBeenCalled();
     });
 
@@ -794,17 +788,15 @@ describe("POST /api/enhance", () => {
       expect(mockGenerateStream).toHaveBeenCalledWith(expect.objectContaining({ userTier: "pro" }));
     });
 
-    it("streams response for guest user (no auth)", async () => {
+    it("does not generate for a guest — returns 401 login_required", async () => {
       setupGuestUser();
       setupMockStream();
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(200);
-      expect(mockGenerateStream).toHaveBeenCalledWith(
-        expect.objectContaining({ userTier: "guest" }),
-      );
+      expect(res.status).toBe(401);
+      expect(mockGenerateStream).not.toHaveBeenCalled();
     });
 
     it("passes tone and category to the engine", async () => {
@@ -858,14 +850,17 @@ describe("POST /api/enhance", () => {
       expect(mockRefundCredit).toHaveBeenCalledWith(lastUserId);
     });
 
-    it("does not refund credit for guest users on error", async () => {
+    it("never reaches generation/refund for a guest (401 login_required)", async () => {
       setupGuestUser();
       mockGenerateStream.mockRejectedValue(new Error("AI failure"));
 
       const req = makeRequest(VALID_BODY);
       const res = await POST(req);
 
-      expect(res.status).toBe(500);
+      // Guest is rejected up front, so generation never runs and there is
+      // nothing to refund.
+      expect(res.status).toBe(401);
+      expect(mockGenerateStream).not.toHaveBeenCalled();
       expect(mockRefundCredit).not.toHaveBeenCalled();
     });
 
@@ -1154,10 +1149,9 @@ describe("POST /api/enhance", () => {
       );
     });
 
-    it("returns 403 when guest requests a non-STANDARD capability mode", async () => {
-      // Policy: only unauthenticated guests are locked to STANDARD;
-      // registered free users get all modes (capability access is no longer
-      // tied to plan tier).
+    it("returns 401 login_required when a guest requests any mode", async () => {
+      // Policy: guests can't create at all — every enhance is rejected up front
+      // regardless of capability mode. Registered free users get all modes.
       setupGuestUser();
       setupMockStream();
 
@@ -1167,7 +1161,7 @@ describe("POST /api/enhance", () => {
       });
       const res = await POST(req);
 
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(401);
       const body = await res.json();
       expect(body.code).toBe("login_required");
     });

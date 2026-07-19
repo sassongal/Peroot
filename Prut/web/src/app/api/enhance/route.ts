@@ -255,7 +255,21 @@ export async function POST(req: Request) {
       if (bearerToken && userId) useServiceClient = true;
     }
 
-    // Guest access: allow unauthenticated users with IP-based rate limiting
+    // Guests can't create — the product requires registration before any
+    // enhance. Reject unauthenticated requests up front (the web client already
+    // routes guests to the register wall; this closes the raw-API path too).
+    if (!userId) {
+      return NextResponse.json(
+        {
+          error: "יש להתחבר כדי ליצור פרומפטים. ההרשמה חינמית.",
+          code: "login_required",
+        },
+        { status: 401 },
+      );
+    }
+
+    // Retained for the (now unreachable) guest branches below; kept so the large
+    // downstream flow that references it continues to type-check.
     const isGuest = !userId;
 
     // When using Bearer token or API key, RLS won't have auth.uid() set,
