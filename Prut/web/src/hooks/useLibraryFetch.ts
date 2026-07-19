@@ -24,7 +24,10 @@ export function useLibraryFetch({
 }: UseLibraryFetchParams) {
   const fetchFolderCounts = useCallback(
     async (userId: string) => {
-      // Fetch category counts from RPC
+      // One round-trip: get_library_folder_counts now returns the category
+      // counts merged with the virtual-folder counts (all/pinned/favorites/
+      // templates), so we no longer fire four extra COUNT queries here — this
+      // runs on init AND every mutation, so it was 5 round-trips each time.
       const { data, error } = await supabase.rpc("get_library_folder_counts", {
         p_user_id: userId,
       });
@@ -36,38 +39,6 @@ export function useLibraryFetch({
       if (data && typeof data === "object" && !Array.isArray(data)) {
         Object.assign(counts, data as Record<string, number>);
       }
-
-      // Compute virtual folder counts
-      // "all" = total items
-      const { count: totalAll } = await supabase
-        .from("personal_library")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId);
-      counts["all"] = totalAll ?? 0;
-
-      // "pinned"
-      const { count: pinnedCount } = await supabase
-        .from("personal_library")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("is_pinned", true);
-      counts["pinned"] = pinnedCount ?? 0;
-
-      // "favorites"
-      const { count: favCount } = await supabase
-        .from("prompt_favorites")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("item_type", "personal");
-      counts["favorites"] = favCount ?? 0;
-
-      // "templates"
-      const { count: templateCount } = await supabase
-        .from("personal_library")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("is_template", true);
-      counts["templates"] = templateCount ?? 0;
 
       setFolderCounts(counts);
     },
