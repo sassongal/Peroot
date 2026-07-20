@@ -30,20 +30,6 @@ import {
   mergeFolderCounts,
 } from "../folder-utils";
 
-// Strip server-owned fields so a deleted prompt can be re-added via addPrompts
-// (used by undo-delete). Content/title/category are preserved; use_count and
-// timestamps reset, which is acceptable for an undo.
-function stripForRestore(
-  p: PersonalPrompt,
-): Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count"> {
-  const clone: Partial<PersonalPrompt> = { ...p };
-  delete clone.id;
-  delete clone.created_at;
-  delete clone.updated_at;
-  delete clone.use_count;
-  return clone as Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">;
-}
-
 // ─── Context value shapes ───────────────────────────────────────────────────
 
 export interface SelectionValue {
@@ -631,7 +617,7 @@ export function PersonalLibraryProvider({
           label: "בטל",
           onClick: async () => {
             try {
-              await ctxRef.current.addPrompts(deleted.map(stripForRestore));
+              await ctxRef.current.restorePrompts(deleted);
               toast.success("הפרומפטים שוחזרו");
             } catch {
               toast.error("השחזור נכשל — הפרומפטים לא נמחקו לצמיתות, נסה שוב.");

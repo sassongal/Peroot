@@ -418,15 +418,17 @@ export function useLibrary() {
   // ORDERING — implemented in usePromptOrdering
   // ---------------------------------------------------------------------------
 
-  const { reorderPrompts, movePrompt, movePrompts, addPrompts } = usePromptOrdering({
-    supabase,
-    user,
-    allLocalItems,
-    setAllLocalItems,
-    personalCategories,
-    setPersonalCategories,
-    refreshCurrentPage,
-  });
+  const { reorderPrompts, movePrompt, movePrompts, addPrompts, restorePrompts } = usePromptOrdering(
+    {
+      supabase,
+      user,
+      allLocalItems,
+      setAllLocalItems,
+      personalCategories,
+      setPersonalCategories,
+      refreshCurrentPage,
+    },
+  );
 
   const deletePrompts = async (ids: string[]) => {
     if (ids.length === 0) return;
@@ -444,6 +446,16 @@ export function useLibrary() {
       setAllLocalItems((prev) => prev.filter((p) => !ids.includes(p.id)));
     }
   };
+
+  // Optimistically nudge a sidebar folder count without a full refetch. Used by
+  // the favorites toggle so the "favorites" folder count reflects instantly
+  // (the RPC-derived count would otherwise stay stale until the next fetch).
+  const adjustFolderCount = useCallback((folder: string, delta: number) => {
+    setFolderCounts((prev) => ({
+      ...prev,
+      [folder]: Math.max(0, (prev[folder] ?? 0) + delta),
+    }));
+  }, []);
 
   const updateProfile = async (updates: {
     onboarding_completed?: boolean;
@@ -524,6 +536,8 @@ export function useLibrary() {
     deletePrompts,
     movePrompts,
     addPrompts,
+    restorePrompts,
+    adjustFolderCount,
     updateTags,
     updateProfile,
     completeOnboarding,

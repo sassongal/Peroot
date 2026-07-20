@@ -21,20 +21,71 @@ interface VariableFillerProps {
   onDeletePreset: (id: string) => Promise<void>;
 }
 
-export function VariableFiller({ promptText, onApply, presets, onSavePreset, onDeletePreset }: VariableFillerProps) {
+// Per-template value memory. Keyed by a stable hash of the prompt text so the
+// same template restores the same last-used values on this device.
+const VALUES_STORAGE_PREFIX = "peroot_var_values_";
+
+function hashPromptText(s: string): string {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+export function VariableFiller({
+  promptText,
+  onApply,
+  presets,
+  onSavePreset,
+  onDeletePreset,
+}: VariableFillerProps) {
   const variables = useMemo(() => extractVariables(promptText), [promptText]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [showPresets, setShowPresets] = useState(false);
 
+  const storageKey = useMemo(
+    () => VALUES_STORAGE_PREFIX + hashPromptText(promptText),
+    [promptText],
+  );
+
   useEffect(() => {
-    queueMicrotask(() => setValues({}));
-  }, [promptText]);
+    // Restore the last values the user applied for THIS template (per device),
+    // so returning to a template doesn't force re-typing the same variables.
+    queueMicrotask(() => {
+      let restored: Record<string, string> = {};
+      try {
+        const raw = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") restored = parsed as Record<string, string>;
+        }
+      } catch {
+        // Ignore corrupt/blocked storage — fall back to an empty form.
+      }
+      setValues(restored);
+    });
+  }, [storageKey]);
   const [presetName, setPresetName] = useState("");
   const [showSavePreset, setShowSavePreset] = useState(false);
 
   if (variables.length === 0) return null;
 
   const handleApply = () => {
+    // Remember the applied values for this template so they auto-fill next time.
+    try {
+      if (typeof window !== "undefined") {
+        const toSave: Record<string, string> = {};
+        for (const v of variables) {
+          if ((values[v] ?? "").trim()) toSave[v] = values[v];
+        }
+        if (Object.keys(toSave).length > 0) {
+          localStorage.setItem(storageKey, JSON.stringify(toSave));
+        } else {
+          localStorage.removeItem(storageKey);
+        }
+      }
+    } catch {
+      // Ignore quota/blocked storage — persistence is best-effort.
+    }
     // Canonical substitution via the shared helper — identical logic to
     // ResultSection and all other call sites, so behavior stays uniform
     // across the whole app.
@@ -42,7 +93,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
   };
 
   const loadPreset = (preset: VariablePreset) => {
-    setValues(prev => ({ ...prev, ...preset.variables }));
+    setValues((prev) => ({ ...prev, ...preset.variables }));
     setShowPresets(false);
     toast.success(`נטען: ${preset.name}`);
   };
@@ -71,12 +122,17 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-(--glass-bg) border border-(--glass-border) text-xs text-(--text-muted) hover:text-(--text-secondary) transition-colors"
               >
                 <span>טען פריסט</span>
-                <ChevronDown className={cn("w-3 h-3 transition-transform", showPresets && "rotate-180")} />
+                <ChevronDown
+                  className={cn("w-3 h-3 transition-transform", showPresets && "rotate-180")}
+                />
               </button>
               {showPresets && (
                 <div className="absolute top-full mt-1 left-0 right-0 min-w-[180px] bg-[#111] border border-(--glass-border) rounded-lg shadow-xl z-10 overflow-hidden">
-                  {presets.map(preset => (
-                    <div key={preset.id} className="flex items-center justify-between px-3 py-2 hover:bg-(--glass-bg) group">
+                  {presets.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className="flex items-center justify-between px-3 py-2 hover:bg-(--glass-bg) group"
+                    >
                       <button
                         onClick={() => loadPreset(preset)}
                         className="text-xs text-(--text-secondary) hover:text-(--text-primary) flex-1 text-start truncate"
@@ -84,7 +140,10 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
                         {preset.name}
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); onDeletePreset(preset.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeletePreset(preset.id);
+                        }}
                         className="p-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -102,7 +161,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
           matching the ResultSection Variables Panel. The raw snake_case
           key is exposed only through the `title` tooltip for power users. */}
       <div className="space-y-2 mb-4">
-        {variables.map(v => {
+        {variables.map((v) => {
           const label = getVariableLabel(v);
           const isFilled = (values[v] ?? "").trim().length > 0;
           const quickSuggestions = getPlaceholderSuggestions(v);
@@ -117,14 +176,14 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
                 </label>
                 <input
                   value={values[v] || ""}
-                  onChange={(e) => setValues(prev => ({ ...prev, [v]: e.target.value }))}
+                  onChange={(e) => setValues((prev) => ({ ...prev, [v]: e.target.value }))}
                   placeholder={getVariablePlaceholder(v)}
                   aria-label={label}
                   className={cn(
                     "flex-1 rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-slate-600 focus:outline-none transition-colors border",
                     isFilled
                       ? "bg-emerald-500/4 border-emerald-500/40 focus:border-emerald-500/60"
-                      : "bg-black/5 dark:bg-black/30 border-(--glass-border) focus:border-sky-500/50"
+                      : "bg-black/5 dark:bg-black/30 border-(--glass-border) focus:border-sky-500/50",
                   )}
                 />
               </div>
@@ -151,7 +210,7 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
       <div className="flex items-center gap-3">
         <button
           onClick={handleApply}
-          disabled={Object.values(values).every(v => !v)}
+          disabled={Object.values(values).every((v) => !v)}
           className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           החל משתנים
@@ -164,7 +223,9 @@ export function VariableFiller({ promptText, onApply, presets, onSavePreset, onD
               onChange={(e) => setPresetName(e.target.value)}
               placeholder="שם הפריסט"
               className="flex-1 bg-black/5 dark:bg-black/30 border border-(--glass-border) rounded-lg px-3 py-1.5 text-sm text-(--text-secondary) placeholder:text-slate-600 focus:outline-none focus:border-amber-500/20"
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSavePreset(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSavePreset();
+              }}
             />
             <button
               onClick={handleSavePreset}

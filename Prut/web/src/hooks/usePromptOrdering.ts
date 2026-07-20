@@ -352,5 +352,53 @@ export function usePromptOrdering({
     [supabase, user, setAllLocalItems, refreshCurrentPage],
   );
 
-  return { reorderPrompts, movePrompt, movePrompts, addPrompts };
+  // Lossless undo-delete: re-insert the exact deleted rows — id, use_count and
+  // timestamps preserved — instead of creating fresh copies (which reset the
+  // count/timestamps and minted a new id, orphaning favorites). No dedup:
+  // these were just deleted, so they are known-unique.
+  const restorePrompts = useCallback(
+    async (rows: PersonalPrompt[]) => {
+      if (rows.length === 0) return;
+      if (user) {
+        const insertData = rows.map((p) => ({
+          id: p.id,
+          user_id: user.id,
+          title: p.title,
+          prompt: p.prompt,
+          prompt_style: p.prompt_style ?? null,
+          category: p.category,
+          personal_category: p.personal_category,
+          use_case: p.use_case,
+          source: p.source,
+          use_count: p.use_count ?? 0,
+          created_at: new Date(p.created_at ?? Date.now()).toISOString(),
+          updated_at: new Date(p.updated_at ?? Date.now()).toISOString(),
+          sort_index: p.sort_index ?? 0,
+          capability_mode: p.capability_mode ?? CapabilityMode.STANDARD,
+          tags: p.tags ?? [],
+          mode_params: p.mode_params ?? null,
+          last_used_at: p.last_used_at != null ? new Date(p.last_used_at).toISOString() : null,
+          is_pinned: p.is_pinned ?? false,
+          success_count: p.success_count ?? 0,
+          fail_count: p.fail_count ?? 0,
+          is_template: p.is_template ?? false,
+          template_description: p.template_description ?? null,
+          template_variables: p.template_variables ?? null,
+          original_prompt: p.original_prompt ?? null,
+          source_history_id: p.source_history_id ?? null,
+        }));
+        const { error } = await supabase.from("personal_library").insert(insertData);
+        if (error) {
+          logger.error("[usePromptOrdering] restorePrompts error:", error);
+          throw error;
+        }
+        await refreshCurrentPage();
+      } else {
+        setAllLocalItems((prev) => [...rows, ...prev]);
+      }
+    },
+    [supabase, user, setAllLocalItems, refreshCurrentPage],
+  );
+
+  return { reorderPrompts, movePrompt, movePrompts, addPrompts, restorePrompts };
 }

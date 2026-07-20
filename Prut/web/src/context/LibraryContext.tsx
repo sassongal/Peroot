@@ -78,6 +78,7 @@ export const useLibraryContext = () => {
       bumpPersonalLibraryLastUsed: data.bumpPersonalLibraryLastUsed,
       addPrompts: data.addPrompts,
       deletePrompts: data.deletePrompts,
+      restorePrompts: data.restorePrompts,
       movePrompts: data.movePrompts,
       updateTags: data.updateTags,
       updateProfile: data.updateProfile,

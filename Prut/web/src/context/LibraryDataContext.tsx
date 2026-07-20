@@ -72,6 +72,10 @@ interface LibraryDataContextType {
     prompts: Omit<PersonalPrompt, "id" | "created_at" | "updated_at" | "use_count">[],
   ) => Promise<void>;
   deletePrompts: (ids: string[]) => Promise<void>;
+  /** Lossless restore of just-deleted rows (id/use_count/timestamps preserved) — for undo-delete. */
+  restorePrompts: (rows: PersonalPrompt[]) => Promise<void>;
+  /** Optimistically nudge a sidebar folder count (e.g. "favorites") without a refetch. */
+  adjustFolderCount: (folder: string, delta: number) => void;
   movePrompts: (ids: string[], category: string) => Promise<void>;
   updateTags: (id: string, tags: string[]) => Promise<void>;
   updateProfile: (updates: {
@@ -183,6 +187,8 @@ export function LibraryDataProvider({
     addCategory: addLibCategory,
     deleteCategory,
     deletePrompts,
+    restorePrompts,
+    adjustFolderCount,
     movePrompts,
     addPrompts,
     updateTags,
@@ -406,6 +412,8 @@ export function LibraryDataProvider({
       bumpPersonalLibraryLastUsed,
       addPrompts,
       deletePrompts,
+      restorePrompts,
+      adjustFolderCount,
       movePrompts,
       updateTags,
       updateProfile,
@@ -449,6 +457,8 @@ export function LibraryDataProvider({
       bumpPersonalLibraryLastUsed,
       addPrompts,
       deletePrompts,
+      restorePrompts,
+      adjustFolderCount,
       movePrompts,
       updateTags,
       updateProfile,
