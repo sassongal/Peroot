@@ -67,12 +67,16 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
       const scored: Array<{ template: LibraryPrompt; score: number }> = [];
       for (const t of pool) {
         const categoryLabel = CATEGORY_LABELS[t.category] || t.category || "";
-        const haystack = `${t.title} ${t.use_case ?? ""} ${categoryLabel}`;
+        // Include the prompt body so a template can be found by its content, not
+        // just its title/use-case — but weight body matches lowest so title and
+        // use-case still dominate the ranking.
+        const haystack = `${t.title} ${t.use_case ?? ""} ${categoryLabel} ${t.prompt ?? ""}`;
         if (!hebrewFuzzyMatch(haystack, trimmedQuery)) continue;
         // Title matches are weighted 2x — they're a stronger signal of intent.
         const score =
           hebrewMatchScore(t.title, trimmedQuery) * 2 +
-          hebrewMatchScore(t.use_case ?? "", trimmedQuery);
+          hebrewMatchScore(t.use_case ?? "", trimmedQuery) +
+          hebrewMatchScore(t.prompt ?? "", trimmedQuery) * 0.25;
         scored.push({ template: t, score });
       }
       scored.sort((a, b) => b.score - a.score);

@@ -49,9 +49,6 @@ export function useLibrary() {
     setFolderCounts,
   });
 
-  // Debounce timer for search
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Keep a ref to current pagination/filter state so callbacks can always read latest values
   const stateRef = useRef({
     page,
@@ -342,12 +339,12 @@ export function useLibrary() {
     setPageState(1);
   }, []);
 
+  // Commit synchronously — the sole caller (PersonalLibraryContext.handleSearchChange)
+  // already debounces keystrokes (and drives instant input display via localSearch),
+  // so a second debounce here only added ~300ms of dead latency before results updated.
   const setSearchQuery = useCallback((query: string) => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    searchDebounceRef.current = setTimeout(() => {
-      setSearchQueryState(query);
-      setPageState(1);
-    }, 300);
+    setSearchQueryState(query);
+    setPageState(1);
   }, []);
 
   // ---------------------------------------------------------------------------
