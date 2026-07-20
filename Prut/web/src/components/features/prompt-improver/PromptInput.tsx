@@ -845,7 +845,7 @@ export function PromptInput({
               />
 
               <button
-                onClick={handleEnhance}
+                onClick={() => handleEnhance()}
                 disabled={isLoading || !inputVal.trim()}
                 className={cn(
                   "group relative rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-lg overflow-hidden cursor-pointer",
