@@ -6,6 +6,7 @@ import { PersonalPrompt } from "@/lib/types";
 import { CapabilityMode } from "@/lib/capability-mode";
 import { logger } from "@/lib/logger";
 import { getCategoriesKey, getOrderKey } from "@/lib/library/row-mapper";
+import { findSimilarPrompts } from "@/lib/prompt-similarity";
 import { useAuth } from "@/context/AuthContext";
 
 const STORAGE_KEY = "peroot_personal_library";
@@ -60,29 +61,57 @@ export function useLibraryAuth({
           try {
             const localItems = JSON.parse(localStr) as PersonalPrompt[];
             if (Array.isArray(localItems) && localItems.length > 0) {
-              logger.info("Migrating guest items:", localItems.length);
-              const itemsToInsert = localItems.map((item) => ({
-                user_id: user.id,
-                title: item.title,
-                prompt: item.prompt,
-                prompt_style: item.prompt_style ?? null,
-                category: item.category,
-                personal_category: item.personal_category,
-                use_case: item.use_case,
-                source: item.source,
-                use_count: item.use_count,
-                created_at: new Date(item.created_at ?? Date.now()).toISOString(),
-                updated_at: new Date(item.updated_at ?? Date.now()).toISOString(),
-                sort_index: item.sort_index ?? 0,
-                capability_mode: item.capability_mode ?? CapabilityMode.STANDARD,
-                tags: item.tags ?? [],
-              }));
-              const { error: insertError } = await supabase
+              // Dedup against the account's existing library so a returning
+              // guest who saved prompts they already own server-side doesn't
+              // get duplicate rows. A high threshold keeps near-identical
+              // prompts out while preserving genuinely distinct ones.
+              const { data: existing } = await supabase
                 .from("personal_library")
-                .insert(itemsToInsert);
-              if (insertError) {
-                logger.error("Migration insert failed", insertError);
-              } else {
+                .select("id, title, prompt")
+                .eq("user_id", user.id)
+                .limit(500);
+              const existingList = (existing ?? []) as Array<{
+                id: string;
+                title: string;
+                prompt: string;
+              }>;
+              const newItems = localItems.filter(
+                (item) => findSimilarPrompts(item.prompt, existingList, 0.9).length === 0,
+              );
+              logger.info("Migrating guest items:", {
+                total: localItems.length,
+                new: newItems.length,
+              });
+
+              let migrationOk = true;
+              if (newItems.length > 0) {
+                const itemsToInsert = newItems.map((item) => ({
+                  user_id: user.id,
+                  title: item.title,
+                  prompt: item.prompt,
+                  prompt_style: item.prompt_style ?? null,
+                  category: item.category,
+                  personal_category: item.personal_category,
+                  use_case: item.use_case,
+                  source: item.source,
+                  use_count: item.use_count,
+                  created_at: new Date(item.created_at ?? Date.now()).toISOString(),
+                  updated_at: new Date(item.updated_at ?? Date.now()).toISOString(),
+                  sort_index: item.sort_index ?? 0,
+                  capability_mode: item.capability_mode ?? CapabilityMode.STANDARD,
+                  tags: item.tags ?? [],
+                }));
+                const { error: insertError } = await supabase
+                  .from("personal_library")
+                  .insert(itemsToInsert);
+                if (insertError) {
+                  logger.error("Migration insert failed", insertError);
+                  migrationOk = false;
+                }
+              }
+              // Clear guest storage when nothing failed — including the
+              // all-duplicates case, where the prompts already live server-side.
+              if (migrationOk) {
                 localStorage.removeItem(STORAGE_KEY);
                 localStorage.removeItem(getCategoriesKey(null));
                 localStorage.removeItem(getOrderKey(null));
