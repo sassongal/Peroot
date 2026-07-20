@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useLibraryData } from "./LibraryDataContext";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,23 +25,38 @@ interface FavoritesProviderProps {
 }
 
 export function FavoritesProvider({ children }: FavoritesProviderProps) {
-  const { favoriteLibraryIds, favoritePersonalIds, toggleFavorite: toggleFavoriteBase } = useFavorites();
-
-  const handleToggleFavorite = useCallback(async (itemType: "library" | "personal", itemId: string) => {
-    await toggleFavoriteBase(itemType, itemId);
-  }, [toggleFavoriteBase]);
-
-  const value = useMemo<FavoritesContextType>(() => ({
+  const {
     favoriteLibraryIds,
     favoritePersonalIds,
-    handleToggleFavorite,
-  }), [favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite]);
+    toggleFavorite: toggleFavoriteBase,
+  } = useFavorites();
+  const { adjustFolderCount } = useLibraryData();
 
-  return (
-    <FavoritesCtx.Provider value={value}>
-      {children}
-    </FavoritesCtx.Provider>
+  const handleToggleFavorite = useCallback(
+    async (itemType: "library" | "personal", itemId: string) => {
+      // Capture pre-toggle state: only personal favorites feed the sidebar
+      // "favorites" folder count, and we need to know add-vs-remove.
+      const wasFavorited = itemType === "personal" && favoritePersonalIds.has(itemId);
+      const ok = await toggleFavoriteBase(itemType, itemId);
+      if (ok && itemType === "personal") {
+        // Keep the "favorites" count in sync instantly (the RPC-derived count
+        // would otherwise stay stale until the next full library fetch).
+        adjustFolderCount("favorites", wasFavorited ? -1 : 1);
+      }
+    },
+    [favoritePersonalIds, toggleFavoriteBase, adjustFolderCount],
   );
+
+  const value = useMemo<FavoritesContextType>(
+    () => ({
+      favoriteLibraryIds,
+      favoritePersonalIds,
+      handleToggleFavorite,
+    }),
+    [favoriteLibraryIds, favoritePersonalIds, handleToggleFavorite],
+  );
+
+  return <FavoritesCtx.Provider value={value}>{children}</FavoritesCtx.Provider>;
 }
 
 // ---------------------------------------------------------------------------
