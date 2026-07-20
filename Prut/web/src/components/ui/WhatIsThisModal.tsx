@@ -1,18 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  X,
-  Sparkles,
-  MessageSquare,
-  Globe,
-  Palette,
-  Video,
-  Bot,
-  ArrowLeft,
-  Play,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { X, Sparkles, MessageSquare, Globe, Palette, Video, Bot, ArrowLeft } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface WhatIsThisModalProps {
   isOpen: boolean;
@@ -57,18 +47,8 @@ const MODES = [
   },
 ];
 
-const YT_ID = "B8_n6uO3Qy4";
-
 export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
-  const [videoPlaying, setVideoPlaying] = useState(false);
-
-  // Reset video state when the modal is closed — adjust state during render
-  // (React's sanctioned pattern) rather than in an effect, so there's no
-  // cascading-render round-trip.
-  if (!isOpen && videoPlaying) {
-    setVideoPlaying(false);
-  }
 
   // Close on Escape key
   useEffect(() => {
@@ -140,37 +120,6 @@ export function WhatIsThisModal({ isOpen, onClose }: WhatIsThisModalProps) {
               <span className="text-amber-600 dark:text-amber-400 font-semibold">פירוט</span> משדרג
               כל פרומפט שאתם כותבים לרמה מקצועית - בעברית.
             </p>
-          </div>
-
-          {/* Intro video */}
-          <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
-            {videoPlaying ? (
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={`https://www.youtube.com/embed/${YT_ID}?autoplay=1&rel=0`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title="מה זה פירוט?"
-              />
-            ) : (
-              <button
-                className="absolute inset-0 w-full h-full group cursor-pointer"
-                onClick={() => setVideoPlaying(true)}
-                aria-label="הפעל סרטון - מה זה פירוט?"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://i.ytimg.com/vi/${YT_ID}/hqdefault.jpg`}
-                  alt="מה זה פירוט?"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                    <Play className="w-6 h-6 text-white fill-white ms-0.5" />
-                  </div>
-                </div>
-              </button>
-            )}
           </div>
 
           {/* 5 Modes */}
