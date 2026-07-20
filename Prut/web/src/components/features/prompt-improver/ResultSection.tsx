@@ -224,7 +224,7 @@ export function ResultSection({
           </div>
           {onRetryStream && (
             <button
-              onClick={onRetryStream}
+              onClick={() => onRetryStream()}
               className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-xs font-medium transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
             >
               <RefreshCw className="w-3.5 h-3.5" />
