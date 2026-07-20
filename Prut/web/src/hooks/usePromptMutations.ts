@@ -168,16 +168,36 @@ export function usePromptMutations({
       }
       if (Object.keys(defined).length === 0) return;
 
+      // Patch optimistically in both stores so renames/edits/moves reflect
+      // instantly. refreshCurrentPage() below is still the source of truth (it
+      // also settles folder membership when personal_category changed).
+      const prevItem = personalLibrary.find((p) => p.id === id);
+      const patch = (prev: PersonalPrompt[]) =>
+        prev.map((p) => (p.id === id ? { ...p, ...defined, updated_at: Date.now() } : p));
+      setPersonalLibrary(patch);
+      setAllLocalItems(patch);
+
       if (user) {
-        await supabase.from("personal_library").update(defined).eq("id", id).eq("user_id", user.id);
+        const { error } = await supabase
+          .from("personal_library")
+          .update(defined)
+          .eq("id", id)
+          .eq("user_id", user.id);
+        if (error) {
+          logger.error("[useLibrary] updatePrompt error:", error);
+          if (prevItem) {
+            const revert = (prev: PersonalPrompt[]) =>
+              prev.map((p) => (p.id === id ? prevItem : p));
+            setPersonalLibrary(revert);
+            setAllLocalItems(revert);
+          }
+          toast.error("עדכון הפרומפט נכשל. נסו שוב.");
+          return;
+        }
         await refreshCurrentPage();
-      } else {
-        setAllLocalItems((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, ...defined, updated_at: Date.now() } : p)),
-        );
       }
     },
-    [user, supabase, setAllLocalItems, refreshCurrentPage],
+    [user, supabase, personalLibrary, setPersonalLibrary, setAllLocalItems, refreshCurrentPage],
   );
 
   /**
@@ -292,30 +312,37 @@ export function usePromptMutations({
 
   const togglePin = useCallback(
     async (id: string) => {
+      const item = personalLibrary.find((p) => p.id === id);
+      if (!item) return;
+      const newPinned = !item.is_pinned;
+      // Flip the star optimistically in both stores so it responds instantly,
+      // instead of only after the DB write + a full page refetch complete.
+      const flip = (prev: PersonalPrompt[]) =>
+        prev.map((p) => (p.id === id ? { ...p, is_pinned: newPinned, updated_at: Date.now() } : p));
+      setPersonalLibrary(flip);
+      setAllLocalItems(flip);
+
       if (user) {
-        // Read current state from page
-        const item = personalLibrary.find((p) => p.id === id);
-        if (!item) return;
-        const newPinned = !item.is_pinned;
         const { error } = await supabase
           .from("personal_library")
           .update({ is_pinned: newPinned })
           .eq("id", id)
           .eq("user_id", user.id);
-        if (error) logger.error("[useLibrary] togglePin error:", error);
+        if (error) {
+          logger.error("[useLibrary] togglePin error:", error);
+          // Roll the star back to its prior state.
+          const revert = (prev: PersonalPrompt[]) =>
+            prev.map((p) => (p.id === id ? { ...p, is_pinned: item.is_pinned } : p));
+          setPersonalLibrary(revert);
+          setAllLocalItems(revert);
+          toast.error("שמירת הנעיצה נכשלה. נסו שוב.");
+          return;
+        }
+        // Settle the pinned-first sort order from the server.
         await refreshCurrentPage();
-      } else {
-        setAllLocalItems((prev) => {
-          const item = prev.find((p) => p.id === id);
-          if (!item) return prev;
-          const newPinned = !item.is_pinned;
-          return prev.map((p) =>
-            p.id === id ? { ...p, is_pinned: newPinned, updated_at: Date.now() } : p,
-          );
-        });
       }
     },
-    [user, supabase, personalLibrary, setAllLocalItems, refreshCurrentPage],
+    [user, supabase, personalLibrary, setPersonalLibrary, setAllLocalItems, refreshCurrentPage],
   );
 
   const updatePromptContent = useCallback(
