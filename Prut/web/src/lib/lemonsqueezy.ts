@@ -16,6 +16,10 @@ export const PLANS = {
     nameHe: "פרו",
     creditsPerMonth: 150,
     price: 9.99, // ₪/month
+    // ₪/year — two months free vs paying monthly (12 × 9.99 = 119.88). Shown in
+    // the pricing UI ONLY when NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID_YEARLY is set;
+    // keep this value in sync with the LemonSqueezy yearly variant's price.
+    priceYearly: 99.9,
     trialDays: 1,
     features: [
       "150 קרדיטים בחודש",

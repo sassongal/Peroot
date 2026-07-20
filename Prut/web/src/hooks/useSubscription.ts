@@ -55,35 +55,38 @@ export function useSubscription() {
     subscription.plan_tier === "admin" ||
     subscription.plan_tier === "premium";
 
-  const checkout = useCallback(async (variantId?: string) => {
-    const vid = (variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || "").trim();
-    if (!vid) {
-      logger.error("No variant ID configured");
-      // Throw so the caller's catch surfaces an error toast instead of the
-      // upgrade button silently flipping back with no feedback.
-      throw new Error("checkout_unconfigured");
-    }
-
-    try {
-      const res = await fetch(getApiPath("/api/checkout"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId: vid }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Checkout failed");
+  const checkout = useCallback(
+    async (variantId?: string, plan: "pro_monthly" | "pro_yearly" = "pro_monthly") => {
+      const vid = (variantId || process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || "").trim();
+      if (!vid) {
+        logger.error("No variant ID configured");
+        // Throw so the caller's catch surfaces an error toast instead of the
+        // upgrade button silently flipping back with no feedback.
+        throw new Error("checkout_unconfigured");
       }
 
-      const { url } = await res.json();
-      trackCheckoutOpened("pro_monthly");
-      window.location.href = url;
-    } catch (error) {
-      logger.error("[Checkout]", error);
-      throw error;
-    }
-  }, []);
+      try {
+        const res = await fetch(getApiPath("/api/checkout"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ variantId: vid }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Checkout failed");
+        }
+
+        const { url } = await res.json();
+        trackCheckoutOpened(plan);
+        window.location.href = url;
+      } catch (error) {
+        logger.error("[Checkout]", error);
+        throw error;
+      }
+    },
+    [],
+  );
 
   return {
     subscription,

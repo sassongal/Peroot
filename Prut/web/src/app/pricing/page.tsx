@@ -22,6 +22,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import { PLANS } from "@/lib/lemonsqueezy";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
@@ -30,7 +31,7 @@ import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 const COMPARISON_FEATURES = [
   {
     name: "קרדיטים",
-    free: "2 ביום",
+    free: "1 ביום",
     pro: "150 בחודש",
     icon: Sparkles,
   },
@@ -109,6 +110,14 @@ export default function PricingPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const supabase = useMemo(() => createClient(), []);
 
+  // Annual billing is gated on the yearly variant being configured. Until the
+  // LemonSqueezy yearly variant + this env var exist, the toggle stays hidden and
+  // the page behaves exactly as the monthly-only version (zero-risk to ship).
+  const yearlyVariant = (process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID_YEARLY || "").trim();
+  const hasYearly = yearlyVariant.length > 0;
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+  const isYearly = hasYearly && billingPeriod === "yearly";
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsLoggedIn(!!user);
@@ -122,7 +131,11 @@ export default function PricingPage() {
     }
     setCheckoutLoading(true);
     try {
-      await checkout();
+      if (isYearly) {
+        await checkout(yearlyVariant, "pro_yearly");
+      } else {
+        await checkout();
+      }
     } catch {
       toast.error("שגיאה ביצירת תשלום. נסה שוב.");
     } finally {
@@ -166,6 +179,49 @@ export default function PricingPage() {
             </span>
           </div>
         </div>
+
+        {/* Billing period toggle — only when a yearly variant is configured */}
+        {hasYearly && (
+          <div className="flex justify-center mb-10">
+            <div
+              role="radiogroup"
+              aria-label="מחזור חיוב"
+              className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-secondary"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!isYearly}
+                onClick={() => setBillingPeriod("monthly")}
+                className={cn(
+                  "px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60",
+                  !isYearly
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                חודשי
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={isYearly}
+                onClick={() => setBillingPeriod("yearly")}
+                className={cn(
+                  "px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60",
+                  isYearly
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                שנתי
+                <span className="text-[11px] font-bold text-green-600 dark:text-green-400">
+                  חודשיים חינם
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Plans */}
         <section className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
@@ -214,13 +270,19 @@ export default function PricingPage() {
               </h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-black text-foreground">
-                  &#8362;{PLANS.pro.price}
+                  &#8362;{isYearly ? PLANS.pro.priceYearly.toFixed(2) : PLANS.pro.price}
                 </span>
-                <span className="text-muted-foreground text-sm">/ חודש</span>
+                <span className="text-muted-foreground text-sm">/ {isYearly ? "שנה" : "חודש"}</span>
               </div>
-              <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">
-                150 קרדיטים בחודש
-              </p>
+              {isYearly ? (
+                <p className="text-green-600 dark:text-green-400 text-sm mt-2">
+                  חסכון של חודשיים · &#8362;{(PLANS.pro.priceYearly / 12).toFixed(2)} לחודש
+                </p>
+              ) : (
+                <p className="text-amber-600/80 dark:text-amber-400/80 text-sm mt-2">
+                  150 קרדיטים בחודש
+                </p>
+              )}
               <div className="flex items-center gap-1.5 mt-2">
                 <Gift className="w-3.5 h-3.5 text-green-400" />
                 <span className="text-green-400 text-xs font-medium">יום ניסיון במתנה</span>
