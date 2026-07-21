@@ -30,6 +30,8 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { CursorSpotlight } from "@/components/ui/CursorSpotlight";
 import { CtaPulse } from "@/components/ui/CtaPulse";
+import { BrandWatermark } from "@/components/ui/BrandWatermark";
+import Image from "next/image";
 
 const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _featuresOg = `${_SITE}/api/og?title=${encodeURIComponent("כל היכולות של Peroot")}&subtitle=${encodeURIComponent("5 מנועי AI, ספרייה אישית, שרשרת פרומפטים ועוד")}&category=${encodeURIComponent("פיצ'רים")}`;
@@ -521,9 +523,17 @@ export default function FeaturesPage() {
           <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
             <Link
               href="/"
-              className="text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              className="flex items-center gap-2 text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
-              Peroot
+              <Image
+                src="/images/peroot_logo_pack/logo_dark_240.png"
+                alt="Peroot"
+                width={28}
+                height={28}
+                className="h-7 w-7 rounded-md"
+                priority
+              />
+              <span>Peroot</span>
             </Link>
             <Link
               href="/"
@@ -539,6 +549,11 @@ export default function FeaturesPage() {
           {/* ── Hero ── */}
           <section className="relative py-16 md:py-24 overflow-hidden">
             <FeaturesHeroParallax />
+            <BrandWatermark
+              className="inset-x-0 top-0 flex justify-center pt-4"
+              size={620}
+              opacity={0.055}
+            />
             <div className="relative z-10">
               <ScrollReveal fromY={24}>
                 <PageHeading
@@ -680,9 +695,11 @@ export default function FeaturesPage() {
             <ScrollReveal fromY={20}>
               <div className="text-center space-y-1">
                 <h2 className="text-xl md:text-2xl font-serif font-bold text-foreground">
-                  ראו הכל בפעולה
+                  כל הסיפור בדקה אחת
                 </h2>
-                <p className="text-muted-foreground text-sm">סרטון קצר שמסביר הכל</p>
+                <p className="text-muted-foreground text-sm">
+                  במקום לקרוא על היכולות, תראו אותן עובדות
+                </p>
               </div>
             </ScrollReveal>
             <ScrollReveal fromY={32} delay={0.1} className="max-w-3xl mx-auto">
@@ -844,7 +861,7 @@ export default function FeaturesPage() {
                 תנסו בחינם עכשיו
               </h2>
               <p className="text-muted-foreground text-sm max-w-sm mx-auto mt-2">
-                ללא כרטיס אשראי. ללא התחייבות. 2 שדרוגים חינם כל יום.
+                ללא כרטיס אשראי. ללא התחייבות. שדרוג חינם בכל יום.
               </p>
             </ScrollReveal>
 
