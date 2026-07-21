@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import { PLANS } from "@/lib/lemonsqueezy";
+import { trackCheckoutOpened } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
@@ -130,6 +131,10 @@ export default function PricingPage() {
       return;
     }
     setCheckoutLoading(true);
+    // Fire the upgrade-intent conversion (mirrors to GA4 `upgrade_click`) before
+    // the LemonSqueezy redirect/modal so the click is captured even if the user
+    // navigates away during checkout.
+    trackCheckoutOpened(isYearly ? "pro_yearly" : "pro_monthly");
     try {
       if (isYearly) {
         await checkout(yearlyVariant, "pro_yearly");
@@ -180,7 +185,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Billing period toggle — only when a yearly variant is configured */}
+        {/* Billing period toggle - only when a yearly variant is configured */}
         {hasYearly && (
           <div className="flex justify-center mb-10">
             <div

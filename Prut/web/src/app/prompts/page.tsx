@@ -11,17 +11,15 @@ import { PromptSearch } from "@/components/features/library/PromptSearch";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: "ספריית פרומפטים בעברית — 480+ תבניות מוכנות",
-  description:
-    "480+ תבניות פרומפטים מוכנות בעברית: פרומפטים לשיווק, פרומפטים לפיתוח, פרומפטים לתמונות, פרומפטים לחינוך ועוד 25 קטגוריות. העתיקו ושדרגו עם Peroot.",
+  title: `ספריית פרומפטים בעברית: ${PROMPT_LIBRARY_COUNT} תבניות`,
+  description: `${PROMPT_LIBRARY_COUNT} תבניות פרומפטים מוכנות בעברית לשיווק, פיתוח, תמונות, חינוך ועוד 25 קטגוריות. העתיקו, שדרגו עם AI, והתאימו לכל פלטפורמת AI.`,
   alternates: {
     canonical: "/prompts",
     languages: { "he-IL": "/prompts" },
   },
   openGraph: {
-    title: "ספריית פרומפטים בעברית — 480+ תבניות | Peroot",
-    description:
-      "480+ תבניות פרומפטים מוכנות בעברית. פרומפטים לשיווק, פיתוח, תמונות, חינוך ועוד — העתיקו ושדרגו.",
+    title: `ספריית פרומפטים בעברית: ${PROMPT_LIBRARY_COUNT} תבניות | Peroot`,
+    description: `${PROMPT_LIBRARY_COUNT} תבניות פרומפטים מוכנות בעברית לשיווק, פיתוח, תמונות וחינוך. העתיקו ושדרגו בשניות.`,
     url: `${SITE_URL}/prompts`,
     siteName: "Peroot",
     locale: "he_IL",
@@ -31,14 +29,14 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/assets/branding/logo.png`,
         width: 1200,
         height: 630,
-        alt: "ספריית פרומפטים - Peroot",
+        alt: "ספריית פרומפטים בעברית | Peroot",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ספריית פרומפטים בעברית | Peroot",
-    description: "מאות פרומפטים מקצועיים בעברית לכל תחום.",
+    description: `${PROMPT_LIBRARY_COUNT} פרומפטים מקצועיים בעברית ל-25 תחומים.`,
     images: [`${SITE_URL}/assets/branding/logo.png`],
   },
   robots: { index: true, follow: true },

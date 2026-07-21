@@ -24,14 +24,17 @@ export default function robots(): MetadataRoute.Robots {
         "Claude-Web", // Claude browsing (on-demand fetch)
         "DuckAssistBot", // DuckDuckGo AI answers
         "MistralAI-User", // Mistral AI search
+        // ── Generative-model crawlers (allowed on purpose) ──────────────────
+        // Deliberately opted IN so Peroot's content can be learned into and
+        // grounded by ChatGPT + Gemini — the goal is maximum presence in LLM
+        // answers, which outweighs the training opt-out for a discovery platform.
+        "GPTBot", // OpenAI (training + ChatGPT grounding)
+        "Google-Extended", // Gemini app / Vertex grounding + training
       ].map((bot) => ({ userAgent: bot, allow: "/" })),
       // ── Training-only crawlers (block) ────────────────────────────────────
-      // These crawl for model training data, not search citations.
-      // Blocking them opts out of training without affecting search ranking
-      // or AI answer citations.
+      // Low-value / high-nuisance scrapers we still keep out. Unlike GPTBot &
+      // Google-Extended above, these don't meaningfully drive LLM-answer presence.
       ...[
-        "GPTBot", // OpenAI training (use OAI-SearchBot for ChatGPT search)
-        "Google-Extended", // Gemini/Bard training opt-out
         "Applebot-Extended", // Apple Intelligence training opt-out
         "CCBot", // Common Crawl (used by many trainers)
         "cohere-ai",

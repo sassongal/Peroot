@@ -64,7 +64,7 @@ const CAPABILITY_BADGE: Record<string, { label: string; className: string }> = {
   },
 };
 
-export const revalidate = 86400; // 24h ISR — prompt content is stable
+export const revalidate = 86400; // 24h ISR: prompt content is stable
 
 export async function generateStaticParams() {
   const supabase = createServiceClient();
@@ -99,11 +99,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!prompt || !categoryData) return { title: "פרומפט לא נמצא" };
 
-  // No " | Peroot" suffix — the root title template appends it (avoids a doubled
+  // No " | Peroot" suffix; the root title template appends it (avoids a doubled
   // "… | Peroot | Peroot").
-  const title = `${prompt.title} — ${categoryData.labelHe}`;
+  const title = `${prompt.title} - ${categoryData.labelHe}`;
   const baseDesc = prompt.use_case?.trim() || prompt.prompt?.slice(0, 100)?.trim() || "";
-  const description = `${baseDesc.slice(0, 100)} — פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`;
+  const description = `${baseDesc.slice(0, 100)}. פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`;
   const canonicalUrl = `/prompts/${slug}/${id}`;
   const ogImage = buildOgImageUrl(prompt.title, description, categoryData.labelHe);
 
@@ -130,7 +130,7 @@ export default async function PromptPage({ params }: Props) {
   const categoryData = CATEGORY_SLUG_MAP[slug];
   if (!categoryData) notFound();
 
-  // Public data — use service client (no cookies needed, safe for ISR pre-rendering)
+  // Public data: use service client (no cookies needed, safe for ISR pre-rendering)
   const supabase = createServiceClient();
 
   const [{ data: prompt, error }, { data: related }] = await Promise.all([
@@ -174,7 +174,7 @@ export default async function PromptPage({ params }: Props) {
       <JsonLd
         data={promptCreativeWorkSchema({
           title: p.title,
-          description: `${(p.use_case?.trim() || p.prompt.slice(0, 100).trim()).slice(0, 100)} — פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`,
+          description: `${(p.use_case?.trim() || p.prompt.slice(0, 100).trim()).slice(0, 100)}. פרומפט בעברית מוכן לשימוש ב-ChatGPT, Claude ו-Gemini.`,
           category: categoryData.labelHe,
           url: pageUrl,
           datePublished: p.created_at,
@@ -249,7 +249,7 @@ export default async function PromptPage({ params }: Props) {
             </div>
           )}
 
-          {/* Prompt text block — full body served only to authed users via /api/p/[id] */}
+          {/* Prompt text block: full body served only to authed users via /api/p/[id] */}
           <section aria-label="תוכן הפרומפט" className="mb-8">
             <PromptBodyGate
               promptId={p.id}
@@ -326,7 +326,7 @@ export default async function PromptPage({ params }: Props) {
               רוצים לשדרג את הפרומפט הזה?
             </h2>
             <p className="text-muted-foreground mb-5 max-w-lg mx-auto text-sm leading-relaxed">
-              Peroot משדרגת כל פרומפט אוטומטית — מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר
+              Peroot משדרגת כל פרומפט אוטומטית: מבנה מקצועי, הקשר מדויק ותוצאות טובות יותר
               ב-ChatGPT, Claude ו-Gemini.
             </p>
             <UsePromptCTA

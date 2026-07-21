@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "קטגוריה לא נמצאה" };
   }
 
-  // No " | Peroot" suffix here — the root layout's title template ("%s | Peroot")
+  // No " | Peroot" suffix here; the root layout's title template ("%s | Peroot")
   // appends it, so hardcoding it produced a doubled "… | Peroot | Peroot".
   const title = `${categoryData.labelHe} - ספריית פרומפטים בעברית`;
   const description = categoryData.descriptionHe;
@@ -100,7 +100,7 @@ export default async function CategoryPage({ params }: Props) {
   }
 
   // Fetch prompts for this category from Supabase. Cookieless service client so
-  // the page stays statically ISR-cacheable (revalidate=3600) — a cookie-bound
+  // the page stays statically ISR-cacheable (revalidate=3600), a cookie-bound
   // client forces dynamic rendering and voids the cache. Only public
   // (is_active=true) data is read; no user session is needed here.
   const supabase = createServiceClient();

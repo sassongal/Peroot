@@ -9,14 +9,14 @@ const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _examplesOg = `${_SITE}/api/og?title=${encodeURIComponent("לפני ואחרי: Peroot בפעולה")}&subtitle=${encodeURIComponent("ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים")}&category=${encodeURIComponent("דוגמאות")}`;
 
 export const metadata: Metadata = {
-  title: "דוגמאות פרומפטים - לפני ואחרי",
+  title: "דוגמאות פרומפטים: לפני ואחרי שדרוג עם AI",
   description:
-    "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
+    "4 דוגמאות אמיתיות של לפני ואחרי בשיווק, תוכן, גיוס וחינוך. ראו איך משפט פשוט בעברית הופך לפרומפט מובנה שמוציא תוצאה טובה יותר מכל מודל AI.",
   alternates: { canonical: "/examples" },
   openGraph: {
-    title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
+    title: "דוגמאות פרומפטים: לפני ואחרי שדרוג | Peroot",
     description:
-      "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים. דוגמאות אמיתיות עם השוואת לפני ואחרי.",
+      "4 דוגמאות אמיתיות בשיווק, תוכן, גיוס וחינוך. ראו איך משפט פשוט הופך לפרומפט מקצועי.",
     url: `${_SITE}/examples`,
     siteName: "Peroot",
     locale: "he_IL",
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "דוגמאות פרומפטים - לפני ואחרי | Peroot",
-    description: "ראו איך Peroot הופך פרומפטים פשוטים לפרומפטים מקצועיים.",
+    title: "דוגמאות פרומפטים: לפני ואחרי שדרוג | Peroot",
+    description: "ראו איך משפט פשוט בעברית הופך לפרומפט מקצועי עם פירוט.",
     images: [_examplesOg],
   },
 };

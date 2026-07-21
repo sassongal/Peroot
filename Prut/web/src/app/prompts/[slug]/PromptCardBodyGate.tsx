@@ -20,7 +20,7 @@ interface Props {
 // Module-level in-memory cache keyed by id. Avoids re-fetching on navigation
 // back to the grid. Shared across all cards on the page.
 const fullTextCache = new Map<string, string>();
-// Coalesced single batch request per mount — each card subscribes to the
+// Coalesced single batch request per mount, each card subscribes to the
 // same promise so 60 cards fire one network round-trip.
 let pendingBatch: Promise<Record<string, string>> | null = null;
 const pendingIds = new Set<string>();

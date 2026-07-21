@@ -20,7 +20,6 @@ export function Footer() {
       dir={isHe ? "rtl" : "ltr"}
     >
       <div className="max-w-7xl mx-auto px-6 py-8 md:py-12 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
-
         {/* Brand & Copyright */}
         <div className="flex flex-col items-center md:items-start gap-2">
           <Link href="/" className="flex items-center gap-2">
@@ -38,7 +37,9 @@ export function Footer() {
               height={24}
               className="hidden dark:block h-6 w-6"
             />
-            <span className="font-black tracking-wider text-[#1B2141] dark:text-[#C8E8EE]">Peroot</span>
+            <span className="font-black tracking-wider text-[#1B2141] dark:text-[#C8E8EE]">
+              Peroot
+            </span>
           </Link>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {isHe
@@ -48,47 +49,102 @@ export function Footer() {
         </div>
 
         {/* Links */}
-        <nav aria-label={isHe ? "ניווט תחתון" : "Footer navigation"} className="flex flex-wrap justify-center items-center gap-4 md:gap-6 text-sm text-slate-500 dark:text-slate-400">
-          <Link href="/prompts" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+        <nav
+          aria-label={isHe ? "ניווט תחתון" : "Footer navigation"}
+          className="flex flex-wrap justify-center items-center gap-4 md:gap-6 text-sm text-slate-500 dark:text-slate-400"
+        >
+          <Link
+            href="/prompts"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "ספריית פרומפטים" : "Prompt Library"}
           </Link>
-          <Link href="/guide" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/guide"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "מדריך" : "Guide"}
           </Link>
-          <Link href="/guides" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/guide/prompt-engineering"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
+            {isHe ? "הנדסת פרומפטים" : "Prompt Engineering"}
+          </Link>
+          <Link
+            href="/guides"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "מדריכי פלטפורמות" : "Platform Guides"}
           </Link>
-          <Link href="/examples" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/examples"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "דוגמאות" : "Examples"}
           </Link>
-          <Link href="/about" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/about"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "אודות" : "About"}
           </Link>
-          <Link href="/features" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/features"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "מה עושים פה?" : "Features"}
           </Link>
-          <Link href="/extension" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/extension"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "תוסף Chrome" : "Chrome Extension"}
           </Link>
-          <Link href="/teachers" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/teachers"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "למורים" : "For Teachers"}
           </Link>
-          <Link href="/blog" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/blog"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "בלוג" : "Blog"}
           </Link>
-          <Link href="/pricing" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center">
+          <Link
+            href="/pricing"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+          >
             {isHe ? "מחירים" : "Pricing"}
           </Link>
-          <Link href="/terms" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link
+            href="/terms"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+            suppressHydrationWarning
+          >
             {isHe ? "תנאי שימוש" : "Terms of Use"}
           </Link>
-          <Link href="/privacy" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link
+            href="/privacy"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+            suppressHydrationWarning
+          >
             {isHe ? "מדיניות פרטיות" : "Privacy Policy"}
           </Link>
-          <Link href="/accessibility" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link
+            href="/accessibility"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+            suppressHydrationWarning
+          >
             {isHe ? "הצהרת נגישות" : "Accessibility"}
           </Link>
-          <Link href="/contact" className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center" suppressHydrationWarning>
+          <Link
+            href="/contact"
+            className="cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 hover:underline transition-colors min-h-[44px] px-1 flex items-center"
+            suppressHydrationWarning
+          >
             {isHe ? "צור קשר" : "Contact"}
           </Link>
           <a

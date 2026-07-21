@@ -36,11 +36,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.peroot.space";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Peroot (פירוט) — מחולל פרומפטים בעברית | חינם ל-ChatGPT ו-Claude",
+    default: "Peroot (פירוט): מחולל פרומפטים בעברית חינם ל-ChatGPT ו-Claude",
     template: "%s | Peroot",
   },
   description:
-    "הנדסת פרומפטים בעברית בחינם. Peroot משדרג כל פרומפט למבנה מקצועי עם דירוג איכות — תוצאות טובות יותר ב-ChatGPT, Claude, Gemini ו-Midjourney.",
+    "מחולל הפרומפטים שהופך כל רעיון גולמי לפרומפט מדויק, עם ציון איכות, 540+ תבניות מוכנות ו-5 מצבי יצירה. תוצאות חדות יותר ב-ChatGPT, Claude ו-Gemini, בעברית ובחינם.",
   applicationName: "Peroot",
   authors: [{ name: "JoyaTech", url: "https://joya-tech.net" }],
   generator: "Next.js",
@@ -95,9 +95,9 @@ export const metadata: Metadata = {
     "llms.txt": "/llms.txt",
   },
   openGraph: {
-    title: "Peroot (פירוט) — הנדסת פרומפטים בעברית בחינם",
+    title: "Peroot (פירוט): מחולל הפרומפטים שמדבר עברית",
     description:
-      "מחולל פרומפטים מקצועיים לכל מודל AI. שדרוג אוטומטי עם דירוג איכות, 480+ תבניות מוכנות, תמיכה מלאה בעברית. חינם.",
+      "כל רעיון הופך לפרומפט מקצועי בעברית: ציון איכות, 540+ תבניות ו-5 מצבי יצירה ל-ChatGPT, Claude, Gemini ו-Midjourney. בלי ניחושים, בחינם.",
     url: siteUrl,
     siteName: "Peroot",
     locale: "he_IL",
@@ -113,9 +113,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Peroot (פירוט) - שדרוג פרומפטים ב-AI",
+    title: "Peroot (פירוט): פרומפטים שעובדים, בעברית",
     description:
-      "כתבו פרומפטים טובים יותר בשניות. המערכת היחידה שמותאמת במיוחד לשפה העברית ולמודלים המובילים.",
+      "פרומפט אחד טוב במקום עשרה ניסיונות. מחולל פרומפטים בעברית עם ציון איכות ו-540+ תבניות, מותאם ל-ChatGPT, Claude ו-Gemini.",
     images: [`${siteUrl}/og-image.jpg`],
     creator: "@joyatech",
   },

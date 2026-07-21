@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities -- Hebrew example prompts intentionally contain literal quotes; they render correctly and escaping would harm readability of the source. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle, XCircle, Sparkles, Target, Layers, Brain } from "lucide-react";
@@ -8,12 +9,12 @@ import { PageHeading } from "@/components/ui/PageHeading";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
-const og = `${SITE}/api/og?title=${encodeURIComponent("הנדסת פרומפטים — המדריך המלא בעברית")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וצ'קליסט מקצועי")}&category=${encodeURIComponent("מדריך pillar")}`;
+const og = `${SITE}/api/og?title=${encodeURIComponent("הנדסת פרומפטים: המדריך המלא בעברית")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וצ'קליסט מקצועי")}&category=${encodeURIComponent("מדריך pillar")}`;
 
 export const metadata: Metadata = {
-  title: "הנדסת פרומפטים — המדריך המלא בעברית 2026 | Peroot",
+  title: { absolute: "הנדסת פרומפטים: המדריך המלא בעברית 2026 | Peroot" },
   description:
-    "הנדסת פרומפטים (Prompt Engineering) בעברית — 3 טכניקות, 12 דוגמאות לפני/אחרי, צ'קליסט מקצועי וטבלת השוואה למודלי AI. המדריך המעמיק ביותר בישראל.",
+    "הנדסת פרומפטים (Prompt Engineering) בעברית: 3 טכניקות ליבה, 12 דוגמאות לפני ואחרי, צ'קליסט מקצועי וטבלת השוואה בין ChatGPT, Claude ו-Gemini. המדריך המעמיק בישראל.",
   alternates: { canonical: "/guide/prompt-engineering" },
   keywords: [
     "הנדסת פרומפטים",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
     "מחולל פרומפטים",
   ],
   openGraph: {
-    title: "הנדסת פרומפטים — המדריך המלא בעברית",
+    title: "הנדסת פרומפטים: המדריך המלא בעברית",
     description:
       "כל מה שצריך לדעת על prompt engineering: טכניקות, דוגמאות, צ'קליסט, והשוואה בין מודלים.",
     url: `${SITE}/guide/prompt-engineering`,
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
         url: og,
         width: 1200,
         height: 630,
-        alt: "הנדסת פרומפטים — המדריך המלא בעברית",
+        alt: "הנדסת פרומפטים: המדריך המלא בעברית",
       },
     ],
   },
@@ -63,7 +64,7 @@ const FAQ = [
   {
     question: "האם טכניקות הנדסת פרומפטים עובדות בעברית?",
     answer:
-      "כן — ואפילו יותר חשוב. מודלים חזקים פחות בעברית מאשר באנגלית, ולכן פרומפט מובנה ומדויק מפצה על חולשות הבנה. Peroot בנוי במיוחד לעברית עם RTL מלא, שאלות הבהרה בעברית ודירוג איכות רגיש להקשר תרבותי.",
+      "כן. ואפילו יותר חשוב: מודלים חזקים פחות בעברית מאשר באנגלית, ולכן פרומפט מובנה ומדויק מפצה על חולשות הבנה. Peroot בנוי במיוחד לעברית עם RTL מלא, שאלות הבהרה בעברית ודירוג איכות רגיש להקשר תרבותי.",
   },
   {
     question: "מה הטכניקות המתקדמות ביותר?",
@@ -73,7 +74,7 @@ const FAQ = [
   {
     question: "כמה זמן לוקח לכתוב פרומפט מקצועי?",
     answer:
-      "ידנית: 10-30 דקות לפרומפט מורכב. עם Peroot: 30 שניות — מזינים טיוטה והמערכת מוסיפה מבנה, הקשר חסר ושאלות הבהרה. לאחר שלומדים את הדפוסים, גם כתיבה ידנית מהירה יותר.",
+      "ידנית: 10-30 דקות לפרומפט מורכב. עם Peroot: 30 שניות. מזינים טיוטה והמערכת מוסיפה מבנה, הקשר חסר ושאלות הבהרה. לאחר שלומדים את הדפוסים, גם כתיבה ידנית מהירה יותר.",
   },
   {
     question: "האם אותו פרומפט עובד בכל המודלים?",
@@ -83,7 +84,7 @@ const FAQ = [
   {
     question: "מתי פרומפט הופך יקר מדי?",
     answer:
-      "פרומפט ארוך = יותר tokens = יותר כסף וזמן. כלל אצבע: אם הפרומפט ארוך מ-2000 מילים והתשובה לא השתפרה משמעותית מול גרסה של 500 מילים — יש התייעלות אפשרית. Peroot מציג אומדן tokens בזמן אמת.",
+      "פרומפט ארוך = יותר tokens = יותר כסף וזמן. כלל אצבע: אם הפרומפט ארוך מ-2000 מילים והתשובה לא השתפרה משמעותית מול גרסה של 500 מילים, יש התייעלות אפשרית. Peroot מציג אומדן tokens בזמן אמת.",
   },
 ];
 
@@ -133,7 +134,7 @@ export default function PromptEngineeringGuidePage() {
       <JsonLd data={faqSchema(FAQ)} />
       <JsonLd
         data={howToSchema({
-          name: "איך לכתוב פרומפט מקצועי — 7 שלבים",
+          name: "איך לכתוב פרומפט מקצועי: 7 שלבים",
           description: "מתודולוגיה מוכחת להנדסת פרומפטים באיכות production.",
           steps: STEPS,
           totalTime: "PT10M",
@@ -153,7 +154,7 @@ export default function PromptEngineeringGuidePage() {
 
         <p className="text-lg text-muted-foreground mb-6">
           הנדסת פרומפטים (Prompt Engineering) היא המיומנות החשובה ביותר בעידן ה-AI. בין אם אתם
-          כותבים תוכן, מפתחים מוצרים, או סתם רוצים תשובות טובות יותר מ-ChatGPT — השליטה בכתיבת
+          כותבים תוכן, מפתחים מוצרים, או סתם רוצים תשובות טובות יותר מ-ChatGPT. השליטה בכתיבת
           פרומפטים משפיעה ישירות על איכות התוצאה. המדריך הזה מכסה את כל מה שצריך לדעת, בעברית, עם
           דוגמאות מעשיות.
         </p>
@@ -169,7 +170,7 @@ export default function PromptEngineeringGuidePage() {
             href="/prompts"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border hover:bg-secondary transition-colors"
           >
-            ספריית {PROMPT_LIBRARY_COUNT}+ תבניות
+            ספריית {PROMPT_LIBRARY_COUNT} תבניות
           </Link>
         </div>
 
@@ -228,14 +229,14 @@ export default function PromptEngineeringGuidePage() {
           <h2 className="text-2xl md:text-3xl font-serif font-bold mb-4">מה זה הנדסת פרומפטים?</h2>
           <p className="mb-4">
             <strong>הנדסת פרומפטים</strong> היא הדיסציפלינה של ניסוח הוראות מדויקות למודלי שפה
-            גדולים (LLMs) — כמו ChatGPT, Claude, Gemini ו-Llama — במטרה לייצר תוצאות איכותיות,
-            עקביות ומדידות. בניגוד לאינטואיציה הראשונית, לא מדובר ב"לדבר יפה" עם ה-AI: זה תהליך
-            מובנה שמשלב הבנה של איך מודלים חושבים, ידע בתחום המקצועי, וחשיבה מערכתית על פלט צפוי.
+            גדולים (LLMs), כמו ChatGPT, Claude, Gemini ו-Llama, במטרה לייצר תוצאות איכותיות, עקביות
+            ומדידות. בניגוד לאינטואיציה הראשונית, לא מדובר ב"לדבר יפה" עם ה-AI: זה תהליך מובנה שמשלב
+            הבנה של איך מודלים חושבים, ידע בתחום המקצועי, וחשיבה מערכתית על פלט צפוי.
           </p>
           <p className="mb-4">
             המונח נטבע ב-2020 סביב GPT-3, אבל הפך לתחום מקצועי מלא רק עם ChatGPT ב-2022. היום יש
             משרות ייעודיות של Prompt Engineer בחברות כמו Anthropic, OpenAI ו-Google, עם משכורות
-            ממוצעות של 150-300 אלף דולר בשנה. אבל המיומנות רלוונטית לכל מי שעובד עם AI — לא רק
+            ממוצעות של 150-300 אלף דולר בשנה. אבל המיומנות רלוונטית לכל מי שעובד עם AI, לא רק
             למפתחים.
           </p>
           <p>
@@ -273,7 +274,7 @@ export default function PromptEngineeringGuidePage() {
           <p>
             בגוף ארגוני, פרומפט גרוע עולה כסף אמיתי: יותר tokens, יותר שעות עבודה, יותר תיקונים.
             במחקר של Anthropic מ-2024, שיפור פרומפט העלה דיוק ב-37% בממוצע על משימות classification
-            — ללא שינוי במודל.
+            , ללא שינוי במודל.
           </p>
         </section>
 
@@ -371,7 +372,7 @@ export default function PromptEngineeringGuidePage() {
             <div>
               <h3 className="text-xl font-bold mb-2">4. Output Templating</h3>
               <p>
-                מסגרת מוגדרת של שדות — JSON, YAML או פורמט משלכם — מאפשרת parsing אוטומטי ויצירת
+                מסגרת מוגדרת של שדות (JSON, YAML או פורמט משלכם) מאפשרת parsing אוטומטי ויצירת
                 workflows. הכרחי לכל שימוש production.
               </p>
             </div>
@@ -420,7 +421,7 @@ export default function PromptEngineeringGuidePage() {
                 topic: "קוד",
                 before: "תבדוק את הקוד הזה",
                 after:
-                  "אתה Senior React reviewer. נתח את ה-component הזה על: 1) bugs פוטנציאליים, 2) re-render לא נחוץ, 3) accessibility, 4) type safety. החזר JSON עם severity (high/med/low), location (line), issue, fix. אל תעיר על סגנון — רק על נכונות.",
+                  "אתה Senior React reviewer. נתח את ה-component הזה על: 1) bugs פוטנציאליים, 2) re-render לא נחוץ, 3) accessibility, 4) type safety. החזר JSON עם severity (high/med/low), location (line), issue, fix. אל תעיר על סגנון, רק על נכונות.",
               },
               {
                 topic: "יצירה",
@@ -432,13 +433,13 @@ export default function PromptEngineeringGuidePage() {
               <div key={ex.topic} className="grid md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5">
                   <div className="flex items-center gap-2 mb-2 text-red-500 font-bold text-sm">
-                    <XCircle size={16} /> לפני — {ex.topic}
+                    <XCircle size={16} /> לפני: {ex.topic}
                   </div>
                   <p className="text-sm">{ex.before}</p>
                 </div>
                 <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
                   <div className="flex items-center gap-2 mb-2 text-emerald-500 font-bold text-sm">
-                    <CheckCircle size={16} /> אחרי — {ex.topic}
+                    <CheckCircle size={16} /> אחרי: {ex.topic}
                   </div>
                   <p className="text-sm">{ex.after}</p>
                 </div>
@@ -450,7 +451,7 @@ export default function PromptEngineeringGuidePage() {
             <Link href="/prompts" className="text-amber-600 dark:text-amber-400 hover:underline">
               ספריית הפרומפטים של Peroot
             </Link>{" "}
-            יש {PROMPT_LIBRARY_COUNT}+ תבניות מוכנות ב-30+ קטגוריות, כולן בנויות לפי העקרונות של
+            יש {PROMPT_LIBRARY_COUNT} תבניות מוכנות ב-30+ קטגוריות, כולן בנויות לפי העקרונות של
             מדריך זה.
           </p>
         </section>
@@ -511,14 +512,14 @@ export default function PromptEngineeringGuidePage() {
           <h2 className="text-2xl md:text-3xl font-serif font-bold mb-4">8 טעויות נפוצות</h2>
           <ul className="space-y-3">
             {[
-              "הנחיה עמומה ('תעזור עם שיווק') — תמיד תוצאה גנרית.",
-              "יותר מדי משימות בפרומפט אחד — קשה למודל לפצל ולעיתים מתעלם מחצי.",
-              "ללא הקשר עסקי — המודל לא יודע אם קהל שלכם 'מנכלי הייטק' או 'הורים צעירים'.",
-              "פורמט פלט פתוח — מקבלים פסקה כשרציתם JSON.",
-              "ללא דוגמאות — הסגנון שהמודל מייצר רחוק ממה שדמיינתם.",
+              "הנחיה עמומה ('תעזור עם שיווק'): תמיד תוצאה גנרית.",
+              "יותר מדי משימות בפרומפט אחד: קשה למודל לפצל ולעיתים מתעלם מחצי.",
+              "ללא הקשר עסקי: המודל לא יודע אם קהל שלכם 'מנכלי הייטק' או 'הורים צעירים'.",
+              "פורמט פלט פתוח: מקבלים פסקה כשרציתם JSON.",
+              "ללא דוגמאות: הסגנון שהמודל מייצר רחוק ממה שדמיינתם.",
               "הוראות סותרות ('קצר אבל מפורט', 'מקצועי אבל כיף').",
               "ציפייה לידע שהמודל לא מחזיק (נתונים אחרי תאריך cutoff, מידע פנים-ארגוני).",
-              "לא לבדוק שוב — פרומפט שעבד פעם אחת לא בהכרח יעבוד ב-edge cases.",
+              "לא לבדוק שוב: פרומפט שעבד פעם אחת לא בהכרח יעבוד ב-edge cases.",
             ].map((m, i) => (
               <li key={i} className="flex gap-3">
                 <XCircle className="text-red-500 flex-shrink-0 mt-0.5" size={18} />
@@ -530,7 +531,7 @@ export default function PromptEngineeringGuidePage() {
 
         <section id="checklist" className="mb-12">
           <h2 className="text-2xl md:text-3xl font-serif font-bold mb-4">
-            צ'קליסט של 15 פריטים — לפני שליחת פרומפט
+            צ'קליסט של 15 פריטים לפני שליחת פרומפט
           </h2>
           <div className="p-5 rounded-xl border border-border bg-card">
             <ol className="space-y-2.5 list-decimal list-inside">
@@ -558,7 +559,7 @@ export default function PromptEngineeringGuidePage() {
             </ol>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            אפשר לתת ל-Peroot לעשות את כל 15 הפריטים האלה אוטומטית —{" "}
+            אפשר לתת ל-Peroot לעשות את כל 15 הפריטים האלה אוטומטית.{" "}
             <Link href="/#enhance" className="text-amber-600 dark:text-amber-400 hover:underline">
               נסו עכשיו
             </Link>
@@ -588,7 +589,7 @@ export default function PromptEngineeringGuidePage() {
             />
             <CrossLinkCard
               href="/prompts"
-              title={`${PROMPT_LIBRARY_COUNT}+ תבניות מוכנות`}
+              title={`${PROMPT_LIBRARY_COUNT} תבניות מוכנות`}
               description="ספרייה ענקית לפי קטגוריה, כולל משתנים חכמים."
             />
             <CrossLinkCard
@@ -598,7 +599,7 @@ export default function PromptEngineeringGuidePage() {
             />
             <CrossLinkCard
               href="/blog/chain-of-thought-prompting-guide"
-              title="Chain-of-Thought — מדריך מלא"
+              title="Chain-of-Thought: מדריך מלא"
               description="צלילה עמוקה לטכניקה שמעלה דיוק פי 3 במשימות היגיון."
             />
           </div>
@@ -614,7 +615,7 @@ export default function PromptEngineeringGuidePage() {
             href="/#enhance"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-r from-amber-500 to-yellow-500 text-black font-bold hover:scale-[1.03] transition-transform"
           >
-            <Sparkles size={18} /> שדרגו פרומפט עכשיו — חינם
+            <Sparkles size={18} /> שדרגו פרומפט עכשיו - חינם
           </Link>
         </div>
       </article>

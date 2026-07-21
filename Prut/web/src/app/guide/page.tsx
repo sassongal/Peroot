@@ -35,12 +35,12 @@ const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _guideOg = `${_SITE}/api/og?title=${encodeURIComponent("מדריך כתיבת פרומפטים")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini")}&category=${encodeURIComponent("מדריכים")}`;
 
 export const metadata: Metadata = {
-  title: "איך לכתוב פרומפט טוב בעברית — המדריך המלא",
+  title: "איך לכתוב פרומפט טוב בעברית: המדריך המלא",
   description:
     "איך לכתוב פרומפט טוב? המדריך המלא בעברית לכתיבת פרומפטים מקצועיים ל-ChatGPT, Claude ו-Gemini. טכניקות Chain of Thought, Few-Shot, Role Play, פרומפטים לתמונות ובניית סוכני AI.",
   alternates: { canonical: "/guide" },
   openGraph: {
-    title: "איך לכתוב פרומפט טוב — המדריך המלא בעברית | Peroot",
+    title: "איך לכתוב פרומפט טוב: המדריך המלא בעברית | Peroot",
     description:
       "מאפס לפרומפטים שמייצרים תוצאות. 5 עקרונות זהב, טכניקות מתקדמות ודוגמאות מעשיות לכל מודל AI.",
     url: `${_SITE}/guide`,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "איך לכתוב פרומפט טוב — המדריך המלא בעברית | Peroot",
+    title: "איך לכתוב פרומפט טוב: המדריך המלא בעברית | Peroot",
     description:
       "מאפס לפרומפטים שמייצרים תוצאות. 5 עקרונות זהב, טכניקות מתקדמות ודוגמאות מעשיות לכל מודל AI.",
     images: [_guideOg],
@@ -194,7 +194,7 @@ const IMAGE_VIDEO_TIPS = [
   {
     title: "פרומפטים לוידאו (Sora / Runway)",
     description:
-      "עבור יצירת וידאו, תארו תנועה, מעברי מצלמה ואווירה. חשבו כמו במאים — מה קורה בסצנה ואיך המצלמה זזה.",
+      "עבור יצירת וידאו, תארו תנועה, מעברי מצלמה ואווירה. חשבו כמו במאים: מה קורה בסצנה ואיך המצלמה זזה.",
     bad: "וידאו של עיר בלילה",
     good: "Cinematic drone shot slowly rising over Tel Aviv skyline at blue hour, city lights twinkling below, smooth camera movement from rooftop level to aerial view, atmospheric haze, 4K, 24fps, 5 seconds duration",
   },
@@ -202,14 +202,14 @@ const IMAGE_VIDEO_TIPS = [
 
 const AI_AGENT_EXAMPLE = `System Prompt לסוכן שירות לקוחות:
 
-אתה נציג שירות לקוחות של "TechStore" — חנות אלקטרוניקה.
+אתה נציג שירות לקוחות של "TechStore", חנות אלקטרוניקה.
 
 ## תפקיד
 - ענה על שאלות לקוחות בנושא מוצרים, משלוחים והחזרות
 - היה אדיב, מקצועי וממוקד פתרון
 
 ## מגבלות
-- אל תמציא מידע על מוצרים. אם אינך יודע — אמור שתבדוק ותחזור
+- אל תמציא מידע על מוצרים. אם אינך יודע, אמור שתבדוק ותחזור
 - אל תציע הנחות או פיצויים ללא אישור מנהל
 - אל תשתף מידע פנימי על מדיניות החברה
 
@@ -219,7 +219,7 @@ const AI_AGENT_EXAMPLE = `System Prompt לסוכן שירות לקוחות:
 - פנה ללקוח בגוף שני ("אתה/את")
 
 ## תהליך
-1. הבן את הבעיה — שאל שאלות הבהרה אם צריך
+1. הבן את הבעיה, שאל שאלות הבהרה אם צריך
 2. הצע פתרון מתוך מדיניות ידועה
 3. סכם את הפתרון ובקש אישור מהלקוח`;
 
@@ -251,7 +251,7 @@ const PLATFORMS = [
     tips: [
       "השתמש ב-Custom Instructions להגדרת הקשר קבוע לכל שיחה",
       "GPT-4o מעולה למולטי-מודל (תמונות + טקסט). o3-mini למשימות לוגיות מורכבות",
-      "מודל o1 / o3 מצטיין בחשיבה מעמיקה, מתמטיקה וקוד — ענק למשימות שדורשות reasoning",
+      "מודל o1 / o3 מצטיין בחשיבה מעמיקה, מתמטיקה וקוד. ענק למשימות שדורשות reasoning",
       "ב-Projects ניתן להגדיר הנחיות מערכת, להעלות קבצים ולשמור הקשר קבוע",
     ],
   },
@@ -261,7 +261,7 @@ const PLATFORMS = [
     border: "border-amber-500/20",
     dot: "bg-amber-400",
     tips: [
-      "Claude 4 מצטיין בכתיבה ארוכה, ניתוח מסמכים וקוד — חלון הקשר של מיליון טוקנים",
+      "Claude 4 מצטיין בכתיבה ארוכה, ניתוח מסמכים וקוד: חלון הקשר של מיליון טוקנים",
       "ב-Projects תעלו מסמכי הקשר שזמינים לכל שיחה + הנחיות מותאמות אישית",
       "Tool Use מאפשר ל-Claude להשתמש בכלים חיצוניים (חיפוש, קוד, APIs) אוטומטית",
       "Artifacts יוצרים תוכן עצמאי (קוד, מסמכים, SVG) שניתן להוריד ולערוך",
@@ -273,9 +273,9 @@ const PLATFORMS = [
     border: "border-blue-500/20",
     dot: "bg-blue-400",
     tips: [
-      "Gemini 2.0 מביא יכולות מולטי-מודל מתקדמות — תמונות, וידאו, אודיו וקוד",
+      "Gemini 2.0 מביא יכולות מולטי-מודל מתקדמות: תמונות, וידאו, אודיו וקוד",
       'Deep Research מבצע מחקר מעמיק אוטונומי עם דו"ח מקיף ומקורות מאומתים',
-      "שולב ב-Google Workspace — נצלו אינטגרציה עם Docs, Gmail, Sheets ו-Drive",
+      "שולב ב-Google Workspace. נצלו אינטגרציה עם Docs, Gmail, Sheets ו-Drive",
       "Gemini Flash מהיר ועלות נמוכה לאפליקציות production בקנה מידה",
     ],
   },
@@ -285,7 +285,7 @@ const PLATFORMS = [
     border: "border-rose-500/20",
     dot: "bg-rose-400",
     tips: [
-      "תארו סגנון, תאורה, זווית ומצלמה — לא רק את הנושא",
+      "תארו סגנון, תאורה, זווית ומצלמה. לא רק את הנושא",
       "השתמשו ב-aspect ratio (--ar 16:9) ו-quality flags (--q 2)",
       "Negative prompts (--no) מסירים אלמנטים לא רצויים מהתמונה",
       "בנו מ-reference images: העלו תמונה כהשראה עם --sref או --cref",
@@ -298,7 +298,7 @@ const PLATFORMS = [
     dot: "bg-rose-400",
     tips: [
       "תארו תנועת מצלמה ברורה: drone shot, tracking, dolly zoom, static wide",
-      "ציינו משך הסצנה ופרטי סביבה — תאורה, מזג אוויר, שעה ביום",
+      "ציינו משך הסצנה ופרטי סביבה: תאורה, מזג אוויר, שעה ביום",
       "Sora (OpenAI) מתמחה בסצנות ריאליסטיות, Runway Gen-3 טוב לסגנונות קריאייטיביים",
       "עבדו בשלבים: קודם תמונת key frame, אחר כך אנימציה ותנועה",
     ],
@@ -310,7 +310,7 @@ const TIPS_2026 = [
     icon: ImageIcon,
     title: "מולטי-מודל",
     description:
-      "מודלים מובילים מקבלים תמונות, קול, וידאו, PDF וקבצי קוד ישירות. במקום לתאר מה יש בתמונה — פשוט העלו אותה ושאלו שאלות.",
+      "מודלים מובילים מקבלים תמונות, קול, וידאו, PDF וקבצי קוד ישירות. במקום לתאר מה יש בתמונה, פשוט העלו אותה ושאלו שאלות.",
   },
   {
     icon: Brain,
@@ -326,7 +326,7 @@ const TIPS_2026 = [
   },
   {
     icon: Bot,
-    title: "MCP — פרוטוקול חיבור כלים",
+    title: "MCP: פרוטוקול חיבור כלים",
     description:
       "Model Context Protocol (MCP) מאפשר לחבר מודלים לכלים חיצוניים: מסדי נתונים, CRM, GitHub, Slack ועוד. בנו סוכנים שפועלים בעולם האמיתי.",
   },
@@ -431,7 +431,7 @@ function BadGoodComparison({ bad, good }: { bad: string; good: string }) {
 
 function SidebarToc() {
   return (
-    <nav aria-label="תוכן עניינים — סרגל צד" className="space-y-1">
+    <nav aria-label="תוכן עניינים: סרגל צד" className="space-y-1">
       <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3">
         תוכן עניינים
       </p>
@@ -512,7 +512,7 @@ export default function GuidePage() {
               <PageHeading
                 title="מדריך כתיבת"
                 highlight="פרומפטים מקצועיים"
-                subtitle="מאפס לפרומפטים שמייצרים תוצאות. כל מה שצריך לדעת על כתיבת פרומפטים ל-ChatGPT, Claude ו-Gemini, כולל תמונות, וידאו וסוכני AI — בעברית, בצורה ברורה ומעשית."
+                subtitle="מאפס לפרומפטים שמייצרים תוצאות. כל מה שצריך לדעת על כתיבת פרומפטים ל-ChatGPT, Claude ו-Gemini, כולל תמונות, וידאו וסוכני AI, בעברית, בצורה ברורה ומעשית."
                 badge="המדריך המלא בעברית"
                 badgeIcon={<BookOpen className="w-3.5 h-3.5" />}
                 size="large"
@@ -549,7 +549,7 @@ export default function GuidePage() {
 
           {/* ── Layout: Sidebar + Content ──────────────────────────────────── */}
           <div className="lg:flex lg:gap-10">
-            {/* Sidebar TOC — desktop sticky */}
+            {/* Sidebar TOC (desktop sticky) */}
             <aside className="hidden lg:block lg:w-56 shrink-0">
               <div className="sticky top-20">
                 <GlassCard className="p-4">
@@ -695,7 +695,7 @@ export default function GuidePage() {
                 <SectionHeading id="image-video">פרומפטים לתמונות ווידאו</SectionHeading>
                 <p className="text-muted-foreground text-base leading-relaxed">
                   יצירת תמונות ווידאו עם AI דורשת חשיבה ויזואלית. תארו לא רק מה רוצים לראות, אלא גם
-                  איך — סגנון, תאורה, קומפוזיציה ופרטים טכניים.
+                  איך: סגנון, תאורה, קומפוזיציה ופרטים טכניים.
                 </p>
                 {IMAGE_VIDEO_TIPS.map((tip, i) => (
                   <GlassCard
@@ -727,7 +727,7 @@ export default function GuidePage() {
                 <SectionHeading id="ai-agents">בניית סוכני AI</SectionHeading>
                 <p className="text-muted-foreground text-base leading-relaxed">
                   סוכני AI הם מודלים שפועלים באופן אוטונומי לפי הנחיות שכתבתם. בין אם זה Custom GPT,
-                  Claude Project או סוכן מותאם אישית — כתיבת System Prompt טובה היא הבסיס לסוכן
+                  Claude Project או סוכן מותאם אישית. כתיבת System Prompt טובה היא הבסיס לסוכן
                   שעובד.
                 </p>
                 <GlassCard className="p-6 md:p-8 space-y-6 bg-linear-to-br from-emerald-500/3 to-transparent">
@@ -754,7 +754,7 @@ export default function GuidePage() {
                         </li>
                         <li className="flex gap-2">
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-1 shrink-0" />
-                          מגבלות ברורות — מה הסוכן לא עושה
+                          מגבלות ברורות: מה הסוכן לא עושה
                         </li>
                         <li className="flex gap-2">
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-1 shrink-0" />
@@ -775,7 +775,7 @@ export default function GuidePage() {
                         </li>
                         <li className="flex gap-2">
                           <XCircle className="w-3.5 h-3.5 text-red-400 mt-1 shrink-0" />
-                          חוסר מגבלות — הסוכן ממציא מידע
+                          חוסר מגבלות: הסוכן ממציא מידע
                         </li>
                         <li className="flex gap-2">
                           <XCircle className="w-3.5 h-3.5 text-red-400 mt-1 shrink-0" />
@@ -801,7 +801,7 @@ export default function GuidePage() {
               <section className="mb-16 space-y-8">
                 <SectionHeading id="deep-research">מחקר מעמיק עם AI</SectionHeading>
                 <p className="text-muted-foreground text-base leading-relaxed">
-                  מצב Deep Research (זמין ב-Gemini, ChatGPT Pro ו-Perplexity) מבצע מחקר אוטונומי —
+                  מצב Deep Research (זמין ב-Gemini, ChatGPT Pro ו-Perplexity) מבצע מחקר אוטונומי:
                   גולש באינטרנט, מצלב מקורות ויוצר דו&quot;ח מקיף. המפתח הוא פרומפט מובנה שמגדיר
                   היקף ופורמט.
                 </p>
@@ -976,7 +976,12 @@ export default function GuidePage() {
               </section>
 
               {/* Cross-links */}
-              <section className="mt-8 mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <section className="mt-8 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <CrossLinkCard
+                  href="/guide/prompt-engineering"
+                  title="הנדסת פרומפטים: המדריך המעמיק"
+                  description="טכניקות מתקדמות, צ'קליסט ודוגמאות לפני ואחרי"
+                />
                 <CrossLinkCard
                   href="/prompts"
                   title="התחילו עם תבניות מוכנות"

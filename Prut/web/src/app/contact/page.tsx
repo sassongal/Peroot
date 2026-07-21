@@ -8,14 +8,13 @@ import { breadcrumbSchema } from "@/lib/schema";
 import { PLANS } from "@/lib/lemonsqueezy";
 
 export const metadata: Metadata = {
-  title: "צור קשר",
+  title: "צור קשר עם צוות פירוט: מענה עד 24 שעות",
   description:
-    "צור קשר עם צוות Peroot - שאלות טכניות, הצעות לשיפור, דיווח על באגים, או בקשות לשיתוף פעולה. זמן מענה ממוצע: עד 24 שעות.",
+    "שאלות טכניות, הצעות לשיפור, דיווח על באגים או שיתופי פעולה: צוות פירוט כאן בשבילכם. זמן מענה ממוצע עד 24 שעות בעברית ובאנגלית.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "צור קשר | Peroot",
-    description:
-      "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים. זמן מענה ממוצע: עד 24 שעות.",
+    title: "צור קשר עם צוות פירוט | Peroot",
+    description: "שאלות, הצעות ודיווח על באגים: צוות פירוט עונה תוך 24 שעות בעברית ובאנגלית.",
     url: "/contact",
     siteName: "Peroot",
     locale: "he_IL",
@@ -23,8 +22,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "צור קשר | Peroot",
-    description: "צור קשר עם צוות Peroot - שאלות, הצעות, דיווח על באגים.",
+    title: "צור קשר עם צוות פירוט | Peroot",
+    description: "שאלות, הצעות ודיווח על באגים: מענה תוך 24 שעות.",
   },
 };
 

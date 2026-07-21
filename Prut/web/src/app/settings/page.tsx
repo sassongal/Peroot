@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const { personalLibrary } = useLibrary();
   const { favorites } = useFavorites();
   const { subscription, isPro } = useSubscription();
-  // Only celebrate once the subscription actually reports Pro — visiting
+  // Only celebrate once the subscription actually reports Pro - visiting
   // /settings?success=true shouldn't fake a thank-you without a real purchase.
   const billingSuccess = billingSuccessParam && isPro;
   const [credits, setCredits] = useState<{

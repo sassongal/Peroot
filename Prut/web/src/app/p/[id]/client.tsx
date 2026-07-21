@@ -22,7 +22,7 @@ function XIcon({ className }: { className?: string }) {
 export function SharePageClient({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  // Lazy initializers — no cascading setState on mount. SSR gets empty
+  // Lazy initializers - no cascading setState on mount. SSR gets empty
   // string / false, client rehydrates synchronously on first render.
   const [pageUrl] = useState<string>(() =>
     typeof window !== "undefined" ? window.location.href : "",
@@ -50,12 +50,12 @@ export function SharePageClient({ prompt }: { prompt: string }) {
   };
 
   const handleOpenIn = async (url: string) => {
-    // Best-effort copy, but ALWAYS open the LLM tab — a clipboard rejection must
+    // Best-effort copy, but ALWAYS open the LLM tab - a clipboard rejection must
     // not block the primary action of the public share page.
     try {
       await navigator.clipboard.writeText(prompt);
     } catch {
-      /* clipboard blocked — still open the tab below */
+      /* clipboard blocked - still open the tab below */
     }
     window.open(url, "_blank");
   };

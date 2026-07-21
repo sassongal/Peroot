@@ -35,13 +35,13 @@ const _SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const _featuresOg = `${_SITE}/api/og?title=${encodeURIComponent("כל היכולות של Peroot")}&subtitle=${encodeURIComponent("5 מנועי AI, ספרייה אישית, שרשרת פרומפטים ועוד")}&category=${encodeURIComponent("פיצ'רים")}`;
 
 export const metadata: Metadata = {
-  title: "מה עושים פה? | פירוט - Peroot",
+  title: "מחולל פרומפטים בעברית: כל היכולות של פירוט",
   description:
-    "הכירו את כל היכולות של פירוט: שדרוג פרומפטים, מחקר מעמיק, יצירת תמונות וסרטונים, בניית סוכני AI, ספרייה אישית, שרשרת פרומפטים ועוד. הכל בעברית.",
+    "5 מצבי יצירה, ספרייה אישית, שרשרת פרומפטים וגרף הקשרים. פירוט הופך משפט אחד בעברית לפרומפט מקצועי ל-ChatGPT, Claude, Gemini ו-Midjourney.",
   alternates: { canonical: "/features" },
   openGraph: {
-    title: "מה עושים פה? | כל היכולות של פירוט",
-    description: "5 מנועי AI, ספרייה אישית, שרשרת פרומפטים, גרף הקשרים ועוד",
+    title: "כל היכולות של פירוט | מחולל פרומפטים בעברית",
+    description: "5 מנועי יצירה, ספרייה אישית, שרשרת פרומפטים וגרף הקשרים בסגנון Obsidian.",
     url: `${_SITE}/features`,
     siteName: "Peroot",
     locale: "he_IL",
@@ -50,8 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "מה עושים פה? | כל היכולות של פירוט",
-    description: "5 מנועי AI, ספרייה אישית, שרשרת פרומפטים ועוד",
+    title: "כל היכולות של פירוט | מחולל פרומפטים בעברית",
+    description: "5 מנועי יצירה, ספרייה אישית, שרשרת פרומפטים וגרף הקשרים.",
     images: [_featuresOg],
   },
 };
@@ -373,7 +373,7 @@ const WALKTHROUGH = [
     title: "ספרייה אישית",
     subtitle: "כל הפרומפטים שלכם, מאורגנים",
     description:
-      "כל פרומפט שמשדרגים נשמר אוטומטית בספרייה האישית. ארגנו לפי תיקיות, הוסיפו מועדפים, הצמידו את הנפוצים ביותר — וחפשו בשניות. לא צריך עוד להמציא את הגלגל מחדש.",
+      "כל פרומפט שמשדרגים נשמר אוטומטית בספרייה האישית. ארגנו לפי תיקיות, הוסיפו מועדפים, הצמידו את הנפוצים ביותר, וחפשו בשניות. לא צריך עוד להמציא את הגלגל מחדש.",
     color: "text-sky-400",
     accent: "border-sky-500/20 bg-sky-500/5",
     bullets: ["שמירה אוטומטית", "תיקיות מותאמות אישית", "חיפוש מלא", "מועדפים ומוצמדים"],
@@ -385,7 +385,7 @@ const WALKTHROUGH = [
     title: "שרשרת פרומפטים",
     subtitle: "זרימת עבודה אוטומטית בלחיצה אחת",
     description:
-      "חברו כמה פרומפטים יחד לתהליך רב-שלבי. הפלט של שלב אחד מזין אוטומטית את הבא — כך שתהליך שלקח שעה הופך לדקה אחת. מושלם לצינורות תוכן, ניתוח שוק, בניית אסטרטגיות.",
+      "חברו כמה פרומפטים יחד לתהליך רב-שלבי. הפלט של שלב אחד מזין אוטומטית את הבא, כך שתהליך שלקח שעה הופך לדקה אחת. מושלם לצינורות תוכן, ניתוח שוק, בניית אסטרטגיות.",
     color: "text-rose-400",
     accent: "border-rose-500/20 bg-rose-500/5",
     bullets: ["חיבור פרומפטים לרצף", "העברת פלט אוטומטית", "שמירת שרשראות", "הרצה בלחיצה"],
@@ -395,7 +395,7 @@ const WALKTHROUGH = [
     icon: Network,
     num: "03",
     title: "גרף הקשרים",
-    subtitle: "ידע מחובר — לא רשימה שטוחה",
+    subtitle: "ידע מחובר, לא רשימה שטוחה",
     description:
       "ספריית הפרומפטים שלכם מוצגת גם כגרף ויזואלי בסגנון Obsidian. ראו בבירור איך הפרומפטים קשורים זה לזה לפי קטגוריה, תגית, תבנית וקישורים. גלו קשרים שלא ידעתם שקיימים.",
     color: "text-emerald-400",
@@ -409,7 +409,7 @@ const WALKTHROUGH = [
     title: "משתנים דינמיים",
     subtitle: "פרומפט אחד, שימושים אינסופיים",
     description:
-      "הגדירו משתנים בסוגריים מסולסלות {כמו_זה} בתוך הפרומפטים שלכם. בכל שימוש — מלאו את הערכים המתאימים בלי לערוך את הפרומפט מחדש. חסכו זמן, שמרו עקביות.",
+      "הגדירו משתנים בסוגריים מסולסלות {כמו_זה} בתוך הפרומפטים שלכם. בכל שימוש מלאו את הערכים המתאימים בלי לערוך את הפרומפט מחדש. חסכו זמן, שמרו עקביות.",
     color: "text-amber-400",
     accent: "border-amber-500/20 bg-amber-500/5",
     bullets: ["{משתנים} בפרומפט", "מילוי מהיר בשימוש", "ללא עריכה חוזרת", "תבניות גמישות"],
@@ -421,7 +421,7 @@ const WALKTHROUGH = [
     title: "קיטלוג אוטומטי",
     subtitle: "AI מארגן עבורכם",
     description:
-      "כשאתם שומרים פרומפט, AI מנתח את התוכן ומוסיף תגיות ותיקייה אוטומטית — בלי שתצטרכו לחשוב על ארגון. הספרייה נשארת מסודרת תמיד, גם כשגדלה למאות פרומפטים.",
+      "כשאתם שומרים פרומפט, AI מנתח את התוכן ומוסיף תגיות ותיקייה אוטומטית, בלי שתצטרכו לחשוב על ארגון. הספרייה נשארת מסודרת תמיד, גם כשגדלה למאות פרומפטים.",
     color: "text-rose-400",
     accent: "border-rose-500/20 bg-rose-500/5",
     bullets: ["קיטלוג בשמירה", "תגיות אוטומטיות", "הצעת תיקייה", "ניתן לשינוי ידני"],
@@ -433,7 +433,7 @@ const WALKTHROUGH = [
     title: "שיפור חכם",
     subtitle: "לא מספיק? ה-AI יציע עוד",
     description:
-      "אחרי כל שדרוג, ניתן לבקש הצעות שיפור נוספות מבוססות AI — ציון איכות, נקודות חולשה, ואפשרויות לשכלול. תהליך איטרטיבי עד שהפרומפט מושלם ב-100%.",
+      "אחרי כל שדרוג, ניתן לבקש הצעות שיפור נוספות מבוססות AI: ציון איכות, נקודות חולשה ואפשרויות לשכלול. תהליך איטרטיבי עד שהפרומפט מושלם ב-100%.",
     color: "text-indigo-400",
     accent: "border-indigo-500/20 bg-indigo-500/5",
     bullets: ["ציון איכות מיידי", "הצעות ספציפיות", "שיפור איטרטיבי", "10 ממדי הערכה"],
@@ -508,7 +508,7 @@ export default function FeaturesPage() {
         ])}
       />
 
-      {/* Global effects — fixed, render outside main */}
+      {/* Global effects: fixed, render outside main */}
       <ScrollProgress />
       <CursorSpotlight />
 
@@ -543,7 +543,7 @@ export default function FeaturesPage() {
               <ScrollReveal fromY={24}>
                 <PageHeading
                   title="מה עושים פה?"
-                  subtitle="פירוט הוא כלי AI ישראלי שהופך כל רעיון גולמי לפרומפט מקצועי, שמור, מאורגן, וניתן לשימוש חוזר — בכל פלטפורמת AI שתבחרו."
+                  subtitle="פירוט הוא כלי AI ישראלי שהופך כל רעיון גולמי לפרומפט מקצועי, שמור, מאורגן וניתן לשימוש חוזר, בכל פלטפורמת AI שתבחרו."
                   badge="המדריך המלא"
                   badgeIcon={<Layers className="w-4 h-4" />}
                   size="large"
@@ -556,7 +556,7 @@ export default function FeaturesPage() {
                 {[
                   { num: "5", label: "מנועי AI" },
                   { num: "15+", label: "פלטפורמות" },
-                  { num: `${PROMPT_LIBRARY_COUNT}+`, label: "תבניות ספרייה" },
+                  { num: `${PROMPT_LIBRARY_COUNT}`, label: "תבניות ספרייה" },
                   { num: "∞", label: "אפשרויות שיפור" },
                 ].map((s, i) => (
                   <ScrollReveal key={s.label} delay={i * 0.08} fromY={20}>
@@ -582,7 +582,7 @@ export default function FeaturesPage() {
                   כל מה שפירוט יכול לעשות
                 </h2>
                 <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                  מהשמירה הראשונה ועד לפרומפט המושלם — זרימת עבודה שלמה
+                  מהשמירה הראשונה ועד לפרומפט המושלם: זרימת עבודה שלמה
                 </p>
               </div>
             </ScrollReveal>
@@ -774,7 +774,7 @@ export default function FeaturesPage() {
                 {
                   step: "2",
                   title: "בחרו מצב עבודה",
-                  desc: "טקסט, מחקר, תמונה, סרטון או סוכן — בחרו מה אתם צריכים.",
+                  desc: "טקסט, מחקר, תמונה, סרטון או סוכן. בחרו מה אתם צריכים.",
                   color: "text-amber-400",
                   bg: "bg-amber-500/10 border-amber-500/20",
                 },
@@ -818,7 +818,7 @@ export default function FeaturesPage() {
                 {
                   href: "/examples",
                   title: "דוגמאות לפרומפטים משודרגים",
-                  description: "ראו לפני ואחרי — איך Peroot משפר פרומפטים",
+                  description: "ראו לפני ואחרי: איך Peroot משפר פרומפטים",
                 },
                 {
                   href: "/blog",
@@ -841,7 +841,7 @@ export default function FeaturesPage() {
                 מוכנים?
               </div>
               <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mt-4">
-                תנסו בחינם — עכשיו
+                תנסו בחינם עכשיו
               </h2>
               <p className="text-muted-foreground text-sm max-w-sm mx-auto mt-2">
                 ללא כרטיס אשראי. ללא התחייבות. 2 שדרוגים חינם כל יום.

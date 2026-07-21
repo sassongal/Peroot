@@ -8,11 +8,12 @@ import { breadcrumbSchema } from "@/lib/schema";
 export const metadata: Metadata = {
   title: "מדריכי פרומפטים לפלטפורמות AI",
   description:
-    "מדריכים מקצועיים ליצירת פרומפטים מושלמים לכל פלטפורמת AI — מידג׳רני, FLUX, GPT Image, Stable Diffusion, Runway, Kling, Sora ועוד. טיפים מעשיים, דוגמאות ומבנה אופטימלי.",
+    "מדריכי פרומפטים ל-Midjourney, FLUX, GPT Image, Stable Diffusion, Runway, Kling ו-Sora: נוסחה, פרמטרים ודוגמאות מוכנות להעתקה לתוצאה מדויקת כבר בניסיון הראשון.",
   alternates: { canonical: "/guides" },
   openGraph: {
     title: "מדריכי פרומפטים לפלטפורמות AI | Peroot",
-    description: "מדריכים מקצועיים ליצירת פרומפטים מושלמים לכל פלטפורמת AI — תמונות וסרטונים",
+    description:
+      "מדריכי פרומפטים לכל מנוע תמונה ווידאו: נוסחה, פרמטרים ודוגמאות מוכנות לכל פלטפורמה.",
     url: "/guides",
     locale: "he_IL",
     type: "website",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "מדריכי פרומפטים לפלטפורמות AI",
-    description: "המדריך המלא לכתיבת פרומפטים — מידג׳רני, FLUX, Runway, Kling ועוד",
+    description: "המדריך המלא לכתיבת פרומפטים: מידג׳רני, FLUX, Runway, Kling ועוד",
   },
 };
 
@@ -36,7 +37,7 @@ interface PlatformCard {
 const IMAGE_CARDS: PlatformCard[] = [
   {
     slug: "image-prompts",
-    title: "מדריך כללי — תמונות",
+    title: "מדריך כללי: תמונות",
     platform: "כל הפלטפורמות",
     description: "עקרונות אוניברסליים ליצירת תמונות מדהימות עם AI",
     icon: "📸",
@@ -54,7 +55,7 @@ const IMAGE_CARDS: PlatformCard[] = [
     slug: "gpt-image",
     title: "GPT Image",
     platform: "OpenAI",
-    description: "יצירת תמונות מקורית של GPT-4o — טקסט מדויק ותיאורים עשירים",
+    description: "יצירת תמונות מקורית של GPT-4o: טקסט מדויק ותיאורים עשירים",
     icon: "🎨",
     color: "#10b981",
   },
@@ -70,7 +71,7 @@ const IMAGE_CARDS: PlatformCard[] = [
     slug: "stable-diffusion",
     title: "Stable Diffusion",
     platform: "Stability AI",
-    description: "מילות מפתח עם משקלות, LoRA, ופרומפטים שליליים — SDXL ו-SD3.5",
+    description: "מילות מפתח עם משקלות, LoRA ופרומפטים שליליים: SDXL ו-SD3.5",
     icon: "🔮",
     color: "#8b5cf6",
   },
@@ -95,7 +96,7 @@ const IMAGE_CARDS: PlatformCard[] = [
 const VIDEO_CARDS: PlatformCard[] = [
   {
     slug: "video-prompts",
-    title: "מדריך כללי — סרטונים",
+    title: "מדריך כללי: סרטונים",
     platform: "כל הפלטפורמות",
     description: "ארכיטקטורת 7 שכבות ליצירת סרטוני AI קולנועיים",
     icon: "🎥",
@@ -129,7 +130,7 @@ const VIDEO_CARDS: PlatformCard[] = [
     slug: "veo",
     title: "Google Veo 3.1",
     platform: "Google DeepMind",
-    description: "הפלטפורמה היחידה עם אודיו מקורי — דיאלוג, SFX, מוזיקה",
+    description: "הפלטפורמה היחידה עם אודיו מקורי: דיאלוג, SFX ומוזיקה",
     icon: "🎵",
     color: "#22c55e",
   },
@@ -213,7 +214,7 @@ export default function GuidesPage() {
           <PageHeading
             title="מדריכי פרומפטים"
             highlight="לפלטפורמות AI"
-            subtitle="טיפים מעשיים, מבנה אופטימלי ודוגמאות לכל פלטפורמה — כדי שהתוצאה הראשונה תהיה מושלמת"
+            subtitle="טיפים מעשיים, מבנה אופטימלי ודוגמאות לכל פלטפורמה, כדי שהתוצאה הראשונה תהיה מושלמת"
             badge="מדריכים מקצועיים"
           />
 
@@ -246,7 +247,7 @@ export default function GuidesPage() {
           {/* CTA */}
           <div className="text-center py-8 space-y-4">
             <p className="text-muted-foreground">
-              רוצה לחסוך זמן? Peroot מייצר פרומפטים מושלמים אוטומטית — לכל פלטפורמה.
+              רוצה לחסוך זמן? Peroot מייצר פרומפטים מושלמים אוטומטית, לכל פלטפורמה.
             </p>
             <Link
               href="/"

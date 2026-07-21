@@ -71,7 +71,7 @@ const PersonalLibraryView = dynamic(
   },
 );
 
-// Extracted components — InputSection + HomeViewChrome are above the fold,
+// Extracted components - InputSection + HomeViewChrome are above the fold,
 // so they stay static. The rest load on demand to keep the initial JS lean.
 import { InputSection } from "@/components/features/home/InputSection";
 import { HomeViewChrome } from "@/components/features/home/HomeViewChrome";
@@ -203,7 +203,7 @@ function PageContent() {
         setTargetModel(stored as TargetModel);
       }
     } catch {
-      // localStorage unavailable — ignore
+      // localStorage unavailable - ignore
     }
   }, []);
 
@@ -212,7 +212,7 @@ function PageContent() {
     try {
       localStorage.setItem("peroot_target_model", model);
     } catch {
-      // QuotaExceededError or unavailable — state updated, persistence skipped
+      // QuotaExceededError or unavailable - state updated, persistence skipped
     }
   }, []);
 
@@ -242,7 +242,7 @@ function PageContent() {
     [dispatch],
   );
 
-  // Single raw buffer — we never drop or redirect incoming chunks. The
+  // Single raw buffer - we never drop or redirect incoming chunks. The
   // promptText / questionsPart split happens ONLY at stream-end, on the
   // final rawText, so an accidental or early `[GENIUS_QUESTIONS]` in the
   // model output can't cause the "missing middle" bug where the rest of
@@ -271,7 +271,7 @@ function PageContent() {
         // false-positive on a mid-body echo) plus the [PROMPT_TITLE] block.
         displayText = stripTrailerForDisplay(displayText);
 
-        // Strip <thinking> blocks — both fully-closed and unclosed trailing.
+        // Strip <thinking> blocks - both fully-closed and unclosed trailing.
         // (Not part of the trailer contract, so handled here.)
         displayText = displayText
           .replace(/<thinking>[\s\S]*?<\/thinking>\n?/gi, "")
@@ -315,7 +315,7 @@ function PageContent() {
     feature?: string;
   }>({});
   const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
-  // Quota-exhausted modal — shown for the *structured* server quota error, which
+  // Quota-exhausted modal - shown for the *structured* server quota error, which
   // carries a refreshAt so we can render a live countdown to the reset.
   const [quotaModal, setQuotaModal] = useState<{
     variant: "guest" | "free";
@@ -416,7 +416,7 @@ function PageContent() {
   // --- Logic ---
 
   // Show upgrade popup when user hits rate limit or runs out of credits.
-  // Never show for Pro/admin — they don't need to upgrade, they need to wait.
+  // Never show for Pro/admin - they don't need to upgrade, they need to wait.
   useEffect(() => {
     if (!ps.error) return;
     const code = lastStreamErrorRef.current?.code;
@@ -459,7 +459,7 @@ function PageContent() {
     }
   }, [ps.error, ps.input, user, isProPlan]);
 
-  // Pro/admin users don't get the upgrade nudge — they need actual error feedback
+  // Pro/admin users don't get the upgrade nudge - they need actual error feedback
   // so a silent failure doesn't leave them staring at a blank screen.
   useEffect(() => {
     if (ps.error && user && isProPlan) {
@@ -469,7 +469,7 @@ function PageContent() {
 
   // Fallback feedback for EVERYONE else. Previously a generic failure (HTTP 500,
   // "No response body", network drop) was surfaced only via the Pro toast and the
-  // rate-limit nudge — so guests and free users whose error wasn't a rate-limit
+  // rate-limit nudge - so guests and free users whose error wasn't a rate-limit
   // keyword got zero feedback and silently bounced back to the empty screen.
   useEffect(() => {
     if (!ps.error) return;
@@ -501,7 +501,7 @@ function PageContent() {
     () => BaseEngine.scorePrompt(debouncedInput, ps.selectedCapability),
     [debouncedInput, ps.selectedCapability],
   );
-  // Live, mode-aware input score — drives the pill + breakdown drawer in
+  // Live, mode-aware input score - drives the pill + breakdown drawer in
   // PromptInput. Separate from `inputScore` (which is kept only for telemetry
   // at trackEnhanceComplete and for analytic score tracking).
   const liveInputScore = useMemo(
@@ -741,7 +741,7 @@ function PageContent() {
       const inputText = textOverride ?? ps.input;
       if (!inputText.trim() || ps.isLoading || enhanceCooldownRef.current) return;
 
-      // Guests can't create at all — every enhance attempt (including the very
+      // Guests can't create at all - every enhance attempt (including the very
       // first) routes straight to the register wall. Preserve their text so it's
       // restored after they sign up.
       if (!user) {
@@ -755,8 +755,8 @@ function PageContent() {
         enhanceCooldownRef.current = false;
       }, 500);
 
-      // Block immediately when credits hit 0 — avoid wasting an API round trip.
-      // Pro/admin: skip — server auto-refreshes at spend time; local counter is stale.
+      // Block immediately when credits hit 0 - avoid wasting an API round trip.
+      // Pro/admin: skip - server auto-refreshes at spend time; local counter is stale.
       if (user && !isProPlan && creditsRemaining !== null && creditsRemaining <= 0) {
         trackPaywallHit("daily_limit", "preflight");
         setShowUpgradeNudge(true);
@@ -780,14 +780,14 @@ function PageContent() {
       }
 
       if (context.isOverLimit) {
-        toast.error("יש יותר מדי context — הסירו קובץ לפני שדרוג");
+        toast.error("יש יותר מדי context. הסירו קובץ לפני שדרוג");
         return;
       }
 
       const erroredAttachments = context.attachments.filter((a) => a.status === "error");
       if (erroredAttachments.length > 0) {
         toast.warning(
-          `${erroredAttachments.length === 1 ? "קובץ אחד" : `${erroredAttachments.length} קבצים`} לא עובדו בהצלחה ולא יכללו בקונטקסט — הסירו אותם או נסו שוב`,
+          `${erroredAttachments.length === 1 ? "קובץ אחד" : `${erroredAttachments.length} קבצים`} לא עובדו בהצלחה ולא יכללו בקונטקסט. הסירו אותם או נסו שוב`,
           { duration: 5000 },
         );
       }
@@ -873,7 +873,7 @@ function PageContent() {
           const newCredits = Math.max(0, creditsRemaining - 1);
           setCreditsRemaining(newCredits);
           if (newCredits === 0 && !isProPlan) {
-            toast("הקרדיטים נגמרו — הם מתחדשים 24 שעות לאחר השימוש", { duration: 8000 });
+            toast("הקרדיטים נגמרו. הם מתחדשים 24 שעות לאחר השימוש", { duration: 8000 });
           }
         }
         if (!user) {
@@ -1130,7 +1130,7 @@ function PageContent() {
         dispatch({ type: "SET_INPUT", payload: prompt.title || "" });
         dispatch({ type: "SET_COMPLETION", payload: prompt.prompt });
         dispatch({ type: "SET_QUESTIONS", payload: [] });
-        toast.success("תבנית נטענה — מלאו את המשתנים");
+        toast.success("תבנית נטענה. מלאו את המשתנים");
       } else {
         dispatch({ type: "SET_INPUT", payload: prompt.prompt });
         dispatch({ type: "SET_COMPLETION", payload: "" });
@@ -1138,7 +1138,7 @@ function PageContent() {
       }
 
       // Route the prompt to its engine (image/video/research/agent). Selecting
-      // the capability here mirrors clicking the capability button — the normal
+      // the capability here mirrors clicking the capability button - the normal
       // free/credit Pro-gating still applies at enhance time, so this can't
       // bypass gating. Only override for non-STANDARD; STANDARD keeps whatever
       // the user already had selected.
@@ -1158,9 +1158,9 @@ function PageContent() {
   // (different route tree), so they stash the prompt in sessionStorage and
   // navigate here; we consume it on mount and route it through the same
   // canonical handleUsePrompt path the in-app library buttons use. Runs
-  // once on mount — consumePendingPrompt is self-clearing, so a page
+  // once on mount - consumePendingPrompt is self-clearing, so a page
   // refresh won't re-apply the same prompt. Guarded with a ref because
-  // handleUsePrompt references viewMode, which changes — without the
+  // handleUsePrompt references viewMode, which changes - without the
   // guard, the effect would fire twice when viewMode updates from the
   // first dispatch and re-trigger the load loop.
   const pendingConsumedRef = useRef(false);
@@ -1173,7 +1173,7 @@ function PageContent() {
     const load = async () => {
       let text = pending.prompt;
       // Public-library CTAs (/prompts/[id]) can only stash the 160-char PREVIEW
-      // — the full body is auth-gated. Now that the user is on the (authed) home
+      // - the full body is auth-gated. Now that the user is on the (authed) home
       // page, fetch the full prompt by id so the input isn't a truncated "…".
       // Templates and the home quota-wall already carry their full text.
       if (pending.id && !pending.is_template && pending.source === "prompts-library") {
@@ -1186,7 +1186,7 @@ function PageContent() {
             }
           }
         } catch {
-          /* keep the preview fallback — still usable */
+          /* keep the preview fallback - still usable */
         }
       }
       handleUsePrompt({
@@ -1277,7 +1277,7 @@ function PageContent() {
 
   // Save-and-favorite: one-tap action that saves the current completion
   // to the personal library AND marks it as a favorite. This is the
-  // star-icon replacement for the old thumbs-up — the "keeper" signal
+  // star-icon replacement for the old thumbs-up - the "keeper" signal
   // users asked for on the result card. Uses the id returned by
   // addPrompt to immediately toggle favorite state, so the star lights
   // up in the library the moment the user hits the star.
@@ -1304,7 +1304,7 @@ function PageContent() {
       toast.success("נשמר ונוסף למועדפים ⭐");
     } else {
       // addPrompt returned undefined when a fuzzy duplicate was found.
-      // The dedupe toast already fired — no second toast here.
+      // The dedupe toast already fired - no second toast here.
     }
   }, [
     user,
@@ -1330,7 +1330,7 @@ function PageContent() {
     const variables = [...new Set(varMatches.map((v) => v.replace(/[{}]/g, "")))];
 
     if (variables.length === 0) {
-      toast.error("הפרומפט לא מכיל משתנים {variable} — הוסיפו משתנים כדי ליצור תבנית");
+      toast.error("הפרומפט לא מכיל משתנים {variable}. הוסיפו משתנים כדי ליצור תבנית");
       return;
     }
 
@@ -1392,7 +1392,7 @@ function PageContent() {
         }
         toast.success(
           seeded
-            ? "ברוכים הבאים! 🎉 הכנו לך פרומפט לדוגמה — לחץ 'פרט' לראות את הקסם"
+            ? "ברוכים הבאים! 🎉 הכנו לך פרומפט לדוגמה. לחצו 'פרט' לראות את הקסם"
             : "ברוכים הבאים לפירוט! 🎉 הזן את הפרומפט הראשון שלך",
         );
         setTimeout(() => {
@@ -1453,7 +1453,7 @@ function PageContent() {
     handleEnhance(text);
   }, [dispatch, ps.completion, handleEnhance]);
 
-  // Stop an in-flight stream — keeps whatever partial text arrived, marks it
+  // Stop an in-flight stream - keeps whatever partial text arrived, marks it
   // interrupted so the success branch doesn't save/toast it.
   const handleStop = useCallback(() => {
     streamInterruptedRef.current = true;
@@ -1501,7 +1501,7 @@ function PageContent() {
   // chains section. We navigate to personal view first, then dispatch a
   // window event that PersonalLibraryView listens for to auto-expand the
   // collapsible chains block and scroll it into view. Keeps the nav
-  // stateless — no prop drilling, no new context.
+  // stateless - no prop drilling, no new context.
   const handleOpenChainsFromNav = useCallback(() => {
     handleNavPersonal();
     // Let the personal view mount first, then trigger the expand.
@@ -1513,7 +1513,7 @@ function PageContent() {
   const topNavBar = (
     <TopNavBar viewMode={viewMode} onNavigate={handleTopNavNavigate} onOpenGraph={handleOpenGraph}>
       <PromptLimitIndicator creditsBalance={creditsRemaining} />
-      {/* Chains + History hidden on mobile — reachable via personal library & MobileTabBar.
+      {/* Chains + History hidden on mobile - reachable via personal library & MobileTabBar.
           Keeps TopNavBar under the 375px crowding threshold. */}
       <button
         onClick={handleOpenChainsFromNav}

@@ -68,11 +68,11 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
       for (const t of pool) {
         const categoryLabel = CATEGORY_LABELS[t.category] || t.category || "";
         // Include the prompt body so a template can be found by its content, not
-        // just its title/use-case — but weight body matches lowest so title and
+        // just its title/use-case, but weight body matches lowest so title and
         // use-case still dominate the ranking.
         const haystack = `${t.title} ${t.use_case ?? ""} ${categoryLabel} ${t.prompt ?? ""}`;
         if (!hebrewFuzzyMatch(haystack, trimmedQuery)) continue;
-        // Title matches are weighted 2x — they're a stronger signal of intent.
+        // Title matches are weighted 2x, they're a stronger signal of intent.
         const score =
           hebrewMatchScore(t.title, trimmedQuery) * 2 +
           hebrewMatchScore(t.use_case ?? "", trimmedQuery) +
@@ -86,7 +86,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
     return pool;
   }, [templates, activeCategory, isSearching, trimmedQuery]);
 
-  // When searching, we render a flat ranked list — section grouping would
+  // When searching, we render a flat ranked list; section grouping would
   // re-shuffle results away from the relevance order computed in `filtered`.
   const grouped = useMemo(
     () => (isSearching ? ([["__results__", filtered]] as const) : groupByCategory(filtered)),
@@ -111,7 +111,7 @@ export function TemplateGrid({ templates }: TemplateGridProps) {
             onKeyDown={(e) => {
               if (e.key === "Escape") setQuery("");
             }}
-            placeholder="חפש תבנית — כותרת, נושא או מילת מפתח"
+            placeholder="חפש תבנית: כותרת, נושא או מילת מפתח"
             aria-label="חיפוש תבניות"
             // Hide the WebKit/Chromium native search-clear button so it
             // doesn't visually collide with our custom <X /> clear button.

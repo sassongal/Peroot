@@ -16,14 +16,14 @@ import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 
 export const metadata: Metadata = {
-  title: "תוסף Chrome - פירוט",
+  title: "תוסף Chrome לשדרוג פרומפטים מכל אתר",
   description:
-    "תוסף Chrome של Peroot מאפשר לשדרג פרומפטים ישירות מכל אתר - Gmail, Google Docs, רשתות חברתיות ועוד. עיצוב עברי-first עם סנכרון לחשבון.",
+    "סמנו טקסט בכל אתר, לחצו לחיצה ימנית וקבלו פרומפט מקצועי: Gmail, Google Docs, לינקדאין ועוד. תוסף Chrome עברי-first עם סנכרון מלא לחשבון פירוט.",
   alternates: { canonical: "/extension" },
   openGraph: {
     title: "תוסף Chrome של Peroot | שדרגו פרומפטים מכל אתר",
     description:
-      "לחיצה ימנית, בחרו טקסט, קבלו פרומפט מקצועי - ישירות מ-Gmail, Docs, ורשתות חברתיות. בקרוב.",
+      "סמנו טקסט, לחצו לחיצה ימנית וקבלו פרומפט מקצועי ישירות מ-Gmail, Docs ולינקדאין. בקרוב.",
     locale: "he_IL",
     type: "website",
   },

@@ -15,12 +15,13 @@ import type { LibraryPrompt } from "@/lib/types";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "תבניות פרומפטים עם משתנים - Peroot",
-  description: `${PROMPT_LIBRARY_COUNT} תבניות פרומפטים מוכנות לשימוש עם שדות למילוי. שדרגו כל תבנית עם AI ותתאימו אותה לצרכים שלכם.`,
+  title: "תבניות פרומפטים בעברית עם משתנים למילוי",
+  description:
+    "תבניות פרומפטים מוכנות בעברית עם שדות למילוי. מלאו את המשתנים, שדרגו עם AI, והעתיקו פרומפט מוכן ל-ChatGPT, Claude ו-Gemini, בלי לכתוב מאפס.",
   alternates: { canonical: "/templates" },
   openGraph: {
-    title: "תבניות פרומפטים עם משתנים - Peroot",
-    description: "תבניות פרומפטים מוכנות לשימוש עם שדות למילוי מותאמים אישית.",
+    title: "תבניות פרומפטים בעברית עם משתנים למילוי | Peroot",
+    description: "בחרו תבנית, מלאו את המשתנים המסומנים, וקבלו פרומפט מותאם אישית בשניות.",
     url: "/templates",
     type: "website",
     locale: "he_IL",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 /** Server-side fetch of library prompts that contain {variable} placeholders.
- *  Cookieless service client + ISR (revalidate below) — public data only. */
+ *  Cookieless service client + ISR (revalidate below): public data only. */
 async function getTemplates(): Promise<LibraryPrompt[]> {
   try {
     const supabase = createServiceClient();
@@ -62,7 +63,7 @@ async function getTemplates(): Promise<LibraryPrompt[]> {
     );
 
     // Filter to only prompts that contain at least one FILLABLE variable, using
-    // the same strict tokenizer the fill UI uses (extractVariables) — so the
+    // the same strict tokenizer the fill UI uses (extractVariables), so the
     // card's "N משתנים" count matches what the Variables Panel actually renders,
     // and prompts with only JSON-ish/over-long `{...}` are not shown as templates.
     return mapped.filter((p) => extractVariables(p.prompt).length > 0);

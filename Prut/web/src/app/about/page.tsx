@@ -7,14 +7,14 @@ import { breadcrumbSchema } from "@/lib/schema";
 import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "אודות Peroot | JoyaTech",
+  title: "אודות פירוט: מחולל הפרומפטים בעברית של JoyaTech",
   description:
-    "Peroot (פירוט) הוא מוצר של JoyaTech - חברת טכנולוגיה ישראלית המפתחת כלי AI חדשניים בעברית. הכלי הראשון והמתקדם ביותר בישראל לשדרוג פרומפטים מקצועי.",
+    "פירוט נבנה מאפס לעברית, לא תרגום מאנגלית. הכירו את הסיפור מאחורי מחולל הפרומפטים של JoyaTech, חברת הטכנולוגיה הישראלית שבונה כלי AI בשפה שלנו.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "אודות Peroot | JoyaTech",
+    title: "אודות פירוט: מחולל הפרומפטים בעברית של JoyaTech",
     description:
-      "Peroot (פירוט) הוא מוצר של JoyaTech - חברת טכנולוגיה ישראלית שמפתחת כלי AI חדשניים בעברית.",
+      "פירוט נבנה מאפס לעברית, לא תרגום. הסיפור מאחורי מחולל הפרומפטים של JoyaTech, חברת טכנולוגיה ישראלית.",
     url: "/about",
     siteName: "Peroot",
     locale: "he_IL",
@@ -110,7 +110,7 @@ export default function AboutPage() {
               <li className="flex gap-3">
                 <Users className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-foreground">{PROMPT_LIBRARY_COUNT}+ תבניות מוכנות</strong>{" "}
+                  <strong className="text-foreground">{PROMPT_LIBRARY_COUNT} תבניות מוכנות</strong>{" "}
                   - ספרייה מקצועית ב-30+ קטגוריות לכל תחום עיסוק.
                 </span>
               </li>

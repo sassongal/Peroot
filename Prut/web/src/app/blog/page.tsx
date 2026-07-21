@@ -12,14 +12,13 @@ import { breadcrumbSchema } from "@/lib/schema";
 import { BlogCategoryFilter } from "@/components/blog/BlogCategoryFilter";
 
 export const metadata: Metadata = {
-  title: "בלוג - טיפים ומדריכים לפרומפטים ו-AI",
+  title: "בלוג פירוט: מדריכי הנדסת פרומפטים ו-AI בעברית",
   description:
-    "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
+    "מדריכים מעשיים לכתיבת פרומפטים, טכניקות הנדסת פרומפטים וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini. הכל בעברית, עם דוגמאות לפני ואחרי.",
   alternates: { canonical: "/blog" },
   openGraph: {
-    title: "בלוג Peroot - טיפים ומדריכים לפרומפטים ו-AI",
-    description:
-      "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
+    title: "בלוג פירוט: מדריכי הנדסת פרומפטים ו-AI בעברית",
+    description: "מדריכים מעשיים לכתיבת פרומפטים וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini, בעברית.",
     url: "/blog",
     siteName: "Peroot",
     locale: "he_IL",
@@ -27,9 +26,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "בלוג Peroot - טיפים ומדריכים לפרומפטים ו-AI",
-    description:
-      "מדריכים מקצועיים לכתיבת פרומפטים, טיפים לשימוש ב-ChatGPT, Claude ו-Gemini, וחדשות AI בעברית.",
+    title: "בלוג פירוט: מדריכי הנדסת פרומפטים ו-AI בעברית",
+    description: "מדריכים מעשיים לכתיבת פרומפטים וטיפים לשימוש ב-ChatGPT, Claude ו-Gemini, בעברית.",
   },
 };
 

@@ -51,11 +51,39 @@ export const initAnalytics = () => {
 
 export const analytics = posthog;
 
+// ─── GA4 conversion mirror ────────────────────────────────────────────────────
+// PostHog is our primary product-analytics layer, but GA4 only received page
+// views (gtag 'config') — so Google's conversion, attribution and
+// Search-Console-linked reports were blind to every real conversion. We mirror a
+// whitelist of conversion moments to GA4 using the recommended GA4 event names.
+// Map: internal (PostHog) event name → GA4 event name. Only conversions belong
+// here; leave exploratory/product events to PostHog to avoid GA4 noise.
+const GA4_EVENT_MAP: Record<string, string> = {
+  user_signup: "sign_up",
+  enhance_complete: "prompt_generated",
+  prompt_enhance: "credit_used",
+  checkout_opened: "upgrade_click",
+  paywall_hit: "paywall_hit",
+};
+
+type GtagFn = (command: "event", eventName: string, params?: Record<string, unknown>) => void;
+
+function mirrorToGA4(event: string, properties?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const ga4Event = GA4_EVENT_MAP[event];
+  if (!ga4Event) return;
+  const gtag = (window as unknown as { gtag?: GtagFn }).gtag;
+  if (typeof gtag === "function") {
+    gtag("event", ga4Event, properties);
+  }
+}
+
 // ─── Typed Event Helpers ──────────────────────────────────────────────────────
 
 function trackEvent(event: string, properties?: Record<string, unknown>) {
   if (typeof window !== "undefined" && analytics) {
     analytics.capture(event, properties);
+    mirrorToGA4(event, properties);
   }
 }
 

@@ -35,7 +35,7 @@ export async function generateMetadata({
   const ogUrl = `/api/og?title=${encodeURIComponent(guide.title)}&subtitle=${encodeURIComponent(guide.platform)}&category=${encodeURIComponent(guide.category === "image" ? "תמונות" : "סרטונים")}`;
 
   return {
-    title: guide.metaTitle,
+    title: { absolute: guide.metaTitle },
     description: guide.metaDescription,
     alternates: { canonical: `/guides/${guide.slug}` },
     openGraph: {
@@ -141,7 +141,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             </h1>
           </header>
 
-          {/* Intro — storytelling */}
+          {/* Intro (storytelling) */}
           <section className="prose prose-lg dark:prose-invert max-w-none leading-relaxed text-muted-foreground">
             <div dangerouslySetInnerHTML={{ __html: guide.intro }} />
           </section>

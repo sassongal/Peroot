@@ -21,26 +21,26 @@ import type { LucideIcon } from "lucide-react";
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: "פרומפטים למורים | פירוט — כלי AI לחינוך בעברית",
+  title: "פרומפטים למורים בעברית: כלי AI חינמי לחינוך",
   description:
-    "68 פרומפטים מקצועיים למורים בעברית — מבחנים, תכנון שיעורים, דפי עבודה, משוב, רובריקות ועוד. הכלי החינמי למורים בישראל.",
+    "68 פרומפטים מקצועיים למורים בעברית: מבחנים, תכנון שיעורים, דפי עבודה, משוב ורובריקות. הכלי החינמי למורים בישראל, בלי כרטיס אשראי.",
   alternates: { canonical: "/teachers" },
   openGraph: {
-    title: "פרומפטים למורים | פירוט — כלי AI לחינוך בעברית",
+    title: "68 פרומפטים למורים בעברית | פירוט",
     description:
-      "68 פרומפטים מקצועיים למורים בעברית — מבחנים, תכנון שיעורים, דפי עבודה, משוב, רובריקות ועוד.",
+      "68 פרומפטים מקצועיים למורים בעברית: מבחנים, תכנון שיעורים, דפי עבודה, משוב ורובריקות. חינם.",
     locale: "he_IL",
     type: "website",
     url: `${SITE_URL}/teachers`,
   },
   twitter: {
     card: "summary_large_image",
-    title: "פרומפטים למורים | פירוט — כלי AI לחינוך בעברית",
-    description: "68 פרומפטים מקצועיים למורים בעברית — מבחנים, תכנון שיעורים, דפי עבודה, משוב, רובריקות ועוד.",
+    title: "68 פרומפטים למורים בעברית | פירוט",
+    description:
+      "68 פרומפטים מקצועיים למורים בעברית: מבחנים, שיעורים, דפי עבודה, משוב ורובריקות. חינם.",
   },
 };
 
@@ -60,72 +60,63 @@ const ACTION_CARDS: ActionCard[] = [
     emoji: "📝",
     title: "בניית מבחנים",
     count: "10 פרומפטים",
-    description:
-      "מבחנים מותאמים לרמת הכיתה עם שאלות פתוחות, אמריקאיות ומחוון מובנה.",
+    description: "מבחנים מותאמים לרמת הכיתה עם שאלות פתוחות, אמריקאיות ומחוון מובנה.",
   },
   {
     icon: ClipboardList,
     emoji: "📋",
     title: "תכנון שיעורים",
     count: "10 פרומפטים",
-    description:
-      "תוכניות שיעור מפורטות עם מטרות, פעילויות, לוח זמנים והערכה.",
+    description: "תוכניות שיעור מפורטות עם מטרות, פעילויות, לוח זמנים והערכה.",
   },
   {
     icon: FileSpreadsheet,
     emoji: "📄",
     title: "דפי עבודה",
     count: "8 פרומפטים",
-    description:
-      "דפי עבודה מגוונים לתרגול עצמאי, קבוצתי ולהעשרה — מותאמים לנושא.",
+    description: "דפי עבודה מגוונים לתרגול עצמאי, קבוצתי ולהעשרה, מותאמים לנושא.",
   },
   {
     icon: MessageCircle,
     emoji: "💬",
     title: 'משוב ודו"חות',
     count: "8 פרומפטים",
-    description:
-      "משוב מילולי מקצועי, דוחות תקופתיים והערות מעצבות לתלמידים.",
+    description: "משוב מילולי מקצועי, דוחות תקופתיים והערות מעצבות לתלמידים.",
   },
   {
     icon: BookOpen,
     emoji: "🎓",
     title: "חומרי הוראה",
     count: "8 פרומפטים",
-    description:
-      "סיכומים, מצגות, חומרי רקע ומשאבים דיגיטליים להוראה מתקדמת.",
+    description: "סיכומים, מצגות, חומרי רקע ומשאבים דיגיטליים להוראה מתקדמת.",
   },
   {
     icon: Target,
     emoji: "🎯",
     title: "דיפרנציאציה",
     count: "6 פרומפטים",
-    description:
-      "התאמת חומרי לימוד לרמות שונות — מחוננים, קשיי למידה ושכבות ביניים.",
+    description: "התאמת חומרי לימוד לרמות שונות: מחוננים, קשיי למידה ושכבות ביניים.",
   },
   {
     icon: Users,
     emoji: "👨‍👩‍👧",
     title: "תקשורת עם הורים",
     count: "6 פרומפטים",
-    description:
-      "מכתבים להורים, הזמנות לאסיפות, עדכוני מצב ומסרים רגישים.",
+    description: "מכתבים להורים, הזמנות לאסיפות, עדכוני מצב ומסרים רגישים.",
   },
   {
     icon: School,
     emoji: "🏫",
     title: "ניהול כיתה",
     count: "6 פרומפטים",
-    description:
-      "חוקי כיתה, טבלאות התנהגות, שגרות בוקר וכלים לניהול משמעת.",
+    description: "חוקי כיתה, טבלאות התנהגות, שגרות בוקר וכלים לניהול משמעת.",
   },
   {
     icon: CheckSquare,
     emoji: "✅",
     title: "הערכה ורובריקות",
     count: "6 פרומפטים",
-    description:
-      "רובריקות הערכה, מחוונים מפורטים וכלים להערכה חלופית ומעצבת.",
+    description: "רובריקות הערכה, מחוונים מפורטים וכלים להערכה חלופית ומעצבת.",
   },
 ];
 
@@ -137,7 +128,7 @@ export default function TeachersPage() {
     "@type": "WebPage",
     name: "פרומפטים למורים | פירוט",
     description:
-      "68 פרומפטים מקצועיים למורים בעברית — מבחנים, תכנון שיעורים, דפי עבודה, משוב, רובריקות ועוד.",
+      "68 פרומפטים מקצועיים למורים בעברית: מבחנים, תכנון שיעורים, דפי עבודה, משוב ורובריקות.",
     url: `${SITE_URL}/teachers`,
     inLanguage: "he",
     isPartOf: {
@@ -194,13 +185,12 @@ export default function TeachersPage() {
               פרומפטים מקצועיים למורים
               <br />
               <span className="bg-linear-to-l from-amber-400 to-[#E17100] bg-clip-text text-transparent">
-                — בעברית
+                בעברית
               </span>
             </h1>
 
             <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              68 פרומפטים מוכנים לשימוש: מבחנים, שיעורים, דפי עבודה, משוב
-              והערכה.
+              68 פרומפטים מוכנים לשימוש: מבחנים, שיעורים, דפי עבודה, משוב והערכה.
               <br />
               <span className="text-foreground font-medium">בחינם.</span>
             </p>
@@ -244,9 +234,7 @@ export default function TeachersPage() {
                         <h3 className="text-sm font-bold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                           {card.emoji} {card.title}
                         </h3>
-                        <p className="text-[11px] text-muted-foreground">
-                          {card.count}
-                        </p>
+                        <p className="text-[11px] text-muted-foreground">{card.count}</p>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
@@ -262,11 +250,9 @@ export default function TeachersPage() {
           <section className="py-20 space-y-10">
             <div className="text-center space-y-2">
               <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
-                לפני ואחרי — מה פירוט עושה לפרומפט שלכם
+                לפני ואחרי: מה פירוט עושה לפרומפט שלכם
               </h2>
-              <p className="text-muted-foreground text-sm">
-                מה שלוקח דקות לנסח — פירוט עושה בשנייה
-              </p>
+              <p className="text-muted-foreground text-sm">מה שלוקח דקות לנסח, פירוט עושה בשנייה</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6 items-stretch">
@@ -301,33 +287,23 @@ export default function TeachersPage() {
                 </div>
                 <div className="text-foreground text-sm leading-relaxed space-y-2 font-mono">
                   <p>
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      תפקיד:
-                    </span>{" "}
-                    אתה מורה למתמטיקה בחטיבת ביניים עם 15 שנות ניסיון.
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">תפקיד:</span> אתה
+                    מורה למתמטיקה בחטיבת ביניים עם 15 שנות ניסיון.
                   </p>
                   <p>
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      משימה:
-                    </span>{" "}
-                    בנה מבחן ל{"{"}כיתה{"}"} בנושא {"{"}נושא{"}"}.
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">משימה:</span> בנה
+                    מבחן ל{"{"}כיתה{"}"} בנושא {"{"}נושא{"}"}.
                   </p>
                   <p>
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      מבנה:
-                    </span>{" "}
-                    5 שאלות אמריקאיות + 3 פתוחות + שאלת חשיבה.
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">מבנה:</span> 5
+                    שאלות אמריקאיות + 3 פתוחות + שאלת חשיבה.
                   </p>
                   <p>
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      דרישות:
-                    </span>{" "}
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">דרישות:</span>{" "}
                     מחוון ניקוד, התאמה לתכנית הלימודים, 3 רמות קושי.
                   </p>
                   <p>
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                      פורמט:
-                    </span>{" "}
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">פורמט:</span>{" "}
                     טבלה מסודרת, מוכנה להדפסה.
                   </p>
                 </div>
@@ -341,7 +317,7 @@ export default function TeachersPage() {
               הצטרפו למורים שכבר משתמשים בפירוט
             </h2>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              כל הפרומפטים זמינים בחינם — בלי כרטיס אשראי, בלי התחייבות
+              כל הפרומפטים זמינים בחינם, בלי כרטיס אשראי, בלי התחייבות
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

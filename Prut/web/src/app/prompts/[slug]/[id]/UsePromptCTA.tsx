@@ -15,7 +15,7 @@ interface Props {
  * Bottom-of-page CTA that stores the prompt in sessionStorage before
  * navigating, so HomeClient can pre-fill the input automatically.
  * Works for both guests (previewText only, full text loaded after login)
- * and logged-in users (same flow — UsePromptButton in PromptBodyGate
+ * and logged-in users (same flow; UsePromptButton in PromptBodyGate
  * handles the full-text path after the prompt loads in the header).
  */
 export function UsePromptCTA({ id, title, previewText, slug }: Props) {
