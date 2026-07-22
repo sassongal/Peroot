@@ -73,7 +73,28 @@ export const getCategoryLabel = (key: string): string => {
 };
 
 export const PERSONAL_DEFAULT_CATEGORY = "כללי";
-export const PROMPT_LIBRARY_COUNT = "540+";
+
+/**
+ * Public marketing counts for the shared prompt library.
+ *
+ * These are two DIFFERENT quantities and must not be used interchangeably —
+ * conflating them is what let the site ship "480+" and "540+" side by side:
+ *
+ * - PROMPT_LIBRARY_COUNT  = every active row in `public_library_prompts`.
+ *   Use in copy that says "פרומפטים" / "ספריית פרומפטים".
+ * - PROMPT_TEMPLATE_COUNT = the subset that has at least one fillable
+ *   `{variable}` token (what /templates actually renders).
+ *   Use in copy that says "תבניות".
+ *
+ * PROMPT_TEMPLATE_COUNT is necessarily <= PROMPT_LIBRARY_COUNT, so it is the
+ * safe choice whenever the wording is ambiguous.
+ *
+ * Both already include the trailing "+" — never write `{CONST}+`, that renders
+ * the "540++" bug. Verified against production 2026-07-22: 654 active rows,
+ * 574 of them fillable (VARIABLE_TOKEN_REGEX). Re-measure before changing.
+ */
+export const PROMPT_LIBRARY_COUNT = "650+";
+export const PROMPT_TEMPLATE_COUNT = "570+";
 
 /**
  * One-click refinement presets (FAQ / marketing: "דלתות מהירות" after שדרוג).

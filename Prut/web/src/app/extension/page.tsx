@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
-import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 
 export const metadata: Metadata = {
@@ -314,7 +314,7 @@ export default function ExtensionPage() {
               />
               <CrossLinkCard
                 href={`/prompts`}
-                title={`ספריית ${PROMPT_LIBRARY_COUNT} תבניות פרומפטים`}
+                title={`ספריית ${PROMPT_TEMPLATE_COUNT} תבניות פרומפטים`}
                 description="פרומפטים מוכנים לכל תחום ופלטפורמה"
               />
               <CrossLinkCard

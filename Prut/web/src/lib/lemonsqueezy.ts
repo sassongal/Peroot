@@ -1,3 +1,5 @@
+import { PROMPT_LIBRARY_COUNT } from "./constants";
+
 export const PLANS = {
   free: {
     name: "Free",
@@ -6,7 +8,7 @@ export const PLANS = {
     trialDays: 0,
     features: [
       "קרדיט אחד ליום (מתחדש כל 24 שעות)",
-      "גישה לספריית 540+ פרומפטים",
+      `גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים`,
       "שיתוף פרומפטים",
       "תוסף Chrome לשדרוג מהיר",
     ],

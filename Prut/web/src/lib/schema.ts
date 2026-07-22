@@ -1,4 +1,5 @@
 import { PLANS } from "./lemonsqueezy";
+import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "./constants";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const PRO_PRICE = String(PLANS.pro.price);
@@ -10,8 +11,7 @@ export function organizationSchema() {
     name: "Peroot",
     alternateName: "פירוט",
     url: SITE_URL,
-    description:
-      "Peroot (פירוט) היא פלטפורמת הנדסת פרומפטים מקצועית בעברית. הפלטפורמה מאפשרת שיפור אוטומטי של פרומפטים ל-ChatGPT, Claude, Gemini ו-Midjourney, עם ספריית 480+ תבניות, דירוג איכות מובנה ותמיכה מלאה בשפה העברית.",
+    description: `Peroot (פירוט) היא פלטפורמת הנדסת פרומפטים מקצועית בעברית. הפלטפורמה מאפשרת שיפור אוטומטי של פרומפטים ל-ChatGPT, Claude, Gemini ו-Midjourney, עם ספריית ${PROMPT_TEMPLATE_COUNT} תבניות, דירוג איכות מובנה ותמיכה מלאה בשפה העברית.`,
     logo: {
       "@type": "ImageObject",
       url: `${SITE_URL}/assets/branding/logo.png`,
@@ -140,13 +140,12 @@ export function softwareAppSchema() {
     applicationCategory: "ProductivityApplication",
     applicationSubCategory: "AI Writing Tool",
     operatingSystem: "Web",
-    description:
-      "מחולל פרומפטים מקצועי בעברית — שדרג כל פרומפט באמצעות AI מתקדם. תומך ב-ChatGPT, Claude, Gemini, Midjourney, Runway ועוד. כולל 480+ תבניות, דירוג איכות ומצב מחקר מעמיק.",
+    description: `מחולל פרומפטים מקצועי בעברית. שדרגו כל פרומפט באמצעות AI מתקדם, עם תמיכה ב-ChatGPT, Claude, Gemini, Midjourney, Runway ועוד. כולל ${PROMPT_TEMPLATE_COUNT} תבניות, דירוג איכות ומצב מחקר מעמיק.`,
     url: SITE_URL,
     inLanguage: "he",
     featureList: [
       "שיפור אוטומטי של פרומפטים בעברית",
-      "480+ תבניות פרומפטים מוכנות",
+      `${PROMPT_TEMPLATE_COUNT} תבניות פרומפטים מוכנות`,
       "דירוג איכות ב-9 ממדים",
       "תמיכה ב-ChatGPT, Claude, Gemini, DeepSeek",
       "מצב תמונות: Midjourney, DALL-E, Flux, Stable Diffusion",
@@ -181,8 +180,7 @@ export function pricingSchema() {
       {
         "@type": "Product",
         name: "Peroot Free",
-        description:
-          "תוכנית חינמית עם קרדיט אחד ביום, גישה לספריית 480+ פרומפטים, שיתוף פרומפטים ותוסף Chrome",
+        description: `תוכנית חינמית עם קרדיט אחד ביום, גישה לספריית ${PROMPT_LIBRARY_COUNT} פרומפטים, שיתוף פרומפטים ותוסף Chrome`,
         image: `${SITE_URL}/assets/branding/logo.png`,
         brand: { "@type": "Brand", name: "Peroot" },
         offers: {

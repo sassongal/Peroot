@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
-import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { FeaturesVideoEmbed } from "@/components/features/FeaturesVideoEmbed";
@@ -571,7 +571,7 @@ export default function FeaturesPage() {
                 {[
                   { num: "5", label: "מנועי AI" },
                   { num: "15+", label: "פלטפורמות" },
-                  { num: `${PROMPT_LIBRARY_COUNT}`, label: "תבניות ספרייה" },
+                  { num: `${PROMPT_TEMPLATE_COUNT}`, label: "תבניות ספרייה" },
                   { num: "∞", label: "אפשרויות שיפור" },
                 ].map((s, i) => (
                   <ScrollReveal key={s.label} delay={i * 0.08} fromY={20}>
@@ -829,7 +829,7 @@ export default function FeaturesPage() {
               {[
                 {
                   href: "/prompts",
-                  title: `ספריית ${PROMPT_LIBRARY_COUNT} תבניות פרומפטים`,
+                  title: `ספריית ${PROMPT_TEMPLATE_COUNT} תבניות פרומפטים`,
                   description: "פרומפטים מוכנים לכל תחום ופלטפורמה",
                 },
                 {

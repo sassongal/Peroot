@@ -6,7 +6,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, faqSchema, howToSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
-import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 const og = `${SITE}/api/og?title=${encodeURIComponent("הנדסת פרומפטים: המדריך המלא בעברית")}&subtitle=${encodeURIComponent("טכניקות מתקדמות, דוגמאות מעשיות וצ'קליסט מקצועי")}&category=${encodeURIComponent("מדריך pillar")}`;
@@ -170,7 +170,7 @@ export default function PromptEngineeringGuidePage() {
             href="/prompts"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border hover:bg-secondary transition-colors"
           >
-            ספריית {PROMPT_LIBRARY_COUNT} תבניות
+            ספריית {PROMPT_TEMPLATE_COUNT} תבניות
           </Link>
         </div>
 
@@ -451,7 +451,7 @@ export default function PromptEngineeringGuidePage() {
             <Link href="/prompts" className="text-amber-600 dark:text-amber-400 hover:underline">
               ספריית הפרומפטים של Peroot
             </Link>{" "}
-            יש {PROMPT_LIBRARY_COUNT} תבניות מוכנות ב-30+ קטגוריות, כולן בנויות לפי העקרונות של
+            יש {PROMPT_TEMPLATE_COUNT} תבניות מוכנות ב-30+ קטגוריות, כולן בנויות לפי העקרונות של
             מדריך זה.
           </p>
         </section>
@@ -589,7 +589,7 @@ export default function PromptEngineeringGuidePage() {
             />
             <CrossLinkCard
               href="/prompts"
-              title={`${PROMPT_LIBRARY_COUNT} תבניות מוכנות`}
+              title={`${PROMPT_TEMPLATE_COUNT} תבניות מוכנות`}
               description="ספרייה ענקית לפי קטגוריה, כולל משתנים חכמים."
             />
             <CrossLinkCard

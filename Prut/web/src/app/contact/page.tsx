@@ -6,6 +6,7 @@ import { ContactForm } from "@/components/ui/ContactForm";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { PLANS } from "@/lib/lemonsqueezy";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "צור קשר עם צוות פירוט: מענה עד 24 שעות",
@@ -100,7 +101,8 @@ export default function ContactPage() {
                   </span>
                 </summary>
                 <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed">
-                  התוכנית החינמית כוללת קרדיט אחד ביום וגישה לספריית 480+ הפרומפטים. תוכנית Pro (₪
+                  התוכנית החינמית כוללת קרדיט אחד ביום וגישה לספריית {PROMPT_LIBRARY_COUNT}{" "}
+                  הפרומפטים. תוכנית Pro (₪
                   {PLANS.pro.price}/חודש) כוללת 150 קרדיטים בחודש, גישה לכל המנועים המתקדמים, שיפור
                   איטרטיבי, ספריה אישית ללא הגבלה, וסנכרון מלא עם תוסף Chrome.
                 </div>

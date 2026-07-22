@@ -6,7 +6,7 @@ import { NewsletterSignup } from "@/components/ui/NewsletterSignup";
 import { ENGLISH_TO_HEBREW_SLUG } from "@/lib/blog-slug-map";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
 import { PageHeading } from "@/components/ui/PageHeading";
-import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { BlogCategoryFilter } from "@/components/blog/BlogCategoryFilter";
@@ -114,7 +114,7 @@ export default async function BlogPage() {
             <CrossLinkCard
               href="/prompts"
               title="ספריית פרומפטים לפי קטגוריה"
-              description={`${PROMPT_LIBRARY_COUNT} תבניות מוכנות לשימוש מיידי`}
+              description={`${PROMPT_TEMPLATE_COUNT} תבניות מוכנות לשימוש מיידי`}
             />
             <CrossLinkCard
               href="/features"

@@ -9,6 +9,7 @@ import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 const varelaRound = Varela_Round({
   weight: "400",
@@ -39,8 +40,7 @@ export const metadata: Metadata = {
     default: "Peroot (פירוט): מחולל פרומפטים בעברית חינם ל-ChatGPT ו-Claude",
     template: "%s | Peroot",
   },
-  description:
-    "מחולל הפרומפטים שהופך כל רעיון גולמי לפרומפט מדויק, עם ציון איכות, 540+ תבניות מוכנות ו-5 מצבי יצירה. תוצאות חדות יותר ב-ChatGPT, Claude ו-Gemini, בעברית ובחינם.",
+  description: `מחולל הפרומפטים שהופך כל רעיון גולמי לפרומפט מדויק, עם ציון איכות, ${PROMPT_TEMPLATE_COUNT} תבניות מוכנות ו-5 מצבי יצירה. תוצאות חדות יותר ב-ChatGPT, Claude ו-Gemini, בעברית ובחינם.`,
   applicationName: "Peroot",
   authors: [{ name: "JoyaTech", url: "https://joya-tech.net" }],
   generator: "Next.js",
@@ -96,8 +96,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Peroot (פירוט): מחולל הפרומפטים שמדבר עברית",
-    description:
-      "כל רעיון הופך לפרומפט מקצועי בעברית: ציון איכות, 540+ תבניות ו-5 מצבי יצירה ל-ChatGPT, Claude, Gemini ו-Midjourney. בלי ניחושים, בחינם.",
+    description: `כל רעיון הופך לפרומפט מקצועי בעברית: ציון איכות, ${PROMPT_TEMPLATE_COUNT} תבניות ו-5 מצבי יצירה ל-ChatGPT, Claude, Gemini ו-Midjourney. בלי ניחושים, בחינם.`,
     url: siteUrl,
     siteName: "Peroot",
     locale: "he_IL",
@@ -114,8 +113,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Peroot (פירוט): פרומפטים שעובדים, בעברית",
-    description:
-      "פרומפט אחד טוב במקום עשרה ניסיונות. מחולל פרומפטים בעברית עם ציון איכות ו-540+ תבניות, מותאם ל-ChatGPT, Claude ו-Gemini.",
+    description: `פרומפט אחד טוב במקום עשרה ניסיונות. מחולל פרומפטים בעברית עם ציון איכות ו-${PROMPT_TEMPLATE_COUNT} תבניות, מותאם ל-ChatGPT, Claude ו-Gemini.`,
     images: [`${siteUrl}/og-image.jpg`],
     creator: "@joyatech",
   },
