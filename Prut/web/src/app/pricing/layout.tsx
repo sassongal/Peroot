@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { pricingSchema, breadcrumbSchema, faqSchema } from "@/lib/schema";
 import { PLANS } from "@/lib/lemonsqueezy";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "תמחור - פירוט | שדרוג טקסטים בעברית עם AI",
@@ -83,7 +84,7 @@ export default function PricingLayout({ children }: { children: React.ReactNode 
           <h2>תוכנית חינם</h2>
           <ul>
             <li>קרדיט אחד ליום (מתחדש כל 24 שעות)</li>
-            <li>גישה לספריית 480+ פרומפטים מקצועיים</li>
+            <li>גישה לספריית {PROMPT_LIBRARY_COUNT} פרומפטים מקצועיים</li>
             <li>שיתוף פרומפטים</li>
             <li>תוסף Chrome לשדרוג מהיר</li>
           </ul>

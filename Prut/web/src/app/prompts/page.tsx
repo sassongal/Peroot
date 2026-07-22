@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CATEGORY_SLUG_MAP } from "@/lib/category-slugs";
-import { CATEGORY_LABELS, PROMPT_COLLECTIONS, PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import {
+  CATEGORY_LABELS,
+  PROMPT_COLLECTIONS,
+  PROMPT_LIBRARY_COUNT,
+  PROMPT_TEMPLATE_COUNT,
+} from "@/lib/constants";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, speakablePageSchema } from "@/lib/schema";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
@@ -11,15 +16,15 @@ import { PromptSearch } from "@/components/features/library/PromptSearch";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
 
 export const metadata: Metadata = {
-  title: `ספריית פרומפטים בעברית: ${PROMPT_LIBRARY_COUNT} תבניות`,
-  description: `${PROMPT_LIBRARY_COUNT} תבניות פרומפטים מוכנות בעברית לשיווק, פיתוח, תמונות, חינוך ועוד 25 קטגוריות. העתיקו, שדרגו עם AI, והתאימו לכל פלטפורמת AI.`,
+  title: `ספריית פרומפטים בעברית: ${PROMPT_TEMPLATE_COUNT} תבניות`,
+  description: `${PROMPT_TEMPLATE_COUNT} תבניות פרומפטים מוכנות בעברית לשיווק, פיתוח, תמונות, חינוך ועוד 25 קטגוריות. העתיקו, שדרגו עם AI, והתאימו לכל פלטפורמת AI.`,
   alternates: {
     canonical: "/prompts",
     languages: { "he-IL": "/prompts" },
   },
   openGraph: {
-    title: `ספריית פרומפטים בעברית: ${PROMPT_LIBRARY_COUNT} תבניות | Peroot`,
-    description: `${PROMPT_LIBRARY_COUNT} תבניות פרומפטים מוכנות בעברית לשיווק, פיתוח, תמונות וחינוך. העתיקו ושדרגו בשניות.`,
+    title: `ספריית פרומפטים בעברית: ${PROMPT_TEMPLATE_COUNT} תבניות | Peroot`,
+    description: `${PROMPT_TEMPLATE_COUNT} תבניות פרומפטים מוכנות בעברית לשיווק, פיתוח, תמונות וחינוך. העתיקו ושדרגו בשניות.`,
     url: `${SITE_URL}/prompts`,
     siteName: "Peroot",
     locale: "he_IL",

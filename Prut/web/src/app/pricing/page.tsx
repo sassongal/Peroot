@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { LoginRequiredModal } from "@/components/ui/LoginRequiredModal";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { CrossLinkCard } from "@/components/ui/CrossLinkCard";
-import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_LIBRARY_COUNT, PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 const COMPARISON_FEATURES = [
   {
@@ -413,7 +413,7 @@ export default function PricingPage() {
           />
           <CrossLinkCard
             href="/prompts"
-            title={`גישה לספריית ${PROMPT_LIBRARY_COUNT} תבניות`}
+            title={`גישה לספריית ${PROMPT_TEMPLATE_COUNT} תבניות`}
             description="פרומפטים מוכנים ב-30+ קטגוריות"
           />
           <CrossLinkCard

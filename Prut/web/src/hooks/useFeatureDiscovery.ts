@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { trackFeatureUse } from "@/lib/analytics";
+import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
 
 // ─── Feature Discovery Tips ─────────────────────────────────────────────────
 
@@ -18,7 +19,14 @@ export interface DiscoveryTip {
   /** CTA button text */
   cta?: string;
   /** Action to perform on CTA click */
-  ctaAction?: "library" | "variables" | "share" | "research" | "image" | "chains" | "public-library";
+  ctaAction?:
+    | "library"
+    | "variables"
+    | "share"
+    | "research"
+    | "image"
+    | "chains"
+    | "public-library";
 }
 
 const ALL_TIPS: DiscoveryTip[] = [
@@ -82,7 +90,7 @@ const ALL_TIPS: DiscoveryTip[] = [
   },
   {
     id: "tip_public_library",
-    text: "יש ספרייה עם 540+ פרומפטים מוכנים לכל תחום — אפשר להתחיל מהם",
+    text: `יש ספרייה עם ${PROMPT_LIBRARY_COUNT} פרומפטים מוכנים לכל תחום, אפשר להתחיל מהם`,
     emoji: "📋",
     feature: "ספרייה ציבורית",
     usedKey: "peroot_used_public_library",
@@ -125,7 +133,9 @@ function getState(): DiscoveryState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   // First time: existing users already have history, so start at a high
   // enough count that tips will show on the very next enhance.
   // We use 2 so that after the first enhance (count becomes 3), tips trigger.
@@ -135,14 +145,18 @@ function getState(): DiscoveryState {
 function saveState(state: DiscoveryState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 /** Mark a feature as "used" so its tip won't show again */
 export function markFeatureUsed(key: string) {
   try {
     localStorage.setItem(key, "true");
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   trackFeatureUse(key);
 }
 
@@ -174,10 +188,11 @@ export function useFeatureDiscovery() {
     if (state.enhanceCount - state.lastShownAtEnhance < MIN_INTERVAL) return;
 
     // Find eligible tips
-    const eligible = ALL_TIPS.filter(tip =>
-      tip.minEnhances <= state.enhanceCount &&
-      !state.seen.includes(tip.id) &&
-      !isFeatureUsed(tip.usedKey)
+    const eligible = ALL_TIPS.filter(
+      (tip) =>
+        tip.minEnhances <= state.enhanceCount &&
+        !state.seen.includes(tip.id) &&
+        !isFeatureUsed(tip.usedKey),
     );
 
     if (eligible.length === 0) return;
@@ -201,7 +216,7 @@ export function useFeatureDiscovery() {
     }
 
     if (currentIndex < activeTips.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
     } else {
       snoozeDiscovery();
       setVisible(false);

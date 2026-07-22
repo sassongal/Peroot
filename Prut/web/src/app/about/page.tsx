@@ -4,7 +4,7 @@ import { ArrowRight, Rocket, Globe, Sparkles, Users, ExternalLink } from "lucide
 import { PageHeading } from "@/components/ui/PageHeading";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
-import { PROMPT_LIBRARY_COUNT } from "@/lib/constants";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "אודות פירוט: מחולל הפרומפטים בעברית של JoyaTech",
@@ -110,7 +110,7 @@ export default function AboutPage() {
               <li className="flex gap-3">
                 <Users className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
                 <span>
-                  <strong className="text-foreground">{PROMPT_LIBRARY_COUNT} תבניות מוכנות</strong>{" "}
+                  <strong className="text-foreground">{PROMPT_TEMPLATE_COUNT} תבניות מוכנות</strong>{" "}
                   - ספרייה מקצועית ב-30+ קטגוריות לכל תחום עיסוק.
                 </span>
               </li>

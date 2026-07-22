@@ -2,6 +2,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { FAQ_ITEMS } from "@/lib/faq-data";
 import { softwareAppSchema, faqSchema } from "@/lib/schema";
+import { PROMPT_TEMPLATE_COUNT } from "@/lib/constants";
 
 /**
  * Server-rendered SEO content for the homepage.
@@ -76,7 +77,7 @@ export function HomeSEOContent() {
               </p>
             </div>
             <div className="p-5 rounded-xl border border-border bg-card">
-              <h3 className="font-bold text-foreground mb-2">480+ תבניות</h3>
+              <h3 className="font-bold text-foreground mb-2">{PROMPT_TEMPLATE_COUNT} תבניות</h3>
               <p className="text-sm text-muted-foreground">
                 <Link
                   href="/prompts"
