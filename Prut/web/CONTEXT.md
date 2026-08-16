@@ -49,7 +49,7 @@ text (or image bytes) the pipeline can enrich. `src/lib/context/engine/extract`.
   `inject` stay. The `context/extract-*` routes keep their own auth (not `withUser`)
   because they stream SSE with an extraction-quota system, not credits.
 
-### Credit-gated endpoint  ·  `withUser`  *(designed 2026-07-17; not yet built)*
+### Credit-gated endpoint  ·  `withUser`  *(designed 2026-07-17; built + merged — lives in `src/lib/api-middleware.ts:235`, ~30 routes migrated)*
 
 The seam at which an **authenticated (or guest-allowed) API request** becomes a
 handler running its actual work. Everything a route must get right *before* its

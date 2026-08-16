@@ -63,3 +63,11 @@ peroot-mcp-server/dist/
 **/.mcp.json
 .claude/
 **/.claude/
+
+# Generated knowledge-graph output from the `graphify` skill (regenerate on demand).
+# Note the `src/` copy: it must never be committed, it would be type-checked and linted.
+graphify-out/
+**/graphify-out/
+
+# Scratch screenshots from blog design comparison (not repo assets)
+Prut/web/*.png

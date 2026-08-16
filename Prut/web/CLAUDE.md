@@ -5,8 +5,8 @@
 
 ## ⚡ CRITICAL CONTEXT — READ FIRST
 
-This project was developed on a MacBook and was **just migrated to a new Windows machine (SASSON)**
-on April 15, 2026. This is the first dev session on the new machine.
+Dev machine is Windows (SASSON); the project was originally built on a MacBook and
+migrated on 2026-04-15. Windows-specific quirks are listed below.
 
 **Developer:** Gal Sasson (גל ששון) — JoyaTech Digital Solutions, Haifa, IL
 **GitHub:** github.com/sassongal/Peroot (public repo)
@@ -28,8 +28,9 @@ Next.js 16 renamed `middleware.ts` → `proxy.ts`. The active middleware file is
 - `husky` git hooks work on Windows via Git-for-Windows `sh.exe`. `scripts/setup-git-hooks.mjs` runs at `npm install` and points `core.hooksPath` at `.husky/`. If hooks ever stop firing, re-run `node scripts/setup-git-hooks.mjs`.
 - `@next/bundle-analyzer` is gated by `process.env.ANALYZE === "true"` in next.config.ts (no-op unless the env var is set).
 - `NODE_ENV` warning on startup is cosmetic — Next.js sets it automatically, ignore it.
-- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` missing — rate limiting degraded locally, not blocking.
-- `vercel` MCP and `peroot-platform` MCP may show errors in Cursor — not blocking for development.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are present and working (verified 2026-08-16), so rate limiting is live locally too.
+- `ADMIN_EMAILS`, `GUEST_IP_SALT` and `RESEND_REPLY_TO` exist on Vercel but **not** in `.env.local` — admin bypass and guest IP hashing behave differently locally. `GUEST_IP_SALT` unset logs a warning and makes guest IP hashes reversible.
+- `NEWSLETTER_UNSUBSCRIBE_SECRET` is present-but-empty in `.env.local` (it is set on Vercel).
 - Dev server runs on: http://localhost:3000
 
 ---
@@ -121,7 +122,8 @@ context/
   I18nContext.tsx
 
 i18n/                       # Hebrew (he) + English (en). Hebrew-first.
-middleware.ts               # Auth guard + CSRF + maintenance mode
+proxy.ts                    # Auth guard + CSRF + admin gate + maintenance mode
+                            # (Next.js 16 name — there is NO middleware.ts, see above)
 ```
 
 ---
@@ -165,20 +167,30 @@ Circuit breaker auto-skips providers that fail consecutively.
 - Postgres with RLS on all tables
 - Migrations: `supabase/migrations/`
 - Key tables: `profiles`, `prompts`, `credit_ledger`, `prompt_favorites`, `newsletter_subscribers`
-- Credits: free 2/day (reset 14:00 IL), Pro 150/month
-- Atomic credit RPC: `refresh_and_decrement_credits`
+- Atomic credit RPC: `refresh_and_decrement_credits`; refunds via `refund_credit`
+- **Quotas are data, not constants** — read `public.site_settings`, never hardcode.
+  `daily_free_limit` drives the free tier (live value **1**/day, rolling window);
+  `allow_guest_access` gates the guest register-wall (live value **true**, so guests
+  still get `GUEST_DAILY_LIMIT` = 1/day from `src/lib/guest-service.ts`).
+  Pro is a LemonSqueezy monthly allowance.
 
 ---
 
 ## Auth
-Supabase SSR enforced in middleware.ts. Never bypass RLS.
-Admin routes check `role = 'admin'` in profiles table.
+Supabase SSR session refresh enforced in `src/proxy.ts`. Never bypass RLS.
+Admin is sourced from the **`user_roles` table** (canonical), with
+`profiles.plan_tier` only as an OR fallback in the `proxy.ts` UI gate — the ~60 API
+routes use `withAdmin`/`validateAdminSession`, which read `user_roles`. Keep both in
+sync when promoting someone. `ADMIN_EMAILS` is a separate maintenance-bypass list.
+Credit-gated user routes go through `withUser` (`src/lib/api-middleware.ts`).
 
 ---
 
 ## Business Logic
-- **Free plan:** 2 prompt improvements/day
-- **Pro plan:** 150/month (LemonSqueezy subscription)
+- **Free plan:** `site_settings.daily_free_limit` improvements/day (live: **1**)
+- **Guests:** `GUEST_DAILY_LIMIT` = 1/day, only while `site_settings.allow_guest_access` is true
+- **Pro plan:** LemonSqueezy subscription — store `Peroot` (312053), variant `Peroot Pro`
+- Never write a quota number into UI copy or logic; read it from `site_settings`
 - Webhook: `/api/webhooks/lemonsqueezy` — order_created / order_refunded
 - Email: Resend API (`RESEND_FROM_EMAIL`)
 - Analytics: PostHog (behavioral) + GA4 (traffic) + Clarity (heatmaps)
@@ -249,13 +261,23 @@ Do NOT commit. Already in .gitignore.
 
 ---
 
-## MCP Servers Available in Cursor
-- `supabase` — DB access, migrations, RLS (29 tools)
-- `github` — repo read/write, PRs (26 tools)
-- `context7` — live docs for Next.js, Supabase, Tailwind (2 tools)
-- `sequential-thinking` — complex reasoning (1 tool)
-- `vercel` — deployments, logs (may error — known issue)
-- `peroot-platform` — internal platform tools (may error — tsx missing globally)
+## MCP servers (verified 2026-08-16)
+
+MCP config is **per working directory**. `Prut/web/.mcp.json` only loads when a
+session starts in `Prut/web`; sessions started at the repo root read
+`C:\Users\sasso\dev\Peroot\.mcp.json` instead. Both are gitignored (they hold tokens).
+
+- `supabase` — project-scoped to `ravinxlujmlvxhgbjxti`, **working** from both dirs.
+- `vercel` — comes from the Vercel plugin, connected. Don't add a second one.
+- `github`, `sentry`, `upstash`, `resend`, `lemonsqueezy`, `playwright`, `context7`,
+  `clarity`, `deepseek` — defined in `Prut/web/.mcp.json` only.
+- `cloudflare` — its token is **dead (401)**; the entry was removed 2026-08-16.
+- The hosted `plugin:supabase:supabase` says "needs authentication" and is redundant
+  with the local `supabase` server. Ignore it.
+
+Whatever isn't wired as MCP, hit over REST with the key from `.env.local` — every
+key there was pinged live on 2026-08-16 and works (see the connectivity notes in
+Claude's project memory).
 ---
 
 ## Agent skills
