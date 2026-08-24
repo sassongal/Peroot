@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { acquireCronLock, releaseCronLock } from "@/lib/cron-lock";
 import { recordCronSuccess } from "@/lib/cron-heartbeat";
 import { verifyCronSecret } from "@/lib/cron-auth";
+import { selectReengagementRecipients } from "./select";
 
 export const maxDuration = 30;
 
@@ -73,15 +74,32 @@ export async function GET(request: NextRequest) {
         ? profileRows.filter((p) => !recentlyActiveIds.has(p.id) && !unsubIds.has(p.id))
         : profileRows;
 
-    // Get already-sent re-engagement emails
-    const { data: alreadySent } = await supabase
+    // Get already-sent re-engagement emails.
+    // `error` is checked deliberately: this query IS the dedupe. If it fails
+    // (e.g. the table is missing, as it was in production until 2026-08-24) an
+    // empty set makes every user re-qualify on every run, and the drip mails the
+    // entire customer base daily. Fail loudly instead of degrading into a blast.
+    const { data: alreadySent, error: sentError } = await supabase
       .from("email_logs")
-      .select("user_id, email_type")
+      .select("user_id, email_type, created_at")
       .in(
         "email_type",
         REENGAGEMENT_TEMPLATES.map((t) => t.id),
       );
-    const sentKeys = new Set((alreadySent ?? []).map((e) => `${e.user_id}:${e.email_type}`));
+    if (sentError) {
+      await releaseCronLock("cron:reengagement");
+      logger.error(
+        "[Reengagement] Cannot read email_logs — aborting rather than risk re-sending:",
+        sentError,
+      );
+      return NextResponse.json({ error: "email_logs unavailable" }, { status: 500 });
+    }
+
+    // Never mail the same person twice inside this window, whatever the tier.
+    const MIN_GAP_MS = Number(process.env.REENGAGEMENT_MIN_GAP_DAYS ?? 7) * 24 * 60 * 60 * 1000;
+    // Cap each run so a cold list drains over several days instead of going out
+    // as one blast: protects sender reputation and stays under provider limits.
+    const MAX_PER_RUN = Number(process.env.REENGAGEMENT_MAX_PER_RUN ?? 50);
 
     // Get email_sequences for unsubscribe tokens (keyed by user_id)
     const { data: sequences } = await supabase
@@ -109,31 +127,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Process each candidate user
-    for (const profile of filteredProfiles) {
+    // Who to mail is decided by a pure, unit-tested function (./select.ts).
+    // Keeping this out of the route is what makes the dedupe testable at all.
+    const selections = selectReengagementRecipients({
+      candidates: filteredProfiles.map((p) => ({
+        userId: p.id,
+        lastActiveAt: lastActivityMap.get(p.id) ?? new Date(p.created_at),
+      })),
+      priorSends: alreadySent ?? [],
+      tiers: REENGAGEMENT_TEMPLATES,
+      now: Date.now(),
+      minGapMs: MIN_GAP_MS,
+      maxPerRun: MAX_PER_RUN,
+    });
+    skipped = filteredProfiles.length - selections.length;
+
+    const profileById = new Map(filteredProfiles.map((p) => [p.id, p]));
+
+    for (const selection of selections) {
+      const profile = profileById.get(selection.userId);
+      const eligibleTemplate = REENGAGEMENT_TEMPLATES.find((t) => t.id === selection.tierId);
+      if (!profile || !eligibleTemplate) continue;
+
+      const daysSinceActive = selection.daysInactive;
       const lastActiveDate = lastActivityMap.get(profile.id) ?? new Date(profile.created_at);
-      const daysSinceActive = Math.floor(
-        (Date.now() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      // Skip recently active users (< 7 days)
-      if (daysSinceActive < 7) {
-        skipped++;
-        continue;
-      }
-
-      // Find the highest-tier template they qualify for but haven't received
-      const eligibleTemplate = REENGAGEMENT_TEMPLATES.filter(
-        (t) => daysSinceActive >= t.inactiveDays,
-      )
-        .filter((t) => !sentKeys.has(`${profile.id}:${t.id}`))
-        .sort((a, b) => b.inactiveDays - a.inactiveDays)[0];
-
-      if (!eligibleTemplate) {
-        skipped++;
-        continue;
-      }
-
       const name = profile.full_name || profile.email?.split("@")[0] || "";
 
       // Use email_sequences.id as unsubscribe token (matches the unsubscribe endpoint)

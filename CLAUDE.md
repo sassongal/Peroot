@@ -38,6 +38,32 @@ Files showing up from the sibling subdir in `git status` are normal, not a leak.
 - **Never bypass RLS.** Service-role client only in `src/lib/supabase/service.ts` call sites.
 - Commit convention: `type(scope): message`.
 
+## Standing authorizations
+
+**Database (granted by Gal, repo owner, 2026-08-24 — open-ended, whole project).**
+Claude may change the Peroot Supabase schema (project `ravinxlujmlvxhgbjxti`) and
+**apply migrations** without asking per change.
+
+How that authority gets exercised, so it stays safe rather than merely fast:
+
+- Every schema change is a **file in `Prut/web/supabase/migrations/`**, committed in
+  the same pass. Never a one-off statement typed into a console and forgotten —
+  that is exactly how `email_logs` came to exist in git but not in production.
+- Migrations are **idempotent** (`IF NOT EXISTS` / `IF EXISTS`) so a re-run is safe.
+- **Verify against the live DB afterwards**, not against the migration's exit code.
+- **RLS stays on.** A new table gets its policy in the same migration. Service-role
+  access only through `src/lib/supabase/service.ts`.
+- Reading production to answer a question never needs a heads-up.
+
+Irreversible **data loss** still gets one sentence of warning first: `DROP TABLE` /
+`DROP COLUMN` on a populated table, `DELETE` without a `WHERE`, disabling RLS, or
+rotating a key other services use. That is a heads-up, not a refusal — say "go"
+and it proceeds.
+
+**Not covered by this grant:** sending real communications to customers
+(re-engagement or marketing email runs). Those are outward-facing and get
+confirmed separately. See `Prut/web/docs/adr/0007-email-logs-dedupe.md`.
+
 ## Before you say "done"
 
 ```bash
