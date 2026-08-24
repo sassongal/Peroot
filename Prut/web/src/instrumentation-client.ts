@@ -57,3 +57,7 @@ Sentry.init({
     return event;
   },
 });
+
+// Required by @sentry/nextjs v9+ so client-side navigations are instrumented.
+// Without this export, App Router route changes produce no transactions.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
