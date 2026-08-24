@@ -292,7 +292,13 @@ Default five-role triage vocabulary (needs-triage, needs-info, ready-for-agent, 
 
 ### Domain docs
 
-Single-context — one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
+Single-context — one `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
+
+### Running agents in parallel
+
+`docs/agents/parallel-work.md` is the protocol, and `scripts/agent-worktree.mjs`
+enforces it (isolated worktree, own `node_modules`, refuses to discard unpushed
+work). Two agents in one working copy has corrupted this repo before.
 
 ## Design Context
 

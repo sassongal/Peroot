@@ -21,14 +21,20 @@ Files showing up from the sibling subdir in `git status` are normal, not a leak.
 - `Prut/web/CLAUDE.md` — stack, structure, conventions, gotchas.
 - `Prut/web/CONTEXT.md` — domain glossary + the load-bearing seams (`extract()`, `withUser`, `useAllPersonalPrompts()`).
 - `Prut/web/PRODUCT.md` + `Prut/web/DESIGN.md` — **normative** for any UI change.
+- `Prut/web/docs/agents/parallel-work.md` — **read this before running more than
+  one agent.** The worktree protocol, and why each rule exists.
+- `Prut/web/docs/adr/` — the decisions that are settled. Don't re-litigate them.
 - `Prut/web/docs/agents/` — issue tracker, triage labels, domain-doc conventions.
-  (`docs/adr/` is referenced by CONTEXT.md but does not exist yet.)
 
 ## Non-negotiables
 
 - **Hebrew-first.** All user-facing strings, category names, toasts, AI system prompts in Hebrew.
 - **`src/proxy.ts`, never `src/middleware.ts`.** Next.js 16 renamed it; having both is a fatal build error.
-- **Never commit secrets.** `.env*`, `**/.mcp.json`, `**/.claude/` are gitignored and must stay that way. The repo is public.
+- **Never commit secrets.** The repo is **public**. `.env*`, `**/.mcp.json` and
+  `**/.claude/settings.local.json` hold live tokens and are gitignored — keep it
+  that way. Note `.claude/` is only *partly* ignored: `commands/`, `agents/` and
+  `settings.json` are deliberately tracked so agents share one config, so never
+  put a credential in those three.
 - **Never bypass RLS.** Service-role client only in `src/lib/supabase/service.ts` call sites.
 - Commit convention: `type(scope): message`.
 
@@ -53,9 +59,18 @@ branch gets a preview. Deploying is not "done" — verify the change is actually
 
 ## Working with agents here
 
-- Parallel sessions have collided on this repo before. Use a git worktree
-  (`using-git-worktrees` skill) for anything long-running, and **never** junction
-  `node_modules` between worktrees — it corrupts the main copy's deps.
-- Long-running/parallel work should land via PR, not direct pushes to `main`.
+- **Two agents must never share one working copy.** Sessions have hijacked each
+  other's commits here. One agent, one worktree:
+  ```bash
+  cd Prut/web
+  node scripts/agent-worktree.mjs new <slug>    # isolated worktree + own deps
+  node scripts/agent-worktree.mjs list          # health, flags linked node_modules
+  node scripts/agent-worktree.mjs done <slug>   # refuses if dirty or unpushed
+  ```
+  Full protocol: `Prut/web/docs/agents/parallel-work.md`.
+- **Never** junction or symlink `node_modules` between worktrees. It corrupts the
+  main copy's deps (~18k tsc errors). Each worktree installs its own.
+- Declare the files you'll touch in the worktree's `AGENT-SCOPE.md` before editing.
+- Long-running/parallel work lands via PR, not direct pushes to `main`.
 - MCP: `supabase` (project-scoped), `github`, `sentry`, `playwright` are wired at
   root in `.mcp.json`. Vercel comes from the `vercel` plugin.

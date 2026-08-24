@@ -55,7 +55,10 @@ next-env.d.ts
 tools/crewai-ui-audit/
 
 # tooling / AI config
-.claude/
+.claude/*
+!.claude/commands/
+!.claude/agents/
+!.claude/settings.json
 # Local planning scratch; codebase map under .planning/codebase/ is tracked
 .planning/**
 !.planning/codebase/

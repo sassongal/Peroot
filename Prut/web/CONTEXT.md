@@ -4,6 +4,8 @@ Single source for the domain language and the load-bearing **seams** of Peroot
 (`Prut/web`). Names here are canonical: use them in code, reviews, and future
 architecture work. Architecture vocabulary (module, interface, depth, seam,
 adapter, leverage, locality) follows the `/codebase-design` skill.
+Settled decisions live in [`docs/adr/`](docs/adr/); running several agents at
+once is governed by [`docs/agents/parallel-work.md`](docs/agents/parallel-work.md).
 
 > New file, seeded 2026-07-17 during the `withUser` design. Add terms lazily as
 > deepened modules get named — don't pad it with concepts the code doesn't have.

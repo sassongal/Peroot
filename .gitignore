@@ -61,8 +61,19 @@ peroot-mcp-server/dist/
 # Local AI tooling config — contains secrets (MCP tokens etc.); never commit
 .mcp.json
 **/.mcp.json
-.claude/
-**/.claude/
+
+# .claude/ — version the SHARED agent config (slash commands, subagents, the
+# non-secret settings.json) so every worktree and machine gets the same setup.
+# Everything else under .claude/ is local state or holds tokens: settings.local.json
+# carries live API keys, worktrees/ is machine-specific. Keep those out.
+.claude/*
+**/.claude/*
+!.claude/commands/
+!.claude/agents/
+!.claude/settings.json
+!**/.claude/commands/
+!**/.claude/agents/
+!**/.claude/settings.json
 
 # Generated knowledge-graph output from the `graphify` skill (regenerate on demand).
 # Note the `src/` copy: it must never be committed, it would be type-checked and linted.
