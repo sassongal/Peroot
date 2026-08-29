@@ -1,4 +1,4 @@
-# Peroot Connect — plan (v0.3 · build-ready, 2026-08-29)
+# Peroot Connect — plan (v0.4 · build-ready, 2026-08-29)
 
 Turn Peroot into the **"prompt brain" any AI agent connects to**: a PRO user
 adds Peroot to Claude / ChatGPT / Cursor / their own code, and from inside that
@@ -381,3 +381,61 @@ quota); configurable per key in the UI.
    ownership) before GA; link from the Connect section.
 8. **`api_usage_logs` lacks per-key attribution** — add `api_key_id` (17).
 9. **Kill switch** — disable Connect without a deploy (19).
+
+## 22. Second review — additional gaps (each a decision)
+Found on a deeper pass against the existing edge/middleware and product rules.
+
+**22.1 proxy.ts will BLOCK browser-origin key calls (bug-in-waiting).**
+`isCsrfExempt()` exempts a Bearer request only when there is no session cookie
+**and** (no Origin OR a chrome-extension origin). A browser-based agent calling
+`/api/v1/*` with a `prk_` key **and an http(s) Origin** is currently **not
+exempt → 403 CSRF**. Server-side callers (no Origin) are fine. → **Add
+`/api/v1/` to the CSRF-exempt prefixes** (it is key-authenticated, not
+cookie-authenticated) and **do NOT** add it to `AUTH_REQUIRED_PREFIXES` (auth is
+the key, resolved in-route, not the middleware session). Add proper **CORS**
+headers for cross-origin REST.
+
+**22.2 Cache-hit credit policy.** The enhance pipeline has a cache (prompt+mode+
+lang). → A **cache hit is FREE** on the API (no LLM spend, better UX); only a
+real generation spends a credit. Response includes `cache_hit: boolean`.
+
+**22.3 Output language default.** Product is Hebrew-first, but agent users are
+often English. → `enhance_prompt` **auto-detects output language from the prompt**
+(fallback Hebrew) with an explicit `output_language` override. Image/Video stay
+English (platform rule in CLAUDE.md) — documented.
+
+**22.4 `mode_options` validation from the single source.** Validate required
+fields per mode by reusing **`CAPABILITY_CONFIGS[mode].requiredFields`** (e.g.
+VIDEO needs `camera_movement`+`duration`) — never a second hard-coded list.
+Missing → `400 invalid_request` naming the field.
+
+**22.5 Contract source of truth = OpenAPI.** Publish an **OpenAPI 3.1 spec** for
+`/api/v1`; generate the DOCS reference, the MCP tool JSON-schemas, and any future
+SDK snippets from it — so the three never drift.
+
+**22.6 Acceptable use + light guardrail.** Add an API/agent **acceptable-use**
+clause; since Peroot outputs prompts (not final media) risk is lower, but add a
+minimal deny/log hook for egregious abuse and per-key anomaly alerting.
+
+**22.7 Analytics for the funnel.** PostHog events: `connect_key_created`,
+`connect_first_enhance`, `connect_trial_exhausted`, `connect_upgrade_clicked`
+— measure activation + upsell conversion (the free-taste ROI).
+
+**22.8 GDPR / account deletion.** Ensure `developer_api_keys` (FK cascade ✓) and
+`api_usage_logs` are removed on account deletion; add to the delete-account flow
+and verify cascade.
+
+**22.9 Plan downgrade & key rotation.** Plan tier is checked **live per call**, so
+a PRO→free downgrade makes keys fall to the non-PRO taste/`402` automatically.
+Key rotation = create new + revoke old (no forced grace; both can be active
+briefly). Document.
+
+**22.10 Concurrency cap.** Beyond req/min, cap **simultaneous in-flight** API
+enhances per user (e.g. 3) so one agent can't monopolize the gateway queue.
+
+**22.11 MCP `resources` (future / non-goal v1).** Later, expose the user's
+library as browsable MCP **resources**; explicitly out of v1 to keep scope tight.
+
+### Non-goals (v1) — stated so scope stays honest
+Team/multi-seat keys · context file/URL ingestion via API · webhooks/events ·
+`suggest_mode` auto-detect · MCP resources · SDK packages (snippets only).
