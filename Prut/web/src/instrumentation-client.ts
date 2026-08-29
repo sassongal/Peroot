@@ -29,20 +29,29 @@ Sentry.init({
   // Drop known-noisy events that are not actionable
   beforeSend(event, hint) {
     const err = hint?.originalException;
-    if (err instanceof Error) {
-      const msg = err.message?.toLowerCase() ?? "";
-      if (
-        msg.includes("failed to fetch") ||
-        msg.includes("networkerror") ||
-        msg.includes("load failed") || // Safari network cancel
-        msg.includes("the user aborted a request") ||
-        msg.includes("resizeobserver loop") ||
-        msg.includes("script error") || // Cross-origin, no useful detail
-        msg.includes("cancelled") ||
-        msg.includes("chunk load error") // Webpack chunk reload; handled by SW
-      ) {
-        return null;
-      }
+    // AbortError is a DOMException (NOT instanceof Error), so read the message
+    // defensively off any object and also fall back to the captured event value.
+    const rawMsg =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object" && err !== null && "message" in err
+          ? String((err as { message?: unknown }).message ?? "")
+          : "";
+    const eventMsg = event.exception?.values?.map((v) => v.value ?? "").join(" ") ?? "";
+    const msg = `${rawMsg} ${eventMsg}`.toLowerCase();
+    if (
+      msg.includes("failed to fetch") ||
+      msg.includes("networkerror") ||
+      msg.includes("load failed") || // Safari network cancel
+      msg.includes("the user aborted a request") ||
+      msg.includes("signal is aborted") || // Supabase auth-js LockManager on navigation/unmount
+      msg.includes("aborted without reason") ||
+      msg.includes("resizeobserver loop") ||
+      msg.includes("script error") || // Cross-origin, no useful detail
+      msg.includes("cancelled") ||
+      msg.includes("chunk load error") // Webpack chunk reload; handled by SW
+    ) {
+      return null;
     }
     // Drop browser-extension-injected errors
     const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
