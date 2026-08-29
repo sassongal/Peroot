@@ -1,4 +1,4 @@
-# Peroot Connect — plan (v0.2, 2026-08-29)
+# Peroot Connect — plan (v0.3 · build-ready, 2026-08-29)
 
 Turn Peroot into the **"prompt brain" any AI agent connects to**: a PRO user
 adds Peroot to Claude / ChatGPT / Cursor / their own code, and from inside that
@@ -68,9 +68,10 @@ Reuse everything that already works; add two thin layers on top.
 
 - **Layer 1 — Developer REST API** (`/api/v1/*`): stable, versioned, `prk_`-auth.
   Serves custom/code agents directly, and is the auth backbone the MCP reuses.
-- **Layer 2 — Remote MCP server**: an HTTP/SSE MCP endpoint (hosted as a Next
-  route or a Worker) that exposes the same capability as MCP tools + ships the
-  bundled instruction prompts. Auth: `prk_` (P1–2) then OAuth (P3).
+- **Layer 2 — Remote MCP server**: a **Streamable HTTP** MCP endpoint **hosted as
+  a Next.js route in the same app** (decided — reuses auth, the enhance pipeline,
+  env, and deploy; avoids a second service to keep drift out). Exposes the tools
+  + ships the bundled instruction prompts. Auth: `prk_` header (P1–2) then OAuth (P3).
 - The existing **`peroot-mcp-server/` is NOT this** — it is an internal,
   local (stdio), service-role **admin** tool (deduct credits, set tier). It must
   never be exposed to users. The user-facing MCP is a new, separate, per-user,
@@ -271,3 +272,112 @@ A PRO user's agent doesn't just "improve text" — it improves it **with the use
 own facts, voice, saved work, and Peroot's per-platform expertise**, and everything
 they do through the agent enriches what they see on the web (and vice-versa). That
 compounding, cross-channel personalization is the thing no generic agent can copy.
+
+---
+
+## 16. Architecture review — gaps found & resolutions (build-readiness)
+Verified against the live code/DB on 2026-08-29. Each item is a decision, not an
+open question.
+
+**16.1 Streaming → single-shot.** `/api/enhance` is SSE-streaming and can trigger
+a **clarifying-questions** step (`/api/enhance/questions`). Agents need one JSON
+answer. → The v1 endpoint runs the pipeline in **collect mode** (aggregate the
+stream server-side, return final text) and **skips the interactive questions
+step** (single-shot; the enhancement proceeds with best-effort assumptions). Do
+NOT fork the pipeline — add a `stream:false` path in the shared enhance code.
+
+**16.2 Auth is already wired.** `resolveAuth()` already routes `prk_*` →
+`validateApiKey()` → service-client scoped to the resolved `user_id`. Phase 1 auth
+work = implement `validateApiKey` only: SHA-256 of the key, **look up by indexed
+`key_prefix`** then constant-time compare `key_hash`, check `is_active` + `expires_at`,
+resolve `user_id`, and update `last_used_at`/`usage_count` **async (fire-and-forget)**.
+No RLS footgun — the existing service-client path is reused.
+
+**16.3 Rate limits — two ceilings.** Per-key 20/min **and** a per-user ceiling
+(default 40/min across all their keys) so N keys can't multiply throughput.
+Upstash sliding window keyed by both `key_id` and `user_id`.
+
+**16.4 Credits, idempotency, trial counter.**
+- Accept an optional **`Idempotency-Key`** header; cache `request_id → result` in
+  Redis (short TTL) so an agent retry returns the same result **without
+  double-charging**.
+- PRO: spend 1 on success via the existing atomic RPC; **refund on failure**
+  (reuse the streaming refund pattern). `save_prompt` + `auto_tag` are **free**
+  (no credit; auto-tag is a cheap classify call).
+- Non-PRO free taste needs its own counter (monthly credits are PRO-only). →
+  add **`profiles.api_trial_used int NOT NULL DEFAULT 0`**, incremented atomically;
+  gate at the `site_settings` value (default 3).
+
+**16.5 Input/output limits & timeouts.** Reject `prompt` > 8,000 chars
+(`400 invalid_request`); cap enhanced output; set `maxDuration` on v1 routes
+(≥60s) so a slow upstream can't hang. Validate `mode` + `mode_options` with zod.
+
+**16.6 Privacy.** `api_usage_logs` stores **no prompt/enhanced text** today — keep
+it that way (metadata only), consistent with `sendDefaultPii:false`. Add
+`api_key_id` for per-key attribution; never log key material or prompt bodies.
+
+**16.7 MCP transport & key injection.** Use **Streamable HTTP** (current MCP
+spec), not legacy SSE — required by claude.ai / ChatGPT / Cursor. For key-based
+clients the `prk_` goes in the `Authorization: Bearer` header:
+- **Claude Desktop:** via the `mcp-remote` bridge (`--header "Authorization: …"`).
+- **Cursor / IDE:** native remote-MCP `headers` config.
+- **REST/custom:** header directly.
+- **claude.ai web / ChatGPT:** header auth not accepted → **OAuth (Phase 3)**.
+Bundled instruction prompts ship via the MCP **`prompts`** capability.
+
+## 17. Required DB changes (Phase 1)
+- `api_usage_logs`: **add `api_key_id uuid NULL` + index** (per-key usage view;
+  keep RLS). `status`/`http_status` optional — token/duration already present.
+- `profiles`: **add `api_trial_used int NOT NULL DEFAULT 0`** (non-PRO taste).
+- `developer_api_keys`: **no change** — already has name/scopes/rate_limit/is_active/expires_at.
+- All as idempotent migrations under `supabase/migrations/`, validated in a
+  rolled-back transaction before commit (as done for the backfill).
+
+## 18. Test plan (build-ready)
+- **Unit:** `validateApiKey` (valid / bad / revoked / expired / wrong-prefix /
+  constant-time); rate-limit (per-key + per-user); credit spend/refund;
+  trial-counter increment & exhaustion; zod validation; idempotency cache.
+- **Integration:** each v1 endpoint — auth (cookie N/A here; key + service-client),
+  RLS isolation (user A cannot read user B), every error code (401/402/429/400),
+  collect-mode enhance returns final text, save→auto-tag→appears in library.
+- **MCP contract:** tool discovery, each tool schema, key-header auth, prompts
+  capability serves the bundled instructions.
+- **Security:** revoked key rejected immediately; cross-user isolation; a leaked
+  key is bounded by rate-limit + credits + per-key spend cap (16.9).
+
+## 19. Rollout & safety
+- **Feature flag** `peroot_connect_enabled` in `site_settings` (quotas-are-data);
+  **kill switch** disables all `/api/v1` + MCP without a deploy.
+- Staged: internal key → small PRO beta → GA. OAuth (P3) gated separately.
+- **Observability:** Sentry tags `{surface:"api"|"mcp", endpoint, key_id}`;
+  per-key metrics from `api_usage_logs`; alert on error-rate / cost spikes.
+- **Versioning:** `/api/v1` frozen contract; additive-only changes; breaking →
+  `/api/v2` with a deprecation window. MCP tool schemas versioned in the server.
+
+## 20. Risks & mitigations
+| Risk | Mitigation |
+|---|---|
+| Leaked `prk_` key drains credits / cost | per-key rate-limit + credit ceiling + **per-key monthly spend cap** (16.9); one-click revoke; alerting |
+| Agent retry double-charges | `Idempotency-Key` + Redis result cache |
+| API load starves web users | shared concurrency queue + circuit breaker (already exist); per-user ceiling |
+| Pipeline logic drifts between channels | one wrapped pipeline, contract tests |
+| Prompt PII in logs | metadata-only logging, enforced by review |
+| MCP spec/client churn | Streamable HTTP standard; `mcp-remote` bridge for header auth |
+
+## 16.9 Per-key spend cap (referenced above)
+Optional monthly credit ceiling **per key** (in addition to the user's quota) so
+one automation/leak can't consume the whole PRO allowance. Default: off (whole
+quota); configurable per key in the UI.
+
+## 21. What we hadn't thought of (architect's extra catches)
+1. **Clarifying-questions step** — must be bypassed for agents (16.1).
+2. **Retry double-charge** — needs idempotency (16.4).
+3. **Rate multiplication across multiple keys** — needs a per-user ceiling (16.3).
+4. **Non-PRO taste has no counter** — monthly credits are PRO-only; new column (16.4).
+5. **MCP transport must be Streamable HTTP** and key-header injection differs per
+   client — a wizard-content requirement, not an afterthought (16.7).
+6. **Leaked-key blast radius** — per-key spend cap + alerting (16.9, 20).
+7. **Legal/ToS** — an API/agent ToS clause (acceptable use, rate/fair-use, prompt
+   ownership) before GA; link from the Connect section.
+8. **`api_usage_logs` lacks per-key attribution** — add `api_key_id` (17).
+9. **Kill switch** — disable Connect without a deploy (19).
