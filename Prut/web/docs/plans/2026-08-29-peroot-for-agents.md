@@ -1,4 +1,4 @@
-# Peroot Connect — plan (v0.4 · build-ready, 2026-08-29)
+# Peroot Connect — plan (v0.5 · FINAL build-ready, 2026-08-29)
 
 Turn Peroot into the **"prompt brain" any AI agent connects to**: a PRO user
 adds Peroot to Claude / ChatGPT / Cursor / their own code, and from inside that
@@ -164,8 +164,10 @@ Table of contents:
 
 ## 8. Roadmap (harmony-integrated)
 - **Phase 1 — Developer API foundation + moat exposed.**
-  `validateApiKey`; `/api/v1/enhance` (wrapping the existing pipeline so memory
-  facts + style + engine skill apply for free) with `target_platform`;
+  **Extract the enhance orchestration into a callable `runEnhance()` lib seam**
+  (23.1 — the single biggest P1 task); `validateApiKey`; `/api/v1/enhance`
+  (calling the seam so memory facts + style + engine skill apply for free) with
+  `target_platform`;
   `/api/v1/prompts*` (save w/ auto-tag + auto-version, search, list, get);
   key create/revoke route; Settings key management; per-key 20/min rate-limit;
   `api_usage_logs`; PRO gate + non-PRO free taste. → Cursor / REST / custom live.
@@ -439,3 +441,66 @@ library as browsable MCP **resources**; explicitly out of v1 to keep scope tight
 ### Non-goals (v1) — stated so scope stays honest
 Team/multi-seat keys · context file/URL ingestion via API · webhooks/events ·
 `suggest_mode` auto-detect · MCP resources · SDK packages (snippets only).
+
+## 23. Final closure round — implementation truths (verified in code)
+
+**23.1 The pipeline seam does NOT exist yet — extracting it IS Phase 1 work.**
+`/api/enhance/route.ts` is ~1,200 lines with the orchestration embedded in the
+handler (auth/refund/engine-input are in `lib/`, but there is no callable
+`runEnhance()`). The honest P1 scope therefore includes **extracting the enhance
+orchestration into a lib function** the v1 route calls directly. Two forbidden
+shortcuts, named explicitly: (a) **no internal HTTP** call from v1 to
+`/api/enhance` (re-enters proxy/CSRF/session — wrong identity model), and
+(b) **no logic fork** (drift). Good news verified: a **non-streaming JSON path
+already exists** (the cache-hit branch returns `NextResponse.json`), so collect
+mode has precedent in the same file.
+
+**23.2 MCP must run STATELESS on Vercel.** Serverless has no session affinity, so
+the MCP endpoint runs Streamable HTTP in **stateless mode** (each tool call is a
+self-contained POST; no server-push notifications, no `Mcp-Session-Id` state).
+Claude/Cursor support this. Decided — do not attempt stateful sessions in v1.
+
+**23.3 Client timeout budget.** Agent-side MCP clients commonly cut off around
+~60s. Target p95 < 30s; hard-stop at **55s** with a clean `504 timeout` error
+**+ automatic credit refund**, so the agent never hangs past its own deadline.
+(Server `maxDuration` stays higher; the 55s guard is ours.)
+
+**23.4 No double rate-limiting.** The enhance pipeline already runs a tier-based
+`checkRateLimit` internally. For the API surface, limits live **only at the v1
+layer** (per-key 20/min, per-user 40/min, concurrency cap); the extracted
+pipeline function takes a `skipRateLimit` flag set by v1 (which has already
+enforced its own). One limiter per surface, never two.
+
+**23.5 Key format (spec).** `prk_live_` + 40 hex chars (20 random bytes,
+`crypto.randomBytes`). Stored: SHA-256 `key_hash` + first 12 chars as
+`key_prefix` (indexed). Lookup by prefix may match multiple rows → compare hash
+against **all** matches in constant time. Test keys later = `prk_test_` (P4+).
+
+**23.6 `quota_resets_at`.** Success responses include `credits_remaining` +
+`quota_resets_at`; `402 no_credits` includes it too — the agent can always tell
+the user when their quota returns.
+
+**23.7 Idempotency-cache privacy exception.** The Redis idempotency cache holds
+the enhanced result ≤15 min (keyed by `hash(user_id, idempotency_key)`), then
+expires. This is the **only** place response text rests outside the user's own
+tables, and it is documented as such. `api_usage_logs` stays metadata-only.
+
+**23.8 DOCS delivery.** MDX pages under `/docs/connect` in the same Next app,
+he/en via the existing i18n pattern, public + SEO-indexed (docs are marketing).
+The API reference page is **generated from the OpenAPI spec** (22.5) at build
+time so it cannot drift.
+
+**23.9 Definition of Done — per phase.**
+- *P1:* migrations applied+verified · `validateApiKey` + v1 routes with unit+
+  integration tests green · OpenAPI published · rate/credit/trial/idempotency
+  tests pass · Sentry tags live · feature flag works (on/off without deploy).
+- *P2:* MCP tools pass a real Claude Desktop + Cursor session end-to-end ·
+  bundled prompts ship · Connect section live (upsell for non-PRO) · DOCS he/en
+  published · funnel events firing.
+- *P2.5:* style loop produces rows for active users; enhance provably uses them.
+- *P3:* OAuth flow passes claude.ai web + ChatGPT connector review; directory
+  listings submitted.
+
+**23.10 Go/No-Go gate before GA.** All DoD items green · kill switch tested in
+prod · secrets rotated (the 3 exposed this session!) · ToS/acceptable-use page
+linked · error copy reviewed in Hebrew+English · beta feedback triaged.
