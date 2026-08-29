@@ -152,6 +152,15 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Reject malformed paths at the edge. Bots probe URLs with a trailing
+  // backslash (e.g. /examples\ → %5C) or raw control chars; Next then tries to
+  // resolve a non-existent pages-router module and throws "Cannot find module
+  // './.next/server/pages/…'", which dominated the Sentry issue list. No
+  // legitimate route contains these characters, so answer a clean 404 here.
+  if (pathname.includes("\\") || /%5c/i.test(pathname) || /[\x00-\x1f]/.test(pathname)) {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   const isMaintenance = await getCachedMaintenanceMode();
 
   // Supabase SSR refresh: required for any request that carries auth cookies,
