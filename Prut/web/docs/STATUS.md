@@ -41,7 +41,7 @@ Last reviewed: 2026-04-24
 | Developer API (`prk_*` keys) | No `developer_api_keys` migration; no mint/revoke UI | Add migration + UI, then replace stub in `src/lib/api-auth.ts`. Detection branches kept in `proxy.ts`, `enhance/lib/auth.ts`, `enhance/route.ts` |
 | `@react-pdf/renderer` top-level import | v4 sub-packages broken on npm | Use dynamic import via `src/lib/export/download-prompt-pdf.tsx` only |
 | SSRF private-IP bypass via `NODE_ENV` | Previously opened private IPs on any non-prod deploy | Set `CONTEXT_ALLOW_PRIVATE_URLS=1` explicitly |
-| `husky` prepare script | Windows incompat | Removed from `package.json`; hooks not active locally |
+| `husky`'s own `prepare` (`husky install`) | Windows incompat | Replaced by `scripts/setup-git-hooks.mjs` (the `prepare` script) which points `core.hooksPath` at `.husky/`. Hooks ARE active — `.husky/pre-commit` runs lint-staged. The `husky` npm dep is now vestigial (knip flags it unused). |
 | `@next/bundle-analyzer` | Disabled locally | Stubbed import; enable with `ANALYZE=true` |
 
 ## Deprecated / migrated away

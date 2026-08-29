@@ -106,7 +106,7 @@ lib/
     server.ts               # SSR client (user context)
     service.ts              # Service role client (admin)
   export/
-    PromptPdfDocument.tsx   # PDF template (STUBBED — see above)
+    PromptPdfDocument.tsx   # PDF template — full impl; load only via dynamic import (SSR-unsafe at module init)
     download-prompt-pdf.tsx # Dynamic import wrapper (OK to use)
   capability-mode.ts        # STANDARD | DEEP_RESEARCH | IMAGE_GENERATION | AGENT_BUILDER | VIDEO_GENERATION
   env.ts                    # Env validation — throws on missing required vars

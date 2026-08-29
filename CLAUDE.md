@@ -70,7 +70,7 @@ confirmed separately. See `Prut/web/docs/adr/0007-email-logs-dedupe.md`.
 cd Prut/web
 npm run typecheck     # hard gate in CI
 npm run test          # hard gate in CI (~1150 tests)
-npm run lint          # non-blocking in CI, ~41 pre-existing errors
+npm run lint          # non-blocking in CI; exits 0 errors (~49 warnings, mostly no-unused-vars)
 ```
 
 CI (`.github/workflows/ci.yml`) runs `quality` on every push/PR to `main`. It is
