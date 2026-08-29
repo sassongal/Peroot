@@ -43,6 +43,13 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(10, "1 h"),
     prefix: "@peroot/ratelimit:referral",
   }),
+  // Peroot Connect — developer key management (create/revoke). Deliberately
+  // tight: key churn is rare, and this caps hostile mint/revoke loops.
+  apiKeys: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    prefix: "@peroot/ratelimit:api-keys",
+  }),
   folders: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(50, "1 h"),
@@ -151,6 +158,7 @@ type RateLimitTier =
   | "adminWrite"
   | "share"
   | "referral"
+  | "apiKeys"
   | "folders"
   | "history"
   | "favorites"

@@ -1,4 +1,4 @@
-# Peroot Connect — plan (v0.5 · FINAL build-ready, 2026-08-29)
+# Peroot Connect — plan (v0.6 · build-ready + build started, 2026-08-29)
 
 Turn Peroot into the **"prompt brain" any AI agent connects to**: a PRO user
 adds Peroot to Claude / ChatGPT / Cursor / their own code, and from inside that
@@ -19,7 +19,7 @@ feed every channel's usage back into the same brain (see §15, Harmony).
 ## 1. Locked decisions
 | # | Decision |
 |---|---|
-| Tier | **PRO feature**, with a **free lifetime taste for non-PRO** (default 3 API enhances, read from `site_settings`) to drive the upsell. |
+| Tier | **Unified quota (SUPERSEDES the earlier "3 lifetime taste"):** agent/API usage draws from the user's **regular allowance** — free **1/day** (`site_settings.daily_free_limit`), PRO **150/month**. Same `refresh_and_decrement_credits` RPC as the web; no separate trial counter needed. |
 | Auth | **`prk_` API key first**, **OAuth 2.1 later**. |
 | Credits | Agent/API enhancements draw from the **same Pro monthly allowance** as the web. |
 | Auto-save | **Explicit only** — nothing is saved unless the user asks the agent (`save_prompt`). |
@@ -120,11 +120,11 @@ Instruction prompts shipped with the connector so the agent uses Peroot well:
   `rate_limit`, `is_active`, `expires_at`, `last_used_at`, `usage_count`.
 - Raw key shown **once** at creation (`prk_` + random); afterwards only the
   prefix. `validateApiKey()` = hash lookup + active/expiry + user resolution.
-- **Credits:** PRO → each `enhance` spends 1 from the Pro monthly allowance via
-  the existing atomic RPC; refund on failure. **Non-PRO → a free lifetime taste**
-  (default **3** API enhances, value in `site_settings` per the "quotas are data"
-  rule); after that, `402 trial_exhausted` with an upgrade CTA. **Rate-limit per
-  key** (Upstash, 20/min), independent of quota.
+- **Credits — unified quota:** every `enhance` spends 1 via the existing atomic
+  `refresh_and_decrement_credits` RPC (tier-aware: free 1/day from
+  `site_settings.daily_free_limit`, PRO 150/month); refund on failure. No
+  separate trial counter — **`profiles.api_trial_used` from §17 is CANCELLED**.
+  **Rate-limit per key** (Upstash, 20/min), independent of quota.
 - **`api_usage_logs`**: per-key call log (endpoint, mode, status, latency) for
   the usage view + abuse detection.
 
@@ -220,8 +220,8 @@ tell the user how much Pro quota is left.
 ## 11. Error model (what the agent surfaces)
 Consistent shape `{ error, code }` with Hebrew + English message:
 - `401 invalid_key` — bad/revoked key → "re-create a key in Peroot Connect".
-- `402 trial_exhausted` — non-PRO used the free taste → upgrade CTA.
-- `402 no_credits` — PRO monthly quota exhausted → "resets on <date>".
+- `402 no_credits` — allowance exhausted (free daily / PRO monthly) →
+  `quota_resets_at` + upgrade CTA for free users.
 - `429 rate_limited` — >20/min on this key → retry-after.
 - `400 invalid_mode` / `invalid_request`.
 
@@ -504,3 +504,31 @@ time so it cannot drift.
 **23.10 Go/No-Go gate before GA.** All DoD items green · kill switch tested in
 prod · secrets rotated (the 3 exposed this session!) · ToS/acceptable-use page
 linked · error copy reviewed in Hebrew+English · beta feedback triaged.
+
+## 24. Command vocabulary — the `/peroot:` namespace (v0.6)
+Users invoke Peroot inside their agent through a consistent, friendly command
+family. Implementation: MCP **prompts** (which surface as slash commands in MCP
+clients) + matching MCP **tools** the model calls. One namespace, short verbs,
+Hebrew-first help text with English aliases.
+
+| Command | What it does | Maps to tool |
+|---|---|---|
+| `/peroot:enhance` | שדרוג פרומפט (מוד STANDARD) | `enhance_prompt(mode=STANDARD)` |
+| `/peroot:image` | פרומפט מושלם לתמונה | `enhance_prompt(mode=IMAGE_GENERATION)` |
+| `/peroot:video` | פרומפט מושלם לוידאו | `enhance_prompt(mode=VIDEO_GENERATION)` |
+| `/peroot:research` | פרומפט למחקר מעמיק | `enhance_prompt(mode=DEEP_RESEARCH)` |
+| `/peroot:agent` | פרומפט לבניית סוכן | `enhance_prompt(mode=AGENT_BUILDER)` |
+| `/peroot:save` | שמירה + תיוג לספרייה | `save_prompt(auto_tag=true)` |
+| `/peroot:find` | חיפוש בספרייה האישית | `search_my_prompts` |
+| `/peroot:library` | תבניות מוכחות מהספרייה הציבורית | `search_public_library` (P2) |
+| `/peroot:quota` | כמה נשאר לי + מתי מתחדש | `get_quota` |
+| `/peroot:help` | מה Peroot יודע לעשות | (prompt only) |
+
+Naming rules: verbs are short, memorable, mode shortcuts spare the user from
+remembering `mode` params; every command's description is Hebrew-first. Tool
+names stay `snake_case` (MCP spec-safe); the `peroot:` prefix comes from the
+server namespace, so clients render `/peroot:enhance` naturally.
+
+**`get_quota` (new v1 tool):** returns `{ tier, credits_remaining,
+quota_resets_at }` — free tool (no credit), powers `/peroot:quota` and lets
+agents warn users before an enhance would fail.
