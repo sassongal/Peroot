@@ -1,6 +1,20 @@
 -- ============================================
--- Peroot Database Schema (Full Sync)
+-- Peroot Database Schema — BOOTSTRAP BASELINE
 -- Refreshed on: 2026-02-01
+-- ============================================
+--
+-- ⚠️ NOT AUTHORITATIVE / NOT AUTO-REGENERATED.
+-- This is the historical BOOTSTRAP snapshot: it creates the base tables
+-- (profiles, history, site_settings, ...) that the incremental migrations in
+-- `supabase/migrations/` assume already exist. A fresh rebuild applies THIS file
+-- first, then every file in `supabase/migrations/` in timestamp order.
+--
+-- The canonical source of truth for anything created/changed AFTER 2026-02-01 is
+-- `supabase/migrations/`, NOT this snapshot — it is not regenerated on every
+-- schema change, so it can lag the live DB. Do not treat it as current.
+-- Known drift: `prompt_popularity` below is created here but later DROPPED by
+-- `supabase/migrations/20260719150000_drop_dead_popularity.sql` (created →
+-- dropped on rebuild, which is correct — just don't read it as a live table).
 -- ============================================
 
 -- ============================================
