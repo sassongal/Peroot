@@ -50,6 +50,20 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(10, "1 h"),
     prefix: "@peroot/ratelimit:api-keys",
   }),
+  // Peroot Connect public surface (/api/v1 + /api/mcp): per-KEY ceiling —
+  // bounds one leaked or runaway key.
+  connectKey: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, "1 m"),
+    prefix: "@peroot/ratelimit:connect-key",
+  }),
+  // …and a per-USER ceiling across all their keys, so minting N keys can't
+  // multiply throughput.
+  connectUser: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(40, "1 m"),
+    prefix: "@peroot/ratelimit:connect-user",
+  }),
   folders: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(50, "1 h"),
@@ -159,6 +173,8 @@ type RateLimitTier =
   | "share"
   | "referral"
   | "apiKeys"
+  | "connectKey"
+  | "connectUser"
   | "folders"
   | "history"
   | "favorites"

@@ -11,8 +11,8 @@ facts, writing-style profile, the Memory Palace graph, and the curated public
 library. Peroot Connect's job is to carry ALL of that into the agent, and to
 feed every channel's usage back into the same brain (see §15, Harmony).
 
-> Status: PLANNING. Nothing here is built yet. Decisions were locked with the
-> product owner over 2026-08-29; v0.2 folds in the harmony/synergy pass.
+> Status: BUILDING. Phase 1 core (keys) + v1 REST + MCP server are implemented
+> on the feature branch (see §24 for the /peroot: commands). UI + DOCS next.
 
 ---
 

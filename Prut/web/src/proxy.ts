@@ -56,6 +56,11 @@ const CSRF_EXEMPT_PREFIXES = [
   "/api/webhooks/", // External service webhooks (HMAC-verified)
   "/api/cron/", // Cron jobs (CRON_SECRET header auth)
   "/api/health", // Public health check
+  // Peroot Connect public surface — authenticated by prk_ API key, never by
+  // cookies, so CSRF does not apply. Browser-origin agent calls would
+  // otherwise 403 here (the Bearer exemption below requires an empty Origin).
+  "/api/v1/",
+  "/api/mcp",
 ];
 
 /** @internal exported for unit tests — do not import from app code */
