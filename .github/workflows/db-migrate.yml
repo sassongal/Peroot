@@ -1,0 +1,56 @@
+name: DB Migrate (manual)
+
+# Manual, self-verifying database migration runner.
+# GitHub Actions only reads workflows from the repo-root .github/workflows,
+# so this lives here (the old Prut/web/.github/workflows/migrate.yml was never
+# registered). Dispatch-only on purpose — it never runs automatically, so
+# merging it changes no existing behavior. DATABASE_URL comes from repo secrets,
+# so no credential is ever needed on a developer machine.
+#
+# Inputs:
+#   migration_file — a single file under Prut/web/supabase/migrations to apply
+#                    and verify (default: the VIDEO_GENERATION enum fix).
+#   run_all        — set "true" to run the full idempotent migration set instead.
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_file:
+        description: "Single migration file to apply + verify"
+        required: false
+        default: "20260829000000_add_video_generation_capability_mode.sql"
+      run_all:
+        description: "Run the full migration set instead (true/false)"
+        required: false
+        default: "false"
+
+defaults:
+  run:
+    working-directory: Prut/web
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: Prut/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ "${{ github.event.inputs.run_all }}" = "true" ]; then
+            npm run db:migrate
+          else
+            node scripts/apply-and-verify-migration.mjs "${{ github.event.inputs.migration_file }}"
+          fi
