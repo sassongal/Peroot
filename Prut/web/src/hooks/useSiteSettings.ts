@@ -104,11 +104,13 @@ export function useSiteSettings() {
         settingsCache = data;
         applyThemeColors(data);
       } else if (error) {
-        logger.error("[Settings] Failed to load:", error);
+        // Falls back to defaultSettings + default theme, so the app stays usable.
+        // Non-actionable transient read failure — warn, don't error into Sentry.
+        logger.warn("[Settings] Failed to load:", error);
         applyThemeColors(defaultSettings);
       }
     } catch (error) {
-      logger.error("[Settings] Error:", error);
+      logger.warn("[Settings] Error:", error);
       applyThemeColors(defaultSettings);
     } finally {
       setLoading(false);

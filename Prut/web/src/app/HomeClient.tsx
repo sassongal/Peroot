@@ -395,7 +395,10 @@ function PageContent() {
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) {
-          logger.error("Error fetching profile:", error);
+          // Best-effort: only used to hydrate the credits badge + onboarding flag.
+          // A transient read failure degrades gracefully (badge stays stale), so
+          // warn rather than error to keep non-actionable noise out of Sentry.
+          logger.warn("Error fetching profile:", error);
           return;
         }
         if (data) {
