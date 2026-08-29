@@ -1,12 +1,18 @@
-# Peroot for Agents — plan (v0.1, 2026-08-29)
+# Peroot Connect — plan (v0.2, 2026-08-29)
 
 Turn Peroot into the **"prompt brain" any AI agent connects to**: a PRO user
 adds Peroot to Claude / ChatGPT / Cursor / their own code, and from inside that
 agent can turn any request into a perfected, expanded prompt across all five
 modes — and, on request, save & tag it into their Memory Palace.
 
-> Status: PLANNING. Nothing here is built yet. Decisions below were locked with
-> the product owner on 2026-08-29; open questions are listed at the end.
+The moat is NOT "enhance a prompt" (any LLM does that). It is Peroot's
+**accumulated intelligence** — per-platform engine skills, per-user memory
+facts, writing-style profile, the Memory Palace graph, and the curated public
+library. Peroot Connect's job is to carry ALL of that into the agent, and to
+feed every channel's usage back into the same brain (see §15, Harmony).
+
+> Status: PLANNING. Nothing here is built yet. Decisions were locked with the
+> product owner over 2026-08-29; v0.2 folds in the harmony/synergy pass.
 
 ---
 
@@ -72,20 +78,29 @@ Reuse everything that already works; add two thin layers on top.
 
 ---
 
-## 3. Tool / endpoint surface (v1)
+## 3. Tool / endpoint surface
 
 All tools resolve to one authenticated Peroot user (RLS-scoped, their credits).
+Every `enhance_prompt` call automatically benefits from the user's **memory
+facts**, **style profile**, and the right **per-platform engine skill** — because
+the tool wraps the existing `/api/enhance` pipeline (see §15). The agent doesn't
+opt in to the intelligence; it gets it for free.
 
-| Tool (MCP) | REST | Purpose | Notes |
+| Phase | Tool (MCP) | REST | Purpose |
 |---|---|---|---|
-| `enhance_prompt` | `POST /api/v1/enhance` | Perfect+expand a prompt | params: `prompt`, `mode` (STANDARD/DEEP_RESEARCH/IMAGE_GENERATION/VIDEO_GENERATION/AGENT_BUILDER), `target_model?`, mode options; spends 1 credit; **non-stream JSON** for agents |
-| `save_prompt` | `POST /api/v1/prompts` | Save to library + Memory Palace | params: `prompt`, `tags?`, `auto_tag?`; explicit-only |
-| `search_my_prompts` | `GET /api/v1/prompts/search` | Fuzzy search the user's library | reuses `search_personal_library_fuzzy` |
-| `list_my_prompts` | `GET /api/v1/prompts` | List/paginate library | folders/filters |
-| `get_prompt` | `GET /api/v1/prompts/:id` | Fetch one saved prompt | |
+| P1 | `enhance_prompt` | `POST /api/v1/enhance` | Perfect+expand. params: `prompt`, `mode`, `target_platform?` (Midjourney/Sora/ChatGPT…→ picks the engine skill), `target_model?`, `mode_options`, `output_language?`. Spends 1 credit; non-stream JSON. |
+| P1 | `save_prompt` | `POST /api/v1/prompts` | Save to library + Memory Palace. params: `prompt`, `tags?`, `auto_tag?`. Explicit-only. Auto-versions on refine. |
+| P1 | `search_my_prompts` | `GET /api/v1/prompts/search` | Fuzzy search the user's library (`search_personal_library_fuzzy`). |
+| P1 | `list_my_prompts` / `get_prompt` | `GET /api/v1/prompts[/:id]` | List/paginate / fetch one. |
+| P2 | `search_public_library` | `GET /api/v1/library/search` | Search the 724 curated public prompts/templates — "start from something proven". |
+| P2 | `fill_template` | `POST /api/v1/templates/fill` | Fill a parametric template with the user's variables/presets. |
+| P2 | `remember_fact` / `list_facts` | `…/user/memory` | Let the user grow their "brain" via the agent; feeds future enhancements. |
+| P2 | `rate_prompt` | `POST /api/v1/feedback` | Close the quality loop → scoring + Memory Palace. |
+| P4 | `related_prompts` | `GET /api/v1/prompts/:id/related` | Memory Palace neighbors (Jaccard + co-occurrence). |
+| P4 | `run_chain` | `POST /api/v1/chains/:id/run` | Execute a saved multi-step prompt chain. |
 
-Deliberately **out of v1**: chains, context file/URL ingestion, `suggest_mode`
-auto-detect, any admin action.
+Deliberately **out of scope for now**: context file/URL ingestion, `suggest_mode`
+auto-detect, and **all** admin actions.
 
 ### Bundled connector "skills" (MCP prompts)
 Instruction prompts shipped with the connector so the agent uses Peroot well:
@@ -146,16 +161,24 @@ Table of contents:
 
 ---
 
-## 8. Roadmap
-- **Phase 1 — Developer API + key UI.** Implement `validateApiKey`, `/api/v1/enhance`
-  + `/api/v1/prompts*`, key create/revoke route, Settings key management,
-  per-key rate-limit, `api_usage_logs`. → Cursor/REST/custom users live.
-- **Phase 2 — Remote MCP (key auth) + bundled skills + section + DOCS.**
-  Remote MCP endpoint wrapping the v1 API; ship instruction prompts; build the
-  platform section + DOCS (he/en). → Claude Desktop live.
-- **Phase 3 — One-click OAuth.** OAuth 2.1 server → claude.ai web + ChatGPT live.
-- **Phase 4 — Smarter recall.** Feed agent usage back into Memory Palace
-  co-occurrence; optional `suggest_mode`.
+## 8. Roadmap (harmony-integrated)
+- **Phase 1 — Developer API foundation + moat exposed.**
+  `validateApiKey`; `/api/v1/enhance` (wrapping the existing pipeline so memory
+  facts + style + engine skill apply for free) with `target_platform`;
+  `/api/v1/prompts*` (save w/ auto-tag + auto-version, search, list, get);
+  key create/revoke route; Settings key management; per-key 20/min rate-limit;
+  `api_usage_logs`; PRO gate + non-PRO free taste. → Cursor / REST / custom live.
+- **Phase 2 — Remote MCP + bundled skills + section + DOCS + library synergies.**
+  Remote MCP wrapping the v1 API; ship instruction prompts; `search_public_library`,
+  `fill_template`, `remember_fact`/`list_facts`, `rate_prompt`; build the Peroot
+  Connect section + DOCS (he/en). → Claude Desktop live.
+- **Phase 2.5 — Revive style-analysis.** `user_style_personality` has **0 rows**
+  — the style loop isn't producing. Fix it and apply the user's voice to every
+  enhancement (web + extension + agent). Pure personalization win, no new surface.
+- **Phase 3 — One-click OAuth.** OAuth 2.1 + PKCE + dynamic client registration
+  → claude.ai web + ChatGPT connectors live.
+- **Phase 4 — Smart recall & workflows.** `related_prompts` (Memory Palace graph)
+  + feed agent usage back into co-occurrence; `run_chain`; optional `suggest_mode`.
 
 ---
 
@@ -213,3 +236,38 @@ advanced users can mint read-only or enhance-only keys.
 - List Peroot in the Anthropic/OpenAI connector directories once OAuth ships.
 - Exact free-taste number + whether it ever resets (default: 3, lifetime).
 - Verbose-mode payload shape (when we add it in P4).
+
+## 15. Harmony — one brain, many mouths
+The organizing principle for the whole system: **web, Chrome extension, and
+agents are three mouths on one brain.** Each channel must (1) READ from the same
+intelligence and (2) WRITE back into it, so every use anywhere makes the brain
+smarter and every channel benefits. Peroot Connect is not a bolt-on API — it is
+the third mouth, wired to the same brain.
+
+### The brain's assets — status & how Connect keeps them in harmony
+| Asset | Live data | Status | Harmony action |
+|---|---|---|---|
+| Engine skills (per-platform) | 1,042 selections | 🟢 live, web/ext only | `enhance` `target_platform` picks the right skill — the moat, exposed |
+| Memory facts | 435 | 🟢 live, enhance-only | auto-applied to agent enhances; `remember_fact`/`list_facts` let the agent grow it |
+| Style profile | **0** | 🔴 dormant (loop not producing) | **Phase 2.5**: fix the loop, apply the user's voice everywhere |
+| Public library | 724 (574 templates) | 🟡 web search only | `search_public_library` + `fill_template` |
+| Variables / presets | 56 / **0** | 🟡 partial, presets dormant | `fill_template` uses them; revive presets |
+| Memory Palace graph | 717 events | 🟢 live, web only | `related_prompts` + agent usage feeds co-occurrence (P4) |
+| Prompt chains | 4 | 🟡 nascent | `run_chain` (P4) |
+| Prompt versions | **0** | 🔴 unused | auto-version on save/refine (P1) |
+| Feedback | 2 | 🔴 near-dead | `rate_prompt` closes the loop → scoring + palace |
+
+### Structural rules that keep it harmonious
+1. **One pipeline, wrapped not forked.** The API/MCP call `/api/enhance` — never a
+   parallel copy — so skills/facts/style/scoring/credits can't drift between channels.
+2. **One capability-mode vocabulary everywhere** (the VIDEO_GENERATION enum drift
+   fixed on 2026-08-29 was exactly this class of disharmony).
+3. **Every channel closes its loops** — writes history, palace events, facts, and
+   feedback back to the brain.
+4. **One identity & credit ledger** across web/ext/agent (already true via `withUser`).
+
+### Net effect for the user
+A PRO user's agent doesn't just "improve text" — it improves it **with the user's
+own facts, voice, saved work, and Peroot's per-platform expertise**, and everything
+they do through the agent enriches what they see on the web (and vice-versa). That
+compounding, cross-channel personalization is the thing no generic agent can copy.
