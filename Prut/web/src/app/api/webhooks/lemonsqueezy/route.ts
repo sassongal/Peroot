@@ -6,6 +6,42 @@ import { verifyWebhookSignature } from "./lib/verify";
 import { type LsEvent } from "./lib/subscription-data";
 import { handleSubscriptionEvent } from "./lib/subscription";
 
+type ServiceClient = ReturnType<typeof createServiceClient>;
+
+/**
+ * Best-effort resolution of the Peroot user_id for a webhook event.
+ * Order: checkout custom_data → stored subscription row by LS subscription id →
+ * stored subscription row by LS customer id (stable across resubscribes).
+ * Returns null when none match. Reads the `subscriptions` table only, whose rows
+ * were written with a verified user_id at checkout time.
+ */
+async function resolveUserId(supabase: ServiceClient, event: LsEvent): Promise<string | null> {
+  const fromCustom = event.meta?.custom_data?.user_id;
+  if (fromCustom) return fromCustom;
+
+  const subId = event.data?.id;
+  if (subId) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("user_id")
+      .eq("lemonsqueezy_subscription_id", subId)
+      .maybeSingle();
+    if (sub?.user_id) return sub.user_id as string;
+  }
+
+  const customerId = event.data?.attributes?.customer_id;
+  if (customerId != null) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("user_id")
+      .eq("lemonsqueezy_customer_id", String(customerId))
+      .maybeSingle();
+    if (sub?.user_id) return sub.user_id as string;
+  }
+
+  return null;
+}
+
 /**
  * POST /api/webhooks/lemonsqueezy
  * Handles LemonSqueezy webhook events for subscription lifecycle.
@@ -38,9 +74,6 @@ export async function POST(request: Request) {
   // Parse event
   const event = JSON.parse(rawBody) as LsEvent;
   const eventName = event.meta?.event_name;
-  const userId = event.meta?.custom_data?.user_id;
-
-  logger.info(`[LemonSqueezy Webhook] Event: ${eventName}, User: ${userId}`);
 
   if (!eventName) {
     return new NextResponse("Missing event name", { status: 400 });
@@ -83,15 +116,36 @@ export async function POST(request: Request) {
     return new NextResponse("Dedup insert failed", { status: 500 });
   }
 
+  // Resolve the Peroot user this event belongs to — only for subscription events,
+  // which are the only ones that act on a user. custom_data.user_id is set at
+  // checkout (see /api/checkout) and is present on checkout-triggered events, but
+  // automatic renewals, dunning retries and dashboard "send test" pings can arrive
+  // WITHOUT it. Rather than error out (which spammed Sentry via captureConsole and
+  // made LemonSqueezy retry an un-attributable event forever), fall back to the
+  // subscription row we already stored (by subscription id, then customer id).
+  const isSubscriptionEvent = eventName.startsWith("subscription_");
+  const userId = isSubscriptionEvent ? await resolveUserId(supabase, event) : null;
+
+  logger.info(`[LemonSqueezy Webhook] Event: ${eventName}, User: ${userId ?? "unresolved"}`);
+
   try {
-    if (eventName.startsWith("subscription_")) {
+    if (isSubscriptionEvent) {
       const attributes = event.data?.attributes;
       if (!attributes) {
         return new NextResponse("Missing subscription data", { status: 400 });
       }
       if (!userId) {
-        logger.error("[LemonSqueezy Webhook] Missing user_id in custom_data");
-        return new NextResponse("Missing user_id in custom_data", { status: 400 });
+        // Not an error — we genuinely cannot attribute this event (e.g. a test
+        // ping or a legacy sub with no matching row/e-mail). Acknowledge with 200
+        // so LemonSqueezy stops retrying; warn (not error) keeps it out of Sentry.
+        logger.warn(
+          `[LemonSqueezy Webhook] Could not resolve user for ${eventName} (sub ${event.data?.id}); acknowledging without processing`,
+        );
+        await supabase
+          .from("webhook_events")
+          .update({ processed: true })
+          .eq("event_name", dedupKey);
+        return new NextResponse("Acknowledged (no matching user)", { status: 200 });
       }
       await handleSubscriptionEvent(supabase, event, eventName, userId);
     }

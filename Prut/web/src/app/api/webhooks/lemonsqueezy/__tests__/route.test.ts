@@ -293,17 +293,19 @@ describe("POST /api/webhooks/lemonsqueezy", () => {
       expect(await res.text()).toBe("Missing subscription data");
     });
 
-    it("returns 400 when subscription event has no user_id in custom_data", async () => {
+    it("acknowledges with 200 when user_id cannot be resolved (no custom_data, no matching subscription)", async () => {
+      // custom_data.user_id absent AND no stored subscription matches the sub/customer id.
+      // The webhook must NOT 400 (LemonSqueezy would retry forever) nor log an error
+      // (that spammed Sentry); it acknowledges so the un-attributable event is dropped.
       const event = buildEvent("subscription_created");
-      // Remove user_id
       (event.meta.custom_data as Record<string, unknown>).user_id = undefined;
       const body = JSON.stringify(event);
       const request = makeRequest(body);
 
       const res = await POST(request);
 
-      expect(res.status).toBe(400);
-      expect(await res.text()).toBe("Missing user_id in custom_data");
+      expect(res.status).toBe(200);
+      expect(await res.text()).toBe("Acknowledged (no matching user)");
     });
 
     it("returns 500 when malformed JSON body causes processing error", async () => {
