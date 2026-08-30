@@ -56,8 +56,8 @@ describe("jobs worker (batch)", () => {
 
     expect(body).toMatchObject({ processed: 2, completed: 2, failed: 0 });
     expect(analyzeUserStyle).toHaveBeenCalledWith("u1");
-    expect(award).toHaveBeenCalledWith("u1", "style_explorer");
-    expect(checkAll).toHaveBeenCalledWith("u2");
+    expect(award).toHaveBeenCalledWith("u1", "style_explorer", expect.anything());
+    expect(checkAll).toHaveBeenCalledWith("u2", expect.anything());
     // both jobs marked completed
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ status: "completed" }));
     expect(update).toHaveBeenCalledTimes(2);

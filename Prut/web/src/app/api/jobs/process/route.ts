@@ -52,17 +52,21 @@ export async function GET(req: Request) {
       let errorMsg: string | null = null;
       try {
         const userId = job.j_payload.userId as string | undefined;
+        // Both handlers get the worker's service client — in cron context the
+        // SSR cookie client has no auth.uid(), so RLS silently empties every
+        // read (the bug that left user_style_personality at 0 while jobs
+        // "completed").
         if (job.j_type === "style_analysis") {
           const { analyzeUserStyle } = await import("@/lib/intelligence/personality-analyzer");
           const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
           if (userId) {
             await analyzeUserStyle(userId);
-            await AchievementTracker.award(userId, "style_explorer");
+            await AchievementTracker.award(userId, "style_explorer", supabase);
           }
         } else if (job.j_type === "achievement_check") {
           const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
           if (userId) {
-            await AchievementTracker.checkAll(userId);
+            await AchievementTracker.checkAll(userId, supabase);
           }
         }
         success = true;
