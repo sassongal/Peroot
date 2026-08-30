@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { CopySetupPrompt } from "@/components/connect/CopySetupPrompt";
 
 interface ApiKeyMeta {
   id: string;
@@ -195,6 +196,13 @@ export function SettingsConnectSection() {
           <p className="text-xs text-amber-200/70">
             שמור את המפתח במקום בטוח. אם יאבד — בטל אותו וצור חדש.
           </p>
+          <div className="pt-1">
+            <CopySetupPrompt apiKey={freshKey} />
+            <p className="text-xs text-amber-200/60 mt-2">
+              הדרך המהירה: העתק את פרומפט החיבור (כולל המפתח) והדבק אצל הסוכן — הוא כבר יידע להתחבר
+              לבד.
+            </p>
+          </div>
         </div>
       )}
 
@@ -327,13 +335,63 @@ export function SettingsConnectSection() {
             אחר כך הקלד <code dir="ltr">/peroot:enhance</code> בשיחה.
           </p>
         )}
-        <a
-          href="/connect"
-          className="inline-flex items-center gap-1.5 text-xs text-amber-400/80 hover:text-amber-300 transition-colors"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          המדריך המלא ורשימת הפקודות
-        </a>
+        <div className="flex items-center gap-3 flex-wrap">
+          <CopySetupPrompt apiKey={freshKey ?? undefined} />
+          <a
+            href="/connect"
+            className="inline-flex items-center gap-1.5 text-xs text-amber-400/80 hover:text-amber-300 transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            המדריך המלא ורשימת הפקודות
+          </a>
+        </div>
+      </div>
+
+      {/* API endpoints — copyable */}
+      <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
+        <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+          <ExternalLink className="w-4 h-4 text-amber-400" />
+          כתובות ה-API
+        </h3>
+        <ul className="space-y-2">
+          {(
+            [
+              ["MCP (סוכנים)", MCP_URL],
+              ["REST Base", "https://www.peroot.space/api/v1"],
+              ["OpenAPI (תיעוד מכונה)", "https://www.peroot.space/api/v1/openapi"],
+            ] as const
+          ).map(([label, url]) => (
+            <li
+              key={url}
+              className="flex items-center gap-3 p-3 bg-black/20 rounded-lg border border-white/5"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-slate-400 mb-0.5">{label}</div>
+                <code dir="ltr" className="block text-xs font-mono text-slate-300 truncate">
+                  {url}
+                </code>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyText(url, `url-${label}`)}
+                className="cursor-pointer shrink-0 p-2 bg-white/5 hover:bg-white/10 text-slate-400 rounded-lg transition-colors"
+                aria-label={`העתק ${label}`}
+              >
+                {copied === `url-${label}` ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-slate-500">
+          התיעוד האנושי המלא:{" "}
+          <a href="/connect/docs" className="text-amber-400/80 hover:text-amber-300">
+            /connect/docs
+          </a>
+        </p>
       </div>
     </section>
   );

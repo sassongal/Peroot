@@ -11,12 +11,14 @@ import {
   Moon,
   MoreHorizontal,
   Network,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
 const MORE_NAV_LINKS: { href: string; label: string }[] = [
+  { href: "/connect", label: "Peroot Connect — חיבור סוכנים" },
   { href: "/blog", label: "בלוג" },
   { href: "/pricing", label: "מחירים" },
   { href: "/prompts", label: "פרומפטים" },
@@ -243,6 +245,14 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
 
         {/* Left: Controls slot */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/connect"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/8 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"
+            aria-label="Peroot Connect — חבר את הסוכן שלך"
+            title="Peroot Connect — חבר את הסוכן שלך"
+          >
+            <Plug className="w-4 h-4" />
+          </Link>
           <button
             onClick={toggleTheme}
             className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 border border-transparent transition-all focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none"

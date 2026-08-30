@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CopySetupPrompt } from "@/components/connect/CopySetupPrompt";
 import {
   ArrowLeft,
   Bot,
@@ -184,6 +185,13 @@ export default function ConnectPage() {
         {/* Setup */}
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-center">איך מתחברים</h2>
+          <div className="p-5 bg-amber-500/10 border border-amber-500/25 rounded-xl flex flex-col sm:flex-row items-center gap-4 justify-between">
+            <p className="text-sm text-slate-300 text-center sm:text-right">
+              <span className="font-semibold text-amber-300">הדרך המהירה:</span> העתק פרומפט חיבור
+              מוכן, הדבק אצל הסוכן שלך — והוא כבר יידע להתחבר ל-Peroot לבד.
+            </p>
+            <CopySetupPrompt className="shrink-0" />
+          </div>
           <ol className="grid sm:grid-cols-3 gap-4 text-sm">
             {[
               ["צור מפתח", "בהגדרות → Peroot Connect. המפתח מוצג פעם אחת — שמור אותו"],
