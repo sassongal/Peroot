@@ -60,7 +60,7 @@ AGENT ARCHITECTURE FRAMEWORK - produce ALL sections:
 ## 3. תהליך חשיבה ולוגיקת פעולה
 Design the agent's cognitive framework:
 - **שלב 1 - הבנה**: How to analyze and classify incoming requests (simple/complex/ambiguous)
-- **שלב 2 - תכנון**: Internal reasoning before responding (think step by step)
+- **שלב 2 - תכנון**: Decision rules for judgment calls (when X — prefer Y); modern reasoning models deliberate internally, so define WHAT to weigh, not "think step by step"
 - **שלב 3 - ביצוע**: Structured response generation with quality checks
 - **שלב 4 - אימות**: Self-verification before delivering output
 - Decision matrix: When to ask clarifying questions vs. when to infer and act

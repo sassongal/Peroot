@@ -910,73 +910,75 @@ export default function RevenueTab() {
                   </p>
                 </div>
 
-                <table className="w-full min-w-[480px]">
-                  <thead>
-                    <tr>
-                      <th className="text-right pb-3 pr-6 text-[9px] font-black uppercase tracking-widest text-zinc-600">
-                        Cohort
-                      </th>
-                      {Array.from({ length: 6 }, (_, i) => (
-                        <th
-                          key={i}
-                          className="text-center pb-3 px-2 text-[9px] font-black uppercase tracking-widest text-zinc-600"
-                        >
-                          M+{i}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[480px]">
+                    <thead>
+                      <tr>
+                        <th className="text-right pb-3 pr-6 text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                          Cohort
                         </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {data.unitEconomics.cohortMrr.map((row) => {
-                      const month0 = row.months.find((m) => m.month === 0);
-                      const baseline = month0?.activeCount ?? 1;
-                      return (
-                        <tr key={row.cohort} className="hover:bg-white/2 transition-all">
-                          <td className="py-3 pr-6 text-[10px] font-black text-zinc-400">
-                            {row.cohort}
-                          </td>
-                          {Array.from({ length: 6 }, (_, i) => {
-                            const m = row.months.find((x) => x.month === i);
-                            if (!m) {
+                        {Array.from({ length: 6 }, (_, i) => (
+                          <th
+                            key={i}
+                            className="text-center pb-3 px-2 text-[9px] font-black uppercase tracking-widest text-zinc-600"
+                          >
+                            M+{i}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {data.unitEconomics.cohortMrr.map((row) => {
+                        const month0 = row.months.find((m) => m.month === 0);
+                        const baseline = month0?.activeCount ?? 1;
+                        return (
+                          <tr key={row.cohort} className="hover:bg-white/2 transition-all">
+                            <td className="py-3 pr-6 text-[10px] font-black text-zinc-400">
+                              {row.cohort}
+                            </td>
+                            {Array.from({ length: 6 }, (_, i) => {
+                              const m = row.months.find((x) => x.month === i);
+                              if (!m) {
+                                return (
+                                  <td
+                                    key={i}
+                                    className="py-3 px-2 text-center text-[9px] text-zinc-800 font-bold"
+                                  >
+                                    —
+                                  </td>
+                                );
+                              }
+                              const retentionPct = baseline > 0 ? m.activeCount / baseline : 0;
+                              const bgOpacity = Math.max(
+                                retentionPct * 0.7,
+                                m.activeCount > 0 ? 0.08 : 0,
+                              );
                               return (
                                 <td
                                   key={i}
-                                  className="py-3 px-2 text-center text-[9px] text-zinc-800 font-bold"
+                                  className="py-3 px-2 text-center"
+                                  title={`${m.activeCount} users · ${fmtILS(m.mrr)}`}
                                 >
-                                  —
+                                  <div
+                                    className="inline-flex flex-col items-center justify-center w-16 h-10 rounded-xl text-white font-black text-[10px] transition-all duration-300"
+                                    style={{ background: `rgba(37, 99, 235, ${bgOpacity})` }}
+                                  >
+                                    <span>{m.activeCount}</span>
+                                    {m.mrr > 0 && (
+                                      <span className="text-[8px] text-blue-300/60">
+                                        {fmtILS(m.mrr)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                               );
-                            }
-                            const retentionPct = baseline > 0 ? m.activeCount / baseline : 0;
-                            const bgOpacity = Math.max(
-                              retentionPct * 0.7,
-                              m.activeCount > 0 ? 0.08 : 0,
-                            );
-                            return (
-                              <td
-                                key={i}
-                                className="py-3 px-2 text-center"
-                                title={`${m.activeCount} users · ${fmtILS(m.mrr)}`}
-                              >
-                                <div
-                                  className="inline-flex flex-col items-center justify-center w-16 h-10 rounded-xl text-white font-black text-[10px] transition-all duration-300"
-                                  style={{ background: `rgba(37, 99, 235, ${bgOpacity})` }}
-                                >
-                                  <span>{m.activeCount}</span>
-                                  {m.mrr > 0 && (
-                                    <span className="text-[8px] text-blue-300/60">
-                                      {fmtILS(m.mrr)}
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

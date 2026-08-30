@@ -2,7 +2,7 @@ import type { PlatformSkill } from "../index";
 
 export const skill: PlatformSkill = {
   platform: "midjourney" as const,
-  name: "Midjourney v7",
+  name: "Midjourney V8",
   examples: [
     {
       concept: "פורטרט דרמטי של זקן עם זקן לבן",
@@ -85,7 +85,7 @@ export const skill: PlatformSkill = {
     {
       concept: "אופנה - דמות עקבית עם פלטת צבעים קבועה",
       output:
-        "A young woman with auburn hair and sharp cheekbones in an editorial fashion shoot, wearing a structured oversized blazer in terracotta, standing against a bleached concrete wall, late afternoon sidelight. Street style meets Parisian elegance --cref <character_image_url> --sref <style_image_url> --ar 4:5 --s 600",
+        "A young woman with auburn hair and sharp cheekbones in an editorial fashion shoot, wearing a structured oversized blazer in terracotta, standing against a bleached concrete wall, late afternoon sidelight. Street style meets Parisian elegance --oref <character_image_url> --ow 400 --sref <style_image_url> --ar 4:5 --s 600",
       category: "fashion",
     },
   ],
@@ -103,7 +103,7 @@ export const skill: PlatformSkill = {
     {
       bad: "portrait of a man --v 5.2 --quality 2 --tile",
       good: "A weathered fisherman with deep-set eyes and salt-crusted beard, golden hour light warming his face, coastal backdrop with crashing waves --ar 2:3 --s 500",
-      why: "Deprecated parameters like --v 5.2, --quality 2, and --tile are from older Midjourney versions. Current v7/v8 does not require version flags and uses --s (stylize) instead of --quality.",
+      why: "Deprecated parameters like --v 5.2, --quality 2, and --tile are from older Midjourney versions. Current V8 does not require version flags and uses --s (stylize) instead of --quality; --cref/--cw were replaced by --oref/--ow (Omni Reference), and --style raw became --raw.",
     },
     {
       bad: "A cat sitting on a chair, no background noise, no blur, no watermark, no text",
@@ -113,23 +113,25 @@ export const skill: PlatformSkill = {
     {
       bad: "ultra detailed, highly realistic, beautiful, stunning, amazing, gorgeous, perfect, cinematic, dramatic, professional photography, 8K, HDR, masterpiece",
       good: "A fisherman casting a net at sunrise over a still river, golden light catching the water droplets mid-air, Malick warmth --ar 16:9 --s 600",
-      why: "Midjourney v7 responds to sentence-style prompts. Stacking comma-separated quality adjectives muddies the output. Describe the scene in natural language — fewer modifiers, more specific imagery.",
+      why: "Midjourney V8 is tuned for natural-language prose and actively punishes keyword spam. Stacking comma-separated quality adjectives muddies the output. Describe the scene in full sentences — fewer modifiers, more specific imagery.",
     },
   ],
   scoringCriteria: [
-    "Subject is clear in the first ~10 words (v7 weights early tokens heavily)",
+    "Subject is clear in the first ~10 words (V8 weights early tokens heavily)",
     "Must include --ar with an aspect ratio that matches the composition (portrait 2:3, landscape 16:9, etc.)",
-    "Natural flowing prose — not comma-separated keyword tags or prompt stuffing",
-    "Length ~20–40 words of scene description before parameters (sweet spot for v7)",
+    "Natural flowing prose — not comma-separated keyword tags or prompt stuffing (V8 punishes keyword spam)",
+    "Length ~20–60 words of scene description before parameters (V8 rewards longer, more specific prose)",
     "Lighting and mood are named (golden hour, Rembrandt, rim light, moody, ethereal)",
-    "No deprecated flags: --v 5.x, --quality, --tile; use --cref/--sref for character and style references",
+    "No deprecated flags: --v 5.x, --quality, --tile, --cref/--cw, --style raw (now plain --raw)",
     "--stylize (--s) in 200–800 unless --raw photorealism calls for lower stylization",
     'Use --no for exclusions (text, watermark) — not "no X" sentences in the prose',
     'Atmosphere and material detail (fabric, weather, texture) — not generic "beautiful 8k"',
     "Parameters at end: --ar, --s, optional --chaos/--weird only when creative intent needs it",
-    "--cref <image_url> — character reference: locks face and clothing across generations",
-    "--sref <image_url> — style reference: locks aesthetic, palette, and mood",
+    "--oref <image_url> + --ow — Omni Reference (replaced --cref): locks character/object identity",
+    "--sref <image_url> + --sw — style reference: locks aesthetic, palette, and mood",
+    "--exp 10–25 — extra detail/experimentation boost; --hd — native 2K when print quality matters",
     "--draft — use for fast iteration before final render (10x faster, half GPU cost)",
+    'Text to render in-image goes in "double quotes" inside the prose',
   ],
   chainOfThoughtExamples: [
     {
