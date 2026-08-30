@@ -300,6 +300,128 @@ export const CONNECT_OPENAPI = {
         },
       },
     },
+    "/prompts/{id}/related": {
+      get: {
+        summary: "שכנים ב-Memory Palace — פרומפטים קרובים בגרף (חינמי)",
+        description:
+          "אותו מנוע כמו גרף ה-Memory Palace בפלטפורמה: דמיון מילות מפתח (Jaccard) + שימוש משותף ב-24 שעות.",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 8, maximum: 19 } },
+        ],
+        responses: {
+          "200": {
+            description: "השכנים, ממוינים לפי קרבה",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    related: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uuid" },
+                          title: { type: "string" },
+                          weight: { type: "number", description: "עוצמת הקשר (גבוה = קרוב יותר)" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "404": errorResponse("פרומפט לא נמצא", "not_found"),
+        },
+      },
+    },
+    "/chains": {
+      get: {
+        summary: "שרשראות הפרומפטים השמורות של המשתמש (חינמי)",
+        responses: {
+          "200": {
+            description: "הרשימה",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    chains: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uuid" },
+                          title: { type: "string" },
+                          description: { type: ["string", "null"] },
+                          steps_count: { type: "integer" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/chains/{id}": {
+      get: {
+        summary: "שרשרת מלאה עם שלביה — להרצה על ידי הסוכן (חינמי)",
+        description:
+          "ההרצה היא באחריות הסוכן: מלא את משתני כל שלב, הרץ כל prompt_text דרך POST /enhance לפי order, והזן פלטים קדימה לפי input_from_step. כל שלב צורך קרדיט אחד.",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          "200": {
+            description: "השרשרת",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    title: { type: "string" },
+                    description: { type: ["string", "null"] },
+                    steps: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          order: { type: "integer" },
+                          title: { type: "string" },
+                          mode: { type: "string" },
+                          prompt_text: { type: "string" },
+                          variables: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                name: { type: "string" },
+                                label: { type: "string" },
+                                default: { type: "string" },
+                              },
+                            },
+                          },
+                          input_from_step: { type: ["string", "null"] },
+                          output_description: { type: ["string", "null"] },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "404": errorResponse("שרשרת לא נמצאה", "not_found"),
+        },
+      },
+    },
     "/library/search": {
       get: {
         summary: "חיפוש בספרייה הציבורית — תבניות מוכחות (חינמי)",

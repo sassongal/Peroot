@@ -20,6 +20,9 @@ import {
   connectListFacts,
   connectRememberFact,
   connectRatePrompt,
+  connectRelatedPrompts,
+  connectListChains,
+  connectGetChain,
 } from "@/lib/connect/ops";
 
 /**
@@ -224,6 +227,38 @@ const TOOLS = [
         mode: { type: "string", enum: MODE_ENUM },
       },
       required: ["rating"],
+    },
+  },
+  {
+    name: "related_prompts",
+    title: "שכנים ב-Memory Palace",
+    description:
+      "מחזיר את הפרומפטים הקרובים ביותר לפרומפט נתון בגרף ה-Memory Palace של המשתמש (דמיון מילות מפתח + שימוש משותף — אותו מנוע כמו בפלטפורמה). השתמש כדי להציע למשתמש פרומפטים קשורים או להרכיב הקשר. חינמי.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "UUID של פרומפט המרכז (מ-search_my_prompts)" },
+        limit: { type: "number", description: "מקסימום שכנים (ברירת מחדל 8)" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "list_chains",
+    title: "רשימת שרשראות",
+    description:
+      "רשימת שרשראות הפרומפטים (Chains) השמורות של המשתמש — תהליכים רב-שלביים שבנה בפלטפורמה. חינמי.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_chain",
+    title: "שליפת שרשרת להרצה",
+    description:
+      "מחזיר שרשרת מלאה עם כל השלבים. ההרצה עליך (הסוכן): 1) שאל את המשתמש על ערכי המשתנים של כל שלב, 2) הרץ את השלבים לפי order — לכל שלב קרא ל-enhance_prompt עם prompt_text אחרי מילוי המשתנים, 3) כששלב מגדיר input_from_step — הזן לתוכו את פלט השלב הקודם, 4) הצג למשתמש את התוצר הסופי. כל שלב צורך קרדיט אחד.",
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string", description: "UUID של השרשרת (מ-list_chains)" } },
+      required: ["id"],
     },
   },
 ];
@@ -554,6 +589,31 @@ async function callTool(
       return toolText(rating === 1 ? "תודה על המשוב החיובי! 👍" : "תודה — המשוב נרשם 👎", {
         saved: true,
       });
+    }
+    case "related_prompts": {
+      const related = await connectRelatedPrompts(
+        userId,
+        String(args.id ?? ""),
+        Number(args.limit ?? 8) || 8,
+      );
+      const text = related.length
+        ? related.map((r, i) => `${i + 1}. ${r.title} (${r.id})`).join("\n")
+        : "אין עדיין שכנים לפרומפט הזה בגרף";
+      return toolText(text, { related });
+    }
+    case "list_chains": {
+      const chains = await connectListChains(userId);
+      const text = chains.length
+        ? chains.map((c, i) => `${i + 1}. ${c.title} · ${c.steps_count} שלבים (${c.id})`).join("\n")
+        : "אין שרשראות שמורות — אפשר לבנות בפלטפורמה";
+      return toolText(text, { chains });
+    }
+    case "get_chain": {
+      const chain = await connectGetChain(userId, String(args.id ?? ""));
+      return toolText(
+        `שרשרת "${chain.title}" — ${chain.steps.length} שלבים. הרץ אותם לפי הסדר עם enhance_prompt; מלא משתנים ושרשר פלטים לפי input_from_step.`,
+        { ...chain },
+      );
     }
     default:
       throw new UnknownToolError(`Unknown tool: ${name}`);

@@ -529,3 +529,136 @@ export async function connectRatePrompt(
     throw new ConnectOpError(500, "save_failed", "שליחת המשוב נכשלה", "Feedback save failed");
   }
 }
+
+// ── P4: Memory-Palace related prompts + chains (agent-orchestrated) ─────────
+
+export interface ConnectRelated {
+  id: string;
+  title: string;
+  weight: number;
+}
+
+/**
+ * Memory Palace neighbors for one saved prompt — same engine as the web graph
+ * (`computeNeighborhood`: Jaccard keyword similarity 60% + 24h usage
+ * co-occurrence 40%). Free (no credit, no LLM).
+ */
+export async function connectRelatedPrompts(
+  userId: string,
+  promptId: string,
+  limit = 8,
+): Promise<ConnectRelated[]> {
+  const db = createServiceClient();
+  const [{ data: rows, error }, { data: events }] = await Promise.all([
+    db
+      .from("personal_library")
+      .select("id, title, prompt, tags, personal_category, capability_mode")
+      .eq("user_id", userId)
+      .limit(300),
+    db
+      .from("personal_library_usage_events")
+      .select("prompt_id, used_at")
+      .eq("user_id", userId)
+      .order("used_at", { ascending: false })
+      .limit(2000),
+  ]);
+  if (error) {
+    logger.error("[Connect] related fetch failed:", error);
+    throw new ConnectOpError(500, "get_failed", "שליפת הקשרים נכשלה", "Related fetch failed");
+  }
+  const corpus = ((rows ?? []) as Record<string, unknown>[]).map(
+    (r) =>
+      ({
+        id: String(r.id),
+        title: String(r.title ?? ""),
+        prompt: String(r.prompt ?? ""),
+        tags: Array.isArray(r.tags) ? (r.tags as string[]) : [],
+        personal_category: (r.personal_category as string) ?? "כללי",
+        capability_mode: r.capability_mode,
+      }) as unknown as PersonalPrompt,
+  );
+  if (!corpus.some((p) => p.id === promptId)) {
+    throw new ConnectOpError(404, "not_found", "פרומפט לא נמצא", "Prompt not found");
+  }
+
+  const { computeNeighborhood } = await import("@/components/features/library/graph-utils");
+  const { nodes, links } = computeNeighborhood({
+    centerId: promptId,
+    corpus,
+    usageEvents: (events ?? []) as { prompt_id: string; used_at: string }[] as never,
+    maxNeighbors: Math.min(Math.max(limit, 1), 19),
+  });
+
+  const weightById = new Map<string, number>();
+  for (const l of links as Array<{ source: unknown; target: unknown; weight?: number }>) {
+    const s = typeof l.source === "object" ? (l.source as { id: string }).id : String(l.source);
+    const t = typeof l.target === "object" ? (l.target as { id: string }).id : String(l.target);
+    const other = s === promptId ? t : t === promptId ? s : null;
+    if (other) weightById.set(other, l.weight ?? 0);
+  }
+  return nodes
+    .filter((n) => n.type === "prompt" && n.id !== promptId)
+    .map((n) => ({ id: n.id, title: n.label, weight: weightById.get(n.id) ?? 0 }))
+    .sort((a, b) => b.weight - a.weight);
+}
+
+export interface ConnectChainSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  steps_count: number;
+}
+
+/** The user's saved multi-step prompt chains (free). */
+export async function connectListChains(userId: string): Promise<ConnectChainSummary[]> {
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("prompt_chains")
+    .select("id, title, description, steps")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    logger.error("[Connect] chains list failed:", error);
+    throw new ConnectOpError(500, "list_failed", "טעינת השרשראות נכשלה", "Chains list failed");
+  }
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: String(r.id),
+    title: String(r.title ?? ""),
+    description: (r.description as string) ?? null,
+    steps_count: Array.isArray(r.steps) ? (r.steps as unknown[]).length : 0,
+  }));
+}
+
+/**
+ * One chain with its FULL steps (order, prompt_text, variables,
+ * input_from_step, output_description). Execution is deliberately
+ * AGENT-orchestrated: the agent fills variables, runs step 0's prompt, feeds
+ * its output into the next step, and so on — stateless MCP + the 60s budget
+ * make server-side multi-LLM execution the wrong place for this.
+ */
+export async function connectGetChain(
+  userId: string,
+  id: string,
+): Promise<{ id: string; title: string; description: string | null; steps: unknown[] }> {
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("prompt_chains")
+    .select("id, title, description, steps")
+    .eq("user_id", userId)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    logger.error("[Connect] chain get failed:", error);
+    throw new ConnectOpError(500, "get_failed", "שליפת השרשרת נכשלה", "Chain fetch failed");
+  }
+  if (!data) {
+    throw new ConnectOpError(404, "not_found", "שרשרת לא נמצאה", "Chain not found");
+  }
+  return {
+    id: String(data.id),
+    title: String(data.title ?? ""),
+    description: (data.description as string) ?? null,
+    steps: Array.isArray(data.steps) ? (data.steps as unknown[]) : [],
+  };
+}

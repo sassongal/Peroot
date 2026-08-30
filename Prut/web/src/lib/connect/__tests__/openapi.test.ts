@@ -22,6 +22,9 @@ describe("Connect OpenAPI contract", () => {
       ["/user/memory", "get"],
       ["/user/memory", "post"],
       ["/feedback", "post"],
+      ["/prompts/{id}/related", "get"],
+      ["/chains", "get"],
+      ["/chains/{id}", "get"],
     ];
     for (const [path, method] of expected) {
       expect(paths[path]?.[method], `${method.toUpperCase()} ${path}`).toBeDefined();

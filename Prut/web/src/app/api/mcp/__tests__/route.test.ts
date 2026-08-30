@@ -56,7 +56,7 @@ describe("MCP route (stateless Streamable HTTP)", () => {
     expect(body.result.serverInfo.name).toBe("peroot");
   });
 
-  it("lists the six v1 tools with schemas", async () => {
+  it("lists all connect tools with schemas", async () => {
     const res = await POST(rpc({ jsonrpc: "2.0", id: 2, method: "tools/list" }));
     const body = await res.json();
     const names = body.result.tools.map((t: { name: string }) => t.name);
@@ -72,6 +72,9 @@ describe("MCP route (stateless Streamable HTTP)", () => {
       "remember_fact",
       "list_facts",
       "rate_prompt",
+      "related_prompts",
+      "list_chains",
+      "get_chain",
     ]);
     const enhance = body.result.tools[0];
     expect(enhance.inputSchema.properties.target_model.enum).toEqual([
