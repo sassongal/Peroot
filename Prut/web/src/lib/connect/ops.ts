@@ -43,6 +43,15 @@ export const ConnectEnhanceSchema = z.object({
   category: z.string().max(60).optional(),
   /** Mode-specific params (IMAGE: aspect_ratio/style · VIDEO: camera_movement/duration/style/mood · AGENT: system_instructions). */
   mode_options: z.record(z.string(), z.string().max(2_000)).optional(),
+  /**
+   * A SHORT distilled summary of the conversation/project the agent is in —
+   * audience, goal, product, constraints. Injected into the engine as a
+   * context attachment so the enhancement is grounded in what the user is
+   * actually working on. Deliberately capped at 4,000 chars: the agent should
+   * distill, never paste transcripts (economy), and context-bearing calls
+   * skip the result cache by design.
+   */
+  context: z.string().min(1).max(4_000).optional(),
 });
 export type ConnectEnhanceInput = z.infer<typeof ConnectEnhanceSchema>;
 
@@ -92,6 +101,20 @@ export async function connectEnhance(
     ...(input.model_profile_slug ? { model_profile_slug: input.model_profile_slug } : {}),
     ...(input.output_language ? { output_language: input.output_language } : {}),
     ...(input.mode_options ? { mode_params: input.mode_options } : {}),
+    // Conversation/project context rides the pipeline's existing context-
+    // attachment lane (legacy {type,name,content} block → EngineInput.context),
+    // so engines ground the enhancement in it exactly like an uploaded doc.
+    ...(input.context
+      ? {
+          context: [
+            {
+              type: "file" as const,
+              name: "הקשר מהשיחה והפרויקט",
+              content: input.context,
+            },
+          ],
+        }
+      : {}),
   };
 
   const req = new Request("http://connect.internal/api/enhance", {

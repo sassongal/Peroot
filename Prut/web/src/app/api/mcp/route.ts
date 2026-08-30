@@ -81,6 +81,11 @@ const TOOLS = [
           description:
             "פרמטרים פר-מוד: IMAGE — aspect_ratio, style · VIDEO — camera_movement, duration, style, mood · AGENT — system_instructions",
         },
+        context: {
+          type: "string",
+          description:
+            "תמצית קצרה (עד 4000 תווים) של הקשר השיחה והפרויקט: מה המוצר/הפרויקט, קהל היעד, המטרה, אילוצים. תמצת בעצמך — אל תדביק טרנסקריפט. כלול רק כשההקשר באמת משפר את הפרומפט; זה מקרקע את השדרוג במה שהמשתמש עובד עליו בפועל.",
+        },
       },
       required: ["prompt"],
     },
@@ -230,6 +235,7 @@ const PROMPT_ARG = [{ name: "prompt", description: "הפרומפט/הבקשה ש
 function modeCommand(mode: string, he: string): string {
   return (
     `שדרג את הפרומפט הבא דרך Peroot: קרא ל-enhance_prompt עם mode="${mode}" והפרומפט של המשתמש. ` +
+    `אם יש בשיחה הקשר רלוונטי (מוצר/פרויקט, קהל יעד, מטרה) — תמצת אותו לפסקה קצרה והעבר בפרמטר context. ` +
     `הצג למשתמש את התוצאה המלאה, וציין כמה קרדיטים נשארו (credits_remaining). ${he}`
   );
 }
@@ -376,7 +382,7 @@ export async function POST(req: Request) {
           version: "1.0.0",
         },
         instructions:
-          "Peroot הופך כל פרומפט לפרומפט מושלם ומורחב. לפני יצירת תמונה/וידאו/מחקר/סוכן — שדרג קודם עם enhance_prompt במוד המתאים. שמירה לספרייה רק לבקשת המשתמש (save_prompt). לפני שדרוג למשתמש חינמי כדאי לבדוק get_quota.",
+          "Peroot הופך כל פרומפט לפרומפט מושלם ומורחב. לפני יצירת תמונה/וידאו/מחקר/סוכן — שדרג קודם עם enhance_prompt במוד המתאים. חשוב: אם בשיחה יש הקשר רלוונטי (על איזה מוצר/פרויקט מדובר, קהל יעד, מטרה) — תמצת אותו לפסקה קצרה והעבר בפרמטר context, כדי שהשדרוג יתבסס על מה שהמשתמש באמת עובד עליו ולא על ניחוש. שמירה לספרייה רק לבקשת המשתמש (save_prompt). לפני שדרוג למשתמש חינמי כדאי לבדוק get_quota.",
       });
 
     case "notifications/initialized":

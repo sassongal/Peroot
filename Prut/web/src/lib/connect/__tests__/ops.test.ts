@@ -129,3 +129,36 @@ describe("fillTemplateText", () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe("conversation/project context", () => {
+  it("maps context into the pipeline's legacy attachment lane", async () => {
+    let seen: Record<string, unknown> = {};
+    const handler = async (req: Request) => {
+      seen = await req.json();
+      return new Response("תוצאה", { status: 200 });
+    };
+    const input = ConnectEnhanceSchema.parse({
+      prompt: "כתוב פוסט השקה",
+      context: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
+    });
+    await connectEnhance(input, KEY, "user-1", handler);
+    expect(seen.context).toEqual([
+      {
+        type: "file",
+        name: "הקשר מהשיחה והפרויקט",
+        content: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
+      },
+    ]);
+  });
+
+  it("omits the context lane entirely when not provided, and caps at 4000 chars", async () => {
+    let seen: Record<string, unknown> = {};
+    const handler = async (req: Request) => {
+      seen = await req.json();
+      return new Response("תוצאה", { status: 200 });
+    };
+    await connectEnhance(ConnectEnhanceSchema.parse({ prompt: "x" }), KEY, "user-1", handler);
+    expect(seen.context).toBeUndefined();
+    expect(() => ConnectEnhanceSchema.parse({ prompt: "x", context: "א".repeat(4001) })).toThrow();
+  });
+});
