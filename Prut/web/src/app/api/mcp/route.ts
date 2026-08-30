@@ -531,8 +531,10 @@ async function callTool(
     }
     case "get_quota": {
       const q = await connectQuota(userId);
+      const creditsText =
+        q.credits_remaining === null ? "ללא הגבלת שדרוגים" : `נשארו ${q.credits_remaining} שדרוגים`;
       return toolText(
-        `מסלול: ${q.tier} · נשארו ${q.credits_remaining} שדרוגים` +
+        `מסלול: ${q.tier} · ${creditsText}` +
           (q.quota_resets_at ? ` · מתחדש ב-${q.quota_resets_at}` : ""),
         { ...q },
       );

@@ -128,7 +128,10 @@ export const CONNECT_OPENAPI = {
         type: "object",
         properties: {
           tier: { type: "string" },
-          credits_remaining: { type: "integer" },
+          credits_remaining: {
+            type: ["integer", "null"],
+            description: "null = ללא הגבלה (admin)",
+          },
           quota_resets_at: { type: ["string", "null"], format: "date-time" },
         },
       },

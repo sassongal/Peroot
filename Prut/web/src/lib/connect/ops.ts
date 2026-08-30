@@ -181,7 +181,8 @@ export async function connectEnhance(
 
 export interface ConnectQuota {
   tier: string;
-  credits_remaining: number;
+  /** null = unlimited (admins bypass the credit gate entirely). */
+  credits_remaining: number | null;
   quota_resets_at: string | null;
 }
 
@@ -195,9 +196,15 @@ export async function connectQuota(userId: string): Promise<ConnectQuota> {
   if (error || !data) {
     throw new ConnectOpError(500, "quota_unavailable", "שליפת המכסה נכשלה", "Quota lookup failed");
   }
+  const tier = data.plan_tier ?? "free";
+  // Admins never pay a credit on enhance (the route skips the decrement), so
+  // reporting a finite number here just confuses — surface "unlimited".
+  if (tier === "admin") {
+    return { tier, credits_remaining: null, quota_resets_at: null };
+  }
   const resetsAt = await getRefreshAt(userId).catch(() => null);
   return {
-    tier: data.plan_tier ?? "free",
+    tier,
     credits_remaining: data.credits_balance ?? 0,
     quota_resets_at: resetsAt ? resetsAt.toISOString() : null,
   };
