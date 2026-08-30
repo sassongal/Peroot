@@ -40,6 +40,41 @@ EXAMPLE:
 Concept: "ציפור ממריאה מענף"
 Output: A slow-motion close-up captures a vibrant blue kingfisher launching from a moss-covered branch, wings spreading wide as droplets of morning dew scatter into the golden sunrise light, the background of a misty forest lake blurs into a dreamy bokeh, filmed with a 200mm telephoto lens.`,
 
+  sora: `PLATFORM: OpenAI Sora 2
+Sora 2 (per OpenAI's official prompting guide) generates synchronized audio-video with strong physics and performance. Duration and resolution are APP/API SETTINGS (4/8/12/16/20 seconds) — never write them into the prose. Prompt structure matters more than length: a focused prompt beats an exhaustive one, and over-specification trades away the model's creativity.
+
+Four-block structure, in this order:
+1. SCENE PROSE — characters (identity, wardrobe, distinctive features), setting, atmosphere. Concrete nouns and materials, not vague adjectives.
+2. CINEMATOGRAPHY — framing (wide/medium/close-up), lens feel, depth of field, lighting direction and quality, color mood.
+3. ACTION AS TIMED BEATS — sequence the motion: "she takes four steps, pauses at the window, then turns." Each beat is one concrete physical action. 2-4 beats per clip.
+4. DIALOGUE BLOCK (only if speech is wanted) — a separate labeled block below the prose:
+   Dialogue:
+   - Character: "exact line"
+   Keep exchanges SHORT — roughly 1-2 short lines per 4 seconds of clip. Long speeches break sync.
+5. Optional sound cues woven in: ambient and diegetic sounds ("rain taps the tin roof", "distant traffic hum").
+
+Rules:
+- Vague quality adjectives ("beautiful", "cinematic", "stunning") add nothing — describe the LIGHT, the MATERIALS, the MOTION instead.
+- One coherent scene per generation; consistent character descriptors if part of a series.
+- Image input (when provided in-app) anchors the first frame — then describe only what happens next.
+- 60-150 words total including dialogue. Output in English only.
+
+CRITICAL — OUTPUT PURITY:
+Your output MUST start directly with the prompt content. NEVER output:
+- "Here's a video prompt for Sora:"
+- "I've created/crafted a prompt:"
+- "כתוב את הפרומפט הבא:"
+- Any explanation, meta-commentary, or preamble
+Start IMMEDIATELY with the scene description.
+Your FIRST WORD must be a visual/scene word. Example: "A", "Inside", "Wide", "Golden".
+
+EXAMPLE:
+Concept: "בריסטה מכינה קפה בבוקר"
+Output: A young barista with tied-back curly hair and a denim apron works behind a sunlit walnut counter in a small specialty café, steam wand hissing beside her. Medium close-up, shallow depth of field, warm morning light raking through the front window, dust motes drifting. She tamps the portafilter with a firm press, locks it into the machine, then watches the first amber threads of espresso fall into a white cup. She lifts the cup, inhales, and allows a small satisfied nod.
+Dialogue:
+- Barista: "Perfect crema."
+Ambient: low chatter, cups clinking, milk steamer hiss.`,
+
   runway: `PLATFORM: Runway Gen-4 / Gen-4.5
 Runway Gen-4 interprets prompts as a single continuous shot (official guidance: one scene per generation — avoid cramming multiple unrelated scene changes into one prompt). It understands camera terminology and lighting physics deeply. Gen-4.5 raises motion quality, temporal consistency, and prompt adherence; still describe one coherent continuous shot unless the Runway UI explicitly offers a multi-clip / keyframe workflow you are targeting.
 
@@ -330,6 +365,12 @@ const VIDEO_USER_PROMPTS: Record<VideoPlatform, string> = {
 Concept: {{input}}
 
 Output ONLY the ready-to-use video prompt. No meta-text, no instructions, no "create a prompt that...".`,
+
+  sora: `Generate the ACTUAL Sora 2 prompt that will be DIRECTLY pasted into Sora. Structure: scene prose (characters, wardrobe, setting) → cinematography (framing, lens, light) → action as 2-4 timed beats → separate Dialogue block if speech is wanted (1-2 short lines per 4s) → ambient sound cues. Do NOT write duration/resolution in the prose (app settings). 60-150 words.
+
+Concept: {{input}}
+
+Output ONLY the ready-to-paste Sora prompt. No meta-text.`,
 
   runway: `Generate the ACTUAL Runway Gen-4 / Gen-4.5 prompt that will be DIRECTLY pasted into Runway. Lead with camera movement. Write in natural sentences, 30-60 words. One continuous scene only (5s or 10s clip — motion must fit that window). Positive phrasing only. Include a cinematic reference.
 
@@ -647,6 +688,7 @@ CRITICAL: Never put the literal substring ${TRAILER.QUESTIONS} inside the Englis
     const identity = this.getSystemIdentity();
 
     const platformRefinementGuidance: Record<string, string> = {
+      sora: "\nPlatform-specific: Verify action is sequenced as timed beats. Check the Dialogue block is separate and short (1-2 lines per 4s). Confirm no duration/resolution written in prose. Verify character descriptors are repeatable for series consistency.",
       runway:
         "\nPlatform-specific: Check camera movement is the FIRST element. Verify 30-80 word count. Ensure single continuous shot design (or valid multi-shot Scene N format). Verify Audio block has all 4 sub-keys. Add motion intensity vocabulary if missing.",
       kling:
@@ -661,6 +703,7 @@ CRITICAL: Never put the literal substring ${TRAILER.QUESTIONS} inside the Englis
     };
 
     const platformGeniusQuestions: Record<string, string> = {
+      sora: "Focus questions on: whether dialogue is wanted and its exact lines, the 2-4 action beats and their order, character wardrobe/identity anchors for series consistency, and ambient sound environment.",
       runway:
         "Focus questions on: camera movement style/speed, motion intensity, cinematic reference, audio mood (music genre, SFX elements), and whether single-scene or multi-shot format is intended.",
       kling:

@@ -1,5 +1,6 @@
 export type VideoPlatform =
   | "general"
+  | "sora"
   | "runway"
   | "kling"
   | "veo"
@@ -23,6 +24,13 @@ export const VIDEO_PLATFORMS: VideoPlatformConfig[] = [
     nameHe: "כללי",
     description: "פרומפט אופטימלי לכל פלטפורמת וידאו",
     icon: "🎬",
+  },
+  {
+    id: "sora",
+    name: "Sora 2",
+    nameHe: "Sora",
+    description: "OpenAI Sora 2 - ביטים מתוזמנים, בלוק דיאלוג, אודיו סינכרוני, 4-20 שניות",
+    icon: "sora",
   },
   {
     id: "runway",

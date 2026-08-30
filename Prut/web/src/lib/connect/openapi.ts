@@ -90,7 +90,7 @@ export const CONNECT_OPENAPI = {
             type: "object",
             additionalProperties: { type: "string" },
             description:
-              "IMAGE: aspect_ratio, style · VIDEO: camera_movement, duration, style, mood · AGENT: system_instructions",
+              "IMAGE: image_platform (midjourney/dalle/flux/stable-diffusion/imagen/nanobanana/general), aspect_ratio, style · VIDEO: video_platform (sora/veo/runway/kling/wan/higgsfield/minimax/general), camera_movement, duration, style, mood · AGENT: system_instructions",
           },
           context: {
             type: "string",

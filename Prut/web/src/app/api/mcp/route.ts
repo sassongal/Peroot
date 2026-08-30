@@ -83,7 +83,7 @@ const TOOLS = [
           type: "object",
           additionalProperties: { type: "string" },
           description:
-            "פרמטרים פר-מוד: IMAGE — aspect_ratio, style · VIDEO — camera_movement, duration, style, mood · AGENT — system_instructions",
+            "פרמטרים פר-מוד: IMAGE — image_platform (midjourney / dalle / flux / stable-diffusion / imagen / nanobanana / general), aspect_ratio, style · VIDEO — video_platform (sora / veo / runway / kling / wan / higgsfield / minimax / general), camera_movement, duration, style, mood · AGENT — system_instructions. בחירת פלטפורמה מייצרת פרומפט בפורמט המדויק שלה (פרמטרים, מבנה, בלוק דיאלוג וכו').",
         },
         context: {
           type: "string",
