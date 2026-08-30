@@ -43,10 +43,16 @@ describe("platform prompt accuracy (source guardrails)", () => {
     expect(f).not.toMatch(/\(5-15 seconds supported\)/);
   });
 
-  it("image-engine.ts: Midjourney quality uses --q/--quality docs, not 'deprecated'", () => {
+  it("image-engine.ts: Midjourney targets V8 — --q/--quality listed as deprecated, --oref/--exp/--hd present", () => {
+    // V8.2 became the Midjourney default (July 2026): --quality/--q, --cref/--cw,
+    // --style raw and --tile are deprecated; --oref/--ow, --exp and --hd are current.
     const f = src("lib", "engines", "image-engine.ts");
-    expect(f).toMatch(/--quality or --q/);
-    expect(f).not.toMatch(/deprecated in v7/i);
+    expect(f).toMatch(/Midjourney V8/);
+    expect(f).toMatch(/deprecated flags: --cref\/--cw, --style raw, --quality\/--q/);
+    expect(f).not.toMatch(/--quality or --q with values/);
+    expect(f).toMatch(/--oref/);
+    expect(f).toMatch(/--exp 10-25/);
+    expect(f).toMatch(/--hd/);
   });
 
   it("image-engine.ts: dalle block references gpt-image-2 and no longer uses [quality: hd]", () => {
