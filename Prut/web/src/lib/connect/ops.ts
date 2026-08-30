@@ -373,20 +373,35 @@ export interface ConnectLibraryHit {
   mode: string | null;
 }
 
-/** Search the curated PUBLIC library (proven prompts/templates). Free — no credit. */
+/**
+ * Search the curated PUBLIC library (proven prompts/templates). Free — no credit.
+ *
+ * Word-split AND search: agents send natural multi-word queries ("פוסט
+ * שיווקי לפייסבוק"), and a single `%whole phrase%` pattern returned 0 unless
+ * the exact word sequence appeared — caught live in the E2E command sweep.
+ * Each word must match SOME field; words combine with AND (chained .or()
+ * groups), so more words narrow rather than kill the search.
+ */
 export async function connectSearchLibrary(
   query: string,
   limit = 10,
 ): Promise<ConnectLibraryHit[]> {
   const db = createServiceClient();
-  const sanitized = query.replace(/[%_,().]/g, " ").trim();
-  if (!sanitized) return [];
-  const pattern = `%${sanitized}%`;
-  const { data, error } = await db
+  const words = query
+    .replace(/[%_,().]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 5);
+  if (words.length === 0) return [];
+  let q = db
     .from("public_library_prompts")
     .select("id, title, prompt, use_case, variables, capability_mode")
-    .eq("is_active", true)
-    .or(`title.ilike.${pattern},use_case.ilike.${pattern},prompt.ilike.${pattern}`)
+    .eq("is_active", true);
+  for (const w of words) {
+    const pattern = `%${w}%`;
+    q = q.or(`title.ilike.${pattern},use_case.ilike.${pattern},prompt.ilike.${pattern}`);
+  }
+  const { data, error } = await q
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(limit, 1), 25));
   if (error) {
