@@ -108,3 +108,24 @@ describe("connectEnhance", () => {
     ).rejects.toBeInstanceOf(ConnectOpError);
   });
 });
+
+describe("fillTemplateText", () => {
+  it("fills Hebrew {variables} and reports the ones still missing", async () => {
+    const { fillTemplateText } = await import("@/lib/connect/ops");
+    const tpl = "כתוב תוכנית השקה עבור {שם_המוצר} המיועד ל{קהל_יעד} מול {מתחרה_עיקרי}";
+    const { filled, missing } = fillTemplateText(tpl, ["שם_המוצר", "קהל_יעד", "מתחרה_עיקרי"], {
+      שם_המוצר: "פירוט",
+      קהל_יעד: "משווקים",
+    });
+    expect(filled).toContain("עבור פירוט");
+    expect(filled).toContain("למשווקים");
+    expect(missing).toEqual(["מתחרה_עיקרי"]);
+  });
+
+  it("replaces every occurrence and returns empty missing when complete", async () => {
+    const { fillTemplateText } = await import("@/lib/connect/ops");
+    const { filled, missing } = fillTemplateText("{x} ועוד {x}", ["x"], { x: "אחת" });
+    expect(filled).toBe("אחת ועוד אחת");
+    expect(missing).toEqual([]);
+  });
+});

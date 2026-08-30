@@ -320,3 +320,178 @@ export async function connectGetPrompt(userId: string, id: string): Promise<Conn
   }
   return rowToSummary(data as Record<string, unknown>);
 }
+
+// ── P2: public library / templates / memory facts / feedback ────────────────
+
+export interface ConnectLibraryHit {
+  id: string;
+  title: string;
+  prompt: string;
+  use_case: string | null;
+  variables: string[];
+  mode: string | null;
+}
+
+/** Search the curated PUBLIC library (proven prompts/templates). Free — no credit. */
+export async function connectSearchLibrary(
+  query: string,
+  limit = 10,
+): Promise<ConnectLibraryHit[]> {
+  const db = createServiceClient();
+  const sanitized = query.replace(/[%_,().]/g, " ").trim();
+  if (!sanitized) return [];
+  const pattern = `%${sanitized}%`;
+  const { data, error } = await db
+    .from("public_library_prompts")
+    .select("id, title, prompt, use_case, variables, capability_mode")
+    .eq("is_active", true)
+    .or(`title.ilike.${pattern},use_case.ilike.${pattern},prompt.ilike.${pattern}`)
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 25));
+  if (error) {
+    logger.error("[Connect] library search failed:", error);
+    throw new ConnectOpError(500, "search_failed", "חיפוש הספרייה נכשל", "Library search failed");
+  }
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: String(r.id),
+    title: String(r.title ?? ""),
+    prompt: String(r.prompt ?? ""),
+    use_case: (r.use_case as string) ?? null,
+    variables: Array.isArray(r.variables) ? (r.variables as string[]) : [],
+    mode: (r.capability_mode as string) ?? null,
+  }));
+}
+
+/**
+ * Pure template fill: replaces every `{name}` placeholder with its value.
+ * Returns the filled text plus any declared variables left unfilled — so the
+ * agent can ask the user for the missing ones instead of silently shipping
+ * a prompt with holes.
+ */
+export function fillTemplateText(
+  prompt: string,
+  declared: string[],
+  values: Record<string, string>,
+): { filled: string; missing: string[] } {
+  let filled = prompt;
+  for (const [name, value] of Object.entries(values)) {
+    filled = filled.split(`{${name}}`).join(value);
+  }
+  const missing = declared.filter((name) => filled.includes(`{${name}}`));
+  return { filled, missing };
+}
+
+export async function connectFillTemplate(
+  templateId: string,
+  values: Record<string, string>,
+): Promise<{ title: string; filled: string; missing: string[] }> {
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("public_library_prompts")
+    .select("title, prompt, variables")
+    .eq("id", templateId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (error) {
+    logger.error("[Connect] template fetch failed:", error);
+    throw new ConnectOpError(500, "get_failed", "שליפת התבנית נכשלה", "Template fetch failed");
+  }
+  if (!data) {
+    throw new ConnectOpError(404, "not_found", "תבנית לא נמצאה", "Template not found");
+  }
+  const declared = Array.isArray(data.variables) ? (data.variables as string[]) : [];
+  const { filled, missing } = fillTemplateText(String(data.prompt ?? ""), declared, values);
+  return { title: String(data.title ?? ""), filled, missing };
+}
+
+export interface ConnectFact {
+  id: string;
+  fact: string;
+  category: string;
+}
+
+const FACT_CATEGORIES = [
+  "professional",
+  "personal",
+  "preference",
+  "project",
+  "language",
+  "general",
+] as const;
+const MAX_FACTS = 100; // mirrors /api/user/memory
+
+/** List the user's memory facts (the "brain" every enhancement draws from). */
+export async function connectListFacts(userId: string): Promise<ConnectFact[]> {
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("user_memory_facts")
+    .select("id, fact, category")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(MAX_FACTS);
+  if (error) {
+    logger.error("[Connect] facts list failed:", error);
+    throw new ConnectOpError(500, "list_failed", "טעינת הזיכרון נכשלה", "Memory list failed");
+  }
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: String(r.id),
+    fact: String(r.fact ?? ""),
+    category: String(r.category ?? "general"),
+  }));
+}
+
+export async function connectRememberFact(
+  userId: string,
+  fact: string,
+  category?: string,
+): Promise<ConnectFact> {
+  const trimmed = fact.trim();
+  if (trimmed.length < 3 || trimmed.length > 300) {
+    throw new ConnectOpError(400, "invalid_request", "עובדה חייבת להיות 3–300 תווים");
+  }
+  const cat = (FACT_CATEGORIES as readonly string[]).includes(category ?? "")
+    ? (category as string)
+    : "general";
+  const db = createServiceClient();
+  const { count } = await db
+    .from("user_memory_facts")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if ((count ?? 0) >= MAX_FACTS) {
+    throw new ConnectOpError(400, "limit_reached", "הגעת למגבלת הזיכרון (100 עובדות)");
+  }
+  const { data, error } = await db
+    .from("user_memory_facts")
+    .insert({ user_id: userId, fact: trimmed, category: cat, source: "api" })
+    .select("id, fact, category")
+    .single();
+  if (error || !data) {
+    logger.error("[Connect] remember failed:", error);
+    throw new ConnectOpError(500, "save_failed", "שמירת העובדה נכשלה", "Fact save failed");
+  }
+  return { id: String(data.id), fact: String(data.fact), category: String(data.category) };
+}
+
+/** Thumbs up/down on an enhancement — closes the quality loop (scoring + palace). */
+export async function connectRatePrompt(
+  userId: string,
+  input: {
+    rating: 1 | -1;
+    input_text?: string;
+    enhanced_text?: string;
+    mode?: string;
+  },
+): Promise<void> {
+  const db = createServiceClient();
+  const { error } = await db.from("prompt_feedback").insert({
+    user_id: userId,
+    rating: input.rating,
+    input_text: input.input_text?.slice(0, 10_000) ?? null,
+    enhanced_text: input.enhanced_text?.slice(0, 50_000) ?? null,
+    capability_mode: input.mode ?? null,
+  });
+  if (error) {
+    logger.error("[Connect] feedback failed:", error);
+    throw new ConnectOpError(500, "save_failed", "שליחת המשוב נכשלה", "Feedback save failed");
+  }
+}

@@ -67,6 +67,11 @@ describe("MCP route (stateless Streamable HTTP)", () => {
       "list_my_prompts",
       "get_prompt",
       "get_quota",
+      "search_public_library",
+      "fill_template",
+      "remember_fact",
+      "list_facts",
+      "rate_prompt",
     ]);
     const enhance = body.result.tools[0];
     expect(enhance.inputSchema.properties.target_model.enum).toEqual([

@@ -15,6 +15,11 @@ import {
   connectQuota,
   connectSavePrompt,
   connectSearchPrompts,
+  connectSearchLibrary,
+  connectFillTemplate,
+  connectListFacts,
+  connectRememberFact,
+  connectRatePrompt,
 } from "@/lib/connect/ops";
 
 /**
@@ -141,6 +146,80 @@ const TOOLS = [
     description:
       "כמה שדרוגים נשארו למשתמש ומתי המכסה מתחדשת. חינמי — קרא לפני enhance_prompt כדי להזהיר לפני שנגמר.",
     inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "search_public_library",
+    title: "חיפוש בספרייה הציבורית",
+    description:
+      "מחפש בספריית הפרומפטים הציבורית של Peroot (מאות פרומפטים ותבניות מוכחים). השתמש כדי להתחיל ממשהו שעובד במקום מאפס. חינמי.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "מה לחפש" },
+        limit: { type: "number", description: "מקסימום תוצאות (ברירת מחדל 10)" },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "fill_template",
+    title: "מילוי תבנית",
+    description:
+      "ממלא תבנית מהספרייה הציבורית: מחליף כל {משתנה} בערך שסופק ומחזיר גם אילו משתנים חסרים — שאל את המשתמש עליהם והשלם. חינמי.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        template_id: { type: "string", description: "UUID של התבנית (מ-search_public_library)" },
+        variables: {
+          type: "object",
+          additionalProperties: { type: "string" },
+          description: 'ערכי המשתנים, למשל {"שם_המוצר": "פירוט"}',
+        },
+      },
+      required: ["template_id"],
+    },
+  },
+  {
+    name: "remember_fact",
+    title: "זכור עליי",
+    description:
+      "שומר עובדה על המשתמש למוח של Peroot (משפיעה על כל שדרוג עתידי). קרא רק כשהמשתמש מבקש שתזכור משהו. חינמי.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fact: {
+          type: "string",
+          description: "העובדה (3–300 תווים), למשל: אני משווק דיגיטלי לעסקים קטנים",
+        },
+        category: {
+          type: "string",
+          enum: ["professional", "personal", "preference", "project", "language", "general"],
+        },
+      },
+      required: ["fact"],
+    },
+  },
+  {
+    name: "list_facts",
+    title: "מה Peroot זוכר עליי",
+    description: "מציג את עובדות הזיכרון של המשתמש. חינמי.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "rate_prompt",
+    title: "דירוג שדרוג",
+    description:
+      "משוב 👍/👎 על שדרוג — עוזר ל-Peroot להשתפר. rating: 1 (טוב) או -1 (לא טוב). חינמי.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        rating: { type: "number", enum: [1, -1] },
+        input_text: { type: "string", description: "הפרומפט המקורי (אופציונלי)" },
+        enhanced_text: { type: "string", description: "הפרומפט המשודרג (אופציונלי)" },
+        mode: { type: "string", enum: MODE_ENUM },
+      },
+      required: ["rating"],
+    },
   },
 ];
 
@@ -415,6 +494,60 @@ async function callTool(
           (q.quota_resets_at ? ` · מתחדש ב-${q.quota_resets_at}` : ""),
         { ...q },
       );
+    }
+    case "search_public_library": {
+      const query = String(args.query ?? "").trim();
+      if (!query) throw new ConnectOpError(400, "invalid_request", "חסרה שאילתת חיפוש");
+      const results = await connectSearchLibrary(query, Number(args.limit ?? 10) || 10);
+      const text = results.length
+        ? results
+            .map(
+              (r, i) =>
+                `${i + 1}. ${r.title} (${r.id})${r.variables.length ? ` · משתנים: ${r.variables.join(", ")}` : ""}`,
+            )
+            .join("\n")
+        : "לא נמצאו תבניות תואמות";
+      return toolText(text, { results });
+    }
+    case "fill_template": {
+      const r = await connectFillTemplate(
+        String(args.template_id ?? ""),
+        (args.variables ?? {}) as Record<string, string>,
+      );
+      const text = r.missing.length
+        ? `${r.filled}\n\n⚠️ חסרים ערכים ל: ${r.missing.join(", ")} — שאל את המשתמש והשלם.`
+        : r.filled;
+      return toolText(text, { ...r });
+    }
+    case "remember_fact": {
+      const f = await connectRememberFact(
+        userId,
+        String(args.fact ?? ""),
+        typeof args.category === "string" ? args.category : undefined,
+      );
+      return toolText(`נשמר לזיכרון: "${f.fact}" (${f.category})`, { ...f });
+    }
+    case "list_facts": {
+      const facts = await connectListFacts(userId);
+      const text = facts.length
+        ? facts.map((f, i) => `${i + 1}. ${f.fact} (${f.category})`).join("\n")
+        : "הזיכרון ריק — אפשר לבקש ממני לזכור דברים עליך";
+      return toolText(text, { facts });
+    }
+    case "rate_prompt": {
+      const rating = Number(args.rating);
+      if (rating !== 1 && rating !== -1) {
+        throw new ConnectOpError(400, "invalid_request", "rating חייב להיות 1 או -1");
+      }
+      await connectRatePrompt(userId, {
+        rating: rating as 1 | -1,
+        input_text: typeof args.input_text === "string" ? args.input_text : undefined,
+        enhanced_text: typeof args.enhanced_text === "string" ? args.enhanced_text : undefined,
+        mode: typeof args.mode === "string" ? args.mode : undefined,
+      });
+      return toolText(rating === 1 ? "תודה על המשוב החיובי! 👍" : "תודה — המשוב נרשם 👎", {
+        saved: true,
+      });
     }
     default:
       throw new UnknownToolError(`Unknown tool: ${name}`);
