@@ -15,6 +15,31 @@ import { logger } from "@/lib/logger";
  * Returns null only when there is genuinely not enough data. AI/persist
  * failures THROW so the worker marks the job for retry instead of completing.
  */
+/**
+ * Models wrap JSON in ```fences and/or add commentary before/after despite
+ * instructions (a fence-only strip failed in production on exactly this).
+ * Extract the outermost {...} span and parse that; throw on anything else so
+ * the job retries instead of falsely completing.
+ */
+export function parsePersonalityJson(text: string): {
+  tokens?: string[];
+  preferred_format?: string;
+  personality_brief?: string;
+} {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end <= start) {
+    throw new Error(`[analyzeUserStyle] model returned non-JSON (${text.slice(0, 120)}…)`);
+  }
+  try {
+    return JSON.parse(text.slice(start, end + 1));
+  } catch {
+    throw new Error(
+      `[analyzeUserStyle] model JSON failed to parse (${text.slice(start, start + 120)}…)`,
+    );
+  }
+}
+
 export async function analyzeUserStyle(userId: string) {
   const supabase = createServiceClient();
 
@@ -60,17 +85,7 @@ export async function analyzeUserStyle(userId: string) {
     prompt: analyzerPrompt,
   });
 
-  // Models often wrap JSON in ```json fences despite instructions — strip them.
-  const cleaned = text
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "");
-  let result: { tokens?: string[]; preferred_format?: string; personality_brief?: string };
-  try {
-    result = JSON.parse(cleaned);
-  } catch {
-    throw new Error(`[analyzeUserStyle] model returned non-JSON (${text.slice(0, 80)}…)`);
-  }
+  const result = parsePersonalityJson(text);
 
   // 3. Persist to DB
   const { error } = await supabase.from("user_style_personality").upsert(
