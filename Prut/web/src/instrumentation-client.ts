@@ -49,16 +49,25 @@ Sentry.init({
       msg.includes("resizeobserver loop") ||
       msg.includes("script error") || // Cross-origin, no useful detail
       msg.includes("cancelled") ||
-      msg.includes("chunk load error") // Webpack chunk reload; handled by SW
+      msg.includes("chunk load error") || // Webpack chunk reload; handled by SW
+      // In-app WebView (Facebook/Instagram) bridge failures — their injected
+      // navigation_performance_logger throws on postMessage during page close.
+      msg.includes("java exception was raised during method invocation")
     ) {
       return null;
     }
-    // Drop browser-extension-injected errors
+    // Drop errors injected by browser extensions or in-app-browser scripts.
+    // Our own code is always served from https:// (or webpack-internal in dev);
+    // app:// frames belong to WebView-injected loggers (Facebook, TikTok, etc.).
     const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
     if (
       frames.some(
         (f) =>
-          f.filename?.includes("chrome-extension://") || f.filename?.includes("moz-extension://"),
+          f.filename?.includes("chrome-extension://") ||
+          f.filename?.includes("moz-extension://") ||
+          f.filename?.includes("safari-extension://") ||
+          f.filename?.includes("safari-web-extension://") ||
+          f.filename?.startsWith("app://"),
       )
     ) {
       return null;
