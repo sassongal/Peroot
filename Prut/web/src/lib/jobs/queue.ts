@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
 
-export type JobType = 'style_analysis' | 'achievement_check';
+export type JobType = "style_analysis" | "achievement_check";
 
 export interface JobPayload {
   [key: string]: unknown;
@@ -9,27 +9,41 @@ export interface JobPayload {
 }
 
 /**
- * Enqueues a background job to be processed by the worker.
- * This ensures tasks like style analysis are persistent and retriable.
+ * Enqueues a background job for the worker (/api/jobs/process, hourly cron).
+ *
+ * Uses the SERVICE client on purpose: enqueue runs inside `after()` on the
+ * enhance path, where API-key (prk_) and extension callers have no cookie
+ * session — the previous SSR-client version silently failed RLS for them.
+ *
+ * Dedupe: if a pending job of the same type already exists for this user, we
+ * skip the insert. Both job types are per-user idempotent ("analyze user X",
+ * "check user X's achievements"), so one pending job is always enough — this
+ * is what previously let 1,000+ duplicates pile up.
  */
 export async function enqueueJob(type: JobType, payload: JobPayload) {
   try {
-    const supabase = await createClient();
-    
-    // We use service role bypass if needed, but for now we assume the current context (admin/user)
-    // has permission to INSERT via RLS. If 'createClient' is user-scoped, RLS must allow INSERT.
-    const { error } = await supabase
-      .from('background_jobs')
-      .insert({
-        type,
-        payload,
-        status: 'pending'
-      });
+    const supabase = createServiceClient();
+
+    if (payload.userId) {
+      const { data: existing } = await supabase
+        .from("background_jobs")
+        .select("id")
+        .eq("type", type)
+        .eq("status", "pending")
+        .eq("payload->>userId", payload.userId)
+        .limit(1)
+        .maybeSingle();
+      if (existing) return; // already queued — nothing to add
+    }
+
+    const { error } = await supabase.from("background_jobs").insert({
+      type,
+      payload,
+      status: "pending",
+    });
 
     if (error) {
       logger.error(`[JobQueue] Failed to enqueue ${type}:`, error);
-      // Fallback: In critical paths, you might want to throw. 
-      // For enhancements, maybe we just log error to not block the user response.
     }
   } catch (err) {
     logger.error(`[JobQueue] Unexpected error enqueuing ${type}:`, err);
