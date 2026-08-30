@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { CopySetupPrompt } from "@/components/connect/CopySetupPrompt";
 import { PEROOT_COMMANDS, CONNECT_CAPABILITIES } from "@/lib/connect/commands";
 import {
@@ -98,6 +99,16 @@ export default function ConnectPage() {
       <div className="max-w-4xl mx-auto px-4 py-16 space-y-16">
         {/* Hero */}
         <header className="text-center space-y-5">
+          <div className="flex justify-center">
+            <Image
+              src="/Peroot-hero.webp"
+              alt="פירוט"
+              width={720}
+              height={316}
+              className="w-full max-w-[280px] h-auto"
+              priority
+            />
+          </div>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300">
             <Plug className="w-4 h-4 text-amber-400" />
             Peroot Connect

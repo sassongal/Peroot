@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { AlertCircle, RefreshCw, Home } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function GlobalError({
   error,
@@ -18,8 +19,27 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-(--surface-body) p-6 font-sans rtl" dir="rtl">
+    <div
+      className="min-h-screen flex items-center justify-center bg-(--surface-body) p-6 font-sans rtl"
+      dir="rtl"
+    >
       <div className="max-w-md w-full glass-card p-8 rounded-3xl border border-(--glass-border) text-center space-y-6 animate-in fade-in zoom-in duration-500">
+        <div className="flex justify-center">
+          <Image
+            src="/images/peroot_logo_pack/logo_dark_240.png"
+            alt="Peroot"
+            width={240}
+            height={240}
+            className="block dark:hidden h-10 w-auto opacity-90"
+          />
+          <Image
+            src="/images/peroot_logo_pack/logo_dark_navbar_2x.png"
+            alt="Peroot"
+            width={240}
+            height={240}
+            className="hidden dark:block h-10 w-auto opacity-90"
+          />
+        </div>
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500">
           <AlertCircle className="w-8 h-8" />
         </div>

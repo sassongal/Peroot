@@ -518,33 +518,6 @@ export default function FeaturesPage() {
         className="min-h-screen bg-background text-foreground selection:bg-amber-500/30"
         dir="rtl"
       >
-        {/* ── Sticky Header ── */}
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-lg font-serif font-bold text-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-            >
-              <Image
-                src="/images/peroot_logo_pack/logo_dark_240.png"
-                alt="Peroot"
-                width={28}
-                height={28}
-                className="h-7 w-7 rounded-md"
-                priority
-              />
-              <span>Peroot</span>
-            </Link>
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-            >
-              חזרה לדף הבית
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-          </div>
-        </header>
-
         <div className="max-w-6xl mx-auto px-4 md:px-8 pb-24">
           {/* ── Hero ── */}
           <section className="relative py-16 md:py-24 overflow-hidden">

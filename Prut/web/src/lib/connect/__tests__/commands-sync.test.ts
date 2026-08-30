@@ -34,7 +34,7 @@ describe("command family sync", () => {
   it("the MCP route and /connect page both consume the shared source", () => {
     const root = process.cwd();
     const mcp = readFileSync(join(root, "src", "app", "api", "mcp", "route.ts"), "utf8");
-    const page = readFileSync(join(root, "src", "app", "connect", "page.tsx"), "utf8");
+    const page = readFileSync(join(root, "src", "app", "(public)", "connect", "page.tsx"), "utf8");
     expect(mcp).toContain('from "@/lib/connect/commands"');
     expect(page).toContain('from "@/lib/connect/commands"');
     // Neither may re-declare its own command list.

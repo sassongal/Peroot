@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export function MaintenancePage() {
@@ -8,26 +9,16 @@ export function MaintenancePage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-8" dir="rtl">
       <div className="max-w-2xl text-center space-y-6">
-        {/* Icon */}
+        {/* Brand — the gold wordmark (this page IS the site while it's down) */}
         <div className="flex justify-center mb-8">
-          <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 opacity-20 blur-2xl absolute inset-0" />
-            <div className="relative w-32 h-32 rounded-full border-4 border-white/10 flex items-center justify-center">
-              <svg
-                className="w-16 h-16 text-white/80"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                />
-              </svg>
-            </div>
-          </div>
+          <Image
+            src="/Peroot-hero.webp"
+            alt="פירוט"
+            width={720}
+            height={316}
+            className="w-full max-w-[280px] h-auto"
+            priority
+          />
         </div>
 
         {/* Content */}

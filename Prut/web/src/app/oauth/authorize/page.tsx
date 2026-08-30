@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getOAuthClient, OAUTH_SCOPE } from "@/lib/connect/oauth";
@@ -80,40 +81,53 @@ export default async function AuthorizePage({
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/6 blur-[160px] rounded-full" />
       </div>
-      <div className="relative z-10 w-full max-w-[440px] rounded-2xl border border-white/6 bg-linear-to-b from-white/5 to-white/2 backdrop-blur-2xl p-7 shadow-[0_16px_80px_rgba(0,0,0,0.6)]">
-        <p className="text-[11px] tracking-widest text-amber-400/80 mb-2">PEROOT CONNECT</p>
-        <h1 className="text-xl font-bold text-white mb-4">בקשת חיבור לחשבון שלך</h1>
-        <p className="text-sm text-white/70 leading-relaxed mb-5">
-          <span className="font-semibold text-white">{client.client_name}</span> מבקש הרשאה לפעול
-          בשמך ב-Peroot: שדרוג פרומפטים (בכפוף למכסה שלך), חיפוש ושמירה בספרייה האישית, ותבניות
-          מהספרייה הציבורית.
-        </p>
-        <p className="text-xs text-white/40 mb-6">
-          מחובר כ-{user.email} · אפשר לנתק בכל רגע מהגדרות → Connect.
-        </p>
-        <form method="POST" action="/api/oauth/authorize" className="flex gap-3">
-          <input type="hidden" name="client_id" value={clientId} />
-          <input type="hidden" name="redirect_uri" value={redirectUri} />
-          <input type="hidden" name="code_challenge" value={codeChallenge} />
-          <input type="hidden" name="state" value={state} />
-          <input type="hidden" name="scope" value={scope} />
-          <button
-            type="submit"
-            name="decision"
-            value="approve"
-            className="flex-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 text-sm transition-colors"
-          >
-            אישור החיבור
-          </button>
-          <button
-            type="submit"
-            name="decision"
-            value="deny"
-            className="flex-1 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 py-2.5 text-sm transition-colors"
-          >
-            ביטול
-          </button>
-        </form>
+      <div className="relative z-10 w-full max-w-[440px]">
+        {/* Brand gate — the gold wordmark, same as the login gate */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/Peroot-hero.webp"
+            alt="פירוט"
+            width={720}
+            height={316}
+            className="w-full max-w-[240px] h-auto"
+            priority
+          />
+        </div>
+        <div className="rounded-2xl border border-white/6 bg-linear-to-b from-white/5 to-white/2 backdrop-blur-2xl p-7 shadow-[0_16px_80px_rgba(0,0,0,0.6)]">
+          <p className="text-[11px] tracking-widest text-amber-400/80 mb-2">PEROOT CONNECT</p>
+          <h1 className="text-xl font-bold text-white mb-4">בקשת חיבור לחשבון שלך</h1>
+          <p className="text-sm text-white/70 leading-relaxed mb-5">
+            <span className="font-semibold text-white">{client.client_name}</span> מבקש הרשאה לפעול
+            בשמך ב-Peroot: שדרוג פרומפטים (בכפוף למכסה שלך), חיפוש ושמירה בספרייה האישית, ותבניות
+            מהספרייה הציבורית.
+          </p>
+          <p className="text-xs text-white/40 mb-6">
+            מחובר כ-{user.email} · אפשר לנתק בכל רגע מהגדרות → Connect.
+          </p>
+          <form method="POST" action="/api/oauth/authorize" className="flex gap-3">
+            <input type="hidden" name="client_id" value={clientId} />
+            <input type="hidden" name="redirect_uri" value={redirectUri} />
+            <input type="hidden" name="code_challenge" value={codeChallenge} />
+            <input type="hidden" name="state" value={state} />
+            <input type="hidden" name="scope" value={scope} />
+            <button
+              type="submit"
+              name="decision"
+              value="approve"
+              className="flex-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 text-sm transition-colors"
+            >
+              אישור החיבור
+            </button>
+            <button
+              type="submit"
+              name="decision"
+              value="deny"
+              className="flex-1 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 py-2.5 text-sm transition-colors"
+            >
+              ביטול
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );
