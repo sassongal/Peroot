@@ -89,6 +89,30 @@ Existing deep module (`src/lib/api-middleware.ts`, ~50 routes). Validates the
 admin session, shapes 401/403/500, and (for `withAdminWrite`) enforces the
 `adminWrite` rate-limit bucket. The proof that the wrapper pattern works here.
 
+### Connect ops  ·  `src/lib/connect/ops.ts`  *(built 2026-08-30)*
+
+The seam at which an **external agent's request** (REST `/api/v1/*` or MCP
+`/api/mcp`) becomes a platform action. One implementation, two transports —
+the two surfaces cannot drift because neither owns any logic.
+
+- **Interface:** one exported function per capability (`connectEnhance`,
+  `connectSavePrompt`, `connectSearchPrompts`, `connectQuota`,
+  `connectRelatedPrompts`, `connectGetChain`, …), each `(userId, input) →
+  result` throwing `ConnectOpError(status, code, hebrewMessage)`. Transports
+  only parse/serialize.
+- **Invariants owned here:** `connectEnhance` calls the REAL `/api/enhance`
+  route handler in-process (synthetic Request + `parseTrailer`) so quota,
+  cache, memory facts and engines stay identical to the web — never a second
+  enhancement path. Context arrives as a FULL new-shape `ContextBlock`
+  (legacy `{type,name,content}` 500s — `renderInjection` reads
+  `display.rawText`).
+- **Adjacent:** `auth.ts` (`authenticateConnect`: `prk_` key or `pot_` OAuth
+  token → `{userId, keyId|null, kind}` + dual rate ceilings),
+  `openapi.ts` (contract SoT), `oauth.ts` (OAuth 2.1 core).
+- **Deliberately outside:** chain *execution* — `get_chain` returns steps and
+  the agent orchestrates them via `enhance_prompt` (stateless MCP + 60s budget
+  make server-side multi-LLM runs the wrong shape).
+
 ### Personal Library corpus  ·  `useAllPersonalPrompts()`  *(built 2026-07-18)*
 
 The seam that hands the graph view and the Memory Palace the **full** personal

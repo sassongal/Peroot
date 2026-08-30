@@ -230,6 +230,44 @@ Credit-gated user routes go through `withUser` (`src/lib/api-middleware.ts`).
 
 ---
 
+## Peroot Connect (public agent surface) — shipped 2026-08-30
+
+Lets ANY agent (Claude Desktop, Cursor, claude.ai web, ChatGPT, curl) enhance
+prompts through Peroot. Plan: `docs/plans/2026-08-29-peroot-for-agents.md` (v1.0).
+
+- **One ops layer, two mouths.** `src/lib/connect/ops.ts` is the single
+  implementation; both `/api/v1/*` (REST) and `/api/mcp` (stateless Streamable
+  HTTP MCP, 14 tools + the `/peroot:` prompt commands) call it — never implement
+  a capability on one surface only. The OpenAPI object in
+  `src/lib/connect/openapi.ts` is the contract SoT: served at `/api/v1/openapi`,
+  rendered at `/connect/docs`, pinned by `openapi.test.ts`.
+- **Auth:** `prk_live_` API keys (SHA-256 hash + 16-char prefix lookup,
+  `src/lib/api-keys.ts`, managed in Settings → Connect) **or** OAuth 2.1
+  (`src/lib/connect/oauth.ts`: RFC 7591 dynamic registration, PKCE S256, Hebrew
+  consent at `/oauth/authorize`, `pot_`/`por_` tokens hashed, refresh rotation;
+  discovery under `/.well-known/`). `authenticateConnect`
+  (`src/lib/connect/auth.ts`) resolves both; usage logs attach `api_key_id`
+  only for prk keys.
+- **Quota is unified** with the web (free 1/day, PRO monthly) via the same
+  credit RPC — `connectEnhance` invokes the real `/api/enhance` handler
+  in-process. Hardening: Idempotency-Key replay (Redis, 15 min), 55s hard-stop
+  → 504 + refund, per-key (20/min) + per-user (40/min) ceilings.
+- **CSRF:** `/api/v1/`, `/api/mcp`, `/api/oauth/token`, `/api/oauth/register`
+  are exempt in `proxy.ts` (bearer/PKCE auth, no cookies). `/api/oauth/authorize`
+  (the consent form) is deliberately NOT exempt.
+
+## Background jobs (style analysis, achievements)
+
+`background_jobs` table → `/api/jobs/process` worker (hourly vercel.json cron
+at :30, Bearer `CRON_SECRET`), batch-drains via the `fetch_next_job` RPC.
+Hard-won rules: the worker and everything it calls MUST use the **service
+client** (cron has no cookies — the SSR client silently reads empty under RLS
+and jobs "complete" doing nothing); handlers must **throw** on failure so the
+job retries; model JSON comes via `generateObject`+zod (free-text JSON parsing
+broke twice on fences/Hebrew quotes). `src/lib/intelligence/*`.
+
+---
+
 ## Agent Framework (.agent/)
 The project has an Antigravity Kit with 19 specialist agents, 36 skills, 11 workflows.
 Use `/plan`, `/debug`, `/create`, `/enhance`, `/deploy` slash commands in Cursor.
