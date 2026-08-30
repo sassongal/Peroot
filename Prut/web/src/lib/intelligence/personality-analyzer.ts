@@ -1,7 +1,20 @@
+import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { google } from "@/lib/ai/models";
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { logger } from "@/lib/logger";
+
+/**
+ * Structured-output schema for the style persona. generateObject uses the
+ * provider's native JSON mode, which eliminates the whole class of failures
+ * free-text parsing hit in production (``` fences, then unescaped Hebrew
+ * quotes inside string values breaking JSON.parse).
+ */
+const StylePersonaSchema = z.object({
+  tokens: z.array(z.string()).max(30).default([]),
+  preferred_format: z.string().max(500).default(""),
+  personality_brief: z.string().max(1000).default(""),
+});
 
 /**
  * Analyzes a user's prompt library and synthesizes a persistent style personality.
@@ -15,31 +28,6 @@ import { logger } from "@/lib/logger";
  * Returns null only when there is genuinely not enough data. AI/persist
  * failures THROW so the worker marks the job for retry instead of completing.
  */
-/**
- * Models wrap JSON in ```fences and/or add commentary before/after despite
- * instructions (a fence-only strip failed in production on exactly this).
- * Extract the outermost {...} span and parse that; throw on anything else so
- * the job retries instead of falsely completing.
- */
-export function parsePersonalityJson(text: string): {
-  tokens?: string[];
-  preferred_format?: string;
-  personality_brief?: string;
-} {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end <= start) {
-    throw new Error(`[analyzeUserStyle] model returned non-JSON (${text.slice(0, 120)}…)`);
-  }
-  try {
-    return JSON.parse(text.slice(start, end + 1));
-  } catch {
-    throw new Error(
-      `[analyzeUserStyle] model JSON failed to parse (${text.slice(start, start + 120)}…)`,
-    );
-  }
-}
-
 export async function analyzeUserStyle(userId: string) {
   const supabase = createServiceClient();
 
@@ -54,8 +42,11 @@ export async function analyzeUserStyle(userId: string) {
   if (libError) throw new Error(`[analyzeUserStyle] library fetch failed: ${libError.message}`);
   if (!library || library.length < 3) return null; // Not enough data to build a persona
 
-  // 2. Synthesize using AI
-  const libraryText = library.map((p) => `[${p.title}]\n${p.prompt}`).join("\n\n---\n\n");
+  // 2. Synthesize using AI (each prompt capped — style shows in the first
+  //    lines; full bodies just burn tokens)
+  const libraryText = library
+    .map((p) => `[${p.title}]\n${(p.prompt ?? "").slice(0, 800)}`)
+    .join("\n\n---\n\n");
 
   const analyzerPrompt = `
     Analyze the following prompt engineering styles for this user.
@@ -65,12 +56,9 @@ export async function analyzeUserStyle(userId: string) {
     - Language habits (e.g. specific Hebrew terminology, formatting preferences)
     - Precision level (detailed vs concise)
 
-    Output format (JSON):
-    {
-      "tokens": ["word1", "word2", "phrase3"],
-      "preferred_format": "description of structure",
-      "personality_brief": "A professional brief of this user's writing identity"
-    }
+    Return: tokens (recurring words/phrases), preferred_format (description of
+    structure), personality_brief (a professional brief of this user's writing
+    identity, in Hebrew).
 
     Prompts to analyze:
     ---
@@ -78,14 +66,12 @@ export async function analyzeUserStyle(userId: string) {
     ---
     `.trim();
 
-  const { text } = await generateText({
+  const { object: result } = await generateObject({
     model: google("gemini-2.5-flash-lite"),
-    system:
-      "You are a behavioral linguistics expert specializing in AI Prompt Engineering. Return only valid JSON.",
+    schema: StylePersonaSchema,
+    system: "You are a behavioral linguistics expert specializing in AI Prompt Engineering.",
     prompt: analyzerPrompt,
   });
-
-  const result = parsePersonalityJson(text);
 
   // 3. Persist to DB
   const { error } = await supabase.from("user_style_personality").upsert(

@@ -1,27 +1,75 @@
-import { describe, it, expect } from "vitest";
-import { parsePersonalityJson } from "@/lib/intelligence/personality-analyzer";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const GOOD = '{"tokens":["מומחה"],"preferred_format":"רשימות","personality_brief":"תמציתי"}';
+const { mockGenerateObject, mockFrom } = vi.hoisted(() => ({
+  mockGenerateObject: vi.fn(),
+  mockFrom: vi.fn(),
+}));
 
-describe("parsePersonalityJson", () => {
-  it("parses bare JSON", () => {
-    expect(parsePersonalityJson(GOOD).tokens).toEqual(["מומחה"]);
+vi.mock("ai", () => ({ generateObject: mockGenerateObject }));
+vi.mock("@/lib/ai/models", () => ({ google: (id: string) => ({ modelId: id }) }));
+vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({ from: mockFrom }) }));
+vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn() } }));
+
+import { analyzeUserStyle } from "@/lib/intelligence/personality-analyzer";
+
+const LIBRARY = [
+  { title: "א", prompt: "פרומפט ראשון", use_case: null, personal_category: "כללי" },
+  { title: "ב", prompt: "פרומפט שני", use_case: null, personal_category: "כללי" },
+  { title: "ג", prompt: "פרומפט שלישי", use_case: null, personal_category: "כללי" },
+];
+
+function mockLibrary(rows: unknown[] | null, upsertError: unknown = null) {
+  const upsert = vi.fn().mockResolvedValue({ error: upsertError });
+  mockFrom.mockImplementation((table: string) => {
+    if (table === "personal_library") {
+      return {
+        select: () => ({
+          eq: () => ({
+            order: () => ({ limit: () => Promise.resolve({ data: rows, error: null }) }),
+          }),
+        }),
+      };
+    }
+    return { upsert };
+  });
+  return upsert;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("analyzeUserStyle", () => {
+  it("persists the structured persona via the service client", async () => {
+    const upsert = mockLibrary(LIBRARY);
+    mockGenerateObject.mockResolvedValue({
+      object: { tokens: ["מומחה"], preferred_format: "רשימות", personality_brief: "תמציתי" },
+    });
+    const result = await analyzeUserStyle("u1");
+    expect(result?.tokens).toEqual(["מומחה"]);
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ user_id: "u1", style_tokens: ["מומחה"] }),
+      { onConflict: "user_id" },
+    );
   });
 
-  it("parses fenced JSON (the production failure shape)", () => {
-    expect(parsePersonalityJson("```json\n" + GOOD + "\n```").preferred_format).toBe("רשימות");
+  it("returns null (legit skip) for a thin library", async () => {
+    mockLibrary(LIBRARY.slice(0, 2));
+    expect(await analyzeUserStyle("u1")).toBeNull();
+    expect(mockGenerateObject).not.toHaveBeenCalled();
   });
 
-  it("parses JSON surrounded by commentary and a fence", () => {
-    const text = "הנה הניתוח:\n```json\n" + GOOD + "\n```\nמקווה שזה עוזר!";
-    expect(parsePersonalityJson(text).personality_brief).toBe("תמציתי");
+  it("throws when the model call fails so the job retries", async () => {
+    mockLibrary(LIBRARY);
+    mockGenerateObject.mockRejectedValue(new Error("schema validation failed"));
+    await expect(analyzeUserStyle("u1")).rejects.toThrow("schema validation failed");
   });
 
-  it("throws on truncated JSON so the job retries", () => {
-    expect(() => parsePersonalityJson('```json\n{"tokens":["a",')).toThrow(/non-JSON|parse/);
-  });
-
-  it("throws on no JSON at all", () => {
-    expect(() => parsePersonalityJson("sorry, cannot analyze")).toThrow(/non-JSON/);
+  it("throws when persisting fails so the job retries", async () => {
+    mockLibrary(LIBRARY, { message: "rls denied" });
+    mockGenerateObject.mockResolvedValue({
+      object: { tokens: [], preferred_format: "", personality_brief: "" },
+    });
+    await expect(analyzeUserStyle("u1")).rejects.toThrow(/persist failed/);
   });
 });
