@@ -81,6 +81,14 @@ export default function ConnectDocsPage() {
           >
             {"Authorization: Bearer prk_live_XXXX"}
           </pre>
+          <p className="text-sm text-slate-400">
+            לחלופין — OAuth 2.1 (PKCE) עבור קונקטורים כמו claude.ai ו-ChatGPT: הלקוח נרשם דינמית,
+            המשתמש מאשר בחלון Peroot, והבקשות נושאות access token במקום מפתח. גילוי אוטומטי דרך{" "}
+            <code className="font-mono text-xs" dir="ltr">
+              /.well-known/oauth-authorization-server
+            </code>
+            .
+          </p>
         </section>
 
         {/* Endpoints — generated from the spec */}

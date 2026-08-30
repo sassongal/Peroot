@@ -233,6 +233,18 @@ export async function POST(req: Request) {
       }
       userId = apiKeyResult.userId;
       useServiceClient = true;
+    } else if (bearerToken?.startsWith("pot_")) {
+      // Peroot Connect OAuth access token (claude.ai web / ChatGPT connectors)
+      const { validateOAuthToken } = await import("@/lib/connect/oauth");
+      const oauthResult = await validateOAuthToken(bearerToken);
+      if (!oauthResult.valid || !oauthResult.userId) {
+        return NextResponse.json(
+          { error: "טוקן OAuth לא תקין או פג תוקף", code: "invalid_token" },
+          { status: 401 },
+        );
+      }
+      userId = oauthResult.userId;
+      useServiceClient = true;
     } else {
       const {
         data: { user },
@@ -695,11 +707,12 @@ export async function POST(req: Request) {
                   category,
                   capability_mode: capability_mode || "STANDARD",
                   title: prompt.slice(0, 60),
-                  source: bearerToken?.startsWith("prk_")
-                    ? "api"
-                    : bearerToken
-                      ? "extension"
-                      : "web",
+                  source:
+                    bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
+                      ? "api"
+                      : bearerToken
+                        ? "extension"
+                        : "web",
                   input_source: inputSource,
                   cost_funnel_stage: 1,
                   output_language: output_language || "hebrew",
@@ -826,11 +839,12 @@ export async function POST(req: Request) {
                   category,
                   capability_mode: capability_mode || "STANDARD",
                   title: prompt.slice(0, 60),
-                  source: bearerToken?.startsWith("prk_")
-                    ? "api"
-                    : bearerToken
-                      ? "extension"
-                      : "web",
+                  source:
+                    bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
+                      ? "api"
+                      : bearerToken
+                        ? "extension"
+                        : "web",
                   input_source: inputSource,
                   cost_funnel_stage: 2,
                   output_language: output_language || "hebrew",
@@ -1110,11 +1124,12 @@ export async function POST(req: Request) {
                     category,
                     capability_mode: capability_mode || "STANDARD",
                     title: prompt.slice(0, 60),
-                    source: bearerToken?.startsWith("prk_")
-                      ? "api"
-                      : bearerToken
-                        ? "extension"
-                        : "web",
+                    source:
+                      bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
+                        ? "api"
+                        : bearerToken
+                          ? "extension"
+                          : "web",
                     input_source: inputSource,
                     cost_funnel_stage: 3,
                     output_language: output_language || "hebrew",

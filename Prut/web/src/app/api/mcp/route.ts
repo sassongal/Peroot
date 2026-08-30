@@ -32,8 +32,9 @@ import {
  * runs correctly on serverless.
  *
  * Auth: `Authorization: Bearer prk_live_…` on every request (Claude Desktop
- * via mcp-remote --header, Cursor via headers config). claude.ai web / ChatGPT
- * arrive with OAuth in Phase 3.
+ * via mcp-remote --header, Cursor via headers config), or an OAuth access
+ * token `pot_…` (claude.ai web / ChatGPT connectors — discovery via
+ * /.well-known/oauth-authorization-server, consent at /oauth/authorize).
  *
  * Tools call the SAME shared ops layer as /api/v1 — zero drift between
  * surfaces. Prompts expose the /peroot: command family.

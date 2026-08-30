@@ -216,7 +216,9 @@ export default function ConnectPage() {
             />
           </div>
           <p className="text-xs text-slate-500 text-center">
-            חיבור בקליק מתוך claude.ai ו-ChatGPT (ללא מפתח) — בקרוב.{" "}
+            מתחברים מ-claude.ai או ChatGPT? הוסיפו קונקטור עם הכתובת
+            https://www.peroot.space/api/mcp — האישור נעשה בחלון התחברות של Peroot (OAuth, ללא
+            מפתח).{" "}
             <Link href="/connect/docs" className="text-amber-400/80 hover:text-amber-300">
               לתיעוד ה-API המלא ←
             </Link>

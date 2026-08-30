@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-auth";
+import { validateOAuthToken, OAUTH_ACCESS_PREFIX } from "@/lib/connect/oauth";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { createServiceClient } from "@/lib/supabase/service";
 import { logger } from "@/lib/logger";
@@ -7,16 +8,19 @@ import { logger } from "@/lib/logger";
 /**
  * Peroot Connect — shared auth/limits for the public surface (/api/v1 + /api/mcp).
  *
- * The key IS the credential (no cookies, no CSRF surface), so these endpoints
- * are CSRF-exempt in proxy.ts and answer CORS openly. Two independent rate
+ * The bearer credential is either a prk_ API key or (Phase 3) a pot_ OAuth
+ * access token — no cookies, no CSRF surface, so these endpoints are
+ * CSRF-exempt in proxy.ts and answer CORS openly. Two independent rate
  * ceilings apply on top of the user's credit allowance:
- *   - per key  (connectKey, 20/min) — bounds one leaked/hot key
- *   - per user (connectUser, 40/min) — N keys must not multiply throughput
+ *   - per credential (connectKey, 20/min) — bounds one leaked/hot key or token
+ *   - per user       (connectUser, 40/min) — N credentials must not multiply throughput
  */
 
 export interface ConnectAuth {
   userId: string;
-  keyId: string;
+  /** developer_api_keys.id for prk_ auth; null for OAuth tokens. */
+  keyId: string | null;
+  kind: "key" | "oauth";
 }
 
 export const CORS_HEADERS: Record<string, string> = {
@@ -33,10 +37,20 @@ export function connectError(
   en: string,
   extra: Record<string, unknown> = {},
 ): NextResponse {
-  return NextResponse.json(
+  const res = NextResponse.json(
     { error: he, error_en: en, code, ...extra },
     { status, headers: CORS_HEADERS },
   );
+  if (status === 401) {
+    // RFC 9728 / MCP auth: point clients at the resource metadata so an
+    // OAuth-capable client (claude.ai web, ChatGPT) can start the flow.
+    const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
+    res.headers.set(
+      "WWW-Authenticate",
+      `Bearer realm="Peroot Connect", resource_metadata="${base}/.well-known/oauth-protected-resource"`,
+    );
+  }
+  return res;
 }
 
 export function connectJson(body: unknown, status = 200): NextResponse {
@@ -65,19 +79,46 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
     );
   }
 
-  const result = await validateApiKey(token);
-  if (!result.valid || !result.userId || !result.keyId) {
-    return connectError(
-      401,
-      "invalid_key",
-      "מפתח API לא תקין או שבוטל — צור מפתח חדש ב-Peroot Connect",
-      "Invalid or revoked API key — create a new key in Peroot Connect",
-    );
+  let userId: string;
+  let keyId: string | null;
+  let kind: "key" | "oauth";
+  let credentialLimitKey: string;
+
+  if (token.startsWith(OAUTH_ACCESS_PREFIX)) {
+    // Phase 3 — OAuth access token (claude.ai web / ChatGPT connectors).
+    const oauth = await validateOAuthToken(token);
+    if (!oauth.valid || !oauth.userId) {
+      return connectError(
+        401,
+        "invalid_key",
+        "טוקן OAuth לא תקין או שפג — התחבר מחדש ל-Peroot",
+        "Invalid or expired OAuth token — reconnect to Peroot",
+      );
+    }
+    userId = oauth.userId;
+    keyId = null;
+    kind = "oauth";
+    // Same per-credential ceiling as a key; bucket by user+client.
+    credentialLimitKey = `connect:oauth:${userId}:${oauth.clientId ?? "unknown"}`;
+  } else {
+    const result = await validateApiKey(token);
+    if (!result.valid || !result.userId || !result.keyId) {
+      return connectError(
+        401,
+        "invalid_key",
+        "מפתח API לא תקין או שבוטל — צור מפתח חדש ב-Peroot Connect",
+        "Invalid or revoked API key — create a new key in Peroot Connect",
+      );
+    }
+    userId = result.userId;
+    keyId = result.keyId;
+    kind = "key";
+    credentialLimitKey = `connect:key:${result.keyId}`;
   }
 
   const [keyLimit, userLimit] = await Promise.all([
-    checkRateLimit(`connect:key:${result.keyId}`, "connectKey"),
-    checkRateLimit(`connect:user:${result.userId}`, "connectUser"),
+    checkRateLimit(credentialLimitKey, "connectKey"),
+    checkRateLimit(`connect:user:${userId}`, "connectUser"),
   ]);
   const blocked = !keyLimit.success ? keyLimit : !userLimit.success ? userLimit : null;
   if (blocked) {
@@ -93,7 +134,7 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
     return res;
   }
 
-  return { userId: result.userId, keyId: result.keyId };
+  return { userId, keyId, kind };
 }
 
 /**
@@ -102,7 +143,8 @@ export async function authenticateConnect(req: Request): Promise<ConnectAuth | N
  */
 export function logConnectUsage(entry: {
   userId: string;
-  keyId: string;
+  /** null for OAuth-authenticated calls (api_key_id FK is prk-only). */
+  keyId: string | null;
   endpoint: string;
   durationMs: number;
   engineMode?: string;

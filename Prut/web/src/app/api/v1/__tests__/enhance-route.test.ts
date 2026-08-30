@@ -51,7 +51,7 @@ function reqWith(headers: Record<string, string> = {}): Request {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockAuth.mockResolvedValue({ userId: "u1", keyId: "k1" });
+  mockAuth.mockResolvedValue({ userId: "u1", keyId: "k1", kind: "key" });
   mockEnhance.mockResolvedValue(RESULT);
   redisGet.mockResolvedValue(null);
 });

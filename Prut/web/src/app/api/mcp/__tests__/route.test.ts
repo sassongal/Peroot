@@ -37,7 +37,7 @@ function rpc(body: unknown): Request {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockAuth.mockResolvedValue({ userId: "user-1", keyId: "key-1" });
+  mockAuth.mockResolvedValue({ userId: "user-1", keyId: "key-1", kind: "key" });
 });
 
 describe("MCP route (stateless Streamable HTTP)", () => {

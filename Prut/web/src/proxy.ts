@@ -61,6 +61,12 @@ const CSRF_EXEMPT_PREFIXES = [
   // otherwise 403 here (the Bearer exemption below requires an empty Origin).
   "/api/v1/",
   "/api/mcp",
+  // OAuth 2.1 endpoints hit by external clients (claude.ai/ChatGPT) with no
+  // cookie context — code+PKCE (token) / rate limit (register) are the guard.
+  // NOTE: /api/oauth/authorize is intentionally NOT here — it's a cookie-authed
+  // same-origin consent form and must keep CSRF protection.
+  "/api/oauth/token",
+  "/api/oauth/register",
 ];
 
 /** @internal exported for unit tests — do not import from app code */
