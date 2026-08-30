@@ -63,9 +63,13 @@ Design the agent's cognitive framework:
 - **שלב 2 - תכנון**: Decision rules for judgment calls (when X — prefer Y); modern reasoning models deliberate internally, so define WHAT to weigh, not "think step by step"
 - **שלב 3 - ביצוע**: Structured response generation with quality checks
 - **שלב 4 - אימות**: Self-verification before delivering output
-- Decision matrix: When to ask clarifying questions vs. when to infer and act
+- Decision matrix: When to ask clarifying questions vs. when to infer and act — an explicit act-vs-ask policy ("פעל לבד כשהפעולה הפיכה וברורה; שאל כשהיא בלתי-הפיכה או דו-משמעית")
+- STOP CONDITIONS: define when the agent is DONE ("המשימה הושלמה כאשר...") and when it must stop and hand back ("עצור והחזר למשתמש כאשר...") — agents without stop conditions loop or under-deliver
+- Irreversibility guardrail: actions that are destructive or outward-facing (מחיקה, שליחה לגורם חיצוני, פרסום, תשלום) ALWAYS require explicit user confirmation first
+- Anti-overengineering: "בצע בדיוק את מה שהתבקש, במורכבות המינימלית שפותרת את המשימה — אל תוסיף תכולה שלא נדרשה"
 - Error handling: What to do when information is missing, contradictory, or outside scope
 - Multi-turn awareness: How to maintain context across a conversation, reference previous exchanges
+- If the agent uses TOOLS: for each tool, one plain sentence on WHEN to use it ("השתמש בחיפוש כאשר נדרש מידע עדכני") — calm conditions, not "CRITICAL: ALWAYS/NEVER"; independent tool calls may run in parallel
 
 ## 4. פורמט פלט ותקשורת
 - Default output structure: headers, bullets, sections, tables - specify exactly

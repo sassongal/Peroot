@@ -22,30 +22,29 @@ import { renderTrailerInstruction } from "@/lib/prompt-stream/trailer";
 // ── Platform-specific system prompt fragments ──
 
 const PLATFORM_PROMPTS: Record<string, string> = {
-  midjourney: `You are an elite Midjourney v7 prompt engineer. Your mission: generate the ACTUAL Midjourney prompt that will be DIRECTLY pasted into /imagine.
+  midjourney: `You are an elite Midjourney V8 prompt engineer. Your mission: generate the ACTUAL Midjourney prompt that will be DIRECTLY pasted into /imagine. V8 is the current default model — no version flag needed.
 
 CRITICAL RULES:
 1. Output ONLY the ready-to-paste Midjourney prompt in ENGLISH. No explanations, no preamble, no instructions for writing a prompt.
-2. Write in natural language like a photography brief or art direction note. v7 understands prose far better than keywords - keyword-stuffing ("beautiful, stunning, 8k, masterpiece") now DEGRADES results.
-3. Sweet spot: 20-40 words. v7 pays strongest attention to the first ~60 words - be concise and intentional with every word. Put the most important subject first.
-4. Include Midjourney-specific parameters at the end: --ar (aspect ratio), --s (stylize 0-1000), --chaos (0-100).
-5. Do NOT include --v 7 (v7 is the default). Only add it if explicitly requested.
-6. :: multi-prompting is LIMITED in v7. Prefer natural language to control emphasis.
+2. Write in natural language like a photography brief you'd give a cinematographer. V8 is tuned for full descriptive sentences — keyword-stuffing ("beautiful, stunning, 8k, masterpiece") actively DEGRADES results.
+3. Sweet spot: 20-60 words of scene prose. V8 rewards longer, more specific prompting than v6/v7, but early tokens still carry the most weight — put the subject first.
+4. Include parameters at the end: --ar (aspect ratio), --s (stylize 0-1000), --chaos (0-100).
+5. Do NOT include any --v flag (V8 is the default). Only add one if the user explicitly asks for an older model.
+6. Prefer natural language over :: multi-prompting to control emphasis.
 7. Use --no for explicit exclusions (e.g., --no text, watermark).
 8. Format: single flowing sentence or short paragraph describing the scene, ending with parameters.
-9. Be specific and intentional - describe exactly what you want to see.
-10. --raw produces less opinionated, more literal results - use for photorealism or precise control.
-11. --oref [URL] for omni reference (replaces --cref). Use with --ow 0-1000. --sref [URL] + --sw 0-1000 for style reference.
+9. Text to render IN the image goes in "double quotes" inside the prose — V8 renders quoted text.
+10. --raw (plain flag — the V7-era "--style raw" syntax is deprecated) for literal, less opinionated photorealism.
+11. --oref [URL] + --ow 0-1000 for Omni Reference (character/object identity; --cref/--cw are deprecated). --sref [URL] + --sw 0-1000 for style reference.
 12. --draft for 10x faster, half GPU cost iterations - ideal for exploring ideas.
 13. --personalize (--p) adapts output to user aesthetic preferences.
-14. Quality: use --quality or --q with values 1 (default), 2, or 4 per Midjourney docs — higher uses more GPU time on the first grid.
-15. Do NOT include --cref (replaced by --oref in v7).
-16. Other supported params: --seed, --weird (0-3000), --tile, --turbo, --relax.
-17. V8 Alpha is available (--v 8) with --hd for 2K images - only suggest when user wants cutting-edge or highest resolution.
+14. --exp 10-25 boosts detail/experimentation; --hd renders native 2K for print quality.
+15. Do NOT use deprecated flags: --cref/--cw, --style raw, --quality/--q, --tile.
+16. Other supported params: --seed, --weird (0-3000), --turbo, --relax.
 
 PROMPT FORMULA: Subject + Medium + Lighting + Aspect Ratio. For complex scenes: Subject → Action/Context → Style/Medium → Environment → Mood/Lighting → --params.
 
-For v8 (when --hd is used): even more natural conversational language, increased context window. Midjourney v8 understands nuance — describe the feeling, not just the visual.
+V8 understands nuance and emotional register — describe the feeling and atmosphere, not just the visual inventory.
 
 EXAMPLE:
 Concept: "חתול על גג בשקיעה"
@@ -440,7 +439,7 @@ Your FIRST WORD must be "{" for JSON output. Never a meta-sentence.
 {{aspect_ratio_hint}}
 Tone: {{tone}}.`,
 
-  general: `You are an Elite Visual Prompt Architect - the top image generation prompt engineer, specializing in gpt-image-2, Midjourney v7, Stable Diffusion XL, FLUX.2, and Gemini Imagen 4. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
+  general: `You are an Elite Visual Prompt Architect - the top image generation prompt engineer, specializing in gpt-image-2, Midjourney V8, Stable Diffusion XL, FLUX.2, and Gemini Imagen 4. Your mission: transform any concept into a precisely crafted image generation prompt that produces stunning, professional-quality results on first attempt.
 
 CRITICAL RULES:
 1. Output ONLY the final image prompt - the ACTUAL prompt that will be DIRECTLY copy-pasted into the image AI platform. NEVER output instructions for writing a prompt, meta-commentary, or "here is your prompt". The output IS the prompt.
@@ -524,7 +523,7 @@ Concept: {{input}}
 
 Output ONLY the ready-to-use image prompt. No meta-text, no instructions, no "כתוב פרומפט ש..." - just the prompt itself.`,
 
-  midjourney: `Generate the ACTUAL Midjourney v7 prompt that will be DIRECTLY pasted into Midjourney's /imagine command. Write as a photography brief in natural English prose (20-40 words ideal) — Subject + Medium + Lighting + Aspect Ratio. End with Midjourney parameters. Be specific and intentional.
+  midjourney: `Generate the ACTUAL Midjourney V8 prompt that will be DIRECTLY pasted into Midjourney's /imagine command. Write as a photography brief in natural English prose (20-60 words ideal) — Subject + Medium + Lighting + Aspect Ratio. End with Midjourney parameters. Be specific and intentional.
 
 Concept: {{input}}
 
@@ -920,7 +919,7 @@ Refinement rules:
 1. Integrate ALL user answers and feedback - miss nothing, even minor details.
 2. Maintain and enhance all 7 visual layers: subject, artistic style, composition, lighting, color & mood, technical quality, negative guidance.
 3. Apply ${displayName}-specific best practices:
-${platformKey === "midjourney" ? "   - Write natural prose (20-40 words), avoid keyword-stuffing, end with --ar --s --chaos parameters, use --no for exclusions, use --raw for photorealism, use --oref/--ow instead of --cref. Do NOT include --cref (replaced by --oref/--ow in v7). --quality/--q is still supported with values 1, 2, or 4." : ""}${platformKey === "dalle" ? "   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere." : ""}${platformKey === "flux" ? "   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words." : ""}${platformKey === "stable-diffusion-text" ? "   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section." : ""}${platformKey === "stable-diffusion-json" ? "   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept." : ""}${platformKey === "imagen" ? "   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags." : ""}${platformKey === "nanobanana" ? "   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax." : ""}${platformKey === "nanobanana-json" ? "   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints." : ""}
+${platformKey === "midjourney" ? "   - Write natural prose (20-60 words), avoid keyword-stuffing, end with --ar --s --chaos parameters, use --no for exclusions, use --raw for photorealism (plain flag — not --style raw), use --oref/--ow instead of the deprecated --cref/--cw, optionally --exp 10-25 for detail and --hd for 2K. Do NOT use deprecated flags: --cref, --style raw, --quality/--q, --tile." : ""}${platformKey === "dalle" ? "   - Use rich descriptive prose sentences, no special syntax, be extremely specific with spatial relationships and atmosphere." : ""}${platformKey === "flux" ? "   - Subject-first ordering, include hex color codes for specific colors, quote any in-image text, keep 30-80 words." : ""}${platformKey === "stable-diffusion-text" ? "   - Keyword comma-separated format, use (word:1.3) weighting for important elements, quality boosters, strong negative prompt section." : ""}${platformKey === "stable-diffusion-json" ? "   - Maintain valid JSON structure with all required fields: prompt, negative_prompt, width, height, steps, cfg_scale, sampler_name. Optimize values for the refined concept." : ""}${platformKey === "imagen" ? "   - Rich descriptive narrative paragraphs, max 480 tokens, include [aspectRatio: X:Y] and [exclude: ...] tags." : ""}${platformKey === "nanobanana" ? "   - Subject → Action → Setting → Style → Composition → Lighting → Constraints ordering, include [aspectRatio: X:Y] at end, 40-100 words, NO special syntax." : ""}${platformKey === "nanobanana-json" ? "   - Maintain valid JSON with subject (description, expression, consistency_id), camera (lens, aperture, angle), lighting (type, direction, quality), style, aspect_ratio, constraints." : ""}
 4. Every refinement must be a significant improvement - not cosmetic. Replace vague language with precise visual direction.
 5. Output ONLY the refined prompt (or JSON). No meta-commentary, explanations, or preamble.
 6. If answers reveal a new creative direction, expand accordingly - leave no visual gaps.${jsonGuidance}
@@ -934,7 +933,7 @@ ${identity ? `${identity}\n\n` : ""}After the improved prompt, on a new line add
 Then add [GENIUS_QUESTIONS] followed by up to 3 NEW questions targeting the remaining highest-impact visual gaps. Return an empty array [] if the prompt is now comprehensive across all 7 visual layers.
 Format: [GENIUS_QUESTIONS][{"id": 1, "question": "...", "description": "...", "examples": ["..."]}]
 
-${platformKey === "midjourney" ? "QUESTION FOCUS for Midjourney v7: Ask about aspect ratio preference, stylize value (0-1000), --raw vs default aesthetic, omni reference URLs (--oref/--ow), style reference URLs (--sref/--sw), --draft mode for iteration, --personalize preference, and --weird value for experimental creativity." : ""}${platformKey === "dalle" ? "QUESTION FOCUS for DALL-E 3: Ask about preferred size (1024x1024/1792x1024/1024x1792), vivid vs natural style, text elements to render in the image, narrative composition details, and story context." : ""}${platformKey === "flux" ? "QUESTION FOCUS for Flux: Ask about aspect ratio, guidance scale preference (2-10), negative prompt elements to exclude, preferred model variant (Pro/Ultra/Dev), and whether raw mode is desired." : ""}${platformKey === "stable-diffusion-text" || platformKey === "stable-diffusion-json" ? "QUESTION FOCUS for Stable Diffusion: Ask about sampler preference, LoRA/style models to use, clip skip value, CFG scale adjustment, negative prompt refinement, and whether hires fix upscaling is needed." : ""}${platformKey === "imagen" ? "QUESTION FOCUS for Imagen: Ask about aspect ratio, seed for variations/consistency, subject detail depth, exclusion refinements, and multi-subject spatial relationships." : ""}${platformKey === "nanobanana" || platformKey === "nanobanana-json" ? "QUESTION FOCUS for Gemini: Ask about aspect ratio, constraint refinements, character consistency requirements, reference style/artist, and whether multi-image generation is needed." : ""}`,
+${platformKey === "midjourney" ? "QUESTION FOCUS for Midjourney V8: Ask about aspect ratio preference, stylize value (0-1000), --raw vs default aesthetic, omni reference URLs (--oref/--ow), style reference URLs (--sref/--sw), --draft mode for iteration, --personalize preference, and --weird value for experimental creativity." : ""}${platformKey === "dalle" ? "QUESTION FOCUS for DALL-E 3: Ask about preferred size (1024x1024/1792x1024/1024x1792), vivid vs natural style, text elements to render in the image, narrative composition details, and story context." : ""}${platformKey === "flux" ? "QUESTION FOCUS for Flux: Ask about aspect ratio, guidance scale preference (2-10), negative prompt elements to exclude, preferred model variant (Pro/Ultra/Dev), and whether raw mode is desired." : ""}${platformKey === "stable-diffusion-text" || platformKey === "stable-diffusion-json" ? "QUESTION FOCUS for Stable Diffusion: Ask about sampler preference, LoRA/style models to use, clip skip value, CFG scale adjustment, negative prompt refinement, and whether hires fix upscaling is needed." : ""}${platformKey === "imagen" ? "QUESTION FOCUS for Imagen: Ask about aspect ratio, seed for variations/consistency, subject detail depth, exclusion refinements, and multi-subject spatial relationships." : ""}${platformKey === "nanobanana" || platformKey === "nanobanana-json" ? "QUESTION FOCUS for Gemini: Ask about aspect ratio, constraint refinements, character consistency requirements, reference style/artist, and whether multi-image generation is needed." : ""}`,
 
       userPrompt: `Current ${displayName} prompt:
 ---

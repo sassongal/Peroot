@@ -38,22 +38,28 @@ RESEARCH PROMPT ARCHITECTURE - produce ALL sections:
 - Decompose into 3-5 sub-questions that together answer the main question (MECE principle - Mutually Exclusive, Collectively Exhaustive)
 - Define what "answered" looks like - what evidence would satisfy each sub-question
 
-## 3. מתודולוגיית מחקר
-Instruct the AI to follow this structured process:
-- **שלב 1 - סריקה רחבה**: Map the landscape - key players, trends, data sources, timeline
-- **שלב 2 - צלילה עמוקה**: Deep-dive into each sub-question with evidence gathering
-- **שלב 3 - אימות צולב**: Cross-verify claims from multiple independent sources
-- **שלב 4 - ניתוח ביקורתי**: Challenge assumptions, identify biases, assess confidence levels
-- **שלב 5 - סינתזה**: Synthesize findings into actionable conclusions
+## 3. תיחום המחקר (Scope)
+Explicit boundaries keep deep-research tools focused — this is the highest-leverage section per the tools' own docs:
+- **טווח זמן**: from-to dates for the evidence ("התמקד ב-2024 ואילך; ציין אם ממצא מוקדם יותר קריטי")
+- **גאוגרפיה / שוק**: which regions, markets, or languages are in scope
+- **בפנים / בחוץ**: 2-3 explicit inclusions AND exclusions ("כולל: מתחרים ישירים. לא כולל: שוק ה-B2C")
+- **עומק**: quick landscape scan vs. exhaustive deep-dive - name it
 
-## 4. דרישות מקורות וראיות
+## 4. עקרונות מתודולוגיים
+Deep-research tools (ChatGPT Deep Research, Gemini Deep Research, Claude) PLAN THEIR OWN research steps - over-constraining the process degrades results. Give verification PRINCIPLES, not a forced sequence:
+- Cross-verify key claims from multiple independent sources
+- Challenge assumptions; identify biases; assess confidence levels per finding
+- On contested questions: present the competing hypotheses side by side with the evidence for each - not just the majority view
+- Synthesize into actionable conclusions - not a source dump
+
+## 5. דרישות מקורות וראיות
 - Prioritize: מקורות ראשוניים (data, reports, studies) over secondary/tertiary
 - Require: שם המקור, תאריך פרסום, קישור (URL) for every claim
 - Flag: confidence level per finding (גבוה / בינוני / נמוך) based on source quality
 - Specify: minimum number of independent sources to corroborate key claims
 - Mandate: "אם אין לך מקור אמין - ציין זאת במפורש. אל תמציא עובדות"
 
-## 5. פרוטוקול פלט - מבנה הדוח
+## 6. פרוטוקול פלט - מבנה הדוח
 Structure the output as a professional intelligence brief:
 - **תקציר מנהלים** (3-5 משפטים) - תמצית הממצאים העיקריים
 - **ממצאים מרכזיים** - organized by sub-question, with evidence and confidence levels
@@ -62,7 +68,7 @@ Structure the output as a professional intelligence brief:
 - **המלצות** - actionable next steps based on findings
 - **מקורות** - full bibliography with URLs and access dates
 
-## 6. הנחיות זהב ומגבלות
+## 7. הנחיות זהב ומגבלות
 - "בצע הפרכה לוגית - נסה לסתור כל מסקנה לפני שאתה מאשר אותה"
 - "הצלב מידע ממקורות עצמאיים - אל תסתמך על מקור יחיד"
 - "הפרד עובדות מדעות - סמן בבירור מה מבוסס ומה השערה"
@@ -170,10 +176,11 @@ Output ONLY the Hebrew research prompt. No meta-text.`,
 
 כללי שדרוג מחקר:
 1. שלב את כל התשובות והמשוב - אל תתעלם מאף פרט, גם הקטן ביותר.
-2. בדוק ושפר את כל 6 רכיבי ארכיטקטורת המחקר:
+2. בדוק ושפר את כל 7 רכיבי ארכיטקטורת המחקר:
    - שאלת המחקר המרכזית: האם היא חדה, ממוקדת ועונה בבירור מהו "נענה"?
    - פירוק MECE: האם תת-השאלות מכסות את כל המרחב (Collectively Exhaustive) ואינן חופפות (Mutually Exclusive)?
-   - מתודולוגיית 5 השלבים: האם סריקה רחבה → צלילה עמוקה → אימות צולב → ניתוח ביקורתי → סינתזה מוגדרים בבהירות?
+   - תיחום (Scope): האם טווח זמן, גאוגרפיה, הכללות והחרגות מוגדרים במפורש?
+   - עקרונות מתודולוגיים: אימות צולב, ניתוח ביקורתי והשערות מתחרות — כעקרונות, לא כרצף כפוי (כלי המחקר מתכננים את צעדיהם בעצמם)?
    - דרישות מקורות וראיות: האם מינימום מקורות, סוגי מקורות, ורמות אמינות מפורטים?
    - פרוטוקול הפלט: האם מבנה הדוח (תקציר מנהלים, ממצאים, מגמות, פערים, המלצות, ביבליוגרפיה) מוגדר?
    - הנחיות זהב: האם כוללות הפרכה לוגית, איסור על המצאת עובדות, ודירוג וודאות?

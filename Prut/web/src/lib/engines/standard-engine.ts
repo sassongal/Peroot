@@ -65,9 +65,11 @@ Be exhaustive:
 - Style (סגנון כתיבה: תמציתי, נרטיבי, אקדמי, שיחתי, טכני)
 - Tone nuance (טון ספציפי: חם-מקצועי, סמכותי-ידידותי, מעורר השראה)
 - What to INCLUDE (must-haves)
-- What to AVOID - use explicit negative constraints: "אל תכלול...", "הימנע מ...", "אין להשתמש ב..."
+- What to AVOID - phrase positively where possible ("כתוב בפסקאות זורמות" beats "בלי רשימות"); reserve "אל תכלול..." for true exclusions
+- Attach a short WHY to every hard constraint ("עד 200 מילים — כי זה פוסט לפיד") — modern models generalize from the motivation and follow the constraint far better
 - Quality bar and success criteria
-- Word count or length limits
+- An explicit LENGTH/DEPTH dial in numbers ("עד 5 בולטים", "300-500 מילים", "עמוד אחד") — current flagship models are terse by default and need the dial stated
+- An assumptions clause: "אם פרט חסר או דו-משמעי — הצהר על ההנחה שבחרת והמשך; אל תעצור לשאלה" (unless the task truly requires asking)
 
 ## דוגמאות - if applicable
 Provide 1-2 concrete examples of desired output quality, structure, or style. Few-shot examples dramatically improve LLM output quality.
