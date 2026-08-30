@@ -142,13 +142,20 @@ describe("conversation/project context", () => {
       context: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
     });
     await connectEnhance(input, KEY, "user-1", handler);
-    expect(seen.context).toEqual([
-      {
-        type: "file",
-        name: "הקשר מהשיחה והפרויקט",
-        content: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
-      },
-    ]);
+    const blocks = seen.context as Array<Record<string, unknown>>;
+    expect(blocks).toHaveLength(1);
+    // MUST be a full new-shape ContextBlock: renderInjection reads
+    // display.rawText and throws on legacy {type,name,content} blocks.
+    expect(blocks[0]).toMatchObject({
+      type: "file",
+      stage: "ready",
+      display: expect.objectContaining({
+        title: "הקשר מהשיחה והפרויקט",
+        rawText: "המוצר: Peroot Connect — חיבור סוכני AI. קהל: משווקים. מטרה: הרשמות.",
+        keyFacts: [],
+        metadata: {},
+      }),
+    });
   });
 
   it("omits the context lane entirely when not provided, and caps at 4000 chars", async () => {

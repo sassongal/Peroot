@@ -101,16 +101,27 @@ export async function connectEnhance(
     ...(input.model_profile_slug ? { model_profile_slug: input.model_profile_slug } : {}),
     ...(input.output_language ? { output_language: input.output_language } : {}),
     ...(input.mode_options ? { mode_params: input.mode_options } : {}),
-    // Conversation/project context rides the pipeline's existing context-
-    // attachment lane (legacy {type,name,content} block → EngineInput.context),
-    // so engines ground the enhancement in it exactly like an uploaded doc.
+    // Conversation/project context rides the pipeline's context-attachment
+    // lane as a FULL new-shape ContextBlock — renderInjection reads
+    // display.rawText/summary/keyFacts, so a legacy {type,name,content} block
+    // would throw (b.display is undefined). The engines then ground the
+    // enhancement in it exactly like an uploaded document.
     ...(input.context
       ? {
           context: [
             {
+              id: "conversation-context",
               type: "file" as const,
-              name: "הקשר מהשיחה והפרויקט",
-              content: input.context,
+              stage: "ready" as const,
+              display: {
+                title: "הקשר מהשיחה והפרויקט",
+                documentType: "הקשר שיחה",
+                summary: input.context.slice(0, 500),
+                keyFacts: [],
+                entities: [],
+                rawText: input.context,
+                metadata: {},
+              },
             },
           ],
         }
