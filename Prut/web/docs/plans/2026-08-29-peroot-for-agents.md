@@ -1,4 +1,4 @@
-# Peroot Connect — plan (v0.6 · build-ready + build started, 2026-08-29)
+# Peroot Connect — plan (v1.0 · SHIPPED, 2026-08-30)
 
 Turn Peroot into the **"prompt brain" any AI agent connects to**: a PRO user
 adds Peroot to Claude / ChatGPT / Cursor / their own code, and from inside that
@@ -11,8 +11,14 @@ facts, writing-style profile, the Memory Palace graph, and the curated public
 library. Peroot Connect's job is to carry ALL of that into the agent, and to
 feed every channel's usage back into the same brain (see §15, Harmony).
 
-> Status: BUILDING. Phase 1 core (keys) + v1 REST + MCP server are implemented
-> on the feature branch (see §24 for the /peroot: commands). UI + DOCS next.
+> Status: SHIPPED (all phases live on main, 2026-08-30).
+> P1 keys + v1 REST + MCP server · P2 library/templates/memory/feedback tools ·
+> context-aware enhance · hardening (idempotency, 55s budget+refund, per-key
+> usage logs) · UI (settings Connect tab, /connect, /connect/docs from the
+> OpenAPI SoT) · P4 related_prompts + agent-orchestrated chains ·
+> P3 OAuth 2.1 (dynamic registration, PKCE, consent page, rotated tokens).
+> Remaining (owner): rotate the secrets from the Go/No-Go gate (§23), then
+> submit to the Anthropic/OpenAI connector directories.
 
 ---
 
