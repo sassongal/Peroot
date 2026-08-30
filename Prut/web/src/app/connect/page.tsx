@@ -216,7 +216,10 @@ export default function ConnectPage() {
             />
           </div>
           <p className="text-xs text-slate-500 text-center">
-            חיבור בקליק מתוך claude.ai ו-ChatGPT (ללא מפתח) — בקרוב.
+            חיבור בקליק מתוך claude.ai ו-ChatGPT (ללא מפתח) — בקרוב.{" "}
+            <Link href="/connect/docs" className="text-amber-400/80 hover:text-amber-300">
+              לתיעוד ה-API המלא ←
+            </Link>
           </p>
         </section>
 
