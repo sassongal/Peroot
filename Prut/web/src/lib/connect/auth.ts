@@ -3,6 +3,7 @@ import { validateApiKey } from "@/lib/api-auth";
 import { validateOAuthToken, OAUTH_ACCESS_PREFIX } from "@/lib/connect/oauth";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { createServiceClient } from "@/lib/supabase/service";
+import { siteBase } from "@/lib/site";
 import { logger } from "@/lib/logger";
 
 /**
@@ -44,10 +45,9 @@ export function connectError(
   if (status === 401) {
     // RFC 9728 / MCP auth: point clients at the resource metadata so an
     // OAuth-capable client (claude.ai web, ChatGPT) can start the flow.
-    const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
     res.headers.set(
       "WWW-Authenticate",
-      `Bearer realm="Peroot Connect", resource_metadata="${base}/.well-known/oauth-protected-resource"`,
+      `Bearer realm="Peroot Connect", resource_metadata="${siteBase()}/.well-known/oauth-protected-resource"`,
     );
   }
   return res;

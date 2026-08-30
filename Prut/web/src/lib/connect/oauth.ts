@@ -111,13 +111,13 @@ export async function createAuthCode(payload: AuthCodePayload): Promise<string> 
   return code;
 }
 
-/** One-time: reads AND deletes. A replayed code gets null. */
+/**
+ * One-time: atomic GETDEL, so two concurrent exchanges of the same code can
+ * never both succeed (RFC 9700 — replayed codes must be denied). A plain
+ * get-then-del had a TOCTOU window here.
+ */
 export async function consumeAuthCode(code: string): Promise<AuthCodePayload | null> {
-  const key = codeKey(code);
-  const payload = await redis.get<AuthCodePayload>(key);
-  if (!payload) return null;
-  await redis.del(key);
-  return payload;
+  return (await redis.getdel<AuthCodePayload>(codeKey(code))) ?? null;
 }
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
@@ -242,6 +242,12 @@ export async function validateOAuthToken(raw: string): Promise<OAuthValidation> 
 /**
  * Refresh grant with rotation: the presented refresh token is revoked and a
  * brand-new access+refresh pair is issued (OAuth 2.1 §4.3.1).
+ *
+ * The revoke is a CONDITIONAL claim (`revoked=false → true` with row-count
+ * check): of N concurrent exchanges of the same refresh token exactly one
+ * wins — a plain update would let all of them mint token pairs. If issuing
+ * fails after the claim, the claim is rolled back so the client's refresh
+ * token still works on retry instead of stranding the connector.
  */
 export async function rotateRefreshToken(
   raw: string,
@@ -251,7 +257,26 @@ export async function rotateRefreshToken(
   const row = await findLiveToken(raw, "refresh");
   if (!row || row.client_id !== clientId) return null;
   const db = createServiceClient();
-  const { error } = await db.from("oauth_tokens").update({ revoked: true }).eq("id", row.id);
+  const { data: claimed, error } = await db
+    .from("oauth_tokens")
+    .update({ revoked: true })
+    .eq("id", row.id)
+    .eq("revoked", false)
+    .select("id");
   if (error) throw new Error(`oauth refresh rotation failed: ${error.message}`);
-  return issueTokens(row.user_id, row.client_id, row.scope);
+  if (!claimed || claimed.length === 0) return null; // lost the race — token already rotated
+  try {
+    return await issueTokens(row.user_id, row.client_id, row.scope);
+  } catch (e) {
+    // Best-effort rollback: un-revoke so the client can retry with the same
+    // refresh token rather than being disconnected until re-consent.
+    await db
+      .from("oauth_tokens")
+      .update({ revoked: false })
+      .eq("id", row.id)
+      .then(({ error: rbErr }) => {
+        if (rbErr) logger.error("[OAuth] rotation rollback failed:", rbErr);
+      });
+    throw e;
+  }
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const analyzeUserStyle = vi.fn().mockResolvedValue(undefined);
+// Truthy persona → the worker awards style_explorer only when analysis ran.
+const analyzeUserStyle = vi.fn().mockResolvedValue({ tokens: [] });
 const award = vi.fn().mockResolvedValue(undefined);
 const checkAll = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/lib/intelligence/personality-analyzer", () => ({ analyzeUserStyle }));

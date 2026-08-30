@@ -219,6 +219,13 @@ export async function POST(req: Request) {
     // Support Bearer token auth for Chrome extension + Developer API keys
     const authHeader = req.headers.get("authorization");
     const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+    // Analytics source label, used at all three history-insert sites below.
+    const promptSource =
+      bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
+        ? "api"
+        : bearerToken
+          ? "extension"
+          : "web";
 
     let useServiceClient = false;
 
@@ -707,12 +714,7 @@ export async function POST(req: Request) {
                   category,
                   capability_mode: capability_mode || "STANDARD",
                   title: prompt.slice(0, 60),
-                  source:
-                    bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
-                      ? "api"
-                      : bearerToken
-                        ? "extension"
-                        : "web",
+                  source: promptSource,
                   input_source: inputSource,
                   cost_funnel_stage: 1,
                   output_language: output_language || "hebrew",
@@ -839,12 +841,7 @@ export async function POST(req: Request) {
                   category,
                   capability_mode: capability_mode || "STANDARD",
                   title: prompt.slice(0, 60),
-                  source:
-                    bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
-                      ? "api"
-                      : bearerToken
-                        ? "extension"
-                        : "web",
+                  source: promptSource,
                   input_source: inputSource,
                   cost_funnel_stage: 2,
                   output_language: output_language || "hebrew",
@@ -1124,12 +1121,7 @@ export async function POST(req: Request) {
                     category,
                     capability_mode: capability_mode || "STANDARD",
                     title: prompt.slice(0, 60),
-                    source:
-                      bearerToken?.startsWith("prk_") || bearerToken?.startsWith("pot_")
-                        ? "api"
-                        : bearerToken
-                          ? "extension"
-                          : "web",
+                    source: promptSource,
                     input_source: inputSource,
                     cost_funnel_stage: 3,
                     output_language: output_language || "hebrew",

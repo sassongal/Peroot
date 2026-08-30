@@ -1,15 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createHash } from "crypto";
 
-const { redisGet, redisSet, redisDel, mockFrom } = vi.hoisted(() => ({
-  redisGet: vi.fn(),
+const { redisGetdel, redisSet, mockFrom } = vi.hoisted(() => ({
+  redisGetdel: vi.fn(),
   redisSet: vi.fn(),
-  redisDel: vi.fn(),
   mockFrom: vi.fn(),
 }));
 
 vi.mock("@/lib/redis", () => ({
-  redis: { get: redisGet, set: redisSet, del: redisDel },
+  redis: { getdel: redisGetdel, set: redisSet },
 }));
 vi.mock("@/lib/supabase/service", () => ({
   createServiceClient: () => ({ from: mockFrom }),
@@ -78,17 +77,16 @@ describe("auth codes", () => {
     expect(redisSet.mock.calls[0][0]).not.toContain(code);
   });
 
-  it("consume is one-time: returns the payload then deletes the key", async () => {
-    redisGet.mockResolvedValue({ userId: "u1" });
+  it("consume is one-time via atomic GETDEL (no TOCTOU window)", async () => {
+    redisGetdel.mockResolvedValue({ userId: "u1" });
     const payload = await consumeAuthCode("pac_abc");
     expect(payload).toEqual({ userId: "u1" });
-    expect(redisDel).toHaveBeenCalledTimes(1);
+    expect(redisGetdel).toHaveBeenCalledTimes(1);
   });
 
   it("consume returns null for an unknown/expired code", async () => {
-    redisGet.mockResolvedValue(null);
+    redisGetdel.mockResolvedValue(null);
     expect(await consumeAuthCode("pac_missing")).toBeNull();
-    expect(redisDel).not.toHaveBeenCalled();
   });
 });
 

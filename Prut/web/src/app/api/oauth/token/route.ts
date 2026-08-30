@@ -40,12 +40,6 @@ export function OPTIONS() {
 }
 
 export async function POST(req: Request) {
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
-  const limit = await checkRateLimit(`oauth:token:${ip}`, "connectKey");
-  if (!limit.success) {
-    return tokenError(429, "invalid_request", "Too many requests — try again shortly");
-  }
-
   let params: Record<string, string>;
   try {
     params = await readParams(req);
@@ -56,6 +50,16 @@ export async function POST(req: Request) {
   const grantType = params.grant_type ?? "";
   const clientId = params.client_id ?? "";
   if (!clientId) return tokenError(400, "invalid_request", "client_id is required");
+
+  // Rate-limit per CLIENT, not per IP: connector platforms (claude.ai/ChatGPT)
+  // exchange tokens from shared egress IPs — an IP bucket would let one
+  // platform's users exhaust each other's quota. client_id is validated
+  // against the code/refresh-token below, so it can't be spoofed usefully.
+  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const limit = await checkRateLimit(`oauth:token:${clientId || ip}`, "connectKey");
+  if (!limit.success) {
+    return tokenError(429, "invalid_request", "Too many requests — try again shortly");
+  }
 
   try {
     if (grantType === "authorization_code") {

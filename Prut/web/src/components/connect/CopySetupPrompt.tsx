@@ -48,11 +48,15 @@ export function CopySetupPrompt({
 }) {
   const [copied, setCopied] = useState(false);
 
-  const copy = () => {
-    navigator.clipboard.writeText(buildSetupPrompt(apiKey));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-    toast.success("פרומפט החיבור הועתק — הדבק אותו אצל הסוכן שלך");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(buildSetupPrompt(apiKey));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+      toast.success("פרומפט החיבור הועתק — הדבק אותו אצל הסוכן שלך");
+    } catch {
+      toast.error("ההעתקה נחסמה על ידי הדפדפן — סמן והעתק ידנית");
+    }
   };
 
   return (

@@ -96,11 +96,15 @@ export function SettingsConnectSection() {
     void loadKeys();
   }, [loadKeys]);
 
-  const copyText = (text: string, tag: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(tag);
-    setTimeout(() => setCopied(null), 2000);
-    toast.success("הועתק ללוח");
+  const copyText = async (text: string, tag: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(tag);
+      setTimeout(() => setCopied(null), 2000);
+      toast.success("הועתק ללוח");
+    } catch {
+      toast.error("ההעתקה נחסמה על ידי הדפדפן — סמן והעתק ידנית");
+    }
   };
 
   const createKey = async () => {

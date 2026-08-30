@@ -21,7 +21,9 @@ export async function POST(req: Request) {
   const redirectUri = get("redirect_uri");
   const codeChallenge = get("code_challenge");
   const state = get("state");
-  const scope = get("scope") || OAUTH_SCOPE;
+  // Clamp scope to the single supported value — the hidden form field is
+  // attacker-editable, and whatever lands here is echoed back as "granted".
+  const scope = OAUTH_SCOPE;
   const decision = get("decision");
 
   // Re-validate everything server-side — hidden form fields are attacker-editable.

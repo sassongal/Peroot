@@ -60,8 +60,10 @@ export async function GET(req: Request) {
           const { analyzeUserStyle } = await import("@/lib/intelligence/personality-analyzer");
           const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
           if (userId) {
-            await analyzeUserStyle(userId);
-            await AchievementTracker.award(userId, "style_explorer", supabase);
+            // Award only when an analysis actually happened — null means the
+            // library was too thin and nothing was analyzed.
+            const persona = await analyzeUserStyle(userId);
+            if (persona) await AchievementTracker.award(userId, "style_explorer", supabase);
           }
         } else if (job.j_type === "achievement_check") {
           const { AchievementTracker } = await import("@/lib/intelligence/achievement-tracker");
@@ -93,6 +95,15 @@ export async function GET(req: Request) {
       if (success) completed++;
       else failed++;
     }
+
+    // Housekeeping while we're here (hourly): purge OAuth tokens that expired
+    // over 7 days ago — refresh rotation only flags rows revoked, so without
+    // this the table grows forever.
+    const { error: purgeError } = await supabase
+      .from("oauth_tokens")
+      .delete()
+      .lt("expires_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    if (purgeError) logger.warn("[Worker] oauth_tokens purge failed:", purgeError.message);
 
     logger.info(`[Worker] Run done: ${processed} processed (${completed} ok, ${failed} failed)`);
     return NextResponse.json({ processed, completed, failed, ms: Date.now() - startedAt });

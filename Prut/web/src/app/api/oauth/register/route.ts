@@ -34,7 +34,7 @@ export function OPTIONS() {
 
 export async function POST(req: Request) {
   const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
-  const limit = await checkRateLimit(`oauth:register:${ip}`, "apiKeys");
+  const limit = await checkRateLimit(`oauth:register:${ip}`, "oauthRegister");
   if (!limit.success) {
     return oauthError(429, "invalid_client_metadata", "Too many registrations — try again later");
   }

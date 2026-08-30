@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { CORS_HEADERS } from "@/lib/connect/auth";
 import { OAUTH_SCOPE } from "@/lib/connect/oauth";
-
-export function siteBase(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://www.peroot.space";
-}
+import { siteBase } from "@/lib/site";
 
 /** RFC 8414 — authorization-server metadata document. */
 export function authServerMetadata(): NextResponse {

@@ -64,6 +64,14 @@ export const rateLimiters = {
     limiter: Ratelimit.slidingWindow(40, "1 m"),
     prefix: "@peroot/ratelimit:connect-user",
   }),
+  // OAuth dynamic client registration (RFC 7591). Keyed by IP, but the
+  // callers are connector-platform BACKENDS (claude.ai/ChatGPT) with shared
+  // egress IPs — so this ceiling must accommodate many users behind one IP.
+  oauthRegister: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, "1 h"),
+    prefix: "@peroot/ratelimit:oauth-register",
+  }),
   folders: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(50, "1 h"),
@@ -175,6 +183,7 @@ type RateLimitTier =
   | "apiKeys"
   | "connectKey"
   | "connectUser"
+  | "oauthRegister"
   | "folders"
   | "history"
   | "favorites"
