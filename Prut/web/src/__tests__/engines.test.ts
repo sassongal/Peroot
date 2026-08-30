@@ -215,7 +215,7 @@ describe("Target model hints", () => {
   it("StandardEngine injects ChatGPT hints when targetModel is chatgpt", () => {
     const engine = new StandardEngine();
     const result = engine.generate(makeInput({ targetModel: "chatgpt" }));
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT/GPT]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT (GPT-5.x)]");
     expect(result.systemPrompt).toContain("עיקרון יישור");
   });
 
@@ -281,7 +281,7 @@ describe("Target model hints", () => {
         targetModel: "chatgpt",
       }),
     );
-    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT/GPT]");
+    expect(result.systemPrompt).toContain("[TARGET_MODEL_OPTIMIZATION — יעד: ChatGPT (GPT-5.x)]");
   });
 });
 
