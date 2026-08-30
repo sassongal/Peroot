@@ -38,7 +38,7 @@ export function FeaturesHeroParallax() {
       {/* Orb 3 — top far right, fast */}
       <motion.div
         style={{ y: orb3Y }}
-        className="absolute -top-24 right-[2%] w-[480px] h-[480px] rounded-full bg-orange-500/[0.04] blur-[90px]"
+        className="absolute -top-24 right-[2%] w-[280px] h-[280px] sm:w-[480px] sm:h-[480px] rounded-full bg-orange-500/[0.04] blur-[90px]"
       />
     </div>
   );
