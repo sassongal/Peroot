@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopySetupPrompt } from "@/components/connect/CopySetupPrompt";
+import { PEROOT_COMMANDS, CONNECT_CAPABILITIES } from "@/lib/connect/commands";
 import {
   ArrowLeft,
   Bot,
@@ -22,20 +23,25 @@ export const metadata: Metadata = {
     "חיבור Peroot ל-Claude, Cursor וכל סוכן AI: פקודות /peroot להפיכת כל בקשה לפרומפט מושלם — טקסט, תמונה, וידאו, מחקר וסוכנים — עם שמירה ותיוג לספרייה האישית.",
 };
 
-const COMMANDS: Array<{
-  cmd: string;
-  icon: React.ComponentType<{ className?: string }>;
-  desc: string;
-}> = [
-  { cmd: "/peroot:enhance", icon: Sparkles, desc: "הופך כל בקשה לפרומפט מושלם ומורחב" },
-  { cmd: "/peroot:image", icon: ImageIcon, desc: "פרומפט מותאם ל-Midjourney / DALL-E / Imagen" },
-  { cmd: "/peroot:video", icon: Video, desc: "פרומפט מותאם ל-Sora / Veo / Runway" },
-  { cmd: "/peroot:research", icon: Search, desc: "פרומפט למחקר מעמיק עם מקורות" },
-  { cmd: "/peroot:agent", icon: Bot, desc: "System prompt מושלם לסוכן או GPT מותאם" },
-  { cmd: "/peroot:save", icon: Library, desc: "שמירה + תיוג אוטומטי לספרייה האישית" },
-  { cmd: "/peroot:find", icon: Search, desc: "חיפוש בפרומפטים השמורים שלך" },
-  { cmd: "/peroot:quota", icon: MessageSquare, desc: "כמה שדרוגים נשארו ומתי מתחדש" },
-];
+// Icons per command — the command LIST itself comes from the shared source
+// (PEROOT_COMMANDS), so this page cannot drift from what /api/mcp serves.
+const COMMAND_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  enhance: Sparkles,
+  image: ImageIcon,
+  video: Video,
+  research: Search,
+  agent: Bot,
+  save: Library,
+  find: Search,
+  quota: MessageSquare,
+  help: BrainCircuit,
+};
+
+const COMMANDS = PEROOT_COMMANDS.map((c) => ({
+  cmd: `/peroot:${c.name}`,
+  icon: COMMAND_ICONS[c.name] ?? Sparkles,
+  desc: c.pageDescription,
+}));
 
 const CLAUDE_SNIPPET = `{
   "mcpServers": {
@@ -180,6 +186,25 @@ export default function ConnectPage() {
             אפשר גם בשפה חופשית — ״שדרג לי את זה דרך Peroot לוידאו, מותאם לקלוד״ — והסוכן כבר ידע
             לבחור את המוד ואת מודל היעד.
           </p>
+        </section>
+
+        {/* Full capability surface — beyond the commands */}
+        <section className="space-y-5">
+          <h2 className="text-2xl font-bold text-center">ומעבר לפקודות — כל מה שהסוכן מקבל</h2>
+          <p className="text-sm text-slate-400 text-center">
+            14 כלים עומדים לרשות הסוכן המחובר. השדרוג צורך קרדיט מהמכסה — כל השאר חינם:
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {CONNECT_CAPABILITIES.map(({ title, desc }) => (
+              <div
+                key={title}
+                className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-1"
+              >
+                <h3 className="text-sm font-semibold text-white">{title}</h3>
+                <p className="text-xs text-slate-400">{desc}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Setup */}

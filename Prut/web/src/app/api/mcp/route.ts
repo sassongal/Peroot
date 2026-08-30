@@ -24,6 +24,7 @@ import {
   connectListChains,
   connectGetChain,
 } from "@/lib/connect/ops";
+import { PEROOT_COMMANDS } from "@/lib/connect/commands";
 
 /**
  * POST /api/mcp — Peroot Connect's remote MCP server (Streamable HTTP,
@@ -276,81 +277,63 @@ function modeCommand(mode: string, he: string): string {
   );
 }
 
-const PROMPTS: Array<{
-  name: string;
-  title: string;
-  description: string;
-  arguments?: typeof PROMPT_ARG;
-  build: (args: Record<string, string>) => string;
-}> = [
-  {
-    name: "enhance",
-    title: "Peroot: שדרוג פרומפט",
-    description: "הופך את הבקשה לפרומפט מושלם (מצב סטנדרטי)",
+/**
+ * Per-command message builders. Names/titles/descriptions come from the
+ * SHARED source (PEROOT_COMMANDS in @/lib/connect/commands) so the /connect
+ * page can never drift from what this server serves; only the wire-message
+ * builders live here. A missing/extra builder fails loudly at module init.
+ */
+const PROMPT_BUILDERS: Record<
+  string,
+  { arguments?: typeof PROMPT_ARG; build: (args: Record<string, string>) => string }
+> = {
+  enhance: {
     arguments: PROMPT_ARG,
     build: (a) => `${modeCommand("STANDARD", "")}\n\nהפרומפט: ${a.prompt ?? ""}`,
   },
-  {
-    name: "image",
-    title: "Peroot: פרומפט לתמונה",
-    description: "פרומפט מושלם ליצירת תמונה (Midjourney/DALL-E/Imagen)",
+  image: {
     arguments: PROMPT_ARG,
     build: (a) =>
-      `${modeCommand("IMAGE_GENERATION", "פרומפטים לתמונה יוצאים באנגלית לתוצאה מיטבית.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
+      `${modeCommand("IMAGE_GENERATION", "פרומפטים לתמונה יוצאים באנגלית לתוצאה מיטבית. אפשר לבחור פלטפורמה עם image_platform ב-mode_options.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
   },
-  {
-    name: "video",
-    title: "Peroot: פרומפט לוידאו",
-    description: "פרומפט מושלם ליצירת וידאו (Sora/Veo/Runway)",
+  video: {
     arguments: PROMPT_ARG,
     build: (a) =>
-      `${modeCommand("VIDEO_GENERATION", "אם חסרים camera_movement או duration — שאל את המשתמש והעבר אותם ב-mode_options.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
+      `${modeCommand("VIDEO_GENERATION", "אפשר לבחור פלטפורמה עם video_platform ב-mode_options (sora/veo/runway/kling…); אם חסרים camera_movement או duration — שאל את המשתמש.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
   },
-  {
-    name: "research",
-    title: "Peroot: פרומפט מחקר",
-    description: "פרומפט מושלם למחקר מעמיק עם מקורות",
+  research: {
     arguments: PROMPT_ARG,
     build: (a) => `${modeCommand("DEEP_RESEARCH", "")}\n\nהפרומפט: ${a.prompt ?? ""}`,
   },
-  {
-    name: "agent",
-    title: "Peroot: פרומפט לסוכן",
-    description: "system prompt מושלם לסוכן/GPT מותאם",
+  agent: {
     arguments: PROMPT_ARG,
     build: (a) =>
       `${modeCommand("AGENT_BUILDER", "העבר system_instructions ב-mode_options אם המשתמש סיפק.")}\n\nהפרומפט: ${a.prompt ?? ""}`,
   },
-  {
-    name: "save",
-    title: "Peroot: שמירה לספרייה",
-    description: "שומר את הפרומפט האחרון לספרייה עם תיוג",
+  save: {
     build: () =>
       "שמור את הפרומפט האחרון שנוצר בשיחה לספריית Peroot של המשתמש: קרא ל-save_prompt עם auto_tag=true ועם original_prompt אם ידוע. אשר למשתמש עם הכותרת והתגיות שנשמרו.",
   },
-  {
-    name: "find",
-    title: "Peroot: חיפוש בספרייה",
-    description: "מחפש בפרומפטים השמורים של המשתמש",
+  find: {
     arguments: PROMPT_ARG,
     build: (a) =>
       `חפש בספריית Peroot של המשתמש: קרא ל-search_my_prompts עם השאילתה, והצג את התוצאות בצורה נעימה (כותרת + תקציר). השאילתה: ${a.prompt ?? ""}`,
   },
-  {
-    name: "quota",
-    title: "Peroot: כמה נשאר לי",
-    description: "בדיקת יתרת שדרוגים ומועד חידוש",
+  quota: {
     build: () =>
-      "קרא ל-get_quota והצג למשתמש בעברית: כמה שדרוגים נשארו, איזה מסלול (חינמי/PRO), ומתי המכסה מתחדשת.",
+      "קרא ל-get_quota והצג למשתמש בעברית: כמה שדרוגים נשארו, איזה מסלול (חינמי/PRO/admin), ומתי המכסה מתחדשת.",
   },
-  {
-    name: "help",
-    title: "Peroot: עזרה",
-    description: "מה Peroot Connect יודע לעשות",
+  help: {
     build: () =>
-      "הצג למשתמש סיכום קצר בעברית של פקודות Peroot: enhance (שדרוג), image/video/research/agent (מודים), save (שמירה), find (חיפוש), quota (מכסה). הסבר ששדרוג צורך קרדיט אחד מהמכסה (חינמי: 1 ליום, PRO: 150 לחודש).",
+      "הצג למשתמש סיכום קצר בעברית של יכולות Peroot Connect: פקודות — enhance (שדרוג), image/video/research/agent (מודים), save (שמירה), find (חיפוש), quota (מכסה). כלים נוספים — תבניות מהספרייה הציבורית (search_public_library + fill_template), זיכרון אישי (remember_fact/list_facts), שכני Memory Palace (related_prompts), שרשראות (list_chains/get_chain), ומשוב (rate_prompt). הסבר ששדרוג צורך קרדיט אחד מהמכסה (חינמי: 1 ליום, PRO: 150 לחודש) ושאר הכלים חינמיים.",
   },
-];
+};
+
+const PROMPTS = PEROOT_COMMANDS.map((c) => {
+  const builder = PROMPT_BUILDERS[c.name];
+  if (!builder) throw new Error(`MCP prompt builder missing for command: ${c.name}`);
+  return { name: c.name, title: c.mcpTitle, description: c.mcpDescription, ...builder };
+});
 
 // ── JSON-RPC plumbing ───────────────────────────────────────────────────────
 
