@@ -127,12 +127,6 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
-                {isPersonal && !isActive && (
-                  <span
-                    aria-hidden
-                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping motion-reduce:animate-none"
-                  />
-                )}
                 <Icon className="w-4 h-4" />
                 <span className="hidden md:inline">{label}</span>
               </button>
@@ -154,9 +148,7 @@ export function TopNavBar({ viewMode, onNavigate, onOpenGraph, children }: TopNa
             title="גרף הפרומפטים שלי"
             aria-label="פתח גרף הספרייה האישית"
           >
-            <Network
-              className={cn("w-4 h-4 transition-all", viewMode !== "personal" && "animate-pulse")}
-            />
+            <Network className="w-4 h-4 transition-all" />
             <span className="hidden md:inline">גרף</span>
           </button>
 

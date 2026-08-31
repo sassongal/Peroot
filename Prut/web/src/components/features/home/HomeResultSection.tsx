@@ -49,7 +49,6 @@ export interface HomeResultSectionProps {
   iterationCount: number;
   preFilledKeys: string[];
   onVariableChange: (key: string, val: string) => void;
-  onImproveAgain: () => void;
   onQuickRefine?: (instruction: string) => void;
   onRetryStream: () => void;
   onResetToOriginal: () => void;
@@ -59,7 +58,7 @@ export interface HomeResultSectionProps {
   isAuthenticated: boolean;
   capabilityMode: CapabilityMode;
   selectedPlatform?: string;
-  creditsLeft?: number;
+  onStop?: () => void;
 
   // SmartRefinement props
   questions: Question[];
@@ -89,7 +88,6 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
     iterationCount,
     preFilledKeys,
     onVariableChange,
-    onImproveAgain,
     onQuickRefine,
     onRetryStream,
     onResetToOriginal,
@@ -99,7 +97,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
     isAuthenticated,
     capabilityMode,
     selectedPlatform,
-    creditsLeft,
+    onStop,
     questions,
     questionsLoading = false,
     questionAnswers,
@@ -131,7 +129,6 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
             }
             preFilledKeys={preFilledKeys}
             onVariableChange={onVariableChange}
-            onImproveAgain={onImproveAgain}
             onQuickRefine={onQuickRefine}
             onRetryStream={onRetryStream}
             originalPrompt={originalPrompt}
@@ -140,7 +137,7 @@ export const HomeResultSection = memo<HomeResultSectionProps>(
             isAuthenticated={isAuthenticated}
             capabilityMode={capabilityMode}
             selectedPlatform={selectedPlatform}
-            creditsLeft={creditsLeft}
+            onStop={onStop}
           />
         </ErrorBoundary>
 

@@ -298,6 +298,10 @@ function PageContent() {
 
   // User / Auth State
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // One-overlay law (U2.2): a fresh account does NOT get the onboarding
+  // overlay on first load. It becomes pending here and only shows after the
+  // user's first result, when there is something real to build on.
+  const onboardingPendingRef = useRef(false);
   const [isNewUser, setIsNewUser] = useState(false);
 
   // Modals
@@ -314,7 +318,6 @@ function PageContent() {
     refreshAt: string | null;
   } | null>(null);
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
-  const [showWhatIsThis, setShowWhatIsThis] = useState(false);
 
   // --- Effects ---
 
@@ -396,7 +399,7 @@ function PageContent() {
         if (data) {
           setCreditsRemaining(data.credits_balance);
           if (!data.onboarding_completed) {
-            setShowOnboarding(true);
+            onboardingPendingRef.current = true;
             setIsNewUser(true);
           }
         }
@@ -871,6 +874,12 @@ function PageContent() {
 
         toast.success(t.prompt_generator.success_toast);
         discovery.onEnhanceComplete();
+
+        // Deferred onboarding: first result just landed, now personalize.
+        if (onboardingPendingRef.current) {
+          onboardingPendingRef.current = false;
+          setTimeout(() => setShowOnboarding(true), 2500);
+        }
 
         // Pro preview nudge: after 3rd enhance for free users (once per session)
         if (user && creditsRemaining !== null && creditsRemaining <= 0) {
@@ -1437,14 +1446,6 @@ function PageContent() {
     [dispatch, ps.variableValues, saveVariable],
   );
 
-  const handleImproveAgain = useCallback(() => {
-    const text = ps.completion;
-    dispatch({ type: "SET_INPUT", payload: text });
-    dispatch({ type: "INCREMENT_ITERATION" });
-    // Pass the text explicitly so it refines the result, not the stale ps.input.
-    handleEnhance(text);
-  }, [dispatch, ps.completion, handleEnhance]);
-
   // Stop an in-flight stream - keeps whatever partial text arrived, marks it
   // interrupted so the success branch doesn't save/toast it.
   const handleStop = useCallback(() => {
@@ -1644,12 +1645,7 @@ function PageContent() {
         discovery={discovery}
         onDiscoveryCtaClick={handleDiscoveryCtaClick}
         isLoading={ps.isLoading}
-        streamPhase={ps.streamPhase}
         hasCompletion={!!ps.completion}
-        onStopStream={handleStop}
-        showWhatIsThis={showWhatIsThis}
-        onCloseWhatIsThis={() => setShowWhatIsThis(false)}
-        onOpenWhatIsThis={() => setShowWhatIsThis(true)}
         isLoginRequiredModalOpen={isLoginRequiredModalOpen}
         onCloseLoginRequired={() => setIsLoginRequiredModalOpen(false)}
         loginRequiredConfig={loginRequiredConfig}
@@ -1748,7 +1744,6 @@ function PageContent() {
             iterationCount={ps.iterationCount}
             preFilledKeys={ps.preFilledKeys}
             onVariableChange={handleVariableChange}
-            onImproveAgain={handleImproveAgain}
             onRetryStream={handleEnhance}
             onResetToOriginal={() => dispatch({ type: "RESET_TO_ORIGINAL" })}
             originalPrompt={ps.originalInput || ps.input}
@@ -1756,7 +1751,7 @@ function PageContent() {
             onReset={() => dispatch({ type: "RESET" })}
             isAuthenticated={!!user}
             capabilityMode={ps.generationContext?.mode || ps.selectedCapability}
-            creditsLeft={creditsRemaining ?? undefined}
+            onStop={handleStop}
             selectedPlatform={
               ps.generationContext?.modeParams?.image_platform ||
               ps.generationContext?.modeParams?.video_platform ||

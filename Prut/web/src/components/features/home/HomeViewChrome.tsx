@@ -2,9 +2,9 @@
 
 import React, { memo } from "react";
 import NextImage from "next/image";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import type { StreamPhase } from "@/hooks/usePromptWorkflow";
 import type { DiscoveryTip } from "@/hooks/useFeatureDiscovery";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 
@@ -24,22 +24,10 @@ const LoginRequiredModal = dynamic(
   () => import("@/components/ui/LoginRequiredModal").then((mod) => mod.LoginRequiredModal),
   { ssr: false, loading: () => null },
 );
-const WhatIsThisModal = dynamic(
-  () => import("@/components/ui/WhatIsThisModal").then((mod) => mod.WhatIsThisModal),
-  { ssr: false, loading: () => null },
-);
 const OnboardingOverlay = dynamic(
   () => import("@/components/ui/OnboardingOverlay").then((mod) => mod.OnboardingOverlay),
   { ssr: false, loading: () => null },
 );
-const LoadingOverlay = dynamic(
-  () => import("@/components/ui/LoadingOverlay").then((mod) => mod.LoadingOverlay),
-  { ssr: false, loading: () => null },
-);
-const StreamingProgress = dynamic(() => import("@/components/ui/StreamingProgress"), {
-  ssr: false,
-  loading: () => null,
-});
 const DidYouKnowBanner = dynamic(
   () => import("@/components/ui/DidYouKnowBanner").then((mod) => mod.DidYouKnowBanner),
   { ssr: false, loading: () => <div className="h-[48px]" /> },
@@ -66,14 +54,7 @@ interface HomeViewChromeProps {
 
   // Loading state
   isLoading: boolean;
-  streamPhase: StreamPhase;
   hasCompletion: boolean;
-  onStopStream?: () => void;
-
-  // What Is This modal
-  showWhatIsThis: boolean;
-  onCloseWhatIsThis: () => void;
-  onOpenWhatIsThis: () => void;
 
   // Login Required modal
   isLoginRequiredModalOpen: boolean;
@@ -98,12 +79,7 @@ function HomeViewChromeInner({
   discovery,
   onDiscoveryCtaClick,
   isLoading,
-  streamPhase,
   hasCompletion,
-  onStopStream,
-  showWhatIsThis,
-  onCloseWhatIsThis,
-  onOpenWhatIsThis,
   isLoginRequiredModalOpen,
   onCloseLoginRequired,
   loginRequiredConfig,
@@ -169,12 +145,14 @@ function HomeViewChromeInner({
           מחולל ומשדרג פרומפטים בעברית, בהתאמה מדויקת לכל מנוע AI: שיחה, תמונה, וידאו, מחקר וסוכנים
         </h1>
 
-        <button
-          onClick={onOpenWhatIsThis}
+        {/* One in-app product explainer only (U2.2): the modal is gone,
+            the full story lives at /features. */}
+        <Link
+          href="/features"
           className="text-xs md:text-sm text-(--text-muted) hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer -mt-3 md:-mt-2 min-h-[32px] md:min-h-[44px] flex items-center justify-center px-3 md:px-4"
         >
-          מה עושים פה?
-        </button>
+          איך זה עובד
+        </Link>
 
         {/* Did You Know banner — reserve min-height to prevent CLS */}
         {!hasCompletion && !isLoading && (
@@ -182,9 +160,6 @@ function HomeViewChromeInner({
             <DidYouKnowBanner />
           </div>
         )}
-
-        <LoadingOverlay isVisible={isLoading} phase={streamPhase} />
-        <StreamingProgress phase={streamPhase} onStop={isLoading ? onStopStream : undefined} />
 
         {children}
       </div>
@@ -197,9 +172,6 @@ function HomeViewChromeInner({
         message={loginRequiredConfig.message}
         feature={loginRequiredConfig.feature}
       />
-
-      {/* What Is This Modal */}
-      <WhatIsThisModal isOpen={showWhatIsThis} onClose={onCloseWhatIsThis} />
 
       {/* Onboarding Overlay */}
       {showOnboarding && !!user && <OnboardingOverlay onComplete={onOnboardingComplete} />}

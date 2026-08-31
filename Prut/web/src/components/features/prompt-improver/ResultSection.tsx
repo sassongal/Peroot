@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -11,7 +11,6 @@ import {
   ExternalLink,
   HelpCircle,
   MoreHorizontal,
-  Pencil,
   Plus,
   RotateCcw,
   Share2,
@@ -75,10 +74,11 @@ interface ResultSectionProps {
   variableValues?: Record<string, string>;
   preFilledKeys?: string[];
   onVariableChange?: (key: string, value: string) => void;
-  onImproveAgain?: () => void;
   /** Preset refinement instructions (דלתות מהירות) — runs true refine, not re-enhance from scratch */
   onQuickRefine?: (instruction: string) => void;
   onRetryStream?: () => void;
+  /** Abort the in-flight stream (rendered inside the progress indicator). */
+  onStop?: () => void;
   originalPrompt?: string;
   onShare?: () => void;
   onReset?: () => void;
@@ -87,8 +87,6 @@ interface ResultSectionProps {
   capabilityMode?: CapabilityMode;
   /** Selected platform for image/video modes (e.g. 'midjourney', 'runway') */
   selectedPlatform?: string;
-  /** Remaining free credits today — shown in the "שפר שוב" confirm popup */
-  creditsLeft?: number;
 }
 
 import { useI18n } from "@/context/I18nContext";
@@ -132,16 +130,15 @@ export function ResultSection({
   variableValues = {},
   preFilledKeys = [],
   onVariableChange,
-  onImproveAgain,
   onQuickRefine,
   onRetryStream,
+  onStop,
   originalPrompt,
   onShare,
   onReset,
   isAuthenticated = false,
   capabilityMode,
   selectedPlatform,
-  creditsLeft,
 }: ResultSectionProps) {
   const t = useI18n();
   // Pro users can toggle the watermark off; free users always get the watermark.
@@ -150,9 +147,6 @@ export function ResultSection({
   // don't run EnhancedScorer on every render (it's cheap but no reason to).
   const [breakdownScore, setBreakdownScore] = useState<EnhancedScore | null>(null);
   const [showMorePanel, setShowMorePanel] = useState(false);
-  const [showRefineConfirm, setShowRefineConfirm] = useState(false);
-  const [showGuestCopyNudge, setShowGuestCopyNudge] = useState(false);
-  const guestNudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [savedToLibrary, setSavedToLibrary] = useState(false);
 
   const openScoreBreakdown = () => {
@@ -194,18 +188,7 @@ export function ResultSection({
     const shouldWatermark =
       forceWatermark !== undefined ? forceWatermark : isPro ? proWatermarkEnabled : true;
     onCopy(text, shouldWatermark);
-    if (!isAuthenticated) {
-      setShowGuestCopyNudge(true);
-      if (guestNudgeTimerRef.current) clearTimeout(guestNudgeTimerRef.current);
-      guestNudgeTimerRef.current = setTimeout(() => setShowGuestCopyNudge(false), 8000);
-    }
   };
-
-  useEffect(() => {
-    return () => {
-      if (guestNudgeTimerRef.current) clearTimeout(guestNudgeTimerRef.current);
-    };
-  }, []);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -295,14 +278,18 @@ export function ResultSection({
                       </div>
                     </div>
                   ) : (
-                    <ThinkingStagesIndicator streamPhase={streamPhase ?? "sending"} />
+                    <ThinkingStagesIndicator
+                      streamPhase={streamPhase ?? "sending"}
+                      onStop={onStop}
+                    />
                   )}
                 </div>
               );
             })()
           ) : (
             <div className="p-4 flex-1">
-              {/* ── Top toolbar: Reset · Save to Library · Copy ── */}
+              {/* ── Top row: stage chip only. Copy/reset/save each live in
+                  exactly ONE place (bottom bar + more panel) — U2.3. ── */}
               <div className="flex items-center justify-between mb-3" dir="rtl">
                 {/* Stage chip */}
                 <div
@@ -316,44 +303,6 @@ export function ResultSection({
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#FDBE00] shadow-[0_0_8px_#FDBE00] animate-pulse shrink-0" />
                   פרומפט מוכן
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {/* לאפס */}
-                  {onReset && (
-                    <button
-                      onClick={onReset}
-                      className={styles.xBtn}
-                      aria-label="לאפס"
-                      disabled={isLoading}
-                    >
-                      <RotateCcw className="w-[15px] h-[15px] shrink-0" />
-                      <span className={styles.xBtnLabel}>לאפס</span>
-                    </button>
-                  )}
-                  {/* שמור בספריה */}
-                  <button
-                    onClick={onSave}
-                    className={cn(styles.xBtn, styles.xBtnGold)}
-                    aria-label="שמור בספריה"
-                    disabled={isLoading}
-                  >
-                    <BookOpen className="w-[15px] h-[15px] shrink-0" />
-                    <span className={styles.xBtnLabel}>שמור בספריה</span>
-                  </button>
-                  {/* העתק */}
-                  <button
-                    onClick={() => handleCopy(displayCompletion)}
-                    className={styles.xBtn}
-                    aria-label={copied ? "הועתק" : "העתק"}
-                    disabled={isLoading}
-                  >
-                    {copied ? (
-                      <Check className="w-[15px] h-[15px] shrink-0" />
-                    ) : (
-                      <Copy className="w-[15px] h-[15px] shrink-0" />
-                    )}
-                    <span className={styles.xBtnLabel}>העתק</span>
-                  </button>
                 </div>
               </div>
               <BeforeAfterSplit
@@ -519,16 +468,6 @@ export function ResultSection({
               </div>
               {/* Right: actions */}
               <div className="flex items-center gap-2">
-                {onImproveAgain && (
-                  <button
-                    onClick={() => setShowRefineConfirm(true)}
-                    className={styles.btnRefine}
-                    aria-label="שפר שוב"
-                    disabled={isLoading}
-                  >
-                    <Pencil className="w-[15px] h-[15px]" />
-                  </button>
-                )}
                 <button
                   onClick={() => handleCopy(displayCompletion)}
                   className={styles.btnCopy}
@@ -545,29 +484,6 @@ export function ResultSection({
               </div>
             </div>
 
-            {/* Guest copy nudge — appears after guest copies, auto-dismisses in 8s */}
-            {showGuestCopyNudge && !isAuthenticated && (
-              <div
-                className="mt-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
-                dir="rtl"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 leading-snug">
-                    ✓ הועתק! הירשמו לשמור לספרייה
-                  </p>
-                  <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/70">
-                    +2 שיפורים ביום, היסטוריה ושרשראות פרומפטים
-                  </p>
-                </div>
-                <Link
-                  href="/login"
-                  className="shrink-0 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors px-3 py-1.5 rounded-lg"
-                >
-                  הירשמו בחינם
-                </Link>
-              </div>
-            )}
-
             {/* Quick refine actions */}
             {onQuickRefine && completion.trim() && !isLoading && (
               <div
@@ -575,7 +491,7 @@ export function ResultSection({
                 dir="rtl"
               >
                 <span className="text-[10px] font-medium text-(--text-muted)">
-                  דלתות מהירות, שיפור על בסיס התוצאה:
+                  חידוד מהיר על בסיס התוצאה, בלי קרדיט נוסף:
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {QUICK_REFINE_ACTIONS.map((action) => (
@@ -822,57 +738,6 @@ export function ResultSection({
       />
 
       {/* ── Credit confirmation popup ── */}
-      {showRefineConfirm && (
-        <div
-          className={styles.popupOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label="אישור שיפור נוסף"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowRefineConfirm(false);
-          }}
-        >
-          <div className={styles.popup} data-testid="credit-popup">
-            <div className={styles.popupHeader}>
-              <div className={styles.popupIconWrap}>
-                <Pencil />
-              </div>
-              <div>
-                <div className={styles.popupTitle}>לשפר את הפרומפט שוב?</div>
-                <div className={styles.popupSub}>שיפור נוסף ישתמש בקרדיט אחד</div>
-              </div>
-            </div>
-            <div className={styles.popupBody}>
-              Peroot תריץ סבב שיפור נוסף על הפרומפט הנוכחי ותייצר גרסה משופרת חדשה.
-              {creditsLeft !== undefined && (
-                <div className={styles.creditRow}>
-                  <div className={styles.creditIconWrap}>
-                    <RotateCcw />
-                  </div>
-                  <div className={styles.creditText}>
-                    <span>קרדיט אחד</span> יצרף לשיפור זה
-                    <small>נותרו לך {creditsLeft} קרדיטים היום</small>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className={styles.popupActions}>
-              <button className={styles.popCancel} onClick={() => setShowRefineConfirm(false)}>
-                ביטול
-              </button>
-              <button
-                className={styles.popConfirm}
-                onClick={() => {
-                  setShowRefineConfirm(false);
-                  onImproveAgain?.();
-                }}
-              >
-                שפר שוב ✓
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

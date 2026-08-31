@@ -136,10 +136,10 @@ function getState(): DiscoveryState {
   } catch {
     /* ignore */
   }
-  // First time: existing users already have history, so start at a high
-  // enough count that tips will show on the very next enhance.
-  // We use 2 so that after the first enhance (count becomes 3), tips trigger.
-  return { seen: [], enhanceCount: 2, lastShownAtEnhance: 0 };
+  // Fresh state starts at zero: the first success moment belongs to the
+  // result, not to a tooltip. Tips become eligible from the third enhance
+  // (one-overlay law, UX plan U2.2).
+  return { seen: [], enhanceCount: 0, lastShownAtEnhance: 0 };
 }
 
 function saveState(state: DiscoveryState) {

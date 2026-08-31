@@ -90,26 +90,18 @@ describe("ResultSection, redesign", () => {
     expect(saveBtn).toHaveClass(/mpItemDisabled/);
   });
 
-  it("credit popup appears when 'שפר שוב' is clicked", () => {
-    render(<ResultSection {...defaultProps} onImproveAgain={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /שפר שוב/i }));
-    expect(screen.getByTestId("credit-popup")).toBeInTheDocument();
-  });
-
-  it("credit popup disappears on cancel", () => {
-    render(<ResultSection {...defaultProps} onImproveAgain={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /שפר שוב/i }));
-    fireEvent.click(screen.getByRole("button", { name: /ביטול/ }));
+  it("the credit-burning 'שפר שוב' path is gone (U2.3, refinement is free)", () => {
+    render(<ResultSection {...defaultProps} />);
+    expect(screen.queryByRole("button", { name: /שפר שוב/i })).not.toBeInTheDocument();
     expect(screen.queryByTestId("credit-popup")).not.toBeInTheDocument();
   });
 
-  it("credit popup confirm calls onImproveAgain", () => {
-    const onImproveAgain = vi.fn();
-    render(<ResultSection {...defaultProps} onImproveAgain={onImproveAgain} />);
-    fireEvent.click(screen.getByRole("button", { name: /שפר שוב/i }));
-    fireEvent.click(screen.getByRole("button", { name: /שפר שוב ✓/ }));
-    expect(onImproveAgain).toHaveBeenCalledOnce();
-    expect(screen.queryByTestId("credit-popup")).not.toBeInTheDocument();
+  it("exactly one copy button renders (U2.3, one toolbar)", () => {
+    render(<ResultSection {...defaultProps} />);
+    const copies = screen
+      .getAllByRole("button")
+      .filter((b) => /העתק/.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));
+    expect(copies).toHaveLength(1);
   });
 
   it("'העתק פרומפט' calls onCopy with display text", () => {

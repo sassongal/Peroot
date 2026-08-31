@@ -7,9 +7,11 @@ const STAGES = ["מנתח את הפרומפט...", "בונה מבנה שיפור
 
 interface Props {
   streamPhase: StreamPhase;
+  /** Abort the in-flight stream — this indicator is the ONE progress surface (U2.3). */
+  onStop?: () => void;
 }
 
-export function ThinkingStagesIndicator({ streamPhase }: Props) {
+export function ThinkingStagesIndicator({ streamPhase, onStop }: Props) {
   const [activeStage, setActiveStage] = useState(0);
 
   useEffect(() => {
@@ -70,6 +72,15 @@ export function ThinkingStagesIndicator({ streamPhase }: Props) {
           </div>
         );
       })}
+      {onStop && (
+        <button
+          type="button"
+          onClick={onStop}
+          className="mt-2 px-4 py-1.5 min-h-[36px] rounded-lg border border-(--glass-border) text-xs text-(--text-secondary) hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer"
+        >
+          עצור
+        </button>
+      )}
     </div>
   );
 }

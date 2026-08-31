@@ -11,10 +11,22 @@ import {
 } from "@/lib/peroot-facts";
 
 const SESSION_KEY = "peroot_fun_fact_dismissed";
+const LAST_SHOWN_KEY = "peroot_fun_fact_last_shown";
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function isDismissedThisSession(): boolean {
   try {
     return sessionStorage.getItem(SESSION_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+// At most one fact a day (one-overlay law, UX plan U2.2).
+function shownWithinLastDay(): boolean {
+  try {
+    const raw = localStorage.getItem(LAST_SHOWN_KEY);
+    return !!raw && Date.now() - Number(raw) < DAY_MS;
   } catch {
     return false;
   }
@@ -26,8 +38,8 @@ export function DidYouKnowBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Don't show if already dismissed this session
-    if (isDismissedThisSession()) return;
+    // Don't show if already dismissed this session or shown today
+    if (isDismissedThisSession() || shownWithinLastDay()) return;
 
     const detectedLocale = detectFactLocale();
     queueMicrotask(() => {
@@ -35,7 +47,14 @@ export function DidYouKnowBanner() {
       setFactIndex(getNextFactIndex(detectedLocale));
     });
     // Small delay for smooth entrance
-    const timer = setTimeout(() => setVisible(true), 800);
+    const timer = setTimeout(() => {
+      setVisible(true);
+      try {
+        localStorage.setItem(LAST_SHOWN_KEY, String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+    }, 800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -43,7 +62,9 @@ export function DidYouKnowBanner() {
     setVisible(false);
     try {
       sessionStorage.setItem(SESSION_KEY, "true");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   if (factIndex === null || !visible) return null;
@@ -55,7 +76,7 @@ export function DidYouKnowBanner() {
     <div
       className={cn(
         "w-full transition-all duration-500 ease-out",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+        visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4",
       )}
       dir={locale === "en" ? "ltr" : "rtl"}
     >
@@ -67,9 +88,7 @@ export function DidYouKnowBanner() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <span className="text-[11px] font-bold text-amber-400 tracking-wide">
-            {label}
-          </span>
+          <span className="text-[11px] font-bold text-amber-400 tracking-wide">{label}</span>
           <p className="text-sm text-(--text-secondary) leading-relaxed mt-0.5">
             {facts[factIndex]}
           </p>
@@ -78,7 +97,7 @@ export function DidYouKnowBanner() {
         {/* Close */}
         <button
           onClick={dismiss}
-          className="shrink-0 p-1 rounded-lg text-(--text-muted) hover:text-(--text-secondary) hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100"
+          className="shrink-0 p-2 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-(--text-muted) hover:text-(--text-secondary) hover:bg-white/5 transition-colors"
           aria-label={locale === "en" ? "Close" : "סגור"}
         >
           <X className="w-3.5 h-3.5" />
