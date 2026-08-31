@@ -430,6 +430,15 @@ export function CapabilitySelector({
     onChange(mode);
   }
 
+  // Compact labels for fifth-width mobile pills (the full labelHe clips).
+  const SHORT_LABEL: Partial<Record<CapabilityMode, string>> = {
+    [CapabilityMode.STANDARD]: "סטנדרטי",
+    [CapabilityMode.DEEP_RESEARCH]: "מחקר",
+    [CapabilityMode.IMAGE_GENERATION]: "תמונה",
+    [CapabilityMode.AGENT_BUILDER]: "סוכנים",
+    [CapabilityMode.VIDEO_GENERATION]: "וידאו",
+  };
+
   return (
     <>
       {/* ── Mobile: Rising Pill Track (hidden on md+) ── */}
@@ -479,7 +488,7 @@ export function CapabilitySelector({
               </span>
               <span className={styles.pillLabel}>
                 {isLocked && <Lock className="w-2.5 h-2.5 inline ms-0.5 opacity-70" />}
-                {config.labelHe}
+                {SHORT_LABEL[mode] ?? config.labelHe}
               </span>
             </button>
           );
